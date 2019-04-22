@@ -2,12 +2,13 @@ import { ResourceStoredMapAndroid } from '../../@types/application';
 
 import Resource from '../../resource';
 
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 const REGEXP_WIDGETNAME = /[\s\n]*<([\w\-.]+)[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
-const REGEXP_DEVICEUNIT = /^-?[\d.]+(px|dp|sp)$/;
+const REGEXP_DEVICEUNIT = /\d(px|dp|sp)$/;
 
 const NAMESPACE_ATTR = ['android', 'app'];
 
@@ -51,7 +52,7 @@ export default class ResourceDimens<T extends android.base.View> extends squared
         for (const tagName in groups) {
             const group = groups[tagName];
             for (const name in group) {
-                const [namespace, attr, value] = name.split($util.REGEXP_COMPILED.SEPARATOR);
+                const [namespace, attr, value] = name.split($regex.XML.SEPARATOR);
                 const key = getResourceName(STORED.dimens, `${getDisplayName(tagName)}_${$util.convertUnderscore(attr)}`, value);
                 for (const node of group[name]) {
                     node[namespace](attr, `@dimen/${key}`);

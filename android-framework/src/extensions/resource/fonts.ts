@@ -13,6 +13,8 @@ type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
 const $enum = squared.base.lib.enumeration;
+const $client = squared.lib.client;
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const REGEXP_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
@@ -81,7 +83,7 @@ const FONT_STYLE = {
     'backgroundColor': 'android:background="@color/'
 };
 
-if ($util.isUserAgent($util.USER_AGENT.EDGE)) {
+if ($client.isUserAgent($client.USER_AGENT.EDGE)) {
     FONTREPLACE_ANDROID['consolas'] = 'monospace';
 }
 
@@ -144,7 +146,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 }
                 if (stored.fontFamily) {
-                    let fontFamily = stored.fontFamily.split($util.REGEXP_COMPILED.SEPARATOR)[0].replace(/"/g, '').toLowerCase();
+                    let fontFamily = stored.fontFamily.split($regex.XML.SEPARATOR)[0].replace(/"/g, '').toLowerCase();
                     let fontStyle = '';
                     let fontWeight = '';
                     if (this.options.fontResourceValue && FONTREPLACE_ANDROID[fontFamily]) {
@@ -299,7 +301,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                             for (const attr in combined) {
                                 const attrs = Array.from(combined[attr]).sort().join(';');
-                                const ids = $util.objectMap<string, number>(attr.split($util.REGEXP_COMPILED.SEPARATOR), value => parseInt(value));
+                                const ids = $util.objectMap<string, number>(attr.split($regex.XML.SEPARATOR), value => parseInt(value));
                                 deleteStyleAttribute(sorted, attrs, ids);
                                 style[tag][attrs] = ids;
                             }
@@ -330,7 +332,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (const attrs in tagData) {
                 const items: NameValue[] = [];
                 for (const value of attrs.split(';')) {
-                    const match = $util.REGEXP_COMPILED.ATTRIBUTE.exec(value);
+                    const match = $regex.XML.ATTRIBUTE.exec(value);
                     if (match) {
                         items.push({ name: match[1], value: match[2] });
                     }

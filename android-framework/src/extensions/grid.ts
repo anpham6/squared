@@ -7,6 +7,7 @@ import $Layout = squared.base.Layout;
 type View = android.base.View;
 
 const $const = squared.base.lib.constant;
+const $css = squared.lib.css;
 const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 
@@ -128,7 +129,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                                     }
                                     else {
                                         const controller = <android.base.Controller<T>> this.application.controllerHandler;
-                                        controller.addAfterOutsideTemplate(item.id, controller.renderSpace('match_parent', $util.formatPX(heightBottom), mainData.columnCount));
+                                        controller.addAfterOutsideTemplate(item.id, controller.renderSpace('match_parent', $css.formatPX(heightBottom), mainData.columnCount));
                                     }
                                 }
                                 mainData.paddingRight = Math.max(actualParent.marginRight + actualParent.paddingRight, mainData.paddingRight);

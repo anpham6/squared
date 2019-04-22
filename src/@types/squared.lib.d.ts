@@ -1,6 +1,7 @@
+import * as $client from '../lib/client';
 import * as $css from '../lib/css';
 import * as $dom from '../lib/dom';
-import * as $util from '../lib/util';
+import * as $regex from '../lib/regex';
 import * as $xml from '../lib/xml';
 
 declare global {
@@ -16,6 +17,12 @@ declare global {
             function convertHSLA(value: RGBA): HSLA;
             function formatRGBA(value: RGBA): string;
             function formatHSLA(value: HSLA): string;
+        }
+
+        namespace client {
+            export import USER_AGENT = $client.USER_AGENT;
+            function isUserAgent(value: string | number): boolean;
+            function getDeviceDPI(): number;
         }
 
         namespace css {
@@ -40,6 +47,18 @@ declare global {
             function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
             function resolveURL(value: string): string;
             function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
+            function convertAngle(value: string, unit?: string): number;
+            function convertPX(value: string, fontSize?: number): string;
+            function calculate(value: string, dimension?: number, fontSize?: number): number;
+            function parseUnit(value: string, fontSize?: number): number;
+            function parseAngle(value: string): number;
+            function formatPX(value: string | number): string;
+            function formatPercent(value: string | number, round?: boolean): string;
+            function isLength(value: string, percent?: boolean): boolean;
+            function isPercent(value: string): boolean;
+            function isCalc(value: string): boolean;
+            function isCustomProperty(value: string): boolean;
+            function isAngle(value: string): boolean;
         }
 
         namespace dom {
@@ -74,6 +93,16 @@ declare global {
             function nextMultiple(values: number[], minumum?: number, offset?: number[]): number;
         }
 
+        namespace regex {
+            export import STRING = $regex.STRING;
+            export import UNIT = $regex.UNIT;
+            export import CSS = $regex.CSS;
+            export import XML = $regex.XML;
+            export import CHAR = $regex.CHAR;
+            export import PREFIX = $regex.PREFIX;
+            export import ESCAPE = $regex.ESCAPE;
+        }
+
         namespace session {
             function getClientRect(element: Element, sessionId: string, cache?: boolean): ClientRect;
             function getRangeClientRect(element: Element, sessionId: string, cache?: boolean): TextDimension;
@@ -85,39 +114,20 @@ declare global {
         }
 
         namespace util {
-            export import REGEXP_COMPILED = $util.REGEXP_COMPILED;
-            export import STRING_PATTERN = $util.STRING_PATTERN;
-            export import USER_AGENT = $util.USER_AGENT;
-            function isUserAgent(value: string | number): boolean;
-            function getDeviceDPI(): number;
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
             function convertWord(value: string, dash?: boolean): string;
             function convertInt(value: string): number;
             function convertFloat(value: string): number;
-            function convertAngle(value: string, unit?: string): number;
-            function convertPX(value: string, fontSize?: number): string;
-            function convertLength(value: string, dimension: number, fontSize?: number): number;
-            function convertPercent(value: string, dimension: number, fontSize?: number): number;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
-            function calculate(value: string, dimension?: number, fontSize?: number): number;
-            function parseUnit(value: string, fontSize?: number): number;
-            function parseAngle(value: string): number;
-            function formatPX(value: string | number): string;
-            function formatPercent(value: string | number, round?: boolean): string;
             function formatString(value: string, ...params: string[]): string;
             function hasBit(value: number, offset: number): boolean;
             function isNumber(value: any): boolean;
             function isString(value: any): value is string;
             function isArray<T>(value: any): value is Array<T>;
-            function isLength(value: string, percent?: boolean): boolean;
-            function isPercent(value: string): boolean;
-            function isCalc(value: string): boolean;
-            function isCustomProperty(value: string): boolean;
-            function isAngle(value: string): boolean;
             function isEqual(source: any, values: any): boolean;
             function includes(source: string | undefined, value: string, delimiter?: string): boolean;
             function cloneInstance<T>(value: T): T;
@@ -159,7 +169,7 @@ declare global {
 
         namespace xml {
             export import STRING_XMLENCODING = $xml.STRING_XMLENCODING;
-            export import REGEXP_ESCAPE = $xml.REGEXP_ESCAPE;
+            function isPlainText(value: string): string;
             function pushIndent(value: string, depth: number, char?: string, indent?: string): string;
             function pushIndentArray(values: string[], depth: number, char?: string, separator?: string): string;
             function replaceIndent(value: string, depth: number, pattern: RegExp): string;

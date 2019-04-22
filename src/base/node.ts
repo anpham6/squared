@@ -10,6 +10,7 @@ type T = Node;
 
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
@@ -574,12 +575,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssPX(attr: string, value: number, negative = false, cache = false) {
         const current = this._styleMap[attr];
-        if (current && $util.isLength(current)) {
-            value += $util.parseUnit(current, this.fontSize);
+        if (current && $css.isLength(current)) {
+            value += $css.parseUnit(current, this.fontSize);
             if (!negative && value < 0) {
                 value = 0;
             }
-            const length = $util.formatPX(value);
+            const length = $css.formatPX(value);
             this.css(attr, length);
             if (cache) {
                 this.unsetCache(attr);
@@ -642,7 +643,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public parseUnit(value: string, horizontal = true, parent = true) {
         if (value !== '') {
-            if ($util.isPercent(value)) {
+            if ($css.isPercent(value)) {
                 const attr = horizontal ? 'width' : 'height';
                 let result = parseFloat(value) / 100;
                 if (parent) {
@@ -659,7 +660,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 return result * (this.has(attr, CSS_STANDARD.LENGTH) ? this.toFloat(attr) : this.bounds[attr]);
             }
-            return $util.parseUnit(value, this.fontSize);
+            return $css.parseUnit(value, this.fontSize);
         }
         return 0;
     }
@@ -723,10 +724,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                     }
                     if (checkType > 0) {
-                        if ($util.hasBit(checkType, CSS_STANDARD.LENGTH) && $util.isLength(value)) {
+                        if ($util.hasBit(checkType, CSS_STANDARD.LENGTH) && $css.isLength(value)) {
                             return true;
                         }
-                        if ($util.hasBit(checkType, CSS_STANDARD.PERCENT) && $util.isPercent(value)) {
+                        if ($util.hasBit(checkType, CSS_STANDARD.PERCENT) && $css.isPercent(value)) {
                             return true;
                         }
                     }
@@ -889,7 +890,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     const value = this[attr];
                     if (node && value !== 0) {
                         if (!node.naturalElement && node[attr] === 0) {
-                            node.css(attr, $util.formatPX(value), true);
+                            node.css(attr, $css.formatPX(value), true);
                         }
                         else {
                             node.modifyBox(CSS_SPACING_KEYS[i + (fromParent ? 0 : 4)], value);
@@ -1056,7 +1057,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     private getDimension(value: string, horizontal = true) {
-        if ($util.isLength(value) || $util.isPercent(value)) {
+        if ($css.isLength(value) || $css.isPercent(value)) {
             return this.parseUnit(value, horizontal);
         }
         return 0;
@@ -1066,7 +1067,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let value = 0;
         if (!this.positionStatic) {
             const unit = this.cssInitial(attr, true);
-            if ($util.isLength(unit) || $util.isPercent(unit)) {
+            if ($css.isLength(unit) || $css.isPercent(unit)) {
                 value = $util.convertFloat(this.convertLength(attr, unit, attr === 'left' || attr === 'right'));
             }
         }
@@ -1079,8 +1080,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     private convertLength(attr: string, value: string, horizontal: boolean, parent = true): string {
-        if ($util.isPercent(value)) {
-            return $util.isLength(this.style[attr]) ? this.style[attr] : this.convertPX(value, horizontal, parent);
+        if ($css.isPercent(value)) {
+            return $css.isLength(this.style[attr]) ? this.style[attr] : this.convertPX(value, horizontal, parent);
         }
         return value;
     }
@@ -1340,11 +1341,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.inlineStatic) {
                 this._cached.hasWidth = false;
             }
-            else if ($util.isPercent(value)) {
+            else if ($css.isPercent(value)) {
                 this._cached.hasWidth = parseFloat(value) > 0;
             }
             else {
-                this._cached.hasWidth = $util.isLength(value) && value !== '0px' || this.toInt('minWidth') > 0;
+                this._cached.hasWidth = $css.isLength(value) && value !== '0px' || this.toInt('minWidth') > 0;
             }
         }
         return this._cached.hasWidth;
@@ -1356,13 +1357,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (this.inlineStatic) {
                     return false;
                 }
-                else if ($util.isPercent(value)) {
+                else if ($css.isPercent(value)) {
                     const actualParent = this.actualParent;
                     if (actualParent && actualParent.hasHeight) {
                         return parseFloat(value) > 0;
                     }
                 }
-                else if ($util.isLength(value) && value !== '0px' || this.toFloat('minHeight') > 0) {
+                else if ($css.isLength(value) && value !== '0px' || this.toFloat('minHeight') > 0) {
                     return true;
                 }
                 return false;
@@ -1388,7 +1389,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             const emSize = parseFloat(fontSize);
                             if (emSize < 1) {
                                 lineHeight *= emSize;
-                                this.css('lineHeight', $util.formatPX(lineHeight));
+                                this.css('lineHeight', $css.formatPX(lineHeight));
                                 hasOwnStyle = true;
                             }
                         }
@@ -1833,7 +1834,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.baseline === undefined) {
             const value = this.verticalAlign;
             const initialValue = this.cssInitial('verticalAlign');
-            this._cached.baseline = this.pageFlow && !this.floating && !this.svgElement && (value === 'baseline' || value === 'initial' || $util.isLength(initialValue) && parseInt(initialValue) === 0);
+            this._cached.baseline = this.pageFlow && !this.floating && !this.svgElement && (value === 'baseline' || value === 'initial' || $css.isLength(initialValue) && parseInt(initialValue) === 0);
         }
         return this._cached.baseline;
     }
@@ -1841,8 +1842,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get verticalAlign() {
         if (this._cached.verticalAlign === undefined) {
             let value = this.css('verticalAlign');
-            if ($util.isPercent(value)) {
-                value = $util.formatPX(parseInt(value) / 100 * this.bounds.height);
+            if ($css.isPercent(value)) {
+                value = $css.formatPX(parseInt(value) / 100 * this.bounds.height);
             }
             this._cached.verticalAlign = value;
         }
@@ -1886,7 +1887,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get visibleStyle() {
         if (this._cached.visibleStyle === undefined) {
             const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-            const backgroundImage = $util.REGEXP_COMPILED.URL.test(this.css('backgroundImage')) || $util.REGEXP_COMPILED.URL.test(this.css('background'));
+            const backgroundImage = $regex.CSS.URL.test(this.css('backgroundImage')) || $regex.CSS.URL.test(this.css('background'));
             const backgroundColor = this.has('backgroundColor');
             this._cached.visibleStyle = {
                 padding: this.paddingTop > 0 || this.paddingRight > 0 || this.paddingBottom > 0 || this.paddingLeft > 0,

@@ -94,7 +94,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 minWidth += ordinal.marginLeft;
                 if (minWidth > 0 && !ordinal.hasWidth) {
-                    ordinal.android('minWidth', $util.formatPX(minWidth));
+                    ordinal.android('minWidth', $css.formatPX(minWidth));
                 }
                 ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
                 this.application.addRenderTemplate(
@@ -155,7 +155,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             CONTAINER_ANDROID.SPACE,
                             {
                                 android: {
-                                    minWidth: $util.formatPX(minWidth),
+                                    minWidth: $css.formatPX(minWidth),
                                     layout_columnWeight: columnWeight
                                 }
                             }
@@ -195,13 +195,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     ordinal.inherit(node, 'textStyle');
                     ordinal.cssApply({
-                        minWidth: minWidth > 0 ? $util.formatPX(minWidth) : '',
-                        marginTop: node.marginTop !== 0 ? $util.formatPX(node.marginTop) : '',
-                        paddingTop: node.paddingTop > 0 ? $util.formatPX(node.paddingTop) : '',
-                        paddingRight: paddingRight > 0 && gravity === 'right' ? $util.formatPX(paddingRight) : '',
-                        paddingLeft: paddingRight > 0 && gravity === 'left' && (!image || mainData.imagePosition) ? $util.formatPX(paddingRight) : '',
-                        fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $util.formatPX(ordinal.toInt('fontSize') * 0.75) : '',
-                        lineHeight: node.lineHeight > 0 ? $util.formatPX(node.lineHeight) : ''
+                        minWidth: minWidth > 0 ? $css.formatPX(minWidth) : '',
+                        marginTop: node.marginTop !== 0 ? $css.formatPX(node.marginTop) : '',
+                        paddingTop: node.paddingTop > 0 ? $css.formatPX(node.paddingTop) : '',
+                        paddingRight: paddingRight > 0 && gravity === 'right' ? $css.formatPX(paddingRight) : '',
+                        paddingLeft: paddingRight > 0 && gravity === 'left' && (!image || mainData.imagePosition) ? $css.formatPX(paddingRight) : '',
+                        fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $css.formatPX(ordinal.toInt('fontSize') * 0.75) : '',
+                        lineHeight: node.lineHeight > 0 ? $css.formatPX(node.lineHeight) : ''
                     });
                     ordinal.apply(options);
                     if (!inside) {
@@ -288,7 +288,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 });
                 controller.addBeforeOutsideTemplate(
                     item.id,
-                    controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, options, 'match_parent', $util.formatPX(spaceHeight)),
+                    controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, options, 'match_parent', $css.formatPX(spaceHeight)),
                     0
                 );
             }

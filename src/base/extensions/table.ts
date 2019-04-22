@@ -6,6 +6,7 @@ import Node from '../node';
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
 
+const $client = squared.lib.client;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
@@ -39,7 +40,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             td.data(EXT_NAME.TABLE, 'expand', true);
         }
         function setBoundsWidth(td: T) {
-            td.css('width', $util.formatPX(td.bounds.width), true);
+            td.css('width', $css.formatPX(td.bounds.width), true);
         }
         function inheritStyles(section: T[]) {
             if (section.length) {
@@ -96,8 +97,8 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             node.modifyBox(BOX_STANDARD.PADDING_TOP, null);
             node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, null);
         }
-        const spacingWidth = $util.formatPX(horizontal > 1 ? Math.round(horizontal / 2) : horizontal);
-        const spacingHeight = $util.formatPX(vertical > 1 ? Math.round(vertical / 2) : vertical);
+        const spacingWidth = $css.formatPX(horizontal > 1 ? Math.round(horizontal / 2) : horizontal);
+        const spacingHeight = $css.formatPX(vertical > 1 ? Math.round(vertical / 2) : vertical);
         const colgroup = node.element && node.element.querySelector('COLGROUP');
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
@@ -121,13 +122,13 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 if (!td.hasWidth) {
                     const width = $util.convertInt($dom.getNamedItem(element, 'width'));
                     if (width > 0) {
-                        td.css('width', $util.formatPX(width));
+                        td.css('width', $css.formatPX(width));
                     }
                 }
                 if (!td.hasHeight) {
                     const height = $util.convertInt($dom.getNamedItem(element, 'height'));
                     if (height > 0) {
-                        td.css('height', $util.formatPX(height));
+                        td.css('height', $css.formatPX(height));
                     }
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
@@ -207,12 +208,12 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         }
                     }
                     else {
-                        const length = $util.isLength(mapWidth[m]);
-                        const percent = $util.isPercent(columnWidth);
+                        const length = $css.isLength(mapWidth[m]);
+                        const percent = $css.isPercent(columnWidth);
                         if (reevaluate || td.bounds.width < mapBounds[m] || td.bounds.width === mapBounds[m] && (
                                 length && percent ||
-                                percent && $util.isPercent(mapWidth[m]) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m]) ||
-                                length && $util.isLength(columnWidth) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m])
+                                percent && $css.isPercent(mapWidth[m]) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m]) ||
+                                length && $css.isLength(columnWidth) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m])
                            ))
                         {
                             mapWidth[m] = columnWidth;
@@ -235,15 +236,15 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             });
             columnCount = Math.max(columnCount, columnIndex[i]);
         }
-        if (node.has('width', CSS_STANDARD.LENGTH) && mapWidth.some(value => $util.isPercent(value))) {
+        if (node.has('width', CSS_STANDARD.LENGTH) && mapWidth.some(value => $css.isPercent(value))) {
             $util.replaceMap<string, string>(mapWidth, (value, index) => {
                 if (value === 'auto' && mapBounds[index] > 0) {
-                    return $util.formatPX(mapBounds[index]);
+                    return $css.formatPX(mapBounds[index]);
                 }
                 return value;
             });
         }
-        if (mapWidth.every(value => $util.isPercent(value)) && mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
+        if (mapWidth.every(value => $css.isPercent(value)) && mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
             let percentTotal = 100;
             $util.replaceMap<string, string>(mapWidth, value => {
                 const percent = parseFloat(value);
@@ -251,13 +252,13 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     value = '0px';
                 }
                 else if (percentTotal - percent < 0) {
-                    value = $util.formatPercent(percentTotal);
+                    value = $css.formatPercent(percentTotal);
                 }
                 percentTotal -= percent;
                 return value;
             });
         }
-        else if (mapWidth.every(value => $util.isLength(value))) {
+        else if (mapWidth.every(value => $css.isLength(value))) {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
             if (node.width > 0) {
                 if (width < node.width) {
@@ -273,12 +274,12 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 }
             }
             if (layoutFixed && !node.has('width')) {
-                node.css('width', $util.formatPX(node.bounds.width), true);
+                node.css('width', $css.formatPX(node.bounds.width), true);
             }
         }
-        const mapPercent = mapWidth.reduce((a, b) => a + ($util.isPercent(b) ? parseFloat(b) : 0), 0);
+        const mapPercent = mapWidth.reduce((a, b) => a + ($css.isPercent(b) ? parseFloat(b) : 0), 0);
         mainData.layoutType = (() => {
-            if (mapWidth.some(value => $util.isPercent(value)) || mapWidth.every(value => $util.isLength(value) && value !== '0px')) {
+            if (mapWidth.some(value => $css.isPercent(value)) || mapWidth.every(value => $css.isLength(value) && value !== '0px')) {
                 return LAYOUT_TABLE.VARIABLE;
             }
             else if (mapWidth.every(value => value === mapWidth[0])) {
@@ -302,7 +303,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     return LAYOUT_TABLE.FIXED;
                 }
             }
-            if (mapWidth.every(value => value === 'auto' || $util.isLength(value) && value !== '0px')) {
+            if (mapWidth.every(value => value === 'auto' || $css.isLength(value) && value !== '0px')) {
                 if (!node.hasWidth) {
                     mainData.expand = true;
                 }
@@ -313,10 +314,10 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const caption = node.find(item => item.tagName === 'CAPTION') as T | undefined;
         node.clear();
         if (caption) {
-            if (!caption.hasWidth && !$util.isUserAgent($util.USER_AGENT.EDGE)) {
+            if (!caption.hasWidth && !$client.isUserAgent($client.USER_AGENT.EDGE)) {
                 if (caption.textElement) {
                     if (!caption.has('maxWidth')) {
-                        caption.css('maxWidth', $util.formatPX(caption.bounds.width));
+                        caption.css('maxWidth', $css.formatPX(caption.bounds.width));
                     }
                 }
                 else if (caption.bounds.width > $math.maxArray(rowWidth)) {
@@ -368,11 +369,11 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                                     setAutoWidth(td);
                                 }
                             }
-                            else if ($util.isPercent(columnWidth)) {
+                            else if ($css.isPercent(columnWidth)) {
                                 td.data(EXT_NAME.TABLE, 'percent', columnWidth);
                                 td.data(EXT_NAME.TABLE, 'expand', true);
                             }
-                            else if ($util.isLength(columnWidth) && parseInt(columnWidth) > 0) {
+                            else if ($css.isLength(columnWidth) && parseInt(columnWidth) > 0) {
                                 if (td.bounds.width >= parseInt(columnWidth)) {
                                     setBoundsWidth(td);
                                     td.data(EXT_NAME.TABLE, 'expand', false);

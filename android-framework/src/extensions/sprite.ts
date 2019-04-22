@@ -9,7 +9,7 @@ import $Layout = squared.base.Layout;
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
-const $util = squared.lib.util;
+const $css = squared.lib.css;
 
 export default class <T extends android.base.View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {
@@ -35,12 +35,12 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 bottom: 'auto',
                 left: 'auto',
                 display: 'inline-block',
-                width: $util.formatPX(mainData.width),
-                height: $util.formatPX(mainData.height),
-                marginTop: $util.formatPX(mainData.position.y),
+                width: $css.formatPX(mainData.width),
+                height: $css.formatPX(mainData.height),
+                marginTop: $css.formatPX(mainData.position.y),
                 marginRight: '0px',
                 marginBottom: '0px',
-                marginLeft: $util.formatPX(mainData.position.x),
+                marginLeft: $css.formatPX(mainData.position.x),
                 paddingTop: '0px',
                 paddingRight: '0px',
                 paddingBottom: '0px',

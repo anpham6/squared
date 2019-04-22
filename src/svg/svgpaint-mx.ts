@@ -8,14 +8,15 @@ type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
 const $color = squared.lib.color;
 const $css = squared.lib.css;
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const REGEXP_CLIPPATH = {
-    url: $util.REGEXP_COMPILED.URL,
-    inset: new RegExp(`inset\\(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}\\s?${$util.STRING_PATTERN.LENGTH_PERCENTAGE}?\\s?${$util.STRING_PATTERN.LENGTH_PERCENTAGE}?\\s?${$util.STRING_PATTERN.LENGTH_PERCENTAGE}?\\)`),
+    url: $regex.CSS.URL,
     polygon: /polygon\(([^)]+)\)/,
-    circle: new RegExp(`circle\\(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}(?: at ${$util.STRING_PATTERN.LENGTH_PERCENTAGE} ${$util.STRING_PATTERN.LENGTH_PERCENTAGE})?\\)`),
-    ellipse: new RegExp(`ellipse\\(${$util.STRING_PATTERN.LENGTH_PERCENTAGE} ${$util.STRING_PATTERN.LENGTH_PERCENTAGE}(?: at ${$util.STRING_PATTERN.LENGTH_PERCENTAGE} ${$util.STRING_PATTERN.LENGTH_PERCENTAGE})?\\)`)
+    inset: new RegExp(`inset\\(${$regex.STRING.LENGTH_PERCENTAGE}\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\)`),
+    circle: new RegExp(`circle\\(${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`),
+    ellipse: new RegExp(`ellipse\\(${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`)
 };
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
@@ -65,29 +66,25 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             return;
                         }
                         else if (d && d.length) {
-                            const fontSize = $css.getFontSize(this.element);
                             const boxRect = SvgBuild.parseBoxRect(d);
                             const width = boxRect.right - boxRect.left;
                             const height = boxRect.bottom - boxRect.top;
                             const parent = this.parent;
-                            function convertLength(value: string, horizontal = true) {
-                                return $util.convertLength(value, horizontal ? width : height, fontSize);
-                            }
                             switch (name) {
                                 case 'inset': {
                                     let x1 = 0;
                                     let x2 = 0;
-                                    let y1 = convertLength(match[1], false);
+                                    let y1 = this.convertLength(match[1], height);
                                     let y2 = 0;
                                     if (match[4]) {
-                                        x1 = boxRect.left + convertLength(match[4]);
-                                        x2 = boxRect.right - convertLength(match[2]);
-                                        y2 = boxRect.bottom - convertLength(match[3], false);
+                                        x1 = boxRect.left + this.convertLength(match[4], width);
+                                        x2 = boxRect.right - this.convertLength(match[2], width);
+                                        y2 = boxRect.bottom - this.convertLength(match[3], height);
                                     }
                                     else if (match[2]) {
-                                        x1 = convertLength(match[2]);
+                                        x1 = this.convertLength(match[2], width);
                                         x2 = boxRect.right - x1;
-                                        y2 = boxRect.bottom - (match[3] ? convertLength(match[3], false) : y1);
+                                        y2 = boxRect.bottom - (match[3] ? this.convertLength(match[3], height) : y1);
                                         x1 += boxRect.left;
                                     }
                                     else {
@@ -109,8 +106,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     return;
                                 }
                                 case 'polygon': {
-                                    const points = $util.objectMap<string, Point>(match[1].split($util.REGEXP_COMPILED.SEPARATOR), values => {
-                                        let [x, y] = $util.replaceMap<string, number>(values.trim().split(' '), (value, index) => convertLength(value, index === 0));
+                                    const points = $util.objectMap<string, Point>(match[1].split($regex.XML.SEPARATOR), values => {
+                                        let [x, y] = $util.replaceMap<string, number>(values.trim().split(' '), (value, index) => this.convertLength(value, index === 0 ? width : height));
                                         x += boxRect.left;
                                         y += boxRect.top;
                                         return { x, y };
@@ -123,22 +120,22 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 }
                                 default: {
                                     if (name === 'circle' || name === 'ellipse') {
+                                        const dimension = width < height ? width : height;
                                         let rx: number;
                                         let ry: number;
                                         if (name === 'circle') {
-                                            rx = convertLength(match[1], width < height);
+                                            rx = this.convertLength(match[1], dimension);
                                             ry = rx;
                                         }
                                         else {
-                                            rx = convertLength(match[1]);
-                                            ry = convertLength(match[2], false);
+                                            rx = this.convertLength(match[1], width);
+                                            ry = this.convertLength(match[2], height);
                                         }
                                         let cx = boxRect.left;
                                         let cy = boxRect.top;
                                         if (match.length >= 4) {
-                                            const horizontal = width < height;
-                                            cx += convertLength(match[match.length - 2], horizontal);
-                                            cy += convertLength(match[match.length - 1], horizontal);
+                                            cx += this.convertLength(match[match.length - 2], dimension);
+                                            cy += this.convertLength(match[match.length - 1], dimension);
                                         }
                                         if (parent) {
                                             cx = parent.refitX(cx);
@@ -162,11 +159,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             if ($util.isString(value)) {
                 switch (attr) {
                     case 'stroke-dasharray':
-                        value = $util.joinMap(value.split(/,\s*/), item => this.convertLength(item), ', ');
+                        value = value !== 'none' ? $util.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ') : '';
                         break;
                     case 'stroke-dashoffset':
                     case 'stroke-width':
-                        value = this.convertLength(value);
+                        value = this.convertLength(value).toString();
                         break;
                     case 'fill':
                     case 'stroke':
@@ -223,14 +220,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             return value;
         }
 
-        public convertLength(value: string) {
-            if ($util.isLength(value)) {
-                return $util.convertLength(value, 0, $css.getFontSize(this.element)).toString();
+        public convertLength(value: string, dimension?: string | number) {
+            if ($css.isLength(value)) {
+                return $css.parseUnit(value, $css.getFontSize(this.element));
             }
-            else if ($util.isPercent(value)) {
-                return $util.convertLength(value, this.element.getBoundingClientRect().width).toString();
+            else if ($css.isPercent(value)) {
+                return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * $util.convertFloat(value) / 100);
             }
-            return value;
+            return $util.convertFloat(value);
         }
 
         public resetPaint() {

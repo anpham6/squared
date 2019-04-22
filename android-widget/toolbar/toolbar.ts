@@ -11,6 +11,7 @@ type ToolbarThemeData = {
 };
 
 const $const = squared.base.lib.constant;
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $enum = squared.base.lib.enumeration;
 const $session = squared.lib.session;
@@ -130,7 +131,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         let collapsingToolbarNode: T | undefined;
         if (hasAppBar) {
             $util.assignEmptyValue(appBarOptions, 'android', 'id', `${node.documentId}_appbar`);
-            $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $util.formatPX(node.height) : 'wrap_content');
+            $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $css.formatPX(node.height) : 'wrap_content');
             $util.assignEmptyValue(appBarOptions, 'android', 'fitsSystemWindows', 'true');
             if (hasMenu) {
                 if (appBarOptions.android.theme) {

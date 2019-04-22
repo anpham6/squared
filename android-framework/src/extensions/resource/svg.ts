@@ -134,6 +134,7 @@ interface AnimateGroup {
 type AnimateCompanion = NumberValue<SvgAnimation>;
 
 const $util = squared.lib.util;
+const $css = squared.lib.css;
 const $math = squared.lib.math;
 const $xml = squared.lib.xml;
 const $constS = squared.svg.lib.constant;
@@ -567,7 +568,7 @@ function createFillGradient(gradient: Gradient, path: $SvgPath, precision?: numb
             }
             result.centerX = (cx + cxDiameter * getRadiusPercent(radial.cxAsString)).toString();
             result.centerY = (cy + cyDiameter * getRadiusPercent(radial.cyAsString)).toString();
-            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * ($util.isPercent(radial.rAsString) ? (parseFloat(radial.rAsString) / 100) : 1)).toString();
+            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * ($css.isPercent(radial.rAsString) ? (parseFloat(radial.rAsString) / 100) : 1)).toString();
             if (radial.spreadMethod) {
                 result.tileMode = getTileMode(radial.spreadMethod);
             }
@@ -591,7 +592,7 @@ const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
 
 const getVectorName = (target: SvgView, section: string, index = -1) => `${target.name}_${section + (index !== -1 ? `_${index + 1}` : '')}`;
 
-const getRadiusPercent = (value: string) => $util.isPercent(value) ? parseFloat(value) / 100 : 0.5;
+const getRadiusPercent = (value: string) => $css.isPercent(value) ? parseFloat(value) / 100 : 0.5;
 
 const getDrawableSrc = (name: string) => `@drawable/${name}`;
 
@@ -660,8 +661,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         'xmlns:android': XMLNS_ANDROID.android,
                         'xmlns:aapt': this.NAMESPACE_AAPT ? XMLNS_ANDROID.aapt : '',
                         'android:name': svg.name,
-                        'android:width': $util.formatPX(svg.width),
-                        'android:height': $util.formatPX(svg.height),
+                        'android:width': $css.formatPX(svg.width),
+                        'android:height': $css.formatPX(svg.height),
                         'android:viewportWidth': (svg.viewBox.width || svg.width).toString(),
                         'android:viewportHeight': (svg.viewBox.height || svg.height).toString(),
                         'android:alpha': parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : '',
@@ -1281,10 +1282,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         width *= scaleX;
                         height *= scaleY;
                         const imageData: ExternalData = {
-                            width: $util.formatPX(width),
-                            height: $util.formatPX(height),
-                            left: x !== 0 ? $util.formatPX(x) : '',
-                            top: y !== 0 ? $util.formatPX(y) : ''
+                            width: $css.formatPX(width),
+                            height: $css.formatPX(height),
+                            left: x !== 0 ? $css.formatPX(x) : '',
+                            top: y !== 0 ? $css.formatPX(y) : ''
                         };
                         const src = getDrawableSrc(Resource.addImage({ mdpi: image.href }));
                         if (image.rotateAngle) {

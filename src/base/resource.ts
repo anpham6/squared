@@ -8,15 +8,17 @@ import NodeList from './nodelist';
 import { NODE_RESOURCE } from './lib/enumeration';
 
 const $color = squared.lib.color;
+const $client = squared.lib.client;
 const $css = squared.lib.css;
 const $math = squared.lib.math;
+const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
-const $xml = squared.lib.xml;
 
-const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
-const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}|${$util.STRING_PATTERN.ANGLE}|(?:${$util.STRING_PATTERN.CALC}(?=,)|${$util.STRING_PATTERN.CALC}))?,?\\s*`;
+const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
+
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
+const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 
 function removeExcluded(node: Node, element: Element, attr: string) {
     let value: string = element[attr];
@@ -41,21 +43,21 @@ function parseColorStops(node: Node, gradient: Gradient, value: string, opacity:
             const item: ColorStop = { color, offset: -1 };
             if (gradient.type === 'conic') {
                 if (match[3] && match[4]) {
-                    item.offset = $util.convertAngle(match[3], match[4]) / 360;
+                    item.offset = $css.convertAngle(match[3], match[4]) / 360;
                 }
             }
             else if (match[2]) {
-                if ($util.isPercent(match[2])) {
+                if ($css.isPercent(match[2])) {
                     item.offset = parseFloat(match[2]) / 100;
                 }
                 else if (repeating) {
                     const horizontal = radial.horizontal;
                     const dimension = gradient.type === 'radial' ? radial.radius : (<Dimension> gradient.dimension)[horizontal ? 'width' : 'height'];
-                    if ($util.isLength(match[2])) {
+                    if ($css.isLength(match[2])) {
                         item.offset = node.parseUnit(match[2], horizontal, false) / dimension;
                     }
-                    else if ($util.isCalc(match[2])) {
-                        item.offset = $util.calculate(match[6], dimension, node.fontSize) / dimension;
+                    else if ($css.isCalc(match[2])) {
+                        item.offset = $css.calculate(match[6], dimension, node.fontSize) / dimension;
                     }
                 }
                 if (repeating && item.offset !== -1) {
@@ -124,7 +126,7 @@ function parseColorStops(node: Node, gradient: Gradient, value: string, opacity:
 
 function parseAngle(value: string) {
     if (value) {
-        let degree = $util.parseAngle(value.trim());
+        let degree = $css.parseAngle(value.trim());
         if (degree < 0) {
             degree += 360;
         }
@@ -134,7 +136,7 @@ function parseAngle(value: string) {
 }
 
 function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: string): [string, boolean] {
-    value = value.replace($xml.REGEXP_ESCAPE.U00A0, '&#160;');
+    value = value.replace($regex.ESCAPE.U00A0, '&#160;');
     switch (node.css('whiteSpace')) {
         case 'nowrap':
             value = value.replace(/\n/g, ' ');
@@ -155,10 +157,10 @@ function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: st
             break;
         default:
             if (element.previousSibling && $session.causesLineBreak(<Element> element.previousSibling, node.sessionId)) {
-                value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
+                value = value.replace($regex.CHAR.LEADINGSPACE, '');
             }
             if (element.nextSibling && $session.causesLineBreak(<Element> element.nextSibling, node.sessionId)) {
-                value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, '');
+                value = value.replace($regex.CHAR.TRAILINGSPACE, '');
             }
             return [value, false];
     }
@@ -167,29 +169,29 @@ function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: st
 
 function getBackgroundSize(node: Node, index: number, value?: string) {
     if (value) {
-        const sizes = value.split($util.REGEXP_COMPILED.SEPARATOR);
+        const sizes = value.split($regex.XML.SEPARATOR);
         return Resource.getBackgroundSize(node, sizes[index % sizes.length]);
     }
     return undefined;
 }
 
 function applyTextTransform(type: string, value: string) {
-    value = value.replace($xml.REGEXP_ESCAPE.AMP, '&amp;');
+    value = value.replace($regex.ESCAPE.AMP, '&amp;');
     if (type === 'none' || type === 'initial') {
         return value;
     }
-    const words = value.split($util.REGEXP_COMPILED.BREAKWORD);
+    const words = value.split($regex.XML.BREAKWORD);
     switch (type) {
         case 'uppercase':
             for (const word of words) {
-                if (!$util.REGEXP_COMPILED.ENTITY.test(word)) {
+                if (!$regex.XML.ENTITY.test(word)) {
                     value = value.replace(word, word.toUpperCase());
                 }
             }
             break;
         case 'lowercase':
             for (const word of words) {
-                if (!$util.REGEXP_COMPILED.ENTITY.test(word)) {
+                if (!$regex.XML.ENTITY.test(word)) {
                     value = value.replace(word, word.toLowerCase());
                 }
             }
@@ -704,7 +706,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             let fontFamily = node.css('fontFamily').trim();
             let fontSize = node.css('fontSize');
             let fontWeight = node.css('fontWeight');
-            if ($util.isUserAgent($util.USER_AGENT.EDGE) && !node.has('fontFamily')) {
+            if ($client.isUserAgent($client.USER_AGENT.EDGE) && !node.has('fontFamily')) {
                 switch (node.tagName) {
                     case 'TT':
                     case 'CODE':
@@ -832,7 +834,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 }
                                 break;
                             case 'file':
-                                value = $util.isUserAgent($util.USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
+                                value = $client.isUserAgent($client.USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
                                 break;
                         }
                         break;
@@ -858,7 +860,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 value = removeExcluded(node, element, 'innerHTML');
                             }
                             else if (Resource.hasLineBreak(node, true)) {
-                                value = applyTextTransform(transform, removeExcluded(node, element, 'innerHTML')).replace(REGEXP_LINEBREAK, '\\n').replace($util.REGEXP_COMPILED.TAGNAME_G, '');
+                                value = applyTextTransform(transform, removeExcluded(node, element, 'innerHTML')).replace(REGEXP_LINEBREAK, '\\n').replace($regex.XML.TAGNAME_G, '');
                             }
                             else {
                                 value = applyTextTransform(transform, removeExcluded(node, element, 'textContent'));
@@ -876,31 +878,31 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         const previousSibling = node.previousSiblings().pop();
                         let previousSpaceEnd = false;
                         if (value.length > 1) {
-                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $util.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.textContent)) {
-                                value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
+                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $regex.CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
+                                value = value.replace($regex.CHAR.LEADINGSPACE, '');
                             }
                             else if (previousSibling.element) {
-                                previousSpaceEnd = $util.REGEXP_COMPILED.TRAILINGSPACE.test((<HTMLElement> previousSibling.element).innerHTML || (<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
+                                previousSpaceEnd = $regex.CHAR.TRAILINGSPACE.test((<HTMLElement> previousSibling.element).innerHTML || (<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
                             }
                         }
                         if (inlined) {
                             const original = value;
                             value = value.trim();
-                            if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $util.REGEXP_COMPILED.LEADINGSPACE.test(original)) {
+                            if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $regex.CHAR.LEADINGSPACE.test(original)) {
                                 value = '&#160;' + value;
                             }
-                            if (!node.lineBreakTrailing && $util.REGEXP_COMPILED.TRAILINGSPACE.test(original)) {
+                            if (!node.lineBreakTrailing && $regex.CHAR.TRAILINGSPACE.test(original)) {
                                 value += '&#160;';
                             }
                         }
                         else if (value.trim() !== '') {
-                            value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, previousSibling && (
+                            value = value.replace($regex.CHAR.LEADINGSPACE, previousSibling && (
                                 previousSibling.block ||
                                 previousSibling.lineBreak ||
                                 previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
                                 node.multiline && Resource.hasLineBreak(node)) ? '' : '&#160;'
                             );
-                            value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : '&#160;');
+                            value = value.replace($regex.CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : '&#160;');
                         }
                         else if (!node.inlineText) {
                             return;

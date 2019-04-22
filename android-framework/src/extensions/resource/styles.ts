@@ -5,6 +5,7 @@ import View from '../../view';
 
 import { createStyleAttribute } from '../../lib/util';
 
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const REGEXP_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;
@@ -91,7 +92,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
         for (const name in styles) {
             const items: NameValue[] = [];
             for (const attr in styles[name]) {
-                const match = $util.REGEXP_COMPILED.ATTRIBUTE.exec(styles[name][attr]);
+                const match = $regex.XML.ATTRIBUTE.exec(styles[name][attr]);
                 if (match) {
                     items.push({ name: match[1], value: match[2] });
                 }

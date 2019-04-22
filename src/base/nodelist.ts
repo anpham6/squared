@@ -1,5 +1,6 @@
 import Node from './node';
 
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 export interface LinearData<T> {
@@ -58,7 +59,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
-        const baseline = $util.filterArray(list, item => !item.baselineAltered && (item.baseline || $util.isLength(item.verticalAlign)) && !item.floating && (item.length === 0 || item.every(child => child.baseline)));
+        const baseline = $util.filterArray(list, item => !item.baselineAltered && (item.baseline || $css.isLength(item.verticalAlign)) && !item.floating && (item.length === 0 || item.every(child => child.baseline)));
         if (baseline.length) {
             list = baseline;
         }

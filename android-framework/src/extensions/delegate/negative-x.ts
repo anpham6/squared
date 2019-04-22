@@ -6,7 +6,7 @@ import $Layout = squared.base.Layout;
 type View = android.base.View;
 
 const $enum = squared.base.lib.enumeration;
-const $util = squared.lib.util;
+const $css = squared.lib.css;
 
 function outsideX(node: View, parent: View) {
     return !node.pageFlow && node.absoluteParent === parent && (node.left < 0 || !node.has('left') && node.right < 0);
@@ -45,14 +45,14 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
                 node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, offset);
                 for (const item of outside) {
                     if (item.left < 0) {
-                        item.css('left', $util.formatPX(item.left + offset), true);
+                        item.css('left', $css.formatPX(item.left + offset), true);
                     }
                 }
             }
             else {
                 for (const item of outside) {
                     if (item.left < 0) {
-                        item.css('left', $util.formatPX(node.marginLeft + item.left), true);
+                        item.css('left', $css.formatPX(node.marginLeft + item.left), true);
                     }
                 }
                 offset = 0;
@@ -70,14 +70,14 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
                 node.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, offset);
                 for (const item of outside) {
                     if (item.right < 0) {
-                        item.css('right', $util.formatPX(item.right + offset), true);
+                        item.css('right', $css.formatPX(item.right + offset), true);
                     }
                 }
             }
             else {
                 for (const item of outside) {
                     if (item.right < 0) {
-                        item.css('right', $util.formatPX(node.marginRight + item.right), true);
+                        item.css('right', $css.formatPX(node.marginRight + item.right), true);
                     }
                 }
                 offset = 0;

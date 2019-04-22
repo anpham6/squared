@@ -1,6 +1,18 @@
 import { parseColor } from './color';
+import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
+import { CSS, STRING, UNIT, XML } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertInt, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, fromLastIndexOf, getDeviceDPI, isCustomProperty, isLength, isNumber, isPercent, isString, isUserAgent, parseUnit, replaceMap, resolvePath } from './util';
+import { convertFloat, capitalize, convertAlpha, convertInt, convertRoman, convertCamelCase, fromLastIndexOf, isNumber, isString, replaceMap, resolvePath } from './util';
+
+const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+
+function convertLength(value: string, dimension: number, fontSize?: number) {
+    return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
+}
+
+function convertPercent(value: string, dimension: number, fontSize?: number) {
+    return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
+}
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -30,10 +42,9 @@ export function hasComputedStyle(element: Element | null): element is HTMLElemen
 }
 
 export function getSpecificity(value: string) {
-    const pattern = new RegExp(STRING_PATTERN.SELECTOR, 'g');
     let result = 0;
     let match: RegExpExecArray | null;
-    while ((match = pattern.exec(value.trim())) !== null) {
+    while ((match = CSS.SELECTOR_G.exec(value.trim())) !== null) {
         if (match[0]) {
             if (match[1]) {
                 let check = true;
@@ -200,7 +211,7 @@ export function getKeyframeRules(): CSSRuleData {
                             for (let k = 0; k < item.cssRules.length; k++) {
                                 const match = pattern.exec(item.cssRules[k].cssText);
                                 if (match) {
-                                    for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
+                                    for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
                                         percent = percent.trim();
                                         switch (percent) {
                                             case 'from':
@@ -261,17 +272,16 @@ export function validMediaRule(value: string, fontSize?: number) {
                         return unit === range;
                 }
             }
-            const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
             if (!fontSize) {
                 fontSize = getFontSize(document.body);
             }
             let match: RegExpExecArray | null;
-            while ((match = pattern.exec(value)) !== null) {
+            while ((match = REGEXP_MEDIARULE.exec(value)) !== null) {
                 const negate = match[1] === 'not';
-                const patternCondition = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+                const pattern = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
                 let condition: RegExpExecArray | null;
                 let valid = false;
-                while ((condition = patternCondition.exec(match[2])) !== null) {
+                while ((condition = pattern.exec(match[2])) !== null) {
                     const attr = condition[1];
                     let operation: string;
                     if (condition[1].startsWith('min')) {
@@ -385,7 +395,7 @@ export function getInheritedStyle(element: Element | null, attr: string, exclude
 export function parseVar(element: HTMLElement | SVGElement, value: string) {
     const style = getStyle(element);
     let match: RegExpMatchArray | null;
-    while ((match = new RegExp(`${STRING_PATTERN.VAR}`).exec(value)) !== null) {
+    while ((match = new RegExp(STRING.CSS_VAR).exec(value)) !== null) {
         let propertyValue = style.getPropertyValue(match[1]).trim();
         if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) !== undefined && parseColor(propertyValue) === undefined)) {
             propertyValue = match[2];
@@ -541,8 +551,9 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     }
     if (srcset !== '') {
         const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
-        for (const src of srcset.split(REGEXP_COMPILED.SEPARATOR)) {
-            const match = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/.exec(src.trim());
+        const pattern = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
+        for (const src of srcset.split(XML.SEPARATOR)) {
+            const match = pattern.exec(src.trim());
             if (match) {
                 let width = 0;
                 let pixelRatio = 0;
@@ -565,11 +576,15 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
             }
         }
         result.sort((a, b) => {
-            if (a.pixelRatio !== b.pixelRatio) {
-                return a.pixelRatio < b.pixelRatio ? -1 : 1;
+            if (a.pixelRatio > 0 && b.pixelRatio > 0) {
+                if (a.pixelRatio !== b.pixelRatio) {
+                    return a.pixelRatio < b.pixelRatio ? -1 : 1;
+                }
             }
-            else if (a.width !== b.width) {
-                return a.width < b.width ? -1 : 1;
+            else if (a.width > 0 && b.width > 0) {
+                if (a.width !== b.width) {
+                    return a.width < b.width ? -1 : 1;
+                }
             }
             return 0;
         });
@@ -578,17 +593,17 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         result.push({ src: element.src, pixelRatio: 1, width: 0 });
     }
     else if (result.length > 1 && isString(sizes)) {
-        const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING_PATTERN.LENGTH}\\))?\\s*(.+)`);
+        const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH}\\))?\\s*(.+)`);
         const fontSize = getFontSize(document.body);
         let width = 0;
-        for (const value of sizes.split(REGEXP_COMPILED.SEPARATOR)) {
+        for (const value of sizes.split(XML.SEPARATOR)) {
             const match = pattern.exec(value.trim());
             if (match) {
                 if (match[1] && !validMediaRule(match[1], fontSize)) {
                     continue;
                 }
                 if (match[4]) {
-                    const calcMatch = REGEXP_COMPILED.CALC.exec(match[4]);
+                    const calcMatch = CSS.CALC.exec(match[4]);
                     if (calcMatch) {
                         width = calculate(calcMatch[1]) || 0;
                     }
@@ -602,10 +617,11 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
             }
         }
         if (width > 0) {
-            const deviceWidth = width * window.devicePixelRatio;
+            const resolution = width * window.devicePixelRatio;
             let index = -1;
             for (let i = 0; i < result.length; i++) {
-                if (result[i].width <= deviceWidth && (index === -1 || result[index].width < result[i].width)) {
+                const imageWidth = result[i].width;
+                if (imageWidth > 0 && imageWidth <= resolution && (index === -1 || result[index].width < imageWidth)) {
                     index = i;
                 }
             }
@@ -651,7 +667,7 @@ export function convertListStyle(name: string, value: number, valueAsDefault = f
 }
 
 export function resolveURL(value: string) {
-    const match = REGEXP_COMPILED.URL.exec(value);
+    const match = CSS.URL.exec(value);
     return match ? resolvePath(match[1]) : '';
 }
 
@@ -671,4 +687,242 @@ export function insertStyleSheetRule(value: string, index = 0) {
         }
     }
     return style;
+}
+
+export function convertAngle(value: string, unit = 'deg') {
+    let angle = parseFloat(value);
+    if (!isNaN(angle)) {
+        switch (unit) {
+            case 'rad':
+                angle *= 180 / Math.PI;
+                break;
+            case 'grad':
+                angle /= 400;
+            case 'turn':
+                angle *= 360;
+                break;
+        }
+        return angle;
+    }
+    return 0;
+}
+
+export function convertPX(value: string, fontSize?: number) {
+    if (value) {
+        value = value.trim();
+        if (value.endsWith('%') || value === 'auto') {
+            return value;
+        }
+        return `${parseUnit(value, fontSize)}px`;
+    }
+    return '0px';
+}
+
+export function calculate(value: string, dimension = 0, fontSize?: number) {
+    value = value.trim();
+    if (value.charAt(0) !== '(' || value.charAt(value.length - 1) !== ')') {
+        value = `(${value})`;
+    }
+    const opening: boolean[] = [];
+    const closing: number[] = [];
+    let opened = 0;
+    for (let i = 0; i < value.length; i++) {
+        switch (value.charAt(i)) {
+            case '(':
+                opened++;
+                opening[i] = true;
+                break;
+            case ')':
+                closing.push(i);
+                break;
+        }
+    }
+    if (opened === closing.length) {
+        const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
+        const placeholder = /{(\d+)}/;
+        const equated: number[] = [];
+        let index = 0;
+        while (true) {
+            for (let i = 0; i < closing.length; i++) {
+                let j = closing[i] - 1;
+                let valid = false;
+                for ( ; j >= 0; j--) {
+                    if (opening[j]) {
+                        valid = true;
+                        opening[j] = false;
+                        break;
+                    }
+                    else if (closing.includes(j)) {
+                        break;
+                    }
+                }
+                if (valid) {
+                    const seg: number[] = [];
+                    const evaluate: string[] = [];
+                    for (let partial of value.substring(j + 1, closing[i]).split(symbol)) {
+                        partial = partial.trim();
+                        switch (partial) {
+                            case '+':
+                            case '-':
+                            case '*':
+                            case '/':
+                                evaluate.push(partial);
+                                break;
+                            default:
+                                const match = placeholder.exec(partial);
+                                if (match) {
+                                    seg.push(equated[parseInt(match[1])]);
+                                }
+                                else if (isLength(partial)) {
+                                    seg.push(parseUnit(partial, fontSize));
+                                }
+                                else if (isPercent(partial)) {
+                                    seg.push(parseFloat(partial) / 100 * dimension);
+                                }
+                                else if (isAngle(partial)) {
+                                    seg.push(parseAngle(partial));
+                                }
+                                else {
+                                    return undefined;
+                                }
+                                break;
+                        }
+                    }
+                    if (seg.length !== evaluate.length + 1) {
+                        return undefined;
+                    }
+                    for (let k = 0; k < evaluate.length; k++) {
+                        if (evaluate[k] === '/') {
+                            if (Math.abs(seg[k + 1]) !== 0) {
+                                seg.splice(k, 2, seg[k] / seg[k + 1]);
+                                evaluate.splice(k--, 1);
+                            }
+                            else {
+                                return undefined;
+                            }
+                        }
+                    }
+                    for (let k = 0; k < evaluate.length; k++) {
+                        if (evaluate[k] === '*') {
+                            seg.splice(k, 2, seg[k] * seg[k + 1]);
+                            evaluate.splice(k--, 1);
+                        }
+                    }
+                    for (let k = 0; k < evaluate.length; k++) {
+                        seg.splice(k, 2, seg[k] + (evaluate[k] === '-' ? -seg[k + 1] : seg[k + 1]));
+                        evaluate.splice(k--, 1);
+                    }
+                    if (seg.length === 1) {
+                        if (closing.length === 1) {
+                            return seg[0];
+                        }
+                        else {
+                            equated[index] = seg[0];
+                            const hash = `{${index++}}`;
+                            const remaining = closing[i] + 1;
+                            value = value.substring(0, j) + `${hash + ' '.repeat(remaining - (j + hash.length))}` + value.substring(remaining);
+                            closing.splice(i--, 1);
+                        }
+                    }
+                    else {
+                        return undefined;
+                    }
+                }
+            }
+        }
+    }
+    return undefined;
+}
+
+export function parseUnit(value: string, fontSize?: number) {
+    if (value) {
+        const match = UNIT.LENGTH.exec(value);
+        if (match) {
+            let result = parseFloat(match[1]);
+            switch (match[2]) {
+                case 'px':
+                    return result;
+                case 'em':
+                case 'ch':
+                    result *= fontSize || 16;
+                    break;
+                case 'rem':
+                    result *= getFontSize(document.body) || 16;
+                    break;
+                case 'pc':
+                    result *= 12;
+                case 'pt':
+                    result *= 4 / 3;
+                    break;
+                case 'mm':
+                    result /= 10;
+                case 'cm':
+                    result /= 2.54;
+                case 'in':
+                    result *= getDeviceDPI();
+                    break;
+                case 'vw':
+                    result *= window.innerWidth / 100;
+                    break;
+                case 'vh':
+                    result *= window.innerHeight / 100;
+                    break;
+                case 'vmin':
+                    result *= Math.min(window.innerWidth, window.innerHeight) / 100;
+                    break;
+                case 'vmax':
+                    result *= Math.max(window.innerWidth, window.innerHeight) / 100;
+                    break;
+            }
+            return result;
+        }
+    }
+    return 0;
+}
+
+export function parseAngle(value: string) {
+    if (value) {
+        const match = CSS.ANGLE.exec(value);
+        if (match) {
+            return convertAngle(match[1], match[2]);
+        }
+    }
+    return 0;
+}
+
+export function formatPX(value: string | number) {
+    if (typeof value === 'string') {
+        value = parseFloat(value);
+    }
+    return isNaN(value) ? '0px' : `${Math.round(value)}px`;
+}
+
+export function formatPercent(value: string | number, round = true) {
+    if (typeof value === 'string') {
+        value = parseFloat(value);
+        if (isNaN(value)) {
+            return '0%';
+        }
+    }
+    return `${round ? Math.round(value) : value}%`;
+}
+
+export function isLength(value: string, percent = false) {
+    return UNIT.LENGTH.test(value) || percent && isPercent(value);
+}
+
+export function isCalc(value: string) {
+    return CSS.CALC.test(value);
+}
+
+export function isCustomProperty(value: string) {
+    return CSS.CUSTOMPROPERTY.test(value);
+}
+
+export function isAngle(value: string) {
+    return CSS.ANGLE.test(value);
+}
+
+export function isPercent(value: string) {
+    return UNIT.PERCENT.test(value);
 }

@@ -11,6 +11,7 @@ import $Layout = squared.base.Layout;
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
@@ -252,7 +253,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                     }
                     if (unit === 'auto' || unit === 'min-content' || unit === 'max-content') {
-                        if (cellSpan < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $util.isLength(value)) || unit === 'min-content')) {
+                        if (cellSpan < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $css.isLength(value)) || unit === 'min-content')) {
                             size = node.bounds[dimension];
                             minSize = 0;
                             sizeWeight = 0;
@@ -264,7 +265,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                         break;
                     }
-                    else if ($util.isPercent(unit)) {
+                    else if ($css.isPercent(unit)) {
                         sizeWeight += parseFloat(unit) / 100;
                         minSize = size;
                         size = 0;
@@ -319,7 +320,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     item.android(`layout_${direction}Span`, cellSpan.toString());
                 }
                 if (minSize > 0 && !item.has(minDimension)) {
-                    item.css(minDimension, $util.formatPX(minSize), true);
+                    item.css(minDimension, $css.formatPX(minSize), true);
                 }
                 if (sizeWeight > 0) {
                     item.android(`layout_${direction}Weight`, $math.truncate(sizeWeight, node.localSettings.floatPrecision));
@@ -331,11 +332,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 else if (size > 0) {
                     const maxDimension = `max${$util.capitalize(dimension)}`;
                     if (fitContent && !item.has(maxDimension)) {
-                        item.css(maxDimension, $util.formatPX(size), true);
+                        item.css(maxDimension, $css.formatPX(size), true);
                         item.mergeGravity('layout_gravity', direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
                     }
                     else if (!item.has(dimension)) {
-                        item.css(dimension, $util.formatPX(size), true);
+                        item.css(dimension, $css.formatPX(size), true);
                     }
                 }
                 return [cellStart, cellSpan];
@@ -456,7 +457,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         node.cssPX('width', columnGap, false, true);
                     }
                     if (!node.has('width') && node.has('maxWidth')) {
-                        node.css('width', $util.formatPX(node.actualWidth + columnGap), true);
+                        node.css('width', $css.formatPX(node.actualWidth + columnGap), true);
                     }
                 }
             }
@@ -468,7 +469,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         if (mainData) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             const lastChild = Array.from(mainData.children)[mainData.children.size - 1];
-            if (mainData.column.unit.length && mainData.column.unit.every(value => $util.isPercent(value))) {
+            if (mainData.column.unit.length && mainData.column.unit.every(value => $css.isPercent(value))) {
                 const percentTotal = mainData.column.unit.reduce((a, b) => a + parseFloat(b), 0);
                 if (percentTotal < 100) {
                     node.android('columnCount', (mainData.column.count + 1).toString());
@@ -476,13 +477,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         controller.addAfterOutsideTemplate(
                             lastChild.id,
                             controller.renderSpace(
-                                $util.formatPercent(100 - percentTotal),
+                                $css.formatPercent(100 - percentTotal),
                                 'wrap_content',
                                 0,
                                 0,
                                 createViewAttribute({
                                     android: {
-                                        [node.localizeString(BOX_ANDROID.MARGIN_LEFT)]: $util.formatPX(mainData.column.gap),
+                                        [node.localizeString(BOX_ANDROID.MARGIN_LEFT)]: $css.formatPX(mainData.column.gap),
                                         layout_row: i.toString(),
                                         layout_column: mainData.column.count.toString()
                                     }
@@ -501,7 +502,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 lastChild.id,
                                 controller.renderSpace(
                                     'wrap_content',
-                                    $util.formatPX(mainData.row.gap),
+                                    $css.formatPX(mainData.row.gap),
                                     0,
                                     0,
                                     createViewAttribute({

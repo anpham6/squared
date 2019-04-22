@@ -66,7 +66,7 @@ declare global {
             setAttribute(attr: string, computed?: boolean): void;
             getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
             resetPaint(): void;
-            convertLength(value: string): string;
+            convertLength(value: string, dimension?: string | number): number;
         }
 
         class SvgBuild {

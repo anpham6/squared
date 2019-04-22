@@ -7,9 +7,9 @@ import { RESERVED_JAVA } from './lib/constant';
 const $Resource = squared.base.Resource;
 const $color = squared.lib.color;
 const $css = squared.lib.css;
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
-const REGEXP_NONENTITY = /&(?!#?[A-Za-z0-9]{2,};)/g;
 const REGEXP_NONWORD = /[^\w+]/g;
 
 const DIRECTORY_THEME = 'res/values';
@@ -38,7 +38,7 @@ function formatObject(obj: {}, numberAlias = false) {
                         break;
                     case 'src':
                     case 'srcCompat':
-                        if ($util.REGEXP_COMPILED.PROTOCOL.test(value)) {
+                        if ($regex.PREFIX.PROTOCOL.test(value)) {
                             value = Resource.addImage({ mdpi: value });
                             if (value !== '') {
                                 obj[attr] = `@drawable/${value}`;
@@ -59,10 +59,6 @@ function formatObject(obj: {}, numberAlias = false) {
     }
 }
 
-function escapeNonEntity(value: string) {
-    return value.replace(REGEXP_NONENTITY, '&amp;');
-}
-
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
     public static formatOptions(options: ExternalData, numberAlias = false) {
         for (const namespace in options) {
@@ -75,7 +71,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     }
 
     public static formatName(value: string) {
-        if ($util.REGEXP_COMPILED.LEADINGNUMBER.test(value)) {
+        if ($regex.CHAR.LEADINGNUMBER.test(value)) {
             value = '__' + value;
         }
         return value.replace(REGEXP_NONWORD, '_');
@@ -133,7 +129,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         return resourceName;
                     }
                 }
-                const partial = $util.trimString(name.replace($util.REGEXP_COMPILED.NONWORD_G, '_'), '_').split(/_+/);
+                const partial = $util.trimString(name.replace($regex.XML.NONWORD_G, '_'), '_').split(/_+/);
                 if (partial.length > 1) {
                     if (partial.length > 4) {
                         partial.length = 4;
@@ -144,7 +140,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     name = partial[0];
                 }
                 name = name.toLowerCase();
-                if (numeric || $util.REGEXP_COMPILED.LEADINGNUMBER.test(name) || RESERVED_JAVA.includes(name)) {
+                if (numeric || $regex.CHAR.LEADINGNUMBER.test(name) || RESERVED_JAVA.includes(name)) {
                     name = `__${name}`;
                 }
                 else if (name === '') {
@@ -153,7 +149,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 if (STORED.strings.has(name)) {
                     name = Resource.generateId('string', name);
                 }
-                STORED.strings.set(name, escapeNonEntity(value));
+                STORED.strings.set(name, value);
             }
             return name;
         }

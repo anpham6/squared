@@ -8,9 +8,9 @@ import NodeList from './nodelist';
 import { NODE_TEMPLATE } from './lib/enumeration';
 
 const $color = squared.lib.color;
+const $client = squared.lib.client;
 const $css = squared.lib.css;
 const $session = squared.lib.session;
-const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
@@ -67,7 +67,7 @@ export default abstract class Controller<T extends Node> implements squared.base
         }
         else {
             styleMap = $session.getElementCache(element, 'styleMap', this.application.processing.sessionId) || {};
-            if ($util.isUserAgent($util.USER_AGENT.FIREFOX)) {
+            if ($client.isUserAgent($client.USER_AGENT.FIREFOX)) {
                 switch (element.tagName) {
                     case 'INPUT':
                     case 'SELECT':
@@ -141,7 +141,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                         if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
                             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                             if (match) {
-                                styleMap[attr] = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * $session.getClientRect(element.parentElement || element, this.application.processing.sessionId)[attr] : match[1]);
+                                styleMap[attr] = $css.formatPX($css.isPercent(match[1]) ? parseFloat(match[1]) / 100 * $session.getClientRect(element.parentElement || element, this.application.processing.sessionId)[attr] : match[1]);
                             }
                             else if (element.tagName === 'IFRAME') {
                                 if (attr ===  'width') {
@@ -151,10 +151,10 @@ export default abstract class Controller<T extends Node> implements squared.base
                                     styleMap.height = '150px';
                                 }
                             }
-                            else if ($util.isLength(styleMap[opposing]) && !(styleMap.maxWidth && $util.isPercent(styleMap.maxWidth) || styleMap.maxHeight && $util.isPercent(styleMap.maxHeight))) {
+                            else if ($css.isLength(styleMap[opposing]) && !(styleMap.maxWidth && $css.isPercent(styleMap.maxWidth) || styleMap.maxHeight && $css.isPercent(styleMap.maxHeight))) {
                                 const image = this.application.session.image.get((<HTMLImageElement> element).src);
                                 if (image && image.width > 0 && image.height > 0) {
-                                    styleMap[attr] = $util.formatPX(image[attr] * (styleMap[opposing] && $util.isLength(styleMap[opposing]) ? parseFloat(styleMap[opposing]) / image[opposing] : 1));
+                                    styleMap[attr] = $css.formatPX(image[attr] * (styleMap[opposing] && $css.isLength(styleMap[opposing]) ? parseFloat(styleMap[opposing]) / image[opposing] : 1));
                                 }
                             }
                         }

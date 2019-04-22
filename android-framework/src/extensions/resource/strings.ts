@@ -5,6 +5,7 @@ import Resource from '../../resource';
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -82,9 +83,9 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                 }
                             }
                             if (node.css('fontVariant') === 'small-caps') {
-                                const words = value.split($util.REGEXP_COMPILED.BREAKWORD);
+                                const words = value.split($regex.XML.BREAKWORD);
                                 for (const word of words) {
-                                    if (!$util.REGEXP_COMPILED.ENTITY.test(word)) {
+                                    if (!$regex.XML.ENTITY.test(word)) {
                                         value = value.replace(word, word.toUpperCase());
                                     }
                                 }

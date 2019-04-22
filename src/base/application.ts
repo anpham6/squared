@@ -12,10 +12,11 @@ import { APP_SECTION, BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE
 
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
-const REGEXP_CACHED: ObjectMap<RegExp> = {};
 let NodeConstructor!: Constructor<Node>;
 
 function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[], documentRoot: HTMLElement | null = null) {
@@ -23,7 +24,7 @@ function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: 
     let current: HTMLElement | null = element;
     while (current) {
         if (current.dataset.use) {
-            for (const value of current.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR)) {
+            for (const value of current.dataset.use.split($regex.XML.SEPARATOR)) {
                 tagged.push(value);
             }
         }
@@ -49,21 +50,6 @@ function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: 
         return $util.concatArray($util.spliceArray(result, item => item === undefined), untagged);
     }
     return extensions;
-}
-
-function isPlainText(value: string) {
-    for (let i = 0; i < value.length; i++) {
-        switch (value.charCodeAt(i)) {
-            case 9:
-            case 10:
-            case 13:
-            case 32:
-                continue;
-            default:
-                return true;
-        }
-    }
-    return false;
 }
 
 export default class Application<T extends Node> implements squared.base.Application<T> {
@@ -243,7 +229,6 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         const documentRoot = this.rootElements.values().next().value;
-        const fileExtension = new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`);
         const preloadImages: HTMLImageElement[] = [];
         const parseResume = () => {
             this.initialized = false;
@@ -260,7 +245,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const iteration = (element.dataset.iteration ? $util.convertInt(element.dataset.iteration) : -1) + 1;
                 element.dataset.iteration = iteration.toString();
                 if (this.createCache(element)) {
-                    const filename = element.dataset.filename && element.dataset.filename.replace(fileExtension, '') || element.id || `document_${this.length}`;
+                    const filename = element.dataset.filename && element.dataset.filename.replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
                     element.dataset.layoutName = $util.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
                     this.setBaseLayout(element.dataset.layoutName);
                     this.setConstraints();
@@ -1639,7 +1624,7 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     protected insertNode(element: Element, parent?: T) {
         if (element.nodeName === '#text') {
-            if (isPlainText(element.textContent as string) || $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
+            if ($xml.isPlainText(element.textContent as string) || $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode(element, false);
                 if (parent) {
@@ -1668,7 +1653,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected conditionElement(element: HTMLElement) {
-        if (this.controllerHandler.includeElement(element) || element.dataset.use && element.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
+        if (this.controllerHandler.includeElement(element) || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
             return true;
         }
         else {
@@ -1711,7 +1696,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 styleMap.fontFamily = style.getPropertyValue('font-family');
             }
             if (styleMap.fontSize) {
-                styleMap.fontSize = $util.convertPX(styleMap.fontSize, $util.parseUnit($css.getStyle(document.body).getPropertyValue('font-size')));
+                styleMap.fontSize = $css.convertPX(styleMap.fontSize, $css.getFontSize(document.body));
             }
             else {
                 styleMap.fontSize = style.getPropertyValue('font-size');
@@ -1756,12 +1741,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     else {
-                        if (REGEXP_CACHED.CSS_CONTENT === undefined) {
-                            REGEXP_CACHED.CSS_CONTENT = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
-                        }
+                        const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
                         let match: RegExpExecArray | null;
                         let found = false;
-                        while ((match = REGEXP_CACHED.CSS_CONTENT.exec(value)) !== null) {
+                        while ((match = pattern.exec(value)) !== null) {
                             if (match[1]) {
                                 content += $dom.getNamedItem(element, match[1].trim());
                             }
@@ -1779,9 +1762,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 }
                                 function getCounterValue(name: string) {
                                     if (name !== 'none') {
-                                        const pattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
+                                        const counterPattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
                                         let counterMatch: RegExpExecArray | null;
-                                        while ((counterMatch = pattern.exec(name)) !== null) {
+                                        while ((counterMatch = counterPattern.exec(name)) !== null) {
                                             if (counterMatch[1] === counterName) {
                                                 return parseInt(counterMatch[2]);
                                             }
@@ -1967,13 +1950,13 @@ export default class Application<T extends Node> implements squared.base.Applica
         for (const attr of Array.from(item.style)) {
             fromRule.push($util.convertCamelCase(attr));
         }
-        for (const selectorText of item.selectorText.split($util.REGEXP_COMPILED.SEPARATOR)) {
+        for (const selectorText of item.selectorText.split($regex.XML.SEPARATOR)) {
             const specificity = $css.getSpecificity(selectorText);
             const [selector, target] = selectorText.split('::');
             const targetElt = target ? '::' + target : '';
             document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
                 const style = $css.getStyle(element, targetElt);
-                const fontSize = $util.parseUnit(style.getPropertyValue('font-size'));
+                const fontSize = $css.parseUnit(style.getPropertyValue('font-size'));
                 const styleMap: StringMap = {};
                 for (const attr of fromRule) {
                     const value = $css.checkStyleValue(element, attr, item.style[attr], style, specificity, fontSize);
@@ -1983,7 +1966,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 const backgroundImage = styleMap.backgroundImage && styleMap.backgroundImage !== 'initial';
                 if (this.userSettings.preloadImages && (backgroundImage || styleMap.content && styleMap.content.startsWith('url('))) {
-                    for (const value of backgroundImage ? styleMap.backgroundImage.split($util.REGEXP_COMPILED.SEPARATOR) : [styleMap.content]) {
+                    for (const value of backgroundImage ? styleMap.backgroundImage.split($regex.XML.SEPARATOR) : [styleMap.content]) {
                         const uri = $css.resolveURL(value.trim());
                         if (uri !== '' && !this.session.image.has(uri)) {
                             this.session.image.set(uri, { width: 0, height: 0, uri });

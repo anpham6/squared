@@ -1,3 +1,4 @@
+import { ESCAPE } from './regex';
 import { joinMap } from './util';
 
 type XMLTagData = {
@@ -9,24 +10,28 @@ type XMLTagData = {
 
 const REGEXP_INDENT = /^(\t+)(.*)$/;
 
-export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
-export const REGEXP_ESCAPE = {
-    ENTITY: /&#(\d+);/g,
-    NBSP: /&nbsp;/g,
-    AMP: /&/g,
-    LT: /</g,
-    GT: />/g,
-    SINGLEQUOTE: /'/g,
-    DOUBLEQUOTE: /"/g,
-    U00A0: /\u00A0/g,
-    U2002: /\u2002/g,
-    U2003: /\u2003/g,
-    U2009: /\u2009/g,
-    U200C: /\u200C/g,
-    U200D: /\u200D/g,
-    U200E: /\u200E/g,
-    U200F: /\u200F/g
+const REGEXP_FORMAT = {
+    ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
+    OPENTAG: /\s*>$/,
+    CLOSETAG: /\/>\n*$/
 };
+
+export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
+
+export function isPlainText(value: string) {
+    for (let i = 0; i < value.length; i++) {
+        switch (value.charCodeAt(i)) {
+            case 9:
+            case 10:
+            case 13:
+            case 32:
+                continue;
+            default:
+                return true;
+        }
+    }
+    return false;
+}
 
 export function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
     if (depth > 0) {
@@ -165,11 +170,6 @@ export function applyTemplate(tagName: string, template: ExternalData, children:
 }
 
 export function formatTemplate(value: string, closeEmpty = true, startIndent = -1, char = '\t') {
-    const REGEXP_FORMAT = {
-        ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
-        OPENTAG: /\s*>$/,
-        CLOSETAG: /\/>\n*$/
-    };
     const lines: XMLTagData[] = [];
     let match: RegExpExecArray | null;
     while ((match = REGEXP_FORMAT.ITEM.exec(value)) !== null) {
@@ -224,21 +224,21 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
 
 export function replaceCharacter(value: string) {
     return value
-        .replace(REGEXP_ESCAPE.NBSP, '&#160;')
-        .replace(REGEXP_ESCAPE.LT, '&lt;')
-        .replace(REGEXP_ESCAPE.GT, '&gt;')
-        .replace(REGEXP_ESCAPE.DOUBLEQUOTE, '&quot;')
-        .replace(REGEXP_ESCAPE.SINGLEQUOTE, "\\'");
+        .replace(ESCAPE.NBSP, '&#160;')
+        .replace(ESCAPE.LT, '&lt;')
+        .replace(ESCAPE.GT, '&gt;')
+        .replace(ESCAPE.DOUBLEQUOTE, '&quot;')
+        .replace(ESCAPE.SINGLEQUOTE, "\\'");
 }
 
 export function replaceEntity(value: string) {
     return value
-        .replace(REGEXP_ESCAPE.U00A0, '&#160;')
-        .replace(REGEXP_ESCAPE.U2002, '&#8194;')
-        .replace(REGEXP_ESCAPE.U2003, '&#8195;')
-        .replace(REGEXP_ESCAPE.U2009, '&#8201;')
-        .replace(REGEXP_ESCAPE.U200C, '&#8204;')
-        .replace(REGEXP_ESCAPE.U200D, '&#8205;')
-        .replace(REGEXP_ESCAPE.U200E, '&#8206;')
-        .replace(REGEXP_ESCAPE.U200F, '&#8207;');
+        .replace(ESCAPE.U00A0, '&#160;')
+        .replace(ESCAPE.U2002, '&#8194;')
+        .replace(ESCAPE.U2003, '&#8195;')
+        .replace(ESCAPE.U2009, '&#8201;')
+        .replace(ESCAPE.U200C, '&#8204;')
+        .replace(ESCAPE.U200D, '&#8205;')
+        .replace(ESCAPE.U200E, '&#8206;')
+        .replace(ESCAPE.U200F, '&#8207;');
 }

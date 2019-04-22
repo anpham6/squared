@@ -8,6 +8,7 @@ import $Layout = squared.base.Layout;
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 export default class <T extends View> extends squared.base.extensions.Table<T> {
@@ -50,7 +51,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                     item.android('maxLines', '1');
                                 }
                                 if (item.has('width') && item.toFloat('width') < item.bounds.width) {
-                                    item.android('layout_width', $util.formatPX(item.bounds.width));
+                                    item.android('layout_width', $css.formatPX(item.bounds.width));
                                 }
                             }
                         }
@@ -62,7 +63,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         node.android('layout_width', 'match_parent');
                     }
                     else {
-                        node.css('width', $util.formatPX(node.actualWidth), true);
+                        node.css('width', $css.formatPX(node.actualWidth), true);
                     }
                 }
                 else {
@@ -71,13 +72,13 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             }
             if (!requireWidth && node.has('width') && node.actualWidth < Math.floor(node.bounds.width)) {
                 if (!node.has('minWidth')) {
-                    node.android('minWidth', $util.formatPX(node.actualWidth));
+                    node.android('minWidth', $css.formatPX(node.actualWidth));
                 }
                 node.css('width', 'auto', true);
             }
             if (node.has('height') && node.actualHeight < Math.floor(node.bounds.height)) {
                 if (!node.has('minHeight')) {
-                    node.android('minHeight', $util.formatPX(node.actualHeight));
+                    node.android('minHeight', $css.formatPX(node.actualHeight));
                 }
                 node.css('height', 'auto', true);
             }
@@ -124,7 +125,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         if (layoutWidth > 0) {
             const actualWidth = node.bounds.width;
             if (actualWidth > layoutWidth) {
-                node.android('layout_width', $util.formatPX(actualWidth));
+                node.android('layout_width', $css.formatPX(actualWidth));
             }
             if (layoutWidth > 0 && node.cssInitial('width') === 'auto' && node.renderChildren.every(item => item.inlineWidth)) {
                 node.renderEach((item: T) => {

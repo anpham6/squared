@@ -18,12 +18,14 @@ type RepeatItem = {
     unitMin?: string
 };
 
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
 const STRING_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
 const STRING_NAMED = '\\[([\\w\\-\\s]+)\\]';
+
 const REGEXP_GRID = {
     UNIT: new RegExp(`^(${STRING_UNIT})$`),
     NAMED: `\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`,
@@ -71,7 +73,7 @@ function getColumnTotal(rows: (Node[] | undefined)[]) {
     return value;
 }
 
-const convertLength = (node: Node, value: string) => $util.isLength(value) ? node.convertPX(value) : value;
+const convertLength = (node: Node, value: string) => $css.isLength(value) ? node.convertPX(value) : value;
 
 export default class CssGrid<T extends Node> extends Extension<T> {
     public static createDataAttribute<T extends Node>(): CssGridData<T> {
@@ -531,7 +533,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
             let percent = 1;
             let fr = 0;
             for (const unit of data.unit) {
-                if ($util.isPercent(unit)) {
+                if ($css.isPercent(unit)) {
                     percent -= parseFloat(unit) / 100;
                 }
                 else if (unit.endsWith('fr')) {

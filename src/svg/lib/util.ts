@@ -3,15 +3,16 @@ import { SvgMatrix, SvgPoint, SvgTransform } from '../@types/object';
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
-const $util = squared.lib.util;
+const $regex = squared.lib.regex;
 
-const STRING_DECIMAL = `(${$util.STRING_PATTERN.DECIMAL})`;
+const STRING_DECIMAL = `(${$regex.STRING.DECIMAL})`;
+
 const REGEXP_TRANSFORM = {
     MATRIX: new RegExp(`(matrix(?:3d)?)\\(${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?\\)`, 'g'),
-    ROTATE: new RegExp(`(rotate[XY]?)\\(${$util.STRING_PATTERN.ANGLE}\\)`, 'g'),
-    SKEW: new RegExp(`(skew[XY]?)\\(${$util.STRING_PATTERN.ANGLE}(?:, ${$util.STRING_PATTERN.ANGLE})?\\)`, 'g'),
+    ROTATE: new RegExp(`(rotate[XY]?)\\(${$regex.STRING.CSS_ANGLE}\\)`, 'g'),
+    SKEW: new RegExp(`(skew[XY]?)\\(${$regex.STRING.CSS_ANGLE}(?:, ${$regex.STRING.CSS_ANGLE})?\\)`, 'g'),
     SCALE: new RegExp(`(scale[XY]?)\\(${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?\\)`, 'g'),
-    TRANSLATE: new RegExp(`(translate[XY]?)\\(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}(?:, ${$util.STRING_PATTERN.LENGTH_PERCENTAGE})?\\)`, 'g')
+    TRANSLATE: new RegExp(`(translate[XY]?)\\(${$regex.STRING.LENGTH_PERCENTAGE}(?:, ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`, 'g')
 };
 
 const SHAPES = {
@@ -105,7 +106,7 @@ export const TRANSFORM = {
                     const isX = match[1].endsWith('X');
                     const isY = match[1].endsWith('Y');
                     if (match[1].startsWith('rotate')) {
-                        const angle = $util.convertAngle(match[2], match[3]);
+                        const angle = $css.convertAngle(match[2], match[3]);
                         const matrix = MATRIX.rotate(angle);
                         if (isX) {
                             matrix.a = 1;
@@ -120,8 +121,8 @@ export const TRANSFORM = {
                         ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
                     }
                     else if (match[1].startsWith('skew')) {
-                        const x = isY ? 0 : $util.convertAngle(match[2], match[3]);
-                        const y = isY ? $util.convertAngle(match[2], match[3]) : (match[4] && match[5] ? $util.convertAngle(match[4], match[5]) : 0);
+                        const x = isY ? 0 : $css.convertAngle(match[2], match[3]);
+                        const y = isY ? $css.convertAngle(match[2], match[3]) : (match[4] && match[5] ? $css.convertAngle(match[4], match[5]) : 0);
                         const matrix = MATRIX.skew(x, y);
                         if (isX) {
                             ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false);
@@ -144,8 +145,8 @@ export const TRANSFORM = {
                     }
                     else if (match[1].startsWith('translate')) {
                         const fontSize = $css.getFontSize(element);
-                        const arg1 = $util.parseUnit(match[2], fontSize);
-                        const arg2 = (!isX && match[3] ? $util.parseUnit(match[3], fontSize) : 0);
+                        const arg1 = $css.parseUnit(match[2], fontSize);
+                        const arg2 = (!isX && match[3] ? $css.parseUnit(match[3], fontSize) : 0);
                         const x = isY ? 0 : arg1;
                         const y = isY ? arg1 : arg2;
                         const matrix = MATRIX.translate(x, y);
@@ -202,10 +203,10 @@ export const TRANSFORM = {
         if (value !== '') {
             const viewBox = getNearestViewBox(element);
             function setPosition(attr: string, position: string, dimension: number) {
-                if ($util.isLength(position)) {
-                    result[attr] = $util.parseUnit(position, $css.getFontSize(element));
+                if ($css.isLength(position)) {
+                    result[attr] = $css.parseUnit(position, $css.getFontSize(element));
                 }
-                else if ($util.isPercent(position)) {
+                else if ($css.isPercent(position)) {
                     result[attr] = (parseFloat(position) / 100) * dimension;
                 }
             }

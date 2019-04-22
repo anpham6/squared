@@ -1,6 +1,6 @@
+import { CSS } from './regex';
+
 const STRING_HEX = '0123456789ABCDEF';
-const REGEXP_HEX = /[A-Za-z\d]{3,}/;
-const REGEXP_RGBA = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/;
 
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 const COLOR_CSS3: ColorResult[] = [
@@ -2133,7 +2133,7 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
             rgba = parseRGBA(value);
         }
         else if (value.startsWith('rgb')) {
-            const match = REGEXP_RGBA.exec(value);
+            const match = CSS.RGBA.exec(value);
             if (match) {
                 rgba = {
                     r: parseInt(match[1]),
@@ -2219,7 +2219,7 @@ export function convertHex(value: RGBA) {
 
 export function parseRGBA(value: string) {
     value = value.replace(/#/g, '').trim();
-    if (REGEXP_HEX.test(value)) {
+    if (CSS.HEX.test(value)) {
         let a = 255;
         switch (value.length) {
             case 4:

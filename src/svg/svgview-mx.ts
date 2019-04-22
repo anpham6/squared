@@ -17,9 +17,12 @@ type AttributeMap = ObjectMap<AttributeData[]>;
 
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
-const STRING_CUBICBEZIER = `cubic-bezier\\((${$util.STRING_PATTERN.ZERO_ONE}), (${$util.STRING_PATTERN.DECIMAL}), (${$util.STRING_PATTERN.ZERO_ONE}), (${$util.STRING_PATTERN.DECIMAL})\\)`;
+const STRING_ZEROONE = '0(?:\\.\\d+)?|1(?:\\.0+)?';
+const STRING_CUBICBEZIER = `cubic-bezier\\((${STRING_ZEROONE}), (${$regex.UNIT.DECIMAL}), (${STRING_ZEROONE}), (${$regex.UNIT.DECIMAL})\\)`;
+
 const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
 
 const KEYFRAME_NAME = $css.getKeyframeRules();
@@ -49,7 +52,7 @@ function parseAttribute(element: SVGElement, attr: string) {
         return result;
     }
     else {
-        return value.split($util.REGEXP_COMPILED.SEPARATOR);
+        return value.split($regex.XML.SEPARATOR);
     }
 }
 
@@ -189,10 +192,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     map[name] = [];
                                 }
                                 let value: string | number | undefined = keyframes[percent][name];
-                                if ($util.isCalc(value)) {
+                                if ($css.isCalc(value)) {
                                     value = $css.calculateVar(element, value, name);
                                 }
-                                else if ($util.isCustomProperty(value)) {
+                                else if ($css.isCustomProperty(value)) {
                                     value = $css.parseVar(element, value);
                                 }
                                 if (value !== undefined) {

@@ -8,6 +8,7 @@ import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 const $color = squared.lib.color;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
@@ -37,21 +38,21 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             case 'rotate':
             case 'scale':
             case 'translate':
-                currentValue = $util.replaceMap<string, number>(values[index].trim().split(/\s+/), value => parseFloat(value));
-                nextValue = $util.replaceMap<string, number>(values[index + 1].trim().split(/\s+/), value => parseFloat(value));
+                currentValue = $util.replaceMap<string, number>(values[index].trim().split($regex.CHAR.SPACE), value => parseFloat(value));
+                nextValue = $util.replaceMap<string, number>(values[index + 1].trim().split($regex.CHAR.SPACE), value => parseFloat(value));
                 break;
             default:
                 if ($util.isNumber(values[index])) {
                     currentValue = [parseFloat(values[index])];
                 }
-                else if ($util.isLength(values[index])) {
-                    currentValue = [$util.parseUnit(values[index], fontSize)];
+                else if ($css.isLength(values[index])) {
+                    currentValue = [$css.parseUnit(values[index], fontSize)];
                 }
                 if ($util.isNumber(values[index + 1])) {
                     nextValue = [parseFloat(values[index + 1])];
                 }
-                else if ($util.isLength(values[index + 1])) {
-                    nextValue = [$util.parseUnit(values[index + 1], fontSize)];
+                else if ($css.isLength(values[index + 1])) {
+                    nextValue = [$css.parseUnit(values[index + 1], fontSize)];
                 }
                 break;
         }

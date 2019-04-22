@@ -22,6 +22,7 @@ type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const NAME_GRAPHICS = new Map<string, number>();
@@ -706,8 +707,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static parsePoints(value: string) {
         const result: Point[] = [];
-        for (const coords of value.trim().split(/\s+/)) {
-            const [x, y] = $util.replaceMap<string, number>(coords.split($util.REGEXP_COMPILED.SEPARATOR), pt => parseFloat(pt));
+        for (const coords of value.trim().split($regex.CHAR.SPACE)) {
+            const [x, y] = $util.replaceMap<string, number>(coords.split($regex.XML.SEPARATOR), pt => parseFloat(pt));
             result.push({ x, y });
         }
         return result;

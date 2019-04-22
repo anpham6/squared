@@ -35,6 +35,7 @@ const REGEXP_ITEM = {
     menuCategory: /^(container|system|secondary|alternative)$/,
     orderInCategory: /^[0-9]+$/
 };
+
 const REGEXP_GROUP = {
     id: /^@\+id\/\w+$/,
     checkableBehavior: /^(none|all|single)$/,

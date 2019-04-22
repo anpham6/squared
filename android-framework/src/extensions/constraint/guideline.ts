@@ -6,6 +6,7 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 import $Layout = squared.base.Layout;
 
 const $enum = squared.base.lib.enumeration;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 export default class Guideline<T extends android.base.View> extends squared.base.Extension<T> {
@@ -129,7 +130,7 @@ export default class Guideline<T extends android.base.View> extends squared.base
                             degrees = center1.x > center2.x ? 90 : 270;
                         }
                         item.app('layout_constraintCircle', anchor.documentId);
-                        item.app('layout_constraintCircleRadius', $util.formatPX(radius));
+                        item.app('layout_constraintCircleRadius', $css.formatPX(radius));
                         item.app('layout_constraintCircleAngle', degrees.toString());
                     }
                 });

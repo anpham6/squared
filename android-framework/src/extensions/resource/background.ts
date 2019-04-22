@@ -47,6 +47,7 @@ const $enum = squared.base.lib.enumeration;
 const $color = squared.lib.color;
 const $css = squared.lib.css;
 const $math = squared.lib.math;
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -118,13 +119,13 @@ function getShapeStroke(border: BorderAttribute, direction = -1, hasInset = fals
         if (isBorderAlternating(style)) {
             if (isInset) {
                 return {
-                    width: $util.formatPX(Math.ceil(parseFloat(border.width) / 2) * 2),
+                    width: $css.formatPX(Math.ceil(parseFloat(border.width) / 2) * 2),
                     ...getBorderStyle(border, direction)
                 };
             }
             else {
                 return {
-                    width: hasInset ? $util.formatPX(Math.ceil(parseFloat(border.width) / 2)) : border.width,
+                    width: hasInset ? $css.formatPX(Math.ceil(parseFloat(border.width) / 2)) : border.width,
                     ...getBorderStyle(border, direction, true)
                 };
             }
@@ -149,7 +150,7 @@ function getShapeCorners(stored: BoxStyle): StringMap | undefined {
             if (stored.borderRadius.length === 8) {
                 borderRadius = [];
                 for (let i = 0; i < stored.borderRadius.length; i += 2) {
-                    borderRadius.push($util.formatPX((parseFloat(stored.borderRadius[i]) + parseFloat(stored.borderRadius[i + 1])) / 2));
+                    borderRadius.push($css.formatPX((parseFloat(stored.borderRadius[i]) + parseFloat(stored.borderRadius[i + 1])) / 2));
                 }
             }
             else {
@@ -177,7 +178,7 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
     const baseWidth = Math.floor(width / 3);
     const remainder = width % 3;
     const offset =  remainder === 2 ? 1 : 0;
-    let drawWidth = `${$util.formatPX(width - baseWidth)}`;
+    let drawWidth = `${$css.formatPX(width - baseWidth)}`;
     let hideWidth = `-${drawWidth}`;
     items.push({
         top: top ? '' : hideWidth,
@@ -187,14 +188,14 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
         shape: {
             'android:shape': 'rectangle',
             stroke: {
-                width: $util.formatPX(baseWidth + offset),
+                width: $css.formatPX(baseWidth + offset),
                 ...getBorderStyle(border)
             },
             corners
         }
     });
     if (width === 3) {
-        drawWidth = `${$util.formatPX(width)}`;
+        drawWidth = `${$css.formatPX(width)}`;
         hideWidth = `-${drawWidth}`;
     }
     items.push({
@@ -205,7 +206,7 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
         shape: {
             'android:shape': 'rectangle',
             stroke: {
-                width: $util.formatPX(baseWidth + offset),
+                width: $css.formatPX(baseWidth + offset),
                 ...getBorderStyle(border)
             },
             corners
@@ -248,8 +249,8 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
                 result.centerY = (center.top * 2).toString();
             }
             else {
-                result.centerX = $util.formatPercent(center.leftAsPercent * 100);
-                result.centerY = $util.formatPercent(center.topAsPercent * 100);
+                result.centerX = $css.formatPercent(center.leftAsPercent * 100);
+                result.centerY = $css.formatPercent(center.topAsPercent * 100);
             }
             break;
         }
@@ -263,9 +264,9 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
                 result.centerY = center.top.toString();
             }
             else {
-                result.gradientRadius = $util.formatPX(radius);
-                result.centerX = $util.formatPercent(center.leftAsPercent * 100);
-                result.centerY = $util.formatPercent(center.topAsPercent * 100);
+                result.gradientRadius = $css.formatPX(radius);
+                result.centerX = $css.formatPercent(center.leftAsPercent * 100);
+                result.centerY = $css.formatPercent(center.topAsPercent * 100);
             }
             break;
         }
@@ -323,7 +324,7 @@ function getPercentOffset(direction: string, position: RectPosition, backgroundS
         if (direction === 'left' || direction === 'right') {
             if (backgroundSize !== 'cover') {
                 const value = orientation.length === 4 ? orientation[1] : orientation[0];
-                if ($util.isPercent(value)) {
+                if ($css.isPercent(value)) {
                     const result = (direction === 'left' ? position.leftAsPercent : position.rightAsPercent) * (bounds.width - dimension.width);
                     return sign === -1 ? Math.abs(result) * -1 : result;
                 }
@@ -335,7 +336,7 @@ function getPercentOffset(direction: string, position: RectPosition, backgroundS
         else {
             if (backgroundSize !== 'contain') {
                 const value = orientation.length === 4 ? orientation[3] : orientation[1];
-                if ($util.isPercent(value)) {
+                if ($css.isPercent(value)) {
                     const result = (direction === 'top' ? position.topAsPercent : position.bottomAsPercent) * (bounds.height - dimension.height);
                     return sign === -1 ? Math.abs(result) * -1 : result;
                 }
@@ -380,10 +381,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         for (const node of this.application.processing.cache) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && node.hasResource($enum.NODE_RESOURCE.BOX_STYLE)) {
-                const backgroundRepeat = stored.backgroundRepeat.split($util.REGEXP_COMPILED.SEPARATOR);
-                const backgroundSize = stored.backgroundSize.split($util.REGEXP_COMPILED.SEPARATOR);
-                const backgroundPositionX = stored.backgroundPositionX.split($util.REGEXP_COMPILED.SEPARATOR);
-                const backgroundPositionY = stored.backgroundPositionY.split($util.REGEXP_COMPILED.SEPARATOR);
+                const backgroundRepeat = stored.backgroundRepeat.split($regex.XML.SEPARATOR);
+                const backgroundSize = stored.backgroundSize.split($regex.XML.SEPARATOR);
+                const backgroundPositionX = stored.backgroundPositionX.split($regex.XML.SEPARATOR);
+                const backgroundPositionY = stored.backgroundPositionY.split($regex.XML.SEPARATOR);
                 const backgroundImage: (string | GradientTemplate)[] = [];
                 const backgroundPosition: RectPosition[] = [];
                 const imageDimensions: Undefined<Dimension>[] = [];
@@ -787,10 +788,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                 }
                                 if (width > 0) {
-                                    imageData.width = $util.formatPX(width);
+                                    imageData.width = $css.formatPX(width);
                                 }
                                 if (height > 0) {
-                                    imageData.height = $util.formatPX(height);
+                                    imageData.height = $css.formatPX(height);
                                 }
                             }
                             if (gravity === undefined) {
@@ -828,16 +829,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (value.item) {
                                 const width = Math.round(dimension.width);
                                 const height = Math.round(dimension.height);
-                                imageData.width = $util.formatPX(width);
-                                imageData.height = $util.formatPX(height);
+                                imageData.width = $css.formatPX(width);
+                                imageData.height = $css.formatPX(height);
                                 const src = Resource.insertStoredAsset(
                                     'drawables',
                                     `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i + 1}`,
                                     $xml.applyTemplate('vector', VECTOR_TMPL, [{
                                         'xmlns:android': XMLNS_ANDROID.android,
                                         'xmlns:aapt': XMLNS_ANDROID.aapt,
-                                        'android:width': imageData.width || $util.formatPX(width),
-                                        'android:height': imageData.height || $util.formatPX(height),
+                                        'android:width': imageData.width || $css.formatPX(width),
+                                        'android:height': imageData.height || $css.formatPX(height),
                                         'android:viewportWidth': width.toString(),
                                         'android:viewportHeight': height.toString(),
                                         'path': {
@@ -859,32 +860,32 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         if (imageData.drawable || imageData.bitmap || imageData.gradient) {
                             if (position.bottom !== 0) {
-                                imageData.bottom = $util.formatPX(getPercentOffset('bottom', position, backgroundSize[i], node.bounds, dimension) + bottom);
+                                imageData.bottom = $css.formatPX(getPercentOffset('bottom', position, backgroundSize[i], node.bounds, dimension) + bottom);
                                 bottom = 0;
                             }
                             else if (position.top !== 0) {
-                                imageData.top = $util.formatPX(getPercentOffset('top', position, backgroundSize[i], node.bounds, dimension) + top);
+                                imageData.top = $css.formatPX(getPercentOffset('top', position, backgroundSize[i], node.bounds, dimension) + top);
                                 top = 0;
                             }
                             if (position.right !== 0) {
-                                imageData.right = $util.formatPX(getPercentOffset('right', position, backgroundSize[i], node.bounds, dimension) + right);
+                                imageData.right = $css.formatPX(getPercentOffset('right', position, backgroundSize[i], node.bounds, dimension) + right);
                                 right = 0;
                             }
                             else if (position.left !== 0) {
-                                imageData.left = $util.formatPX(getPercentOffset('left', position, backgroundSize[i], node.bounds, dimension) + left);
+                                imageData.left = $css.formatPX(getPercentOffset('left', position, backgroundSize[i], node.bounds, dimension) + left);
                                 left = 0;
                             }
                             if (top > 0) {
-                                imageData.top = $util.formatPX(top);
+                                imageData.top = $css.formatPX(top);
                             }
                             if (right > 0) {
-                                imageData.right = $util.formatPX(right);
+                                imageData.right = $css.formatPX(right);
                             }
                             if (bottom > 0) {
-                                imageData.bottom = $util.formatPX(bottom);
+                                imageData.bottom = $css.formatPX(bottom);
                             }
                             if (left > 0) {
-                                imageData.left = $util.formatPX(left);
+                                imageData.left = $css.formatPX(left);
                             }
                             images.push(imageData);
                         }
@@ -970,7 +971,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 ]);
                             }
                             else {
-                                const hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
+                                const hideWidth = `-${$css.formatPX(getHideWidth(width))}`;
                                 const leftTop = !borderVisible[0] && !borderVisible[3];
                                 const topOnly = !borderVisible[0] && borderVisible[1] && borderVisible[2] && borderVisible[3];
                                 const leftOnly = borderVisible[0] && borderVisible[1] && borderVisible[2] && !borderVisible[3];
@@ -1028,7 +1029,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             }
                                         });
                                         if (hasInset) {
-                                            outerWidth = `-${$util.formatPX(getHideWidth(width))}`;
+                                            outerWidth = `-${$css.formatPX(getHideWidth(width))}`;
                                             innerWidth = `-${width + (visibleAll ? 1 : 0)}px`;
                                             layerList.item.splice(layerList.item.length, 0, {
                                                 top:  index === 0 ? topWidth : innerWidth,
@@ -1092,13 +1093,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (!node.has('width', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) && (imageWidth === 0 || node.bounds.width < imageWidth)) {
                             const backgroundWidth = node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0);
                             if (backgroundWidth > 0) {
-                                node.css('width', $util.formatPX(backgroundWidth), true);
+                                node.css('width', $css.formatPX(backgroundWidth), true);
                             }
                         }
                         if (!node.has('height', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) && (imageHeight === 0 || node.bounds.height < imageHeight)) {
                             const backgroundHeight = node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0);
                             if (backgroundHeight > 0) {
-                                node.css('height', $util.formatPX(backgroundHeight), true);
+                                node.css('height', $css.formatPX(backgroundHeight), true);
                                 if (node.marginBottom < 0) {
                                     node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, null);
                                 }

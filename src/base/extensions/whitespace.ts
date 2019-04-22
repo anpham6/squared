@@ -4,13 +4,14 @@ import Node from '../node';
 import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
 
 const $session = squared.lib.session;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 const HTML5 = document.doctype ? document.doctype.name === 'html' : false;
 
 function setMinHeight(node: Node, offset: number) {
     const minHeight = node.has('minHeight', CSS_STANDARD.LENGTH) ? node.toFloat('minHeight') : 0;
-    node.css('minHeight', $util.formatPX(Math.max(offset, minHeight)));
+    node.css('minHeight', $css.formatPX(Math.max(offset, minHeight)));
 }
 
 function isBlockElement(node: Node | undefined) {
@@ -138,7 +139,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                 const childMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
                                                 if (childMarginBottom > marginBottom) {
                                                     marginBottom = childMarginBottom;
-                                                    previousVisible.css('marginBottom', $util.formatPX(marginBottom), true);
+                                                    previousVisible.css('marginBottom', $css.formatPX(marginBottom), true);
                                                 }
                                                 resetMargin(getVisibleNode(bottomChild), BOX_STANDARD.MARGIN_BOTTOM);
                                             }
@@ -149,7 +150,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                 const childMarginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
                                                 if (childMarginTop > marginTop) {
                                                     marginTop = childMarginTop;
-                                                    currentVisible.css('marginTop', $util.formatPX(marginTop), true);
+                                                    currentVisible.css('marginTop', $css.formatPX(marginTop), true);
                                                 }
                                                 resetMargin(getVisibleNode(topChild), BOX_STANDARD.MARGIN_TOP);
                                             }
