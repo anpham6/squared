@@ -55,8 +55,8 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         let parentAs: T | undefined;
         if (!node.pageFlow || target) {
-            const horizontalBias = node.horizontalBias;
-            const verticalBias = node.verticalBias;
+            const horizontalBias = $utilA.getHorizontalBias(node);
+            const verticalBias = $utilA.getVerticalBias(node);
             const documentParent = node.documentParent;
             const gravity: string[] = [];
             if (horizontalBias < 0.5) {

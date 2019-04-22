@@ -9,8 +9,6 @@ export interface InitialData<T> {
 
 export interface CachedValue<T> {
     htmlElement?: boolean;
-    naturalElement?: boolean;
-    pseudoElement?: boolean;
     pageFlow?: boolean;
     inlineFlow?: boolean;
     positionStatic?: boolean;
@@ -60,6 +58,7 @@ export interface CachedValue<T> {
     dir?: string;
     tagName?: string;
     textContent?: string;
+    src?: string;
     float?: string;
     actualParent?: T | null;
     absoluteParent?: T | null;

@@ -1,11 +1,39 @@
 import { StyleAttribute } from '../@types/application';
 import { ViewAttribute } from '../@types/node';
 
+import View from '../view';
+
 import { XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
+function calculateBias(start: number, end: number, accuracy = 4) {
+    if (start === 0) {
+        return 0;
+    }
+    else if (end === 0) {
+        return 1;
+    }
+    else {
+        return parseFloat(Math.max(start / (start + end), 0).toPrecision(accuracy));
+    }
+}
+
 export function stripId(value: string) {
     return value ? value.replace(/^@\+?id\//, '') : '';
+}
+
+export function getHorizontalBias(node: View) {
+    const parent = node.documentParent;
+    const left = Math.max(0, node.actualRect('left', 'bounds') - parent.box.left);
+    const right = Math.max(0, parent.box.right - node.actualRect('right', 'bounds'));
+    return calculateBias(left, right, node.localSettings.floatPrecision);
+}
+
+export function getVerticalBias(node: View) {
+    const parent = node.documentParent;
+    const top = Math.max(0, node.actualRect('top', 'bounds') - parent.box.top);
+    const bottom = Math.max(0, parent.box.bottom - node.actualRect('bottom', 'bounds'));
+    return calculateBias(top, bottom, node.localSettings.floatPrecision);
 }
 
 export function createViewAttribute(options?: ExternalData): ViewAttribute {

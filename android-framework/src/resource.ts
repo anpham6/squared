@@ -161,49 +161,40 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     }
 
     public static addImageSrc(element: HTMLImageElement, prefix = '') {
-        const images: StringMap = {};
+        const result: StringMap = {};
         if (element.srcset) {
-            const srcset = element.srcset.trim();
-            if (srcset !== '') {
-                const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
-                for (const value of srcset.split($util.REGEXP_COMPILED.SEPARATOR)) {
-                    const match = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/.exec(value.trim());
-                    if (match) {
-                        if (!match[2]) {
-                            match[2] = '1x';
+            const images = $css.getSrcSet(element, IMAGE_FORMAT);
+            for (const image of images) {
+                const pixelRatio = image.pixelRatio;
+                if (pixelRatio > 0) {
+                    const src = image.src;
+                    if (pixelRatio < 1) {
+                        result.ldpi = src;
+                    }
+                    else if (pixelRatio === 1) {
+                        if (result.mdpi === undefined || image.actualWidth) {
+                            result.mdpi = src;
                         }
-                        const src = filepath + $util.fromLastIndexOf(match[1], '/');
-                        const size = parseFloat(match[2]);
-                        if (!isNaN(size)) {
-                            if (match[3] === 'x') {
-                                if (size <= 0.75) {
-                                    images.ldpi = src;
-                                }
-                                else if (size <= 1) {
-                                    images.mdpi = src;
-                                }
-                                else if (size <= 1.5) {
-                                    images.hdpi = src;
-                                }
-                                else if (size <= 2) {
-                                    images.xhdpi = src;
-                                }
-                                else if (size <= 3) {
-                                    images.xxhdpi = src;
-                                }
-                                else {
-                                    images.xxxhdpi = src;
-                                }
-                            }
-                        }
+                    }
+                    else if (pixelRatio <= 1.5) {
+                        result.hdpi = src;
+                    }
+                    else if (pixelRatio <= 2) {
+                        result.xhdpi = src;
+                    }
+                    else if (pixelRatio <= 3) {
+                        result.xxhdpi = src;
+                    }
+                    else {
+                        result.xxxhdpi = src;
                     }
                 }
             }
         }
-        if (images.mdpi === undefined) {
-            images.mdpi = element.src;
+        if (result.mdpi === undefined) {
+            result.mdpi = element.src;
         }
-        return this.addImage(images, prefix);
+        return this.addImage(result, prefix);
     }
 
     public static addImage(images: StringMap, prefix = '') {

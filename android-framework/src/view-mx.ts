@@ -85,18 +85,6 @@ function setAutoMargin(node: T) {
     return false;
 }
 
-function calculateBias(start: number, end: number, accuracy = 4) {
-    if (start === 0) {
-        return 0;
-    }
-    else if (end === 0) {
-        return 1;
-    }
-    else {
-        return parseFloat(Math.max(start / (start + end), 0).toPrecision(accuracy));
-    }
-}
-
 function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
     if (node.localSettings.targetAPI >= BUILD_ANDROID.PIE) {
         node.android('lineHeight', $util.formatPX(lineHeight), overwrite);
@@ -1183,36 +1171,12 @@ export default (Base: Constructor<squared.base.Node>) => {
             return this.controlId ? `@+id/${this.controlId}` : '';
         }
 
-        get imageElement() {
-            return super.imageElement || this.is(CONTAINER_NODE.IMAGE);
-        }
-
         set anchored(value) {
             this.constraint.horizontal = value;
             this.constraint.vertical = value;
         }
         get anchored() {
             return this.constraint.horizontal && this.constraint.vertical;
-        }
-
-        get horizontalBias() {
-            const parent = this.documentParent;
-            if (parent !== this) {
-                const left = Math.max(0, this.actualRect('left', 'bounds') - parent.box.left);
-                const right = Math.max(0, parent.box.right - this.actualRect('right', 'bounds'));
-                return calculateBias(left, right, this.localSettings.floatPrecision);
-            }
-            return 0.5;
-        }
-
-        get verticalBias() {
-            const parent = this.documentParent;
-            if (parent !== this) {
-                const top = Math.max(0, this.actualRect('top', 'bounds') - parent.box.top);
-                const bottom = Math.max(0, parent.box.bottom - this.actualRect('bottom', 'bounds'));
-                return calculateBias(top, bottom, this.localSettings.floatPrecision);
-            }
-            return 0.5;
         }
 
         set containerType(value) {

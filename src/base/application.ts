@@ -746,82 +746,85 @@ export default class Application<T extends Node> implements squared.base.Applica
     protected cascadeParentNode(element: HTMLElement, depth = 0) {
         const node = this.insertNode(element);
         if (node) {
-            const localSettings = this.controllerHandler.localSettings;
             node.depth = depth;
             if (depth === 0) {
                 this.processing.cache.append(node);
             }
-            if (node.tagName !== 'SELECT') {
-                const beforeElement = this.createPseduoElement(element, 'before');
-                const afterElement = this.createPseduoElement(element, 'after');
-                const children: T[] = [];
-                let includeText = false;
-                for (let i = 0; i < element.childNodes.length; i++) {
-                    const childElement = <HTMLInputElement> element.childNodes[i];
-                    if (childElement.nodeName.charAt(0) === '#') {
-                        if (childElement.nodeName === '#text') {
-                            const child = this.insertNode(childElement, node);
-                            if (child) {
-                                children.push(child);
-                            }
-                        }
-                    }
-                    else if (childElement === beforeElement) {
-                        const child = this.insertNode(<HTMLElement> beforeElement);
-                        if (child) {
-                            node.beforePseudoChild = child;
-                            child.setInlineText(true);
-                            children.push(child);
-                            includeText = true;
-                        }
-                    }
-                    else if (childElement === afterElement) {
-                        const child = this.insertNode(<HTMLElement> afterElement);
-                        if (child) {
-                            node.afterPseudoChild = child;
-                            child.setInlineText(true);
-                            children.push(child);
-                            includeText = true;
-                        }
-                    }
-                    else if (!localSettings.unsupported.tagName.has(childElement.tagName) || childElement.tagName === 'INPUT' && !localSettings.unsupported.tagName.has(`${childElement.tagName}:${childElement.type}`)) {
-                        prioritizeExtensions(childElement, this.extensions).some(item => item.init(childElement));
-                        if (!this.rootElements.has(childElement)) {
-                            const child = this.cascadeParentNode(childElement, depth + 1);
-                            if (child) {
-                                children.push(child);
-                                if (!child.excluded) {
-                                    includeText = true;
-                                }
-                            }
-                        }
-                        else {
-                            includeText = true;
-                        }
-                    }
-                }
-                for (let i = 0; i < children.length; i++) {
-                    const child = children[i];
-                    if (child.lineBreak) {
-                        if (i > 0) {
-                            children[i - 1].lineBreakTrailing = true;
-                        }
-                        if (i < children.length - 1) {
-                            children[i + 1].lineBreakLeading = true;
-                        }
-                    }
-                    if (child.excluded) {
-                        this.processing.excluded.append(child);
-                    }
-                    else if (includeText || !child.plainText) {
-                        child.parent = node;
-                        this.processing.cache.append(child);
-                    }
-                    child.siblingIndex = i;
-                }
-                node.setInlineText(!includeText);
-                node.actualChildren = children;
+            switch (node.tagName) {
+                case 'SELECT':
+                case 'SVG':
+                    return node;
             }
+            const localSettings = this.controllerHandler.localSettings;
+            const beforeElement = this.createPseduoElement(element, 'before');
+            const afterElement = this.createPseduoElement(element, 'after');
+            const children: T[] = [];
+            let includeText = false;
+            for (let i = 0; i < element.childNodes.length; i++) {
+                const childElement = <HTMLInputElement> element.childNodes[i];
+                if (childElement.nodeName.charAt(0) === '#') {
+                    if (childElement.nodeName === '#text') {
+                        const child = this.insertNode(childElement, node);
+                        if (child) {
+                            children.push(child);
+                        }
+                    }
+                }
+                else if (childElement === beforeElement) {
+                    const child = this.insertNode(<HTMLElement> beforeElement);
+                    if (child) {
+                        node.beforePseudoChild = child;
+                        child.setInlineText(true);
+                        children.push(child);
+                        includeText = true;
+                    }
+                }
+                else if (childElement === afterElement) {
+                    const child = this.insertNode(<HTMLElement> afterElement);
+                    if (child) {
+                        node.afterPseudoChild = child;
+                        child.setInlineText(true);
+                        children.push(child);
+                        includeText = true;
+                    }
+                }
+                else if (!localSettings.unsupported.tagName.has(childElement.tagName) || childElement.tagName === 'INPUT' && !localSettings.unsupported.tagName.has(`${childElement.tagName}:${childElement.type}`)) {
+                    prioritizeExtensions(childElement, this.extensions).some(item => item.init(childElement));
+                    if (!this.rootElements.has(childElement)) {
+                        const child = this.cascadeParentNode(childElement, depth + 1);
+                        if (child) {
+                            children.push(child);
+                            if (!child.excluded) {
+                                includeText = true;
+                            }
+                        }
+                    }
+                    else {
+                        includeText = true;
+                    }
+                }
+            }
+            for (let i = 0; i < children.length; i++) {
+                const child = children[i];
+                if (child.lineBreak) {
+                    if (i > 0) {
+                        children[i - 1].lineBreakTrailing = true;
+                    }
+                    if (i < children.length - 1) {
+                        children[i + 1].lineBreakLeading = true;
+                    }
+                }
+                if (child.excluded) {
+                    this.processing.excluded.append(child);
+                }
+                else if (includeText || !child.plainText) {
+                    child.parent = node;
+                    this.processing.cache.append(child);
+                }
+                child.siblingIndex = i;
+            }
+            node.setInlineText(!includeText);
+            node.actualChildren = children;
         }
         return node;
     }
@@ -1178,9 +1181,11 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected setResources() {
-        this.resourceHandler.setBoxStyle();
-        this.resourceHandler.setFontStyle();
-        this.resourceHandler.setValueString();
+        for (const node of this.processing.cache) {
+            this.resourceHandler.setBoxStyle(node);
+            this.resourceHandler.setFontStyle(node);
+            this.resourceHandler.setValueString(node);
+        }
         for (const ext of this.extensions) {
             ext.afterResources();
         }
@@ -1194,14 +1199,16 @@ export default class Application<T extends Node> implements squared.base.Applica
             const left: T[] = [];
             const right: T[] = [];
             for (const node of layout) {
-                if (node.float === 'right') {
-                    right.push(node);
-                }
-                else if (node.float === 'left') {
-                    left.push(node);
-                }
-                else {
-                    inline.push(node);
+                switch (node.float) {
+                    case 'left':
+                        left.push(node);
+                        break;
+                    case 'right':
+                        right.push(node);
+                        break;
+                    default:
+                        inline.push(node);
+                        break;
                 }
             }
             if (inline.length === itemCount || left.length === itemCount || right.length === itemCount || (left.length === 0 || right.length === 0) && !inline.some(item => item.blockStatic)) {
@@ -1221,9 +1228,9 @@ export default class Application<T extends Node> implements squared.base.Applica
         let current = '';
         let pendingFloat = 0;
         for (const node of layout) {
-            const direction = layout.cleared.get(node);
-            if (direction && ($util.hasBit(pendingFloat, direction === 'right' ? 4 : 2) || pendingFloat !== 0 && direction === 'both')) {
-                switch (direction) {
+            const cleared = layout.cleared.get(node);
+            if (cleared && ($util.hasBit(pendingFloat, cleared === 'right' ? 4 : 2) || pendingFloat !== 0 && cleared === 'both')) {
+                switch (cleared) {
                     case 'left':
                         if ($util.hasBit(pendingFloat, 2)) {
                             pendingFloat ^= 2;
@@ -1641,7 +1648,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 return node;
             }
         }
-        else if (!this.controllerHandler.localSettings.svg.enabled || element.parentElement instanceof HTMLElement) {
+        else {
             this.controllerHandler.applyDefaultStyles(element);
             const node = this.createNode(element, false);
             if (!node.pseudoElement) {
@@ -1688,7 +1695,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     private createPseduoElement(element: HTMLElement, target: string) {
         const styleMap: StringMap = $session.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
         if (styleMap && styleMap.content && this.controllerHandler.includeElement(element, target)) {
-            let value: string = styleMap.content;
+            let value = styleMap.content;
             if (value === 'inherit') {
                 let current = element.parentElement;
                 while (current) {
@@ -1976,11 +1983,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 const backgroundImage = styleMap.backgroundImage && styleMap.backgroundImage !== 'initial';
                 if (this.userSettings.preloadImages && (backgroundImage || styleMap.content && styleMap.content.startsWith('url('))) {
-                    const images: string[] = backgroundImage ? styleMap.backgroundImage.split($util.REGEXP_COMPILED.SEPARATOR) : [];
-                    if (styleMap.content) {
-                        images.push(styleMap.content);
-                    }
-                    for (const value of images) {
+                    for (const value of backgroundImage ? styleMap.backgroundImage.split($util.REGEXP_COMPILED.SEPARATOR) : [styleMap.content]) {
                         const uri = $css.resolveURL(value.trim());
                         if (uri !== '' && !this.session.image.has(uri)) {
                             this.session.image.set(uri, { width: 0, height: 0, uri });

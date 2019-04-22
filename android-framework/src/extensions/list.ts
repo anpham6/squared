@@ -146,7 +146,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         layout_columnWeight: columnWeight
                     }
                 });
-                const element = $dom.createElement(node.actualParent && node.actualParent.element);
+                const element = $dom.createElement(node.actualParent && node.actualParent.element, image ? 'img' : 'span');
                 ordinal = this.application.createNode(element);
                 if (inside) {
                     controller.addBeforeOutsideTemplate(
@@ -178,6 +178,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             baselineAlignBottom: adjustPadding ? 'true' : ''
                         });
                         ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
+                        (<HTMLImageElement> element).src = mainData.imageSrc;
                     }
                     else if (mainData.ordinal) {
                         element.innerHTML = mainData.ordinal;

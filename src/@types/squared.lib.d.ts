@@ -28,7 +28,7 @@ declare global {
             function getSpecificity(value: string): number;
             function getKeyframeRules(): CSSRuleData;
             function parseConditionText(rule: string, value: string): string;
-            function validMediaRule(value: string): boolean;
+            function validMediaRule(value: string, fontSize?: number): boolean;
             function getDataSet(element: HTMLElement | null, prefix: string): StringMap;
             function getFontSize(element: Element | null): number | undefined;
             function isParentStyle(element: Element | null, attr: string, ...styles: string[]): boolean;
@@ -36,6 +36,7 @@ declare global {
             function parseVar(element: HTMLElement | SVGElement, value: string): string | undefined;
             function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number | undefined;
             function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number): RectPosition;
+            function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
             function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
             function resolveURL(value: string): string;
             function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;

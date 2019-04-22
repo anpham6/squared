@@ -10,9 +10,9 @@ declare global {
             readonly stored: ResourceStoredMap;
             finalize(data: ViewData): void;
             reset(): void;
-            setBoxStyle(): void;
-            setFontStyle(): void;
-            setValueString(): void;
+            setBoxStyle(node: T): void;
+            setFontStyle(node: T): void;
+            setValueString(node: T): void;
         }
 
         class Resource<T extends Node> implements Resource<T> {

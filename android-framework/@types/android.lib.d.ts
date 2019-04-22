@@ -5,6 +5,8 @@ import * as $const from '../src/lib/constant';
 import * as $custom from '../src/lib/customization';
 import * as $enum from '../src/lib/enumeration';
 
+type View = android.base.View;
+
 declare global {
     namespace android.lib {
         namespace enumeration {
@@ -34,6 +36,8 @@ declare global {
 
         namespace util {
             function stripId(value: string): string;
+            function getHorizontalBias(node: View): number;
+            function getVerticalBias(node: View): number;
             function createViewAttribute(options?: ExternalData): ViewAttribute;
             function createStyleAttribute(options?: ExternalData): Required<StyleAttribute>;
             function localizeString(value: string, rtl: boolean, api: number): string;

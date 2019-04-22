@@ -1,6 +1,6 @@
 import { parseColor } from './color';
 import { getElementCache, setElementCache } from './session';
-import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertInt, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, getDeviceDPI, isCustomProperty, isLength, isNumber, isPercent, isUserAgent, parseUnit, replaceMap, resolvePath } from './util';
+import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertInt, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, fromLastIndexOf, getDeviceDPI, isCustomProperty, isLength, isNumber, isPercent, isString, isUserAgent, parseUnit, replaceMap, resolvePath } from './util';
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -241,7 +241,7 @@ export function parseConditionText(rule: string, value: string) {
     return value;
 }
 
-export function validMediaRule(value: string) {
+export function validMediaRule(value: string, fontSize?: number) {
     switch (value) {
         case 'only all':
         case 'only screen':
@@ -262,7 +262,9 @@ export function validMediaRule(value: string) {
                 }
             }
             const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-            const fontSize = parseUnit(getStyle(document.body).getPropertyValue('font-size'));
+            if (!fontSize) {
+                fontSize = getFontSize(document.body);
+            }
             let match: RegExpExecArray | null;
             while ((match = pattern.exec(value)) !== null) {
                 const negate = match[1] === 'not';
@@ -516,6 +518,106 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     }
                     break;
                 }
+            }
+        }
+    }
+    return result;
+}
+
+export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
+    const parentElement = <HTMLPictureElement> element.parentElement;
+    const result: ImageSrcSet[] = [];
+    let srcset = element.srcset;
+    let sizes = element.sizes;
+    if (parentElement && parentElement.tagName === 'PICTURE') {
+        for (let i = 0; i < parentElement.children.length; i++) {
+            const source = <HTMLSourceElement> parentElement.children[i];
+            if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || isString(source.type) && mimeType && mimeType.includes((source.type.split('/').pop() as string).toLowerCase()))) {
+                srcset = source.srcset;
+                sizes = source.sizes;
+                break;
+            }
+        }
+    }
+    if (srcset !== '') {
+        const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
+        for (const src of srcset.split(REGEXP_COMPILED.SEPARATOR)) {
+            const match = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/.exec(src.trim());
+            if (match) {
+                let width = 0;
+                let pixelRatio = 0;
+                switch (match[3]) {
+                    case 'w':
+                        width = parseFloat(match[2]);
+                        break;
+                    case 'x':
+                        pixelRatio = parseFloat(match[2]);
+                        break;
+                    default:
+                        pixelRatio = 1;
+                        break;
+                }
+                result.push({
+                    src: filepath + fromLastIndexOf(match[1], '/'),
+                    pixelRatio,
+                    width
+                });
+            }
+        }
+        result.sort((a, b) => {
+            if (a.pixelRatio !== b.pixelRatio) {
+                return a.pixelRatio < b.pixelRatio ? -1 : 1;
+            }
+            else if (a.width !== b.width) {
+                return a.width < b.width ? -1 : 1;
+            }
+            return 0;
+        });
+    }
+    if (result.length === 0) {
+        result.push({ src: element.src, pixelRatio: 1, width: 0 });
+    }
+    else if (result.length > 1 && isString(sizes)) {
+        const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING_PATTERN.LENGTH}\\))?\\s*(.+)`);
+        const fontSize = getFontSize(document.body);
+        let width = 0;
+        for (const value of sizes.split(REGEXP_COMPILED.SEPARATOR)) {
+            const match = pattern.exec(value.trim());
+            if (match) {
+                if (match[1] && !validMediaRule(match[1], fontSize)) {
+                    continue;
+                }
+                if (match[4]) {
+                    const calcMatch = REGEXP_COMPILED.CALC.exec(match[4]);
+                    if (calcMatch) {
+                        width = calculate(calcMatch[1]) || 0;
+                    }
+                    else {
+                        width = parseUnit(match[4], fontSize);
+                    }
+                }
+                if (width > 0) {
+                    break;
+                }
+            }
+        }
+        if (width > 0) {
+            const deviceWidth = width * window.devicePixelRatio;
+            let index = -1;
+            for (let i = 0; i < result.length; i++) {
+                if (result[i].width <= deviceWidth && (index === -1 || result[index].width < result[i].width)) {
+                    index = i;
+                }
+            }
+            if (index > 0) {
+                const selected = result.splice(index, 1)[0];
+                selected.pixelRatio = 1;
+                selected.actualWidth = width;
+                result.unshift(selected);
+            }
+            else if (index === 0) {
+                result[0].pixelRatio = 1;
+                result[0].actualWidth = width;
             }
         }
     }

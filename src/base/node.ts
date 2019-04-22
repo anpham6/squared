@@ -1144,7 +1144,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get htmlElement() {
         if (this._cached.htmlElement === undefined) {
-            this._cached.htmlElement = this._element instanceof HTMLElement;
+            this._cached.htmlElement = this._element !== null && !this.plainText && !this.svgElement;
         }
         return this._cached.htmlElement;
     }
@@ -1154,21 +1154,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get styleElement() {
-        return $css.hasComputedStyle(this._element);
+        return this.htmlElement || this.svgElement;
     }
 
     get naturalElement() {
-        if (this._cached.naturalElement === undefined) {
-            this._cached.naturalElement = this._element !== null && this._element.className !== '__squared.placeholder';
-        }
-        return this._cached.naturalElement;
+        return this._element !== null && this._element.className !== '__squared.placeholder';
     }
 
     get pseudoElement() {
-        if (this._cached.pseudoElement === undefined) {
-            this._cached.pseudoElement = this._element !== null && this._element.className === '__squared.pseudo';
-        }
-        return this._cached.pseudoElement;
+        return this._element !== null && this._element.className === '__squared.pseudo';
     }
 
     get imageElement() {
@@ -1796,10 +1790,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get src() {
         const element = <HTMLInputElement> this._element;
-        if (element) {
-            if (this.imageElement || element.type === 'image') {
-                return element.src;
-            }
+        if (element && (this.imageElement || element.type === 'image')) {
+            return element.src;
         }
         return '';
     }

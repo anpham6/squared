@@ -4,8 +4,6 @@ declare global {
     namespace android.base {
         interface View extends squared.base.Node {
             anchored: boolean;
-            readonly horizontalBias: number;
-            readonly verticalBias: number;
             readonly constraint: Constraint;
             readonly localSettings: LocalSettings;
             readonly documentId: string;

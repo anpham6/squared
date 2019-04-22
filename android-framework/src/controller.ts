@@ -15,6 +15,7 @@ import $NodeList = squared.base.NodeList;
 
 const $enum = squared.base.lib.enumeration;
 const $color = squared.lib.color;
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $session = squared.lib.session;
@@ -381,7 +382,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             enabled: false
         },
         supported: {
-            imageFormat: ['jpg', 'png', 'gif', 'bmp', 'webp', 'ico', 'cur']
+            imageFormat: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'ico', 'cur']
         },
         unsupported: {
             excluded: new Set(['BR']),
@@ -861,10 +862,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 case 'IMG': {
                     if (node.hasResource($enum.NODE_RESOURCE.IMAGE_SOURCE)) {
                         const element = <HTMLImageElement> node.element;
-                        const widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT);
-                        const heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT);
                         let width = node.toFloat('width');
                         let height = node.toFloat('height');
+                        let widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT) && width < 100;
+                        let heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT) && height < 100;
                         let scaleType = 'fitXY';
                         const setWidth = () => {
                             const image = this.application.session.image.get(element.src);
@@ -886,22 +887,30 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 node.android('adjustViewBounds', 'true');
                             }
                         };
+                        if (element.srcset) {
+                            const images = $css.getSrcSet(element, this.localSettings.supported.imageFormat);
+                            if (images.length && images[0].actualWidth) {
+                                width = images[0].actualWidth;
+                                node.css('width', $util.formatPX(width), true);
+                                setHeight();
+                                widthPercent = false;
+                                heightPercent = false;
+                            }
+                        }
                         if (widthPercent || heightPercent) {
-                            if (!parent.layoutConstraint) {
-                                if (widthPercent) {
-                                    width *= parent.box.width / 100;
-                                    if (width < 100) {
-                                        node.css('width', $util.formatPX(width));
-                                    }
+                            if (widthPercent && !parent.layoutConstraint) {
+                                width *= parent.box.width / 100;
+                                if (width > 0) {
+                                    node.css('width', $util.formatPX(width));
                                     if (height === 0) {
                                         setHeight();
                                     }
                                 }
-                                if (heightPercent && height < 100) {
-                                    height *= parent.box.height / 100;
-                                    if (height < 100) {
-                                        node.css('height', $util.formatPX(height));
-                                    }
+                            }
+                            if (heightPercent && !(parent.layoutConstraint && node.documentParent.has('height', $enum.CSS_STANDARD.LENGTH))) {
+                                height *= parent.box.height / 100;
+                                if (height > 0) {
+                                    node.css('height', $util.formatPX(height));
                                     if (width === 0) {
                                         setWidth();
                                     }
@@ -1232,29 +1241,29 @@ export default class Controller<T extends View> extends squared.base.Controller<
         return this.getEnclosingTag($enum.NODE_TEMPLATE.XML, <NodeTagXml<T>> { controlName, attributes: this.userSettings.showAttributes ? node.extractAttributes(1) : undefined, content });
     }
 
-    public renderSpace(width: string, height = '', columnSpan = 0, rowSpan = 0, options?: ViewAttribute) {
+    public renderSpace(width: string, height?: string, columnSpan?: number, rowSpan?: number, options?: ViewAttribute) {
         options = createViewAttribute(options);
         if ($util.isPercent(width)) {
             options.android.layout_columnWeight = $math.truncate(parseFloat(width) / 100, this.localSettings.precision.standardFloat);
             width = '0px';
         }
-        if ($util.isPercent(height)) {
+        if (height && $util.isPercent(height)) {
             options.android.layout_rowWeight = $math.truncate(parseFloat(height) / 100, this.localSettings.precision.standardFloat);
             height = '0px';
         }
-        if (columnSpan > 0) {
+        if (columnSpan) {
             options.android.layout_columnSpan = columnSpan.toString();
         }
-        if (rowSpan > 0) {
+        if (rowSpan) {
             options.android.layout_rowSpan = rowSpan.toString();
         }
         return this.renderNodeStatic(CONTAINER_ANDROID.SPACE, options, width, height || undefined);
     }
 
-    public addGuideline(node: T, parent: T, orientation = '', percent = false, opposite = false) {
+    public addGuideline(node: T, parent: T, orientation?: string, percent = false, opposite = false) {
         const documentParent = parent.groupParent && !node.documentParent.hasAlign($enum.NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
         GUIDELINE_AXIS.forEach(value => {
-            if (!node.constraint[value] && (orientation === '' || value === orientation)) {
+            if (!node.constraint[value] && (!orientation || value === orientation)) {
                 const horizontal = value === AXIS_ANDROID.HORIZONTAL;
                 const box = documentParent.box;
                 let LT: string;

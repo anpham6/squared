@@ -123,4 +123,11 @@ interface ColorStop {
     offset: number;
 }
 
+interface ImageSrcSet {
+    src: string;
+    width: number;
+    pixelRatio: number;
+    actualWidth?: number;
+}
+
 type CSSRuleData = Map<string, ObjectMap<StringMap>>;
