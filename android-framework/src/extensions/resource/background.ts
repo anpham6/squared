@@ -1007,8 +1007,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     else {
                                         const visible = !visibleAll && item.width === '1px';
                                         const hasInset = item.style === 'groove' || item.style === 'ridge';
-                                        const baseWidth = getHideWidth(hasInset ? Math.ceil(width / 2) : width);
                                         const drawWidth = visible ? item.width : '';
+                                        let baseWidth = getHideWidth(hasInset ? Math.ceil(width / 2) : width);
                                         let outerWidth = `-${baseWidth}px`;
                                         let innerWidth = `-${baseWidth + (visibleAll ? 1 : 0)}px`;
                                         let topWidth = '';
@@ -1029,8 +1029,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             }
                                         });
                                         if (hasInset) {
-                                            outerWidth = `-${$css.formatPX(getHideWidth(width))}`;
-                                            innerWidth = `-${width + (visibleAll ? 1 : 0)}px`;
+                                            baseWidth = getHideWidth(width);
+                                            outerWidth = `-${$css.formatPX(baseWidth)}`;
+                                            innerWidth = `-${baseWidth + (visibleAll ? 1 : 0)}px`;
                                             layerList.item.splice(layerList.item.length, 0, {
                                                 top:  index === 0 ? topWidth : innerWidth,
                                                 right: index === 1 ? drawWidth : outerWidth,
@@ -1045,8 +1046,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                 }
                             }
-                            setBorderStyle(layerListData[0], 3);
                             setBorderStyle(layerListData[0], 0);
+                            setBorderStyle(layerListData[0], 3);
                             setBorderStyle(layerListData[0], 1);
                             setBorderStyle(layerListData[0], 2);
                         }

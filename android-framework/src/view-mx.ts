@@ -591,14 +591,17 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 this.android('layout_columnWeight', $math.truncate(parseInt(width) / 100, this.localSettings.floatPrecision), false);
                             }
                             else if (width === '100%') {
-                                if (this.has('maxWidth')) {
-                                    value = this.parseUnit(this.css('maxWidth'));
+                                if (this.has('maxWidth') && !this.textElement && !this.imageElement && !this.svgElement) {
+                                    value = Math.min(this.parseUnit(this.css('maxWidth')), this.documentParent.box.width);
                                 }
-                                else if (renderParent.inlineWidth || this.imageElement) {
-                                    value = this.bounds.width;
+                                else if (!renderParent.blockWidth) {
+                                    value = this.imageElement ? this.bounds.width : this.actualWidth;
                                 }
                                 else {
                                     layoutWidth = 'match_parent';
+                                    if (this.imageElement) {
+                                        this.android('adjustViewBounds', 'true');
+                                    }
                                     value = -1;
                                 }
                             }
@@ -652,12 +655,15 @@ export default (Base: Constructor<squared.base.Node>) => {
                         else if ($css.isPercent(height)) {
                             if (height === '100%' && (this.documentRoot || renderParent.blockHeight && !this.has('maxHeight'))) {
                                 layoutHeight = 'match_parent';
-                            }
-                            else if (this.documentParent.has('height', $enum.CSS_STANDARD.LENGTH)) {
-                                value = this.actualHeight;
+                                if (this.imageElement) {
+                                    this.android('adjustViewBounds', 'true');
+                                }
                             }
                             else if (this.imageElement) {
                                 value = this.bounds.height;
+                            }
+                            else if (this.documentParent.has('height', $enum.CSS_STANDARD.LENGTH)) {
+                                value = this.actualHeight;
                             }
                         }
                         if (value > 0) {

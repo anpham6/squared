@@ -961,34 +961,39 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     if (previous) {
                                         if (hasFloat) {
                                             if (item.alignedVertically(previousSiblings, horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0)) {
-                                                if (horizontal.length && !(item.blockStatic && previous.float !== 'right' && $util.withinRange(previous.linear.right, parentY.box.right))) {
-                                                    if (floatActive.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
-                                                        function getFloatBottom() {
-                                                            let floatBottom = Number.NEGATIVE_INFINITY;
-                                                            $util.captureMap(
-                                                                horizontal,
-                                                                node => node.floating,
-                                                                node => floatBottom = Math.max(floatBottom, node.linear.bottom)
-                                                            );
-                                                            return floatBottom;
-                                                        }
-                                                        if (!item.floating || item.linear.top < getFloatBottom()) {
-                                                            if (cleared.has(item)) {
-                                                                if (!item.floating && floatActive.size > 0) {
-                                                                    item.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
-                                                                    horizontal.push(item);
-                                                                    verticalExtended = true;
-                                                                    continue;
-                                                                }
-                                                                break traverse;
+                                                if (horizontal.length) {
+                                                    if (!(item.blockStatic && previous.float !== 'right' && $util.withinRange(previous.linear.right, parentY.box.right))) {
+                                                        if (floatActive.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
+                                                            function getFloatBottom() {
+                                                                let floatBottom = Number.NEGATIVE_INFINITY;
+                                                                $util.captureMap(
+                                                                    horizontal,
+                                                                    node => node.floating,
+                                                                    node => floatBottom = Math.max(floatBottom, node.linear.bottom)
+                                                                );
+                                                                return floatBottom;
                                                             }
-                                                            else if (floated.size === 1 && (!item.floating || floatActive.has(item.float))) {
-                                                                horizontal.push(item);
-                                                                if (item.linear.bottom > getFloatBottom()) {
+                                                            if (!item.floating || item.linear.top < getFloatBottom()) {
+                                                                if (cleared.has(item)) {
+                                                                    if (!item.floating && floatActive.size > 0) {
+                                                                        item.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
+                                                                        horizontal.push(item);
+                                                                        verticalExtended = true;
+                                                                        continue;
+                                                                    }
                                                                     break traverse;
                                                                 }
                                                                 else {
-                                                                    continue;
+                                                                    const floatBottom = getFloatBottom();
+                                                                    if (floated.size === 1 && (!item.floating && item.linear.top < floatBottom || floatActive.has(item.float))) {
+                                                                        horizontal.push(item);
+                                                                        if (!item.floating && item.linear.bottom >= floatBottom) {
+                                                                            break traverse;
+                                                                        }
+                                                                        else {
+                                                                            continue;
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
                                                         }

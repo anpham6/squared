@@ -397,7 +397,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     return true;
                 }
                 else if (this.floating && previous.floating) {
-                    if (this.linear.top >= Math.floor(previous.linear.bottom) || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.right, node.linear.right)) !== undefined) {
+                    if (this.linear.top >= Math.floor(previous.linear.bottom)) {
                         return true;
                     }
                 }
@@ -414,7 +414,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 bottom = rect.bottom;
                             }
                         }
-                        return !$util.withinRange(top, floated.linear.top) && bottom > floated.linear.bottom;
+                        return !$util.withinRange(top, floated.linear.top) && (this.multiline ? bottom > floated.linear.bottom : top >= floated.linear.bottom);
                     }
                 }
             }

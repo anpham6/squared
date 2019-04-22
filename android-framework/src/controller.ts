@@ -206,7 +206,7 @@ function isTargeted(parent: View, node: View) {
 }
 
 function getTextBottom<T extends View>(nodes: T[]): T | undefined {
-    return $util.filterArray(nodes, node => node.verticalAlign === 'text-bottom').sort((a, b) => {
+    return $util.filterArray(nodes, node => node.verticalAlign === 'text-bottom' || node.display === 'inline-block' && node.baseline).sort((a, b) => {
         if (a.bounds.height === b.bounds.height) {
             return a.is(CONTAINER_NODE.SELECT) ? 1 : -1;
         }
@@ -865,8 +865,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         const element = <HTMLImageElement> node.element;
                         let width = node.toFloat('width');
                         let height = node.toFloat('height');
-                        let widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT) && width < 100;
-                        let heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT) && height < 100;
+                        let widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT);
+                        let heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT);
                         let scaleType = 'fitXY';
                         const setWidth = () => {
                             const image = this.application.session.image.get(element.src);
@@ -900,18 +900,24 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                         if (widthPercent || heightPercent) {
                             if (widthPercent && !parent.layoutConstraint) {
-                                width *= parent.box.width / 100;
-                                if (width > 0) {
-                                    node.css('width', $css.formatPX(width));
+                                const actualWidth = parent.box.width * width / 100;
+                                if (actualWidth > 0) {
+                                    if (width < 100) {
+                                        node.css('width', $css.formatPX(width));
+                                    }
+                                    width = actualWidth;
                                     if (height === 0) {
                                         setHeight();
                                     }
                                 }
                             }
                             if (heightPercent && !(parent.layoutConstraint && node.documentParent.has('height', $enum.CSS_STANDARD.LENGTH))) {
-                                height *= parent.box.height / 100;
-                                if (height > 0) {
-                                    node.css('height', $css.formatPX(height));
+                                const actualHeight = parent.box.height * height / 100;
+                                if (actualHeight > 0) {
+                                    if (height < 100) {
+                                        node.css('height', $css.formatPX(actualHeight));
+                                    }
+                                    height = actualHeight;
                                     if (width === 0) {
                                         setWidth();
                                     }
@@ -1969,7 +1975,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                         break;
                     case 'middle':
-                        if (baseline && !baseline.textElement) {
+                        if (baseline && !baseline.textElement || textBottom) {
                             alignTop = true;
                         }
                         else {
@@ -2030,7 +2036,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             item.anchored = true;
             item.positioned = true;
         }
-        if (middle && baseline && baseline.textElement && getMaxHeight(middle) > getMaxHeight(baseline)) {
+        if (middle && baseline && textBottom === undefined && baseline.textElement && getMaxHeight(middle) > getMaxHeight(baseline)) {
             baseline.anchorParent(AXIS_ANDROID.VERTICAL, true);
         }
     }

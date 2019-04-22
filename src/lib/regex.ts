@@ -25,8 +25,7 @@ export const CSS = {
     URL: new RegExp(STRING.CSS_URL),
     CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
     HEX: /[A-Za-z\d]{3,8}/,
-    RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/,
-    SELECTOR_G: new RegExp(STRING.CSS_SELECTOR, 'g')
+    RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/
 };
 
 export const XML = {
@@ -54,6 +53,7 @@ export const PREFIX = {
 
 export const ESCAPE = {
     ENTITY: /&#(\d+);/g,
+    NONENTITY: /&(?!#?[A-Za-z0-9]{2,};)/g,
     NBSP: /&nbsp;/g,
     AMP: /&/g,
     LT: /</g,

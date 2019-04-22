@@ -1,4 +1,4 @@
-/* android.widget 0.9.3
+/* android.widget 0.9.4
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -8,6 +8,7 @@ this.android.widget.toolbar = (function () {
 
     var $Resource = android.base.Resource;
     const $const = squared.base.lib.constant;
+    const $css = squared.lib.css;
     const $dom = squared.lib.dom;
     const $enum = squared.base.lib.enumeration;
     const $session = squared.lib.session;
@@ -119,7 +120,7 @@ this.android.widget.toolbar = (function () {
             let collapsingToolbarNode;
             if (hasAppBar) {
                 $util.assignEmptyValue(appBarOptions, 'android', 'id', `${node.documentId}_appbar`);
-                $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $util.formatPX(node.height) : 'wrap_content');
+                $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $css.formatPX(node.height) : 'wrap_content');
                 $util.assignEmptyValue(appBarOptions, 'android', 'fitsSystemWindows', 'true');
                 if (hasMenu) {
                     if (appBarOptions.android.theme) {

@@ -1,4 +1,4 @@
-/* squared 0.9.3
+/* squared 0.9.4
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -7,82 +7,89 @@
     (global = global || self, factory(global.squared = {}));
 }(this, function (exports) { 'use strict';
 
-    const REGEXP_WORD = /\w/;
-    const REGEXP_WORDDASH = /[a-zA-Z\d]/;
+    const DECIMAL = '-?\\d+(?:\\.\\d+)?';
+    const UNIT_TYPE = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in';
+    const STRING = {
+        DECIMAL,
+        PERCENT: '-?\\d+(?:\\.\\d+)?%',
+        LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
+        LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
+        CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
+        CSS_URL: 'url\\("?(.+?)"?\\)',
+        CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
+        CSS_CALC: 'calc(\\(.+\\))',
+        CSS_VAR: 'var\\((--[A-Za-z0-9\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
+    };
+    const UNIT = {
+        DECIMAL: new RegExp(`^${STRING.DECIMAL}$`),
+        LENGTH: new RegExp(`^${STRING.LENGTH}$`),
+        PERCENT: new RegExp(`^${STRING.PERCENT}$`)
+    };
+    const CSS = {
+        ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
+        CALC: new RegExp(`^${STRING.CSS_CALC}$`),
+        URL: new RegExp(STRING.CSS_URL),
+        CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
+        HEX: /[A-Za-z\d]{3,8}/,
+        RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/
+    };
+    const XML = {
+        ATTRIBUTE: /([^\s]+)="([^"]+)"/,
+        ENTITY: /&#?[A-Za-z0-9]+;/,
+        SEPARATOR: /\s*,\s*/,
+        BREAKWORD: /[^A-Za-z0-9&#;]+/,
+        TAGNAME_G: /(<([^>]+)>)/g,
+        NONWORD_G: /[^A-Za-z\d]+/g
+    };
+    const CHAR = {
+        SPACE: /\s+/,
+        LEADINGSPACE: /^\s+/,
+        TRAILINGSPACE: /\s+$/,
+        LEADINGNEWLINE: /^\s*\n+/,
+        LEADINGNUMBER: /^\d/,
+        WORD: /\w/,
+        WORDDASH: /[a-zA-Z\d]/
+    };
+    const PREFIX = {
+        PROTOCOL: /^[A-Za-z]+:\/\//
+    };
+    const ESCAPE = {
+        ENTITY: /&#(\d+);/g,
+        NONENTITY: /&(?!#?[A-Za-z0-9]{2,};)/g,
+        NBSP: /&nbsp;/g,
+        AMP: /&/g,
+        LT: /</g,
+        GT: />/g,
+        SINGLEQUOTE: /'/g,
+        DOUBLEQUOTE: /"/g,
+        U00A0: /\u00A0/g,
+        U2002: /\u2002/g,
+        U2003: /\u2003/g,
+        U2009: /\u2009/g,
+        U200C: /\u200C/g,
+        U200D: /\u200D/g,
+        U200E: /\u200E/g,
+        U200F: /\u200F/g
+    };
+
+    var regex = /*#__PURE__*/Object.freeze({
+        STRING: STRING,
+        UNIT: UNIT,
+        CSS: CSS,
+        XML: XML,
+        CHAR: CHAR,
+        PREFIX: PREFIX,
+        ESCAPE: ESCAPE
+    });
+
     const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const NUMERALS = [
         '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
         '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
         '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
     ];
-    const UNIT_TYPE = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in';
     const CACHE_CAMELCASE = {};
     const CACHE_UNDERSCORE = {};
-    const STRING_PATTERN = {
-        DECIMAL: '-?\\d+(?:\\.\\d+)?',
-        PERCENT: '-?\\d+(?:\\.\\d+)?%',
-        CALC: 'calc(\\(.+\\))',
-        VAR: 'var\\((--[A-Za-z0-9\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
-        ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
-        SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
-        URL: 'url\\("?(.+?)"?\\)'
-    };
-    STRING_PATTERN.LENGTH = `(${STRING_PATTERN.DECIMAL})(${UNIT_TYPE})?`;
-    STRING_PATTERN.LENGTH_PERCENTAGE = `(${STRING_PATTERN.DECIMAL}(?:${UNIT_TYPE}|%)?)`;
-    STRING_PATTERN.ANGLE = `(${STRING_PATTERN.DECIMAL})(deg|rad|turn|grad)`;
-    const REGEXP_COMPILED = {
-        DECIMAL: new RegExp(`^${STRING_PATTERN.DECIMAL}$`),
-        LENGTH: new RegExp(`^${STRING_PATTERN.LENGTH}$`),
-        PERCENT: new RegExp(`^${STRING_PATTERN.PERCENT}$`),
-        ANGLE: new RegExp(`^${STRING_PATTERN.ANGLE}$`),
-        CALC: new RegExp(`^${STRING_PATTERN.CALC}$`),
-        URL: new RegExp(STRING_PATTERN.URL),
-        CHAR_ENTITY: /&#?[A-Za-z0-9]+;/,
-        TAGNAME: /(<([^>]+)>)/g,
-        PROTOCOL: /^[A-Za-z]+:\/\//,
-        SEPARATOR: /\s*,\s*/,
-        ATTRIBUTE: /([^\s]+)="([^"]+)"/,
-        CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
-        LEADINGSPACE: /^\s+/,
-        TRAILINGSPACE: /\s+$/,
-        LEADINGNEWLINE: /^\s*\n+/
-    };
-    function isUserAgent(value) {
-        if (typeof value === 'string') {
-            const name = value.toUpperCase();
-            value = 0;
-            if (name.indexOf('CHROME') !== -1) {
-                value |= 2 /* CHROME */;
-            }
-            if (name.indexOf('SAFARI') !== -1) {
-                value |= 4 /* SAFARI */;
-            }
-            if (name.indexOf('FIREFOX') !== -1) {
-                value |= 8 /* FIREFOX */;
-            }
-            if (name.indexOf('EDGE') !== -1) {
-                value |= 16 /* EDGE */;
-            }
-        }
-        const userAgent = navigator.userAgent;
-        let client;
-        if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
-            client = 4 /* SAFARI */;
-        }
-        else if (userAgent.indexOf('Firefox') !== -1) {
-            client = 8 /* FIREFOX */;
-        }
-        else if (userAgent.indexOf('Edge') !== -1) {
-            client = 16 /* EDGE */;
-        }
-        else {
-            client = 2 /* CHROME */;
-        }
-        return hasBit(value, client);
-    }
-    function getDeviceDPI() {
-        return window.devicePixelRatio * 96;
-    }
     function capitalize(value, upper = true) {
         if (upper) {
             return value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
@@ -135,7 +142,7 @@
         let result = '';
         if (dash) {
             for (let i = 0; i < value.length; i++) {
-                if (REGEXP_WORDDASH.test(value[i])) {
+                if (CHAR.WORDDASH.test(value[i])) {
                     result += value[i];
                 }
                 else {
@@ -145,7 +152,7 @@
         }
         else {
             for (let i = 0; i < value.length; i++) {
-                if (REGEXP_WORD.test(value[i])) {
+                if (CHAR.WORD.test(value[i])) {
                     result += value[i];
                 }
                 else {
@@ -160,39 +167,6 @@
     }
     function convertFloat(value) {
         return value && parseFloat(value) || 0;
-    }
-    function convertAngle(value, unit = 'deg') {
-        let angle = parseFloat(value);
-        if (!isNaN(angle)) {
-            switch (unit) {
-                case 'rad':
-                    angle *= 180 / Math.PI;
-                    break;
-                case 'grad':
-                    angle /= 400;
-                case 'turn':
-                    angle *= 360;
-                    break;
-            }
-            return angle;
-        }
-        return 0;
-    }
-    function convertPX(value, fontSize) {
-        if (value) {
-            value = value.trim();
-            if (value.endsWith('%') || value === 'auto') {
-                return value;
-            }
-            return `${parseUnit(value, fontSize)}px`;
-        }
-        return '0px';
-    }
-    function convertLength(value, dimension, fontSize) {
-        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
-    }
-    function convertPercent(value, dimension, fontSize) {
-        return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
     }
     function convertAlpha(value) {
         if (value >= 0) {
@@ -232,190 +206,6 @@
         }
         return '';
     }
-    function calculate(value, dimension = 0, fontSize) {
-        value = value.trim();
-        if (value.charAt(0) !== '(' || value.charAt(value.length - 1) !== ')') {
-            value = `(${value})`;
-        }
-        const opening = [];
-        const closing = [];
-        let opened = 0;
-        for (let i = 0; i < value.length; i++) {
-            switch (value.charAt(i)) {
-                case '(':
-                    opened++;
-                    opening[i] = true;
-                    break;
-                case ')':
-                    closing.push(i);
-                    break;
-            }
-        }
-        if (opened === closing.length) {
-            const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
-            const placeholder = /{(\d+)}/;
-            const equated = [];
-            let index = 0;
-            while (true) {
-                for (let i = 0; i < closing.length; i++) {
-                    let j = closing[i] - 1;
-                    let valid = false;
-                    for (; j >= 0; j--) {
-                        if (opening[j]) {
-                            valid = true;
-                            opening[j] = false;
-                            break;
-                        }
-                        else if (closing.includes(j)) {
-                            break;
-                        }
-                    }
-                    if (valid) {
-                        const seg = [];
-                        const evaluate = [];
-                        for (let partial of value.substring(j + 1, closing[i]).split(symbol)) {
-                            partial = partial.trim();
-                            switch (partial) {
-                                case '+':
-                                case '-':
-                                case '*':
-                                case '/':
-                                    evaluate.push(partial);
-                                    break;
-                                default:
-                                    const match = placeholder.exec(partial);
-                                    if (match) {
-                                        seg.push(equated[parseInt(match[1])]);
-                                    }
-                                    else if (isLength(partial)) {
-                                        seg.push(parseUnit(partial, fontSize));
-                                    }
-                                    else if (isPercent(partial)) {
-                                        seg.push(parseFloat(partial) / 100 * dimension);
-                                    }
-                                    else if (isAngle(partial)) {
-                                        seg.push(parseAngle(partial));
-                                    }
-                                    else {
-                                        return undefined;
-                                    }
-                                    break;
-                            }
-                        }
-                        if (seg.length !== evaluate.length + 1) {
-                            return undefined;
-                        }
-                        for (let k = 0; k < evaluate.length; k++) {
-                            if (evaluate[k] === '/') {
-                                if (Math.abs(seg[k + 1]) !== 0) {
-                                    seg.splice(k, 2, seg[k] / seg[k + 1]);
-                                    evaluate.splice(k--, 1);
-                                }
-                                else {
-                                    return undefined;
-                                }
-                            }
-                        }
-                        for (let k = 0; k < evaluate.length; k++) {
-                            if (evaluate[k] === '*') {
-                                seg.splice(k, 2, seg[k] * seg[k + 1]);
-                                evaluate.splice(k--, 1);
-                            }
-                        }
-                        for (let k = 0; k < evaluate.length; k++) {
-                            seg.splice(k, 2, seg[k] + (evaluate[k] === '-' ? -seg[k + 1] : seg[k + 1]));
-                            evaluate.splice(k--, 1);
-                        }
-                        if (seg.length === 1) {
-                            if (closing.length === 1) {
-                                return seg[0];
-                            }
-                            else {
-                                equated[index] = seg[0];
-                                const hash = `{${index++}}`;
-                                const remaining = closing[i] + 1;
-                                value = value.substring(0, j) + `${hash + ' '.repeat(remaining - (j + hash.length))}` + value.substring(remaining);
-                                closing.splice(i--, 1);
-                            }
-                        }
-                        else {
-                            return undefined;
-                        }
-                    }
-                }
-            }
-        }
-        return undefined;
-    }
-    function parseUnit(value, fontSize) {
-        if (value) {
-            const match = REGEXP_COMPILED.LENGTH.exec(value);
-            if (match) {
-                let result = parseFloat(match[1]);
-                switch (match[2]) {
-                    case 'px':
-                        return result;
-                    case 'em':
-                    case 'ch':
-                        result *= fontSize || 16;
-                        break;
-                    case 'rem':
-                        result *= parseFloat(getComputedStyle(document.body).getPropertyValue('font-size'));
-                        break;
-                    case 'pc':
-                        result *= 12;
-                    case 'pt':
-                        result *= 4 / 3;
-                        break;
-                    case 'mm':
-                        result /= 10;
-                    case 'cm':
-                        result /= 2.54;
-                    case 'in':
-                        result *= getDeviceDPI();
-                        break;
-                    case 'vw':
-                        result *= window.innerWidth / 100;
-                        break;
-                    case 'vh':
-                        result *= window.innerHeight / 100;
-                        break;
-                    case 'vmin':
-                        result *= Math.min(window.innerWidth, window.innerHeight) / 100;
-                        break;
-                    case 'vmax':
-                        result *= Math.max(window.innerWidth, window.innerHeight) / 100;
-                        break;
-                }
-                return result;
-            }
-        }
-        return 0;
-    }
-    function parseAngle(value) {
-        if (value) {
-            const match = REGEXP_COMPILED.ANGLE.exec(value);
-            if (match) {
-                return convertAngle(match[1], match[2]);
-            }
-        }
-        return 0;
-    }
-    function formatPX(value) {
-        if (typeof value === 'string') {
-            value = parseFloat(value);
-        }
-        return isNaN(value) ? '0px' : `${Math.round(value)}px`;
-    }
-    function formatPercent(value, round = true) {
-        if (typeof value === 'string') {
-            value = parseFloat(value);
-            if (isNaN(value)) {
-                return '0%';
-            }
-        }
-        return `${round ? Math.round(value) : value}%`;
-    }
     function formatString(value, ...params) {
         for (let i = 0; i < params.length; i++) {
             value = value.replace(`{${i}}`, params[i]);
@@ -426,28 +216,13 @@
         return (value & offset) === offset;
     }
     function isNumber(value) {
-        return typeof value === 'string' && REGEXP_COMPILED.DECIMAL.test(value.trim());
+        return typeof value === 'string' && UNIT.DECIMAL.test(value.trim());
     }
     function isString(value) {
         return typeof value === 'string' && value.trim() !== '';
     }
     function isArray(value) {
         return Array.isArray(value) && value.length > 0;
-    }
-    function isLength(value, percent = false) {
-        return REGEXP_COMPILED.LENGTH.test(value) || percent && isPercent(value);
-    }
-    function isPercent(value) {
-        return REGEXP_COMPILED.PERCENT.test(value);
-    }
-    function isCalc(value) {
-        return REGEXP_COMPILED.CALC.test(value);
-    }
-    function isCustomProperty(value) {
-        return REGEXP_COMPILED.CUSTOMPROPERTY.test(value);
-    }
-    function isAngle(value) {
-        return REGEXP_COMPILED.ANGLE.test(value);
     }
     function isEqual(source, values) {
         if (source === values) {
@@ -555,7 +330,7 @@
         return optional(obj, value, 'boolean');
     }
     function resolvePath(value) {
-        if (!REGEXP_COMPILED.PROTOCOL.test(value)) {
+        if (!PREFIX.PROTOCOL.test(value)) {
             let pathname = location.pathname.split('/');
             pathname.pop();
             if (value.charAt(0) === '/') {
@@ -734,11 +509,19 @@
         });
     }
     function flatArray(list) {
-        let current = list;
-        while (current.some(item => Array.isArray(item))) {
-            current = [].concat.apply([], filterArray(current, item => item !== undefined && item !== null));
+        const result = [];
+        for (let i = 0; i < list.length; i++) {
+            const item = list[i];
+            if (Array.isArray(item)) {
+                if (item.length) {
+                    result.push(...flatArray(item));
+                }
+            }
+            else if (item !== undefined && item !== null) {
+                result.push(item);
+            }
         }
-        return current;
+        return result;
     }
     function partitionArray(list, predicate) {
         const valid = [];
@@ -766,14 +549,12 @@
         return list;
     }
     function filterArray(list, predicate) {
-        const result = new Array(list.length);
-        let j = 0;
+        const result = [];
         for (let i = 0; i < list.length; i++) {
             if (predicate(list[i], i, list)) {
-                result[j++] = list[i];
+                result.push(list[i]);
             }
         }
-        result.length = j;
         return result;
     }
     function concatArray(dest, source) {
@@ -791,26 +572,22 @@
         return dest;
     }
     function flatMap(list, predicate) {
-        const result = new Array(list.length);
-        let j = 0;
+        const result = [];
         for (let i = 0; i < list.length; i++) {
             const item = predicate(list[i], i, list);
             if (hasValue(item)) {
-                result[j++] = item;
+                result.push(item);
             }
         }
-        result.length = j;
         return result;
     }
     function filterMap(list, predicate, callback) {
-        const result = new Array(list.length);
-        let j = 0;
+        const result = [];
         for (let i = 0; i < list.length; i++) {
             if (predicate(list[i], i, list)) {
-                result[j++] = callback(list[i], i, list);
+                result.push(callback(list[i], i, list));
             }
         }
-        result.length = j;
         return result;
     }
     function replaceMap(list, predicate) {
@@ -848,38 +625,20 @@
     }
 
     var util = /*#__PURE__*/Object.freeze({
-        STRING_PATTERN: STRING_PATTERN,
-        REGEXP_COMPILED: REGEXP_COMPILED,
-        isUserAgent: isUserAgent,
-        getDeviceDPI: getDeviceDPI,
         capitalize: capitalize,
         convertUnderscore: convertUnderscore,
         convertCamelCase: convertCamelCase,
         convertWord: convertWord,
         convertInt: convertInt,
         convertFloat: convertFloat,
-        convertAngle: convertAngle,
-        convertPX: convertPX,
-        convertLength: convertLength,
-        convertPercent: convertPercent,
         convertAlpha: convertAlpha,
         convertRoman: convertRoman,
         convertEnum: convertEnum,
-        calculate: calculate,
-        parseUnit: parseUnit,
-        parseAngle: parseAngle,
-        formatPX: formatPX,
-        formatPercent: formatPercent,
         formatString: formatString,
         hasBit: hasBit,
         isNumber: isNumber,
         isString: isString,
         isArray: isArray,
-        isLength: isLength,
-        isPercent: isPercent,
-        isCalc: isCalc,
-        isCustomProperty: isCustomProperty,
-        isAngle: isAngle,
         isEqual: isEqual,
         includes: includes,
         cloneInstance: cloneInstance,
@@ -1063,9 +822,9 @@
                 for (const item of container.children) {
                     if (predicate === undefined || predicate(item)) {
                         result.push(item);
-                        if (item instanceof Container && item.length) {
-                            concatArray(result, cascade(item));
-                        }
+                    }
+                    if (item instanceof Container && item.length) {
+                        concatArray(result, cascade(item));
                     }
                 }
                 return result;
@@ -1081,8 +840,6 @@
     }
 
     const STRING_HEX = '0123456789ABCDEF';
-    const REGEXP_HEX = /[A-Za-z\d]{3,}/;
-    const REGEXP_RGBA = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/;
     const CACHE_COLORDATA = {};
     const COLOR_CSS3 = [
         {
@@ -3209,7 +2966,7 @@
                 rgba = parseRGBA(value);
             }
             else if (value.startsWith('rgb')) {
-                const match = REGEXP_RGBA.exec(value);
+                const match = CSS.RGBA.exec(value);
                 if (match) {
                     rgba = {
                         r: parseInt(match[1]),
@@ -3286,7 +3043,7 @@
     }
     function parseRGBA(value) {
         value = value.replace(/#/g, '').trim();
-        if (REGEXP_HEX.test(value)) {
+        if (CSS.HEX.test(value)) {
             let a = 255;
             switch (value.length) {
                 case 4:
@@ -3369,6 +3126,45 @@
         convertHSLA: convertHSLA,
         formatRGBA: formatRGBA,
         formatHSLA: formatHSLA
+    });
+
+    function isUserAgent(value) {
+        if (typeof value === 'string') {
+            const name = value.toUpperCase();
+            value = 0;
+            if (name.indexOf('CHROME') !== -1) {
+                value |= 2 /* CHROME */;
+            }
+            if (name.indexOf('SAFARI') !== -1) {
+                value |= 4 /* SAFARI */;
+            }
+            if (name.indexOf('FIREFOX') !== -1) {
+                value |= 8 /* FIREFOX */;
+            }
+            if (name.indexOf('EDGE') !== -1) {
+                value |= 16 /* EDGE */;
+            }
+        }
+        const userAgent = navigator.userAgent;
+        let client = 2 /* CHROME */;
+        if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
+            client = 4 /* SAFARI */;
+        }
+        else if (userAgent.indexOf('Firefox') !== -1) {
+            client = 8 /* FIREFOX */;
+        }
+        else if (userAgent.indexOf('Edge') !== -1) {
+            client = 16 /* EDGE */;
+        }
+        return hasBit(value, client);
+    }
+    function getDeviceDPI() {
+        return window.devicePixelRatio * 96;
+    }
+
+    var client = /*#__PURE__*/Object.freeze({
+        isUserAgent: isUserAgent,
+        getDeviceDPI: getDeviceDPI
     });
 
     const ELEMENT_BLOCK = [
@@ -3508,6 +3304,17 @@
         }
         return element;
     }
+    function getTextMetrics(value, fontFamily, fontSize) {
+        if (fontFamily && fontSize) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            if (context) {
+                context.font = `${fontSize}px ${fontFamily}`;
+                return context.measureText(value);
+            }
+        }
+        return undefined;
+    }
     function getNamedItem(element, attr) {
         if (element) {
             const item = element.attributes.getNamedItem(attr);
@@ -3527,6 +3334,7 @@
         removeElementsByClassName: removeElementsByClassName,
         getElementsBetweenSiblings: getElementsBetweenSiblings,
         createElement: createElement,
+        getTextMetrics: getTextMetrics,
         getNamedItem: getNamedItem
     });
 
@@ -3629,6 +3437,13 @@
         getElementAsNode: getElementAsNode
     });
 
+    const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+    function convertLength(value, dimension, fontSize) {
+        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
+    }
+    function convertPercent(value, dimension, fontSize) {
+        return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
+    }
     const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
     const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
     const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
@@ -3654,7 +3469,7 @@
         return !!element && typeof element['style'] === 'object' && typeof element['style']['display'] === 'string';
     }
     function getSpecificity(value) {
-        const pattern = new RegExp(STRING_PATTERN.SELECTOR, 'g');
+        const pattern = new RegExp(STRING.CSS_SELECTOR, 'g');
         let result = 0;
         let match;
         while ((match = pattern.exec(value.trim())) !== null) {
@@ -3764,6 +3579,24 @@
                         return computed;
                     }
                 }
+                switch (attr) {
+                    case 'borderTopWidth':
+                    case 'borderRightWidth':
+                    case 'borderBottomWidth':
+                    case 'borderLeftWidth':
+                        switch (value) {
+                            case 'thin':
+                                value = '1px';
+                                break;
+                            case 'medium':
+                                value = '2px';
+                                break;
+                            case 'thick':
+                                value = '3px';
+                                break;
+                        }
+                        break;
+                }
                 if (numeric) {
                     setElementCache(element, attr, specificity.toString(), value);
                 }
@@ -3803,7 +3636,7 @@
                                 for (let k = 0; k < item.cssRules.length; k++) {
                                     const match = pattern.exec(item.cssRules[k].cssText);
                                     if (match) {
-                                        for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
+                                        for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
                                             percent = percent.trim();
                                             switch (percent) {
                                                 case 'from':
@@ -3835,7 +3668,14 @@
         }
         return result;
     }
-    function validMediaRule(value) {
+    function parseConditionText(rule, value) {
+        const match = new RegExp(`^@${rule}([^{]+)`).exec(value);
+        if (match) {
+            value = match[1].trim();
+        }
+        return value;
+    }
+    function validMediaRule(value, fontSize) {
         switch (value) {
             case 'only all':
             case 'only screen':
@@ -3855,15 +3695,16 @@
                             return unit === range;
                     }
                 }
-                const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-                const fontSize = parseUnit(getStyle(document.body).getPropertyValue('font-size'));
+                if (!fontSize) {
+                    fontSize = getFontSize(document.body);
+                }
                 let match;
-                while ((match = pattern.exec(value)) !== null) {
+                while ((match = REGEXP_MEDIARULE.exec(value)) !== null) {
                     const negate = match[1] === 'not';
-                    const patternCondition = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+                    const pattern = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
                     let condition;
                     let valid = false;
-                    while ((condition = patternCondition.exec(match[2])) !== null) {
+                    while ((condition = pattern.exec(match[2])) !== null) {
                         const attr = condition[1];
                         let operation;
                         if (condition[1].startsWith('min')) {
@@ -3973,7 +3814,7 @@
     function parseVar(element, value) {
         const style = getStyle(element);
         let match;
-        while ((match = new RegExp(`${STRING_PATTERN.VAR}`).exec(value)) !== null) {
+        while ((match = new RegExp(STRING.CSS_VAR).exec(value)) !== null) {
             let propertyValue = style.getPropertyValue(match[1]).trim();
             if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) !== undefined && parseColor(propertyValue) === undefined)) {
                 propertyValue = match[2];
@@ -4109,6 +3950,111 @@
         }
         return result;
     }
+    function getSrcSet(element, mimeType) {
+        const parentElement = element.parentElement;
+        const result = [];
+        let srcset = element.srcset;
+        let sizes = element.sizes;
+        if (parentElement && parentElement.tagName === 'PICTURE') {
+            for (let i = 0; i < parentElement.children.length; i++) {
+                const source = parentElement.children[i];
+                if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || isString(source.type) && mimeType && mimeType.includes(source.type.split('/').pop().toLowerCase()))) {
+                    srcset = source.srcset;
+                    sizes = source.sizes;
+                    break;
+                }
+            }
+        }
+        if (srcset !== '') {
+            const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
+            const pattern = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
+            for (const src of srcset.split(XML.SEPARATOR)) {
+                const match = pattern.exec(src.trim());
+                if (match) {
+                    let width = 0;
+                    let pixelRatio = 0;
+                    switch (match[3]) {
+                        case 'w':
+                            width = parseFloat(match[2]);
+                            break;
+                        case 'x':
+                            pixelRatio = parseFloat(match[2]);
+                            break;
+                        default:
+                            pixelRatio = 1;
+                            break;
+                    }
+                    result.push({
+                        src: filepath + fromLastIndexOf(match[1], '/'),
+                        pixelRatio,
+                        width
+                    });
+                }
+            }
+            result.sort((a, b) => {
+                if (a.pixelRatio > 0 && b.pixelRatio > 0) {
+                    if (a.pixelRatio !== b.pixelRatio) {
+                        return a.pixelRatio < b.pixelRatio ? -1 : 1;
+                    }
+                }
+                else if (a.width > 0 && b.width > 0) {
+                    if (a.width !== b.width) {
+                        return a.width < b.width ? -1 : 1;
+                    }
+                }
+                return 0;
+            });
+        }
+        if (result.length === 0) {
+            result.push({ src: element.src, pixelRatio: 1, width: 0 });
+        }
+        else if (result.length > 1 && isString(sizes)) {
+            const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH}\\))?\\s*(.+)`);
+            const fontSize = getFontSize(document.body);
+            let width = 0;
+            for (const value of sizes.split(XML.SEPARATOR)) {
+                const match = pattern.exec(value.trim());
+                if (match) {
+                    if (match[1] && !validMediaRule(match[1], fontSize)) {
+                        continue;
+                    }
+                    if (match[4]) {
+                        const calcMatch = CSS.CALC.exec(match[4]);
+                        if (calcMatch) {
+                            width = calculate(calcMatch[1]) || 0;
+                        }
+                        else {
+                            width = parseUnit(match[4], fontSize);
+                        }
+                    }
+                    if (width > 0) {
+                        break;
+                    }
+                }
+            }
+            if (width > 0) {
+                const resolution = width * window.devicePixelRatio;
+                let index = -1;
+                for (let i = 0; i < result.length; i++) {
+                    const imageWidth = result[i].width;
+                    if (imageWidth > 0 && imageWidth <= resolution && (index === -1 || result[index].width < imageWidth)) {
+                        index = i;
+                    }
+                }
+                if (index > 0) {
+                    const selected = result.splice(index, 1)[0];
+                    selected.pixelRatio = 1;
+                    selected.actualWidth = width;
+                    result.unshift(selected);
+                }
+                else if (index === 0) {
+                    result[0].pixelRatio = 1;
+                    result[0].actualWidth = width;
+                }
+            }
+        }
+        return result;
+    }
     function convertListStyle(name, value, valueAsDefault = false) {
         switch (name) {
             case 'decimal':
@@ -4135,7 +4081,7 @@
         return valueAsDefault ? value.toString() : '';
     }
     function resolveURL(value) {
-        const match = REGEXP_COMPILED.URL.exec(value);
+        const match = CSS.URL.exec(value);
         return match ? resolvePath(match[1]) : '';
     }
     function insertStyleSheetRule(value, index = 0) {
@@ -4155,6 +4101,232 @@
         }
         return style;
     }
+    function convertAngle(value, unit = 'deg') {
+        let angle = parseFloat(value);
+        if (!isNaN(angle)) {
+            switch (unit) {
+                case 'rad':
+                    angle *= 180 / Math.PI;
+                    break;
+                case 'grad':
+                    angle /= 400;
+                case 'turn':
+                    angle *= 360;
+                    break;
+            }
+            return angle;
+        }
+        return 0;
+    }
+    function convertPX(value, fontSize) {
+        if (value) {
+            value = value.trim();
+            if (value.endsWith('%') || value === 'auto') {
+                return value;
+            }
+            return `${parseUnit(value, fontSize)}px`;
+        }
+        return '0px';
+    }
+    function calculate(value, dimension = 0, fontSize) {
+        value = value.trim();
+        if (value.charAt(0) !== '(' || value.charAt(value.length - 1) !== ')') {
+            value = `(${value})`;
+        }
+        const opening = [];
+        const closing = [];
+        let opened = 0;
+        for (let i = 0; i < value.length; i++) {
+            switch (value.charAt(i)) {
+                case '(':
+                    opened++;
+                    opening[i] = true;
+                    break;
+                case ')':
+                    closing.push(i);
+                    break;
+            }
+        }
+        if (opened === closing.length) {
+            const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
+            const placeholder = /{(\d+)}/;
+            const equated = [];
+            let index = 0;
+            while (true) {
+                for (let i = 0; i < closing.length; i++) {
+                    let j = closing[i] - 1;
+                    let valid = false;
+                    for (; j >= 0; j--) {
+                        if (opening[j]) {
+                            valid = true;
+                            opening[j] = false;
+                            break;
+                        }
+                        else if (closing.includes(j)) {
+                            break;
+                        }
+                    }
+                    if (valid) {
+                        const seg = [];
+                        const evaluate = [];
+                        for (let partial of value.substring(j + 1, closing[i]).split(symbol)) {
+                            partial = partial.trim();
+                            switch (partial) {
+                                case '+':
+                                case '-':
+                                case '*':
+                                case '/':
+                                    evaluate.push(partial);
+                                    break;
+                                default:
+                                    const match = placeholder.exec(partial);
+                                    if (match) {
+                                        seg.push(equated[parseInt(match[1])]);
+                                    }
+                                    else if (isLength(partial)) {
+                                        seg.push(parseUnit(partial, fontSize));
+                                    }
+                                    else if (isPercent(partial)) {
+                                        seg.push(parseFloat(partial) / 100 * dimension);
+                                    }
+                                    else if (isAngle(partial)) {
+                                        seg.push(parseAngle(partial));
+                                    }
+                                    else {
+                                        return undefined;
+                                    }
+                                    break;
+                            }
+                        }
+                        if (seg.length !== evaluate.length + 1) {
+                            return undefined;
+                        }
+                        for (let k = 0; k < evaluate.length; k++) {
+                            if (evaluate[k] === '/') {
+                                if (Math.abs(seg[k + 1]) !== 0) {
+                                    seg.splice(k, 2, seg[k] / seg[k + 1]);
+                                    evaluate.splice(k--, 1);
+                                }
+                                else {
+                                    return undefined;
+                                }
+                            }
+                        }
+                        for (let k = 0; k < evaluate.length; k++) {
+                            if (evaluate[k] === '*') {
+                                seg.splice(k, 2, seg[k] * seg[k + 1]);
+                                evaluate.splice(k--, 1);
+                            }
+                        }
+                        for (let k = 0; k < evaluate.length; k++) {
+                            seg.splice(k, 2, seg[k] + (evaluate[k] === '-' ? -seg[k + 1] : seg[k + 1]));
+                            evaluate.splice(k--, 1);
+                        }
+                        if (seg.length === 1) {
+                            if (closing.length === 1) {
+                                return seg[0];
+                            }
+                            else {
+                                equated[index] = seg[0];
+                                const hash = `{${index++}}`;
+                                const remaining = closing[i] + 1;
+                                value = value.substring(0, j) + `${hash + ' '.repeat(remaining - (j + hash.length))}` + value.substring(remaining);
+                                closing.splice(i--, 1);
+                            }
+                        }
+                        else {
+                            return undefined;
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+    function parseUnit(value, fontSize) {
+        if (value) {
+            const match = UNIT.LENGTH.exec(value);
+            if (match) {
+                let result = parseFloat(match[1]);
+                switch (match[2]) {
+                    case 'px':
+                        return result;
+                    case 'em':
+                    case 'ch':
+                        result *= fontSize || 16;
+                        break;
+                    case 'rem':
+                        result *= getFontSize(document.body) || 16;
+                        break;
+                    case 'pc':
+                        result *= 12;
+                    case 'pt':
+                        result *= 4 / 3;
+                        break;
+                    case 'mm':
+                        result /= 10;
+                    case 'cm':
+                        result /= 2.54;
+                    case 'in':
+                        result *= getDeviceDPI();
+                        break;
+                    case 'vw':
+                        result *= window.innerWidth / 100;
+                        break;
+                    case 'vh':
+                        result *= window.innerHeight / 100;
+                        break;
+                    case 'vmin':
+                        result *= Math.min(window.innerWidth, window.innerHeight) / 100;
+                        break;
+                    case 'vmax':
+                        result *= Math.max(window.innerWidth, window.innerHeight) / 100;
+                        break;
+                }
+                return result;
+            }
+        }
+        return 0;
+    }
+    function parseAngle(value) {
+        if (value) {
+            const match = CSS.ANGLE.exec(value);
+            if (match) {
+                return convertAngle(match[1], match[2]);
+            }
+        }
+        return 0;
+    }
+    function formatPX(value) {
+        if (typeof value === 'string') {
+            value = parseFloat(value);
+        }
+        return isNaN(value) ? '0px' : `${Math.round(value)}px`;
+    }
+    function formatPercent(value, round = true) {
+        if (typeof value === 'string') {
+            value = parseFloat(value);
+            if (isNaN(value)) {
+                return '0%';
+            }
+        }
+        return `${round ? Math.round(value) : value}%`;
+    }
+    function isLength(value, percent = false) {
+        return UNIT.LENGTH.test(value) || percent && isPercent(value);
+    }
+    function isCalc(value) {
+        return CSS.CALC.test(value);
+    }
+    function isCustomProperty(value) {
+        return CSS.CUSTOMPROPERTY.test(value);
+    }
+    function isAngle(value) {
+        return CSS.ANGLE.test(value);
+    }
+    function isPercent(value) {
+        return UNIT.PERCENT.test(value);
+    }
 
     var css = /*#__PURE__*/Object.freeze({
         BOX_POSITION: BOX_POSITION,
@@ -4166,6 +4338,7 @@
         checkStyleValue: checkStyleValue,
         getDataSet: getDataSet,
         getKeyframeRules: getKeyframeRules,
+        parseConditionText: parseConditionText,
         validMediaRule: validMediaRule,
         getFontSize: getFontSize,
         isParentStyle: isParentStyle,
@@ -4173,9 +4346,22 @@
         parseVar: parseVar,
         calculateVar: calculateVar,
         getBackgroundPosition: getBackgroundPosition,
+        getSrcSet: getSrcSet,
         convertListStyle: convertListStyle,
         resolveURL: resolveURL,
-        insertStyleSheetRule: insertStyleSheetRule
+        insertStyleSheetRule: insertStyleSheetRule,
+        convertAngle: convertAngle,
+        convertPX: convertPX,
+        calculate: calculate,
+        parseUnit: parseUnit,
+        parseAngle: parseAngle,
+        formatPX: formatPX,
+        formatPercent: formatPercent,
+        isLength: isLength,
+        isCalc: isCalc,
+        isCustomProperty: isCustomProperty,
+        isAngle: isAngle,
+        isPercent: isPercent
     });
 
     const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
@@ -4341,7 +4527,26 @@
     });
 
     const REGEXP_INDENT = /^(\t+)(.*)$/;
+    const REGEXP_FORMAT = {
+        ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
+        OPENTAG: /\s*>$/,
+        CLOSETAG: /\/>\n*$/
+    };
     const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
+    function isPlainText(value) {
+        for (let i = 0; i < value.length; i++) {
+            switch (value.charCodeAt(i)) {
+                case 9:
+                case 10:
+                case 13:
+                case 32:
+                    continue;
+                default:
+                    return true;
+            }
+        }
+        return false;
+    }
     function pushIndent(value, depth, char = '\t', indent) {
         if (depth > 0) {
             if (indent === undefined) {
@@ -4474,11 +4679,6 @@
         return output;
     }
     function formatTemplate(value, closeEmpty = true, startIndent = -1, char = '\t') {
-        const REGEXP_FORMAT = {
-            ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
-            OPENTAG: /\s*>$/,
-            CLOSETAG: /\/>\n*$/
-        };
         const lines = [];
         let match;
         while ((match = REGEXP_FORMAT.ITEM.exec(value)) !== null) {
@@ -4530,15 +4730,41 @@
         }
         return output;
     }
+    function replaceCharacter(value) {
+        return value
+            .replace(ESCAPE.NBSP, '&#160;')
+            .replace(ESCAPE.LT, '&lt;')
+            .replace(ESCAPE.GT, '&gt;')
+            .replace(ESCAPE.DOUBLEQUOTE, '&quot;')
+            .replace(ESCAPE.SINGLEQUOTE, "\\'");
+    }
+    function replaceEntity(value) {
+        return value
+            .replace(ESCAPE.U00A0, '&#160;')
+            .replace(ESCAPE.U2002, '&#8194;')
+            .replace(ESCAPE.U2003, '&#8195;')
+            .replace(ESCAPE.U2009, '&#8201;')
+            .replace(ESCAPE.U200C, '&#8204;')
+            .replace(ESCAPE.U200D, '&#8205;')
+            .replace(ESCAPE.U200E, '&#8206;')
+            .replace(ESCAPE.U200F, '&#8207;');
+    }
+    function escapeAmpersand(value) {
+        return value.replace(ESCAPE.NONENTITY, '&amp;');
+    }
 
     var xml = /*#__PURE__*/Object.freeze({
         STRING_XMLENCODING: STRING_XMLENCODING,
+        isPlainText: isPlainText,
         pushIndent: pushIndent,
         pushIndentArray: pushIndentArray,
         replaceIndent: replaceIndent,
         replaceTab: replaceTab,
         applyTemplate: applyTemplate,
-        formatTemplate: formatTemplate
+        formatTemplate: formatTemplate,
+        replaceCharacter: replaceCharacter,
+        replaceEntity: replaceEntity,
+        escapeAmpersand: escapeAmpersand
     });
 
     let main;
@@ -4726,9 +4952,11 @@
             Container
         },
         color,
+        client,
         css,
         dom,
         math,
+        regex,
         session,
         util,
         xml

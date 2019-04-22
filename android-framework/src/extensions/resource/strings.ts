@@ -37,7 +37,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                     if (this.options.replaceCharacterEntities) {
                                         value = $xml.replaceEntity(value);
                                     }
-                                    value = Resource.addString($xml.replaceCharacter(value), '', this.options.numberResourceValue);
+                                    value = Resource.addString($xml.escapeAmpersand($xml.replaceCharacter(value)), '', this.options.numberResourceValue);
                                     if (value !== '') {
                                         result.push(`@string/${value}`);
                                     }
@@ -54,8 +54,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                     }
                     case 'IFRAME': {
                         const stored: NameValue = node.data(Resource.KEY_NAME, 'valueString');
-                        const value = $xml.replaceCharacter(stored.value);
-                        Resource.addString(value, stored.name);
+                        Resource.addString($xml.replaceCharacter(stored.value), stored.name);
                         break;
                     }
                     default: {
@@ -97,9 +96,9 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             if (this.options.replaceCharacterEntities) {
                                 value = $xml.replaceEntity(value);
                             }
-                            value = $xml.replaceCharacter(value);
+                            value = $xml.escapeAmpersand($xml.replaceCharacter(value));
                             let textIndent = 0;
-                            if (node.blockDimension) {
+                            if (node.blockDimension || node.display === 'table-cell') {
                                 textIndent = node.toFloat('textIndent');
                                 if (textIndent + node.bounds.width < 0) {
                                     value = '';
@@ -107,7 +106,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             }
                             if (textIndent === 0) {
                                 const actualParent = node.actualParent;
-                                if (actualParent && actualParent.blockDimension && node === actualParent.firstChild) {
+                                if (actualParent && (actualParent.blockDimension || actualParent.display === 'table-cell') && node === actualParent.firstChild) {
                                     textIndent = actualParent.toFloat('textIndent');
                                 }
                             }

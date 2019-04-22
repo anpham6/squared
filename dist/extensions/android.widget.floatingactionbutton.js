@@ -1,4 +1,4 @@
-/* android.widget 0.9.3
+/* android.widget 0.9.4
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -55,8 +55,8 @@ this.android.widget.floatingactionbutton = (function () {
             $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
             let parentAs;
             if (!node.pageFlow || target) {
-                const horizontalBias = node.horizontalBias;
-                const verticalBias = node.verticalBias;
+                const horizontalBias = $utilA.getHorizontalBias(node);
+                const verticalBias = $utilA.getVerticalBias(node);
                 const documentParent = node.documentParent;
                 const gravity = [];
                 if (horizontalBias < 0.5) {

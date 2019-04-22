@@ -242,3 +242,7 @@ export function replaceEntity(value: string) {
         .replace(ESCAPE.U200E, '&#8206;')
         .replace(ESCAPE.U200F, '&#8207;');
 }
+
+export function escapeAmpersand(value: string) {
+    return value.replace(ESCAPE.NONENTITY, '&amp;');
+}

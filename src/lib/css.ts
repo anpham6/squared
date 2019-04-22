@@ -42,9 +42,10 @@ export function hasComputedStyle(element: Element | null): element is HTMLElemen
 }
 
 export function getSpecificity(value: string) {
+    const pattern = new RegExp(STRING.CSS_SELECTOR, 'g');
     let result = 0;
     let match: RegExpExecArray | null;
-    while ((match = CSS.SELECTOR_G.exec(value.trim())) !== null) {
+    while ((match = pattern.exec(value.trim())) !== null) {
         if (match[0]) {
             if (match[1]) {
                 let check = true;

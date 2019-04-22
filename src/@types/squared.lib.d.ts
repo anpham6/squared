@@ -178,6 +178,7 @@ declare global {
             function formatTemplate(value: string, closeEmpty?: boolean, startIndent?: number, char?: string): string;
             function replaceCharacter(value: string): string;
             function replaceEntity(value: string): string;
+            function escapeAmpersand(value: string): string;
         }
     }
 }

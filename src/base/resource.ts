@@ -27,6 +27,9 @@ function removeExcluded(node: Node, element: Element, attr: string) {
             value = value.replace(item[attr], '');
         }
     }
+    if (attr === 'innerHTML') {
+        value = value.replace($regex.ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
+    }
     return value;
 }
 
@@ -176,7 +179,6 @@ function getBackgroundSize(node: Node, index: number, value?: string) {
 }
 
 function applyTextTransform(type: string, value: string) {
-    value = value.replace($regex.ESCAPE.AMP, '&amp;');
     if (type === 'none' || type === 'initial') {
         return value;
     }
@@ -850,7 +852,12 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     default:
                         if (node.plainText) {
                             name = node.textContent.trim();
-                            [value] = replaceWhiteSpace(renderParent, node, element, applyTextTransform(transform, node.textContent));
+                            [value] = replaceWhiteSpace(
+                                renderParent,
+                                node,
+                                element,
+                                applyTextTransform(transform, node.textContent.replace($regex.ESCAPE.AMP, '&amp;'))
+                            );
                             inlined = true;
                             trimming = true;
                         }

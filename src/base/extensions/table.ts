@@ -81,22 +81,6 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const layoutFixed = node.css('tableLayout') === 'fixed';
         const borderCollapse = node.css('borderCollapse') === 'collapse';
         const [horizontal, vertical] = borderCollapse ? [0, 0] : $util.replaceMap<string, number>(node.css('borderSpacing').split(' '), value => parseInt(value));
-        if (horizontal > 0) {
-            node.modifyBox(BOX_STANDARD.PADDING_LEFT, horizontal);
-            node.modifyBox(BOX_STANDARD.PADDING_RIGHT, horizontal);
-        }
-        else {
-            node.modifyBox(BOX_STANDARD.PADDING_LEFT, null);
-            node.modifyBox(BOX_STANDARD.PADDING_RIGHT, null);
-        }
-        if (vertical > 0) {
-            node.modifyBox(BOX_STANDARD.PADDING_TOP, vertical);
-            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, vertical);
-        }
-        else {
-            node.modifyBox(BOX_STANDARD.PADDING_TOP, null);
-            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, null);
-        }
         const spacingWidth = $css.formatPX(horizontal > 1 ? Math.round(horizontal / 2) : horizontal);
         const spacingHeight = $css.formatPX(vertical > 1 ? Math.round(vertical / 2) : vertical);
         const colgroup = node.element && node.element.querySelector('COLGROUP');
@@ -107,6 +91,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const rowCount = table.length;
         let columnIndex: number[] = new Array(rowCount).fill(0);
         let columnCount = 0;
+        let cellCount = 0;
         for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
             rowWidth[i] = horizontal;
@@ -233,8 +218,33 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     marginLeft: columnIndex[i] === 0 ? '0px' : spacingWidth
                 }, true);
                 columnIndex[i] += element.colSpan;
+                cellCount++;
             });
             columnCount = Math.max(columnCount, columnIndex[i]);
+        }
+        if (horizontal === 0) {
+            node.modifyBox(BOX_STANDARD.PADDING_LEFT, null);
+            node.modifyBox(BOX_STANDARD.PADDING_RIGHT, null);
+        }
+        else {
+            node.modifyBox(BOX_STANDARD.MARGIN_LEFT, horizontal);
+            node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, horizontal);
+            if (cellCount > 1) {
+                node.modifyBox(BOX_STANDARD.PADDING_LEFT, horizontal);
+                node.modifyBox(BOX_STANDARD.PADDING_RIGHT, horizontal);
+            }
+        }
+        if (vertical === 0) {
+            node.modifyBox(BOX_STANDARD.PADDING_TOP, null);
+            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, null);
+        }
+        else {
+            node.modifyBox(BOX_STANDARD.MARGIN_TOP, vertical);
+            node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, vertical);
+            if (cellCount > 1) {
+                node.modifyBox(BOX_STANDARD.PADDING_TOP, vertical);
+                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, vertical);
+            }
         }
         if (node.has('width', CSS_STANDARD.LENGTH) && mapWidth.some(value => $css.isPercent(value))) {
             $util.replaceMap<string, string>(mapWidth, (value, index) => {
