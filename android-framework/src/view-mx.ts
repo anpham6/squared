@@ -595,7 +595,12 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     value = Math.min(this.parseUnit(this.css('maxWidth')), this.documentParent.box.width);
                                 }
                                 else if (!renderParent.blockWidth) {
-                                    value = this.imageElement ? this.bounds.width : this.actualWidth;
+                                    if (this.android('adjustViewBounds') === 'true') {
+                                        layoutWidth = 'wrap_content';
+                                    }
+                                    else {
+                                        value = this.imageElement ? this.bounds.width : this.actualWidth;
+                                    }
                                 }
                                 else {
                                     layoutWidth = 'match_parent';
@@ -614,7 +619,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                     else if (this.imageElement && this.has('height', $enum.CSS_STANDARD.PERCENT)) {
-                        layoutWidth = $css.formatPX(this.bounds.width);
+                        layoutWidth = 'wrap_content';
+                        this.android('adjustViewBounds', 'true');
                     }
                     if (!layoutWidth) {
                         if (this.textElement && this.inlineText && this.textEmpty && !this.visibleStyle.backgroundImage) {
@@ -660,7 +666,12 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 }
                             }
                             else if (this.imageElement) {
-                                value = this.bounds.height;
+                                if (this.android('adjustViewBounds') === 'true') {
+                                    layoutHeight = 'wrap_content';
+                                }
+                                else {
+                                    value = this.bounds.height;
+                                }
                             }
                             else if (this.documentParent.has('height', $enum.CSS_STANDARD.LENGTH)) {
                                 value = this.actualHeight;
@@ -674,7 +685,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                     else if (this.imageElement && this.has('width', $enum.CSS_STANDARD.PERCENT)) {
-                        layoutHeight = $css.formatPX(this.bounds.height);
+                        layoutHeight = 'wrap_content';
+                        this.android('adjustViewBounds', 'true');
                     }
                     if (!layoutHeight) {
                         if (this.textElement && this.inlineText && this.textEmpty && !this.visibleStyle.backgroundImage) {

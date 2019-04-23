@@ -144,19 +144,51 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
 }
 
 function constraintMinMax(node: View, dimension: string) {
-    const dimensionA = $util.capitalize(dimension);
-    const minWH = node.cssInitial(`min${dimensionA}`);
-    const maxWH = node.cssInitial(`max${dimensionA}`);
-    if ($css.isLength(minWH)) {
-        node.app(`layout_constraint${dimensionA}_min`, minWH);
-        if (dimension === 'width' && !node.blockStatic && !node.has('width') && node.ascend(false, item => item.has('width') || item.blockStatic).length > 0) {
-            node.android(`layout_${dimension}`, '0px', false);
+    if (!node.inputElement) {
+        const horizontal = dimension === 'width';
+        const dimensionA = $util.capitalize(dimension);
+        const minWH = node.cssInitial(`min${dimensionA}`);
+        const maxWH = node.cssInitial(`max${dimensionA}`);
+        function setAlignmentBlock() {
+            const renderParent = node.renderParent;
+            if (renderParent && renderParent.groupParent) {
+                renderParent.alignmentType |= $enum.NODE_ALIGNMENT.BLOCK;
+            }
         }
-    }
-    if ($css.isLength(maxWH)) {
-        node.app(`layout_constraint${dimensionA}_max`, maxWH);
-        if (dimension === 'width' && node.blockStatic && !node.has('width') && node.ascend(false, item => item.has('width') || item.blockStatic).length > 0) {
-            node.android(`layout_${dimension}`, '0px', false);
+        if ($css.isLength(minWH, true)) {
+            let valid = false;
+            if (horizontal) {
+                if (node.ascend(false, item => item.has('width') || item.blockStatic).length > 0) {
+                    node.android('layout_width', '0px', false);
+                    valid = true;
+                    setAlignmentBlock();
+                }
+                valid = true;
+            }
+            else if (node.documentParent.has('height') && !node.has('height')) {
+                node.android('layout_height', '0px', false);
+                valid = true;
+            }
+            if (valid) {
+                node.app(`layout_constraint${dimensionA}_min`, $css.formatPX(node.parseUnit(minWH, horizontal)));
+            }
+        }
+        if ($css.isLength(maxWH, true)) {
+            let valid = false;
+            if (horizontal) {
+                if (node.ascend(false, item => item.has('width') || item.blockStatic).length > 0) {
+                    node.android('layout_width', '0px', false);
+                    valid = true;
+                    setAlignmentBlock();
+                }
+            }
+            else if (node.documentParent.has('height') && !node.has('height')) {
+                node.android('layout_height', '0px', false);
+                valid = true;
+            }
+            if (valid) {
+                node.app(`layout_constraint${dimensionA}_max`, $css.formatPX(node.parseUnit(maxWH, horizontal)));
+            }
         }
     }
 }
@@ -865,64 +897,48 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         const element = <HTMLImageElement> node.element;
                         let width = node.toFloat('width');
                         let height = node.toFloat('height');
-                        let widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT);
-                        let heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT);
+                        let widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT) ? width : 0;
+                        let heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT) ? height : 0;
                         let scaleType = 'fitXY';
-                        const setWidth = () => {
-                            const image = this.application.session.image.get(element.src);
-                            if (image && image.width > 0 && image.height > 0) {
-                                width = image.width * (height / image.height);
-                                node.css('width', $css.formatPX(width), true);
-                            }
-                            else {
-                                node.android('adjustViewBounds', 'true');
-                            }
-                        };
-                        const setHeight = () => {
-                            const image = this.application.session.image.get(element.src);
-                            if (image && image.width > 0 && image.height > 0) {
-                                height = image.height * (width / image.width);
-                                node.css('height', $css.formatPX(height), true);
-                            }
-                            else {
-                                node.android('adjustViewBounds', 'true');
-                            }
-                        };
+                        let imageSet: ImageSrcSet[] | undefined;
                         if (element.srcset) {
-                            const images = $css.getSrcSet(element, this.localSettings.supported.imageFormat);
-                            if (images.length && images[0].actualWidth) {
-                                width = images[0].actualWidth;
+                            imageSet = $css.getSrcSet(element, this.localSettings.supported.imageFormat);
+                            if (imageSet.length && imageSet[0].actualWidth) {
+                                width = imageSet[0].actualWidth;
                                 node.css('width', $css.formatPX(width), true);
-                                setHeight();
-                                widthPercent = false;
-                                heightPercent = false;
+                                const image = this.application.session.image.get(element.src);
+                                if (image && image.width > 0 && image.height > 0) {
+                                    height = image.height * (width / image.width);
+                                    node.css('height', $css.formatPX(height), true);
+                                }
+                                else {
+                                    node.android('adjustViewBounds', 'true');
+                                }
+                                widthPercent = 0;
+                                heightPercent = 0;
+                            }
+                            else {
+                                imageSet = undefined;
                             }
                         }
-                        if (widthPercent || heightPercent) {
-                            if (widthPercent && !parent.layoutConstraint) {
-                                const actualWidth = parent.box.width * width / 100;
-                                if (actualWidth > 0) {
-                                    if (width < 100) {
-                                        node.css('width', $css.formatPX(width));
-                                    }
-                                    width = actualWidth;
-                                    if (height === 0) {
-                                        setHeight();
-                                    }
+                        const src = Resource.addImageSrc(element, '', imageSet);
+                        if (src !== '') {
+                            node.android('src', `@drawable/${src}`);
+                        }
+                        if (widthPercent > 0 || heightPercent > 0) {
+                            if (widthPercent > 0) {
+                                width = parent.box.width * width / 100;
+                                if (widthPercent < 100 && !parent.layoutConstraint) {
+                                    node.css('width', $css.formatPX(width));
                                 }
                             }
-                            if (heightPercent && !(parent.layoutConstraint && node.documentParent.has('height', $enum.CSS_STANDARD.LENGTH))) {
-                                const actualHeight = parent.box.height * height / 100;
-                                if (actualHeight > 0) {
-                                    if (height < 100) {
-                                        node.css('height', $css.formatPX(actualHeight));
-                                    }
-                                    height = actualHeight;
-                                    if (width === 0) {
-                                        setWidth();
-                                    }
+                            if (heightPercent > 0) {
+                                height = parent.box.height * height / 100;
+                                if (heightPercent < 100 && !(parent.layoutConstraint && node.documentParent.has('height', $enum.CSS_STANDARD.LENGTH))) {
+                                    node.css('height', $css.formatPX(height));
                                 }
                             }
+                            node.android('adjustViewBounds', 'true');
                         }
                         else {
                             switch (node.css('objectFit')) {
@@ -939,20 +955,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     scaleType = 'center';
                                     break;
                             }
+                            if (width === 0 && height > 0 || height === 0 && width > 0) {
+                                node.android('adjustViewBounds', 'true');
+                            }
                         }
                         node.android('scaleType', scaleType);
-                        if (width === 0 && height > 0) {
-                            setWidth();
-                        }
-                        if (height === 0 && width > 0) {
-                            setHeight();
-                        }
                         if (node.baseline) {
                             node.android('baselineAlignBottom', 'true');
-                        }
-                        const src = Resource.addImageSrc(element);
-                        if (src !== '') {
-                            node.android('src', `@drawable/${src}`);
                         }
                         if (!node.pageFlow && (node.left < 0 || node.top < 0) && node.absoluteParent && node.absoluteParent.css('overflow') === 'hidden') {
                             const container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
@@ -1169,12 +1178,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
             if (node.imageElement) {
                 const image = this.application.session.image.get(node.src);
                 if (image) {
-                    if (maxWidth > 0 && maxHeight === 0) {
-                        maxHeight = image.height * (maxWidth / image.width);
-                    }
-                    else if (maxHeight > 0 && maxWidth === 0) {
-                        maxWidth = image.width * (maxHeight / image.height);
-                    }
                     maxWidth = Math.min(maxWidth, image.width);
                     maxHeight = Math.min(maxHeight, image.height);
                     if (maxWidth > 0) {
@@ -1182,17 +1185,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             node.android('layout_width', 'wrap_content');
                             node.android('adjustViewBounds', 'true');
                         }
-                        else {
-                            if (image.width >= parent.box.width && node.css('maxWidth') === '100%' && parent.has('width')) {
-                                node.android('layout_width', 'match_parent');
-                            }
-                            else if (maxWidth === image.width) {
-                                node.android('layout_height', 'wrap_content');
-                                node.android('adjustViewBounds', 'true');
-                            }
-                            else {
-                                node.css('width', $css.formatPX(maxWidth), true);
-                            }
+                        else if (image.width >= parent.box.width && node.css('maxWidth') === '100%') {
+                            node.android('layout_width', 'match_parent');
+                            node.android('adjustViewBounds', 'true');
+                            maxWidth = 0;
+                        }
+                        else if (maxWidth === image.width) {
+                            node.android('layout_width', 'wrap_content');
+                            node.android('adjustViewBounds', 'true');
                             maxWidth = 0;
                         }
                     }
@@ -1201,17 +1201,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             node.android('layout_height', 'wrap_content');
                             node.android('adjustViewBounds', 'true');
                         }
-                        else {
-                            if (image.height >= parent.box.height && node.css('maxHeight') === '100%' && parent.has('height')) {
-                                node.android('layout_height', 'match_parent');
-                            }
-                            else if (maxHeight === image.height) {
-                                node.android('layout_height', 'wrap_content');
-                                node.android('adjustViewBounds', 'true');
-                            }
-                            else {
-                                node.css('height', $css.formatPX(maxHeight), true);
-                            }
+                        else if (image.height >= parent.box.height && node.css('maxHeight') === '100%') {
+                            node.android('layout_height', 'match_parent');
+                            node.android('adjustViewBounds', 'true');
+                            maxHeight = 0;
+                        }
+                        else if (maxHeight === image.height) {
+                            node.android('layout_height', 'wrap_content');
                             maxHeight = 0;
                         }
                     }
@@ -1525,6 +1521,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 }
                             }
                         }
+                    }
+                    else if (renderParent === node.documentParent && renderParent.blockStatic && node.inlineStatic) {
+                        return renderParent.box.width - (node.linear.left - renderParent.box.left);
                     }
                 }
                 return node.box.width - (node.valueBox($enum.BOX_STANDARD.PADDING_LEFT)[1] + node.valueBox($enum.BOX_STANDARD.PADDING_RIGHT)[1]);
