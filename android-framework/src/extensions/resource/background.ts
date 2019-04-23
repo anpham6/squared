@@ -325,8 +325,15 @@ function getPercentOffset(direction: string, position: RectPosition, backgroundS
             if (backgroundSize !== 'cover') {
                 const value = orientation.length === 4 ? orientation[1] : orientation[0];
                 if ($css.isPercent(value)) {
-                    const result = (direction === 'left' ? position.leftAsPercent : position.rightAsPercent) * (bounds.width - dimension.width);
-                    return sign === -1 ? Math.abs(result) * -1 : result;
+                    const percent = direction === 'left' ? position.leftAsPercent : position.rightAsPercent;
+                    let result = percent * (bounds.width - dimension.width);
+                    if (sign === -1) {
+                        result = Math.abs(result);
+                        if (percent > 0) {
+                            result *= -1;
+                        }
+                    }
+                    return result;
                 }
             }
             else {
@@ -337,8 +344,15 @@ function getPercentOffset(direction: string, position: RectPosition, backgroundS
             if (backgroundSize !== 'contain') {
                 const value = orientation.length === 4 ? orientation[3] : orientation[1];
                 if ($css.isPercent(value)) {
-                    const result = (direction === 'top' ? position.topAsPercent : position.bottomAsPercent) * (bounds.height - dimension.height);
-                    return sign === -1 ? Math.abs(result) * -1 : result;
+                    const percent = direction === 'top' ? position.topAsPercent : position.bottomAsPercent;
+                    let result = percent * (bounds.height - dimension.height);
+                    if (sign === -1) {
+                        result = Math.abs(result);
+                        if (percent > 0) {
+                            result *= -1;
+                        }
+                    }
+                    return result;
                 }
             }
             else {
@@ -718,9 +732,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 switch (backgroundSize[i]) {
                                     case 'cover':
                                         if (dimension.width < bounds.width || dimension.height < bounds.height) {
-                                            const ratio = Math.max(bounds.width / dimension.width, bounds.height / dimension.height);
                                             width = 0;
-                                            height = dimension.height * ratio;
+                                            if (dimension.height < bounds.height) {
+                                                const ratio = Math.max(bounds.width / dimension.width, bounds.height / dimension.height);
+                                                height = dimension.height * ratio;
+                                            }
+                                            else {
+                                                height = 0;
+                                            }
                                             gravity = 'top|center_horizontal|fill_horizontal';
                                         }
                                         else {
@@ -1047,8 +1066,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                             }
                             setBorderStyle(layerListData[0], 0);
-                            setBorderStyle(layerListData[0], 3);
                             setBorderStyle(layerListData[0], 1);
+                            setBorderStyle(layerListData[0], 3);
                             setBorderStyle(layerListData[0], 2);
                         }
                     }

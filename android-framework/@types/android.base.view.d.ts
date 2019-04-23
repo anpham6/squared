@@ -1,4 +1,4 @@
-import { Constraint, LocalSettings } from '../src/@types/node';
+import { Constraint, LocalSettings, SupportAndroid } from '../src/@types/node';
 
 declare global {
     namespace android.base {
@@ -18,6 +18,7 @@ declare global {
             readonly blockHeight: boolean;
             readonly flexibleWidth: boolean;
             readonly flexibleHeight: boolean;
+            readonly support: SupportAndroid;
             android(attr: string, value?: string, overwrite?: boolean): string;
             app(attr: string, value?: string, overwrite?: boolean): string;
             formatted(value: string, overwrite?: boolean): void;

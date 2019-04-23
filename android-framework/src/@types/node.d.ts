@@ -1,3 +1,5 @@
+import { Support } from '../../../src/base/@types/node';
+
 export interface LocalSettings {
     targetAPI: number;
     supportRTL: boolean;
@@ -14,4 +16,9 @@ export interface Constraint {
 export interface ViewAttribute {
     android: StringMap;
     app: StringMap;
+}
+
+export interface SupportAndroid extends Support {
+    maxWidth: boolean;
+    maxHeight: boolean;
 }

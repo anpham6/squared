@@ -41,8 +41,8 @@ declare global {
             renderTemplates?: NodeTemplate<Node>[];
             outerParent?: Node;
             innerChild?: Node;
-            beforePseudoChild?: Node;
-            afterPseudoChild?: Node;
+            pseudoBeforeChild?: Node;
+            pseudoAfterChild?: Node;
             companion?: Node;
             extracted?: Node[];
             horizontalRows?: Node[][];

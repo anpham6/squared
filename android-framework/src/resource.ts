@@ -156,11 +156,13 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return '';
     }
 
-    public static addImageSrc(element: HTMLImageElement, prefix = '') {
+    public static addImageSrc(element: HTMLImageElement, prefix = '', imageSet?: ImageSrcSet[]) {
         const result: StringMap = {};
         if (element.srcset) {
-            const images = $css.getSrcSet(element, IMAGE_FORMAT);
-            for (const image of images) {
+            if (imageSet === undefined) {
+                imageSet = $css.getSrcSet(element, IMAGE_FORMAT);
+            }
+            for (const image of imageSet) {
                 const pixelRatio = image.pixelRatio;
                 if (pixelRatio > 0) {
                     const src = image.src;

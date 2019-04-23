@@ -40,8 +40,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public companion?: T;
     public extracted?: T[];
     public horizontalRows?: T[][];
-    public beforePseudoChild?: T;
-    public afterPseudoChild?: T;
+    public pseudoBeforeChild?: T;
+    public pseudoAfterChild?: T;
 
     public abstract readonly localSettings: {};
     public abstract readonly renderChildren: T[];
@@ -1187,7 +1187,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get inputElement() {
-        return this._element !== null && this._element.tagName === 'INPUT' || this.tagName === 'BUTTON';
+        if (this._cached.inputElement === undefined) {
+            const tagName = this.tagName;
+            this._cached.inputElement = this._element !== null && this._element.tagName === 'INPUT' || tagName === 'BUTTON' || tagName === 'SELECT' || tagName === 'TEXTAREA';
+        }
+        return this._cached.inputElement;
     }
 
     get layoutElement() {

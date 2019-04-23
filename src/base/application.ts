@@ -553,7 +553,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         for (const node of pseudoElement) {
-            [node.beforePseudoChild, node.afterPseudoChild].forEach((item, index) => {
+            [node.pseudoBeforeChild, node.pseudoAfterChild].forEach((item, index) => {
                 if (item) {
                     const element = <HTMLElement> node.element;
                     const id = element.id;
@@ -758,7 +758,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 else if (childElement === beforeElement) {
                     const child = this.insertNode(<HTMLElement> beforeElement);
                     if (child) {
-                        node.beforePseudoChild = child;
+                        node.pseudoBeforeChild = child;
                         child.setInlineText(true);
                         children.push(child);
                         includeText = true;
@@ -767,7 +767,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 else if (childElement === afterElement) {
                     const child = this.insertNode(<HTMLElement> afterElement);
                     if (child) {
-                        node.afterPseudoChild = child;
+                        node.pseudoAfterChild = child;
                         child.setInlineText(true);
                         children.push(child);
                         includeText = true;

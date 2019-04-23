@@ -4,8 +4,6 @@ import { CSS, STRING, UNIT, XML } from './regex';
 import { getElementCache, setElementCache } from './session';
 import { convertFloat, capitalize, convertAlpha, convertInt, convertRoman, convertCamelCase, fromLastIndexOf, isNumber, isString, replaceMap, resolvePath } from './util';
 
-const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-
 function convertLength(value: string, dimension: number, fontSize?: number) {
     return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
 }
@@ -276,25 +274,26 @@ export function validMediaRule(value: string, fontSize?: number) {
             if (!fontSize) {
                 fontSize = getFontSize(document.body);
             }
+            const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
             let match: RegExpExecArray | null;
-            while ((match = REGEXP_MEDIARULE.exec(value)) !== null) {
+            while ((match = pattern.exec(value)) !== null) {
                 const negate = match[1] === 'not';
-                const pattern = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-                let condition: RegExpExecArray | null;
+                const conditionPattern = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+                let conditionMatch: RegExpExecArray | null;
                 let valid = false;
-                while ((condition = pattern.exec(match[2])) !== null) {
-                    const attr = condition[1];
+                while ((conditionMatch = conditionPattern.exec(match[2])) !== null) {
+                    const attr = conditionMatch[1];
                     let operation: string;
-                    if (condition[1].startsWith('min')) {
+                    if (conditionMatch[1].startsWith('min')) {
                         operation = '>=';
                     }
-                    else if (condition[1].startsWith('max')) {
+                    else if (conditionMatch[1].startsWith('max')) {
                         operation = '<=';
                     }
                     else {
                         operation = match[2];
                     }
-                    const rule = condition[3];
+                    const rule = conditionMatch[3];
                     switch (attr) {
                         case 'aspect-ratio':
                         case 'min-aspect-ratio':

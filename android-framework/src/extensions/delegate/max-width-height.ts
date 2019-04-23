@@ -8,7 +8,7 @@ const $css = squared.lib.css;
 
 export default class MaxWidthHeight<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {
-        return !node.textElement && !node.imageElement && !node.svgElement && !parent.layoutConstraint && (node.has('maxWidth') && !parent.has('columnCount') && !parent.has('columnWidth') || node.has('maxHeight'));
+        return !parent.layoutConstraint && (!node.support.maxWidth && node.has('maxWidth') && !parent.has('columnCount') && !parent.has('columnWidth') || !node.support.maxHeight && node.has('maxHeight'));
     }
 
     public processNode(node: T, parent: T) {
