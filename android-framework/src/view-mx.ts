@@ -95,6 +95,17 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
             node.android('lineSpacingExtra', $css.formatPX(offset), overwrite);
         }
     }
+    if (node.styleElement && !node.has('height') && node.cssTry('lineHeight', 'normal')) {
+        if (node.cssTry('whiteSpace', 'nowrap')) {
+            const offset = (lineHeight - (<Element> node.element).getBoundingClientRect().height) / 2;
+            if (Math.floor(offset) > 0) {
+                node.modifyBox($enum.BOX_STANDARD.PADDING_TOP, Math.floor(offset));
+                node.modifyBox($enum.BOX_STANDARD.PADDING_BOTTOM, Math.ceil(offset));
+            }
+            node.cssFinally('whiteSpace');
+        }
+        node.cssFinally('lineHeight');
+    }
 }
 
 function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top = true, bottom = true) {
@@ -106,11 +117,11 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
     }
     else if (node.length === 0) {
         let offset: number;
-        if (node.styleElement && !inlineStyle && !node.hasHeight && node.cssTry('lineHeight', 'normal')) {
+        if (node.styleElement && !inlineStyle && !node.has('height') && node.cssTry('lineHeight', 'normal')) {
             offset = (lineHeight - ((<Element> node.element).getBoundingClientRect().height || node.actualHeight)) / 2;
             node.cssFinally('lineHeight');
         }
-        else if (inlineStyle && node.inlineText && (!node.inlineVertical || node.display === 'table-cell')) {
+        else if (inlineStyle && node.inlineText && !node.inline) {
             adjustMinHeight(node, lineHeight);
             return;
         }
@@ -170,6 +181,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         };
 
         protected _namespaces = ['android', 'app'];
+        protected _cached: CachedValue<T> = {};
         protected _controlName = '';
         protected _fontSize = 0;
         protected _documentParent?: T;
@@ -814,19 +826,21 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 break;
                         }
                     }
-                    if (!this.blockWidth && (outerRenderParent.layoutVertical || this.documentRoot && (this.layoutVertical || this.layoutFrame))) {
-                        if (this.floating) {
-                            node.mergeGravity('layout_gravity', this.float);
+                    if (!this.blockWidth) {
+                        if (outerRenderParent.layoutVertical || this.documentRoot && (this.layoutVertical || this.layoutFrame)) {
+                            if (this.floating) {
+                                node.mergeGravity('layout_gravity', this.float);
+                            }
+                            else if (!setAutoMargin(node) && textAlign !== '' && this.hasWidth && !this.blockStatic && this.display !== 'table') {
+                                node.mergeGravity('layout_gravity', textAlign, false);
+                            }
                         }
-                        else if (!setAutoMargin(node) && textAlign !== '' && this.hasWidth && !this.blockStatic && this.display !== 'table') {
-                            node.mergeGravity('layout_gravity', textAlign, false);
+                        if (this.hasAlign($enum.NODE_ALIGNMENT.RIGHT) || this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
+                            floating = 'right';
                         }
-                    }
-                    if (this.hasAlign($enum.NODE_ALIGNMENT.RIGHT) || this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
-                        floating = 'right';
-                    }
-                    else if (alignFloat && this.groupParent && !this.renderChildren.some(item => item.float === 'right')) {
-                        floating = 'left';
+                        else if (alignFloat && this.groupParent && !this.renderChildren.some(item => item.float === 'right')) {
+                            floating = 'left';
+                        }
                     }
                     if (renderParent.layoutFrame && this.innerChild === undefined) {
                         if (!setAutoMargin(this)) {
@@ -1293,18 +1307,21 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         get support() {
-            const cached: CachedValue<T> = this.unsafe('cached') || {};
-            if (cached.support === undefined) {
+            if (this._cached.support === undefined) {
                 const maxWidth = this.textElement || this.imageElement || this.svgElement;
-                cached.support = <SupportAndroid> {
+                const support = <SupportAndroid> {
                     container: {
                         positionRelative: this.layoutRelative || this.layoutConstraint
                     },
                     maxWidth,
                     maxHeight: maxWidth
                 };
+                if (this.containerType !== 0) {
+                    this._cached.support = support;
+                }
+                return support;
             }
-            return <SupportAndroid> cached.support;
+            return <SupportAndroid> this._cached.support;
         }
 
         get inlineWidth() {

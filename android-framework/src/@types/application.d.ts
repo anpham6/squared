@@ -1,4 +1,4 @@
-import { ResourceStoredMap, UserSettings } from '../../../src/base/@types/application';
+import { ControllerSettings, ResourceStoredMap, UserSettings } from '../../../src/base/@types/application';
 
 export interface UserSettingsAndroid extends UserSettings {
     targetAPI: number;
@@ -9,6 +9,16 @@ export interface UserSettingsAndroid extends UserSettings {
     manifestLabelAppName: string;
     manifestThemeName: string;
     manifestParentThemeName: string;
+}
+
+export interface ControllereSettingsAndroid extends ControllerSettings {
+    deviations: {
+        textMarginBoundarySize: number;
+        constraintParentBottomOffset: number;
+        subscriptBottomOffset: number;
+        superscriptTopOffset: number;
+        legendBottomOffset: number;
+    };
 }
 
 export interface ResourceStoredMapAndroid extends ResourceStoredMap {

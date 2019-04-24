@@ -4,11 +4,12 @@ import Node from '../node';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default abstract class Relative<T extends Node> extends Extension<T> {
     public condition(node: T) {
-        return node.positionRelative && !node.positionStatic || node.toFloat('verticalAlign', true) !== 0;
+        return node.positionRelative || node.toFloat('verticalAlign', true) !== 0;
     }
 
     public processNode() {
@@ -19,8 +20,9 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
         const renderParent = node.renderParent as T;
         if (renderParent) {
             const verticalAlign = $util.convertFloat(node.verticalAlign);
-            let target: T;
-            if (renderParent.support.container.positionRelative && node.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
+            let target = node;
+            let { top, right, bottom, left } = node;
+            if (renderParent.support.container.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                 target = node.clone(this.application.nextId, true, true) as T;
                 node.hide(true);
                 this.application.session.cache.append(target, false);
@@ -72,28 +74,65 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                     }
                 }
             }
-            else {
-                target = node;
+            else if (node.naturalElement && node.positionRelative) {
+                const actualParent = node.actualParent;
+                if (actualParent) {
+                    let preceding = false;
+                    for (const item of actualParent.actualChildren) {
+                        if (item === node) {
+                            if (preceding) {
+                                if (renderParent.layoutVertical && (node.top !== 0 || node.bottom !== 0)) {
+                                    const bounds = $dom.assignRect((<Element> node.element).getBoundingClientRect(), true);
+                                    if (top !== 0) {
+                                        top -= bounds.top - node.bounds.top;
+                                    }
+                                    if (bottom !== 0) {
+                                        bottom += bounds.bottom - node.bounds.bottom;
+                                    }
+                                }
+                                if (renderParent.layoutHorizontal && (node.left !== 0 || node.right !== 0) && node.alignSibling('leftRight') === '') {
+                                    const bounds = $dom.assignRect((<Element> node.element).getBoundingClientRect(), true);
+                                    if (left !== 0) {
+                                        left -= bounds.left - node.bounds.left;
+                                    }
+                                    if (right !== 0) {
+                                        right += bounds.right - node.bounds.right;
+                                    }
+                                }
+                            }
+                            else if (renderParent.layoutVertical && bottom !== 0) {
+                                const valueBox = item.valueBox(BOX_STANDARD.MARGIN_TOP);
+                                if (valueBox[0] === 1) {
+                                    bottom -= item.marginTop;
+                                }
+                            }
+                            break;
+                        }
+                        else if (item.positionRelative) {
+                            preceding = true;
+                        }
+                    }
+                }
             }
-            if (node.top !== 0) {
-                target.modifyBox(BOX_STANDARD.MARGIN_TOP, node.top);
+            if (top !== 0) {
+                target.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
             }
-            else if (node.bottom !== 0) {
-                target.modifyBox(BOX_STANDARD.MARGIN_TOP, node.bottom * -1);
+            else if (bottom !== 0) {
+                target.modifyBox(BOX_STANDARD.MARGIN_TOP, bottom * -1);
             }
             if (verticalAlign !== 0) {
                 target.modifyBox(BOX_STANDARD.MARGIN_TOP, verticalAlign * -1);
             }
-            if (node.left !== 0) {
+            if (left !== 0) {
                 if (target.autoMargin.left) {
-                    target.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.left * -1);
+                    target.modifyBox(BOX_STANDARD.MARGIN_RIGHT, left * -1);
                 }
                 else {
-                    target.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.left);
+                    target.modifyBox(BOX_STANDARD.MARGIN_LEFT, left);
                 }
             }
-            else if (node.right !== 0) {
-                target.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.right * -1);
+            else if (right !== 0) {
+                target.modifyBox(BOX_STANDARD.MARGIN_LEFT, right * -1);
             }
         }
     }

@@ -135,7 +135,7 @@ export default abstract class NodeGroup extends Node {
 
     get floating() {
         if (this._cached.floating === undefined) {
-            this._cached.floating = this.every(node => node.floating);
+            this._cached.floating = this.every(node => node.naturalElement && node.floating);
         }
         return this._cached.floating;
     }

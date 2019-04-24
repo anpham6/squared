@@ -8,7 +8,7 @@ import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
 
-import { APP_SECTION, BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';
+import { APP_SECTION, BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
@@ -507,7 +507,6 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         const preAlignment: ObjectIndex<StringMap> = {};
         const direction = new Set<HTMLElement>();
-        let resetBounds = false;
         function saveAlignment(element: HTMLElement, id: number, attr: string, value: string, restoreValue: string) {
             if (preAlignment[id] === undefined) {
                 preAlignment[id] = {};
@@ -515,6 +514,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             preAlignment[id][attr] = restoreValue;
             element.style[attr] = value;
         }
+        let resetBounds = false;
         for (const node of this.processing.cache) {
             if (node.styleElement) {
                 const element = <HTMLElement> node.element;
@@ -528,7 +528,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             break;
                     }
                 }
-                if (node.positionRelative && !node.positionStatic) {
+                if (node.positionRelative) {
                     for (const attr of $css.BOX_POSITION) {
                         if (node.has(attr)) {
                             saveAlignment(element, node.id, attr, 'auto', node.css(attr));
@@ -595,6 +595,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             if (!node.documentRoot) {
                 let parent: T | undefined;
+                const actualParent = node.parent as T;
                 switch (node.position) {
                     case 'fixed':
                         if (!node.positionAuto) {
@@ -605,27 +606,34 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (node.positionAuto && !node.previousSiblings().some(item => item.multiline || item.excluded && !item.blockStatic) && (node.nextSiblings().every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === parent.getLastChildElement())) {
                             node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
                             node.positionStatic = true;
-                            parent = node.parent as T;
+                            parent = actualParent;
                         }
                         else if (this.userSettings.supportNegativeLeftTop) {
                             let outside = false;
                             parent = node.absoluteParent as T;
                             while (parent && parent !== rootNode) {
                                 if (!outside) {
-                                    if (parent.css('overflow') === 'hidden' || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
+                                    if (parent.overflowX && parent.overflowY || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
                                         break;
-                                    }
-                                    else if (node.outsideY(parent.box) && (node.top < 0 || node.marginTop < 0 || !node.has('top') && node.bottom !== 0 || !parent.pageFlow && node.top > 0)) {
-                                        outside = true;
-                                    }
-                                    else if (node.outsideX(parent.box) && (!node.has('left') && node.right > 0 || !parent.pageFlow && node.left > 0)) {
-                                        outside = true;
-                                    }
-                                    else if (node.outsideX(parent.linear) && (node.left < 0 || node.marginLeft < 0) || !node.has('left') && node.right < 0 && node.linear.left >= parent.linear.right) {
-                                        outside = true;
                                     }
                                     else {
-                                        break;
+                                        const outsideX = !parent.overflowX && node.outsideX(parent.box);
+                                        const outsideY = !parent.overflowY && node.outsideY(parent.box);
+                                        if (outsideY && (node.top < 0 || node.marginTop < 0 || !node.has('top') && node.bottom !== 0 || !parent.pageFlow && node.top > 0)) {
+                                            outside = true;
+                                        }
+                                        else if (outsideX && (!node.has('left') && node.right > 0 || !parent.pageFlow && node.left > 0)) {
+                                            outside = true;
+                                        }
+                                        else if (outsideX && outsideY) {
+                                            outside = true;
+                                        }
+                                        else if (!parent.overflowX && node.outsideX(parent.linear) && (node.left < 0 || node.marginLeft < 0) || !node.has('left') && node.right < 0 && node.linear.left >= parent.linear.right) {
+                                            outside = true;
+                                        }
+                                        else {
+                                            break;
+                                        }
                                     }
                                 }
                                 else {
@@ -646,10 +654,32 @@ export default class Application<T extends Node> implements squared.base.Applica
                         break;
                 }
                 if (parent === undefined) {
-                    parent = !node.pageFlow ? rootNode : node.parent as T;
+                    parent = !node.pageFlow ? rootNode : actualParent;
                 }
-                if (parent !== node.parent) {
-                    let current: T | undefined = node.parent as T;
+                if (parent !== actualParent) {
+                    const absoluteParent = node.absoluteParent;
+                    if (absoluteParent && parent !== absoluteParent && absoluteParent.positionRelative) {
+                        const bounds = node.bounds;
+                        if (absoluteParent.left !== 0) {
+                            bounds.left += absoluteParent.left;
+                            bounds.right += absoluteParent.left;
+                        }
+                        else if (!absoluteParent.has('left') && absoluteParent.right !== 0) {
+                            bounds.left -= absoluteParent.right;
+                            bounds.right -= absoluteParent.right;
+                        }
+                        if (absoluteParent.top !== 0) {
+                            bounds.top += absoluteParent.top;
+                            bounds.bottom += absoluteParent.top;
+                        }
+                        else if (!absoluteParent.has('top') && absoluteParent.bottom !== 0) {
+                            bounds.top -= absoluteParent.bottom;
+                            bounds.bottom -= absoluteParent.bottom;
+                        }
+                        node.unsafe('box', true);
+                        node.unsafe('linear', true);
+                    }
+                    let current: T | undefined = actualParent;
                     let opacity = $util.convertFloat(node.css('opacity')) || 1;
                     while (current && current !== parent) {
                         opacity *= $util.convertFloat(current.css('opacity')) || 1;
@@ -960,8 +990,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     const previous = previousSiblings[previousSiblings.length - 1];
                                     if (previous) {
                                         if (hasFloat) {
-                                            if (item.alignedVertically(previousSiblings, horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0)) {
-                                                if (horizontal.length) {
+                                            const traverse = item.alignedVertically(previousSiblings, horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0);
+                                            if (traverse > 0) {
+                                                if (horizontal.length && traverse !== NODE_TRAVERSE.FLOAT_INTERSECT) {
                                                     if (!(item.blockStatic && previous.float !== 'right' && $util.withinRange(previous.linear.right, parentY.box.right))) {
                                                         if (floatActive.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
                                                             function getFloatBottom() {
@@ -1405,6 +1436,9 @@ export default class Application<T extends Node> implements squared.base.Applica
         $util.spliceArray(layerIndex, item => item.length === 0);
         layout.itemCount = layerIndex.length;
         layout.setType(outerVertical.containerType, outerVertical.alignmentType);
+        if (layout.hasAlign(NODE_ALIGNMENT.RIGHT)) {
+            layout.add(NODE_ALIGNMENT.BLOCK);
+        }
         let floatgroup: T | undefined;
         for (let i = 0; i < layerIndex.length; i++) {
             const item = layerIndex[i];
@@ -1467,7 +1501,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         const offset = position - basegroup.box.left;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset);
+                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
                         }
                     }
                     if (rightAbove.length) {
@@ -1477,7 +1511,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         const offset = basegroup.box.right - position;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset);
+                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
                         }
                     }
                 }

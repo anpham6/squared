@@ -4,10 +4,11 @@ const settings: UserSettingsAndroid = {
     builtInExtensions: [
         'android.delegate.percent',
         'android.delegate.max-width-height',
+        'android.delegate.negative-viewport',
         'android.delegate.fixed',
         'android.delegate.negative-x',
-        'android.delegate.radiogroup',
         'android.delegate.scrollbar',
+        'android.delegate.radiogroup',
         'squared.external',
         'squared.substitute',
         'squared.sprite',

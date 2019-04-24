@@ -77,6 +77,10 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         }
     }
 
+    public hasAlign(value: number) {
+        return $util.hasBit(this.alignmentType, value);
+    }
+
     public add(value: number) {
         if (!$util.hasBit(this.alignmentType, value)) {
             this.alignmentType |= value;

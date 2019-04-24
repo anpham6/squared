@@ -79,102 +79,120 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
         const columnEnd: number[] = [];
         const columns: T[][] = [];
         const nextMapX: ObjectIndex<T[]> = {};
-        for (const item of node) {
-            for (const subitem of item) {
-                const x = Math.floor(subitem.linear.left);
+        for (const row of node) {
+            for (const column of row) {
+                const x = Math.floor(column.linear.left);
                 if (nextMapX[x] === undefined) {
                     nextMapX[x] = [];
                 }
-                nextMapX[x].push(subitem as T);
+                nextMapX[x].push(column as T);
             }
         }
         const nextCoordsX = Object.keys(nextMapX);
         if (nextCoordsX.length) {
-            const columnRight: number[] = [];
+            let columnLength = -1;
             for (let i = 0; i < nextCoordsX.length; i++) {
-                const nextAxisX = nextMapX[nextCoordsX[i]];
-                if (i === 0 && nextAxisX.length === 0) {
-                    return undefined;
+                const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
+                if (i === 0) {
+                    columnLength = nextAxisX.length;
                 }
-                columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
-                for (let j = 0; j < nextAxisX.length; j++) {
-                    const nextX = nextAxisX[j];
-                    if (i === 0 || nextX.linear.left >= columnRight[i - 1]) {
-                        if (columns[i] === undefined) {
-                            columns[i] = [];
-                        }
-                        if (i === 0 || columns[0].length === nextAxisX.length) {
-                            columns[i][j] = nextX;
-                        }
-                        else {
-                            const index = getRowIndex(columns, nextX);
-                            if (index !== -1) {
-                                columns[i][index] = nextX;
+                else if (columnLength !== nextAxisX.length) {
+                    columnLength = -1;
+                    break;
+                }
+            }
+            if (columnLength !== -1) {
+                for (let i = 0; i < nextCoordsX.length; i++) {
+                    columns.push(nextMapX[nextCoordsX[i]]);
+                }
+            }
+            else {
+                const columnRight: number[] = [];
+                for (let i = 0; i < nextCoordsX.length; i++) {
+                    const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
+                    if (i === 0 && nextAxisX.length === 0) {
+                        return undefined;
+                    }
+                    columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
+                    for (let j = 0; j < nextAxisX.length; j++) {
+                        const nextX = nextAxisX[j];
+                        if (i === 0 || nextX.linear.left >= columnRight[i - 1]) {
+                            if (columns[i] === undefined) {
+                                columns[i] = [];
+                            }
+                            if (i === 0 || columns[0].length === nextAxisX.length) {
+                                columns[i][j] = nextX;
                             }
                             else {
-                                return undefined;
-                            }
-                        }
-                    }
-                    else {
-                        const endIndex = columns.length - 1;
-                        if (columns[endIndex]) {
-                            let minLeft = Number.POSITIVE_INFINITY;
-                            let maxRight = Number.NEGATIVE_INFINITY;
-                            columns[endIndex].forEach(item => {
-                                minLeft = Math.min(minLeft, item.linear.left);
-                                maxRight = Math.max(maxRight, item.linear.right);
-                            });
-                            if (nextX.linear.left > Math.ceil(minLeft) && nextX.linear.right > Math.ceil(maxRight)) {
                                 const index = getRowIndex(columns, nextX);
                                 if (index !== -1) {
-                                    for (let k = columns.length - 1; k >= 0; k--) {
-                                        if (columns[k]) {
-                                            if (columns[k][index] === undefined) {
-                                                columns[endIndex].length = 0;
+                                    columns[i][index] = nextX;
+                                }
+                                else {
+                                    return undefined;
+                                }
+                            }
+                        }
+                        else {
+                            const endIndex = columns.length - 1;
+                            if (columns[endIndex]) {
+                                let minLeft = Number.POSITIVE_INFINITY;
+                                let maxRight = Number.NEGATIVE_INFINITY;
+                                columns[endIndex].forEach(item => {
+                                    minLeft = Math.min(minLeft, item.linear.left);
+                                    maxRight = Math.max(maxRight, item.linear.right);
+                                });
+                                if (nextX.linear.left > Math.ceil(minLeft) && nextX.linear.right > Math.ceil(maxRight)) {
+                                    const index = getRowIndex(columns, nextX);
+                                    if (index !== -1) {
+                                        for (let k = columns.length - 1; k >= 0; k--) {
+                                            if (columns[k]) {
+                                                if (columns[k][index] === undefined) {
+                                                    columns[endIndex].length = 0;
+                                                }
+                                                break;
                                             }
-                                            break;
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                    columnRight[i] = Math.max(nextX.linear.right, columnRight[i]);
-                }
-            }
-            for (let i = 0, j = -1; i < columnRight.length; i++) {
-                if (columns[i] === undefined) {
-                    if (j === -1) {
-                        j = i - 1;
-                    }
-                    else if (i === columnRight.length - 1) {
-                        columnRight[j] = columnRight[i];
+                        columnRight[i] = Math.max(nextX.linear.right, columnRight[i]);
                     }
                 }
-                else if (j !== -1) {
-                    columnRight[j] = columnRight[i - 1];
-                    j = -1;
-                }
-            }
-            for (let i = 0; i < columns.length; i++) {
-                if (columns[i] && columns[i].length) {
-                    columnEnd.push(columnRight[i]);
-                }
-                else {
-                    columns.splice(i--, 1);
-                }
-            }
-            const maxColumn = columns.reduce((a, b) => Math.max(a, b.length), 0);
-            for (let l = 0; l < maxColumn; l++) {
-                for (let m = 0; m < columns.length; m++) {
-                    if (columns[m][l] === undefined) {
-                        columns[m][l] = { spacer: 1 } as any;
+                for (let i = 0, j = -1; i < columnRight.length; i++) {
+                    if (columns[i] === undefined) {
+                        if (j === -1) {
+                            j = i - 1;
+                        }
+                        else if (i === columnRight.length - 1) {
+                            columnRight[j] = columnRight[i];
+                        }
+                    }
+                    else if (j !== -1) {
+                        columnRight[j] = columnRight[i - 1];
+                        j = -1;
                     }
                 }
+                for (let i = 0; i < columns.length; i++) {
+                    if (columns[i] && columns[i].length) {
+                        columnEnd.push(columnRight[i]);
+                    }
+                    else {
+                        columns.splice(i--, 1);
+                    }
+                }
+                const maxColumn = columns.reduce((a, b) => Math.max(a, b.length), 0);
+                for (let l = 0; l < maxColumn; l++) {
+                    for (let m = 0; m < columns.length; m++) {
+                        if (columns[m][l] === undefined) {
+                            columns[m][l] = { spacer: 1 } as any;
+                        }
+                    }
+                }
+                columnEnd.push(node.box.right);
             }
         }
-        columnEnd.push(node.box.right);
         if (columns.length > 1 && columns[0].length === node.length) {
             const mainData = { ...Grid.createDataAttribute(), columnCount: columns.length };
             const children: T[][] = [];
@@ -209,11 +227,13 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                                 }
                             }
                         }
-                        const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
-                        const actualChildren = item.documentParent.actualChildren;
-                        for (const sibling of actualChildren) {
-                            if (sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[l]) {
-                                data.siblings.push(sibling as T);
+                        if (columnEnd.length) {
+                            const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
+                            const actualChildren = item.documentParent.actualChildren;
+                            for (const sibling of actualChildren) {
+                                if (sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[l]) {
+                                    data.siblings.push(sibling as T);
+                                }
                             }
                         }
                         data.rowSpan = rowSpan;

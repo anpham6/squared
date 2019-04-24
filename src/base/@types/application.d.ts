@@ -36,10 +36,7 @@ export interface ControllerSettings {
         standardFloat: number;
     };
     deviations: {
-        constraintParentBottomOffset: number;
-        subscriptBottomOffset: number;
-        superscriptTopOffset: number;
-        legendBottomOffset: number;
+        textMarginBoundarySize: number;
     };
 }
 

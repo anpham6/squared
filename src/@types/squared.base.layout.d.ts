@@ -19,6 +19,7 @@ declare global {
             readonly visible: T[];
             init(): void;
             setType(containerType: number, ...alignmentType: number[]): void;
+            hasAlign(value: number): boolean;
             reset(): void;
             add(value: number): number;
             delete(value: number): number;

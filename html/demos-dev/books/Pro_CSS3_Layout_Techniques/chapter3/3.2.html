@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Example of Relative and Absolute Positioning</title>		
+		<script src="/node_modules/systemjs/dist/system.js"></script>
+		<script src="../../squared.js"></script>
+	</head>
+	<body>
+<style>
+.relative {
+ position: relative;
+ bottom: 100px; 
+ left: 100px; 
+ width: 100px;
+ height: 100px;
+ background: red;
+ margin: 10px;
+} 
+#absolute1 {
+ position: absolute;
+ top: 100px;
+ left: 200px;
+ width: 100px;
+ height: 100px;
+ background: yellow;
+}
+#absolute2 {
+ position: absolute;
+ top: 100px;
+ left: 200px;
+ width: 100px;
+ height: 100px;
+ background: purple;
+}
+#absolute3 {
+ position: absolute;
+ top: 100px;
+ left: 200px;
+ width: 100px;
+ height: 100px;
+ background: yellow;
+}
+.relative2 {
+ position: relative;
+ bottom: 100px; 
+ right: 100px; 
+ width: 100px;
+ height: 100px;
+ background: red;
+ margin: 10px;
+} 
+#absolute4 {
+ position: absolute;
+ top: 100px;
+ left: 200px;
+ width: 100px;
+ height: 100px;
+ background: yellow;
+}
+#absolute5 {
+ position: absolute;
+ bottom: 100px;
+ left: 200px;
+ width: 100px;
+ height: 100px;
+ background: purple;
+}
+.relative3 {
+ position: relative;
+ bottom: 100px; 
+ left: 100px; 
+ width: 100px;
+ height: 100px;
+ background: red;
+ margin: 10px;
+} 
+</style>
+<div class="relative">
+ Element 1
+ <div id="absolute1">Element 4</div>
+</div>
+<div class="relative">Element 2</div>
+<div class="relative">
+ Element 3
+ <div id="absolute2">Element 5</div>
+</div>
+
+<div id="absolute3">Element 6</div>
+
+<div class="relative2">
+	Element 7
+	<div id="absolute4">Element 8</div>
+   </div>
+   <div class="relative2">Element 9</div>
+   <div class="relative2">
+	Element 10
+	<div id="absolute5">Element 11</div>
+</div>
+
+<div class="relative3">
+	Element 12
+	<div id="absolute1">Element 13</div>
+   </div>
+   <div class="relative3">Element 14</div>
+   <div class="relative3">
+	Element 15
+	<div id="absolute2">Element 16</div>
+</div>
+
+	</body>
+</html>

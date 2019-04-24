@@ -22,6 +22,8 @@ declare global {
         namespace delegate {
             class Fixed<T extends View> extends squared.base.Extension<T> {}
             class MaxWidthHeight<T extends View> extends squared.base.Extension<T> {}
+            class NegativeViewport<T extends View> extends squared.base.Extension<T> {}
+            class NegativeX<T extends View> extends squared.base.Extension<T> {}
             class Percent<T extends View> extends squared.base.Extension<T> {}
             class RadioGroup<T extends View> extends squared.base.Extension<T> {}
             class ScrollBar<T extends View> extends squared.base.Extension<T> {}

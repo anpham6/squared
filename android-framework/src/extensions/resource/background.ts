@@ -458,8 +458,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 imageDimensions[j] = Resource.ASSETS.images.get(element.src);
                                 backgroundRepeat[j] = 'no-repeat';
                                 backgroundSize[j] = `${image.actualWidth}px ${image.actualHeight}px`;
-                                const position = image.tagName === 'IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left}px ${image.bounds.top - node.bounds.top}px`;
-                                backgroundPosition[j] = $css.getBackgroundPosition(position, node.actualDimension, node.fontSize);
+                                backgroundPosition[j] = $css.getBackgroundPosition(
+                                    image.tagName === 'IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left}px ${image.bounds.top - node.bounds.top}px`,
+                                    node.actualDimension,
+                                    node.fontSize
+                                );
                                 j++;
                             }
                         }
@@ -844,33 +847,37 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 imageData.gravity = gravity;
                             }
                         }
-                        else if (dimension) {
+                        else {
                             if (value.item) {
-                                const width = Math.round(dimension.width);
-                                const height = Math.round(dimension.height);
-                                imageData.width = $css.formatPX(width);
-                                imageData.height = $css.formatPX(height);
-                                const src = Resource.insertStoredAsset(
-                                    'drawables',
-                                    `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i + 1}`,
-                                    $xml.applyTemplate('vector', VECTOR_TMPL, [{
-                                        'xmlns:android': XMLNS_ANDROID.android,
-                                        'xmlns:aapt': XMLNS_ANDROID.aapt,
-                                        'android:width': imageData.width || $css.formatPX(width),
-                                        'android:height': imageData.height || $css.formatPX(height),
-                                        'android:viewportWidth': width.toString(),
-                                        'android:viewportHeight': height.toString(),
-                                        'path': {
-                                            pathData: drawRect(width, height),
-                                            'aapt:attr': {
-                                                name: 'android:fillColor',
-                                                gradient: value
+                                if (dimension) {
+                                    const width = Math.round(dimension.width);
+                                    const height = Math.round(dimension.height);
+                                    if (backgroundSize[i].split(' ').some(size => size !== '100%' && $css.isLength(size, true))) {
+                                        imageData.width = $css.formatPX(width);
+                                        imageData.height = $css.formatPX(height);
+                                    }
+                                    const src = Resource.insertStoredAsset(
+                                        'drawables',
+                                        `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i + 1}`,
+                                        $xml.applyTemplate('vector', VECTOR_TMPL, [{
+                                            'xmlns:android': XMLNS_ANDROID.android,
+                                            'xmlns:aapt': XMLNS_ANDROID.aapt,
+                                            'android:width': imageData.width || $css.formatPX(width),
+                                            'android:height': imageData.height || $css.formatPX(height),
+                                            'android:viewportWidth': width.toString(),
+                                            'android:viewportHeight': height.toString(),
+                                            'path': {
+                                                pathData: drawRect(width, height),
+                                                'aapt:attr': {
+                                                    name: 'android:fillColor',
+                                                    gradient: value
+                                                }
                                             }
-                                        }
-                                    }])
-                                );
-                                if (src !== '') {
-                                    imageData.drawable = `@drawable/${src}`;
+                                        }])
+                                    );
+                                    if (src !== '') {
+                                        imageData.drawable = `@drawable/${src}`;
+                                    }
                                 }
                             }
                             else {

@@ -66,7 +66,7 @@ declare global {
             function newBoxRect(): BoxRect;
             function newRectDimension(): RectDimension;
             function newBoxModel(): BoxModel;
-            function assignRect(rect: DOMRect | RectDimension): RectDimension;
+            function assignRect(rect: DOMRect | RectDimension, scrollPosition?: boolean): RectDimension;
             function removeElementsByClassName(className: string): void;
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
             function getNamedItem(element: Element | null, attr: string): string;

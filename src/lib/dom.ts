@@ -69,8 +69,8 @@ export function newBoxModel(): BoxModel {
     };
 }
 
-export function assignRect(rect: DOMRect | RectDimension): RectDimension {
-    return {
+export function assignRect(rect: DOMRect | RectDimension, scrollPosition = false): RectDimension {
+    const result = {
         top: rect.top,
         right: rect.right,
         bottom: rect.bottom,
@@ -78,6 +78,17 @@ export function assignRect(rect: DOMRect | RectDimension): RectDimension {
         width: rect.width,
         height: rect.height
     };
+    if (scrollPosition) {
+        if (window.scrollY !== 0) {
+            result.top += window.scrollY;
+            result.bottom += window.scrollY;
+        }
+        if (window.scrollX !== 0) {
+            result.left += window.scrollX;
+            result.right += window.scrollX;
+        }
+    }
+    return result;
 }
 
 export function removeElementsByClassName(className: string) {

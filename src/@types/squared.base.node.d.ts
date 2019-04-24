@@ -162,7 +162,7 @@ declare global {
             saveAsInitial(overwrite?: boolean): void;
             is(...containers: number[]): boolean;
             of(containerType: number, ...alignmentType: number[]): boolean;
-            unsafe(name: string): any;
+            unsafe(name: string, reset?: boolean): any;
             attr(name: string, attr: string, value?: string, overwrite?: boolean): string;
             namespace(name: string): StringMap;
             delete(name: string, ...attrs: string[]): void;
@@ -176,7 +176,7 @@ declare global {
             ascend(generated?: boolean, condition?: (item: Node) => boolean, parent?: Node): Node[];
             cascade(predicate?: (item: Node) => boolean, element?: boolean): Node[];
             inherit(node: Node, ...modules: string[]): void;
-            alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): boolean;
+            alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
             intersectX(rect: RectDimension, dimension?: string): boolean;
             intersectY(rect: RectDimension, dimension?: string): boolean;
             withinX(rect: RectDimension, dimension?: string): boolean;

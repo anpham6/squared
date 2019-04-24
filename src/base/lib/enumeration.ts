@@ -23,6 +23,17 @@ export const enum NODE_TEMPLATE {
     INCLUDE
 }
 
+export const enum NODE_TRAVERSE {
+    HORIZONTAL = 0,
+    VERTICAL = 1,
+    LINEBREAK = 2,
+    INLINE_WRAP = 3,
+    FLOAT_WRAP = 4,
+    FLOAT_CLEAR = 5,
+    FLOAT_BLOCK = 6,
+    FLOAT_INTERSECT = 7
+}
+
 export const enum CSS_STANDARD {
     LENGTH = 2,
     AUTO = 4,
