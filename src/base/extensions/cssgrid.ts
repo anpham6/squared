@@ -315,7 +315,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 if (column === 1 && columnMax > 0) {
                     let valid = false;
                     do {
-                        const available = new Array(columnMax - 1).fill(1);
+                        const available: number[] = new Array(columnMax - 1).fill(1);
                         for (const cell of layout) {
                             const placement = cell.placement;
                             if (placement[indexA] > row) {

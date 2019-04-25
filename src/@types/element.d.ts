@@ -15,11 +15,8 @@ interface RectPosition extends BoxRect {
     orientation: string[];
 }
 
-interface RectDimension extends BoxRect, Dimension {
-}
-
-interface TextDimension extends RectDimension {
-    multiline: number;
+interface BoxRectDimension extends BoxRect, Dimension {
+    numberOfLines?: number;
 }
 
 interface BoxMargin {

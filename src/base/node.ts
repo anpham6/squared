@@ -47,9 +47,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract readonly renderChildren: T[];
 
     protected _styleMap!: StringMap;
-    protected _box?: RectDimension;
-    protected _bounds?: RectDimension;
-    protected _linear?: RectDimension;
+    protected _box?: BoxRectDimension;
+    protected _bounds?: BoxRectDimension;
+    protected _linear?: BoxRectDimension;
     protected _controlName?: string;
     protected _documentParent?: T;
     protected readonly _initial: InitialData<T> = {
@@ -464,8 +464,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return NODE_TRAVERSE.HORIZONTAL;
     }
 
-    public intersectX(rect: RectDimension, dimension = 'linear') {
-        const self: RectDimension = this[dimension];
+    public intersectX(rect: BoxRectDimension, dimension = 'linear') {
+        const self: BoxRectDimension = this[dimension];
         return (
             rect.left >= self.left && rect.left < self.right ||
             rect.right > self.left && rect.right <= self.right ||
@@ -474,8 +474,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         );
     }
 
-    public intersectY(rect: RectDimension, dimension = 'linear') {
-        const self: RectDimension = this[dimension];
+    public intersectY(rect: BoxRectDimension, dimension = 'linear') {
+        const self: BoxRectDimension = this[dimension];
         return (
             rect.top >= self.top && rect.top < self.bottom ||
             rect.bottom > self.top && rect.bottom <= self.bottom ||
@@ -484,23 +484,23 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         );
     }
 
-    public withinX(rect: RectDimension, dimension = 'linear') {
-        const self: RectDimension = this[dimension];
+    public withinX(rect: BoxRectDimension, dimension = 'linear') {
+        const self: BoxRectDimension = this[dimension];
         return Math.ceil(self.left) >= Math.floor(rect.left) && Math.floor(self.right) <= Math.ceil(rect.right);
     }
 
-    public withinY(rect: RectDimension, dimension = 'linear') {
-        const self: RectDimension = this[dimension];
+    public withinY(rect: BoxRectDimension, dimension = 'linear') {
+        const self: BoxRectDimension = this[dimension];
         return Math.ceil(self.top) >= Math.floor(rect.top) && Math.floor(self.bottom) <= Math.ceil(rect.bottom);
     }
 
-    public outsideX(rect: RectDimension, dimension = 'linear') {
-        const self: RectDimension = this[dimension];
+    public outsideX(rect: BoxRectDimension, dimension = 'linear') {
+        const self: BoxRectDimension = this[dimension];
         return Math.ceil(self.left) < Math.floor(rect.left) || Math.floor(self.right) > Math.ceil(rect.right);
     }
 
-    public outsideY(rect: RectDimension, dimension = 'linear') {
-        const self: RectDimension = this[dimension];
+    public outsideY(rect: BoxRectDimension, dimension = 'linear') {
+        const self: BoxRectDimension = this[dimension];
         return Math.ceil(self.top) < Math.floor(rect.top) || Math.floor(self.bottom) > Math.ceil(rect.bottom);
     }
 
@@ -835,7 +835,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         else if (this.plainText) {
             const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId, cache);
             this._bounds = $dom.assignRect(rect, true);
-            this._cached.multiline = rect.multiline > 0;
+            this._cached.multiline = (rect.numberOfLines as number) > 0;
         }
     }
 
@@ -1060,7 +1060,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     private setDimensions(dimension: 'box' | 'linear') {
-        const bounds: RectDimension = this.unsafe(dimension);
+        const bounds: BoxRectDimension = this.unsafe(dimension);
         if (bounds) {
             bounds.width = this.bounds.width;
             if (this.plainText) {
@@ -1258,7 +1258,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get bounds() {
-        return this._bounds || $dom.newRectDimension();
+        return this._bounds || $dom.newBoxRectDimension();
     }
 
     get linear() {
@@ -1279,7 +1279,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             this.setDimensions('linear');
         }
-        return this._linear || $dom.newRectDimension();
+        return this._linear || $dom.newBoxRectDimension();
     }
 
     get box() {
@@ -1300,7 +1300,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             this.setDimensions('box');
         }
-        return this._box || $dom.newRectDimension();
+        return this._box || $dom.newBoxRectDimension();
     }
 
     set renderAs(value) {
@@ -1903,7 +1903,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get multiline() {
         if (this._cached.multiline === undefined) {
-            this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $session.getRangeClientRect(<Element> this._element, this.sessionId).multiline > 0 : false;
+            this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? ($session.getRangeClientRect(<Element> this._element, this.sessionId).numberOfLines as number) > 0 : false;
         }
         return this._cached.multiline;
     }

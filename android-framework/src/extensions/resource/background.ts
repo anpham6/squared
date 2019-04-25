@@ -317,7 +317,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     return result;
 }
 
-function getPercentOffset(direction: string, position: RectPosition, backgroundSize: string, bounds: RectDimension, dimension?: Dimension): number {
+function getPercentOffset(direction: string, position: RectPosition, backgroundSize: string, bounds: BoxRectDimension, dimension?: Dimension): number {
     if (dimension) {
         const orientation = position.orientation;
         const sign = backgroundSize === 'cover' || backgroundSize === 'contain' ? -1 : 1;

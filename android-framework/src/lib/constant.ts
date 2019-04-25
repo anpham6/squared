@@ -37,7 +37,8 @@ export const CONTAINER_ANDROID = {
     RELATIVE: 'RelativeLayout',
     WEBVIEW: 'WebView',
     CONSTRAINT: 'android.support.constraint.ConstraintLayout',
-    GUIDELINE: 'android.support.constraint.Guideline'
+    GUIDELINE: 'android.support.constraint.Guideline',
+    BARRIER: 'android.support.constraint.Barrier'
 };
 
 export const ELEMENT_ANDROID = {

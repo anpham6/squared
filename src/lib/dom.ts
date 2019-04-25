@@ -45,7 +45,7 @@ export function newBoxRect(): BoxRect {
     };
 }
 
-export function newRectDimension(): RectDimension {
+export function newBoxRectDimension(): BoxRectDimension {
     return {
         top: 0,
         left: 0,
@@ -69,7 +69,7 @@ export function newBoxModel(): BoxModel {
     };
 }
 
-export function assignRect(rect: DOMRect | RectDimension, scrollPosition = false): RectDimension {
+export function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition = false): BoxRectDimension {
     const result = {
         top: rect.top,
         right: rect.right,

@@ -64,9 +64,9 @@ declare global {
         namespace dom {
             export import ELEMENT_BLOCK = $dom.ELEMENT_BLOCK;
             function newBoxRect(): BoxRect;
-            function newRectDimension(): RectDimension;
+            function newBoxRectDimension(): BoxRectDimension;
             function newBoxModel(): BoxModel;
-            function assignRect(rect: DOMRect | RectDimension, scrollPosition?: boolean): RectDimension;
+            function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
             function removeElementsByClassName(className: string): void;
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
             function getNamedItem(element: Element | null, attr: string): string;
@@ -105,7 +105,7 @@ declare global {
 
         namespace session {
             function getClientRect(element: Element, sessionId: string, cache?: boolean): ClientRect;
-            function getRangeClientRect(element: Element, sessionId: string, cache?: boolean): TextDimension;
+            function getRangeClientRect(element: Element, sessionId: string, cache?: boolean): BoxRectDimension;
             function causesLineBreak(element: Element, sessionId: string): boolean;
             function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
             function getElementCache(element: Element, attr: string, sessionId: string): any;

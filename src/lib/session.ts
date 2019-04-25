@@ -1,4 +1,4 @@
-import { assignRect, newRectDimension } from './dom';
+import { assignRect, newBoxRectDimension } from './dom';
 import { withinRange } from './util';
 
 type Node = squared.base.Node;
@@ -28,12 +28,12 @@ export function getRangeClientRect(element: Element, sessionId: string, cache = 
     const domRect: ClientRect[] = [];
     for (let i = 0; i < clientRects.length; i++) {
         const item = <ClientRect> clientRects.item(i);
-        if (!(Math.round(item.width) === 0 && withinRange(item.left, item.right))) {
+        if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
             domRect.push(item);
         }
     }
-    let bounds: RectDimension = newRectDimension();
-    let multiline = 0;
+    let bounds: BoxRectDimension = newBoxRectDimension();
+    let numberOfLines = 0;
     let maxTop = Number.NEGATIVE_INFINITY;
     if (domRect.length) {
         bounds = assignRect(domRect[0]);
@@ -51,21 +51,19 @@ export function getRangeClientRect(element: Element, sessionId: string, cache = 
             if (rect.bottom > bounds.bottom) {
                 bounds.bottom = rect.bottom;
             }
-            if (rect.height > bounds.height) {
-                bounds.height = rect.height;
-            }
             bounds.width += rect.width;
+            bounds.height += rect.height;
             if (rect.top > maxTop) {
                 maxTop = rect.top;
             }
         }
         if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-            multiline = domRect.length - 1;
+            numberOfLines = domRect.length - 1;
         }
     }
-    (<TextDimension> bounds).multiline = multiline;
+    bounds.numberOfLines = numberOfLines;
     setElementCache(element, 'rangeClientRect', sessionId, bounds);
-    return <TextDimension> bounds;
+    return <BoxRectDimension> bounds;
 }
 
 export function causesLineBreak(element: Element, sessionId: string) {
