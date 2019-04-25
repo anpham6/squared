@@ -1117,13 +1117,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 ascend = ascend.actualParent as T;
                             }
                         }
-                        if (!node.has('width', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) && (imageWidth === 0 || node.bounds.width < imageWidth)) {
+                        if ((!node.has('width', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) || !node.pageFlow) && (imageWidth === 0 || node.bounds.width < imageWidth)) {
                             const backgroundWidth = node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0);
                             if (backgroundWidth > 0) {
                                 node.css('width', $css.formatPX(backgroundWidth), true);
                             }
                         }
-                        if (!node.has('height', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) && (imageHeight === 0 || node.bounds.height < imageHeight)) {
+                        if ((!node.has('height', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) || !node.pageFlow) && (imageHeight === 0 || node.bounds.height < imageHeight)) {
                             const backgroundHeight = node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0);
                             if (backgroundHeight > 0) {
                                 node.css('height', $css.formatPX(backgroundHeight), true);

@@ -20,16 +20,16 @@ function isBlockElement(node: Node | undefined) {
 
 function getVisibleNode(node: Node) {
     if (node.visible) {
-        const innerChild = node.innerChild;
-        if (innerChild && !innerChild.naturalElement) {
-            return innerChild;
+        const innerWrapped = node.innerWrapped;
+        if (innerWrapped && !innerWrapped.naturalElement) {
+            return innerWrapped;
         }
         return node;
     }
     else if (node.excluded) {
         return node;
     }
-    return node.renderAs || node.outerParent || node.innerChild || node;
+    return node.renderAs || node.outerWrapper || node.innerWrapped || node;
 }
 
 function resetMargin(node: Node, value: number) {
@@ -319,7 +319,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                 function setSpacingOffset(region: number, value: number) {
                     const offset = (region === BOX_STANDARD.MARGIN_LEFT ? node.actualRect('left') : node.actualRect('top')) - value;
                     if (offset > 0) {
-                        node = getVisibleNode(node.outerParent || node) as T;
+                        node = getVisibleNode(node.outerWrapper || node) as T;
                         node.modifyBox(region, offset);
                         modified.push(node.id);
                     }

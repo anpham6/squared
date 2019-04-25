@@ -10,6 +10,7 @@ declare global {
             readonly containerTypeHorizontal: LayoutType;
             readonly containerTypeVertical: LayoutType;
             readonly containerTypeVerticalMargin: LayoutType;
+            readonly containerTypePercent: LayoutType;
             readonly afterInsertNode: BindGeneric<T, void>;
             readonly generateSessionId: string;
             finalize(data: ViewData): void;

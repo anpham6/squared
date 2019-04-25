@@ -35,8 +35,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public renderParent?: T;
     public renderExtension?: Extension<T>[];
     public renderTemplates?: NodeTemplate<T>[];
-    public outerParent?: T;
-    public innerChild?: T;
+    public outerWrapper?: T;
+    public innerWrapped?: T;
     public companion?: T;
     public extracted?: T[];
     public horizontalRows?: T[][];
@@ -865,7 +865,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.children[i] === node) {
                 this.children[i] = replacement;
                 replacement.parent = this;
-                replacement.innerChild = node;
+                replacement.innerWrapped = node;
                 valid = true;
                 break;
             }
@@ -1169,8 +1169,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get element() {
-        if (!this.naturalElement && this.innerChild) {
-            const element: Element | null = this.innerChild.unsafe('element');
+        if (!this.naturalElement && this.innerWrapped) {
+            const element: Element | null = this.innerWrapped.unsafe('element');
             if (element) {
                 return element;
             }
@@ -1666,7 +1666,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get inlineStatic() {
         if (this._cached.inlineStatic === undefined) {
-            this._cached.inlineStatic = this.inline && !this.floating && !this.imageElement;
+            this._cached.inlineStatic = this.inline && this.pageFlow && !this.floating && !this.imageElement;
         }
         return this._cached.inlineStatic;
     }

@@ -6,7 +6,7 @@ import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
 
-import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID } from './lib/constant';
+import { AXIS_ANDROID, CONTAINER_ANDROID } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { createViewAttribute, getRootNs } from './lib/util';
 
@@ -300,6 +300,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                     }
                     else {
+                        if (current.alignSibling('bottom') === '') {
+                            current.anchor('bottom', 'parent');
+                            node.anchorStyle(AXIS_ANDROID.VERTICAL, 'packed', 0, false);
+                        }
                         break;
                     }
                 }
@@ -498,8 +502,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 node.renderAs = child;
                 node.resetBox($enum.BOX_STANDARD.MARGIN, child, true);
                 node.hide();
-                node.innerChild = child;
-                child.outerParent = node;
+                node.innerWrapped = child;
+                child.outerWrapper = node;
                 renderAs = child;
             }
             else if (node.autoMargin.horizontal || parent.layoutConstraint && parent.flexElement && node.flexbox.alignSelf === 'baseline' && child.textElement) {
@@ -756,9 +760,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     else {
                                         if (item.has('left')) {
                                             item.anchor('left', 'parent');
+                                            if (!item.has('right') && item.css('width') === '100%') {
+                                                item.anchor('right', 'parent');
+                                            }
                                             item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, adjustDocumentRootOffset(item.left, node, 'Left', true));
                                         }
-                                        if (item.has('right') && (!item.hasWidth || !item.has('left'))) {
+                                        if (item.has('right') && (!item.has('width') || item.css('width') === '100%' || !item.has('left'))) {
                                             item.anchor('right', 'parent');
                                             item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, adjustDocumentRootOffset(item.right, node, 'Right', true));
                                         }
@@ -781,9 +788,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     else {
                                         if (item.has('top')) {
                                             item.anchor('top', 'parent');
+                                            if (!item.has('bottom') && item.css('height') === '100%') {
+                                                item.anchor('bottom', 'parent');
+                                            }
                                             item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, adjustDocumentRootOffset(item.top, node, 'Top', true));
                                         }
-                                        if (item.has('bottom') && (!item.hasHeight || !item.has('top'))) {
+                                        if (item.has('bottom') && (!item.has('height') || item.css('height') === '100%' || !item.has('top'))) {
                                             item.anchor('bottom', 'parent');
                                             item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, adjustDocumentRootOffset(item.bottom, node, 'Bottom', true));
                                         }
@@ -806,7 +816,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 if (item.autoMargin.leftRight || (item.inlineStatic && item.cssAscend('textAlign', true) === 'center')) {
                                     item.anchorParent(AXIS_ANDROID.HORIZONTAL);
                                 }
-                                else if (item.rightAligned && item.outerParent === undefined) {
+                                else if (item.rightAligned && item.outerWrapper === undefined) {
                                     item.anchor('right', 'parent');
                                 }
                                 else if ($util.withinRange(item.linear.left, node.box.left) || item.linear.left < node.box.left) {
@@ -898,15 +908,15 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         const element = <HTMLImageElement> node.element;
                         let width = node.toFloat('width');
                         let height = node.toFloat('height');
-                        let widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT) ? width : -1;
-                        const heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT) ? height : -1;
+                        let percentWidth = node.has('width', $enum.CSS_STANDARD.PERCENT) ? width : -1;
+                        const percentHeight = node.has('height', $enum.CSS_STANDARD.PERCENT) ? height : -1;
                         let scaleType = 'fitXY';
                         let imageSet: ImageSrcSet[] | undefined;
                         if (element.srcset) {
                             imageSet = $css.getSrcSet(element, this.localSettings.supported.imageFormat);
                             if (imageSet.length) {
                                 if (imageSet[0].actualWidth) {
-                                    if (widthPercent === -1 || width < 100) {
+                                    if (percentWidth === -1 || width < 100) {
                                         width = imageSet[0].actualWidth;
                                         node.css('width', $css.formatPX(width), true);
                                         const image = this.application.session.image.get(element.src);
@@ -922,7 +932,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                         width = parent.box.width;
                                         node.android('adjustViewBounds', 'true');
                                     }
-                                    widthPercent = -1;
+                                    percentWidth = -1;
                                 }
                             }
                             else {
@@ -933,16 +943,16 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         if (src !== '') {
                             node.android('src', `@drawable/${src}`);
                         }
-                        if (widthPercent !== -1 || heightPercent !== -1) {
-                            if (widthPercent >= 0) {
-                                width *= parent.box.width / 100;
-                                if (widthPercent < 100 && !parent.layoutConstraint) {
+                        if (percentWidth !== -1 || percentHeight !== -1) {
+                            if (percentWidth >= 0) {
+                                width *= node.documentParent.box.width / 100;
+                                if (percentWidth < 100 && !parent.layoutConstraint) {
                                     node.css('width', $css.formatPX(width));
                                 }
                             }
-                            if (heightPercent >= 0) {
-                                height *= parent.box.height / 100;
-                                if (heightPercent < 100 && !(parent.layoutConstraint && node.documentParent.has('height', $enum.CSS_STANDARD.LENGTH))) {
+                            if (percentHeight >= 0) {
+                                height *= node.documentParent.box.height / 100;
+                                if (percentHeight < 100 && !(parent.layoutConstraint && node.documentParent.has('height', $enum.CSS_STANDARD.LENGTH))) {
                                     node.css('height', $css.formatPX(height));
                                 }
                             }
@@ -986,19 +996,23 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             parent.appendTry(node, container);
                             node.parent = container;
                             if (width > 0) {
-                                container.android('layout_width', width < parent.box.width ? $css.formatPX(width) : 'match_parent');
+                                container.android('layout_width', width < node.documentParent.box.width ? $css.formatPX(width) : 'match_parent');
                             }
                             else {
                                 container.android('layout_width', 'wrap_content');
                             }
                             if (height > 0) {
-                                container.android('layout_height', height < parent.box.height ? $css.formatPX(height) : 'match_parent');
+                                container.android('layout_height', height < node.documentParent.box.height ? $css.formatPX(height) : 'match_parent');
                             }
                             else {
                                 container.android('layout_height', 'wrap_content');
                             }
                             container.render(target ? this.application.resolveTarget(target) : parent);
                             container.saveAsInitial();
+                            container.innerWrapped = node;
+                            node.outerWrapper = container;
+                            node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
+                            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.left);
                             this.application.addRenderTemplate(
                                 parent,
                                 container,
@@ -1008,10 +1022,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     controlName: CONTAINER_ANDROID.FRAME
                                 }
                             );
-                            node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
-                            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.left);
-                            container.innerChild = node;
-                            node.outerParent = container;
                             parent = container;
                             layout.parent = container;
                             target = undefined;
@@ -1313,7 +1323,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             offset = absoluteParent.marginTop;
                         }
                         location = bounds[LT] - box[!opposite ? LT : RB] - offset;
-                        if (!node.pageFlow && node.parent === boxParent.outerParent) {
+                        if (!node.pageFlow && node.parent === boxParent.outerWrapper) {
                             location += boxParent[!opposite ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
                         }
                         beginPercent += 'begin';
@@ -1339,8 +1349,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 if (location <= 0) {
                     node.anchor(LT, 'parent', true);
                     if (location < 0) {
-                        const innerChild = node.innerChild;
-                        if (innerChild && !innerChild.pageFlow) {
+                        const innerWrapped = node.innerWrapped;
+                        if (innerWrapped && !innerWrapped.pageFlow) {
                             let boxMargin = 0;
                             switch (LT) {
                                 case 'top':
@@ -1356,7 +1366,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     boxMargin = $enum.BOX_STANDARD.MARGIN_RIGHT;
                                     break;
                             }
-                            innerChild.modifyBox(boxMargin, location);
+                            innerWrapped.modifyBox(boxMargin, location);
                         }
                     }
                 }
@@ -1428,7 +1438,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             node.parent = container;
         }
         else {
-            container.innerChild = node;
+            container.innerWrapped = node;
             container.siblingIndex = node.siblingIndex;
         }
         if (node.renderParent) {
@@ -1458,10 +1468,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
             borderRightStyle: 'none',
             borderBottomStyle: 'none',
             borderLeftStyle: 'none',
-            borderRadius: '0px',
-            display: 'block'
+            borderRadius: '0px'
         });
-        node.outerParent = container;
+        node.outerWrapper = container;
         return container;
     }
 
@@ -2010,6 +2019,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
                     item.baselineAltered = true;
                 }
+                Controller.setConstraintDimension(item);
             }
             else if (baseline && item !== baseline && item.plainText && item.baseline) {
                 item.anchor('baseline', baseline.documentId);
@@ -2044,20 +2054,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (items.length === 0) {
             rows.pop();
         }
+        const columnGap = $util.convertFloat(node.css('columnGap')) || $css.getFontSize(document.body) || 16;
         const columnWidth = node.toFloat('columnWidth');
-        const columnGap = $util.convertFloat(node.css('columnGap')) || 16;
-        let columnIteration = 0;
-        if (columnWidth > 0) {
-            let actualWidth = node.actualWidth;
-            do {
-                actualWidth -= columnWidth;
-                if (columnIteration > 0) {
-                    actualWidth -= columnGap;
-                }
-            }
-            while (actualWidth > 0 && ++columnIteration);
-        }
-        const columnCount = Math.max(1, Math.min(node.toInt('columnCount') || Number.POSITIVE_INFINITY, columnIteration || Number.POSITIVE_INFINITY));
+        const columnCount = node.toInt('columnCount');
+        const columnSized = columnWidth > 0 ? Math.floor(node.actualWidth / columnWidth) : Number.POSITIVE_INFINITY;
         let previous: T | undefined;
         const setColumnHorizontal = (seg: T[]) => {
             const rowStart = seg[0];
@@ -2091,10 +2091,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             }
                             else {
                                 item.anchor('top', 'parent');
+                                item.anchorStyle(AXIS_ANDROID.VERTICAL);
                             }
                         }
                         else {
                             item.anchor('top', rowStart.documentId);
+                            item.anchorStyle(AXIS_ANDROID.VERTICAL);
                             item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
                         }
                     }
@@ -2106,7 +2108,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         item.anchor('left', seg[0].documentId);
                     }
                     if (j === seg.length - 1) {
-                        if (lastRow && this.withinParentBottom(item.pageFlow, item.linear.bottom, item.documentParent.box.bottom)) {
+                        if (lastRow) {
                             item.anchor('bottom', 'parent');
                         }
                         else if (i > 0 && !item.multiline) {
@@ -2120,7 +2122,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     Controller.setConstraintDimension(item);
                     item.anchored = true;
                 }
-                seg[0].anchorStyle(AXIS_ANDROID.VERTICAL);
             }
         };
         for (let i = 0; i < rows.length; i++) {
@@ -2130,6 +2131,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 Controller.setConstraintDimension(rowStart, true);
                 if (i === 0) {
                     rowStart.anchor('top', 'parent');
+                    rowStart.anchorStyle(AXIS_ANDROID.VERTICAL);
                 }
                 else if (previous) {
                     previous.anchor('bottomTop', rowStart.documentId);
@@ -2141,20 +2143,17 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 previous = row[0];
             }
             else {
-                let columnMin = Math.min(row.length, columnCount);
-                if (row.length > columnCount) {
-                    while (row.length / columnMin < 1.5) {
-                        columnMin--;
-                    }
-                }
-                const perRowCount = Math.ceil(row.length / columnMin);
                 const columns: T[][] = [];
+                const columnMin = Math.min(columnCount, columnSized);
+                const perRowCount = row.length >= columnMin ? Math.ceil(row.length / columnMin) : 1;
+                let excessCount = perRowCount > 1 && row.length % columnMin !== 0 ? row.length - columnMin : Number.POSITIVE_INFINITY;
                 let totalGap = 0;
-                for (let j = 0, k = 0; j < row.length; j++) {
+                for (let j = 0, k = 0, l = 0; j < row.length; j++, l++) {
                     const column = row[j];
-                    if (j % perRowCount === 0) {
+                    if (l % perRowCount === 0 || excessCount <= 0) {
                         if (j > 0) {
                             k++;
+                            excessCount--;
                         }
                         if (columns[k] === undefined) {
                             columns[k] = [];
@@ -2165,17 +2164,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         totalGap += $math.maxArray($util.objectMap<T, number>(column.children as T[], child => child.marginLeft + child.marginRight));
                     }
                 }
-                const percentGap = Math.max(((totalGap + (columnGap * (columnMin - 1))) / node.box.width) / columnMin, 0.01);
+                const percentGap = columnMin > 1 ? Math.max(((totalGap + (columnGap * (columnMin - 1))) / node.box.width) / columnMin, 0.01) : 0;
                 const horizontal: T[] = [];
                 for (let j = 0; j < columns.length; j++) {
                     const columnStart = columns[j][0];
                     horizontal.push(columnStart);
-                    if (columnMin > 1) {
-                        for (const item of columns[j]) {
-                            const percent = (1 / columnMin) - percentGap;
-                            item.android('layout_width', '0px');
-                            item.app('layout_constraintWidth_percent', $math.truncate(percent, this.localSettings.precision.standardFloat));
-                        }
+                    for (const item of columns[j]) {
+                        item.android('layout_width', '0px');
+                        item.app('layout_constraintWidth_percent', $math.truncate((1 / columnMin) - percentGap, this.localSettings.precision.standardFloat));
                     }
                 }
                 for (let j = 0; j < columns.length - 1; j++) {
@@ -2192,7 +2188,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 for (let j = 0; j < horizontal.length; j++) {
                     const item = horizontal[j];
                     if (j > 0) {
-                        item.android(item.localizeString(BOX_ANDROID.MARGIN_LEFT), $css.formatPX(item.marginLeft + columnGap));
+                        item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, columnGap);
                     }
                 }
                 setColumnHorizontal(horizontal);
@@ -2376,6 +2372,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
     get containerTypeVerticalMargin(): LayoutType {
         return {
             containerType: CONTAINER_NODE.FRAME,
+            alignmentType: $enum.NODE_ALIGNMENT.COLUMN,
+            renderType: 0
+        };
+    }
+
+    get containerTypePercent(): LayoutType {
+        return {
+            containerType: CONTAINER_NODE.CONSTRAINT,
             alignmentType: $enum.NODE_ALIGNMENT.COLUMN,
             renderType: 0
         };

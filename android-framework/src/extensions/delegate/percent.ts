@@ -11,6 +11,7 @@ export default class Percent<T extends android.base.View> extends squared.base.E
 
     public processNode(node: T, parent: T) {
         const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
+        container.css('display', 'block');
         container.android('layout_width', 'match_parent');
         container.android('layout_height', node.has('height', $enum.CSS_STANDARD.PERCENT) ? 'match_parent' : 'wrap_content');
         node.android('layout_width', '0px');

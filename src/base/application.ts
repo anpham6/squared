@@ -1482,12 +1482,19 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (seg.some(child => child.blockStatic || child.has('width', CSS_STANDARD.PERCENT))) {
                     group.add(NODE_ALIGNMENT.BLOCK);
                 }
-                if (seg.length === 1 || group.linearY) {
-                    group.setType(vertical.containerType, vertical.alignmentType);
-                    if (seg.length === 1) {
-                        target.innerChild = seg[0];
-                        seg[0].outerParent = target;
+                if (seg.length === 1) {
+                    target.innerWrapped = seg[0];
+                    seg[0].outerWrapper = target;
+                    if (seg[0].has('width', CSS_STANDARD.PERCENT)) {
+                        const percent = this.controllerHandler.containerTypePercent;
+                        group.setType(percent.containerType, percent.alignmentType);
                     }
+                    else {
+                        group.setType(vertical.containerType, vertical.alignmentType);
+                    }
+                }
+                else if (group.linearY) {
+                    group.setType(vertical.containerType, vertical.alignmentType);
                 }
                 else {
                     controller.processLayoutHorizontal(group);
@@ -1719,6 +1726,9 @@ export default class Application<T extends Node> implements squared.base.Applica
     private createPseduoElement(element: HTMLElement, target: string) {
         const styleMap: StringMap = $session.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
         if (styleMap && styleMap.content && this.controllerHandler.includeElement(element, target)) {
+            if ((styleMap.position === 'absolute' || styleMap.position === 'fixed') && $util.trimString(styleMap.content, '"').trim() === '' && (styleMap.width === undefined || !$css.isLength(styleMap.width, true))) {
+                return undefined;
+            }
             let value = styleMap.content;
             if (value === 'inherit') {
                 let current = element.parentElement;

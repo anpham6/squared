@@ -57,7 +57,8 @@ export default class <T extends android.base.View> extends squared.base.extensio
             node.unsetCache();
             node.exclude({ procedure: $enum.NODE_PROCEDURE.OPTIMIZATION });
             node.android('src', `@drawable/${Resource.addImage({ mdpi: mainData.uri })}`);
-            node.outerParent = container;
+            node.outerWrapper = container;
+            container.innerWrapped = node;
             node.parent = container;
             return {
                 renderAs: container,

@@ -22,9 +22,18 @@ const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 
 function removeExcluded(node: Node, element: Element, attr: string) {
     let value: string = element[attr];
-    for (const item of node.actualChildren) {
-        if ((item.excluded || item.pseudoElement || item.dataset.target) && $util.isString(item[attr])) {
-            value = value.replace(item[attr], '');
+    for (let i = 0; i < node.actualChildren.length; i++) {
+        const item = node.actualChildren[i];
+        if (item.excluded || item.pseudoElement || item.dataset.target) {
+            if ($util.isString(item[attr])) {
+                value = value.replace(item[attr], '');
+            }
+            else if (i === 0) {
+                value = $util.trimStart(value, ' ');
+            }
+            else if (i === node.actualChildren.length - 1) {
+                value = $util.trimEnd(value, ' ');
+            }
         }
     }
     if (attr === 'innerHTML') {

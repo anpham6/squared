@@ -31,10 +31,12 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
         let left = NaN;
         let right = NaN;
         for (const item of outside) {
-            if (item.left < 0 && (isNaN(left) || item.linear.left < left)) {
-                left = item.linear.left;
+            if (item.has('left')) {
+                if (item.left < 0 && (isNaN(left) || item.linear.left < left)) {
+                    left = item.linear.left;
+                }
             }
-            if (item.right < 0 && (isNaN(right) || item.linear.right > right)) {
+            else if (item.right < 0 && (isNaN(right) || item.linear.right > right)) {
                 right = item.linear.right;
             }
         }
@@ -55,38 +57,40 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
                         item.css('left', $css.formatPX(node.marginLeft + item.left), true);
                     }
                 }
-                offset = 0;
+                offset = Math.abs(offset);
             }
             if (node.has('width', $enum.CSS_STANDARD.LENGTH)) {
-                container.cssPX('width', node.marginLeft + offset, false, true);
+                container.cssPX('width', (node.marginLeft > 0 ? node.marginLeft : 0) + offset, false, true);
             }
             else if (node.has('width')) {
                 container.css('width', 'auto', true);
             }
         }
         if (!isNaN(right)) {
-            let offset = node.linear.right - right;
-            if (offset > 0) {
+            let offset = right - node.bounds.right;
+            if (offset > node.marginRight) {
+                offset -= node.marginRight;
                 node.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, offset);
-                for (const item of outside) {
-                    if (item.right < 0) {
-                        item.css('right', $css.formatPX(item.right + offset), true);
-                    }
-                }
             }
             else {
-                for (const item of outside) {
-                    if (item.right < 0) {
-                        item.css('right', $css.formatPX(node.marginRight + item.right), true);
-                    }
-                }
                 offset = 0;
             }
-            if (node.has('width', $enum.CSS_STANDARD.LENGTH)) {
-                container.cssPX('width', node.marginRight + offset, false, true);
+            const outerRight = node.linear.right + offset;
+            if (node.marginRight > 0) {
+                offset += node.marginRight;
             }
-            else if (node.has('width')) {
-                container.css('width', 'auto', true);
+            if (offset > 0) {
+                if (node.has('width', $enum.CSS_STANDARD.LENGTH)) {
+                    container.cssPX('width', offset, false, true);
+                }
+                else if (!node.blockStatic && !node.has('width')) {
+                    container.css('minWidth', $css.formatPX(node.actualWidth + offset), true);
+                }
+            }
+            for (const item of outside) {
+                if (item.right < 0) {
+                    item.css('right', $css.formatPX(outerRight - item.linear.right), true);
+                }
             }
         }
         return {

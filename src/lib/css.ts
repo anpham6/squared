@@ -16,9 +16,9 @@ export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
 export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
 
-export function getStyle(element: Element | null, target?: string, cache = true): CSSStyleDeclaration {
+export function getStyle(element: Element | null, target = '', cache = true): CSSStyleDeclaration {
     if (element) {
-        const attr = 'style' + (target ? '::' + target : '');
+        const attr = 'style' + target;
         if (cache) {
             const style = getElementCache(element, attr, '0');
             if (style) {

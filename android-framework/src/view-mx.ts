@@ -53,8 +53,7 @@ function isHorizontalAlign(value: string) {
 }
 
 function setAutoMargin(node: T) {
-    const innerChild = (node.innerChild || node) as T;
-    if (!node.blockWidth || node.width > 0 || node.has('maxWidth') || innerChild.has('width', $enum.CSS_STANDARD.PERCENT, { not: '100%' })) {
+    if (!node.blockWidth || node.width > 0 || node.has('maxWidth') || (node.innerWrapped || node).has('width', $enum.CSS_STANDARD.PERCENT, { not: '100%' })) {
         const alignment: string[] = [];
         if (node.autoMargin.leftRight) {
             alignment.push('center_horizontal');
@@ -75,7 +74,7 @@ function setAutoMargin(node: T) {
             alignment.push('top');
         }
         if (alignment.length) {
-            const attr = node.outerParent === undefined && (node.blockWidth || !node.pageFlow) ? 'gravity' : 'layout_gravity';
+            const attr = node.outerWrapper === undefined && (node.blockWidth || !node.pageFlow) ? 'gravity' : 'layout_gravity';
             for (const value of alignment) {
                 node.mergeGravity(attr, value);
             }
@@ -305,7 +304,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             return false;
         }
 
-        public anchorParent(orientation: string, overwrite = false, bias?: number) {
+        public anchorParent(orientation: string, overwrite?: boolean, bias?: number) {
             const node = this.actualAnchor;
             const renderParent = node.renderParent as T;
             if (renderParent) {
@@ -322,8 +321,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                 }
                 else if (renderParent.layoutRelative) {
-                    node.anchor(horizontal ? 'left' : 'top', 'true');
-                    node.anchor(horizontal ? 'right' : 'bottom', 'true');
+                    node.anchor(horizontal ? 'left' : 'top', 'true', overwrite);
+                    node.anchor(horizontal ? 'right' : 'bottom', 'true', overwrite);
                     return true;
                 }
             }
@@ -760,7 +759,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             width = this.parseUnit(this.css('maxWidth'));
                         }
                     }
-                    else if (!this.pageFlow && this.textElement && this.inlineWidth && this.textContent.indexOf(' ') !== -1) {
+                    else if (!this.pageFlow && this.textElement && this.inlineWidth && this.textContent.trim() !== '' && this.textContent.indexOf(' ') !== -1) {
                         width = Math.ceil(this.bounds.width);
                     }
                     if (width !== -1) {
@@ -795,7 +794,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             const renderParent = this.renderParent as T;
             if (renderParent) {
                 const alignFloat = this.hasAlign($enum.NODE_ALIGNMENT.FLOAT);
-                const node = (this.outerParent || this) as T;
+                const node = (this.outerWrapper as T) || this;
                 const outerRenderParent = (node.renderParent || renderParent) as T;
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
@@ -842,7 +841,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             floating = 'left';
                         }
                     }
-                    if (renderParent.layoutFrame && this.innerChild === undefined) {
+                    if (renderParent.layoutFrame && this.innerWrapped === undefined) {
                         if (!setAutoMargin(this)) {
                             floating = this.floating ? this.float : floating;
                             if (floating !== '' && (renderParent.inlineWidth || !renderParent.documentRoot && this.singleChild)) {
@@ -907,7 +906,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (attr === 'layout_gravity') {
                 const renderParent = this.renderParent as T;
                 if (renderParent) {
-                    if (isHorizontalAlign(alignment) && (renderParent.inlineWidth && this.singleChild || !overwrite && this.outerParent && this.has('maxWidth'))) {
+                    if (isHorizontalAlign(alignment) && (renderParent.inlineWidth && this.singleChild || !overwrite && this.outerWrapper && this.has('maxWidth'))) {
                         return;
                     }
                     else if (renderParent.layoutConstraint) {
@@ -1202,9 +1201,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                 }
             }
-            if (renderParent.layoutConstraint && !renderParent.blockHeight && renderParent.horizontalRows === undefined && !this.documentParent.documentBody && this.pageFlow && this.alignParent('top') && !this.alignParent('bottom') && this.alignSibling('bottomTop') === '' && $util.withinRange(this.actualRect('bottom'), renderParent.box.bottom)) {
-                this.anchor('bottom', 'parent', false);
-                this.anchorStyle(AXIS_ANDROID.VERTICAL);
+            if (renderParent.layoutConstraint) {
+                if (this.pageFlow && !this.documentParent.documentBody && this.alignParent('top') && !this.alignParent('bottom') && !renderParent.blockHeight && (renderParent.horizontalRows === undefined || renderParent.horizontalRows.length && renderParent.horizontalRows[0].find(node => node === this)) && this.alignSibling('bottomTop') === '' && $util.withinRange(this.actualRect('bottom'), renderParent.box.bottom)) {
+                    this.anchor('bottom', 'parent', false);
+                    this.anchorStyle(AXIS_ANDROID.VERTICAL);
+                }
             }
         }
 
@@ -1303,7 +1304,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
                 return this;
             }
-            return this.outerParent && this.outerParent.visible ? this.outerParent as T : this;
+            return this.outerWrapper && this.outerWrapper.visible ? this.outerWrapper as T : this;
         }
 
         get support() {

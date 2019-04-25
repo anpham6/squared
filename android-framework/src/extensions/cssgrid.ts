@@ -386,7 +386,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 else if (!node.hasHeight) {
                     node.android('layout_height', 'match_parent', false);
                 }
-                node.outerParent = renderAs;
+                node.outerWrapper = renderAs;
                 node.parent = renderAs;
                 outputAs = this.application.renderNode(
                     new $Layout(
@@ -437,8 +437,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 const item = mainData.rowData[i][j];
                                 if (item) {
                                     for (let column of item) {
-                                        if (column.outerParent) {
-                                            column = column.outerParent as T;
+                                        if (column.outerWrapper) {
+                                            column = column.outerWrapper as T;
                                         }
                                         column.android('layout_rowWeight', $math.truncate(mainData.rowWeight[i], precision).toString());
                                         column.android('layout_height', '0px');

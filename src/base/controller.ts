@@ -46,6 +46,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract get containerTypeHorizontal(): LayoutType;
     public abstract get containerTypeVertical(): LayoutType;
     public abstract get containerTypeVerticalMargin(): LayoutType;
+    public abstract get containerTypePercent(): LayoutType;
     public abstract get afterInsertNode(): BindGeneric<T, void>;
 
     public reset() {

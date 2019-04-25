@@ -36,7 +36,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
     let percent = parent[attr] > 0 || parent.blockStatic && $util.withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight')), parent.box.width);
     if (percent) {
         for (const item of items) {
-            const autoMargin = item.innerChild ? item.innerChild.autoMargin : item.autoMargin;
+            const autoMargin = item.innerWrapped ? item.innerWrapped.autoMargin : item.autoMargin;
             if (horizontal) {
                 if (autoMargin.horizontal) {
                     percent = false;
@@ -133,7 +133,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
 }
 
 function getAutoMargin(node: View) {
-    return node.innerChild ? node.innerChild.autoMargin : node.autoMargin;
+    return node.innerWrapped ? node.innerWrapped.autoMargin : node.autoMargin;
 }
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
@@ -187,6 +187,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         marginRight: '0px',
                         marginBottom: '0px',
                         marginLeft: '0px',
+                        display: 'block',
                     }, true);
                     container.saveAsInitial(true);
                     container.flexbox = { ...node.flexbox };
@@ -350,10 +351,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         const previous = seg[j - 1];
                         const next = seg[j + 1];
                         if (next) {
-                            chain.anchor(RLBT, (next.outerParent || next).documentId);
+                            chain.anchor(RLBT, (next.outerWrapper || next).documentId);
                         }
                         if (previous) {
-                            chain.anchor(LRTB, (previous.outerParent || previous).documentId);
+                            chain.anchor(LRTB, (previous.outerWrapper || previous).documentId);
                         }
                         if (opposing) {
                             if (parentEnd && seg.length > 1 && dimensionDirection) {
@@ -362,11 +363,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                         else {
                             const autoMargin = getAutoMargin(chain);
-                            const innerChild = chain.innerChild as T | undefined;
+                            const innerWrapped = chain.innerWrapped as T | undefined;
                             const stretchable = node[HWL] > 0;
                             if (horizontal) {
                                 if (autoMargin.horizontal) {
-                                    if (innerChild) {
+                                    if (innerWrapped) {
                                         let gravity: string;
                                         if (autoMargin.leftRight) {
                                             gravity = 'center_horizontal';
@@ -374,7 +375,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         else {
                                             gravity = chain.localizeString(autoMargin.left ? 'right' : 'left');
                                         }
-                                        innerChild.mergeGravity('layout_gravity', gravity);
+                                        innerWrapped.mergeGravity('layout_gravity', gravity);
                                         if (growAvailable > 0) {
                                             chain.flexbox.basis = '0%';
                                             layoutWeight.push(chain);
@@ -396,7 +397,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             }
                             else {
                                 if (autoMargin.vertical) {
-                                    if (innerChild) {
+                                    if (innerWrapped) {
                                         let gravity: string;
                                         if (autoMargin.topBottom) {
                                             gravity = 'center_vertical';
@@ -404,7 +405,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         else {
                                             gravity = chain.localizeString(autoMargin.top ? 'bottom' : 'top');
                                         }
-                                        innerChild.mergeGravity('layout_gravity', gravity);
+                                        innerWrapped.mergeGravity('layout_gravity', gravity);
                                         if (growAvailable > 0) {
                                             chain.flexbox.basis = '0%';
                                             layoutWeight.push(chain);
@@ -425,10 +426,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 }
                             }
                             switch (chain.flexbox.alignSelf) {
-                                case 'stretch':
-                                    chain.anchorParent(orientationInverse);
-                                    chain.android(`layout_${HWL}`, '0px');
-                                    break;
                                 case 'start':
                                 case 'flex-start':
                                     chain.anchor(TL, 'parent');
@@ -455,7 +452,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                     break;
                                 default:
-                                    const contentChild = chain.innerChild as T;
+                                    const childContent = chain.innerWrapped as T;
                                     const wrapReverse = mainData.wrapReverse;
                                     switch (mainData.alignContent) {
                                         case 'center':
@@ -471,8 +468,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             break;
                                         case 'space-evenly':
                                         case 'space-around':
-                                            if (chain.layoutFrame && contentChild) {
-                                                contentChild.mergeGravity('layout_gravity', horizontal ? 'center_vertical' : 'center_horizontal');
+                                            if (chain.layoutFrame && childContent) {
+                                                childContent.mergeGravity('layout_gravity', horizontal ? 'center_vertical' : 'center_horizontal');
                                             }
                                             else {
                                                 chain.anchorParent(orientationInverse);
@@ -483,24 +480,24 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchorDelete(j === 0 ? RLBT : LRTB);
                                             }
                                             if (i === 0) {
-                                                if (chain.layoutFrame && contentChild) {
-                                                    contentChild.mergeGravity('layout_gravity', wrapReverse ? BR : TL);
+                                                if (chain.layoutFrame && childContent) {
+                                                    childContent.mergeGravity('layout_gravity', wrapReverse ? BR : TL);
                                                 }
                                                 else {
                                                     chain.anchor(wrapReverse ? BR : TL, 'parent');
                                                 }
                                             }
                                             else if (partition.length > 2 && i < partition.length - 1) {
-                                                if (chain.layoutFrame && contentChild) {
-                                                    contentChild.mergeGravity('layout_gravity', horizontal ? 'center_vertical' : 'center_horizontal');
+                                                if (chain.layoutFrame && childContent) {
+                                                    childContent.mergeGravity('layout_gravity', horizontal ? 'center_vertical' : 'center_horizontal');
                                                 }
                                                 else {
                                                     chain.anchorParent(orientationInverse);
                                                 }
                                             }
                                             else {
-                                                if (chain.layoutFrame && contentChild) {
-                                                    contentChild.mergeGravity('layout_gravity', wrapReverse ? TL : BR);
+                                                if (chain.layoutFrame && childContent) {
+                                                    childContent.mergeGravity('layout_gravity', wrapReverse ? TL : BR);
                                                 }
                                                 else {
                                                     chain.anchor(wrapReverse ? TL : BR, 'parent');
@@ -529,8 +526,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     else {
                                                         chain.android(attr, '0px');
                                                     }
-                                                    if (innerChild && !innerChild.autoMargin[orientation]) {
-                                                        innerChild.android(attr, 'match_parent');
+                                                    if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
+                                                        innerWrapped.android(attr, 'match_parent');
                                                     }
                                                 }
                                             }

@@ -39,8 +39,8 @@ declare global {
             renderParent?: Node;
             renderExtension?: Extension<Node>[];
             renderTemplates?: NodeTemplate<Node>[];
-            outerParent?: Node;
-            innerChild?: Node;
+            outerWrapper?: Node;
+            innerWrapped?: Node;
             pseudoBeforeChild?: Node;
             pseudoAfterChild?: Node;
             companion?: Node;
