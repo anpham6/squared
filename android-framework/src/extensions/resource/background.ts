@@ -982,7 +982,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     else {
                         layerListData = createLayerList();
                         const visibleAll = borderVisible[1] && borderVisible[2];
-                        const getHideWidth = (value: number) => value + (visibleAll ? 0 : value === 1 ? 1 : 2);
+                        const getHideWidth = (value: number) => Math.round(value) + (visibleAll ? 0 : value === 1 ? 1 : 2);
                         if (borderStyle && borderData && !isBorderAlternating(borderData.style)) {
                             const width = parseInt(borderData.width);
                             if (borderData.style === 'double' && width > 2) {
@@ -997,15 +997,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 ]);
                             }
                             else {
-                                const hideWidth = `-${$css.formatPX(getHideWidth(width))}`;
+                                const hideOffset = `-${getHideWidth(width)}px`;
                                 const leftTop = !borderVisible[0] && !borderVisible[3];
                                 const topOnly = !borderVisible[0] && borderVisible[1] && borderVisible[2] && borderVisible[3];
                                 const leftOnly = borderVisible[0] && borderVisible[1] && borderVisible[2] && !borderVisible[3];
                                 layerListData[0].item.push({
-                                    top: borderVisible[0] ? '' : hideWidth,
-                                    right: borderVisible[1] ? (borderVisible[3] || leftTop || leftOnly ? '' : borderData.width) : hideWidth,
-                                    bottom: borderVisible[2] ? (borderVisible[0] || leftTop || topOnly ? '' : borderData.width) : hideWidth,
-                                    left: borderVisible[3] ? '' : hideWidth,
+                                    top: borderVisible[0] ? '' : hideOffset,
+                                    right: borderVisible[1] ? (borderVisible[3] || leftTop || leftOnly ? '' : borderData.width) : hideOffset,
+                                    bottom: borderVisible[2] ? (borderVisible[0] || leftTop || topOnly ? '' : borderData.width) : hideOffset,
+                                    left: borderVisible[3] ? '' : hideOffset,
                                     shape: {
                                         'android:shape': 'rectangle',
                                         corners,
@@ -1034,20 +1034,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         const visible = !visibleAll && item.width === '1px';
                                         const hasInset = item.style === 'groove' || item.style === 'ridge';
                                         const drawWidth = visible ? item.width : '';
-                                        let baseWidth = getHideWidth(hasInset ? Math.ceil(width / 2) : width);
-                                        let outerWidth = `-${baseWidth}px`;
-                                        let innerWidth = `-${baseWidth + (visibleAll ? 1 : 0)}px`;
-                                        let topWidth = '';
-                                        if (index === 0 && visibleAll) {
+                                        let hideWidth = getHideWidth(hasInset ? Math.ceil(width / 2) : width);
+                                        let topOffset = '';
+                                        if (index === 0 && visibleAll && !hasInset) {
                                             item = { ...item };
                                             item.width = `${width + 1}px`;
-                                            topWidth = '-1px';
+                                            hideWidth += 2;
+                                            topOffset = '-1px';
                                         }
+                                        let hideOffset = `-${hideWidth + (visibleAll && topOffset === '' ? 1 : 0)}px`;
                                         layerList.item.push({
-                                            top:  index === 0 ? topWidth : innerWidth,
-                                            right: index === 1 ? drawWidth : outerWidth,
-                                            bottom: index === 2 ? drawWidth : outerWidth,
-                                            left: index === 3 ? '' : innerWidth,
+                                            top:  index === 0 ? topOffset : hideOffset,
+                                            right: index === 1 ? drawWidth : hideOffset,
+                                            bottom: index === 2 ? drawWidth : hideOffset,
+                                            left: index === 3 ? '' : hideOffset,
                                             shape: {
                                                 'android:shape': 'rectangle',
                                                 corners,
@@ -1055,14 +1055,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             }
                                         });
                                         if (hasInset) {
-                                            baseWidth = getHideWidth(width);
-                                            outerWidth = `-${$css.formatPX(baseWidth)}`;
-                                            innerWidth = `-${baseWidth + (visibleAll ? 1 : 0)}px`;
+                                            hideOffset = `-${getHideWidth(width) + (visibleAll ? 1 : 0)}px`;
                                             layerList.item.splice(layerList.item.length, 0, {
-                                                top:  index === 0 ? topWidth : innerWidth,
-                                                right: index === 1 ? drawWidth : outerWidth,
-                                                bottom: index === 2 ? drawWidth : outerWidth,
-                                                left: index === 3 ? '' : innerWidth,
+                                                top:  index === 0 ? '' : hideOffset,
+                                                right: index === 1 ? drawWidth : hideOffset,
+                                                bottom: index === 2 ? drawWidth : hideOffset,
+                                                left: index === 3 ? '' : hideOffset,
                                                 shape: {
                                                     'android:shape': 'rectangle',
                                                     stroke: getShapeStroke(item, index, hasInset, true)

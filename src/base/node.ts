@@ -357,13 +357,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     if (!this.positionStatic) {
                         for (const attr of $css.BOX_POSITION) {
-                            this._styleMap[attr] = node.css(attr);
+                            if (node.has(attr)) {
+                                this._styleMap[attr] = node.css(attr);
+                            }
                             this._initial.styleMap[attr] = initial.styleMap[attr];
                         }
                     }
                     if (node.autoMargin.horizontal || node.autoMargin.vertical) {
                         for (const attr of $css.BOX_MARGIN) {
-                            if (node.cssInitial(attr, true) === 'auto') {
+                            if (node.cssInitial(attr) === 'auto') {
                                 this._styleMap[attr] = 'auto';
                             }
                             if (node.cssInitial(attr) === 'auto') {
@@ -1112,8 +1114,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 break;
             case 'table-row':
-            case 'table-cell':
                 return 0;
+            case 'table-cell':
+                if (region === 'margin') {
+                    return 0;
+                }
+                break;
         }
         return $util.convertFloat(this.convertLength(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
     }

@@ -50,8 +50,8 @@ function sortHorizontalFloat(list: View[]) {
 function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
     if (templates.length > 1) {
         templates.sort((a, b) => {
-            const above = a.node;
-            const below = b.node;
+            const above = (a.node.innerWrapped as View) || a.node;
+            const below = (b.node.innerWrapped as View) || b.node;
             if (above.intersectX(below.bounds, 'bounds') && above.intersectY(below.bounds, 'bounds')) {
                 if (above.depth === below.depth) {
                     if (above.documentParent === below.documentParent) {
@@ -674,65 +674,71 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         if (absolute.length) {
                             node.renderEach(item => bottomParent = Math.max(bottomParent, item.linear.bottom));
                             for (const item of absolute) {
-                                if (!item.positionAuto && item.leftTopAxis) {
-                                    if (item.hasWidth && item.autoMargin.horizontal) {
-                                        if (item.has('left') && item.autoMargin.right) {
-                                            item.anchor('left', 'parent');
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, item.left);
-                                        }
-                                        else if (item.has('right') && item.autoMargin.left) {
-                                            item.anchor('right', 'parent');
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, item.right);
-                                        }
-                                        else {
-                                            item.anchorParent(AXIS_ANDROID.HORIZONTAL);
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, item.left);
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, item.right);
-                                        }
-                                    }
-                                    else {
-                                        if (item.has('left')) {
-                                            item.anchor('left', 'parent');
-                                            if (!item.has('right') && item.css('width') === '100%') {
+                                if (item.leftTopAxis) {
+                                    if (!item.positionAuto) {
+                                        if (item.hasWidth && item.autoMargin.horizontal) {
+                                            if (item.has('left') && item.autoMargin.right) {
+                                                item.anchor('left', 'parent');
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, item.left);
+                                            }
+                                            else if (item.has('right') && item.autoMargin.left) {
                                                 item.anchor('right', 'parent');
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, item.right);
                                             }
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, adjustDocumentRootOffset(item.left, node, 'Left', true));
-                                        }
-                                        if (item.has('right') && (!item.has('width') || item.css('width') === '100%' || !item.has('left'))) {
-                                            item.anchor('right', 'parent');
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, adjustDocumentRootOffset(item.right, node, 'Right', true));
-                                        }
-                                    }
-                                    if (item.hasHeight && item.autoMargin.vertical) {
-                                        if (item.has('top') && item.autoMargin.bottom) {
-                                            item.anchor('top', 'parent');
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.top);
-                                        }
-                                        else if (item.has('bottom') && item.autoMargin.top) {
-                                            item.anchor('bottom', 'parent');
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
+                                            else {
+                                                item.anchorParent(AXIS_ANDROID.HORIZONTAL);
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, item.left);
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, item.right);
+                                            }
                                         }
                                         else {
-                                            item.anchorParent(AXIS_ANDROID.VERTICAL);
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.top);
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
-                                        }
-                                    }
-                                    else {
-                                        if (item.has('top')) {
-                                            item.anchor('top', 'parent');
-                                            if (!item.has('bottom') && item.css('height') === '100%') {
-                                                item.anchor('bottom', 'parent');
+                                            if (item.has('left')) {
+                                                item.anchor('left', 'parent');
+                                                if (!item.has('right') && item.css('width') === '100%') {
+                                                    item.anchor('right', 'parent');
+                                                }
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, adjustDocumentRootOffset(item.left, node, 'Left', true));
                                             }
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, adjustDocumentRootOffset(item.top, node, 'Top', true));
+                                            if (item.has('right') && (!item.has('width') || item.css('width') === '100%' || !item.has('left'))) {
+                                                item.anchor('right', 'parent');
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, adjustDocumentRootOffset(item.right, node, 'Right', true));
+                                            }
                                         }
-                                        if (item.has('bottom') && (!item.has('height') || item.css('height') === '100%' || !item.has('top'))) {
-                                            item.anchor('bottom', 'parent');
-                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, adjustDocumentRootOffset(item.bottom, node, 'Bottom', true));
+                                        if (item.hasHeight && item.autoMargin.vertical) {
+                                            if (item.has('top') && item.autoMargin.bottom) {
+                                                item.anchor('top', 'parent');
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.top);
+                                            }
+                                            else if (item.has('bottom') && item.autoMargin.top) {
+                                                item.anchor('bottom', 'parent');
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
+                                            }
+                                            else {
+                                                item.anchorParent(AXIS_ANDROID.VERTICAL);
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.top);
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
+                                            }
+                                        }
+                                        else {
+                                            if (item.has('top')) {
+                                                item.anchor('top', 'parent');
+                                                if (!item.has('bottom') && item.css('height') === '100%') {
+                                                    item.anchor('bottom', 'parent');
+                                                }
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, adjustDocumentRootOffset(item.top, node, 'Top', true));
+                                            }
+                                            if (item.has('bottom') && (!item.has('height') || item.css('height') === '100%' || !item.has('top'))) {
+                                                item.anchor('bottom', 'parent');
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, adjustDocumentRootOffset(item.bottom, node, 'Bottom', true));
+                                            }
                                         }
                                     }
-                                    item.positioned = true;
+                                    else if (item.outerWrapper) {
+                                        item.anchor('top', 'parent');
+                                        item.anchor('left', 'parent');
+                                    }
                                 }
+                                item.positioned = true;
                             }
                         }
                         if (node.layoutHorizontal) {
@@ -914,7 +920,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         if (node.baseline) {
                             node.android('baselineAlignBottom', 'true');
                         }
-                        if (!node.pageFlow && node.absoluteParent && (node.left < 0 && node.absoluteParent.overflowX || node.top < 0 && node.absoluteParent.overflowY)) {
+                        if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
                             const container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
                             container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                             container.inherit(node, 'base');
@@ -944,8 +950,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             container.saveAsInitial();
                             container.innerWrapped = node;
                             node.outerWrapper = container;
-                            node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
-                            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.left);
+                            if (!parent.layoutConstraint) {
+                                node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
+                                node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.left);
+                            }
                             this.application.addRenderTemplate(
                                 parent,
                                 container,
@@ -1256,15 +1264,15 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             offset = absoluteParent.marginTop;
                         }
                         location = bounds[LT] - box[!opposite ? LT : RB] - offset;
-                        if (!node.pageFlow && node.parent === boxParent.outerWrapper) {
-                            location += boxParent[!opposite ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
-                        }
                         beginPercent += 'begin';
                     }
                 }
                 const guideline = parent.constraint.guideline || {};
                 if (!node.pageFlow) {
-                    if (absoluteParent === node.documentParent) {
+                    if (node.parent === boxParent.outerWrapper) {
+                        location += boxParent[!opposite ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
+                    }
+                    else if (absoluteParent === node.documentParent) {
                         location = horizontal ? adjustDocumentRootOffset(location, boxParent, 'Left') : adjustDocumentRootOffset(location, boxParent, 'Top', boxParent.valueBox($enum.BOX_STANDARD.PADDING_TOP)[0] === 0);
                     }
                 }
@@ -2122,7 +2130,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         if (lastRow) {
                             item.anchor('bottom', 'parent');
                         }
-                        if (i > 0 && !item.multiline) {
+                        else if (i > 0 && !item.multiline) {
                             const adjacent = partition[i - 1][j];
                             if (adjacent && !adjacent.multiline && $util.withinRange(item.bounds.top, adjacent.bounds.top)) {
                                 item.anchor('top', adjacent.documentId);
@@ -2132,6 +2140,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     Controller.setConstraintDimension(item);
                     item.anchored = true;
+                    item.positioned = true;
                 }
             }
         }
@@ -2159,13 +2168,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 const columns: T[][] = [];
                 const columnMin = Math.min(row.length, columnSized, columnCount || Number.POSITIVE_INFINITY);
                 const perRowCount = row.length >= columnMin ? Math.ceil(row.length / columnMin) : 1;
-                let maxHeight = Math.floor(row.reduce((a, b) => a + b.bounds.height, 0) / columnMin * 1.15);
+                let maxHeight = Math.floor(row.reduce((a, b) => a + b.bounds.height, 0) / columnMin);
                 let excessCount = perRowCount > 1 && row.length % columnMin !== 0 ? row.length - columnMin : Number.POSITIVE_INFINITY;
                 let totalGap = 0;
-                for (let j = 0, k = 0, l = 0, height = 0; j < row.length; j++, l++) {
+                for (let j = 0, k = 0, l = 0; j < row.length; j++, l++) {
                     const column = row[j];
                     const rowIteration = l % perRowCount === 0;
-                    if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || column.multiline && height + column.bounds.height > maxHeight)) {
+                    if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && row[j - 1].bounds.height >= maxHeight)) {
                         if (j > 0) {
                             k++;
                             if (rowIteration) {
@@ -2179,10 +2188,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             columns[k] = [];
                         }
                         l = 0;
-                        height = 0;
                     }
                     columns[k].push(column);
-                    height += column.actualHeight;
                     if (column.length) {
                         totalGap += $math.maxArray($util.objectMap<T, number>(column.children as T[], child => child.marginLeft + child.marginRight));
                     }

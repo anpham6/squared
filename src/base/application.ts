@@ -613,12 +613,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                             parent = node.absoluteParent as T;
                             while (parent && parent !== rootNode) {
                                 if (!outside) {
-                                    if (parent.overflowX && parent.overflowY || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
+                                    const overflowX = parent.css('overflowX') === 'hidden';
+                                    const overflowY = parent.css('overflowY') === 'hidden';
+                                    if (overflowX && overflowY || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
                                         break;
                                     }
                                     else {
-                                        const outsideX = !parent.overflowX && node.outsideX(parent.box);
-                                        const outsideY = !parent.overflowY && node.outsideY(parent.box);
+                                        const outsideX = !overflowX && node.outsideX(parent.box);
+                                        const outsideY = !overflowY && node.outsideY(parent.box);
                                         if (outsideY && (node.top < 0 || node.marginTop < 0 || !node.has('top') && node.bottom !== 0 || !parent.pageFlow && node.top > 0)) {
                                             outside = true;
                                         }
@@ -628,7 +630,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         else if (outsideX && outsideY) {
                                             outside = true;
                                         }
-                                        else if (!parent.overflowX && node.outsideX(parent.linear) && (node.left < 0 || node.marginLeft < 0) || !node.has('left') && node.right < 0 && node.linear.left >= parent.linear.right) {
+                                        else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.has('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
                                             outside = true;
                                         }
                                         else {
@@ -993,37 +995,35 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             const traverse = item.alignedVertically(previousSiblings, horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0);
                                             if (traverse > 0) {
                                                 if (horizontal.length && traverse !== NODE_TRAVERSE.FLOAT_INTERSECT) {
-                                                    if (!(item.blockStatic && previous.float !== 'right' && $util.withinRange(previous.linear.right, parentY.box.right))) {
-                                                        if (floatActive.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
-                                                            function getFloatBottom() {
-                                                                let floatBottom = Number.NEGATIVE_INFINITY;
-                                                                $util.captureMap(
-                                                                    horizontal,
-                                                                    node => node.floating,
-                                                                    node => floatBottom = Math.max(floatBottom, node.linear.bottom)
-                                                                );
-                                                                return floatBottom;
-                                                            }
-                                                            if (!item.floating || item.linear.top < getFloatBottom()) {
-                                                                if (cleared.has(item)) {
-                                                                    if (!item.floating && floatActive.size > 0) {
-                                                                        item.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
-                                                                        horizontal.push(item);
-                                                                        verticalExtended = true;
-                                                                        continue;
-                                                                    }
-                                                                    break traverse;
+                                                    if (floatActive.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
+                                                        function getFloatBottom() {
+                                                            let floatBottom = Number.NEGATIVE_INFINITY;
+                                                            $util.captureMap(
+                                                                horizontal,
+                                                                node => node.floating,
+                                                                node => floatBottom = Math.max(floatBottom, node.linear.bottom)
+                                                            );
+                                                            return floatBottom;
+                                                        }
+                                                        if (!item.floating || item.linear.top < getFloatBottom()) {
+                                                            if (cleared.has(item)) {
+                                                                if (!item.floating && floatActive.size > 0) {
+                                                                    item.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
+                                                                    horizontal.push(item);
+                                                                    verticalExtended = true;
+                                                                    continue;
                                                                 }
-                                                                else {
-                                                                    const floatBottom = getFloatBottom();
-                                                                    if (floated.size === 1 && (!item.floating && item.linear.top < floatBottom || floatActive.has(item.float))) {
-                                                                        horizontal.push(item);
-                                                                        if (!item.floating && item.linear.bottom >= floatBottom) {
-                                                                            break traverse;
-                                                                        }
-                                                                        else {
-                                                                            continue;
-                                                                        }
+                                                                break traverse;
+                                                            }
+                                                            else {
+                                                                const floatBottom = getFloatBottom();
+                                                                if (floated.size === 1 && (!item.floating && item.linear.top < floatBottom || floatActive.has(item.float))) {
+                                                                    horizontal.push(item);
+                                                                    if (!item.floating && item.linear.bottom >= Math.floor(floatBottom)) {
+                                                                        break traverse;
+                                                                    }
+                                                                    else {
+                                                                        continue;
                                                                     }
                                                                 }
                                                             }

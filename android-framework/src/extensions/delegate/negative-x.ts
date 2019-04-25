@@ -14,7 +14,7 @@ function outsideX(node: View, parent: View) {
 
 export default class NegativeX<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
-        return this.application.userSettings.supportNegativeLeftTop && !node.documentRoot && !node.overflowX && node.some((item: T) => outsideX(item, node));
+        return this.application.userSettings.supportNegativeLeftTop && !node.documentRoot && node.css('overflowX') !== 'hidden' && node.some((item: T) => outsideX(item, node));
     }
 
     public processNode(node: T, parent: T) {
@@ -80,11 +80,8 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
                 offset += node.marginRight;
             }
             if (offset > 0) {
-                if (node.has('width', $enum.CSS_STANDARD.LENGTH)) {
-                    container.cssPX('width', offset, false, true);
-                }
-                else if (!node.blockStatic && !node.has('width')) {
-                    container.css('minWidth', $css.formatPX(node.actualWidth + offset), true);
+                if (node.has('width', $enum.CSS_STANDARD.LENGTH) || !node.blockStatic && !node.has('width')) {
+                    container.css(container.has('width') ? 'width' : 'minWidth', $css.formatPX(node.actualWidth + offset), true);
                 }
             }
             for (const item of outside) {

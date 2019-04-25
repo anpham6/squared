@@ -81,8 +81,8 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const layoutFixed = node.css('tableLayout') === 'fixed';
         const borderCollapse = node.css('borderCollapse') === 'collapse';
         const [horizontal, vertical] = borderCollapse ? [0, 0] : $util.replaceMap<string, number>(node.css('borderSpacing').split(' '), value => parseInt(value));
-        const spacingWidth = $css.formatPX(horizontal > 1 ? Math.round(horizontal / 2) : horizontal);
-        const spacingHeight = $css.formatPX(vertical > 1 ? Math.round(vertical / 2) : vertical);
+        const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
+        const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const colgroup = node.element && node.element.querySelector('COLGROUP');
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
@@ -211,12 +211,22 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 if (td.length || td.inlineText) {
                     rowWidth[i] += td.bounds.width + horizontal;
                 }
-                td.cssApply({
-                    marginTop: i === 0 ? '0px' : spacingHeight,
-                    marginRight: j < tr.length - 1 ? spacingWidth : '0px',
-                    marginBottom: i + element.rowSpan - 1 >= table.length - 1 ? '0px' : spacingHeight,
-                    marginLeft: columnIndex[i] === 0 ? '0px' : spacingWidth
-                }, true);
+                if (spacingWidth > 0) {
+                    if (j < tr.length - 1) {
+                        td.modifyBox(BOX_STANDARD.MARGIN_RIGHT, spacingWidth);
+                    }
+                    if (columnIndex[i] !== 0) {
+                        td.modifyBox(BOX_STANDARD.MARGIN_LEFT, spacingWidth);
+                    }
+                }
+                if (spacingHeight > 0) {
+                    if (i > 0) {
+                        td.modifyBox(BOX_STANDARD.MARGIN_TOP, spacingHeight);
+                    }
+                    if (i + element.rowSpan < table.length) {
+                        td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, spacingHeight);
+                    }
+                }
                 columnIndex[i] += element.colSpan;
                 cellCount++;
             });

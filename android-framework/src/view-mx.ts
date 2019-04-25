@@ -114,7 +114,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
     if (node.multiline) {
         setMultiline(node, lineHeight, false);
     }
-    else if (node.length === 0) {
+    else if (node.length === 0 && (node.pageFlow || node.textContent.length)) {
         let offset: number;
         if (node.styleElement && !inlineStyle && !node.has('height') && node.cssTry('lineHeight', 'normal')) {
             offset = (lineHeight - ((<Element> node.element).getBoundingClientRect().height || node.actualHeight)) / 2;
@@ -129,10 +129,10 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
         }
         if (Math.floor(offset) > 0) {
             if (top) {
-                node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset));
+                node.modifyBox(node.textElement ? $enum.BOX_STANDARD.PADDING_TOP : $enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset));
             }
             if (bottom) {
-                node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset));
+                node.modifyBox(node.textElement ? $enum.BOX_STANDARD.PADDING_BOTTOM : $enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset));
             }
         }
     }

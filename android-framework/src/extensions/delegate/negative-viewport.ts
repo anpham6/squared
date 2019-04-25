@@ -6,11 +6,11 @@ const $enum = squared.base.lib.enumeration;
 
 export default class NegativeViewport<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {
-        return !node.pageFlow && parent.documentRoot && (
+        return !node.pageFlow && parent.documentBody && (
             Math.ceil(node.linear.left) < Math.floor(parent.box.left) && (node.left < 0 || node.marginLeft < 0 || !node.has('left') && node.right > 0) ||
-            Math.floor(node.linear.right) > Math.ceil(parent.box.right) && (node.left > 0 || node.marginLeft > 0 || !node.has('left') && node.right < 0) && (parent.documentBody || parent.has('width')) ||
+            Math.floor(node.linear.right) > Math.ceil(parent.box.right) && (node.left > 0 || node.marginLeft > 0 || !node.has('left') && node.right < 0) ||
             Math.ceil(node.linear.top) < Math.floor(parent.box.top) && (node.top < 0 || node.marginTop < 0 || !node.has('top') && node.bottom > 0) ||
-            Math.floor(node.linear.bottom) > Math.ceil(parent.box.bottom) && (node.top > 0 || node.marginTop > 0 || !node.has('top') && node.bottom < 0) && (parent.documentBody || parent.has('height'))
+            Math.floor(node.linear.bottom) > Math.ceil(parent.box.bottom) && (node.top > 0 || node.marginTop > 0 || !node.has('top') && node.bottom < 0) && parent.has('height')
         );
     }
 
