@@ -97,6 +97,16 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                 value = $xml.replaceEntity(value);
                             }
                             value = $xml.escapeAmpersand($xml.replaceCharacter(value));
+                            for (const style of node.css('textDecorationLine').split(' ')) {
+                                switch (style) {
+                                    case 'underline':
+                                        value = `<u>${value}</u>`;
+                                        break;
+                                    case 'line-through':
+                                        value = `<strike>${value}</strike>`;
+                                        break;
+                                }
+                            }
                             let textIndent = 0;
                             if (node.blockDimension || node.display === 'table-cell') {
                                 textIndent = node.toFloat('textIndent');

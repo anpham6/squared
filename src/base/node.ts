@@ -384,6 +384,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         fontWeight: node.css('fontWeight'),
                         color: node.css('color'),
                         whiteSpace: node.css('whiteSpace'),
+                        textDecoration: node.css('textDecoration'),
                         textTransform: node.css('textTransform'),
                         opacity: node.css('opacity')
                     });

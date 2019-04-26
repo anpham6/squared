@@ -99,7 +99,7 @@ function adjustBaseline(baseline: View, nodes: View[]) {
 }
 
 function checkSingleLine(node: View, nowrap = false, multiline = false) {
-    if (node.textElement && node.cssAscend('textAlign', true) !== 'center' && !node.hasWidth && (!node.multiline || multiline) && (nowrap || node.textContent.trim().split(String.fromCharCode(32)).length)) {
+    if (node.textElement && node.cssAscend('textAlign', true) !== 'center' && !node.has('width') && (!node.multiline || multiline) && (nowrap || node.textContent.trim().split(String.fromCharCode(32)).length)) {
         node.android('maxLines', '1');
         node.android('ellipsize', 'end');
     }
@@ -153,6 +153,7 @@ function constraintMinMax(node: View, dimension: string) {
             const renderParent = node.renderParent;
             if (renderParent && renderParent.groupParent) {
                 renderParent.alignmentType |= $enum.NODE_ALIGNMENT.BLOCK;
+                renderParent.unsetCache('blockStatic');
             }
         }
         if ($css.isLength(minWH, true)) {
@@ -654,7 +655,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public checkRelativeHorizontal(layout: $Layout<T>) {
-        if (layout.floated.size === 2 || layout.every(node => node.imageElement && node.baseline && !node.positionRelative)) {
+        if (layout.every(node => (node.imageElement || node.textElement && !node.multiline) && node.baseline && !node.positionRelative) && layout.singleRowAligned) {
             return false;
         }
         return layout.some(node => node.positionRelative || node.textElement || node.imageElement || !node.baseline);
@@ -820,8 +821,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 break;
         }
         if (valid) {
-            node.alignmentType |= alignmentType;
             node.setControlType(View.getControlName(containerType), containerType);
+            node.alignmentType |= alignmentType;
             node.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);
             node.apply(options);
             return <NodeXmlTemplate<T>> {
@@ -843,130 +844,130 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (node.element) {
             switch (node.element.tagName) {
                 case 'IMG': {
-                    if (node.hasResource($enum.NODE_RESOURCE.IMAGE_SOURCE)) {
-                        const element = <HTMLImageElement> node.element;
-                        let width = node.toFloat('width');
-                        let height = node.toFloat('height');
-                        let percentWidth = node.has('width', $enum.CSS_STANDARD.PERCENT) ? width : -1;
-                        const percentHeight = node.has('height', $enum.CSS_STANDARD.PERCENT) ? height : -1;
-                        let scaleType = 'fitXY';
-                        let imageSet: ImageSrcSet[] | undefined;
-                        if (element.srcset) {
-                            imageSet = $css.getSrcSet(element, this.localSettings.supported.imageFormat);
-                            if (imageSet.length) {
-                                if (imageSet[0].actualWidth) {
-                                    if (percentWidth === -1 || width < 100) {
-                                        width = imageSet[0].actualWidth;
-                                        node.css('width', $css.formatPX(width), true);
-                                        const image = this.application.session.image.get(element.src);
-                                        if (image && image.width > 0 && image.height > 0) {
-                                            height = image.height * (width / image.width);
-                                            node.css('height', $css.formatPX(height), true);
-                                        }
-                                        else {
-                                            node.android('adjustViewBounds', 'true');
-                                        }
+                    const element = <HTMLImageElement> node.element;
+                    let width = node.toFloat('width');
+                    let height = node.toFloat('height');
+                    let percentWidth = node.has('width', $enum.CSS_STANDARD.PERCENT) ? width : -1;
+                    const percentHeight = node.has('height', $enum.CSS_STANDARD.PERCENT) ? height : -1;
+                    let scaleType = 'fitXY';
+                    let imageSet: ImageSrcSet[] | undefined;
+                    if (element.srcset) {
+                        imageSet = $css.getSrcSet(element, this.localSettings.supported.imageFormat);
+                        if (imageSet.length) {
+                            if (imageSet[0].actualWidth) {
+                                if (percentWidth === -1 || width < 100) {
+                                    width = imageSet[0].actualWidth;
+                                    node.css('width', $css.formatPX(width), true);
+                                    const image = this.application.session.image.get(element.src);
+                                    if (image && image.width > 0 && image.height > 0) {
+                                        height = image.height * (width / image.width);
+                                        node.css('height', $css.formatPX(height), true);
                                     }
                                     else {
-                                        width = parent.box.width;
                                         node.android('adjustViewBounds', 'true');
                                     }
-                                    percentWidth = -1;
                                 }
-                            }
-                            else {
-                                imageSet = undefined;
+                                else {
+                                    width = parent.box.width;
+                                    node.android('adjustViewBounds', 'true');
+                                }
+                                percentWidth = -1;
                             }
                         }
+                        else {
+                            imageSet = undefined;
+                        }
+                    }
+                    if (node.hasResource($enum.NODE_RESOURCE.IMAGE_SOURCE)) {
                         const src = Resource.addImageSrc(element, '', imageSet);
                         if (src !== '') {
                             node.android('src', `@drawable/${src}`);
                         }
-                        if (percentWidth !== -1 || percentHeight !== -1) {
-                            if (percentWidth >= 0) {
-                                width *= node.documentParent.box.width / 100;
-                                if (percentWidth < 100 && !parent.layoutConstraint) {
-                                    node.css('width', $css.formatPX(width));
-                                }
+                    }
+                    if (percentWidth !== -1 || percentHeight !== -1) {
+                        if (percentWidth >= 0) {
+                            width *= node.documentParent.box.width / 100;
+                            if (percentWidth < 100 && !parent.layoutConstraint) {
+                                node.css('width', $css.formatPX(width));
                             }
-                            if (percentHeight >= 0) {
-                                height *= node.documentParent.box.height / 100;
-                                if (percentHeight < 100 && !(parent.layoutConstraint && node.documentParent.has('height', $enum.CSS_STANDARD.LENGTH))) {
-                                    node.css('height', $css.formatPX(height));
-                                }
+                        }
+                        if (percentHeight >= 0) {
+                            height *= node.documentParent.box.height / 100;
+                            if (percentHeight < 100 && !(parent.layoutConstraint && node.documentParent.has('height', $enum.CSS_STANDARD.LENGTH))) {
+                                node.css('height', $css.formatPX(height));
                             }
+                        }
+                        node.android('adjustViewBounds', 'true');
+                    }
+                    else {
+                        switch (node.css('objectFit')) {
+                            case 'contain':
+                                scaleType = 'centerInside';
+                                break;
+                            case 'cover':
+                                scaleType = 'centerCrop';
+                                break;
+                            case 'scale-down':
+                                scaleType = 'fitCenter';
+                                break;
+                            case 'none':
+                                scaleType = 'center';
+                                break;
+                        }
+                        if (width === 0 && height > 0 || height === 0 && width > 0) {
                             node.android('adjustViewBounds', 'true');
                         }
+                    }
+                    node.android('scaleType', scaleType);
+                    if (node.baseline) {
+                        node.android('baselineAlignBottom', 'true');
+                    }
+                    if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
+                        const container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
+                        container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
+                        container.inherit(node, 'base');
+                        container.exclude({
+                            procedure: $enum.NODE_PROCEDURE.ALL,
+                            resource: $enum.NODE_RESOURCE.ALL
+                        });
+                        container.cssApply({
+                            position: node.position,
+                            zIndex: node.zIndex.toString()
+                        });
+                        parent.appendTry(node, container);
+                        node.parent = container;
+                        if (width > 0) {
+                            container.android('layout_width', width < node.documentParent.box.width ? $css.formatPX(width) : 'match_parent');
+                        }
                         else {
-                            switch (node.css('objectFit')) {
-                                case 'contain':
-                                    scaleType = 'centerInside';
-                                    break;
-                                case 'cover':
-                                    scaleType = 'centerCrop';
-                                    break;
-                                case 'scale-down':
-                                    scaleType = 'fitCenter';
-                                    break;
-                                case 'none':
-                                    scaleType = 'center';
-                                    break;
-                            }
-                            if (width === 0 && height > 0 || height === 0 && width > 0) {
-                                node.android('adjustViewBounds', 'true');
-                            }
+                            container.android('layout_width', 'wrap_content');
                         }
-                        node.android('scaleType', scaleType);
-                        if (node.baseline) {
-                            node.android('baselineAlignBottom', 'true');
+                        if (height > 0) {
+                            container.android('layout_height', height < node.documentParent.box.height ? $css.formatPX(height) : 'match_parent');
                         }
-                        if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
-                            const container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
-                            container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                            container.inherit(node, 'base');
-                            container.exclude({
-                                procedure: $enum.NODE_PROCEDURE.ALL,
-                                resource: $enum.NODE_RESOURCE.ALL
-                            });
-                            container.cssApply({
-                                position: node.position,
-                                zIndex: node.zIndex.toString()
-                            });
-                            parent.appendTry(node, container);
-                            node.parent = container;
-                            if (width > 0) {
-                                container.android('layout_width', width < node.documentParent.box.width ? $css.formatPX(width) : 'match_parent');
-                            }
-                            else {
-                                container.android('layout_width', 'wrap_content');
-                            }
-                            if (height > 0) {
-                                container.android('layout_height', height < node.documentParent.box.height ? $css.formatPX(height) : 'match_parent');
-                            }
-                            else {
-                                container.android('layout_height', 'wrap_content');
-                            }
-                            container.render(target ? this.application.resolveTarget(target) : parent);
-                            container.saveAsInitial();
-                            container.innerWrapped = node;
-                            node.outerWrapper = container;
-                            if (!parent.layoutConstraint) {
-                                node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
-                                node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.left);
-                            }
-                            this.application.addRenderTemplate(
-                                parent,
-                                container,
-                                <NodeXmlTemplate<T>> {
-                                    type: $enum.NODE_TEMPLATE.XML,
-                                    node: container,
-                                    controlName: CONTAINER_ANDROID.FRAME
-                                }
-                            );
-                            parent = container;
-                            layout.parent = container;
-                            target = undefined;
+                        else {
+                            container.android('layout_height', 'wrap_content');
                         }
+                        container.render(target ? this.application.resolveTarget(target) : parent);
+                        container.saveAsInitial();
+                        container.innerWrapped = node;
+                        node.outerWrapper = container;
+                        if (!parent.layoutConstraint) {
+                            node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
+                            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.left);
+                        }
+                        this.application.addRenderTemplate(
+                            parent,
+                            container,
+                            <NodeXmlTemplate<T>> {
+                                type: $enum.NODE_TEMPLATE.XML,
+                                node: container,
+                                controlName: CONTAINER_ANDROID.FRAME
+                            }
+                        );
+                        parent = container;
+                        layout.parent = container;
+                        target = undefined;
                     }
                     break;
                 }
@@ -1096,9 +1097,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 if (node.has('textShadow')) {
                     const match = /^(rgba?\(\d+, \d+, \d+(?:, [\d.]+)?\)) (-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?$/.exec(node.css('textShadow'));
                     if (match) {
-                        const colorName = Resource.addColor($color.parseColor(match[1]));
-                        if (colorName !== '') {
-                            node.android('shadowColor', `@color/${colorName}`);
+                        const color = Resource.addColor($color.parseColor(match[1]));
+                        if (color !== '') {
+                            node.android('shadowColor', `@color/${color}`);
                             node.android('shadowDx', $math.truncate($css.parseUnit(match[2], node.fontSize)));
                             node.android('shadowDy', $math.truncate($css.parseUnit(match[3], node.fontSize)));
                             node.android('shadowRadius', match[4] ? $math.truncate($css.parseUnit(match[4], node.fontSize)) : '0');

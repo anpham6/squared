@@ -236,25 +236,17 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             node.modifyBox(BOX_STANDARD.PADDING_LEFT, null);
             node.modifyBox(BOX_STANDARD.PADDING_RIGHT, null);
         }
-        else {
-            node.modifyBox(BOX_STANDARD.MARGIN_LEFT, horizontal);
-            node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, horizontal);
-            if (cellCount > 1) {
-                node.modifyBox(BOX_STANDARD.PADDING_LEFT, horizontal);
-                node.modifyBox(BOX_STANDARD.PADDING_RIGHT, horizontal);
-            }
+        else if (cellCount > 1) {
+            node.modifyBox(BOX_STANDARD.PADDING_LEFT, horizontal);
+            node.modifyBox(BOX_STANDARD.PADDING_RIGHT, horizontal);
         }
         if (vertical === 0) {
             node.modifyBox(BOX_STANDARD.PADDING_TOP, null);
             node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, null);
         }
-        else {
-            node.modifyBox(BOX_STANDARD.MARGIN_TOP, vertical);
-            node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, vertical);
-            if (cellCount > 1) {
-                node.modifyBox(BOX_STANDARD.PADDING_TOP, vertical);
-                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, vertical);
-            }
+        else if (cellCount > 1) {
+            node.modifyBox(BOX_STANDARD.PADDING_TOP, vertical);
+            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, vertical);
         }
         if (node.has('width', CSS_STANDARD.LENGTH) && mapWidth.some(value => $css.isPercent(value))) {
             $util.replaceMap<string, string>(mapWidth, (value, index) => {

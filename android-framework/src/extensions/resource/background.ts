@@ -37,7 +37,7 @@ interface BitmapData {
     tileModeY: string;
 }
 
-interface ShapeSolidData {
+interface ShapeStrokeData {
     color: string;
     dashWidth: string;
     dashGap: string;
@@ -51,9 +51,9 @@ const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeSolidData {
+function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeStrokeData {
     const style = border.style;
-    const width = Math.round(parseFloat(border.width));
+    const width = roundFloat(border.width);
     let lighten = false;
     switch (style) {
         case 'inset':
@@ -82,11 +82,13 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                 switch (direction) {
                     case 0:
                     case 3:
-                        percent = lighten ? 0.8 : 1;
+                        if (lighten) {
+                            percent = -0.15;
+                        }
                         break;
                     case 1:
                     case 2:
-                        percent = lighten ? 0.5 : -0.75;
+                        percent = lighten ? -0.30 : -0.75;
                         break;
                 }
                 if (percent !== 1) {
@@ -113,11 +115,11 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
     return result;
 }
 
-function getShapeStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false): ExternalData | undefined {
+function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false): ExternalData | undefined {
     if (border) {
         const style = border.style;
-        const width = parseFloat(border.width);
         if (isAlternatingBorder(style)) {
+            const width = parseFloat(border.width);
             if (isInset) {
                 return {
                     width: $css.formatPX(Math.ceil(width / 2) * 2),
@@ -126,14 +128,14 @@ function getShapeStroke(border: BorderAttribute, direction = -1, hasInset = fals
             }
             else {
                 return {
-                    width: hasInset ? $css.formatPX(Math.ceil(width / 2)) : border.width,
+                    width: hasInset ? $css.formatPX(Math.ceil(width / 2)) : $css.formatPX(roundFloat(border.width)),
                     ...getBorderStyle(border, direction, true)
                 };
             }
         }
         else {
             return {
-                width: $css.formatPX(width),
+                width: $css.formatPX(roundFloat(border.width)),
                 ...getBorderStyle(border)
             };
         }
@@ -141,21 +143,21 @@ function getShapeStroke(border: BorderAttribute, direction = -1, hasInset = fals
     return undefined;
 }
 
-function getShapeCorners(borderRadius?: string[]): StringMap | undefined {
-    if (borderRadius) {
-        if (borderRadius.length === 1) {
-            return { radius: borderRadius[0] };
+function getBorderRadius(radius?: string[]): StringMap | undefined {
+    if (radius) {
+        if (radius.length === 1) {
+            return { radius: radius[0] };
         }
         else {
             let corners: string[];
-            if (borderRadius.length === 8) {
+            if (radius.length === 8) {
                 corners = [];
-                for (let i = 0; i < borderRadius.length; i += 2) {
-                    borderRadius.push($css.formatPX((parseFloat(borderRadius[i]) + parseFloat(borderRadius[i + 1])) / 2));
+                for (let i = 0; i < radius.length; i += 2) {
+                    radius.push($css.formatPX((parseFloat(radius[i]) + parseFloat(radius[i + 1])) / 2));
                 }
             }
             else {
-                corners = borderRadius;
+                corners = radius;
             }
             const boxModel = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
             const result = {};
@@ -174,40 +176,57 @@ function getShapeCorners(borderRadius?: string[]): StringMap | undefined {
     return undefined;
 }
 
-function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, corners: StringMap[] | false) {
-    const width = Math.round(parseFloat(border.width));
-    const baseWidth = Math.floor(width / 3);
-    const remainder = width % 3;
-    const offset =  remainder === 2 ? 1 : 0;
-    let drawWidth = $css.formatPX(width - baseWidth);
-    let hideOffset = `-${drawWidth}`;
+function getBackgroundColor(value: string) {
+    const color = Resource.addColor(value);
+    if (color !== '') {
+        return { color: `@color/${color}` };
+    }
+    return undefined;
+}
+
+function isAlternatingBorder(value: string) {
+    switch (value) {
+        case 'groove':
+        case 'ridge':
+        case 'inset':
+        case 'outset':
+            return true;
+        default:
+            return false;
+    }
+}
+
+function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, indentWidth = 0, corners?: StringMap) {
+    const width = roundFloat(border.width);
+    const borderWidth = Math.max(1, Math.floor(width / 3));
+    const indentOffset = indentWidth > 0 ? $css.formatPX(indentWidth) : '';
+    let hideOffset = '-' + $css.formatPX(borderWidth + indentWidth);
     items.push({
-        top: top ? '' : hideOffset,
-        right: right ? '' : hideOffset,
-        bottom: bottom ? '' : hideOffset,
-        left: left ? '' :  hideOffset,
+        top: top ? indentOffset : hideOffset,
+        right: right ? indentOffset : hideOffset,
+        bottom: bottom ? indentOffset : hideOffset,
+        left: left ? indentOffset :  hideOffset,
         shape: {
             'android:shape': 'rectangle',
             stroke: {
-                width: $css.formatPX(baseWidth + offset),
+                width: $css.formatPX(borderWidth),
                 ...getBorderStyle(border)
             },
             corners
         }
     });
-    if (width === 3) {
-        drawWidth = $css.formatPX(width);
-        hideOffset = '-' + drawWidth;
-    }
+    const insetWidth = width - borderWidth + indentWidth;
+    const drawOffset = $css.formatPX(insetWidth);
+    hideOffset = '-' + drawOffset;
     items.push({
-        top: top ? drawWidth : hideOffset,
-        right: right ? drawWidth : hideOffset,
-        bottom: bottom ? drawWidth : hideOffset,
-        left: left ? drawWidth : hideOffset,
+        top: top ? drawOffset : hideOffset,
+        right: right ? drawOffset : hideOffset,
+        bottom: bottom ? drawOffset : hideOffset,
+        left: left ? drawOffset : hideOffset,
         shape: {
             'android:shape': 'rectangle',
             stroke: {
-                width: $css.formatPX(baseWidth + offset),
+                width: $css.formatPX(borderWidth),
                 ...getBorderStyle(border)
             },
             corners
@@ -224,14 +243,6 @@ function checkBackgroundPosition(value: string, adjacent: string, fallback: stri
         return '0px';
     }
     return value;
-}
-
-function setBodyBackground(name: string, parent: string, attr: string, value: string) {
-    Resource.addTheme({
-        name,
-        parent,
-        items: { [attr]: value }
-    });
 }
 
 function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIPOP, precision?: number) {
@@ -341,35 +352,33 @@ function getPercentOffset(direction: string, position: RectPosition, backgroundS
                 return 0;
             }
         }
-        else {
-            if (backgroundSize !== 'contain') {
-                const value = orientation.length === 4 ? orientation[3] : orientation[1];
-                if ($css.isPercent(value)) {
-                    const percent = direction === 'top' ? position.topAsPercent : position.bottomAsPercent;
-                    let result = percent * (bounds.height - dimension.height);
-                    if (sign === -1) {
-                        result = Math.abs(result);
-                        if (percent > 0) {
-                            result *= -1;
-                        }
+        else if (backgroundSize !== 'contain') {
+            const value = orientation.length === 4 ? orientation[3] : orientation[1];
+            if ($css.isPercent(value)) {
+                const percent = direction === 'top' ? position.topAsPercent : position.bottomAsPercent;
+                let result = percent * (bounds.height - dimension.height);
+                if (sign === -1) {
+                    result = Math.abs(result);
+                    if (percent > 0) {
+                        result *= -1;
                     }
-                    return result;
                 }
+                return result;
             }
-            else {
-                return 0;
-            }
+        }
+        else {
+            return 0;
         }
     }
     return position[direction];
 }
 
-function createLayerList(boxStyle: BoxStyle, images?: BackgroundImageData[]) {
+function createLayerList(boxStyle: BoxStyle, images?: BackgroundImageData[], borderOnly = true) {
     const result: ExternalData[] = [{
         'xmlns:android': XMLNS_ANDROID.android,
         item: []
     }];
-    const solid = getSolidColor(boxStyle.backgroundColor);
+    const solid = !borderOnly ? getBackgroundColor(boxStyle.backgroundColor) : undefined;
     if (solid) {
         result[0].item.push({
             shape: {
@@ -406,19 +415,27 @@ function createShapeData(stroke?: ObjectMap<any> | false, solid?: StringMap | fa
     }];
 }
 
-function getSolidColor(value: string) {
-    const colorName = Resource.addColor(value);
-    if (colorName !== '') {
-        return { color: `@color/${colorName}` };
-    }
-    return undefined;
+function setBodyBackground(name: string, parent: string, attr: string, value: string) {
+    Resource.addTheme({
+        name,
+        parent,
+        items: { [attr]: value }
+    });
 }
 
-const getStrokeColor = (value: string): ShapeSolidData => ({ color: `@color/${value}`, dashWidth: '', dashGap: '' });
+function getIndentOffset(border: BorderAttribute) {
+    const width = roundFloat(border.width);
+    if (border.style === 'double' && width === 2) {
+        return 3;
+    }
+    return width;
+}
 
-const isInsetBorder = (border: BorderAttribute) => isAlternatingBorder(border.style) || border.style === 'double' && Math.round(parseFloat(border.width)) > 2;
+const roundFloat = (value: string) => Math.round(parseFloat(value));
 
-const isAlternatingBorder = (style: string) => style === 'groove' || style === 'ridge' || style === 'inset' || style === 'outset';
+const getStrokeColor = (value: string): ShapeStrokeData => ({ color: `@color/${value}`, dashWidth: '', dashGap: '' });
+
+const isInsetBorder = (border: BorderAttribute) => isAlternatingBorder(border.style) || border.style === 'double' && roundFloat(border.width) > 1;
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     const result: GradientColorStop[] = [];
@@ -438,54 +455,63 @@ export function drawRect(width: number, height: number, x = 0, y = 0, precision?
 
 export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {
     public readonly options: ResourceBackgroundOptions = {
-        autoSizeBackgroundImage: true
+        autoSizeBackgroundImage: true,
+        drawOutlineAsInsetBorder: true
     };
 
     public readonly eventOnly = true;
 
     public afterResources() {
         const settings = <UserSettingsAndroid> this.application.userSettings;
+        function setDrawableBackground(node: T, value: string) {
+            let drawable = Resource.insertStoredAsset('drawables', `${node.tagName.toLowerCase()}_${node.controlId}`, value);
+            if (drawable !== '') {
+                drawable = `@drawable/${drawable}`;
+                if (node.documentBody) {
+                    setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, 'android:background', drawable);
+                }
+                else {
+                    node.android('background', drawable, false);
+                }
+            }
+        }
         for (const node of this.application.processing.cache) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && node.hasResource($enum.NODE_RESOURCE.BOX_STYLE)) {
-                const images = this.getDrawableImages(node, stored);
-                let [shapeData, layerListData] = this.getDrawableBorder(stored, [stored.borderTop, stored.borderRight, stored.borderBottom, stored.borderLeft], stored.border, images);
-                if (shapeData === undefined && layerListData === undefined && stored.outline) {
-                    [shapeData, layerListData] = this.getDrawableBorder(stored, [stored.outline, stored.outline, stored.outline, stored.outline], stored.outline);
+                if (node.inputElement) {
+                    const companion = node.companion;
+                    if (companion && !companion.visible && companion.tagName === 'LABEL' && !Resource.isInheritedStyle(companion, 'backgroundColor')) {
+                        const style: BoxStyle = companion.data(Resource.KEY_NAME, 'boxStyle');
+                        if (style && style.backgroundColor) {
+                            stored.backgroundColor = style.backgroundColor;
+                        }
+                    }
                 }
-                if (shapeData || layerListData) {
-                    const filename = `${node.tagName.toLowerCase()}_${node.controlId}`;
-                    let drawable = '';
-                    if (shapeData) {
-                        drawable = Resource.insertStoredAsset(
-                            'drawables',
-                            filename,
-                            $xml.applyTemplate('shape', SHAPE_TMPL, shapeData)
-                        );
+                const images = this.getDrawableImages(node, stored);
+                let [shapeData, layerListData] = this.getDrawableBorder(stored, [stored.borderTop, stored.borderRight, stored.borderBottom, stored.borderLeft], stored.border, images, this.options.drawOutlineAsInsetBorder && stored.outline ? getIndentOffset(stored.outline) : 0, false);
+                const emptyBackground = shapeData === undefined && layerListData === undefined;
+                if (stored.outline && (this.options.drawOutlineAsInsetBorder || emptyBackground)) {
+                    const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(stored, [stored.outline, stored.outline, stored.outline, stored.outline], emptyBackground ? stored.outline : undefined);
+                    if (emptyBackground) {
+                        shapeData = outlineShapeData;
+                        layerListData = outlineLayerListData;
                     }
-                    else if (layerListData) {
-                        drawable = Resource.insertStoredAsset(
-                            'drawables',
-                            filename,
-                            $xml.applyTemplate('layer-list', LAYERLIST_TMPL, layerListData)
-                        );
+                    else if (layerListData && outlineLayerListData) {
+                        $util.concatArray(layerListData[0].item, outlineLayerListData[0].item);
                     }
-                    if (drawable !== '') {
-                        drawable = `@drawable/${drawable}`;
-                        if (node.documentBody) {
-                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, 'android:background', drawable);
-                        }
-                        else {
-                            node.android('background', drawable, false);
-                        }
-                    }
+                }
+                if (shapeData) {
+                    setDrawableBackground(node, $xml.applyTemplate('shape', SHAPE_TMPL, shapeData));
+                }
+                else if (layerListData) {
+                    setDrawableBackground(node, $xml.applyTemplate('layer-list', LAYERLIST_TMPL, layerListData));
                 }
                 else if (stored.backgroundColor) {
-                    let colorName = Resource.addColor(stored.backgroundColor);
-                    if (colorName !== '') {
-                        colorName = `@color/${colorName}`;
+                    let color = Resource.addColor(stored.backgroundColor);
+                    if (color !== '') {
+                        color = `@color/${color}`;
                         if (node.documentBody) {
-                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, 'android:windowBackground', colorName);
+                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, 'android:windowBackground', color);
                         }
                         else {
                             const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
@@ -493,7 +519,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 fontStyle.backgroundColor = stored.backgroundColor;
                             }
                             else {
-                                node.android('background', colorName, false);
+                                node.android('background', color, false);
                             }
                         }
                     }
@@ -502,9 +528,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         }
     }
 
-    public getDrawableBorder(boxStyle: BoxStyle, borders: (BorderAttribute | undefined)[], border?: BorderAttribute, images?: BackgroundImageData[]) {
+    public getDrawableBorder(data: BoxStyle, borders: (BorderAttribute | undefined)[], border?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = true) {
         const borderVisible: boolean[] = [];
-        const corners = getShapeCorners(boxStyle.borderRadius);
+        const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
+        const indentOffset = indentWidth > 0 ? $css.formatPX(indentWidth) : '';
         let borderStyle = true;
         let borderData: BorderAttribute | undefined;
         let shapeData: ExternalData[] | undefined;
@@ -512,118 +539,108 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         for (let i = 0; i < borders.length; i++) {
             const item = borders[i];
             if (item) {
-                borderVisible[i] = true;
-                if (borderData && borderStyle) {
+                if (borderStyle && borderData) {
                     borderStyle = $util.isEqual(borderData, item);
                 }
                 borderData = item;
+                borderVisible[i] = true;
             }
             else {
                 borderVisible[i] = false;
             }
         }
-        if (border && !isInsetBorder(border)) {
-            const stroke = border ? getShapeStroke(border) : false;
-            if (images && images.length) {
-                layerListData = createLayerList(boxStyle, images);
-                if (corners || stroke) {
-                    layerListData[0].item.push({
-                        shape: {
-                            'android:shape': 'rectangle',
-                            corners,
-                            stroke
-                        }
-                    });
-                }
+        if (border && !isInsetBorder(border) || borderData === undefined && images && images.length) {
+            const stroke = border ? getBorderStroke(border) : false;
+            if (images && images.length || indentWidth > 0) {
+                layerListData = createLayerList(data, images, borderOnly);
+                layerListData[0].item.push({
+                    top: indentOffset,
+                    right: indentOffset,
+                    left: indentOffset,
+                    bottom: indentOffset,
+                    shape: {
+                        'android:shape': 'rectangle',
+                        corners,
+                        stroke
+                    }
+                });
             }
-            else if (stroke || corners) {
-                shapeData = createShapeData(stroke, getSolidColor(boxStyle.backgroundColor), corners);
+            else {
+                shapeData = createShapeData(stroke, !borderOnly ? getBackgroundColor(data.backgroundColor) : undefined, corners);
             }
         }
         else if (borderData) {
-            const visibleAll = borderVisible[1] && borderVisible[2];
-            const getHideWidth = (value: number) => Math.round(value) + (visibleAll ? 0 : value === 1 ? 1 : 2);
-            layerListData = createLayerList(boxStyle, images);
+            layerListData = createLayerList(data, images, borderOnly);
             if (borderStyle && !isAlternatingBorder(borderData.style)) {
-                const width = Math.round(parseFloat(borderData.width));
-                if (borderData.style === 'double' && width > 2) {
-                    insertDoubleBorder.apply(null, [
+                const width = roundFloat(borderData.width);
+                if (borderData.style === 'double' && width > 1) {
+                    insertDoubleBorder(
                         layerListData[0].item,
                         borderData,
                         borderVisible[0],
                         borderVisible[1],
                         borderVisible[2],
                         borderVisible[3],
+                        indentWidth,
                         corners
-                    ]);
+                    );
                 }
                 else {
-                    const hideOffset = '-' + $css.formatPX(getHideWidth(width));
-                    const leftTop = !borderVisible[0] && !borderVisible[3];
-                    const topOnly = !borderVisible[0] && borderVisible[1] && borderVisible[2] && borderVisible[3];
-                    const leftOnly = borderVisible[0] && borderVisible[1] && borderVisible[2] && !borderVisible[3];
+                    const hideOffset = '-' + $css.formatPX(width + indentWidth);
                     layerListData[0].item.push({
-                        top: borderVisible[0] ? '' : hideOffset,
-                        right: borderVisible[1] ? (borderVisible[3] || leftTop || leftOnly ? '' : borderData.width) : hideOffset,
-                        bottom: borderVisible[2] ? (borderVisible[0] || leftTop || topOnly ? '' : borderData.width) : hideOffset,
-                        left: borderVisible[3] ? '' : hideOffset,
+                        top: borderVisible[0] ? indentOffset : hideOffset,
+                        right: borderVisible[1] ? indentOffset : hideOffset,
+                        bottom: borderVisible[2] ? indentOffset : hideOffset,
+                        left: borderVisible[3] ? indentOffset : hideOffset,
                         shape: {
                             'android:shape': 'rectangle',
                             corners,
-                            stroke: getShapeStroke(borderData)
+                            stroke: getBorderStroke(borderData)
                         }
                     });
                 }
             }
             else {
                 function setBorderStyle(layerList: ObjectMap<any>, index: number) {
-                    let item = borders[index];
+                    const item = borders[index];
                     if (item) {
-                        const width = Math.round(parseFloat(item.width));
-                        if (item.style === 'double' && width > 2) {
-                            insertDoubleBorder.apply(null, [
+                        const width = roundFloat(item.width);
+                        if (item.style === 'double' && width > 1) {
+                            insertDoubleBorder(
                                 layerList.item,
                                 item,
                                 index === 0,
                                 index === 1,
                                 index === 2,
                                 index === 3,
+                                indentWidth,
                                 corners
-                            ]);
+                            );
                         }
                         else {
-                            const hasInset = item.style === 'groove' || item.style === 'ridge';
-                            const drawWidth = !visibleAll && width === 1 ? item.width : '';
-                            let hideWidth = getHideWidth(hasInset ? Math.ceil(width / 2) : width);
-                            let topOffset = '';
-                            if (index === 0 && visibleAll && !hasInset) {
-                                item = { ...item };
-                                item.width = $css.formatPX(width + 1);
-                                hideWidth += 2;
-                                topOffset = '-1px';
-                            }
-                            let hideOffset = '-' + $css.formatPX(hideWidth + (visibleAll && topOffset === '' ? 1 : 0));
+                            const inset = item.style === 'groove' || item.style === 'ridge';
+                            let hideOffset = '-' + $css.formatPX((inset ? Math.ceil(width / 2) : width) + indentWidth);
                             layerList.item.push({
-                                top:  index === 0 ? topOffset : hideOffset,
-                                right: index === 1 ? drawWidth : hideOffset,
-                                bottom: index === 2 ? drawWidth : hideOffset,
-                                left: index === 3 ? '' : hideOffset,
+                                top:  index === 0 ? indentOffset : hideOffset,
+                                right: index === 1 ? indentOffset : hideOffset,
+                                bottom: index === 2 ? indentOffset : hideOffset,
+                                left: index === 3 ? indentOffset : hideOffset,
                                 shape: {
                                     'android:shape': 'rectangle',
                                     corners,
-                                    stroke: getShapeStroke(item, index, hasInset)
+                                    stroke: getBorderStroke(item, index, inset)
                                 }
                             });
-                            if (hasInset) {
-                                hideOffset = '-' + $css.formatPX(getHideWidth(width) + (visibleAll ? 1 : 0));
+                            if (inset) {
+                                hideOffset = '-' + $css.formatPX(width + indentWidth);
                                 layerList.item.splice(layerList.item.length, 0, {
                                     top:  index === 0 ? '' : hideOffset,
-                                    right: index === 1 ? drawWidth : hideOffset,
-                                    bottom: index === 2 ? drawWidth : hideOffset,
+                                    right: index === 1 ? '' : hideOffset,
+                                    bottom: index === 2 ? '' : hideOffset,
                                     left: index === 3 ? '' : hideOffset,
                                     shape: {
                                         'android:shape': 'rectangle',
-                                        stroke: getShapeStroke(item, index, hasInset, true)
+                                        stroke: getBorderStroke(item, index, inset, true)
                                     }
                                 });
                             }
@@ -639,11 +656,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         return [shapeData, layerListData];
     }
 
-    public getDrawableImages(node: T, boxStyle: BoxStyle) {
-        const backgroundRepeat = boxStyle.backgroundRepeat.split($regex.XML.SEPARATOR);
-        const backgroundSize = boxStyle.backgroundSize.split($regex.XML.SEPARATOR);
-        const backgroundPositionX = boxStyle.backgroundPositionX.split($regex.XML.SEPARATOR);
-        const backgroundPositionY = boxStyle.backgroundPositionY.split($regex.XML.SEPARATOR);
+    public getDrawableImages(node: T, data: BoxStyle) {
+        const backgroundRepeat = data.backgroundRepeat.split($regex.XML.SEPARATOR);
+        const backgroundSize = data.backgroundSize.split($regex.XML.SEPARATOR);
+        const backgroundPositionX = data.backgroundPositionX.split($regex.XML.SEPARATOR);
+        const backgroundPositionY = data.backgroundPositionY.split($regex.XML.SEPARATOR);
         const backgroundImage: (string | GradientTemplate)[] = [];
         const backgroundPosition: RectPosition[] = [];
         const imageDimensions: Undefined<Dimension>[] = [];
@@ -651,23 +668,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         let imageLength = 0;
         let resizable = true;
         if (node.hasResource($enum.NODE_RESOURCE.IMAGE_SOURCE)) {
-            if (node.inputElement) {
-                const companion = node.companion;
-                if (companion && !companion.visible && companion.textElement && !companion.plainText && !Resource.isInheritedStyle(companion, 'backgroundColor')) {
-                    const companionStyle: BoxStyle = companion.data(Resource.KEY_NAME, 'boxStyle');
-                    if (companionStyle && companionStyle.backgroundColor) {
-                        boxStyle.backgroundColor = companionStyle.backgroundColor;
-                    }
-                }
-            }
-            if (boxStyle.backgroundImage)  {
-                imageLength = boxStyle.backgroundImage.length;
+            if (data.backgroundImage)  {
+                imageLength = data.backgroundImage.length;
                 while (backgroundSize.length < imageLength) {
                     $util.concatArray(backgroundSize, backgroundSize.slice(0));
                 }
                 backgroundSize.length = imageLength;
                 for (let i = 0, j = 0; i < imageLength; i++) {
-                    const value = boxStyle.backgroundImage[i];
+                    const value = data.backgroundImage[i];
                     let valid = false;
                     if (typeof value === 'string') {
                         if (value !== 'initial') {
@@ -711,7 +719,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     const src = Resource.addImageSrc(element);
                     if (src !== '') {
                         backgroundImage[j] = src;
-                        imageDimensions[j] = Resource.ASSETS.images.get(element.src);
                         backgroundRepeat[j] = 'no-repeat';
                         backgroundSize[j] = `${image.actualWidth}px ${image.actualHeight}px`;
                         backgroundPosition[j] = $css.getBackgroundPosition(
@@ -719,6 +726,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             node.actualDimension,
                             node.fontSize
                         );
+                        imageDimensions[j] = Resource.ASSETS.images.get(element.src);
                         j++;
                     }
                 }
@@ -953,7 +961,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         break;
                 }
                 if (dimension) {
-                    const backgroundClip = boxStyle.backgroundClip;
+                    const backgroundClip = data.backgroundClip;
                     switch (backgroundSize[i]) {
                         case 'cover':
                             if (dimension.width < bounds.width || dimension.height < bounds.height) {
@@ -1069,42 +1077,46 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     imageData.gravity = gravity;
                 }
             }
-            else {
-                if (value.item) {
-                    if (dimension) {
-                        const width = Math.round(dimension.width);
-                        const height = Math.round(dimension.height);
-                        if (backgroundSize[i].split(' ').some(size => size !== '100%' && $css.isLength(size, true))) {
-                            imageData.width = $css.formatPX(width);
-                            imageData.height = $css.formatPX(height);
-                        }
-                        const src = Resource.insertStoredAsset(
-                            'drawables',
-                            `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i + 1}`,
-                            $xml.applyTemplate('vector', VECTOR_TMPL, [{
-                                'xmlns:android': XMLNS_ANDROID.android,
-                                'xmlns:aapt': XMLNS_ANDROID.aapt,
-                                'android:width': imageData.width || $css.formatPX(width),
-                                'android:height': imageData.height || $css.formatPX(height),
-                                'android:viewportWidth': width.toString(),
-                                'android:viewportHeight': height.toString(),
-                                'path': {
-                                    pathData: drawRect(width, height),
-                                    'aapt:attr': {
-                                        name: 'android:fillColor',
-                                        gradient: value
-                                    }
-                                }
-                            }])
-                        );
-                        if (src !== '') {
-                            imageData.drawable = `@drawable/${src}`;
-                        }
-                    }
+            else if (value.item) {
+                let width: number;
+                let height: number;
+                if (dimension) {
+                    width = Math.round(dimension.width);
+                    height = Math.round(dimension.height);
                 }
                 else {
-                    imageData.gradient = value;
+                    width = Math.round(node.actualWidth);
+                    height = Math.round(node.actualHeight);
                 }
+                if (backgroundSize[i].split(' ').some(size => size !== '100%' && $css.isLength(size, true))) {
+                    imageData.width = $css.formatPX(width);
+                    imageData.height = $css.formatPX(height);
+                }
+                const src = Resource.insertStoredAsset(
+                    'drawables',
+                    `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i + 1}`,
+                    $xml.applyTemplate('vector', VECTOR_TMPL, [{
+                        'xmlns:android': XMLNS_ANDROID.android,
+                        'xmlns:aapt': XMLNS_ANDROID.aapt,
+                        'android:width': imageData.width || $css.formatPX(width),
+                        'android:height': imageData.height || $css.formatPX(height),
+                        'android:viewportWidth': width.toString(),
+                        'android:viewportHeight': height.toString(),
+                        'path': {
+                            pathData: drawRect(width, height),
+                            'aapt:attr': {
+                                name: 'android:fillColor',
+                                gradient: value
+                            }
+                        }
+                    }])
+                );
+                if (src !== '') {
+                    imageData.drawable = `@drawable/${src}`;
+                }
+            }
+            else {
+                imageData.gradient = value;
             }
             if (imageData.drawable || imageData.bitmap || imageData.gradient) {
                 if (position.bottom !== 0) {
@@ -1123,28 +1135,28 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     imageData.left = $css.formatPX(getPercentOffset('left', position, backgroundSize[i], node.bounds, dimension) + left);
                     left = 0;
                 }
-                if (top > 0) {
+                if (top !== 0) {
                     imageData.top = $css.formatPX(top);
                 }
-                if (right > 0) {
+                if (right !== 0) {
                     imageData.right = $css.formatPX(right);
                 }
-                if (bottom > 0) {
+                if (bottom !== 0) {
                     imageData.bottom = $css.formatPX(bottom);
                 }
-                if (left > 0) {
+                if (left !== 0) {
                     imageData.left = $css.formatPX(left);
                 }
                 result.push(imageData);
             }
         }
         if (this.options.autoSizeBackgroundImage && result.length && resizable && !node.documentRoot && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
-            this.refitDrawable(node, imageDimensions);
+            this.refitDrawableDimension(node, imageDimensions);
         }
         return result;
     }
 
-    public refitDrawable(node: T, dimensions: Undefined<Dimension>[]) {
+    public refitDrawableDimension(node: T, dimensions: Undefined<Dimension>[]) {
         if (!node.is(CONTAINER_NODE.IMAGE)) {
             let imageWidth = 0;
             let imageHeight = 0;
@@ -1154,16 +1166,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     imageHeight = Math.max(imageHeight, image.height);
                 }
             }
-            if (node.blockStatic || imageWidth === 0) {
+            if (imageWidth === 0) {
                 let ascend = node;
                 while (ascend) {
                     if (ascend.hasWidth) {
-                        imageWidth = ascend.has('width') ? ascend.actualWidth : ascend.bounds.width;
+                        imageWidth = ascend.actualWidth;
                     }
                     if (ascend.hasHeight) {
-                        imageHeight = ascend.has('height') ? ascend.actualHeight : ascend.bounds.height;
+                        imageHeight = ascend.actualHeight;
                     }
-                    if (ascend.documentBody || imageWidth > 0 && imageHeight > 0 || !ascend.pageFlow) {
+                    if (imageWidth > 0 && imageHeight > 0 || ascend.documentBody || !ascend.pageFlow) {
                         break;
                     }
                     ascend = ascend.actualParent as T;

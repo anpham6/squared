@@ -2094,7 +2094,7 @@ export function findColorShade(value: string) {
                     result.push(color);
                 }
             }
-            else if (hsl.h >= color.hsl.h) {
+            else if (hsl.h <= color.hsl.h) {
                 result.push(color);
                 baseline = color.hsl.h;
             }

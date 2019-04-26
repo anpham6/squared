@@ -1,5 +1,5 @@
 *.t1 { text-decoration:underline;     }  *.t2 { text-decoration:overline; }
-*.t3 { text-decoration:line-through;  }  
+*.t3 { text-decoration:line-through underline;  }  
 
 *.t4 { border-bottom:1px solid black; }  *.t5 { border-bottom:1px dotted black; } 
 *.t6 { border-bottom:2px dashed gray; }  *.t7 { border-top:3px double red;      } 

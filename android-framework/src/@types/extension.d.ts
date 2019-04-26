@@ -13,6 +13,7 @@ export interface ResourceSvgOptions {
 
 export interface ResourceBackgroundOptions {
     autoSizeBackgroundImage: boolean;
+    drawOutlineAsInsetBorder: boolean;
 }
 
 export interface ResourceStringsOptions {
