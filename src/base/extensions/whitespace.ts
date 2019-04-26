@@ -315,7 +315,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
         const modified: number[] = [];
         for (let node of this.application.processing.cache) {
             const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
-            if (renderParent && node.pageFlow && node.styleElement && node.inlineVertical && !node.documentParent.layoutElement && !node.positioned && !renderParent.tableElement && !modified.includes(node.id)) {
+            if (renderParent && node.pageFlow && node.styleElement && node.inlineVertical && !node.positioned && !node.documentParent.layoutElement && !renderParent.tableElement && !modified.includes(node.id)) {
                 function setSpacingOffset(region: number, value: number) {
                     const offset = (region === BOX_STANDARD.MARGIN_LEFT ? node.actualRect('left') : node.actualRect('top')) - value;
                     if (offset > 0) {

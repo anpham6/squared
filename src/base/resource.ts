@@ -423,6 +423,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 backgroundPositionY: '',
                 backgroundImage: undefined,
                 borderRadius: undefined,
+                outline: undefined,
                 backgroundClip: undefined
             };
             if (!node.css('border').startsWith('0px none')) {
@@ -634,7 +635,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     case 'borderTop':
                     case 'borderRight':
                     case 'borderBottom':
-                    case 'borderLeft': {
+                    case 'borderLeft':
+                    case 'outline': {
                         const style = node.css(`${attr}Style`) || 'none';
                         const width = node.convertPX(node.css(`${attr}Width`), (attr === 'borderLeft' || attr === 'borderRight'), false) || '0px';
                         let color = node.css(`${attr}Color`) || 'initial';

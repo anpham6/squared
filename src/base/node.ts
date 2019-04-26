@@ -1564,25 +1564,25 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get borderTopWidth() {
         if (this._cached.borderTopWidth === undefined) {
-            this._cached.borderTopWidth = this.styleElement && this.css('borderTopStyle') !== 'none' ? $util.convertFloat(this.css('borderTopWidth')) : 0;
+            this._cached.borderTopWidth = this.styleElement && this.css('borderTopStyle') !== 'none' ? Math.round($util.convertFloat(this.css('borderTopWidth'))) : 0;
         }
         return this._cached.borderTopWidth;
     }
     get borderRightWidth() {
         if (this._cached.borderRightWidth === undefined) {
-            this._cached.borderRightWidth = this.styleElement && this.css('borderRightStyle') !== 'none' ? $util.convertFloat(this.css('borderRightWidth')) : 0;
+            this._cached.borderRightWidth = this.styleElement && this.css('borderRightStyle') !== 'none' ? Math.round($util.convertFloat(this.css('borderRightWidth'))) : 0;
         }
         return this._cached.borderRightWidth;
     }
     get borderBottomWidth() {
         if (this._cached.borderBottomWidth === undefined) {
-            this._cached.borderBottomWidth = this.styleElement && this.css('borderBottomStyle') !== 'none' ? $util.convertFloat(this.css('borderBottomWidth')) : 0;
+            this._cached.borderBottomWidth = this.styleElement && this.css('borderBottomStyle') !== 'none' ? Math.round($util.convertFloat(this.css('borderBottomWidth'))) : 0;
         }
         return this._cached.borderBottomWidth;
     }
     get borderLeftWidth() {
         if (this._cached.borderLeftWidth === undefined) {
-            this._cached.borderLeftWidth = this.styleElement && this.css('borderLeftStyle') !== 'none' ? $util.convertFloat(this.css('borderLeftWidth')) : 0;
+            this._cached.borderLeftWidth = this.styleElement && this.css('borderLeftStyle') !== 'none' ? Math.round($util.convertFloat(this.css('borderLeftWidth'))) : 0;
         }
         return this._cached.borderLeftWidth;
     }

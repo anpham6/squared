@@ -522,6 +522,7 @@ export const API_ANDROID: Customizations = {
         assign: {
             Button: {
                 android: {
+                    'elevation': '6px',
                     'textAllCaps': 'false'
                 }
             }
