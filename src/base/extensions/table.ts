@@ -272,7 +272,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         }
         else if (mapWidth.every(value => $css.isLength(value))) {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
-            if (node.width > 0) {
+            if (node.hasWidth) {
                 if (width < node.width) {
                     $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? `${(parseFloat(value) / width) * 100}%` : value);
                 }

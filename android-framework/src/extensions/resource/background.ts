@@ -549,7 +549,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 borderVisible[i] = false;
             }
         }
-        if (border && !isInsetBorder(border) || borderData === undefined && images && images.length) {
+        if (border && !isInsetBorder(border) || borderData === undefined && (corners || images && images.length)) {
             const stroke = border ? getBorderStroke(border) : false;
             if (images && images.length || indentWidth > 0) {
                 layerListData = createLayerList(data, images, borderOnly);

@@ -11,6 +11,5 @@ export default {
                 }
             }
         }
-    },
-    filename: 'res/values/styles.xml'
+    }
 };

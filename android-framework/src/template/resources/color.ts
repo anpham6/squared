@@ -6,6 +6,5 @@ export default {
                 '~': true
             }
         }
-    },
-    filename: 'res/values/colors.xml'
+    }
 };

@@ -258,12 +258,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'width':
                         this._cached.actualWidth = undefined;
                     case 'minWidth':
-                        this._cached.hasWidth = undefined;
+                        this._cached.width = undefined;
                         break;
                     case 'height':
                         this._cached.actualHeight = undefined;
                     case 'minHeight':
-                        this._cached.hasHeight = undefined;
+                        this._cached.height = undefined;
                         break;
                     case 'verticalAlign':
                         this._cached.baseline = undefined;
@@ -669,7 +669,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public parseUnit(value: string, horizontal = true, parent = true) {
-        if (value !== '') {
+        if (value) {
             if ($css.isPercent(value)) {
                 const attr = horizontal ? 'width' : 'height';
                 let result = parseFloat(value) / 100;
@@ -1088,13 +1088,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    private getDimension(value: string, horizontal = true) {
-        if ($css.isLength(value) || $css.isPercent(value)) {
-            return this.parseUnit(value, horizontal);
-        }
-        return 0;
-    }
-
     private convertPosition(attr: string) {
         let value = 0;
         if (!this.positionStatic) {
@@ -1374,52 +1367,30 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get width() {
         if (this._cached.width === undefined) {
-            this._cached.width = Math.max(this.getDimension(this._styleMap.width), this.getDimension(this._styleMap.minWidth));
+            this._cached.width = Math.max(this.parseUnit(this._styleMap.width), this.parseUnit(this._styleMap.minWidth));
         }
         return this._cached.width;
     }
     get height() {
         if (this._cached.height === undefined) {
-            this._cached.height = Math.max(this.getDimension(this._styleMap.height, false), this.getDimension(this._styleMap.minHeight, false));
+            this._cached.height = Math.max(this.parseUnit(this._styleMap.height, false), this.parseUnit(this._styleMap.minHeight, false));
         }
         return this._cached.height;
     }
 
     get hasWidth() {
-        if (this._cached.hasWidth === undefined) {
-            const value = this.cssInitial('width', true);
-            if (this.inlineStatic) {
-                this._cached.hasWidth = false;
-            }
-            else if ($css.isPercent(value)) {
-                this._cached.hasWidth = parseFloat(value) > 0;
-            }
-            else {
-                this._cached.hasWidth = $css.isLength(value) && value !== '0px' || this.toInt('minWidth') > 0;
-            }
-        }
-        return this._cached.hasWidth;
+        return this.width > 0;
     }
     get hasHeight() {
-        if (this._cached.hasHeight === undefined) {
-            const value = this.cssInitial('height', true);
-            this._cached.hasHeight = (() => {
-                if (this.inlineStatic) {
-                    return false;
-                }
-                else if ($css.isPercent(value)) {
-                    const actualParent = this.actualParent;
-                    if (actualParent && actualParent.hasHeight) {
-                        return parseFloat(value) > 0;
-                    }
-                }
-                else if ($css.isLength(value) && value !== '0px' || this.toFloat('minHeight') > 0) {
-                    return true;
-                }
-                return false;
-            })();
+        const value = this.cssInitial('height', true);
+        if ($css.isPercent(value)) {
+            const actualParent = this.actualParent;
+            if (actualParent && actualParent.hasHeight) {
+                return parseFloat(value) > 0;
+            }
+            return false;
         }
-        return this._cached.hasHeight;
+        return this.height > 0;
     }
 
     get lineHeight() {

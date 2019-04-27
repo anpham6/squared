@@ -291,10 +291,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public static setFlexDimension<T extends View>(node: T, dimension: string) {
         const horizontal = dimension === 'width';
+        const dimensionA = $util.capitalize(dimension);
         const flexbox = node.flexbox;
         const basis = flexbox.basis;
-        const dimensionA = $util.capitalize(dimension);
-        function setFlexGrow(value: string, grow: number) {
+        function setFlexGrow(value: string, grow: number, fromBasis = false) {
             node.android(`layout_${dimension}`, '0px');
             if (grow > 0) {
                 node.app(`layout_constraint${horizontal ? 'Horizontal' : 'Vertical'}_weight`, $math.truncate(grow, node.localSettings.floatPrecision));
@@ -315,7 +315,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if ($css.isLength(basis)) {
             setFlexGrow(node.convertPX(basis), node.flexbox.grow);
         }
-        else if ($css.isPercent(basis) && basis !== '0%') {
+        else if (basis !== '0%' && $css.isPercent(basis)) {
             node.app(`layout_constraint${dimensionA}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
             setFlexGrow('', node.flexbox.grow);
         }
@@ -753,13 +753,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                         else {
                             for (const item of pageFlow) {
-                                if (item.autoMargin.leftRight || (item.inlineStatic && item.cssAscend('textAlign', true) === 'center')) {
+                                if (item.autoMargin.leftRight || item.inlineStatic && item.cssAscend('textAlign', true) === 'center') {
                                     item.anchorParent(AXIS_ANDROID.HORIZONTAL);
                                 }
                                 else if (item.rightAligned && item.outerWrapper === undefined) {
                                     item.anchor('right', 'parent');
                                 }
-                                else if ($util.withinRange(item.linear.left, node.box.left) || item.linear.left < node.box.left) {
+                                else if ($util.withinRange(item.linear.left, node.box.left) || item.linear.left < node.box.left || item.autoMargin.right) {
                                     item.anchor('left', 'parent');
                                 }
                                 if ($util.withinRange(item.linear.top, node.box.top) || item.linear.top < node.box.top) {
@@ -1629,7 +1629,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             if (item.marginRight < 0) {
                                 baseWidth += item.marginRight;
                             }
-                            maxWidth = ((item.plainText || item.inlineText) && item.textContent.indexOf(' ') !== -1 ? maxBoxWidth : boxWidth);
+                            maxWidth = (item.plainText || item.inlineText) && item.textContent.indexOf(' ') !== -1 ? maxBoxWidth : boxWidth;
                             if (textIndent < 0) {
                                 maxWidth += rows.length > 1 ? 0 : textIndent;
                             }

@@ -19,7 +19,7 @@ const withinBoxRegion = (rect: number[], value: number) => rect.some(coord => co
 
 export default class Fixed<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
-        if (node.outerWrapper === undefined) {
+        if (node.naturalElement && (node.documentBody || node.contentBoxWidth > 0 || node.contentBoxHeight > 0)) {
             const fixed = getFixedNodes(node);
             if (fixed.length) {
                 const top: number[] = [];

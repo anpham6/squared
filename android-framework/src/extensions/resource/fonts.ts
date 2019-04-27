@@ -141,19 +141,15 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (companion && !companion.visible && companion.tagName === 'LABEL') {
                     node = companion as T;
                 }
-                let system = false;
                 if (stored.backgroundColor) {
                     stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 }
                 if (stored.fontFamily) {
                     let fontFamily = stored.fontFamily.split($regex.XML.SEPARATOR)[0].replace(/"/g, '').toLowerCase();
-                    let fontStyle = '';
-                    let fontWeight = '';
                     if (this.options.fontResourceValue && FONTREPLACE_ANDROID[fontFamily]) {
                         fontFamily = this.options.defaultSystemFont || FONTREPLACE_ANDROID[fontFamily];
                     }
                     if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || this.options.fontResourceValue && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
-                        system = true;
                         stored.fontFamily = fontFamily;
                         if (stored.fontStyle === 'normal') {
                             stored.fontStyle = '';
@@ -164,16 +160,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                     else {
                         fontFamily = $util.convertWord(fontFamily);
-                        stored.fontFamily = `@font/${fontFamily + (stored.fontStyle !== 'normal' ? `_${stored.fontStyle}` : '') + (stored.fontWeight !== '400' ? `_${FONTWEIGHT_ANDROID[stored.fontWeight] || stored.fontWeight}` : '')}`;
-                        fontStyle = stored.fontStyle;
-                        fontWeight = stored.fontWeight;
+                        const fonts = Resource.STORED.fonts.get(fontFamily) || {};
+                        fonts[(FONTWEIGHT_ANDROID[stored.fontWeight] || stored.fontWeight) + '-' + stored.fontStyle + '-' + stored.fontWeight] = true;
+                        Resource.STORED.fonts.set(fontFamily, fonts);
+                        stored.fontFamily = `@font/${fontFamily}`;
                         stored.fontStyle = '';
                         stored.fontWeight = '';
-                    }
-                    if (!system && (fontStyle || fontWeight)) {
-                        const fonts = Resource.STORED.fonts.get(fontFamily) || {};
-                        fonts[(fontStyle ? fontStyle : 'normal') + '-' + (fontWeight || '400')] = true;
-                        Resource.STORED.fonts.set(fontFamily, fonts);
                     }
                 }
                 stored.color = Resource.addColor(stored.color);

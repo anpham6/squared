@@ -15,6 +15,7 @@ import STYLE_TMPL from './template/resources/style';
 
 type StyleXML = {
     data: ExternalData[];
+    pathname: string;
     filename: string;
 };
 
@@ -32,31 +33,25 @@ const REGEXP_FILENAME = /^(.+)\/(.+?\.\w+)$/;
 
 function getFileAssets(items: string[]) {
     const result: FileAsset[] = [];
-    for (let i = 0; i < items.length; i += 2) {
-        const match = REGEXP_FILENAME.exec(items[i + 1]);
-        if (match) {
-            result.push({
-                pathname: match[1],
-                filename: match[2],
-                content: items[i]
-            });
-        }
+    for (let i = 0; i < items.length; i += 3) {
+        result.push({
+            pathname: items[i + 1],
+            filename: items[i + 2],
+            content: items[i]
+        });
     }
     return result;
 }
 
 function getImageAssets(items: string[]) {
     const result: FileAsset[] = [];
-    for (let i = 0; i < items.length; i += 2) {
-        const match = REGEXP_FILENAME.exec(items[i + 1]);
-        if (match) {
-            result.push({
-                uri: items[i],
-                pathname: match[1],
-                filename: match[2],
-                content: ''
-            });
-        }
+    for (let i = 0; i < items.length; i += 3) {
+        result.push({
+            pathname: items[i + 1],
+            filename: items[i + 2],
+            content: '',
+            uri: items[i],
+        });
     }
     return result;
 }
@@ -184,7 +179,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 $xml.applyTemplate('resources', STRING_TMPL, data),
                 this.userSettings.insertSpaces
             ),
-            STRING_TMPL.filename
+            'res/values',
+            'strings.xml'
         );
         if (saveToDisk) {
             this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
@@ -207,7 +203,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     $xml.applyTemplate('resources', STRINGARRAY_TMPL, data),
                     this.userSettings.insertSpaces
                 ),
-                STRINGARRAY_TMPL.filename
+                'res/values',
+                'string_arrays.xml'
             );
             if (saveToDisk) {
                 this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
@@ -227,18 +224,18 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     font: []
                 }];
                 for (const attr in font) {
-                    const [fontStyle, fontWeight] = attr.split('-');
+                    const [fontName, fontStyle, fontWeight] = attr.split('-');
                     data[0].font.push({
+                        font: `@font/${name}_${fontName}`,
                         fontStyle,
                         fontWeight,
-                        font: `@font/${name + (fontStyle === 'normal' && fontWeight === '400' ? '' : (fontStyle !== 'normal' ? `_${fontStyle}` : '') + (fontWeight !== '400' ? `_${fontWeight}` : ''))}`
                     });
                 }
-                let output = $xml.replaceTab($xml.applyTemplate('font-family', FONTFAMILY_TMPL, data), this.userSettings.insertSpaces);
+                let output = $xml.replaceTab($xml.applyTemplate('font-family', FONTFAMILY_TMPL, data), settings.insertSpaces);
                 if (settings.targetAPI < BUILD_ANDROID.OREO) {
                     output = output.replace(/\s+android:/g, ' app:');
                 }
-                result.push(output, `res/font/${name}.xml`);
+                result.push(output, 'res/font', `${name}.xml`);
             }
             if (saveToDisk) {
                 this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
@@ -259,7 +256,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     $xml.applyTemplate('resources', COLOR_TMPL, data),
                     this.userSettings.insertSpaces
                 ),
-                COLOR_TMPL.filename
+                'res/values',
+                'colors.xml'
             );
             if (saveToDisk) {
                 this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
@@ -287,7 +285,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     });
                 }
             }
-            files.push({ data, filename: STYLE_TMPL.filename });
+            files.push({ data, pathname: 'res/values', filename: 'styles.xml' });
         }
         if (this.stored.themes.size) {
             const appTheme: ObjectMap<boolean> = {};
@@ -309,7 +307,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         appTheme[filename] = true;
                     }
                 }
-                files.push({ data, filename });
+                const match = REGEXP_FILENAME.exec(filename);
+                if (match) {
+                    files.push({ data, pathname: match[1], filename: match[2] });
+                }
             }
         }
         for (const style of files) {
@@ -323,6 +324,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     ),
                     settings.insertSpaces
                 ),
+                style.pathname,
                 style.filename
             );
         }
@@ -351,7 +353,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     ),
                     this.userSettings.insertSpaces
                 ),
-                DIMEN_TMPL.filename
+                'res/values',
+                'dimens.xml'
             );
             if (saveToDisk) {
                 this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
@@ -374,7 +377,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         ),
                         settings.insertSpaces
                     ),
-                    `res/drawable/${name}.xml`
+                    'res/drawable',
+                    `${name}.xml`
                 );
             }
             if (saveToDisk) {
@@ -392,14 +396,16 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     for (const dpi in images) {
                         result.push(
                             images[dpi],
-                            `res/drawable-${dpi}/${name}.${$util.fromLastIndexOf(images[dpi], '.')}`
+                            `res/drawable-${dpi}`,
+                            `${name}.${$util.fromLastIndexOf(images[dpi], '.')}`
                         );
                     }
                 }
                 else if (images.mdpi) {
                     result.push(
                         images.mdpi,
-                        `res/drawable/${name}.${$util.fromLastIndexOf(images.mdpi, '.')}`
+                        'res/drawable',
+                        `${name}.${$util.fromLastIndexOf(images.mdpi, '.')}`
                     );
                 }
             }
@@ -416,7 +422,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
             for (const [name, value] of this.stored.animators.entries()) {
                 result.push(
                     $xml.replaceTab(value, this.userSettings.insertSpaces),
-                    `res/anim/${name}.xml`
+                    'res/anim',
+                    `${name}.xml`
                 );
             }
             if (saveToDisk) {

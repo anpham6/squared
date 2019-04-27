@@ -10,6 +10,5 @@ export default {
                 }
             }
         }
-    },
-    filename: 'res/values/string_arrays.xml'
+    }
 };

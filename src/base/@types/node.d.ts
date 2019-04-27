@@ -44,8 +44,6 @@ export interface CachedValue<T> {
     verticalAlign?: string;
     multiline?: boolean;
     positiveAxis?: boolean;
-    hasWidth?: boolean;
-    hasHeight?: boolean;
     centerAligned?: boolean;
     rightAligned?: boolean;
     bottomAligned?: boolean;
