@@ -16,7 +16,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
         return { include: true };
     }
 
-    public postProcedure(node: T) {
+    public postOptimize(node: T) {
         const renderParent = node.renderParent as T;
         if (renderParent) {
             const verticalAlign = $util.convertFloat(node.verticalAlign);
@@ -36,7 +36,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                 if (index !== -1) {
                     layout.renderIndex = index + 1;
                 }
-                this.application.addRenderLayout(layout);
+                this.application.addLayout(layout);
                 if (renderParent.layoutHorizontal && node.documentParent.toInt('textIndent') < 0) {
                     renderParent.renderEach(item => {
                         if (item.alignSibling('topBottom') === node.documentId) {
@@ -101,8 +101,8 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                                 }
                             }
                             else if (renderParent.layoutVertical && bottom !== 0) {
-                                const valueBox = item.valueBox(BOX_STANDARD.MARGIN_TOP);
-                                if (valueBox[0] === 1) {
+                                const getBox = item.getBox(BOX_STANDARD.MARGIN_TOP);
+                                if (getBox[0] === 1) {
                                     bottom -= item.marginTop;
                                 }
                             }

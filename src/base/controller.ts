@@ -1,4 +1,4 @@
-import { ControllerSettings, LayoutResult, LayoutType, NodeTag, NodeTagXml, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserSettings, ViewData } from './@types/application';
+import { ControllerSettings, FileAsset, LayoutResult, LayoutType, NodeTag, NodeTagXml, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserSettings } from './@types/application';
 
 import Application from './application';
 import Layout from './layout';
@@ -40,7 +40,8 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;
     public abstract renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
     public abstract setConstraints(): void;
-    public abstract finalize(data: ViewData): void;
+    public abstract optimize(nodes: T[]): void;
+    public abstract finalize(layouts: FileAsset[]): void;
     public abstract createNodeGroup(node: T, children: T[], parent: T): T;
     public abstract get userSettings(): UserSettings;
     public abstract get containerTypeHorizontal(): LayoutType;
@@ -161,7 +162,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                             else if (styleMap[opposing] && $css.isLength(styleMap[opposing])) {
                                 const attrMax = `max${$util.capitalize(attr)}`;
                                 if (styleMap[attrMax] === undefined || !$css.isPercent(attrMax)) {
-                                    const image = this.application.session.image.get((<HTMLImageElement> element).src);
+                                    const image = this.application.resourceHandler.getImage((<HTMLImageElement> element).src);
                                     if (image && image.width > 0 && image.height > 0) {
                                         styleMap[attr] = $css.formatPX(image[attr] * parseFloat(styleMap[opposing]) / image[opposing]);
                                     }

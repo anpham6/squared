@@ -36,7 +36,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
         };
     }
 
-    public postProcedure(node: T) {
+    public postOptimize(node: T) {
         if (node.documentRoot) {
             if (node.inlineWidth) {
                 for (const item of node) {

@@ -21,6 +21,8 @@ declare global {
             readonly support: SupportAndroid;
             android(attr: string, value?: string, overwrite?: boolean): string;
             app(attr: string, value?: string, overwrite?: boolean): string;
+            applyOptimizations(): void;
+            applyCustomizations(overwrite?: boolean): void;
             formatted(value: string, overwrite?: boolean): void;
             mergeGravity(attr: string, alignment: string, overwrite?: boolean): void;
             anchor(position: string, documentId?: string, overwrite?: boolean): boolean;

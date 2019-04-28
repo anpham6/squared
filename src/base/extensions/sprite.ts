@@ -18,7 +18,7 @@ export default abstract class Sprite<T extends Node> extends Extension<T> {
                 url = match ? match[0] : '';
             }
             if (url !== '') {
-                const image = <ImageAsset> this.application.session.image.get($css.resolveURL(url));
+                const image = <ImageAsset> this.application.resourceHandler.getImage($css.resolveURL(url));
                 if (image) {
                     const dimension = node.actualDimension;
                     const position = $css.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, node.fontSize);

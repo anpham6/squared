@@ -5,7 +5,11 @@ interface BoxRect {
     left: number;
 }
 
-interface RectPosition extends BoxRect {
+interface BoxRectDimension extends BoxRect, Dimension {
+    numberOfLines?: number;
+}
+
+interface BoxRectPosition extends BoxRect {
     topAsPercent: number;
     rightAsPercent: number;
     bottomAsPercent: number;
@@ -13,10 +17,6 @@ interface RectPosition extends BoxRect {
     horizontal: string;
     vertical: string;
     orientation: string[];
-}
-
-interface BoxRectDimension extends BoxRect, Dimension {
-    numberOfLines?: number;
 }
 
 interface BoxMargin {
@@ -102,7 +102,7 @@ interface LinearGradient extends RepeatingGradient {
 
 interface RadialGradient extends RepeatingGradient {
     shape: string;
-    center: RectPosition;
+    center: BoxRectPosition;
     radius: number;
     radiusExtent: number;
     closestSide: number;
@@ -113,7 +113,7 @@ interface RadialGradient extends RepeatingGradient {
 
 interface ConicGradient extends Gradient {
     angle: number;
-    center: RectPosition;
+    center: BoxRectPosition;
 }
 
 interface ColorStop {

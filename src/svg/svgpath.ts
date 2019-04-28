@@ -81,7 +81,7 @@ function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?
 function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
     for (let i = 0; i < path.length; i++) {
         const seg = path[i];
-        if (seg.name.toUpperCase() === 'A') {
+        if (seg.key.toUpperCase() === 'A') {
             if (rx !== undefined) {
                 const offset = rx - <number> seg.radiusX;
                 seg.radiusX = rx;
@@ -145,7 +145,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         case 'width':
                             for (const index of [1, 2]) {
                                 const seg = path[index];
-                                switch (seg.name) {
+                                switch (seg.key) {
                                     case 'm':
                                     case 'l':
                                     case 'h':
@@ -162,7 +162,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         case 'height':
                             for (const index of [2, 3]) {
                                 const seg = path[index];
-                                switch (seg.name) {
+                                switch (seg.key) {
                                     case 'm':
                                     case 'l':
                                     case 'v':
@@ -396,7 +396,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         const pathStartPoint = pathStart.start;
                         const pathEnd = commands[commands.length - 1];
                         const pathEndPoint = pathEnd.end;
-                        const name = pathEnd.name.toUpperCase();
+                        const name = pathEnd.key.toUpperCase();
                         const leading = data.leading;
                         const trailing = data.trailing;
                         let modified = false;

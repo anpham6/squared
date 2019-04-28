@@ -26,7 +26,7 @@ const getDisplayName = (value: string) => $util.fromLastIndexOf(value, '.');
 export default class ResourceDimens<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
 
-    public beforeCascadeDocument() {
+    public beforeCascade() {
         const groups: ObjectMapNested<T[]> = {};
         for (const node of this.application.session.cache) {
             if (node.visible) {
@@ -63,18 +63,15 @@ export default class ResourceDimens<T extends android.base.View> extends squared
     }
 
     public afterFinalize() {
-        const data = this.application.viewData;
-        for (const name in data) {
-            for (const view of data[name]) {
-                let content = view.content;
-                let match: RegExpExecArray | null;
-                while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
-                    const key = getResourceName(STORED.dimens, `${getDisplayName(match[1]).toLowerCase()}_${$util.convertUnderscore(match[3])}`, match[4]);
-                    STORED.dimens.set(key, match[4]);
-                    content = content.replace(match[0], match[0].replace(match[4], `@dimen/${key}`));
-                }
-                view.content = content;
+        for (const layout of this.application.layouts) {
+            let content = layout.content;
+            let match: RegExpExecArray | null;
+            while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
+                const key = getResourceName(STORED.dimens, `${getDisplayName(match[1]).toLowerCase()}_${$util.convertUnderscore(match[3])}`, match[4]);
+                STORED.dimens.set(key, match[4]);
+                content = content.replace(match[0], match[0].replace(match[4], `@dimen/${key}`));
             }
+            layout.content = content;
         }
     }
 }

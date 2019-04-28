@@ -223,7 +223,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             }
             const shade = $color.findColorShade(color.value);
             if (shade) {
-                colorName = keyName === shade.value ? shade.name : Resource.generateId('color', shade.name);
+                colorName = keyName === shade.value ? shade.key : Resource.generateId('color', shade.key);
                 STORED.colors.set(keyName, colorName);
                 return colorName;
             }

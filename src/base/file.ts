@@ -1,4 +1,4 @@
-import { FileAsset, UserSettings, ViewData } from './@types/application';
+import { FileAsset, UserSettings } from './@types/application';
 
 import Node from './node';
 import Resource from './resource';
@@ -35,7 +35,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         resource.fileHandler = this;
     }
 
-    public abstract saveAllToDisk(data: ViewData): void;
+    public abstract saveAllToDisk(layouts: FileAsset[]): void;
     public abstract get userSettings(): UserSettings;
 
     public addAsset(pathname: string, filename: string, content = '', uri: string = '') {

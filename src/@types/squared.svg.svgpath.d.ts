@@ -2,7 +2,9 @@ import { SvgBuildOptions, SvgPathExtendData, SvgStrokeDash, SvgTransform } from 
 
 declare global {
     namespace squared.svg {
-        interface SvgPath extends SvgBaseVal, SvgPaint, SvgTransformable, NameValue<string> {
+        interface SvgPath extends SvgBaseVal, SvgPaint, SvgTransformable {
+            name: string;
+            value: string;
             baseValue: string;
             readonly element: SVGGeometryElement;
             readonly pathLength: number;

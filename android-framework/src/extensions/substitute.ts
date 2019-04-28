@@ -10,7 +10,7 @@ export default class Substitute<T extends android.base.View> extends squared.bas
         return super.processNode(node, parent);
     }
 
-    public postProcedure(node: T) {
+    public postOptimize(node: T) {
         node.apply(
             Resource.formatOptions(
                 createViewAttribute(this.options[node.elementId]),

@@ -705,12 +705,12 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             else if ($SvgBuild.isAnimate(item)) {
                                 const children = $util.filterArray(companions, child => (<AnimateCompanion> child.companion).value === item);
                                 if (children.length) {
-                                    children.sort((a, b) => (<AnimateCompanion> a.companion).index >= (<AnimateCompanion> b.companion).index ? 1 : 0);
+                                    children.sort((a, b) => (<AnimateCompanion> a.companion).key >= (<AnimateCompanion> b.companion).key ? 1 : 0);
                                     const sequentially: SvgAnimation[] = [];
                                     const after: SvgAnimation[] = [];
                                     for (let j = 0; j < children.length; j++) {
                                         const child = children[j];
-                                        if ((<AnimateCompanion> child.companion).index <= 0) {
+                                        if ((<AnimateCompanion> child.companion).key <= 0) {
                                             sequentially.push(child);
                                             if (j === 0 && item.delay > 0) {
                                                 child.delay += item.delay;
@@ -767,11 +767,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 togetherTargets.push(item);
                             }
                             else {
-                                togetherTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.index >= b.synchronized.index ? 1 : -1));
+                                togetherTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.key >= b.synchronized.key ? 1 : -1));
                             }
                         }
                         for (const item of transformMap.values()) {
-                            transformTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.index >= b.synchronized.index ? 1 : -1));
+                            transformTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.key >= b.synchronized.key ? 1 : -1));
                         }
                         for (const item of isolatedData) {
                             isolatedTargets.push([[item]]);
@@ -905,13 +905,13 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             setFillAfter(propertyNames[i], undefined, index > 1 ? item.duration : 0);
                                                         }
                                                         else {
-                                                            if (item.companion && item.companion.index <= 0) {
+                                                            if (item.companion && item.companion.key <= 0) {
                                                                 if (companionBefore === undefined) {
                                                                     companionBefore = [];
                                                                 }
                                                                 companionBefore.push(propertyValue);
                                                             }
-                                                            else if (item.companion && item.companion.index > 0) {
+                                                            else if (item.companion && item.companion.key > 0) {
                                                                 if (companionAfter === undefined) {
                                                                     companionAfter = [];
                                                                 }
@@ -1015,7 +1015,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 }
                                             }
                                             if (values && propertyNames) {
-                                                const keyName =  item.synchronized ? item.synchronized.index + item.synchronized.value : (index !== 0 || propertyNames.length > 1 ? JSON.stringify(options) : '');
+                                                const keyName = item.synchronized ? item.synchronized.key + item.synchronized.value :
+                                                                                    index !== 0 || propertyNames.length > 1 ? JSON.stringify(options) : '';
                                                 for (let i = 0; i < propertyNames.length; i++) {
                                                     const propertyName = propertyNames[i];
                                                     if (checkBefore) {
@@ -1395,7 +1396,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 else if ($SvgBuild.asImage(item)) {
                     if (!$SvgBuild.asPattern(group)) {
                         if (item.width === 0 || item.height === 0) {
-                            const image = this.application.session.image.get(item.href);
+                            const image = this.application.resourceHandler.getImage(item.href);
                             if (image && image.width > 0 && image.height > 0) {
                                 item.width = image.width;
                                 item.height = image.height;

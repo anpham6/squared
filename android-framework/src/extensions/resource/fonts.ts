@@ -13,7 +13,6 @@ type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
 const $enum = squared.base.lib.enumeration;
-const $client = squared.lib.client;
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
@@ -83,10 +82,6 @@ const FONT_STYLE = {
     'backgroundColor': 'android:background="@color/'
 };
 
-if ($client.isUserAgent($client.USER_AGENT.EDGE)) {
-    FONTREPLACE_ANDROID['consolas'] = 'monospace';
-}
-
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
@@ -145,8 +140,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 }
                 if (stored.fontFamily) {
-                    stored.fontFamily.split($regex.XML.SEPARATOR).some((value, index, array) => {
-                        value = value.replace(/["']/g, '');
+                    stored.fontFamily.replace($regex.ESCAPE.DOUBLEQUOTE, '').split($regex.XML.SEPARATOR).some((value, index, array) => {
+                        value = $util.trimString(value, "'");
                         let fontFamily = value.toLowerCase();
                         if (this.options.fontResourceValue && FONTREPLACE_ANDROID[fontFamily]) {
                             fontFamily = this.options.defaultSystemFont || FONTREPLACE_ANDROID[fontFamily];
@@ -156,7 +151,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             if (stored.fontStyle === 'normal') {
                                 stored.fontStyle = '';
                             }
-                            if (stored.fontWeight === '400' || !node.supported('android', 'fontWeight')) {
+                            if (stored.fontWeight === '400' || node.localSettings.targetAPI < BUILD_ANDROID.OREO) {
                                 stored.fontWeight = '';
                             }
                             return true;
@@ -167,7 +162,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                     return false;
                                 }
                                 else if (index > 0) {
-                                    value = array[0].replace(/["']/g, '');
+                                    value = $util.trimString(array[0], "'");
                                     fontFamily = value.toLowerCase();
                                 }
                             }
@@ -337,11 +332,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const tagData = style[tag];
             const styleData: StyleAttribute[] = [];
             for (const attrs in tagData) {
-                const items: NameValue<string>[] = [];
+                const items: StringValue[] = [];
                 for (const value of attrs.split(';')) {
                     const match = $regex.XML.ATTRIBUTE.exec(value);
                     if (match) {
-                        items.push({ name: match[1], value: match[2] });
+                        items.push({ key: match[1], value: match[2] });
                     }
                 }
                 styleData.push({
@@ -404,7 +399,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         for (const value of parentStyle) {
             const styleName: string[] = [];
-            let items: NameValue<string>[] | undefined;
+            let items: StringValue[] | undefined;
             let parent = '';
             value.split('.').forEach((tag, index, array) => {
                 const match = REGEXP_TAGNAME.exec(tag);
@@ -414,7 +409,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (index === 0) {
                             parent = tag;
                             if (array.length === 1) {
-                                items = <NameValue<string>[]> styleData.items;
+                                items = <StringValue[]> styleData.items;
                             }
                             else if (!STORED.styles.has(tag)) {
                                 STORED.styles.set(tag, { name: tag, parent: '', items: styleData.items });
@@ -422,11 +417,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                         else {
                             if (items === undefined) {
-                                items = (<NameValue<string>[]> styleData.items).slice(0);
+                                items = (<StringValue[]> styleData.items).slice(0);
                             }
                             else {
-                                for (const item of styleData.items as NameValue<string>[]) {
-                                    const replaceIndex = items.findIndex(previous => previous.name === item.name);
+                                for (const item of styleData.items as StringValue[]) {
+                                    const replaceIndex = items.findIndex(previous => previous.key === item.key);
                                     if (replaceIndex !== -1) {
                                         items[replaceIndex] = item;
                                     }

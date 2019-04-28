@@ -1,4 +1,4 @@
-import { AppHandler, ResourceAssetMap, ResourceStoredMap, UserSettings, ViewData } from '../base/@types/application';
+import { AppHandler, FileAsset, ImageAsset, ResourceAssetMap, ResourceStoredMap, UserSettings } from '../base/@types/application';
 
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
 
@@ -11,8 +11,10 @@ declare global {
             readonly userSettings: UserSettings;
             readonly assets: ResourceAssetMap;
             readonly stored: ResourceStoredMap;
-            finalize(data: ViewData): void;
+            finalize(layouts: FileAsset[]): void;
             reset(): void;
+            addImage(element: HTMLImageElement | undefined): void;
+            getImage(src: string): ImageAsset | undefined;
             addFont(data: CSSFontFaceData): void;
             getFont(fontFamily: string, fontStyle?: string, fontWeighte?: string): CSSFontFaceData | undefined;
             setBoxStyle(node: T): void;

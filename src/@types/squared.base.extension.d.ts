@@ -27,14 +27,13 @@ declare global {
             postBaseLayout(node: T): void;
             postConstraints(node: T): void;
             postParseDocument(node: T): void;
-            postProcedure(node: T): void;
+            postOptimize(node: T): void;
             beforeParseDocument(): void;
             afterBaseLayout(): void;
             afterConstraints(): void;
             afterResources(): void;
             afterParseDocument(): void;
-            beforeCascadeDocument(): void;
-            beforeFinalize(): void;
+            beforeCascade(): void;
             afterFinalize(): void;
         }
 

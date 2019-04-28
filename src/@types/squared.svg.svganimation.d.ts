@@ -47,7 +47,7 @@ declare global {
             by?: number;
             end?: number;
             loopIntervals?: boolean[];
-            synchronized?: NumberValue<string>;
+            synchronized?: NumberValue;
             readonly playable: boolean;
             readonly valueTo: string;
             readonly valueFrom: string;

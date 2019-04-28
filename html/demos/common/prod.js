@@ -1,11 +1,11 @@
 function stringify(template) {
     var output = '';
     for (var name in template) {
-        for (var i = 0; i < template[name].length; i += 2) {
+        for (var i = 0; i < template[name].length; i += 3) {
             output += template[name][i];
             if (template[name][i + 1]) {
                 output += (name === 'drawableImage' ? '\n' : '') +
-                          `<!-- filename: ${template[name][i + 1]} -->\n\n`;
+                          `<!-- filename: ${template[name][i + 1]}/${template[name][i + 2]} -->\n\n`;
             }
             else {
                 output += '\n';

@@ -1,12 +1,12 @@
-import { ViewData } from '../../src/base/@types/application';
+import { FileAsset } from '../../src/base/@types/application';
 import { ResourceStoredMapAndroid } from '../src/@types/application';
 
 declare global {
     namespace android.base {
         interface File<T extends View> extends squared.base.File<T> {
             readonly stored: ResourceStoredMapAndroid;
-            saveAllToDisk(data: ViewData): void;
-            layoutAllToXml(data: ViewData, saveToDisk?: boolean): {};
+            saveAllToDisk(layouts: FileAsset[]): void;
+            layoutAllToXml(layouts: FileAsset[], saveToDisk?: boolean): {};
             resourceAllToXml(saveToDisk?: boolean): {};
             resourceStringToXml(saveToDisk?: boolean): string[];
             resourceStringArrayToXml(saveToDisk?: boolean): string[];

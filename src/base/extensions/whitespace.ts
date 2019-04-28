@@ -67,7 +67,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                     break;
                 }
             }
-            if (child.valueBox(boxMargin)[0] !== 1) {
+            if (child.getBox(boxMargin)[0] !== 1) {
                 if (HTML5 && node[margin] < child[margin]) {
                     const visibleParent = getVisibleNode(node);
                     visibleParent.modifyBox(boxMargin, null);
@@ -135,7 +135,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                     else {
                                         if (previous.paddingBottom === 0 && previous.borderBottomWidth === 0) {
                                             const bottomChild = previous.lastChild as T;
-                                            if (isBlockElement(bottomChild) && bottomChild.valueBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
+                                            if (isBlockElement(bottomChild) && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
                                                 const childMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
                                                 if (childMarginBottom > marginBottom) {
                                                     marginBottom = childMarginBottom;
@@ -146,7 +146,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                         }
                                         if (current.borderTopWidth === 0 && current.paddingTop === 0) {
                                             const topChild = current.firstChild as T;
-                                            if (isBlockElement(topChild) && topChild.valueBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
+                                            if (isBlockElement(topChild) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
                                                 const childMarginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
                                                 if (childMarginTop > marginTop) {
                                                     marginTop = childMarginTop;

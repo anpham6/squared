@@ -9,7 +9,7 @@ import SvgBuild from './svgbuild';
 import { KEYSPLINE_NAME } from './lib/constant';
 import { TRANSFORM, getAttribute } from './lib/util';
 
-interface AttributeData extends NumberValue<string> {
+interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
@@ -80,7 +80,7 @@ function setOpacity(element: SVGGraphicsElement, value: string) {
     }
 }
 
-const sortAttribute = (value: NumberValue<string>[]) => value.sort((a, b) => a.index >= b.index ? 1 : -1);
+const sortAttribute = (value: NumberValue[]) => value.sort((a, b) => a.key >= b.key ? 1 : -1);
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
@@ -185,7 +185,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             fillMode
                         });
                         for (const percent in keyframes) {
-                            const index = parseFloat(percent) / 100;
+                            const key = parseFloat(percent) / 100;
                             for (const name in keyframes[percent]) {
                                 const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
                                 if (map[name] === undefined) {
@@ -200,14 +200,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         value = $css.parseVar(element, value);
                                     }
                                     if (value !== undefined) {
-                                        map[name].push({ index, value: value.toString() });
+                                        map[name].push({ key, value: value.toString() });
                                     }
                                 }
                             }
                         }
                         if (attrMap['transform']) {
                             function getKeyframeOrigin(order: number) {
-                                const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.index === order);
+                                const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.key === order);
                                 if (origin) {
                                     return TRANSFORM.origin(element, origin.value);
                                 }
@@ -216,7 +216,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             for (const transform of sortAttribute(attrMap['transform'])) {
                                 const transforms = TRANSFORM.parse(element, transform.value);
                                 if (transforms) {
-                                    const origin = getKeyframeOrigin(transform.index);
+                                    const origin = getKeyframeOrigin(transform.key);
                                     transforms.forEach(item => {
                                         const m = item.matrix;
                                         let name: string;
@@ -230,7 +230,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             case SVGTransform.SVG_TRANSFORM_SCALE:
                                                 name = 'scale';
                                                 value = `${m.a} ${m.d} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
-                                                if (origin && (transform.index !== 0 || origin.x !== 0 || origin.y !== 0)) {
+                                                if (origin && (transform.key !== 0 || origin.x !== 0 || origin.y !== 0)) {
                                                     transformOrigin = {
                                                         x: origin.x * (1 - m.a),
                                                         y: origin.y * (1 - m.d)
@@ -244,7 +244,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             case SVGTransform.SVG_TRANSFORM_SKEWX:
                                                 name = 'skewX';
                                                 value = item.angle.toString();
-                                                if (origin && (transform.index !== 0 || origin.y !== 0)) {
+                                                if (origin && (transform.key !== 0 || origin.y !== 0)) {
                                                     transformOrigin = {
                                                         x: origin.y * m.c * -1,
                                                         y: 0
@@ -254,7 +254,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             case SVGTransform.SVG_TRANSFORM_SKEWY:
                                                 name = 'skewY';
                                                 value = item.angle.toString();
-                                                if (origin && (transform.index !== 0 || origin.x !== 0)) {
+                                                if (origin && (transform.key !== 0 || origin.x !== 0)) {
                                                     transformOrigin = {
                                                         x: 0,
                                                         y: origin.x * m.b * -1
@@ -267,14 +267,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         if (attrMap[name] === undefined) {
                                             attrMap[name] = [];
                                         }
-                                        const previousIndex = attrMap[name].findIndex(subitem => subitem.index === transform.index);
+                                        const previousIndex = attrMap[name].findIndex(subitem => subitem.key === transform.key);
                                         if (previousIndex !== -1) {
                                             attrMap[name][previousIndex].value = value;
                                             attrMap[name][previousIndex].transformOrigin = transformOrigin;
                                         }
                                         else {
                                             attrMap[name].push({
-                                                index: transform.index,
+                                                key: transform.key,
                                                 value,
                                                 transformOrigin
                                             });
@@ -311,10 +311,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             const keySplines: string[] = [];
                             sortAttribute(animation);
                             for (let j = 0; j < animation.length; j++) {
-                                keyTimes.push(animation[j].index);
+                                keyTimes.push(animation[j].key);
                                 values.push(animation[j].value);
                                 if (j < animation.length - 1) {
-                                    const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.index === animation[j].index);
+                                    const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.key === animation[j].key);
                                     keySplines.push(spline ? spline.value : timingFunction);
                                 }
                                 const transformOrigin = animation[j].transformOrigin;

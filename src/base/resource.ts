@@ -1,4 +1,4 @@
-import { ResourceAssetMap, ResourceStoredMap, UserSettings, ViewData } from './@types/application';
+import { FileAsset, ResourceAssetMap, ResourceStoredMap, UserSettings } from './@types/application';
 
 import Application from './application';
 import File from './file';
@@ -402,18 +402,35 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public abstract get userSettings(): UserSettings;
 
-    public finalize(data: ViewData) {}
+    public finalize(layouts: FileAsset[]) {}
 
     public reset() {
         for (const name in Resource.ASSETS) {
-            Resource.ASSETS[name] = new Map();
+            (<Map<any, any>> Resource.ASSETS[name]).clear();
         }
         for (const name in Resource.STORED) {
-            Resource.STORED[name] = new Map();
+            (<Map<any, any>> Resource.STORED[name]).clear();
         }
         if (this.fileHandler) {
             this.fileHandler.reset();
         }
+    }
+
+    public addImage(element: HTMLImageElement | undefined) {
+        if (element && element.complete) {
+            const uri = element.src.trim();
+            if (uri !== '') {
+                Resource.ASSETS.images.set(uri, {
+                    width: element.naturalWidth,
+                    height: element.naturalHeight,
+                    uri
+                });
+            }
+        }
+    }
+
+    public getImage(src: string) {
+        return Resource.ASSETS.images.get(src);
     }
 
     public addFont(data: CSSFontFaceData) {

@@ -180,7 +180,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 collapsingToolbarNode.render(appBarNode);
                 collapsingToolbarNode.android('layout_width', 'match_parent');
                 collapsingToolbarNode.android('layout_height', 'match_parent');
-                application.addRenderTemplate(
+                application.addLayoutTemplate(
                     (collapsingToolbarNode.renderParent || parent) as T,
                     collapsingToolbarNode,
                     <NodeXmlTemplate<T>> {
@@ -263,7 +263,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         return undefined;
     }
 
-    public postProcedure(node: T) {
+    public postOptimize(node: T) {
         const menu = $util.optionalAsString(Toolbar.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
             const toolbarOptions = $utilA.createViewAttribute(this.options[node.elementId] && this.options[node.elementId].self);

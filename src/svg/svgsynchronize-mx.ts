@@ -42,21 +42,21 @@ function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number
     let previousValue: AnimateValue | undefined;
     let previous: NumberValue<AnimateValue> | undefined;
     let next: NumberValue<AnimateValue> | undefined;
-    for (const [index, value] of map.entries()) {
-        if (time === index) {
-            previous = { index, value };
+    for (const [key, value] of map.entries()) {
+        if (time === key) {
+            previous = { key, value };
             break;
         }
-        else if (time > previousTime && time < index && previousValue !== undefined) {
-            previous = { index: previousTime, value: previousValue };
-            next = { index, value };
+        else if (time > previousTime && time < key && previousValue !== undefined) {
+            previous = { key: previousTime, value: previousValue };
+            next = { key, value };
             break;
         }
-        previousTime = index;
+        previousTime = key;
         previousValue = value;
     }
     if (previous && next) {
-        setTimelineValue(map, time, getItemSplitValue(time, previous.index, previous.value, next.index, next.value), true);
+        setTimelineValue(map, time, getItemSplitValue(time, previous.key, previous.value, next.key, next.value), true);
     }
     else if (previous) {
         setTimelineValue(map, time, previous.value, true);
@@ -123,7 +123,7 @@ function getForwardValue(items: ForwardValue[], time: number) {
 }
 
 function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContainer | undefined, forwardMap: ForwardMap, precision?: number) {
-    const result: NumberValue<string>[] = [];
+    const result: NumberValue[] = [];
     const tagName = path.element.tagName;
     let baseVal: string[];
     switch (tagName) {
@@ -148,14 +148,14 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContain
     }
     const transformOrigin = TRANSFORM.origin(path.element);
     for (let i = 0; i < entries.length; i++) {
-        const index = entries[i][0];
+        const key = entries[i][0];
         const data = entries[i][1];
         const values: AnimateValue[] = [];
         for (const attr of baseVal) {
             let value = data.get(attr);
             if (value === undefined) {
                 if (value === undefined) {
-                    value = getForwardValue(forwardMap[attr], index);
+                    value = getForwardValue(forwardMap[attr], key);
                 }
                 if (value === undefined) {
                     value = path.getBaseValue(attr);
@@ -209,7 +209,7 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContain
                     break;
             }
             if (value !== undefined) {
-                result.push({ index, value });
+                result.push({ key, value });
             }
         }
     }
@@ -941,9 +941,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     forwardMap[attr] = [];
                                 }
                                 forwardMap[attr].push({
-                                    time,
+                                    key: type,
                                     value,
-                                    index: type
+                                    time
                                 });
                             }
                             if (item && SvgBuild.isAnimate(item) && !item.fillReplace) {
@@ -1514,19 +1514,19 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 }
                             }
                             if (previousComplete && previousComplete.fillReplace && infiniteMap[attr] === undefined) {
-                                let type = 0;
+                                let key = 0;
                                 let value: AnimateValue | undefined;
                                 if (forwardMap[attr]) {
                                     const item = getForwardItem(attr);
                                     if (item) {
-                                        type = item.index;
+                                        key = item.key;
                                         value = item.value;
                                     }
                                 }
                                 else {
                                     if (transforming) {
-                                        type = Array.from(animateTimeRangeMap.values()).pop() as number;
-                                        value = TRANSFORM.typeAsValue(type);
+                                        key = Array.from(animateTimeRangeMap.values()).pop() as number;
+                                        value = TRANSFORM.typeAsValue(key);
                                     }
                                     else {
                                         value = baseValueMap[attr];
@@ -1535,7 +1535,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 if (value !== undefined && !$util.isEqual(<AnimateValue> repeatingMap[attr].get(maxTime), value)) {
                                     maxTime = setTimelineValue(repeatingMap[attr], maxTime, value);
                                     if (transforming) {
-                                        setTimeRange(animateTimeRangeMap, type, maxTime);
+                                        setTimeRange(animateTimeRangeMap, key, maxTime);
                                     }
                                 }
                             }
@@ -1822,7 +1822,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             }
                                             animate.duration = duration;
                                             animate.keySplines = keySplines;
-                                            animate.synchronized = { index: i, value: '' };
+                                            animate.synchronized = { key: i, value: '' };
                                             previousEndTime = endTime;
                                             this._insertAnimate(animate, repeating);
                                         }
@@ -1841,7 +1841,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 object = new SvgAnimate();
                                                 object.attributeName = 'd';
                                                 for (const item of pathData) {
-                                                    object.keyTimes.push(item.index);
+                                                    object.keyTimes.push(item.key);
                                                     object.values.push(item.value.toString());
                                                 }
                                             }
@@ -1910,7 +1910,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 if (pathData) {
                                                     object = new SvgAnimate();
                                                     object.attributeName = 'd';
-                                                    object.values = $util.replaceMap<NumberValue<string>, string>(pathData, item => item.value.toString());
+                                                    object.values = $util.replaceMap<NumberValue, string>(pathData, item => item.value.toString());
                                                 }
                                                 else {
                                                     continue;
@@ -1934,7 +1934,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                         object.duration = keyTimeTo - keyTimeFrom;
                                         object.keyTimes = [0, 1];
-                                        object.synchronized = { index: i, value };
+                                        object.synchronized = { key: i, value };
                                         const interpolator = interpolatorMap.get(keyTimeTo);
                                         if (interpolator) {
                                             object.keySplines = [interpolator];

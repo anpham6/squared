@@ -6,7 +6,7 @@ const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 const COLOR_CSS3: ColorResult[] = [
     {
         value: '#000000',
-        name: 'black',
+        key: 'black',
         rgb: {
             r: 0,
             g: 0,
@@ -20,7 +20,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#696969',
-        name: 'dimgray',
+        key: 'dimgray',
         rgb: {
             r: 105,
             g: 105,
@@ -34,7 +34,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#696969',
-        name: 'dimgrey',
+        key: 'dimgrey',
         rgb: {
             r: 105,
             g: 105,
@@ -48,7 +48,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#808080',
-        name: 'gray',
+        key: 'gray',
         rgb: {
             r: 128,
             g: 128,
@@ -62,7 +62,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#808080',
-        name: 'grey',
+        key: 'grey',
         rgb: {
             r: 128,
             g: 128,
@@ -76,7 +76,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#A9A9A9',
-        name: 'darkgray',
+        key: 'darkgray',
         rgb: {
             r: 169,
             g: 169,
@@ -90,7 +90,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#A9A9A9',
-        name: 'darkgrey',
+        key: 'darkgrey',
         rgb: {
             r: 169,
             g: 169,
@@ -104,7 +104,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#C0C0C0',
-        name: 'silver',
+        key: 'silver',
         rgb: {
             r: 192,
             g: 192,
@@ -118,7 +118,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#D3D3D3',
-        name: 'lightgray',
+        key: 'lightgray',
         rgb: {
             r: 211,
             g: 211,
@@ -132,7 +132,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#D3D3D3',
-        name: 'lightgrey',
+        key: 'lightgrey',
         rgb: {
             r: 211,
             g: 211,
@@ -146,7 +146,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#DCDCDC',
-        name: 'gainsboro',
+        key: 'gainsboro',
         rgb: {
             r: 220,
             g: 220,
@@ -160,7 +160,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F5F5F5',
-        name: 'whitesmoke',
+        key: 'whitesmoke',
         rgb: {
             r: 245,
             g: 245,
@@ -174,7 +174,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFFFFF',
-        name: 'white',
+        key: 'white',
         rgb: {
             r: 255,
             g: 255,
@@ -188,7 +188,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#BC8F8F',
-        name: 'rosybrown',
+        key: 'rosybrown',
         rgb: {
             r: 188,
             g: 143,
@@ -202,7 +202,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#CD5C5C',
-        name: 'indianred',
+        key: 'indianred',
         rgb: {
             r: 205,
             g: 92,
@@ -216,7 +216,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#A52A2A',
-        name: 'brown',
+        key: 'brown',
         rgb: {
             r: 165,
             g: 42,
@@ -230,7 +230,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#B22222',
-        name: 'firebrick',
+        key: 'firebrick',
         rgb: {
             r: 178,
             g: 34,
@@ -244,7 +244,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F08080',
-        name: 'lightcoral',
+        key: 'lightcoral',
         rgb: {
             r: 240,
             g: 128,
@@ -258,7 +258,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#800000',
-        name: 'maroon',
+        key: 'maroon',
         rgb: {
             r: 128,
             g: 0,
@@ -272,7 +272,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#8B0000',
-        name: 'darkred',
+        key: 'darkred',
         rgb: {
             r: 139,
             g: 0,
@@ -286,7 +286,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FF0000',
-        name: 'red',
+        key: 'red',
         rgb: {
             r: 255,
             g: 0,
@@ -300,7 +300,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFFAFA',
-        name: 'snow',
+        key: 'snow',
         rgb: {
             r: 255,
             g: 250,
@@ -314,7 +314,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFE4E1',
-        name: 'mistyrose',
+        key: 'mistyrose',
         rgb: {
             r: 255,
             g: 228,
@@ -328,7 +328,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FA8072',
-        name: 'salmon',
+        key: 'salmon',
         rgb: {
             r: 250,
             g: 128,
@@ -342,7 +342,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FF6347',
-        name: 'tomato',
+        key: 'tomato',
         rgb: {
             r: 255,
             g: 99,
@@ -356,7 +356,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#E9967A',
-        name: 'darksalmon',
+        key: 'darksalmon',
         rgb: {
             r: 233,
             g: 150,
@@ -370,7 +370,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FF7F50',
-        name: 'coral',
+        key: 'coral',
         rgb: {
             r: 255,
             g: 127,
@@ -384,7 +384,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FF4500',
-        name: 'orangered',
+        key: 'orangered',
         rgb: {
             r: 255,
             g: 69,
@@ -398,7 +398,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFA07A',
-        name: 'lightsalmon',
+        key: 'lightsalmon',
         rgb: {
             r: 255,
             g: 160,
@@ -412,7 +412,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#A0522D',
-        name: 'sienna',
+        key: 'sienna',
         rgb: {
             r: 160,
             g: 82,
@@ -426,7 +426,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFF5EE',
-        name: 'seashell',
+        key: 'seashell',
         rgb: {
             r: 255,
             g: 245,
@@ -440,7 +440,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#D2691E',
-        name: 'chocolate',
+        key: 'chocolate',
         rgb: {
             r: 210,
             g: 105,
@@ -454,7 +454,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#8B4513',
-        name: 'saddlebrown',
+        key: 'saddlebrown',
         rgb: {
             r: 139,
             g: 69,
@@ -468,7 +468,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F4A460',
-        name: 'sandybrown',
+        key: 'sandybrown',
         rgb: {
             r: 244,
             g: 164,
@@ -482,7 +482,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFDAB9',
-        name: 'peachpuff',
+        key: 'peachpuff',
         rgb: {
             r: 255,
             g: 218,
@@ -496,7 +496,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#CD853F',
-        name: 'peru',
+        key: 'peru',
         rgb: {
             r: 205,
             g: 133,
@@ -510,7 +510,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FAF0E6',
-        name: 'linen',
+        key: 'linen',
         rgb: {
             r: 250,
             g: 240,
@@ -524,7 +524,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFE4C4',
-        name: 'bisque',
+        key: 'bisque',
         rgb: {
             r: 255,
             g: 228,
@@ -538,7 +538,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FF8C00',
-        name: 'darkorange',
+        key: 'darkorange',
         rgb: {
             r: 255,
             g: 140,
@@ -552,7 +552,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#DEB887',
-        name: 'burlywood',
+        key: 'burlywood',
         rgb: {
             r: 222,
             g: 184,
@@ -566,7 +566,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FAEBD7',
-        name: 'antiquewhite',
+        key: 'antiquewhite',
         rgb: {
             r: 250,
             g: 235,
@@ -580,7 +580,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#D2B48C',
-        name: 'tan',
+        key: 'tan',
         rgb: {
             r: 210,
             g: 180,
@@ -594,7 +594,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFDEAD',
-        name: 'navajowhite',
+        key: 'navajowhite',
         rgb: {
             r: 255,
             g: 222,
@@ -608,7 +608,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFEBCD',
-        name: 'blanchedalmond',
+        key: 'blanchedalmond',
         rgb: {
             r: 255,
             g: 235,
@@ -622,7 +622,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFEFD5',
-        name: 'papayawhip',
+        key: 'papayawhip',
         rgb: {
             r: 255,
             g: 239,
@@ -636,7 +636,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFE4B5',
-        name: 'moccasin',
+        key: 'moccasin',
         rgb: {
             r: 255,
             g: 228,
@@ -650,7 +650,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFA500',
-        name: 'orange',
+        key: 'orange',
         rgb: {
             r: 255,
             g: 165,
@@ -664,7 +664,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F5DEB3',
-        name: 'wheat',
+        key: 'wheat',
         rgb: {
             r: 245,
             g: 222,
@@ -678,7 +678,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FDF5E6',
-        name: 'oldlace',
+        key: 'oldlace',
         rgb: {
             r: 253,
             g: 245,
@@ -692,7 +692,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFFAF0',
-        name: 'floralwhite',
+        key: 'floralwhite',
         rgb: {
             r: 255,
             g: 250,
@@ -706,7 +706,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#B8860B',
-        name: 'darkgoldenrod',
+        key: 'darkgoldenrod',
         rgb: {
             r: 184,
             g: 134,
@@ -720,7 +720,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#DAA520',
-        name: 'goldenrod',
+        key: 'goldenrod',
         rgb: {
             r: 218,
             g: 165,
@@ -734,7 +734,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFF8DC',
-        name: 'cornsilk',
+        key: 'cornsilk',
         rgb: {
             r: 255,
             g: 248,
@@ -748,7 +748,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFD700',
-        name: 'gold',
+        key: 'gold',
         rgb: {
             r: 255,
             g: 215,
@@ -762,7 +762,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFFACD',
-        name: 'lemonchiffon',
+        key: 'lemonchiffon',
         rgb: {
             r: 255,
             g: 250,
@@ -776,7 +776,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F0E68C',
-        name: 'khaki',
+        key: 'khaki',
         rgb: {
             r: 240,
             g: 230,
@@ -790,7 +790,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#EEE8AA',
-        name: 'palegoldenrod',
+        key: 'palegoldenrod',
         rgb: {
             r: 238,
             g: 232,
@@ -804,7 +804,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#BDB76B',
-        name: 'darkkhaki',
+        key: 'darkkhaki',
         rgb: {
             r: 189,
             g: 183,
@@ -818,7 +818,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F5F5DC',
-        name: 'beige',
+        key: 'beige',
         rgb: {
             r: 245,
             g: 245,
@@ -832,7 +832,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FAFAD2',
-        name: 'lightgoldenrodyellow',
+        key: 'lightgoldenrodyellow',
         rgb: {
             r: 250,
             g: 250,
@@ -846,7 +846,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#808000',
-        name: 'olive',
+        key: 'olive',
         rgb: {
             r: 128,
             g: 128,
@@ -860,7 +860,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFFF00',
-        name: 'yellow',
+        key: 'yellow',
         rgb: {
             r: 255,
             g: 255,
@@ -874,7 +874,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFFFE0',
-        name: 'lightyellow',
+        key: 'lightyellow',
         rgb: {
             r: 255,
             g: 255,
@@ -888,7 +888,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFFFF0',
-        name: 'ivory',
+        key: 'ivory',
         rgb: {
             r: 255,
             g: 255,
@@ -902,7 +902,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#6B8E23',
-        name: 'olivedrab',
+        key: 'olivedrab',
         rgb: {
             r: 107,
             g: 142,
@@ -916,7 +916,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#9ACD32',
-        name: 'yellowgreen',
+        key: 'yellowgreen',
         rgb: {
             r: 154,
             g: 205,
@@ -930,7 +930,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#556B2F',
-        name: 'darkolivegreen',
+        key: 'darkolivegreen',
         rgb: {
             r: 85,
             g: 107,
@@ -944,7 +944,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#ADFF2F',
-        name: 'greenyellow',
+        key: 'greenyellow',
         rgb: {
             r: 173,
             g: 255,
@@ -958,7 +958,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#7FFF00',
-        name: 'chartreuse',
+        key: 'chartreuse',
         rgb: {
             r: 127,
             g: 255,
@@ -972,7 +972,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#7CFC00',
-        name: 'lawngreen',
+        key: 'lawngreen',
         rgb: {
             r: 124,
             g: 252,
@@ -986,7 +986,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#8FBC8F',
-        name: 'darkseagreen',
+        key: 'darkseagreen',
         rgb: {
             r: 143,
             g: 188,
@@ -1000,7 +1000,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#228B22',
-        name: 'forestgreen',
+        key: 'forestgreen',
         rgb: {
             r: 34,
             g: 139,
@@ -1014,7 +1014,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#32CD32',
-        name: 'limegreen',
+        key: 'limegreen',
         rgb: {
             r: 50,
             g: 205,
@@ -1028,7 +1028,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#90EE90',
-        name: 'lightgreen',
+        key: 'lightgreen',
         rgb: {
             r: 144,
             g: 238,
@@ -1042,7 +1042,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#98FB98',
-        name: 'palegreen',
+        key: 'palegreen',
         rgb: {
             r: 152,
             g: 251,
@@ -1056,7 +1056,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#006400',
-        name: 'darkgreen',
+        key: 'darkgreen',
         rgb: {
             r: 0,
             g: 100,
@@ -1070,7 +1070,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#008000',
-        name: 'green',
+        key: 'green',
         rgb: {
             r: 0,
             g: 128,
@@ -1084,7 +1084,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#00FF00',
-        name: 'lime',
+        key: 'lime',
         rgb: {
             r: 0,
             g: 255,
@@ -1098,7 +1098,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F0FFF0',
-        name: 'honeydew',
+        key: 'honeydew',
         rgb: {
             r: 240,
             g: 255,
@@ -1112,7 +1112,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#2E8B57',
-        name: 'seagreen',
+        key: 'seagreen',
         rgb: {
             r: 46,
             g: 139,
@@ -1126,7 +1126,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#3CB371',
-        name: 'mediumseagreen',
+        key: 'mediumseagreen',
         rgb: {
             r: 60,
             g: 179,
@@ -1140,7 +1140,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#00FF7F',
-        name: 'springgreen',
+        key: 'springgreen',
         rgb: {
             r: 0,
             g: 255,
@@ -1154,7 +1154,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F5FFFA',
-        name: 'mintcream',
+        key: 'mintcream',
         rgb: {
             r: 245,
             g: 255,
@@ -1168,7 +1168,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#00FA9A',
-        name: 'mediumspringgreen',
+        key: 'mediumspringgreen',
         rgb: {
             r: 0,
             g: 250,
@@ -1182,7 +1182,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#66CDAA',
-        name: 'mediumaquamarine',
+        key: 'mediumaquamarine',
         rgb: {
             r: 102,
             g: 205,
@@ -1196,7 +1196,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#7FFFD4',
-        name: 'aquamarine',
+        key: 'aquamarine',
         rgb: {
             r: 127,
             g: 255,
@@ -1210,7 +1210,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#40E0D0',
-        name: 'turquoise',
+        key: 'turquoise',
         rgb: {
             r: 64,
             g: 224,
@@ -1224,7 +1224,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#20B2AA',
-        name: 'lightseagreen',
+        key: 'lightseagreen',
         rgb: {
             r: 32,
             g: 178,
@@ -1238,7 +1238,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#48D1CC',
-        name: 'mediumturquoise',
+        key: 'mediumturquoise',
         rgb: {
             r: 72,
             g: 209,
@@ -1252,7 +1252,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#2F4F4F',
-        name: 'darkslategray',
+        key: 'darkslategray',
         rgb: {
             r: 47,
             g: 79,
@@ -1266,7 +1266,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#2F4F4F',
-        name: 'darkslategrey',
+        key: 'darkslategrey',
         rgb: {
             r: 47,
             g: 79,
@@ -1280,7 +1280,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#AFEEEE',
-        name: 'paleturquoise',
+        key: 'paleturquoise',
         rgb: {
             r: 175,
             g: 238,
@@ -1294,7 +1294,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#008080',
-        name: 'teal',
+        key: 'teal',
         rgb: {
             r: 0,
             g: 128,
@@ -1308,7 +1308,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#008B8B',
-        name: 'darkcyan',
+        key: 'darkcyan',
         rgb: {
             r: 0,
             g: 139,
@@ -1322,7 +1322,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#00FFFF',
-        name: 'aqua',
+        key: 'aqua',
         rgb: {
             r: 0,
             g: 255,
@@ -1336,7 +1336,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#00FFFF',
-        name: 'cyan',
+        key: 'cyan',
         rgb: {
             r: 0,
             g: 255,
@@ -1350,7 +1350,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#E0FFFF',
-        name: 'lightcyan',
+        key: 'lightcyan',
         rgb: {
             r: 224,
             g: 255,
@@ -1364,7 +1364,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F0FFFF',
-        name: 'azure',
+        key: 'azure',
         rgb: {
             r: 240,
             g: 255,
@@ -1378,7 +1378,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#00CED1',
-        name: 'darkturquoise',
+        key: 'darkturquoise',
         rgb: {
             r: 0,
             g: 206,
@@ -1392,7 +1392,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#5F9EA0',
-        name: 'cadetblue',
+        key: 'cadetblue',
         rgb: {
             r: 95,
             g: 158,
@@ -1406,7 +1406,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#B0E0E6',
-        name: 'powderblue',
+        key: 'powderblue',
         rgb: {
             r: 176,
             g: 224,
@@ -1420,7 +1420,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#ADD8E6',
-        name: 'lightblue',
+        key: 'lightblue',
         rgb: {
             r: 173,
             g: 216,
@@ -1434,7 +1434,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#00BFFF',
-        name: 'deepskyblue',
+        key: 'deepskyblue',
         rgb: {
             r: 0,
             g: 191,
@@ -1448,7 +1448,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#87CEEB',
-        name: 'skyblue',
+        key: 'skyblue',
         rgb: {
             r: 135,
             g: 206,
@@ -1462,7 +1462,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#87CEFA',
-        name: 'lightskyblue',
+        key: 'lightskyblue',
         rgb: {
             r: 135,
             g: 206,
@@ -1476,7 +1476,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#4682B4',
-        name: 'steelblue',
+        key: 'steelblue',
         rgb: {
             r: 70,
             g: 130,
@@ -1490,7 +1490,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F0F8FF',
-        name: 'aliceblue',
+        key: 'aliceblue',
         rgb: {
             r: 240,
             g: 248,
@@ -1504,7 +1504,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#1E90FF',
-        name: 'dodgerblue',
+        key: 'dodgerblue',
         rgb: {
             r: 30,
             g: 144,
@@ -1518,7 +1518,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#708090',
-        name: 'slategray',
+        key: 'slategray',
         rgb: {
             r: 112,
             g: 128,
@@ -1532,7 +1532,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#708090',
-        name: 'slategrey',
+        key: 'slategrey',
         rgb: {
             r: 112,
             g: 128,
@@ -1546,7 +1546,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#778899',
-        name: 'lightslategray',
+        key: 'lightslategray',
         rgb: {
             r: 119,
             g: 136,
@@ -1560,7 +1560,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#778899',
-        name: 'lightslategrey',
+        key: 'lightslategrey',
         rgb: {
             r: 119,
             g: 136,
@@ -1574,7 +1574,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#B0C4DE',
-        name: 'lightsteelblue',
+        key: 'lightsteelblue',
         rgb: {
             r: 176,
             g: 196,
@@ -1588,7 +1588,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#6495ED',
-        name: 'cornflower',
+        key: 'cornflower',
         rgb: {
             r: 100,
             g: 149,
@@ -1602,7 +1602,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#4169E1',
-        name: 'royalblue',
+        key: 'royalblue',
         rgb: {
             r: 65,
             g: 105,
@@ -1616,7 +1616,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#191970',
-        name: 'midnightblue',
+        key: 'midnightblue',
         rgb: {
             r: 25,
             g: 25,
@@ -1630,7 +1630,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#E6E6FA',
-        name: 'lavender',
+        key: 'lavender',
         rgb: {
             r: 230,
             g: 230,
@@ -1644,7 +1644,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#000080',
-        name: 'navy',
+        key: 'navy',
         rgb: {
             r: 0,
             g: 0,
@@ -1658,7 +1658,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#00008B',
-        name: 'darkblue',
+        key: 'darkblue',
         rgb: {
             r: 0,
             g: 0,
@@ -1672,7 +1672,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#0000CD',
-        name: 'mediumblue',
+        key: 'mediumblue',
         rgb: {
             r: 0,
             g: 0,
@@ -1686,7 +1686,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#0000FF',
-        name: 'blue',
+        key: 'blue',
         rgb: {
             r: 0,
             g: 0,
@@ -1700,7 +1700,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#F8F8FF',
-        name: 'ghostwhite',
+        key: 'ghostwhite',
         rgb: {
             r: 248,
             g: 248,
@@ -1714,7 +1714,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#6A5ACD',
-        name: 'slateblue',
+        key: 'slateblue',
         rgb: {
             r: 106,
             g: 90,
@@ -1728,7 +1728,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#483D8B',
-        name: 'darkslateblue',
+        key: 'darkslateblue',
         rgb: {
             r: 72,
             g: 61,
@@ -1742,7 +1742,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#7B68EE',
-        name: 'mediumslateblue',
+        key: 'mediumslateblue',
         rgb: {
             r: 123,
             g: 104,
@@ -1756,7 +1756,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#9370DB',
-        name: 'mediumpurple',
+        key: 'mediumpurple',
         rgb: {
             r: 147,
             g: 112,
@@ -1770,7 +1770,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#8A2BE2',
-        name: 'blueviolet',
+        key: 'blueviolet',
         rgb: {
             r: 138,
             g: 43,
@@ -1784,7 +1784,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#4B0082',
-        name: 'indigo',
+        key: 'indigo',
         rgb: {
             r: 75,
             g: 0,
@@ -1798,7 +1798,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#9932CC',
-        name: 'darkorchid',
+        key: 'darkorchid',
         rgb: {
             r: 153,
             g: 50,
@@ -1812,7 +1812,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#9400D3',
-        name: 'darkviolet',
+        key: 'darkviolet',
         rgb: {
             r: 148,
             g: 0,
@@ -1826,7 +1826,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#BA55D3',
-        name: 'mediumorchid',
+        key: 'mediumorchid',
         rgb: {
             r: 186,
             g: 85,
@@ -1840,7 +1840,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#D8BFD8',
-        name: 'thistle',
+        key: 'thistle',
         rgb: {
             r: 216,
             g: 191,
@@ -1854,7 +1854,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#DDA0DD',
-        name: 'plum',
+        key: 'plum',
         rgb: {
             r: 221,
             g: 160,
@@ -1868,7 +1868,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#EE82EE',
-        name: 'violet',
+        key: 'violet',
         rgb: {
             r: 238,
             g: 130,
@@ -1882,7 +1882,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#800080',
-        name: 'purple',
+        key: 'purple',
         rgb: {
             r: 128,
             g: 0,
@@ -1896,7 +1896,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#8B008B',
-        name: 'darkmagenta',
+        key: 'darkmagenta',
         rgb: {
             r: 139,
             g: 0,
@@ -1910,7 +1910,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FF00FF',
-        name: 'fuchsia',
+        key: 'fuchsia',
         rgb: {
             r: 255,
             g: 0,
@@ -1924,7 +1924,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FF00FF',
-        name: 'magenta',
+        key: 'magenta',
         rgb: {
             r: 255,
             g: 0,
@@ -1938,7 +1938,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#DA70D6',
-        name: 'orchid',
+        key: 'orchid',
         rgb: {
             r: 218,
             g: 112,
@@ -1952,7 +1952,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#C71585',
-        name: 'mediumvioletred',
+        key: 'mediumvioletred',
         rgb: {
             r: 199,
             g: 21,
@@ -1966,7 +1966,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FF1493',
-        name: 'deeppink',
+        key: 'deeppink',
         rgb: {
             r: 255,
             g: 20,
@@ -1980,7 +1980,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FF69B4',
-        name: 'hotpink',
+        key: 'hotpink',
         rgb: {
             r: 255,
             g: 105,
@@ -1994,7 +1994,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFF0F5',
-        name: 'lavenderblush',
+        key: 'lavenderblush',
         rgb: {
             r: 255,
             g: 240,
@@ -2008,7 +2008,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#DB7093',
-        name: 'palevioletred',
+        key: 'palevioletred',
         rgb: {
             r: 219,
             g: 112,
@@ -2022,7 +2022,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#DC143C',
-        name: 'crimson',
+        key: 'crimson',
         rgb: {
             r: 220,
             g: 20,
@@ -2036,7 +2036,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFC0CB',
-        name: 'pink',
+        key: 'pink',
         rgb: {
             r: 255,
             g: 192,
@@ -2050,7 +2050,7 @@ const COLOR_CSS3: ColorResult[] = [
     },
     {
         value: '#FFB6C1',
-        name: 'lightpink',
+        key: 'lightpink',
         rgb: {
             r: 255,
             g: 182,
@@ -2072,7 +2072,7 @@ const parseOpacity = (value: string) => parseFloat(value.trim() || '1') * 255;
 
 export function findColorName(value: string) {
     for (const color of COLOR_CSS3) {
-        if (color.name === value.toLowerCase()) {
+        if (color.key === value.toLowerCase()) {
             return color;
         }
     }
@@ -2127,7 +2127,7 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
         if (CACHE_COLORDATA[value]) {
             return CACHE_COLORDATA[value];
         }
-        let name = '';
+        let key = '';
         let rgba: RGBA | undefined;
         if (value.charAt(0) === '#') {
             rgba = parseRGBA(value);
@@ -2147,11 +2147,11 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
             switch (value) {
                 case 'transparent':
                     rgba = { r: 0, g: 0, b: 0, a: 0 };
-                    name = 'transparent';
+                    key = 'transparent';
                     break;
                 case 'initial':
                     rgba = { r: 0, g: 0, b: 0, a: 255 };
-                    name = 'black';
+                    key = 'black';
                     break;
                 default:
                     const color = findColorName(value);
@@ -2160,7 +2160,7 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
                             ...color.rgb,
                             a: parseOpacity(opacity)
                         };
-                        name = value;
+                        key = value;
                     }
                     break;
             }
@@ -2170,7 +2170,7 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
             const alphaAsString = getHexCode(rgba.a);
             const alpha = rgba.a / 255;
             CACHE_COLORDATA[value] = <ColorData> {
-                name,
+                key,
                 value: `#${hexAsString}`,
                 valueAsRGBA: `#${hexAsString + alphaAsString}`,
                 valueAsARGB: `#${alphaAsString + hexAsString}`,

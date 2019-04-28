@@ -135,7 +135,7 @@ const appBase: AppFramework<T> = {
         },
         writeLayoutAllXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
-                return fileHandler.layoutAllToXml(application.viewData, saveToDisk);
+                return fileHandler.layoutAllToXml(application.layouts, saveToDisk);
             }
             return {};
         },

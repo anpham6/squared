@@ -40,8 +40,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public companion?: T;
     public extracted?: T[];
     public horizontalRows?: T[][];
-    public pseudoBeforeChild?: T;
-    public pseudoAfterChild?: T;
+    public innerBefore?: T;
+    public innerAfter?: T;
 
     public abstract readonly localSettings: {};
     public abstract readonly renderChildren: T[];
@@ -91,8 +91,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract setControlType(viewName: string, containerType?: number): void;
     public abstract setLayout(width?: number, height?: number): void;
     public abstract setAlignment(): void;
-    public abstract applyOptimizations(): void;
-    public abstract applyCustomizations(overwrite?: boolean): void;
     public abstract setBoxSpacing(): void;
     public abstract extractAttributes(depth?: number): string;
     public abstract alignParent(position: string): boolean;
@@ -326,11 +324,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             current = current[attr];
         }
         return result;
-    }
-
-    public cascade(predicate?: (item: T) => boolean, element = false) {
-        const result = super.cascade(predicate);
-        return element ? $util.spliceArray(result, node => node.element === null) : result;
     }
 
     public inherit(node: T, ...modules: string[]) {
@@ -904,7 +897,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public valueBox(region: number): [number, number] {
+    public getBox(region: number): [number, number] {
         const attr = CSS_SPACING.get(region);
         return attr ? [this._boxReset[attr], this._boxAdjustment[attr]] : [0, 0];
     }
@@ -966,7 +959,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         while (element) {
             const node = $session.getElementAsNode<T>(element, this.sessionId);
-            if (node && node.naturalElement) {
+            if (node) {
                 if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded) {
                     result.push(node);
                 }
@@ -1001,7 +994,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         while (element) {
             const node = $session.getElementAsNode<T>(element, this.sessionId);
-            if (node && node.naturalElement) {
+            if (node) {
                 if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded) {
                     result.push(node);
                 }
@@ -1342,6 +1335,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get flexbox() {
         if (this._cached.flexbox === undefined) {
             const actualParent = this.actualParent;
+            const alignSelf = this.css('alignSelf');
+            const justifySelf = this.css('justifySelf');
             const getFlexValue = (attr: string, initialValue: number, parent?: Node): number => {
                 const value = (parent || this).css(attr);
                 if ($util.isNumber(value)) {
@@ -1352,8 +1347,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 return initialValue;
             };
-            const alignSelf = this.css('alignSelf');
-            const justifySelf = this.css('justifySelf');
             this._cached.flexbox = {
                 alignSelf: alignSelf === 'auto' && actualParent && actualParent.has('alignItems', CSS_STANDARD.BASELINE, { all: true }) ? actualParent.css('alignItems') : alignSelf,
                 justifySelf: justifySelf === 'auto' && actualParent && actualParent.has('justifyItems') ? actualParent.css('justifyItems') : justifySelf,
@@ -1779,8 +1772,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get floating() {
         if (this._cached.floating === undefined) {
             if (this.pageFlow) {
-                const value = this.css('float');
-                this._cached.floating = value === 'left' || value === 'right';
+                this._cached.floating = this.cssAny('float', 'left', 'right');
             }
             else {
                 this._cached.floating = false;
@@ -1993,7 +1985,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const actualChildren: T[] = [];
                 (<HTMLElement> this._element).childNodes.forEach((element: Element) => {
                     const node = $session.getElementAsNode<T>(element, this.sessionId);
-                    if (node && node.naturalElement) {
+                    if (node) {
                         actualChildren.push(node);
                     }
                 });
@@ -2088,7 +2080,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 let element = <Element> (this._element as Element).previousSibling;
                 while (element) {
                     const node = $session.getElementAsNode<Node>(element, this.sessionId);
-                    if (node && node.naturalElement && (!node.excluded || node.lineBreak)) {
+                    if (node && (!node.excluded || node.lineBreak)) {
                         this._cached.previousSibling = node;
                         return node;
                     }
@@ -2106,7 +2098,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 let element = <Element> (this._element as Element).nextSibling;
                 while (element) {
                     const node =  $session.getElementAsNode<Node>(element, this.sessionId);
-                    if (node && node.naturalElement && (!node.excluded || node.lineBreak)) {
+                    if (node && (!node.excluded || node.lineBreak)) {
                         this._cached.nextSibling = node;
                         return node;
                     }

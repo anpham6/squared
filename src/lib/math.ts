@@ -47,12 +47,7 @@ export function convertDecimalNotation(value: number) {
     const match = REGEXP_DECIMALNOTATION.exec(value.toString());
     if (match) {
         const multiplier = parseInt(match[2]);
-        if (multiplier > 0) {
-            return value.toFixed(multiplier + 1);
-        }
-        else {
-            return value.toFixed(Math.abs(multiplier));
-        }
+        return value.toFixed(multiplier > 0 ? multiplier + 1 : Math.abs(multiplier));
     }
     return value.toString();
 }

@@ -1,4 +1,4 @@
-import { LayoutType, NodeTagXml, NodeXmlTemplate, ViewData } from '../../src/base/@types/application';
+import { FileAsset, LayoutType, NodeTagXml, NodeXmlTemplate } from '../../src/base/@types/application';
 import { ControllereSettingsAndroid, UserSettingsAndroid } from './@types/application';
 import { ViewAttribute } from './@types/node';
 
@@ -372,11 +372,20 @@ export default class Controller<T extends View> extends squared.base.Controller<
         }
     };
 
-    public finalize(data: ViewData) {
-        for (const name in data) {
-            for (const view of data[name]) {
-                view.content = $xml.replaceTab(view.content.replace(/{#0}/, getRootNs(view.content)), this.userSettings.insertSpaces);
+    public optimize(nodes: T[]) {
+        for (const node of nodes) {
+            if (node.hasProcedure($enum.NODE_PROCEDURE.OPTIMIZATION)) {
+                node.applyOptimizations();
             }
+            if (!this.userSettings.customizationsDisabled && node.hasProcedure($enum.NODE_PROCEDURE.CUSTOMIZATION)) {
+                node.applyCustomizations(this.userSettings.customizationsOverwritePrivilege);
+            }
+        }
+    }
+
+    public finalize(layouts: FileAsset[]) {
+        for (const layout of layouts) {
+            layout.content = $xml.replaceTab(layout.content.replace(/{#0}/, getRootNs(layout.content)), this.userSettings.insertSpaces);
         }
     }
 
@@ -859,7 +868,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 if (percentWidth === -1 || width < 100) {
                                     width = imageSet[0].actualWidth;
                                     node.css('width', $css.formatPX(width), true);
-                                    const image = this.application.session.image.get(element.src);
+                                    const image = this.application.resourceHandler.getImage(element.src);
                                     if (image && image.width > 0 && image.height > 0) {
                                         height = image.height * (width / image.width);
                                         node.css('height', $css.formatPX(height), true);
@@ -957,7 +966,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
                             node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.left);
                         }
-                        this.application.addRenderTemplate(
+                        this.application.addLayoutTemplate(
                             parent,
                             container,
                             <NodeXmlTemplate<T>> {
@@ -1262,7 +1271,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     else {
                         let offset = 0;
-                        if (!horizontal && absoluteParent !== boxParent && absoluteParent.valueBox($enum.BOX_STANDARD.MARGIN_TOP)[0] === 1) {
+                        if (!horizontal && absoluteParent !== boxParent && absoluteParent.getBox($enum.BOX_STANDARD.MARGIN_TOP)[0] === 1) {
                             offset = absoluteParent.marginTop;
                         }
                         location = bounds[LT] - box[!opposite ? LT : RB] - offset;
@@ -1275,7 +1284,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         location += boxParent[!opposite ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
                     }
                     else if (absoluteParent === node.documentParent) {
-                        location = horizontal ? adjustDocumentRootOffset(location, boxParent, 'Left') : adjustDocumentRootOffset(location, boxParent, 'Top', boxParent.valueBox($enum.BOX_STANDARD.PADDING_TOP)[0] === 0);
+                        location = horizontal ? adjustDocumentRootOffset(location, boxParent, 'Left') : adjustDocumentRootOffset(location, boxParent, 'Top', boxParent.getBox($enum.BOX_STANDARD.PADDING_TOP)[0] === 0);
                     }
                 }
                 else if (node.inlineVertical) {
@@ -1538,7 +1547,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         return renderParent.box.width - (node.linear.left - renderParent.box.left);
                     }
                 }
-                return node.box.width - (node.valueBox($enum.BOX_STANDARD.PADDING_LEFT)[1] + node.valueBox($enum.BOX_STANDARD.PADDING_RIGHT)[1]);
+                return node.box.width - (node.getBox($enum.BOX_STANDARD.PADDING_LEFT)[1] + node.getBox($enum.BOX_STANDARD.PADDING_RIGHT)[1]);
             })();
             const maxBoxWidth = Math.min(boxWidth, this.userSettings.maxWordWrapWidth);
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';

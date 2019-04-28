@@ -160,8 +160,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static drawPath(values: SvgPathCommand[], precision?: number) {
         let result = '';
         for (const value of values) {
-            result += (result !== '' ? ' ' : '') + value.name;
-            switch (value.name.toUpperCase()) {
+            result += (result !== '' ? ' ' : '') + value.key;
+            switch (value.key.toUpperCase()) {
                 case 'M':
                 case 'L':
                 case 'C':
@@ -287,7 +287,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let previousPoint: Point | undefined;
             if (result.length) {
                 const previous = result[result.length - 1];
-                previousCommand = previous.name.toUpperCase();
+                previousCommand = previous.key.toUpperCase();
                 previousPoint = previous.end;
             }
             let radiusX: number | undefined;
@@ -398,7 +398,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     points.push({ x, y });
                 }
                 result.push({
-                    name: match[1],
+                    key: match[1],
                     value: points,
                     start: points[0],
                     end: points[points.length - 1],
@@ -431,7 +431,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     y = item.coordinates[j + 1];
                 }
                 const pt: SvgPoint = { x, y };
-                if (item.name.toUpperCase() === 'A') {
+                if (item.key.toUpperCase() === 'A') {
                     pt.rx = item.radiusX;
                     pt.ry = item.radiusY;
                     if (radius) {
@@ -446,7 +446,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 result.push(pt);
             }
             if (item.relative) {
-                item.name = item.name.toUpperCase();
+                item.key = item.key.toUpperCase();
             }
         }
         return result;
@@ -458,7 +458,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             for (const item of values) {
                 if (item.relative) {
                     if (location) {
-                        if (transformed && (item.name === 'H' || item.name === 'V')) {
+                        if (transformed && (item.key === 'H' || item.key === 'V')) {
                             const pt = points.shift();
                             if (pt) {
                                 item.coordinates[0] = pt.x;
@@ -466,7 +466,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                                 item.value[0] = pt;
                                 item.start = pt;
                                 item.end = pt;
-                                item.name = 'L';
+                                item.key = 'L';
                                 item.relative = false;
                             }
                             else {
@@ -479,7 +479,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                                 if (pt) {
                                     item.coordinates[i] = pt.x - location.x;
                                     item.coordinates[i + 1] = pt.y - location.y;
-                                    if (item.name === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
+                                    if (item.key === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
                                         item.radiusX = pt.rx;
                                         item.radiusY = pt.ry;
                                     }
@@ -489,7 +489,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                                     break invalid;
                                 }
                             }
-                            item.name = item.name.toLowerCase();
+                            item.key = item.key.toLowerCase();
                         }
                         location = item.end;
                     }
@@ -498,7 +498,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                 }
                 else {
-                    switch (item.name.toUpperCase()) {
+                    switch (item.key.toUpperCase()) {
                         case 'M':
                         case 'L':
                         case 'H':

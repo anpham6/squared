@@ -99,7 +99,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         }
     }
 
-    public postProcedure(node: T) {
+    public postOptimize(node: T) {
         const element = Drawer.findNestedElement(node.element, WIDGET_NAME.COORDINATOR);
         if (element) {
             const coordinator = $session.getElementAsNode<T>(element, node.sessionId);

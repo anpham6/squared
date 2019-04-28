@@ -53,12 +53,12 @@ export default class ResourceStrings<T extends android.base.View> extends square
                         break;
                     }
                     case 'IFRAME': {
-                        const stored: NameValue<string> = node.data(Resource.KEY_NAME, 'valueString');
-                        Resource.addString($xml.replaceCharacter(stored.value), stored.name);
+                        const stored: StringValue = node.data(Resource.KEY_NAME, 'valueString');
+                        Resource.addString($xml.replaceCharacter(stored.value), stored.key);
                         break;
                     }
                     default: {
-                        const stored: NameValue<string> = node.data(Resource.KEY_NAME, 'valueString');
+                        const stored: StringValue = node.data(Resource.KEY_NAME, 'valueString');
                         if (stored) {
                             const renderParent = node.renderParent as T;
                             let value = stored.value;
@@ -125,7 +125,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                 const width = metrics && metrics.width || node.fontSize / 2;
                                 value = '&#160;'.repeat(Math.max(Math.floor(textIndent / width), 1)) + value;
                             }
-                            const name = Resource.addString(value, stored.name, this.options.numberResourceValue);
+                            const name = Resource.addString(value, stored.key, this.options.numberResourceValue);
                             if (name !== '') {
                                 node.android('text', this.options.numberResourceValue || !$util.isNumber(name) ? `@string/${name}` : name, false);
                             }

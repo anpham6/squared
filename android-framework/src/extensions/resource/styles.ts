@@ -15,7 +15,7 @@ const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 export default class ResourceStyles<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
 
-    public beforeCascadeDocument() {
+    public beforeCascade() {
         const styles: ObjectMap<string[]> = {};
         const styleCache: StringMap = {};
         for (const node of this.application.session.cache) {
@@ -90,11 +90,11 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
             }
         }
         for (const name in styles) {
-            const items: NameValue<string>[] = [];
+            const items: StringValue[] = [];
             for (const attr in styles[name]) {
                 const match = $regex.XML.ATTRIBUTE.exec(styles[name][attr]);
                 if (match) {
-                    items.push({ name: match[1], value: match[2] });
+                    items.push({ key: match[1], value: match[2] });
                 }
             }
             STORED.styles.set(name, {

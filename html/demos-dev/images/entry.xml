@@ -53,16 +53,16 @@
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
-            <RelativeLayout
-                android:id="@+id/relativelayout_1"
+            <LinearLayout
+                android:id="@+id/linearlayout_1"
+                android:baselineAlignedChildIndex="1"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/label_layout_margin_end"
                 android:layout_width="@dimen/label_layout_width"
+                android:orientation="horizontal"
                 android:paddingTop="@dimen/label_padding_top">
                 <TextView
                     android:id="@+id/textview_17"
-                    android:layout_alignBaseline="@+id/textview_18"
-                    android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:text="@string/date"
@@ -70,79 +70,76 @@
                 <TextView
                     android:id="@+id/textview_18"
                     android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/textview_17"
                     android:layout_width="wrap_content"
-                    android:text="@string/add"
+                    android:text="@string/u_add_u"
                     style="@style/A" />
                 <TextView
                     android:id="@+id/textview_19"
-                    android:layout_alignBaseline="@+id/textview_18"
                     android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol17883"
+                    android:text="@string/__symbol47089"
                     style="@style/Plaintext" />
-            </RelativeLayout>
+            </LinearLayout>
             <LinearLayout
-                android:id="@+id/linearlayout_1"
+                android:id="@+id/linearlayout_2"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:orientation="vertical">
                 <LinearLayout
-                    android:id="@+id/linearlayout_9"
-                    style="@style/Linearlayout_1">
+                    android:id="@+id/linearlayout_12"
+                    style="@style/Linearlayout_2">
                     <Spinner
                         android:id="@+id/month0"
                         android:entries="@array/month0_array"
-                        style="@style/Select.Linearlayout_9" />
+                        style="@style/Select.Linearlayout_12" />
                     <Spinner
                         android:id="@+id/day0"
                         android:entries="@array/day0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_9" />
+                        style="@style/Select.Linearlayout_12" />
                     <Spinner
                         android:id="@+id/year0"
                         android:entries="@array/year0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_9" />
+                        style="@style/Select.Linearlayout_12" />
                 </LinearLayout>
                 <LinearLayout
-                    android:id="@+id/linearlayout_10"
+                    android:id="@+id/linearlayout_13"
                     android:layout_marginTop="@dimen/select_group_layout_margin_top"
-                    style="@style/Linearlayout_1">
+                    style="@style/Linearlayout_2">
                     <Spinner
                         android:id="@+id/month1"
                         android:entries="@array/month0_array"
-                        style="@style/Select.Linearlayout_9" />
+                        style="@style/Select.Linearlayout_12" />
                     <Spinner
                         android:id="@+id/day1"
                         android:entries="@array/day0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_9" />
+                        style="@style/Select.Linearlayout_12" />
                     <Spinner
                         android:id="@+id/year1"
                         android:entries="@array/year0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_9" />
+                        style="@style/Select.Linearlayout_12" />
                 </LinearLayout>
                 <LinearLayout
-                    android:id="@+id/linearlayout_11"
+                    android:id="@+id/linearlayout_14"
                     android:layout_marginTop="@dimen/select_group_layout_margin_top"
-                    style="@style/Linearlayout_1">
+                    style="@style/Linearlayout_2">
                     <Spinner
                         android:id="@+id/month2"
                         android:entries="@array/month0_array"
-                        style="@style/Select.Linearlayout_9" />
+                        style="@style/Select.Linearlayout_12" />
                     <Spinner
                         android:id="@+id/day2"
                         android:entries="@array/day0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_9" />
+                        style="@style/Select.Linearlayout_12" />
                     <Spinner
                         android:id="@+id/year2"
                         android:entries="@array/year0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_9" />
+                        style="@style/Select.Linearlayout_12" />
                 </LinearLayout>
             </LinearLayout>
             <Space
@@ -159,7 +156,7 @@
                 android:text="@string/time"
                 style="@style/Label" />
             <LinearLayout
-                android:id="@+id/linearlayout_2"
+                android:id="@+id/linearlayout_3"
                 android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -167,12 +164,12 @@
                 <Spinner
                     android:id="@+id/hour"
                     android:entries="@array/hour_array"
-                    style="@style/Select.Linearlayout_9" />
+                    style="@style/Select.Linearlayout_12" />
                 <Spinner
                     android:id="@+id/minute"
                     android:entries="@array/minute_array"
                     android:layout_marginStart="@dimen/select_layout_margin_start"
-                    style="@style/Select.Linearlayout_9" />
+                    style="@style/Select.Linearlayout_12" />
             </LinearLayout>
             <Space
                 android:id="@+id/space_3"
@@ -202,16 +199,16 @@
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
-            <RelativeLayout
-                android:id="@+id/relativelayout_2"
+            <LinearLayout
+                android:id="@+id/linearlayout_4"
+                android:baselineAlignedChildIndex="1"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/label_layout_margin_end"
                 android:layout_width="@dimen/label_layout_width"
+                android:orientation="horizontal"
                 android:paddingTop="@dimen/label_padding_top">
                 <TextView
                     android:id="@+id/textview_20"
-                    android:layout_alignBaseline="@+id/textview_21"
-                    android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:text="@string/topic"
@@ -219,21 +216,18 @@
                 <TextView
                     android:id="@+id/textview_21"
                     android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/textview_20"
                     android:layout_width="wrap_content"
-                    android:text="@string/add"
+                    android:text="@string/u_add_u"
                     style="@style/A" />
                 <TextView
                     android:id="@+id/textview_22"
-                    android:layout_alignBaseline="@+id/textview_21"
                     android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol17883"
+                    android:text="@string/__symbol47089"
                     style="@style/Plaintext" />
-            </RelativeLayout>
+            </LinearLayout>
             <LinearLayout
-                android:id="@+id/linearlayout_3"
+                android:id="@+id/linearlayout_5"
                 android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -400,7 +394,7 @@
                 android:text="@string/entries"
                 style="@style/Label" />
             <LinearLayout
-                android:id="@+id/linearlayout_4"
+                android:id="@+id/linearlayout_6"
                 android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -418,6 +412,7 @@
                 <Button
                     android:id="@+id/button_1"
                     android:background="@drawable/button_button_1"
+                    android:elevation="@dimen/button_elevation"
                     android:enabled="false"
                     android:gravity="center"
                     android:layout_height="wrap_content"
@@ -433,6 +428,7 @@
                 <Button
                     android:id="@+id/button_2"
                     android:background="@drawable/button_button_1"
+                    android:elevation="@dimen/button_elevation"
                     android:enabled="false"
                     android:gravity="center"
                     android:layout_height="wrap_content"
@@ -529,7 +525,7 @@
                 android:text="@string/version"
                 style="@style/Label" />
             <LinearLayout
-                android:id="@+id/linearlayout_5"
+                android:id="@+id/linearlayout_7"
                 android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -558,6 +554,7 @@
                 <Button
                     android:id="@+id/button_3"
                     android:background="@drawable/button_button_1"
+                    android:elevation="@dimen/button_elevation"
                     android:gravity="center"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_layout_margin_start_1"
@@ -584,7 +581,7 @@
                 android:text="@string/branch"
                 style="@style/Label" />
             <LinearLayout
-                android:id="@+id/linearlayout_6"
+                android:id="@+id/linearlayout_8"
                 android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -613,6 +610,7 @@
                 <Button
                     android:id="@+id/button_4"
                     android:background="@drawable/button_button_1"
+                    android:elevation="@dimen/button_elevation"
                     android:gravity="center"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_layout_margin_start_1"
@@ -627,6 +625,7 @@
                 <Button
                     android:id="@+id/button_5"
                     android:background="@drawable/button_button_1"
+                    android:elevation="@dimen/button_elevation"
                     android:gravity="center"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_layout_margin_start"
@@ -644,16 +643,16 @@
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
-            <RelativeLayout
-                android:id="@+id/relativelayout_3"
+            <LinearLayout
+                android:id="@+id/linearlayout_9"
+                android:baselineAlignedChildIndex="1"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/label_layout_margin_end"
                 android:layout_width="@dimen/label_layout_width"
+                android:orientation="horizontal"
                 android:paddingTop="@dimen/label_padding_top">
                 <TextView
                     android:id="@+id/textview_23"
-                    android:layout_alignBaseline="@+id/textview_24"
-                    android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:text="@string/custom"
@@ -661,21 +660,18 @@
                 <TextView
                     android:id="@+id/textview_24"
                     android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/textview_23"
                     android:layout_width="wrap_content"
-                    android:text="@string/add"
+                    android:text="@string/u_add_u"
                     style="@style/A" />
                 <TextView
                     android:id="@+id/textview_25"
-                    android:layout_alignBaseline="@+id/textview_24"
                     android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol17883"
+                    android:text="@string/__symbol47089"
                     style="@style/Plaintext" />
-            </RelativeLayout>
+            </LinearLayout>
             <LinearLayout
-                android:id="@+id/linearlayout_7"
+                android:id="@+id/linearlayout_10"
                 android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -727,7 +723,7 @@
                 android:text="@string/conclusion"
                 style="@style/Label" />
             <LinearLayout
-                android:id="@+id/linearlayout_8"
+                android:id="@+id/linearlayout_11"
                 android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -781,6 +777,7 @@
                 <Button
                     android:id="@+id/button_6"
                     android:background="@drawable/button_button_1"
+                    android:elevation="@dimen/button_elevation"
                     android:gravity="center"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_layout_margin_start_2"
@@ -802,9 +799,8 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol17883">):</string>
+    <string name="__symbol81712">):</string>
     <string name="active">Active:</string>
-    <string name="add">Add</string>
     <string name="all">All</string>
     <string name="birth">Birth</string>
     <string name="branch">Branch:</string>
@@ -828,6 +824,7 @@
     <string name="time">Time:</string>
     <string name="topic">Topic (</string>
     <string name="type">Type:</string>
+    <string name="u_add_u"><u>Add</u></string>
     <string name="update">Update</string>
     <string name="variant">Variant</string>
     <string name="version">Version:</string>
@@ -984,11 +981,11 @@
     <color name="blue">#0000FF</color>
     <color name="gray">#808080</color>
     <color name="yellowgreen">#9ACD32</color>
+    <color name="darkgray_1">#9B9B9B</color>
     <color name="darkgray">#A9A9A9</color>
+    <color name="silver_1">#BCBCBC</color>
     <color name="lightgray_1">#CCCCCC</color>
     <color name="gainsboro_1">#DDDDDD</color>
-    <color name="whitesmoke_2">#EEEEEE</color>
-    <color name="whitesmoke_1">#F8F8F8</color>
     <color name="white">#FFFFFF</color>
 </resources>
 <!-- filename: res/values/colors.xml -->
@@ -1029,7 +1026,7 @@
     <style name="Label_1" parent="Label">
         <item name="android:textStyle">italic</item>
     </style>
-    <style name="Linearlayout_1">
+    <style name="Linearlayout_2">
         <item name="android:baselineAlignedChildIndex">0</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
@@ -1050,7 +1047,7 @@
         <item name="android:textColor">@color/black</item>
         <item name="android:textSize">11sp</item>
     </style>
-    <style name="Select.Linearlayout_9">
+    <style name="Select.Linearlayout_12">
         <item name="android:background">@drawable/select_series_1</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
@@ -1068,6 +1065,7 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <dimen name="button_elevation">6dp</dimen>
     <dimen name="button_layout_margin_start">3dp</dimen>
     <dimen name="button_layout_margin_start_1">7dp</dimen>
     <dimen name="button_layout_margin_start_2">4dp</dimen>
@@ -1128,24 +1126,24 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:top="-3dp" android:right="-2dp" android:bottom="-2dp">
+    <item android:left="-2dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="2dp" android:color="@color/gray" />
+            <stroke android:width="2dp" android:color="@color/black" />
         </shape>
     </item>
-    <item android:left="-3dp" android:top="-1dp" android:right="-2dp" android:bottom="-2dp">
+    <item android:left="-2dp" android:top="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="3dp" android:color="@color/gray" />
+            <stroke android:width="2dp" android:color="@color/black" />
         </shape>
     </item>
-    <item android:left="-3dp" android:top="-3dp" android:bottom="-2dp">
+    <item android:top="-2dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="2dp" android:color="@color/lightgray_1" />
+            <stroke android:width="2dp" android:color="@color/black" />
         </shape>
     </item>
-    <item android:left="-3dp" android:top="-3dp" android:right="-2dp">
+    <item android:left="-2dp" android:top="-2dp" android:right="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="2dp" android:color="@color/lightgray_1" />
+            <stroke android:width="2dp" android:color="@color/black" />
         </shape>
     </item>
 </layer-list>
@@ -1164,24 +1162,24 @@
             <solid android:color="@color/gainsboro_1" />
         </shape>
     </item>
-    <item android:top="-3dp" android:right="-2dp" android:bottom="-2dp">
+    <item android:left="-2dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="2dp" android:color="@color/whitesmoke_1" />
+            <stroke android:width="2dp" android:color="@color/silver_1" />
         </shape>
     </item>
-    <item android:left="-3dp" android:top="-1dp" android:right="-2dp" android:bottom="-2dp">
+    <item android:left="-2dp" android:top="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="3dp" android:color="@color/whitesmoke_1" />
+            <stroke android:width="2dp" android:color="@color/darkgray_1" />
         </shape>
     </item>
-    <item android:left="-3dp" android:top="-3dp" android:bottom="-2dp">
+    <item android:top="-2dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="2dp" android:color="@color/whitesmoke_2" />
+            <stroke android:width="2dp" android:color="@color/silver_1" />
         </shape>
     </item>
-    <item android:left="-3dp" android:top="-3dp" android:right="-2dp">
+    <item android:left="-2dp" android:top="-2dp" android:right="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="2dp" android:color="@color/whitesmoke_2" />
+            <stroke android:width="2dp" android:color="@color/darkgray_1" />
         </shape>
     </item>
 </layer-list>

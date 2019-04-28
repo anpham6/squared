@@ -97,7 +97,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     ordinal.android('minWidth', $css.formatPX(minWidth));
                 }
                 ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
-                this.application.addRenderTemplate(
+                this.application.addLayoutTemplate(
                     parent,
                     ordinal,
                     this.application.renderNode(layout)
@@ -214,7 +214,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, left);
                     }
                     ordinal.render(parent);
-                    this.application.addRenderTemplate(
+                    this.application.addLayoutTemplate(
                         parent,
                         ordinal,
                         <NodeXmlTemplate<T>> {
@@ -295,7 +295,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         }
     }
 
-    public postProcedure(node: T) {
+    public postOptimize(node: T) {
         if (node.blockStatic && node.inlineWidth) {
             node.android('layout_width', 'match_parent');
         }

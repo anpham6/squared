@@ -1,12 +1,13 @@
-interface NameValue<T> {
-    name: string;
-    value: T;
+interface KeyValue<T, U> {
+    key: T;
+    value: U;
 }
 
-type NumberValue<T> = {
-    index: number;
-    value: T;
-};
+interface StringValue<T = string> extends KeyValue<string, T> {
+}
+
+interface NumberValue<T = string> extends KeyValue<number, T> {
+}
 
 interface RGB {
     r: number;
@@ -28,7 +29,7 @@ interface HSLA extends HSL {
     a: number;
 }
 
-interface ColorData extends NameValue<string> {
+interface ColorData extends StringValue {
     valueAsRGBA: string;
     valueAsARGB: string;
     rgba: RGBA;
@@ -38,7 +39,7 @@ interface ColorData extends NameValue<string> {
     transparent: boolean;
 }
 
-interface ColorResult extends NameValue<string> {
+interface ColorResult extends StringValue {
     rgb: RGB;
     hsl: HSL;
 }

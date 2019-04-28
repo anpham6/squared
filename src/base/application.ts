@@ -1,4 +1,4 @@
-import { AppProcessing, AppSession, FileAsset, ImageAsset, LayoutResult, NodeTemplate, UserSettings, ViewData } from './@types/application';
+import { AppProcessing, AppSession, FileAsset, LayoutResult, NodeTemplate, UserSettings } from './@types/application';
 
 import Controller from './controller';
 import Extension from './extension';
@@ -72,7 +72,6 @@ export default class Application<T extends Node> implements squared.base.Applica
     public readonly session: AppSession<T, NodeList<T>> = {
         cache: new NodeList<T>(),
         documentRoot: [],
-        image: new Map<string, ImageAsset>(),
         targetQueue: new Map<T, NodeTemplate<T>>(),
         excluded: new NodeList<T>(),
         active: [],
@@ -86,8 +85,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     };
 
     private _userSettings?: UserSettings;
-    private readonly _views: FileAsset[] = [];
-    private readonly _includes: FileAsset[] = [];
+    private readonly _layouts: FileAsset[] = [];
 
     constructor(
         public framework: number,
@@ -121,7 +119,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const parent = this.resolveTarget(node.dataset.target);
                 if (parent) {
                     node.render(parent);
-                    this.addRenderTemplate(parent, node, template);
+                    this.addLayoutTemplate(parent, node, template);
                 }
                 else if (node.renderParent === undefined) {
                     this.session.cache.remove(node);
@@ -137,17 +135,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                 node.setAlignment();
             }
         }
-        for (const node of rendered) {
-            if (node.hasProcedure(NODE_PROCEDURE.OPTIMIZATION)) {
-                node.applyOptimizations();
-            }
-            if (!this.userSettings.customizationsDisabled && node.hasProcedure(NODE_PROCEDURE.CUSTOMIZATION)) {
-                node.applyCustomizations(this.userSettings.customizationsOverwritePrivilege);
-            }
-        }
+        controller.optimize(rendered);
         for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
-                ext.postProcedure(node);
+                ext.postOptimize(node);
             }
         }
         for (const node of this.rendered) {
@@ -156,13 +147,13 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         for (const ext of this.extensions) {
-            ext.beforeCascadeDocument();
+            ext.beforeCascade();
         }
         for (const layout of this.session.documentRoot) {
             const node = layout.node;
             const parent = node.renderParent;
             if (parent && parent.renderTemplates) {
-                this.addLayoutFile(
+                this.saveLayout(
                     layout.layoutName,
                     controller.localSettings.layout.baseTemplate + controller.cascadeDocument(<NodeTemplate<T>[]> parent.renderTemplates, 0),
                     node.dataset.pathname,
@@ -170,12 +161,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                 );
             }
         }
-        for (const ext of this.extensions) {
-            ext.beforeFinalize();
-        }
-        const viewData = this.viewData;
-        this.resourceHandler.finalize(viewData);
-        controller.finalize(viewData);
+        this.resourceHandler.finalize(this._layouts);
+        controller.finalize(this._layouts);
         for (const ext of this.extensions) {
             ext.afterFinalize();
         }
@@ -186,7 +173,7 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     public saveAllToDisk() {
         if (this.resourceHandler.fileHandler) {
-            this.resourceHandler.fileHandler.saveAllToDisk(this.viewData);
+            this.resourceHandler.fileHandler.saveAllToDisk(this.layouts);
         }
     }
 
@@ -205,15 +192,13 @@ export default class Application<T extends Node> implements squared.base.Applica
         this.session.documentRoot.length = 0;
         this.session.active.length = 0;
         this.session.targetQueue.clear();
-        this.session.image.clear();
         this.session.cache.reset();
         this.session.excluded.reset();
         this.session.extensionMap.clear();
         this.processing.cache.reset();
         this.controllerHandler.reset();
         this.resourceHandler.reset();
-        this._views.length = 0;
-        this._includes.length = 0;
+        this._layouts.length = 0;
         for (const ext of this.extensions) {
             ext.subscribers.clear();
         }
@@ -236,15 +221,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                 this.rootElements.add(element);
             }
         }
+        const ASSET_IMAGES = this.resourceHandler.assets.images;
         const documentRoot = this.rootElements.values().next().value;
         const preloadImages: HTMLImageElement[] = [];
         const parseResume = () => {
             this.initialized = false;
             for (const image of preloadImages) {
                 documentRoot.removeChild(image);
-            }
-            for (const [uri, image] of this.session.image.entries()) {
-                Resource.ASSETS.images.set(uri, image);
             }
             for (const ext of this.extensions) {
                 ext.beforeParseDocument();
@@ -276,7 +259,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
                     const uri = image.src;
                     if (uri !== '') {
-                        this.session.image.set(uri, {
+                        ASSET_IMAGES.set(uri, {
                             width: image.width,
                             height: image.height,
                             uri
@@ -286,7 +269,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 element.querySelectorAll('svg image').forEach((image: SVGImageElement) => {
                     const uri = $util.resolvePath(image.href.baseVal);
                     if (uri !== '') {
-                        this.session.image.set(uri, {
+                        ASSET_IMAGES.set(uri, {
                             width: image.width.baseVal.value,
                             height: image.height.baseVal.value,
                             uri
@@ -294,7 +277,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 });
             }
-            for (const image of this.session.image.values()) {
+            for (const image of ASSET_IMAGES.values()) {
                 if (image.width === 0 && image.height === 0 && image.uri) {
                     const element = document.createElement('img');
                     element.src = image.uri;
@@ -312,7 +295,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 element.querySelectorAll('IMG').forEach((image: HTMLImageElement) => {
                     if (image.tagName === 'IMG') {
                         if (image.complete) {
-                            this.addImagePreload(image);
+                            this.resourceHandler.addImage(image);
                         }
                         else {
                             images.push(image);
@@ -338,7 +321,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }))
             .then((result: HTMLImageElement[]) => {
                 for (const item of result) {
-                    this.addImagePreload(item);
+                    this.resourceHandler.addImage(item);
                 }
                 parseResume();
             })
@@ -382,32 +365,23 @@ export default class Application<T extends Node> implements squared.base.Applica
         return layout.containerType !== 0 ? this.renderNode(layout) : undefined;
     }
 
-    public addLayoutFile(filename: string, content: string, pathname?: string, leading = false) {
-        if (content !== '') {
+    public saveLayout(filename: string, content: string, pathname?: string, leading = false) {
+        if ($util.isString(content)) {
             const layout: FileAsset = {
                 pathname: $util.trimString(pathname || this.controllerHandler.localSettings.layout.pathName, '/'),
                 filename,
                 content
             };
             if (leading) {
-                this._views.unshift(layout);
+                this._layouts.unshift(layout);
             }
             else {
-                this._views.push(layout);
+                this._layouts.push(layout);
             }
         }
     }
 
-    public addIncludeFile(id: number, filename: string, content: string) {
-        this._includes.push({
-            id,
-            pathname: this.controllerHandler.localSettings.layout.pathName,
-            filename,
-            content
-        });
-    }
-
-    public addRenderLayout(layout: Layout<T>, outerParent?: T) {
+    public addLayout(layout: Layout<T>, outerParent?: T) {
         let template: NodeTemplate<T> | undefined;
         if (outerParent) {
             template = this.renderLayout(layout, outerParent);
@@ -415,10 +389,10 @@ export default class Application<T extends Node> implements squared.base.Applica
         else {
             template = this.renderNode(layout);
         }
-        return this.addRenderTemplate(layout.parent, layout.node, template, layout.renderIndex);
+        return this.addLayoutTemplate(layout.parent, layout.node, template, layout.renderIndex);
     }
 
-    public addRenderTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index = -1) {
+    public addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index = -1) {
         if (template) {
             if (!node.renderExclude) {
                 if (node.renderParent === undefined) {
@@ -445,19 +419,6 @@ export default class Application<T extends Node> implements squared.base.Applica
             return true;
         }
         return false;
-    }
-
-    public addImagePreload(element: HTMLImageElement | undefined) {
-        if (element && element.complete) {
-            const uri = element.src.trim();
-            if (uri !== '') {
-                this.session.image.set(uri, {
-                    width: element.naturalWidth,
-                    height: element.naturalHeight,
-                    uri
-                });
-            }
-        }
     }
 
     public createNode(element: Element, append = true, parent?: T, children?: T[]) {
@@ -491,7 +452,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public toString() {
-        return this._views.length ? this._views[0].content : '';
+        return this._layouts.length ? this._layouts[0].content : '';
     }
 
     protected createCache(documentRoot: HTMLElement) {
@@ -561,7 +522,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         for (const node of pseudoElement) {
-            [node.pseudoBeforeChild, node.pseudoAfterChild].forEach((item, index) => {
+            [node.innerBefore, node.innerAfter].forEach((item, index) => {
                 if (item) {
                     const element = <HTMLElement> node.element;
                     const id = element.id;
@@ -798,7 +759,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 else if (childElement === beforeElement) {
                     const child = this.insertNode(<HTMLElement> beforeElement);
                     if (child) {
-                        node.pseudoBeforeChild = child;
+                        node.innerBefore = child;
                         child.setInlineText(true);
                         children.push(child);
                         includeText = true;
@@ -807,7 +768,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 else if (childElement === afterElement) {
                     const child = this.insertNode(<HTMLElement> afterElement);
                     if (child) {
-                        node.pseudoAfterChild = child;
+                        node.innerAfter = child;
                         child.setInlineText(true);
                         children.push(child);
                         includeText = true;
@@ -1076,7 +1037,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) && segEnd === axisY[axisY.length - 1]) {
                             parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
                         }
-                        if (result && this.addRenderLayout(result.layout, parentY)) {
+                        if (result && this.addLayout(result.layout, parentY)) {
                             parentY = nodeY.parent as T;
                         }
                     }
@@ -1109,10 +1070,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 const result = ext.processChild(nodeY, parentY);
                                 if (result) {
                                     if (result.output) {
-                                        this.addRenderTemplate(result.parentAs || parentY, nodeY, result.output);
+                                        this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
                                     }
                                     if (result.renderAs && result.outputAs) {
-                                        this.addRenderTemplate(parentY, result.renderAs, result.outputAs);
+                                        this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
                                     }
                                     if (result.parent) {
                                         parentY = result.parent;
@@ -1134,10 +1095,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     const result = item.processNode(nodeY, parentY);
                                     if (result) {
                                         if (result.output) {
-                                            this.addRenderTemplate(result.parentAs || parentY, nodeY, result.output);
+                                            this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
                                         }
                                         if (result.renderAs && result.outputAs) {
-                                            this.addRenderTemplate(parentY, result.renderAs, result.outputAs);
+                                            this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
                                         }
                                         if (result.parent) {
                                             parentY = result.parent as T;
@@ -1173,7 +1134,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             k--;
                             continue;
                         }
-                        this.addRenderLayout(result.layout, parentY);
+                        this.addLayout(result.layout, parentY);
                     }
                 }
             }
@@ -1401,7 +1362,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             inlineBelow.unshift(layout.node);
             const parent = this.createNode($dom.createElement(layout.node.actualParent && layout.node.actualParent.element), true, layout.parent, inlineBelow);
-            this.addRenderLayout(new Layout(
+            this.addLayout(new Layout(
                 layout.parent,
                 parent,
                 vertical.containerType,
@@ -1470,7 +1431,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         vertical.alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
                     );
                     group.itemCount = segments.length;
-                    this.addRenderLayout(group);
+                    this.addLayout(group);
                 }
             }
             else {
@@ -1507,7 +1468,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 else {
                     controller.processLayoutHorizontal(group);
                 }
-                this.addRenderLayout(group);
+                this.addLayout(group);
                 if (seg === inlineAbove) {
                     if (leftAbove.length) {
                         let position = Number.NEGATIVE_INFINITY;
@@ -1540,7 +1501,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         const vertical = controller.containerTypeVertical;
         if (layout.containerType !== 0) {
             const parent = controller.createNodeGroup(layout.node, [layout.node], outerParent);
-            this.addRenderLayout(new Layout(
+            this.addLayout(new Layout(
                 parent,
                 layout.node,
                 vertical.containerType,
@@ -1608,7 +1569,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (floatedRows[i] === null && pageFlow.length) {
                     const layoutType = controller.containerTypeVertical;
                     layoutType.alignmentType |= NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK;
-                    this.addRenderLayout(new Layout(
+                    this.addLayout(new Layout(
                         layout.node,
                         controller.createNodeGroup(pageFlow[0], pageFlow, layout.node),
                         layoutType.containerType,
@@ -1656,12 +1617,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         basegroup.init();
                         layoutGroup.itemCount = children.length;
-                        this.addRenderLayout(layoutGroup);
+                        this.addLayout(layoutGroup);
                         for (let node of children) {
                             if (!node.groupParent) {
                                 node = controller.createNodeGroup(node, [node], basegroup);
                             }
-                            this.addRenderLayout(new Layout(
+                            this.addLayout(new Layout(
                                 basegroup,
                                 node,
                                 vertical.containerType,
@@ -2028,8 +1989,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (this.userSettings.preloadImages && (backgroundImage || styleMap.content && styleMap.content.startsWith('url('))) {
                             for (const value of backgroundImage ? styleMap.backgroundImage.split($regex.XML.SEPARATOR) : [styleMap.content]) {
                                 const uri = $css.resolveURL(value.trim());
-                                if (uri !== '' && !this.session.image.has(uri)) {
-                                    this.session.image.set(uri, { width: 0, height: 0, uri });
+                                if (uri !== '' && !this.resourceHandler.assets.images.has(uri)) {
+                                    this.resourceHandler.assets.images.set(uri, { width: 0, height: 0, uri });
                                 }
                             }
                         }
@@ -2115,11 +2076,8 @@ export default class Application<T extends Node> implements squared.base.Applica
         return this._userSettings || {} as UserSettings;
     }
 
-    get viewData(): ViewData {
-        return {
-            views: this._views,
-            includes: this._includes
-        };
+    get layouts() {
+        return this._layouts;
     }
 
     get rendered() {

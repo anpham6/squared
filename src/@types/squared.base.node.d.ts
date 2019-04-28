@@ -41,8 +41,8 @@ declare global {
             renderTemplates?: NodeTemplate<Node>[];
             outerWrapper?: Node;
             innerWrapped?: Node;
-            pseudoBeforeChild?: Node;
-            pseudoAfterChild?: Node;
+            innerBefore?: Node;
+            innerAfter?: Node;
             companion?: Node;
             extracted?: Node[];
             horizontalRows?: Node[][];
@@ -150,10 +150,6 @@ declare global {
             setControlType(controlName: string, containerType?: number): void;
             setLayout(): void;
             setAlignment(): void;
-            applyOptimizations(): void;
-            applyCustomizations(overwrite?: boolean): void;
-            modifyBox(region: number, offset: number | null, negative?: boolean): void;
-            valueBox(region: number): [number, number];
             alignParent(position: string): boolean;
             alignSibling(position: string, documentId?: string): string;
             localizeString(value: string): string;
@@ -174,7 +170,6 @@ declare global {
             data(name: string, attr: string, value?: any, overwrite?: boolean): any;
             unsetCache(...attrs: string[]): void;
             ascend(generated?: boolean, condition?: (item: Node) => boolean, parent?: Node): Node[];
-            cascade(predicate?: (item: Node) => boolean, element?: boolean): Node[];
             inherit(node: Node, ...modules: string[]): void;
             alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
             intersectX(rect: BoxRectDimension, dimension?: string): boolean;
@@ -210,6 +205,8 @@ declare global {
             setInlineText(value: boolean, overwrite?: boolean): void;
             setBoxSpacing(): void;
             extractAttributes(depth: number): string;
+            modifyBox(region: number, offset: number | null, negative?: boolean): void;
+            getBox(region: number): [number, number];
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
             inheritBox(region: number, node: Node): void;
             actualRect(direction: string, dimension?: string): number;

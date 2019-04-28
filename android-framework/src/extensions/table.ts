@@ -120,7 +120,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         return undefined;
     }
 
-    public postProcedure(node: T) {
+    public postOptimize(node: T) {
         const layoutWidth = $util.convertInt(node.android('layout_width'));
         if (layoutWidth > 0) {
             const actualWidth = node.bounds.width;

@@ -464,7 +464,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         }
     }
 
-    public postProcedure(node: T) {
+    public postOptimize(node: T) {
         const mainData: CssGridData<T> = node.data($const.EXT_NAME.CSS_GRID, 'mainData');
         if (mainData) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;

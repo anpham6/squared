@@ -34,7 +34,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
                     const item = node.children[i];
                     const listStyleType = item.css('listStyleType') !== 'none';
                     if (item.display === 'list-item') {
-                        if (listStyleType || item.pseudoBeforeChild || hasSingleImage(item)) {
+                        if (listStyleType || item.innerBefore || hasSingleImage(item)) {
                             listType++;
                         }
                     }

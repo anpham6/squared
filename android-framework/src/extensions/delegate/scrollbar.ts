@@ -86,7 +86,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             }
             item.render(i === 0 ? (!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent) : previous);
             item.unsetCache();
-            this.application.addRenderTemplate(
+            this.application.addLayoutTemplate(
                 (item.renderParent || parent) as T,
                 item,
                 <NodeXmlTemplate<T>> {

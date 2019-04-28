@@ -44,7 +44,7 @@ declare global {
             function getInheritedStyle(element: Element | null, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
             function parseVar(element: HTMLElement | SVGElement, value: string): string | undefined;
             function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number | undefined;
-            function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number): RectPosition;
+            function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number): BoxRectPosition;
             function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
             function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
             function resolveURL(value: string): string;

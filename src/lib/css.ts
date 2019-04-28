@@ -2,7 +2,7 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { CSS, STRING, UNIT, XML } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertFloat, capitalize, convertAlpha, convertInt, convertRoman, convertCamelCase, fromLastIndexOf, isNumber, isString, replaceMap, resolvePath } from './util';
+import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isNumber, isString, replaceMap, resolvePath } from './util';
 
 function convertLength(value: string, dimension: number, fontSize?: number) {
     return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
@@ -446,7 +446,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
 
 export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number) {
     const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
-    const result: RectPosition = {
+    const result: BoxRectPosition = {
         top: 0,
         left: 0,
         right: 0,

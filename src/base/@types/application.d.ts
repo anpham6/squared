@@ -65,7 +65,6 @@ export interface AppHandler<T extends squared.base.Node> {
 export interface AppSession<T extends squared.base.Node, U> {
     cache: U;
     documentRoot: { node: T, layoutName: string }[];
-    image: Map<string, ImageAsset>;
     excluded: squared.base.NodeList<T>;
     targetQueue: Map<T, NodeTemplate<T>>;
     active: string[];
@@ -77,11 +76,6 @@ export interface AppProcessing<T extends squared.base.Node, U> {
     sessionId: string;
     node: T | undefined;
     excluded: squared.base.NodeList<T>;
-}
-
-export interface ViewData {
-    views: FileAsset[];
-    includes: FileAsset[];
 }
 
 export interface ExtensionDependency {
@@ -127,7 +121,6 @@ export interface ResourceStoredMap {
 }
 
 export interface Asset {
-    id?: number;
     uri?: string;
 }
 

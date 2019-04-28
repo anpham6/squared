@@ -10,12 +10,7 @@ const CACHE_CAMELCASE: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
 
 export function capitalize(value: string, upper = true) {
-    if (upper) {
-        return value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
-    }
-    else {
-        return value.charAt(0).toLowerCase() + value.substring(1);
-    }
+    return upper ? value.charAt(0).toUpperCase() + value.substring(1).toLowerCase() : value.charAt(0).toLowerCase() + value.substring(1);
 }
 
 export function convertUnderscore(value: string) {
@@ -145,7 +140,7 @@ export function hasBit(value: number, offset: number) {
     return (value & offset) === offset;
 }
 
-export function isNumber(value: any) {
+export function isNumber(value: any): value is string {
     return typeof value === 'string' && UNIT.DECIMAL.test(value.trim());
 }
 
@@ -356,19 +351,11 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
         }
     }
     else {
-        let search: (a: string) => boolean;
-        if (/^\*.+\*$/.test(value)) {
-            search = (a: string) => a.indexOf(value.replace(/\*/g, '')) !== -1;
-        }
-        else if (/^\*/.test(value)) {
-            search = (a: string) => a.endsWith(value.replace(/\*/, ''));
-        }
-        else if (/\*$/.test(value)) {
-            search = (a: string) => a.startsWith(value.replace(/\*/, ''));
-        }
-        else {
-            search = (a: string): boolean => a === value;
-        }
+        const search =
+            /^\*.+\*$/.test(value) ? (a: string) => a.indexOf(value.replace(/\*/g, '')) !== -1 :
+                 /^\*/.test(value) ? (a: string) => a.endsWith(value.replace(/\*/, '')) :
+                 /\*$/.test(value) ? (a: string) => a.startsWith(value.replace(/\*/, '')) :
+                                     (a: string): boolean => a === value;
         for (const i in obj) {
             if (search(i)) {
                 result.push([i, obj[i]]);

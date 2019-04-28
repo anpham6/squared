@@ -329,7 +329,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     return result;
 }
 
-function getPercentOffset(direction: string, position: RectPosition, backgroundSize: string, bounds: BoxRectDimension, dimension?: Dimension): number {
+function getPercentOffset(direction: string, position: BoxRectPosition, backgroundSize: string, bounds: BoxRectDimension, dimension?: Dimension): number {
     if (dimension) {
         const orientation = position.orientation;
         const sign = backgroundSize === 'cover' || backgroundSize === 'contain' ? -1 : 1;
@@ -662,7 +662,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         const backgroundPositionX = data.backgroundPositionX.split($regex.XML.SEPARATOR);
         const backgroundPositionY = data.backgroundPositionY.split($regex.XML.SEPARATOR);
         const backgroundImage: (string | GradientTemplate)[] = [];
-        const backgroundPosition: RectPosition[] = [];
+        const backgroundPosition: BoxRectPosition[] = [];
         const imageDimensions: Undefined<Dimension>[] = [];
         const result: BackgroundImageData[] = [];
         let imageLength = 0;
@@ -681,7 +681,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (value !== 'initial') {
                             backgroundImage[j] = Resource.addImageURL(value);
                             if (backgroundImage[j] !== '') {
-                                imageDimensions[j] = Resource.ASSETS.images.get($css.resolveURL(value));
+                                imageDimensions[j] = this.application.resourceHandler.getImage($css.resolveURL(value));
                                 valid = true;
                             }
                         }
@@ -726,7 +726,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             node.actualDimension,
                             node.fontSize
                         );
-                        imageDimensions[j] = Resource.ASSETS.images.get(element.src);
+                        imageDimensions[j] = this.application.resourceHandler.getImage(element.src);
                         j++;
                     }
                 }

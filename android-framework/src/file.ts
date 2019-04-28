@@ -1,4 +1,4 @@
-import { FileAsset, ViewData } from '../../src/base/@types/application';
+import { FileAsset } from '../../src/base/@types/application';
 import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/application';
 
 import View from './view';
@@ -88,14 +88,10 @@ function replaceLength(value: string, dpi = 160, format = 'dp', font = false, pr
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
-    public saveAllToDisk(data: ViewData) {
+    public saveAllToDisk(layouts: FileAsset[]) {
         const files: FileAsset[] = [];
-        let j = 0;
-        for (const name in data) {
-            for (let i = 0; i < data[name].length; i++) {
-                const view: FileAsset = data[name][i];
-                files.push(createFileAsset(view.pathname, j++ === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
-            }
+        for (let i = 0; i < layouts.length; i++) {
+            files.push(createFileAsset(layouts[i].pathname, i === 0 ? this.userSettings.outputMainFileName : `${layouts[i].filename}.xml`, layouts[i].content));
         }
         this.saveToDisk(
             $util.concatMultiArray(
@@ -114,17 +110,14 @@ export default class File<T extends View> extends squared.base.File<T> implement
         );
     }
 
-    public layoutAllToXml(data: ViewData, saveToDisk = false) {
+    public layoutAllToXml(layouts: FileAsset[], saveToDisk = false) {
         const result = {};
         const files: FileAsset[] = [];
-        let j = 0;
-        for (const name in data) {
-            for (let i = 0; i < data[name].length; i++) {
-                const view: FileAsset = data[name][i];
-                result[view.filename] = [view.content];
-                if (saveToDisk) {
-                    files.push(createFileAsset(view.pathname, j++ === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
-                }
+        for (let i = 0; i < layouts.length; i++) {
+            const layout = layouts[i];
+            result[layout.filename] = [layout.content];
+            if (saveToDisk) {
+                files.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
             }
         }
         if (saveToDisk) {
@@ -297,8 +290,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
             for (const style of Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
                 if (Array.isArray(style.items)) {
                     const item: ItemValue[] = [];
-                    for (const obj of style.items.sort((a, b) => a.name >= b.name ? 1 : -1)) {
-                        item.push({ name: obj.name, innerText: obj.value });
+                    for (const obj of style.items.sort((a, b) => a.key >= b.key ? 1 : -1)) {
+                        item.push({ name: obj.key, innerText: obj.value });
                     }
                     data[0].style.push({
                         name: style.name,

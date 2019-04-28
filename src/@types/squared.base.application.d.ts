@@ -1,4 +1,4 @@
-import { AppProcessing, AppSession, FileAsset, NodeTemplate, UserSettings, ViewData } from '../base/@types/application';
+import { AppProcessing, AppSession, FileAsset, NodeTemplate, UserSettings } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
@@ -15,7 +15,7 @@ declare global {
             readonly rootElements: Set<Element>;
             readonly processing: AppProcessing<T, NodeList<T>>;
             readonly extensions: Extension<T>[];
-            readonly viewData: ViewData;
+            readonly layouts: FileAsset[];
             readonly nextId: number;
             readonly length: number;
             registerController(handler: Controller<T>): void;
@@ -26,11 +26,9 @@ declare global {
             parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
             renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
             renderLayout(layout: Layout<T>, outerParent: T): NodeTemplate<T> | undefined;
-            addLayoutFile(filename: string, content: string, pathname: string, leading?: boolean): void;
-            addIncludeFile(id: number, filename: string, content: string): void;
-            addRenderLayout(layout: Layout<T>, outerParent?: T): boolean;
-            addRenderTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): boolean;
-            addImagePreload(element: HTMLImageElement | undefined): void;
+            addLayout(layout: Layout<T>, outerParent?: T): boolean;
+            addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): boolean;
+            saveLayout(filename: string, content: string, pathname?: string, leading?: boolean): void;
             createNode(element: Element, append?: boolean, parent?: T, children?: T[]): T;
             resolveTarget(target: string): T | undefined;
             toString(): string;

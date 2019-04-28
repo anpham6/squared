@@ -15,7 +15,7 @@ const $enum = squared.base.lib.enumeration;
 export default class ResourceIncludes<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
 
-    public beforeCascadeDocument() {
+    public beforeCascade() {
         for (const node of this.application.session.cache) {
             if (node.renderParent && node.renderTemplates) {
                 const open: NodeRenderIndex[] = [];
@@ -69,7 +69,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 if (merge) {
                                     content = controller.getEnclosingTag($enum.NODE_TEMPLATE.XML, <NodeTagXml<T>> { controlName: 'merge', attributes: getRootNs(content), content });
                                 }
-                                this.application.addIncludeFile(openData.item.id, openData.name, content);
+                                this.application.saveLayout(openData.name, content);
                                 close.splice(j, 1);
                                 break;
                             }
