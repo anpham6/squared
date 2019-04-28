@@ -38,9 +38,7 @@ export interface SvgRadialGradient extends SvgGradient {
     frAsString: string;
 }
 
-export interface SvgPathCommand extends NameValue {
-    name: string;
-    value: SvgPoint[];
+export interface SvgPathCommand extends NameValue<SvgPoint[]> {
     start: SvgPoint;
     end: SvgPoint;
     relative: boolean;

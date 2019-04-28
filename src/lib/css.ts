@@ -12,6 +12,17 @@ function convertPercent(value: string, dimension: number, fontSize?: number) {
     return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
 }
 
+export type CSSKeyframesData = ObjectMap<StringMap>;
+
+export interface CSSFontFaceData {
+    fontFamily: string;
+    fontWeight: number;
+    fontStyle: string;
+    srcFormat: string;
+    srcUrl?: string;
+    srcLocal?: string;
+}
+
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
 export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
@@ -195,9 +206,8 @@ export function getDataSet(element: HTMLElement | null, prefix: string) {
     return result;
 }
 
-export function getKeyframeRules(): CSSRuleData {
-    const pattern = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-    const result = new Map<string, ObjectMap<StringMap>>();
+export function getKeyframeRules(): ObjectMap<CSSKeyframesData> {
+    const result: ObjectMap<CSSKeyframesData> = {};
     violation: {
         for (let i = 0; i < document.styleSheets.length; i++) {
             const styleSheet = <CSSStyleSheet> document.styleSheets[i];
@@ -205,32 +215,16 @@ export function getKeyframeRules(): CSSRuleData {
                 for (let j = 0; j < styleSheet.cssRules.length; j++) {
                     try {
                         const item = <CSSKeyframesRule> styleSheet.cssRules[j];
-                        if (item.type === 7) {
-                            const map: ObjectMap<StringMap> = {};
-                            for (let k = 0; k < item.cssRules.length; k++) {
-                                const match = pattern.exec(item.cssRules[k].cssText);
-                                if (match) {
-                                    for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
-                                        percent = percent.trim();
-                                        switch (percent) {
-                                            case 'from':
-                                                percent = '0%';
-                                                break;
-                                            case 'to':
-                                                percent = '100%';
-                                                break;
-                                        }
-                                        map[percent] = {};
-                                        for (const property of match[2].split(';')) {
-                                            const [name, value] = property.split(':');
-                                            if (value) {
-                                                map[percent][name.trim()] = value.trim();
-                                            }
-                                        }
-                                    }
+                        if (item.type === CSSRule.KEYFRAMES_RULE) {
+                            const value = parseKeyframeRule(item.cssRules);
+                            if (Object.keys(value).length) {
+                                if (result[item.name]) {
+                                    Object.assign(result[item.name], value);
+                                }
+                                else {
+                                    result[item.name] = value;
                                 }
                             }
-                            result.set(item.name, map);
                         }
                     }
                     catch {
@@ -243,12 +237,33 @@ export function getKeyframeRules(): CSSRuleData {
     return result;
 }
 
-export function parseConditionText(rule: string, value: string) {
-    const match = new RegExp(`^@${rule}([^{]+)`).exec(value);
-    if (match) {
-        value = match[1].trim();
+export function parseKeyframeRule(rules: CSSRuleList) {
+    const pattern = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+    const result: CSSKeyframesData = {};
+    for (let k = 0; k < rules.length; k++) {
+        const match = pattern.exec(rules[k].cssText);
+        if (match) {
+            for (let percent of (rules[k]['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
+                percent = percent.trim();
+                switch (percent) {
+                    case 'from':
+                        percent = '0%';
+                        break;
+                    case 'to':
+                        percent = '100%';
+                        break;
+                }
+                result[percent] = {};
+                for (const property of match[2].split(';')) {
+                    const [name, value] = property.split(':');
+                    if (value) {
+                        result[percent][name.trim()] = value.trim();
+                    }
+                }
+            }
+        }
     }
-    return value;
+    return result;
 }
 
 export function validMediaRule(value: string, fontSize?: number) {

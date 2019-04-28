@@ -32,7 +32,7 @@ export interface ResourceStoredMapAndroid extends ResourceStoredMap {
 export interface StyleAttribute {
     name: string;
     parent: string;
-    items: StringMap | NameValue[];
+    items: StringMap | NameValue<string>[];
     output?: {
         path: string;
         file: string;

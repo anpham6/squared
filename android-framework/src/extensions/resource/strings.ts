@@ -53,12 +53,12 @@ export default class ResourceStrings<T extends android.base.View> extends square
                         break;
                     }
                     case 'IFRAME': {
-                        const stored: NameValue = node.data(Resource.KEY_NAME, 'valueString');
+                        const stored: NameValue<string> = node.data(Resource.KEY_NAME, 'valueString');
                         Resource.addString($xml.replaceCharacter(stored.value), stored.name);
                         break;
                     }
                     default: {
-                        const stored: NameValue = node.data(Resource.KEY_NAME, 'valueString');
+                        const stored: NameValue<string> = node.data(Resource.KEY_NAME, 'valueString');
                         if (stored) {
                             const renderParent = node.renderParent as T;
                             let value = stored.value;

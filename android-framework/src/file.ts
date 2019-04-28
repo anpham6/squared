@@ -50,7 +50,7 @@ function getImageAssets(items: string[]) {
             pathname: items[i + 1],
             filename: items[i + 2],
             content: '',
-            uri: items[i],
+            uri: items[i]
         });
     }
     return result;
@@ -224,14 +224,36 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     font: []
                 }];
                 for (const attr in font) {
-                    const [fontName, fontStyle, fontWeight] = attr.split('-');
+                    const [fontFamily, fontStyle, fontWeight] = attr.split('|');
+                    let fontName = name;
+                    if (fontStyle === 'normal') {
+                        if (fontWeight === '400') {
+                            fontName += '_normal';
+                        }
+                        else {
+                            fontName += `_${font[attr]}`;
+                        }
+                    }
+                    else {
+                        fontName += `_${fontStyle}`;
+                        if (fontWeight !== '400') {
+                            fontName += `_${font[attr]}`;
+                        }
+                    }
                     data[0].font.push({
-                        font: `@font/${name}_${fontName}`,
+                        font: `@font/${fontName}`,
                         fontStyle,
-                        fontWeight,
+                        fontWeight
                     });
+                    const src = this.resource.getFont(fontFamily, fontStyle, fontWeight);
+                    if (src && src.srcUrl) {
+                        this.addAsset('res/font', fontName + '.' + $util.fromLastIndexOf(src.srcUrl, '.').toLowerCase(), '', src.srcUrl);
+                    }
                 }
-                let output = $xml.replaceTab($xml.applyTemplate('font-family', FONTFAMILY_TMPL, data), settings.insertSpaces);
+                let output = $xml.replaceTab(
+                    $xml.applyTemplate('font-family', FONTFAMILY_TMPL, data),
+                    settings.insertSpaces
+                );
                 if (settings.targetAPI < BUILD_ANDROID.OREO) {
                     output = output.replace(/\s+android:/g, ' app:');
                 }

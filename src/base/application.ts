@@ -52,6 +52,14 @@ function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: 
     return extensions;
 }
 
+function parseConditionText(rule: string, value: string) {
+    const match = new RegExp(`^@${rule}([^{]+)`).exec(value);
+    if (match) {
+        value = match[1].trim();
+    }
+    return value;
+}
+
 export default class Application<T extends Node> implements squared.base.Application<T> {
     public controllerHandler: Controller<T>;
     public resourceHandler: Resource<T>;
@@ -1952,12 +1960,6 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     private setStyleMap() {
         let warning = false;
-        const applyCSSRule = (rule: CSSConditionRule) => {
-            const items = rule.cssRules;
-            for (let k = 0; k < items.length; k++) {
-                this.applyStyleRule(<CSSStyleRule> items[k]);
-            }
-        };
         for (let i = 0; i < document.styleSheets.length; i++) {
             const item = <CSSStyleSheet> document.styleSheets[i];
             try {
@@ -1966,16 +1968,17 @@ export default class Application<T extends Node> implements squared.base.Applica
                         const rule = item.cssRules[j];
                         switch (rule.type) {
                             case CSSRule.STYLE_RULE:
+                            case CSSRule.FONT_FACE_RULE:
                                 this.applyStyleRule(<CSSStyleRule> rule);
                                 break;
                             case CSSRule.MEDIA_RULE:
-                                if ($css.validMediaRule((<CSSConditionRule> rule).conditionText || $css.parseConditionText('media', rule.cssText))) {
-                                    applyCSSRule(<CSSConditionRule> rule);
+                                if ($css.validMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
+                                    this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
                                 }
                                 break;
                             case CSSRule.SUPPORTS_RULE:
-                                if (CSS.supports && CSS.supports((<CSSConditionRule> rule).conditionText || $css.parseConditionText('supports', rule.cssText))) {
-                                    applyCSSRule(<CSSConditionRule> rule);
+                                if (CSS.supports && CSS.supports((<CSSConditionRule> rule).conditionText || parseConditionText('supports', rule.cssText))) {
+                                    this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
                                 }
                                 break;
                         }
@@ -1994,56 +1997,104 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
     }
 
-    private applyStyleRule(item: CSSStyleRule) {
-        const fromRule: string[] = [];
-        for (const attr of Array.from(item.style)) {
-            fromRule.push($util.convertCamelCase(attr));
+    private applyCSSRuleList(rules: CSSRuleList) {
+        for (let i = 0; i < rules.length; i++) {
+            this.applyStyleRule(<CSSStyleRule> rules[i]);
         }
-        for (const selectorText of item.selectorText.split($regex.XML.SEPARATOR)) {
-            const specificity = $css.getSpecificity(selectorText);
-            const [selector, target] = selectorText.split('::');
-            const targetElt = target ? '::' + target : '';
-            document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
-                const style = $css.getStyle(element, targetElt);
-                const fontSize = $css.parseUnit(style.getPropertyValue('font-size'));
-                const styleMap: StringMap = {};
-                for (const attr of fromRule) {
-                    const value = $css.checkStyleValue(element, attr, item.style[attr], style, specificity, fontSize);
-                    if (value) {
-                        styleMap[attr] = value;
-                    }
+    }
+
+    private applyStyleRule(item: CSSStyleRule) {
+        switch (item.type) {
+            case CSSRule.STYLE_RULE: {
+                const fromRule: string[] = [];
+                for (const attr of Array.from(item.style)) {
+                    fromRule.push($util.convertCamelCase(attr));
                 }
-                const backgroundImage = styleMap.backgroundImage && styleMap.backgroundImage !== 'initial';
-                if (this.userSettings.preloadImages && (backgroundImage || styleMap.content && styleMap.content.startsWith('url('))) {
-                    for (const value of backgroundImage ? styleMap.backgroundImage.split($regex.XML.SEPARATOR) : [styleMap.content]) {
-                        const uri = $css.resolveURL(value.trim());
-                        if (uri !== '' && !this.session.image.has(uri)) {
-                            this.session.image.set(uri, { width: 0, height: 0, uri });
+                for (const selectorText of item.selectorText.split($regex.XML.SEPARATOR)) {
+                    const specificity = $css.getSpecificity(selectorText);
+                    const [selector, target] = selectorText.split('::');
+                    const targetElt = target ? '::' + target : '';
+                    document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
+                        const style = $css.getStyle(element, targetElt);
+                        const fontSize = $css.parseUnit(style.getPropertyValue('font-size'));
+                        const styleMap: StringMap = {};
+                        for (const attr of fromRule) {
+                            const value = $css.checkStyleValue(element, attr, item.style[attr], style, specificity, fontSize);
+                            if (value) {
+                                styleMap[attr] = value;
+                            }
+                        }
+                        const backgroundImage = styleMap.backgroundImage && styleMap.backgroundImage !== 'initial';
+                        if (this.userSettings.preloadImages && (backgroundImage || styleMap.content && styleMap.content.startsWith('url('))) {
+                            for (const value of backgroundImage ? styleMap.backgroundImage.split($regex.XML.SEPARATOR) : [styleMap.content]) {
+                                const uri = $css.resolveURL(value.trim());
+                                if (uri !== '' && !this.session.image.has(uri)) {
+                                    this.session.image.set(uri, { width: 0, height: 0, uri });
+                                }
+                            }
+                        }
+                        const attrStyle = `styleMap${targetElt}`;
+                        const attrSpecificity = `styleSpecificity${targetElt}`;
+                        const styleData = $session.getElementCache(element, attrStyle, this.processing.sessionId);
+                        if (styleData) {
+                            const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, this.processing.sessionId) || {};
+                            for (const attr in styleMap) {
+                                if (styleData[attr] === undefined || specificityData[attr] === undefined || specificity >= specificityData[attr]) {
+                                    styleData[attr] = styleMap[attr];
+                                    specificityData[attr] = specificity;
+                                }
+                            }
+                        }
+                        else {
+                            const specificityData: ObjectMap<number> = {};
+                            for (const attr in styleMap) {
+                                specificityData[attr] = specificity;
+                            }
+                            $session.setElementCache(element, `style${targetElt}`, '0', style);
+                            $session.setElementCache(element, attrStyle, this.processing.sessionId, styleMap);
+                            $session.setElementCache(element, attrSpecificity, this.processing.sessionId, specificityData);
+                        }
+                    });
+                }
+                break;
+            }
+            case CSSRule.FONT_FACE_RULE: {
+                const match = /\s*@font-face\s*{([^}]+)}\s*/.exec(item.cssText);
+                if (match) {
+                    const familyMatch = /\s*font-family:[^\w]*([^'";]+)/.exec(match[1]);
+                    const srcMatch = /\s*src:\s*([^;]+);/.exec(match[1]);
+                    if (familyMatch && srcMatch) {
+                        const styleMatch = /\s*font-style:\s*(\w+)\s*;/.exec(match[1]);
+                        const weightMatch = /\s*font-weight:\s*(\d+)\s*;/.exec(match[1]);
+                        const urlPattern = /\s*(url|local)\(['"]([^'")]+)['"]\)\s*format\(['"](\w+)['"]\)\s*/;
+                        const fontFamily = familyMatch[1].trim();
+                        const fontStyle = styleMatch ? styleMatch[1].toLowerCase() : 'normal';
+                        const fontWeight = weightMatch ? parseInt(weightMatch[1]) : 400;
+                        for (const value of srcMatch[1].split($regex.XML.SEPARATOR)) {
+                            const url = urlPattern.exec(value);
+                            if (url) {
+                                let srcUrl: string | undefined;
+                                let srcLocal: string | undefined;
+                                if (url[1] === 'url') {
+                                    srcUrl = $util.resolvePath(url[2].trim());
+                                }
+                                else {
+                                    srcLocal = url[2].trim();
+                                }
+                                this.resourceHandler.addFont({
+                                    fontFamily,
+                                    fontWeight,
+                                    fontStyle,
+                                    srcUrl,
+                                    srcLocal,
+                                    srcFormat: url[3].toLowerCase().trim()
+                                });
+                            }
                         }
                     }
                 }
-                const attrStyle = `styleMap${targetElt}`;
-                const attrSpecificity = `styleSpecificity${targetElt}`;
-                const styleData = $session.getElementCache(element, attrStyle, this.processing.sessionId);
-                if (styleData) {
-                    const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, this.processing.sessionId) || {};
-                    for (const attr in styleMap) {
-                        if (styleData[attr] === undefined || specificity >= specificityData[attr] || specificityData[attr] === undefined) {
-                            styleData[attr] = styleMap[attr];
-                            specificityData[attr] = specificity;
-                        }
-                    }
-                }
-                else {
-                    const specificityData: ObjectMap<number> = {};
-                    for (const attr in styleMap) {
-                        specificityData[attr] = specificity;
-                    }
-                    $session.setElementCache(element, `style${targetElt}`, '0', style);
-                    $session.setElementCache(element, attrStyle, this.processing.sessionId, styleMap);
-                    $session.setElementCache(element, attrSpecificity, this.processing.sessionId, specificityData);
-                }
-            });
+                break;
+            }
         }
     }
 

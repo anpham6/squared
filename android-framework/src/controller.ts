@@ -353,6 +353,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             enabled: false
         },
         supported: {
+            fontFormat: ['truetype', 'opentype'],
             imageFormat: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'ico', 'cur']
         },
         unsupported: {

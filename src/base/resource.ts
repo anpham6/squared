@@ -7,6 +7,8 @@ import NodeList from './nodelist';
 
 import { NODE_RESOURCE } from './lib/enumeration';
 
+type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
+
 const $color = squared.lib.color;
 const $client = squared.lib.client;
 const $css = squared.lib.css;
@@ -223,7 +225,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public static ASSETS: ResourceAssetMap = {
         ids: new Map(),
-        images: new Map()
+        images: new Map(),
+        fonts: new Map()
     };
 
     public static STORED: ResourceStoredMap = {
@@ -411,6 +414,21 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         if (this.fileHandler) {
             this.fileHandler.reset();
         }
+    }
+
+    public addFont(data: CSSFontFaceData) {
+        const fonts = Resource.ASSETS.fonts.get(data.fontFamily) || [];
+        fonts.push(data);
+        Resource.ASSETS.fonts.set(data.fontFamily, fonts);
+    }
+
+    public getFont(fontFamily: string, fontStyle = 'normal', fontWeight = '400') {
+        const font = Resource.ASSETS.fonts.get(fontFamily);
+        if (font) {
+            const fontFormat = this.application.controllerHandler.localSettings.supported.fontFormat;
+            return font.find(item => item.fontStyle === fontStyle && item.fontWeight === parseInt(fontWeight) && fontFormat.includes(item.srcFormat));
+        }
+        return undefined;
     }
 
     public setBoxStyle(node: T) {
@@ -932,6 +950,10 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 }
             }
         }
+    }
+
+    get assets() {
+        return Resource.ASSETS;
     }
 
     get stored() {

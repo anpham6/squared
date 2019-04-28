@@ -1,5 +1,7 @@
 import { AppHandler, ResourceAssetMap, ResourceStoredMap, UserSettings, ViewData } from '../base/@types/application';
 
+type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
+
 declare global {
     namespace squared.base {
         interface Resource<T extends Node> extends AppHandler<T> {
@@ -7,9 +9,12 @@ declare global {
             cache: NodeList<T>;
             fileHandler?: File<T>;
             readonly userSettings: UserSettings;
+            readonly assets: ResourceAssetMap;
             readonly stored: ResourceStoredMap;
             finalize(data: ViewData): void;
             reset(): void;
+            addFont(data: CSSFontFaceData): void;
+            getFont(fontFamily: string, fontStyle?: string, fontWeighte?: string): CSSFontFaceData | undefined;
             setBoxStyle(node: T): void;
             setFontStyle(node: T): void;
             setValueString(node: T): void;

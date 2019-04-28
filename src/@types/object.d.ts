@@ -1,6 +1,6 @@
-interface NameValue {
+interface NameValue<T> {
     name: string;
-    value: any;
+    value: T;
 }
 
 type NumberValue<T> = {
@@ -28,9 +28,7 @@ interface HSLA extends HSL {
     a: number;
 }
 
-interface ColorData extends NameValue {
-    name: string;
-    value: string;
+interface ColorData extends NameValue<string> {
     valueAsRGBA: string;
     valueAsARGB: string;
     rgba: RGBA;
@@ -40,7 +38,7 @@ interface ColorData extends NameValue {
     transparent: boolean;
 }
 
-interface ColorResult extends NameValue {
+interface ColorResult extends NameValue<string> {
     rgb: RGB;
     hsl: HSL;
 }

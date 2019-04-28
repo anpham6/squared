@@ -26,6 +26,7 @@ export interface ControllerSettings {
         enabled: boolean;
     };
     supported: {
+        fontFormat: string[];
         imageFormat: string[];
     };
     unsupported: {
@@ -114,12 +115,13 @@ export interface LayoutResult<T extends squared.base.Node> {
 export interface ResourceAssetMap {
     ids: Map<string, string[]>;
     images: Map<string, ImageAsset>;
+    fonts: Map<string, squared.lib.css.CSSFontFaceData[]>;
 }
 
 export interface ResourceStoredMap {
     strings: Map<string, string>;
     arrays: Map<string, string[]>;
-    fonts: Map<string, ObjectMap<boolean>>;
+    fonts: Map<string, ObjectMap<string>>;
     colors: Map<string, string>;
     images: Map<string, StringMap>;
 }

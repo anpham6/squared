@@ -145,28 +145,43 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 }
                 if (stored.fontFamily) {
-                    let fontFamily = stored.fontFamily.split($regex.XML.SEPARATOR)[0].replace(/"/g, '').toLowerCase();
-                    if (this.options.fontResourceValue && FONTREPLACE_ANDROID[fontFamily]) {
-                        fontFamily = this.options.defaultSystemFont || FONTREPLACE_ANDROID[fontFamily];
-                    }
-                    if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || this.options.fontResourceValue && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
-                        stored.fontFamily = fontFamily;
-                        if (stored.fontStyle === 'normal') {
+                    stored.fontFamily.split($regex.XML.SEPARATOR).some((value, index, array) => {
+                        value = value.replace(/["']/g, '');
+                        let fontFamily = value.toLowerCase();
+                        if (this.options.fontResourceValue && FONTREPLACE_ANDROID[fontFamily]) {
+                            fontFamily = this.options.defaultSystemFont || FONTREPLACE_ANDROID[fontFamily];
+                        }
+                        if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || this.options.fontResourceValue && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
+                            stored.fontFamily = fontFamily;
+                            if (stored.fontStyle === 'normal') {
+                                stored.fontStyle = '';
+                            }
+                            if (stored.fontWeight === '400' || !node.supported('android', 'fontWeight')) {
+                                stored.fontWeight = '';
+                            }
+                            return true;
+                        }
+                        else if (stored.fontStyle && stored.fontWeight) {
+                            if (this.application.resourceHandler.getFont(value, stored.fontStyle, stored.fontWeight) === undefined) {
+                                if (index < array.length - 1) {
+                                    return false;
+                                }
+                                else if (index > 0) {
+                                    value = array[0].replace(/["']/g, '');
+                                    fontFamily = value.toLowerCase();
+                                }
+                            }
+                            fontFamily = $util.convertWord(fontFamily);
+                            const fonts = Resource.STORED.fonts.get(fontFamily) || {};
+                            fonts[value + '|' + stored.fontStyle + '|' + stored.fontWeight] = FONTWEIGHT_ANDROID[stored.fontWeight] || stored.fontWeight;
+                            Resource.STORED.fonts.set(fontFamily, fonts);
+                            stored.fontFamily = `@font/${fontFamily}`;
                             stored.fontStyle = '';
-                        }
-                        if (stored.fontWeight === '400' || !node.supported('android', 'fontWeight')) {
                             stored.fontWeight = '';
+                            return true;
                         }
-                    }
-                    else {
-                        fontFamily = $util.convertWord(fontFamily);
-                        const fonts = Resource.STORED.fonts.get(fontFamily) || {};
-                        fonts[(FONTWEIGHT_ANDROID[stored.fontWeight] || stored.fontWeight) + '-' + stored.fontStyle + '-' + stored.fontWeight] = true;
-                        Resource.STORED.fonts.set(fontFamily, fonts);
-                        stored.fontFamily = `@font/${fontFamily}`;
-                        stored.fontStyle = '';
-                        stored.fontWeight = '';
-                    }
+                        return false;
+                    });
                 }
                 stored.color = Resource.addColor(stored.color);
                 for (let i = 0; i < styleKeys.length; i++) {
@@ -322,7 +337,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const tagData = style[tag];
             const styleData: StyleAttribute[] = [];
             for (const attrs in tagData) {
-                const items: NameValue[] = [];
+                const items: NameValue<string>[] = [];
                 for (const value of attrs.split(';')) {
                     const match = $regex.XML.ATTRIBUTE.exec(value);
                     if (match) {
@@ -389,7 +404,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         for (const value of parentStyle) {
             const styleName: string[] = [];
-            let items: NameValue[] | undefined;
+            let items: NameValue<string>[] | undefined;
             let parent = '';
             value.split('.').forEach((tag, index, array) => {
                 const match = REGEXP_TAGNAME.exec(tag);
@@ -399,7 +414,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (index === 0) {
                             parent = tag;
                             if (array.length === 1) {
-                                items = <NameValue[]> styleData.items;
+                                items = <NameValue<string>[]> styleData.items;
                             }
                             else if (!STORED.styles.has(tag)) {
                                 STORED.styles.set(tag, { name: tag, parent: '', items: styleData.items });
@@ -407,10 +422,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                         else {
                             if (items === undefined) {
-                                items = (<NameValue[]> styleData.items).slice(0);
+                                items = (<NameValue<string>[]> styleData.items).slice(0);
                             }
                             else {
-                                for (const item of styleData.items as NameValue[]) {
+                                for (const item of styleData.items as NameValue<string>[]) {
                                     const replaceIndex = items.findIndex(previous => previous.name === item.name);
                                     if (replaceIndex !== -1) {
                                         items[replaceIndex] = item;

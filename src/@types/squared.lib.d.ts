@@ -29,12 +29,14 @@ declare global {
             export import BOX_POSITION = $css.BOX_POSITION;
             export import BOX_MARGIN = $css.BOX_MARGIN;
             export import BOX_PADDING = $css.BOX_PADDING;
+            export import CSSKeyframesData = $css.CSSKeyframesData;
+            export import CSSFontFaceData = $css.CSSFontFaceData;
             function getStyle(element: Element | null, target?: string, cache?: boolean): CSSStyleDeclaration;
             function hasComputedStyle(element: Element | null): element is HTMLElement;
             function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, specificity?: number, fontSize?: number): string;
             function getSpecificity(value: string): number;
-            function getKeyframeRules(): CSSRuleData;
-            function parseConditionText(rule: string, value: string): string;
+            function getKeyframeRules(): ObjectMap<CSSKeyframesData>;
+            function parseKeyframeRule(rules: CSSRuleList): CSSKeyframesData;
             function validMediaRule(value: string, fontSize?: number): boolean;
             function getDataSet(element: HTMLElement | null, prefix: string): StringMap;
             function getFontSize(element: Element | null): number | undefined;

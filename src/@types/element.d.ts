@@ -127,5 +127,3 @@ interface ImageSrcSet {
     pixelRatio: number;
     actualWidth?: number;
 }
-
-type CSSRuleData = Map<string, ObjectMap<StringMap>>;

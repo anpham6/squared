@@ -90,7 +90,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
             }
         }
         for (const name in styles) {
-            const items: NameValue[] = [];
+            const items: NameValue<string>[] = [];
             for (const attr in styles[name]) {
                 const match = $regex.XML.ATTRIBUTE.exec(styles[name][attr]);
                 if (match) {

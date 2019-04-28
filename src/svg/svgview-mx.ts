@@ -163,7 +163,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     cssData[name] = values;
                 }
                 for (let i = 0; i < animationName.length; i++) {
-                    const keyframes = KEYFRAME_NAME.get(animationName[i]);
+                    const keyframes = KEYFRAME_NAME[animationName[i]];
                     const duration = SvgAnimation.convertClockTime(cssData['animation-duration'][i]);
                     if (keyframes && duration > 0) {
                         id++;
@@ -185,24 +185,23 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             fillMode
                         });
                         for (const percent in keyframes) {
-                            const fraction = parseInt(percent) / 100;
+                            const index = parseFloat(percent) / 100;
                             for (const name in keyframes[percent]) {
                                 const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
                                 if (map[name] === undefined) {
                                     map[name] = [];
                                 }
-                                let value: string | number | undefined = keyframes[percent][name];
-                                if ($css.isCalc(value)) {
-                                    value = $css.calculateVar(element, value, name);
-                                }
-                                else if ($css.isCustomProperty(value)) {
-                                    value = $css.parseVar(element, value);
-                                }
-                                if (value !== undefined) {
-                                    map[name].push({
-                                        index: fraction,
-                                        value: value.toString()
-                                    });
+                                let value: any = keyframes[percent][name];
+                                if (value) {
+                                    if ($css.isCalc(value)) {
+                                        value = $css.calculateVar(element, value, name);
+                                    }
+                                    else if ($css.isCustomProperty(value)) {
+                                        value = $css.parseVar(element, value);
+                                    }
+                                    if (value !== undefined) {
+                                        map[name].push({ index, value: value.toString() });
+                                    }
                                 }
                             }
                         }
