@@ -220,8 +220,11 @@ export default class Application<T extends Node> implements squared.base.Applica
         const parseResume = () => {
             this.initialized = false;
             for (const image of preloadImages) {
-                documentRoot.removeChild(image);
+                if (image.parentElement) {
+                    documentRoot.removeChild(image);
+                }
             }
+            preloadImages.length = 0;
             for (const ext of this.extensions) {
                 ext.beforeParseDocument();
             }
@@ -319,8 +322,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                 parseResume();
             })
             .catch((error: Event) => {
-                const message = error.target ? (<HTMLImageElement> error.target).src : '';
-                if (!$util.hasValue(message) || confirm(`FAIL: ${message}`)) {
+                const message = error.target && (<HTMLImageElement> error.target).src;
+                if (!message || confirm(`FAIL: ${message}`)) {
                     parseResume();
                 }
             });
@@ -740,15 +743,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             let includeText = false;
             for (let i = 0; i < element.childNodes.length; i++) {
                 const childElement = <HTMLInputElement> element.childNodes[i];
-                if (childElement.nodeName.charAt(0) === '#') {
-                    if (childElement.nodeName === '#text') {
-                        const child = this.insertNode(childElement, node);
-                        if (child) {
-                            children.push(child);
-                        }
-                    }
-                }
-                else if (childElement === beforeElement) {
+                if (childElement === beforeElement) {
                     const child = this.insertNode(<HTMLElement> beforeElement);
                     if (child) {
                         node.innerBefore = child;
@@ -766,7 +761,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                         includeText = true;
                     }
                 }
-                else if (this.controllerHandler.includeElement(element)) {
+                else if (childElement.nodeName.charAt(0) === '#') {
+                    if (childElement.nodeName === '#text') {
+                        const child = this.insertNode(childElement, node);
+                        if (child) {
+                            children.push(child);
+                        }
+                    }
+                }
+                else if (this.controllerHandler.includeElement(childElement)) {
                     prioritizeExtensions(childElement, this.extensions).some(item => item.init(childElement));
                     if (!this.rootElements.has(childElement)) {
                         const child = this.cascadeParentNode(childElement, depth + 1);
@@ -1613,24 +1616,25 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const node = this.createNode(element, false);
                 if (parent) {
                     node.inherit(parent, 'textStyle');
+                    if (!node.pageFlow) {
+                        node.css('backgroundColor', parent.css('backgroundColor'));
+                    }
                 }
                 return node;
             }
         }
-        else {
+        else if (this.conditionElement(<HTMLElement> element)) {
             this.controllerHandler.applyDefaultStyles(element);
             const node = this.createNode(element, false);
-            if (!node.pseudoElement) {
-                if (this.conditionElement(<HTMLElement> element)) {
-                    if (!this.userSettings.exclusionsDisabled) {
-                        node.setExclusions();
-                    }
-                }
-                else {
-                    node.visible = false;
-                    node.excluded = true;
-                }
+            if (!this.userSettings.exclusionsDisabled) {
+                node.setExclusions();
             }
+            return node;
+        }
+        else {
+            const node = this.createNode(element, false);
+            node.visible = false;
+            node.excluded = true;
             return node;
         }
         return undefined;
@@ -1666,8 +1670,8 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     private createPseduoElement(element: HTMLElement, target: string) {
         const styleMap: StringMap = $session.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
-        if (styleMap && styleMap.content && this.controllerHandler.visibleElement(element, target)) {
-            if ((styleMap.position === 'absolute' || styleMap.position === 'fixed') && $util.trimString(styleMap.content, '"').trim() === '' && (styleMap.width === undefined || !$css.isLength(styleMap.width, true))) {
+        if (styleMap && styleMap.content) {
+            if ((styleMap.position === 'absolute' || styleMap.position === 'fixed') && $util.trimString(styleMap.content, '"').trim() === '' && (!styleMap.width || !$css.isLength(styleMap.width, true))) {
                 return undefined;
             }
             let value = styleMap.content;

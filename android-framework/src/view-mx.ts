@@ -98,8 +98,10 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
         if (node.cssTry('whiteSpace', 'nowrap')) {
             const offset = (lineHeight - (<Element> node.element).getBoundingClientRect().height) / 2;
             if (Math.floor(offset) > 0) {
-                node.modifyBox($enum.BOX_STANDARD.PADDING_TOP, Math.floor(offset));
-                node.modifyBox($enum.BOX_STANDARD.PADDING_BOTTOM, Math.ceil(offset));
+                node.modifyBox($enum.BOX_STANDARD.PADDING_TOP, Math.ceil(offset));
+                if (!node.blockStatic) {
+                    node.modifyBox($enum.BOX_STANDARD.PADDING_BOTTOM, Math.floor(offset));
+                }
             }
             node.cssFinally('whiteSpace');
         }
@@ -600,7 +602,12 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 if (!this.support.maxWidth && this.has('maxWidth', 0, { not: '100%' })) {
                                     const maxWidth = this.parseUnit(this.css('maxWidth'));
                                     if (maxWidth > 0) {
-                                        layoutWidth = Math.ceil(maxWidth) < Math.floor(this.documentParent.box.width) ? 'wrap_content' : 'match_parent';
+                                        if (this.inputElement) {
+                                            value = this.actualWidth;
+                                        }
+                                        else {
+                                            layoutWidth = Math.ceil(maxWidth) < Math.floor(this.documentParent.box.width) ? 'wrap_content' : 'match_parent';
+                                        }
                                     }
                                 }
                                 if (layoutWidth === '' && (this.documentRoot || !renderParent.inlineWidth)) {
@@ -671,7 +678,12 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 if (!this.support.maxHeight && this.has('maxHeight', 0, { not: '100%' })) {
                                     const maxHeight = this.parseUnit(this.css('maxHeight'), true);
                                     if (maxHeight > 0) {
-                                        layoutHeight = Math.ceil(maxHeight) < Math.floor(this.documentParent.box.height) ? 'wrap_content' : 'match_parent';
+                                        if (this.inputElement) {
+                                            value = this.actualHeight;
+                                        }
+                                        else {
+                                            layoutHeight = Math.ceil(maxHeight) < Math.floor(this.documentParent.box.height) ? 'wrap_content' : 'match_parent';
+                                        }
                                     }
                                 }
                                 if (layoutHeight === '' && (this.documentRoot || !renderParent.inlineHeight)) {
@@ -784,10 +796,10 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (renderParent) {
                 const alignFloat = this.hasAlign($enum.NODE_ALIGNMENT.FLOAT);
                 const node = (this.outerWrapper as T) || this;
-                const outerRenderParent = (node.renderParent || renderParent) as T;
+                const outerRenderParent = (node.renderParent as T) || renderParent;
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
-                if (textAlign === '' && this.groupParent && !alignFloat) {
+                if (this.groupParent && !alignFloat && textAlign === '') {
                     const actualParent = $NodeList.actualParent(this.renderChildren);
                     if (actualParent) {
                         textAlign = checkTextAlign(actualParent.cssInitial('textAlign', true));
@@ -796,11 +808,15 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (this.pageFlow) {
                     let floating = '';
                     if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.container.positionRelative || outerRenderParent.is(CONTAINER_NODE.GRID))) {
-                        let target = node;
-                        let gravity = 'layout_gravity';
+                        let target: T;
+                        let gravity: string;
                         if (this.display === 'table-cell') {
                             target = this;
                             gravity = 'gravity';
+                        }
+                        else {
+                            target = node;
+                            gravity = 'layout_gravity';
                         }
                         switch (this.cssInitial('verticalAlign', true)) {
                             case 'top':
@@ -838,7 +854,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             }
                         }
                         if (renderParent.display === 'table-cell' && this.singleChild) {
-                            let gravity: string | undefined;
+                            let gravity: string;
                             switch (renderParent.css('verticalAlign')) {
                                 case 'top':
                                     gravity = 'top';

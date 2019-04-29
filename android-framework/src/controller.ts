@@ -271,22 +271,11 @@ const constraintPercentWidth = (node: View, opposing = false) => constraintPerce
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
 
 export default class Controller<T extends View> extends squared.base.Controller<T> implements android.base.Controller<T> {
-    public static setConstraintDimension<T extends View>(node: T, single = false) {
+    public static setConstraintDimension<T extends View>(node: T) {
         constraintPercentWidth(node);
         constraintPercentHeight(node);
         constraintMinMax(node, 'width');
         constraintMinMax(node, 'height');
-        if (single) {
-            if (node.rightAligned) {
-                node.anchor('right', 'parent');
-            }
-            else if (node.centerAligned) {
-                node.anchorParent(AXIS_ANDROID.HORIZONTAL);
-            }
-            else {
-                node.anchor('left', 'parent');
-            }
-        }
     }
 
     public static setFlexDimension<T extends View>(node: T, dimension: string) {
@@ -761,7 +750,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         else if (pageFlow.length > 1) {
                             this.processConstraintChain(node, pageFlow);
                         }
-                        else {
+                        else if (pageFlow.length) {
                             const item = pageFlow[0];
                             if (item.autoMargin.leftRight || item.inlineStatic && item.cssAscend('textAlign', true) === 'center') {
                                 item.anchorParent(AXIS_ANDROID.HORIZONTAL);
@@ -2101,7 +2090,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 if (i < seg.length - 1) {
                     item.anchor('rightLeft', seg[i + 1].documentId);
                 }
-                Controller.setConstraintDimension(item);
                 item.anchored = true;
             }
             rowStart.anchor('left', 'parent');
@@ -2150,7 +2138,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             }
                         }
                     }
-                    Controller.setConstraintDimension(item);
                     item.anchored = true;
                     item.positioned = true;
                 }
@@ -2160,7 +2147,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
             const row = rows[i];
             const rowStart = row[0];
             if (row.length === 1) {
-                Controller.setConstraintDimension(rowStart, true);
                 if (i === 0) {
                     rowStart.anchor('top', 'parent');
                     rowStart.anchorStyle(AXIS_ANDROID.VERTICAL);
@@ -2168,6 +2154,15 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 else if (previousRow) {
                     previousRow.anchor('bottomTop', rowStart.documentId);
                     rowStart.anchor('topBottom', previousRow.documentId);
+                }
+                if (node.rightAligned) {
+                    node.anchor('right', 'parent');
+                }
+                else if (node.centerAligned) {
+                    node.anchorParent(AXIS_ANDROID.HORIZONTAL);
+                }
+                else {
+                    node.anchor('left', 'parent');
                 }
                 if (i === rows.length - 1) {
                     rowStart.anchor('bottom', 'parent');
@@ -2186,7 +2181,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 for (let j = 0, k = 0, l = 0; j < row.length; j++, l++) {
                     const column = row[j];
                     const rowIteration = l % perRowCount === 0;
-                    if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && row[j - 1].bounds.height >= maxHeight)) {
+                    if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columnMin >= row.length - j && j < row.length - 1 && columns[k].length && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                         if (j > 0) {
                             k++;
                             if (rowIteration) {

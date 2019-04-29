@@ -27,6 +27,9 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
             if (!node.hasWidth) {
                 node.android('layout_width', node.some(item => item.blockStatic) ? 'match_parent' : 'wrap_content');
             }
+            else if (node.css('width') === '100%') {
+                node.android('layout_width', 'match_parent');
+            }
             const width = $css.formatPX(node.parseUnit(maxWidth) + ($css.isPercent(maxWidth) ? 0 : node.contentBoxWidth + (node.marginLeft > 0 ? node.marginLeft : 0) + (node.marginRight > 0 ? node.marginRight : 0)));
             container.cssApply({ width, maxWidth: width }, true);
             if (parent.layoutElement) {

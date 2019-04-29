@@ -247,16 +247,19 @@ export default abstract class Controller<T extends Node> implements squared.base
     }
 
     public includeElement(element: Element) {
-        return !this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && !this.localSettings.unsupported.tagName.has(`${element.tagName}:${(<HTMLInputElement> element).type}`);
+        return !this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && !this.localSettings.unsupported.tagName.has(`${element.tagName}:${(<HTMLInputElement> element).type}`) || element['contentEditable'] === 'true';
     }
 
-    public visibleElement(element: Element, target?: string) {
+    public visibleElement(element: Element) {
+        if (element.className === '__squared.pseudo') {
+            return true;
+        }
         const rect = $session.getClientRect(element, this.application.processing.sessionId);
         if (withinViewport(rect)) {
             if (rect.width > 0 && rect.height > 0) {
                 return true;
             }
-            const style = $css.getStyle(element, target);
+            const style = $css.getStyle(element);
             return rect.width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) || style.getPropertyValue('clear') !== 'none';
         }
         return false;

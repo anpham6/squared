@@ -19,7 +19,7 @@ const $util = squared.lib.util;
 
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
 
-const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
+const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 
 function removeExcluded(node: Node, element: Element, attr: string) {
@@ -493,11 +493,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             let match: RegExpExecArray | null;
                             let i = 0;
                             while ((match = REGEXP_BACKGROUNDIMAGE.exec(value)) !== null) {
-                                const [complete, repeating, type, direction, colorStop] = match;
-                                if (complete === 'initial' || complete.startsWith('url')) {
-                                    images.push(complete);
+                                if (match[0] === 'initial' || match[0].startsWith('url')) {
+                                    images.push(match[0]);
                                 }
                                 else {
+                                    const repeating = match[1] === 'repeating';
+                                    const type = match[2];
+                                    const direction = match[3];
                                     const dimension = getBackgroundSize(node, i, boxStyle.backgroundSize) || node.actualDimension;
                                     let gradient: Gradient | undefined;
                                     switch (type) {
@@ -509,7 +511,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                 angle: parseAngle(direction)
                                             };
                                             conic.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize);
-                                            conic.colorStops = parseColorStops(node, conic, colorStop, opacity);
+                                            conic.colorStops = parseColorStops(node, conic, match[4], opacity);
                                             gradient = conic;
                                             break;
                                         }
@@ -517,7 +519,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                             const position = getGradientPosition(direction);
                                             const radial = <RadialGradient> {
                                                 type,
-                                                repeating: repeating === 'repeating',
+                                                repeating,
                                                 horizontal: node.actualWidth <= node.actualHeight,
                                                 dimension,
                                                 shape: position && position[1] && position[1].startsWith('circle') ? 'circle' : 'ellipse'
@@ -562,11 +564,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                     radial.radiusExtent = radial.farthestCorner;
                                                     break;
                                             }
-                                            radial.colorStops = parseColorStops(node, radial, colorStop, opacity);
+                                            radial.colorStops = parseColorStops(node, radial, match[4], opacity);
                                             gradient = radial;
                                             break;
                                         }
-                                        default: {
+                                        case 'linear': {
                                             let angle = 180;
                                             switch (direction) {
                                                 case 'to top':
@@ -600,12 +602,12 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                             }
                                             const linear = <LinearGradient> {
                                                 type,
-                                                repeating: repeating === 'repeating',
+                                                repeating,
                                                 horizontal: angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315,
                                                 dimension,
                                                 angle
                                             };
-                                            linear.colorStops = parseColorStops(node, linear, colorStop, opacity);
+                                            linear.colorStops = parseColorStops(node, linear, match[4], opacity);
                                             const width = dimension.width;
                                             const height = dimension.height;
                                             let x = $math.truncateFraction($math.offsetAngleX(angle, width));
@@ -638,11 +640,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                             break;
                                         }
                                     }
-                                    images.push(gradient);
+                                    images.push(gradient || 'initial');
                                 }
                                 i++;
                             }
-                            if (i > 0) {
+                            if (images.length) {
                                 boxStyle.backgroundImage = images;
                             }
                         }
@@ -750,14 +752,14 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             node.imageElement ||
             node.svgElement ||
             node.tagName === 'HR' ||
-            node.inlineText && !node.preserveWhiteSpace && node.element.innerHTML.trim() === '' && !Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))))
+            node.inlineText && !node.preserveWhiteSpace && node.element.innerHTML.trim() === '' && !node.visibleStyle.background))
         {
             const opacity = node.css('opacity');
             const color = $color.parseColor(node.css('color'), opacity);
             let fontFamily = node.css('fontFamily').trim();
             let fontSize = node.css('fontSize');
             let fontWeight = node.css('fontWeight');
-            if ($client.isUserAgent($client.USER_AGENT.EDGE) && !node.has('fontFamily')) {
+            if (fontFamily === '' && $client.isUserAgent($client.USER_AGENT.EDGE)) {
                 switch (node.tagName) {
                     case 'TT':
                     case 'CODE':

@@ -553,17 +553,19 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const stroke = border ? getBorderStroke(border) : false;
             if (images && images.length || indentWidth > 0) {
                 layerListData = createLayerList(data, images, borderOnly);
-                layerListData[0].item.push({
-                    top: indentOffset,
-                    right: indentOffset,
-                    left: indentOffset,
-                    bottom: indentOffset,
-                    shape: {
-                        'android:shape': 'rectangle',
-                        corners,
-                        stroke
-                    }
-                });
+                if (corners || stroke) {
+                    layerListData[0].item.push({
+                        top: indentOffset,
+                        right: indentOffset,
+                        left: indentOffset,
+                        bottom: indentOffset,
+                        shape: {
+                            'android:shape': 'rectangle',
+                            corners,
+                            stroke
+                        }
+                    });
+                }
             }
             else {
                 shapeData = createShapeData(stroke, !borderOnly ? getBackgroundColor(data.backgroundColor) : undefined, corners);
