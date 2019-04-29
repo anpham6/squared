@@ -350,7 +350,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 renderAs.inherit(node, 'initial', 'base');
                 renderAs.resetBox($enum.BOX_STANDARD.MARGIN | $enum.BOX_STANDARD.PADDING);
                 renderAs.exclude({
-                    procedure: $enum.NODE_PROCEDURE.CUSTOMIZATION,
+                    procedure: $enum.NODE_PROCEDURE.NONPOSITIONAL,
                     resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET
                 });
                 parent.appendTry(node, renderAs);
@@ -481,12 +481,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 'wrap_content',
                                 0,
                                 0,
-                                createViewAttribute({
-                                    android: {
-                                        [node.localizeString(BOX_ANDROID.MARGIN_LEFT)]: $css.formatPX(mainData.column.gap),
-                                        layout_row: i.toString(),
-                                        layout_column: mainData.column.count.toString()
-                                    }
+                                createViewAttribute(undefined, {
+                                    [node.localizeString(BOX_ANDROID.MARGIN_LEFT)]: $css.formatPX(mainData.column.gap),
+                                    layout_row: i.toString(),
+                                    layout_column: mainData.column.count.toString()
                                 })
                             )
                         );
@@ -505,12 +503,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                     $css.formatPX(mainData.row.gap),
                                     0,
                                     0,
-                                    createViewAttribute({
-                                        android: {
-                                            layout_row: i.toString(),
-                                            layout_column: j.toString()
-                                        }
-                                    })
+                                    createViewAttribute(undefined, { layout_row: i.toString(), layout_column: j.toString() })
                                 )
                             );
                             break;

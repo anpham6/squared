@@ -28,6 +28,7 @@ declare global {
             postConstraints(node: T): void;
             postParseDocument(node: T): void;
             postOptimize(node: T): void;
+            postBoxSpacing(node: T): void;
             beforeParseDocument(): void;
             afterBaseLayout(): void;
             afterConstraints(): void;

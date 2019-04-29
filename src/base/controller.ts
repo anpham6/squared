@@ -95,9 +95,9 @@ export default abstract class Controller<T extends Node> implements squared.base
                             const color = $color.parseColor(style.getPropertyValue('background-color'));
                             if (color === undefined) {
                                 styleMap.backgroundColor = '#DDDDDD';
-                                if (style.getPropertyValue('border-style')) {
+                                if (style.getPropertyValue('border-style') === 'none') {
                                     for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
-                                        styleMap[`${border}Style`] = 'solid';
+                                        styleMap[`${border}Style`] = 'outset';
                                         styleMap[`${border}Color`] = '#DDDDDD';
                                         styleMap[`${border}Width`] = '2px';
                                     }
@@ -246,7 +246,11 @@ export default abstract class Controller<T extends Node> implements squared.base
         return this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined;
     }
 
-    public includeElement(element: Element, target?: string) {
+    public includeElement(element: Element) {
+        return !this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && !this.localSettings.unsupported.tagName.has(`${element.tagName}:${(<HTMLInputElement> element).type}`);
+    }
+
+    public visibleElement(element: Element, target?: string) {
         const rect = $session.getClientRect(element, this.application.processing.sessionId);
         if (withinViewport(rect)) {
             if (rect.width > 0 && rect.height > 0) {

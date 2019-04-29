@@ -27,7 +27,7 @@ declare global {
             renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
             renderLayout(layout: Layout<T>, outerParent: T): NodeTemplate<T> | undefined;
             addLayout(layout: Layout<T>, outerParent?: T): boolean;
-            addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): boolean;
+            addLayoutTemplate(parent: T, node: T, template?: NodeTemplate<T>, index?: number): boolean;
             saveLayout(filename: string, content: string, pathname?: string, leading?: boolean): void;
             createNode(element: Element, append?: boolean, parent?: T, children?: T[]): T;
             resolveTarget(target: string): T | undefined;

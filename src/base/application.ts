@@ -17,29 +17,17 @@ const $session = squared.lib.session;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
+const REGEXP_CACHED: ObjectMap<RegExp> = {};
+
 let NodeConstructor!: Constructor<Node>;
 
-function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[], documentRoot: HTMLElement | null = null) {
-    const tagged: string[] = [];
-    let current: HTMLElement | null = element;
-    while (current) {
-        if (current.dataset.use) {
-            for (const value of current.dataset.use.split($regex.XML.SEPARATOR)) {
-                tagged.push(value);
-            }
-        }
-        if (documentRoot === null || current === documentRoot) {
-            break;
-        }
-        else if (current !== documentRoot) {
-            current = current.parentElement;
-        }
-    }
-    if (tagged.length) {
+function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[]) {
+    if (element.dataset.use) {
+        const included = element.dataset.use.split($regex.XML.SEPARATOR);
         const result: Extension<T>[] = [];
         const untagged: Extension<T>[] = [];
         for (const ext of extensions) {
-            const index = tagged.indexOf(ext.name);
+            const index = included.indexOf(ext.name);
             if (index !== -1) {
                 result[index] = ext;
             }
@@ -47,7 +35,9 @@ function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: 
                 untagged.push(ext);
             }
         }
-        return $util.concatArray($util.spliceArray(result, item => item === undefined), untagged);
+        if (result.length) {
+            return $util.concatArray($util.spliceArray(result, item => item === undefined), untagged);
+        }
     }
     return extensions;
 }
@@ -147,6 +137,9 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         for (const ext of this.extensions) {
+            for (const node of ext.subscribers) {
+                ext.postBoxSpacing(node);
+            }
             ext.beforeCascade();
         }
         for (const layout of this.session.documentRoot) {
@@ -741,7 +734,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                 case 'SVG':
                     return node;
             }
-            const localSettings = this.controllerHandler.localSettings;
             const beforeElement = this.createPseduoElement(element, 'before');
             const afterElement = this.createPseduoElement(element, 'after');
             const children: T[] = [];
@@ -774,7 +766,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         includeText = true;
                     }
                 }
-                else if (!localSettings.unsupported.tagName.has(childElement.tagName) || childElement.tagName === 'INPUT' && !localSettings.unsupported.tagName.has(`${childElement.tagName}:${childElement.type}`)) {
+                else if (this.controllerHandler.includeElement(element)) {
                     prioritizeExtensions(childElement, this.extensions).some(item => item.init(childElement));
                     if (!this.rootElements.has(childElement)) {
                         const child = this.cascadeParentNode(childElement, depth + 1);
@@ -817,13 +809,8 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     protected setBaseLayout(layoutName: string) {
         const controller = this.controllerHandler;
-        const extensions: Extension<T>[] = [];
-        for (const item of this.extensions) {
-            if (!item.eventOnly) {
-                extensions.push(item);
-            }
-        }
         const documentRoot = this.processing.node as T;
+        const extensions = $util.filterArray(this.extensions, item => !item.eventOnly);
         const mapY = new Map<number, Map<number, T>>();
         function setMapY(depth: number, id: number, node: T) {
             const index = mapY.get(depth) || new Map<number, T>();
@@ -872,29 +859,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                 let k = -1;
                 while (++k < axisY.length) {
                     let nodeY = axisY[k];
-                    if (!nodeY.visible || nodeY.rendered) {
+                    if (!nodeY.visible || nodeY.rendered || nodeY.htmlElement && this.rootElements.has(<HTMLElement> nodeY.element) && !nodeY.documentRoot && !nodeY.documentBody) {
                         continue;
                     }
-                    else if (nodeY.htmlElement) {
-                        const element = <HTMLElement> nodeY.element;
-                        if (this.rootElements.has(element) && !nodeY.documentRoot && !nodeY.documentBody) {
-                            continue;
-                        }
-                        else if (nodeY.length === 0 && element.children.length) {
-                            let valid = true;
-                            for (let i = 0; i < element.children.length; i++) {
-                                if (!this.rootElements.has(<HTMLElement> element.children[i])) {
-                                    valid = false;
-                                    break;
-                                }
-                            }
-                            if (valid) {
-                                nodeY.setInlineText(false, true);
-                            }
-                        }
-                    }
                     let parentY = nodeY.parent as T;
-                    const extensionDescendant = this.session.extensionMap.get(nodeY.id);
                     const extendable = nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE);
                     if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || extendable || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
@@ -1055,13 +1023,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
-                        let combined = parent.renderExtension ? <Extension<T>[]> parent.renderExtension.slice(0) : undefined;
-                        if (extensionDescendant) {
+                        const descendant = this.session.extensionMap.get(nodeY.id);
+                        let combined = parent.renderExtension && <Extension<T>[]> parent.renderExtension.slice(0);
+                        if (descendant) {
                             if (combined) {
-                                $util.concatArray(combined, <Extension<T>[]> extensionDescendant);
+                                $util.concatArray(combined, <Extension<T>[]> descendant);
                             }
                             else {
-                                combined = <Extension<T>[]> extensionDescendant.slice(0);
+                                combined = <Extension<T>[]> descendant.slice(0);
                             }
                         }
                         if (combined) {
@@ -1090,8 +1059,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         if (nodeY.styleElement) {
                             let next = false;
-                            prioritizeExtensions(<HTMLElement> nodeY.element, extensions, <HTMLElement> documentRoot.element).some(item => {
-                                if (item.is(nodeY) && item.condition(nodeY, parentY) && (extensionDescendant === undefined || !extensionDescendant.includes(item))) {
+                            prioritizeExtensions(<HTMLElement> nodeY.element, extensions).some(item => {
+                                if (item.is(nodeY) && item.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(item))) {
                                     const result = item.processNode(nodeY, parentY);
                                     if (result) {
                                         if (result.output) {
@@ -1448,7 +1417,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     seg.length < itemCount ? NODE_ALIGNMENT.SEGMENTED : 0,
                     seg
                 );
-                if (seg.some(child => child.blockStatic || child.has('width', CSS_STANDARD.PERCENT))) {
+                if (seg.some(child => child.blockStatic || child.multiline && basegroup.blockStatic || child.has('width', CSS_STANDARD.PERCENT))) {
                     group.add(NODE_ALIGNMENT.BLOCK);
                 }
                 if (seg.length === 1) {
@@ -1652,7 +1621,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             this.controllerHandler.applyDefaultStyles(element);
             const node = this.createNode(element, false);
             if (!node.pseudoElement) {
-                if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(<HTMLElement> element)) {
+                if (this.conditionElement(<HTMLElement> element)) {
                     if (!this.userSettings.exclusionsDisabled) {
                         node.setExclusions();
                     }
@@ -1668,33 +1637,36 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected conditionElement(element: HTMLElement) {
-        if (this.controllerHandler.includeElement(element) || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
-            return true;
-        }
-        else {
-            let current = element.parentElement;
-            let valid = true;
-            while (current) {
-                if ($css.getStyle(current).display === 'none') {
-                    valid = false;
-                    break;
-                }
-                current = current.parentElement;
+        if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName)) {
+            if (this.controllerHandler.visibleElement(element) || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
+                return true;
             }
-            if (valid) {
-                for (let i = 0; i < element.children.length; i++) {
-                    if (this.controllerHandler.includeElement(<Element> element.children[i])) {
-                        return true;
+            else {
+                let current = element.parentElement;
+                let valid = true;
+                while (current) {
+                    if ($css.getStyle(current).display === 'none') {
+                        valid = false;
+                        break;
+                    }
+                    current = current.parentElement;
+                }
+                if (valid) {
+                    for (let i = 0; i < element.children.length; i++) {
+                        if (this.controllerHandler.visibleElement(<Element> element.children[i])) {
+                            return true;
+                        }
                     }
                 }
+                return false;
             }
-            return false;
         }
+        return false;
     }
 
     private createPseduoElement(element: HTMLElement, target: string) {
         const styleMap: StringMap = $session.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
-        if (styleMap && styleMap.content && this.controllerHandler.includeElement(element, target)) {
+        if (styleMap && styleMap.content && this.controllerHandler.visibleElement(element, target)) {
             if ((styleMap.position === 'absolute' || styleMap.position === 'fixed') && $util.trimString(styleMap.content, '"').trim() === '' && (styleMap.width === undefined || !$css.isLength(styleMap.width, true))) {
                 return undefined;
             }
@@ -1759,10 +1731,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     else {
-                        const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
+                        if (REGEXP_CACHED.COUNTERS === undefined) {
+                            REGEXP_CACHED.COUNTERS = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
+                        }
                         let match: RegExpExecArray | null;
                         let found = false;
-                        while ((match = pattern.exec(value)) !== null) {
+                        while ((match = REGEXP_CACHED.COUNTERS.exec(value)) !== null) {
                             if (match[1]) {
                                 content += $dom.getNamedItem(element, match[1].trim());
                             }
@@ -1985,18 +1959,21 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 styleMap[attr] = value;
                             }
                         }
-                        const backgroundImage = styleMap.backgroundImage && styleMap.backgroundImage !== 'initial';
-                        if (this.userSettings.preloadImages && (backgroundImage || styleMap.content && styleMap.content.startsWith('url('))) {
-                            for (const value of backgroundImage ? styleMap.backgroundImage.split($regex.XML.SEPARATOR) : [styleMap.content]) {
-                                const uri = $css.resolveURL(value.trim());
-                                if (uri !== '' && !this.resourceHandler.assets.images.has(uri)) {
-                                    this.resourceHandler.assets.images.set(uri, { width: 0, height: 0, uri });
+                        if (this.userSettings.preloadImages) {
+                            [styleMap.backgroundImage, styleMap.listStyleImage, styleMap.content].forEach(image => {
+                                if (image && image.startsWith('url(')) {
+                                    for (const value of image.split($regex.XML.SEPARATOR)) {
+                                        const uri = $css.resolveURL(value.trim());
+                                        if (uri !== '' && this.resourceHandler.getImage(uri) === undefined) {
+                                            this.resourceHandler.assets.images.set(uri, { width: 0, height: 0, uri });
+                                        }
+                                    }
                                 }
-                            }
+                            });
                         }
                         const attrStyle = `styleMap${targetElt}`;
                         const attrSpecificity = `styleSpecificity${targetElt}`;
-                        const styleData = $session.getElementCache(element, attrStyle, this.processing.sessionId);
+                        const styleData: StringMap = $session.getElementCache(element, attrStyle, this.processing.sessionId);
                         if (styleData) {
                             const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, this.processing.sessionId) || {};
                             for (const attr in styleMap) {
@@ -2020,19 +1997,26 @@ export default class Application<T extends Node> implements squared.base.Applica
                 break;
             }
             case CSSRule.FONT_FACE_RULE: {
-                const match = /\s*@font-face\s*{([^}]+)}\s*/.exec(item.cssText);
+                if (REGEXP_CACHED.FONT_FACE === undefined) {
+                    REGEXP_CACHED.FONT_FACE = /\s*@font-face\s*{([^}]+)}\s*/;
+                    REGEXP_CACHED.FONT_FAMILY = /\s*font-family:[^\w]*([^'";]+)/;
+                    REGEXP_CACHED.FONT_SRC = /\s*src:\s*([^;]+);/;
+                    REGEXP_CACHED.FONT_STYLE = /\s*font-style:\s*(\w+)\s*;/;
+                    REGEXP_CACHED.FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
+                    REGEXP_CACHED.URL = /\s*(url|local)\(['"]([^'")]+)['"]\)\s*format\(['"](\w+)['"]\)\s*/;
+                }
+                const match = REGEXP_CACHED.FONT_FACE.exec(item.cssText);
                 if (match) {
-                    const familyMatch = /\s*font-family:[^\w]*([^'";]+)/.exec(match[1]);
-                    const srcMatch = /\s*src:\s*([^;]+);/.exec(match[1]);
+                    const familyMatch = REGEXP_CACHED.FONT_FAMILY.exec(match[1]);
+                    const srcMatch = REGEXP_CACHED.FONT_SRC.exec(match[1]);
                     if (familyMatch && srcMatch) {
-                        const styleMatch = /\s*font-style:\s*(\w+)\s*;/.exec(match[1]);
-                        const weightMatch = /\s*font-weight:\s*(\d+)\s*;/.exec(match[1]);
-                        const urlPattern = /\s*(url|local)\(['"]([^'")]+)['"]\)\s*format\(['"](\w+)['"]\)\s*/;
+                        const styleMatch = REGEXP_CACHED.FONT_STYLE.exec(match[1]);
+                        const weightMatch = REGEXP_CACHED.FONT_WEIGHT.exec(match[1]);
                         const fontFamily = familyMatch[1].trim();
                         const fontStyle = styleMatch ? styleMatch[1].toLowerCase() : 'normal';
                         const fontWeight = weightMatch ? parseInt(weightMatch[1]) : 400;
                         for (const value of srcMatch[1].split($regex.XML.SEPARATOR)) {
-                            const url = urlPattern.exec(value);
+                            const url = REGEXP_CACHED.URL.exec(value);
                             if (url) {
                                 let srcUrl: string | undefined;
                                 let srcLocal: string | undefined;

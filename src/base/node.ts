@@ -380,6 +380,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         whiteSpace: node.css('whiteSpace'),
                         textDecoration: node.css('textDecoration'),
                         textTransform: node.css('textTransform'),
+                        wordSpacing: node.css('wordSpacing'),
                         opacity: node.css('opacity')
                     });
                     break;
@@ -1093,6 +1094,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return value;
     }
 
+    private convertBorderWidth(attr: string) {
+        if (this.styleElement) {
+            const style = this.css(`border${attr}Style`);
+            if (style !== 'none') {
+                const width = Math.round($util.convertFloat(this.css(`border${attr}Width`)));
+                if (width === 2 && (style === 'inset' || style === 'outset')) {
+                    return 1;
+                }
+                return width;
+            }
+        }
+        return 0;
+    }
+
     private convertBox(region: string, direction: string) {
         const attr = region + direction;
         switch (this.display) {
@@ -1530,25 +1545,25 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get borderTopWidth() {
         if (this._cached.borderTopWidth === undefined) {
-            this._cached.borderTopWidth = this.styleElement && this.css('borderTopStyle') !== 'none' ? Math.round($util.convertFloat(this.css('borderTopWidth'))) : 0;
+            this._cached.borderTopWidth = this.convertBorderWidth('Top');
         }
         return this._cached.borderTopWidth;
     }
     get borderRightWidth() {
         if (this._cached.borderRightWidth === undefined) {
-            this._cached.borderRightWidth = this.styleElement && this.css('borderRightStyle') !== 'none' ? Math.round($util.convertFloat(this.css('borderRightWidth'))) : 0;
+            this._cached.borderRightWidth = this.convertBorderWidth('Right');
         }
         return this._cached.borderRightWidth;
     }
     get borderBottomWidth() {
         if (this._cached.borderBottomWidth === undefined) {
-            this._cached.borderBottomWidth = this.styleElement && this.css('borderBottomStyle') !== 'none' ? Math.round($util.convertFloat(this.css('borderBottomWidth'))) : 0;
+            this._cached.borderBottomWidth = this.convertBorderWidth('Bottom');
         }
         return this._cached.borderBottomWidth;
     }
     get borderLeftWidth() {
         if (this._cached.borderLeftWidth === undefined) {
-            this._cached.borderLeftWidth = this.styleElement && this.css('borderLeftStyle') !== 'none' ? Math.round($util.convertFloat(this.css('borderLeftWidth'))) : 0;
+            this._cached.borderLeftWidth = this.convertBorderWidth('Left');
         }
         return this._cached.borderLeftWidth;
     }

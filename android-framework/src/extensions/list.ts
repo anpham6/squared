@@ -4,7 +4,7 @@ import { ListData } from '../../../src/base/@types/extension';
 import Resource from '../resource';
 import View from '../view';
 
-import { BOX_ANDROID, CONTAINER_ANDROID } from '../lib/constant';
+import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
@@ -54,9 +54,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             let minWidth = node.marginLeft;
             let columnCount = 0;
-            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
             let adjustPadding = false;
             let resetPadding: number | null = null;
+            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
             if (parent.is(CONTAINER_NODE.GRID)) {
                 columnCount = $util.convertInt(parent.android('columnCount'));
                 adjustPadding = true;
@@ -141,26 +141,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     const length = mainData.ordinal ? mainData.ordinal.length : 1;
                     paddingRight = Math.max(minWidth / (image ? 6 : length * 4), 4);
                 }
-                const options = createViewAttribute({
-                    android: {
-                        layout_columnWeight: columnWeight
-                    }
-                });
+                const options = createViewAttribute(undefined, { layout_columnWeight: columnWeight });
                 const element = $dom.createElement(node.actualParent && node.actualParent.element, image ? 'img' : 'span');
                 ordinal = this.application.createNode(element);
                 if (inside) {
-                    controller.addBeforeOutsideTemplate(
-                        ordinal.id,
-                        controller.renderNodeStatic(
-                            CONTAINER_ANDROID.SPACE,
-                            {
-                                android: {
-                                    minWidth: $css.formatPX(minWidth),
-                                    layout_columnWeight: columnWeight
-                                }
-                            }
-                        )
-                    );
+                    controller.addBeforeOutsideTemplate(ordinal.id, controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, createViewAttribute(undefined, { minWidth: $css.formatPX(minWidth), layout_columnWeight: columnWeight })));
                     minWidth = MINWIDTH_INSIDE;
                 }
                 else if (columnCount === 3) {
@@ -178,7 +163,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             baselineAlignBottom: adjustPadding ? 'true' : ''
                         });
                         ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
-                        (<HTMLImageElement> element).src = mainData.imageSrc;
+                        (<HTMLImageElement> element).src = $css.resolveURL(mainData.imageSrc);
                     }
                     else if (mainData.ordinal) {
                         element.innerHTML = mainData.ordinal;
@@ -204,6 +189,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         lineHeight: node.lineHeight > 0 ? $css.formatPX(node.lineHeight) : ''
                     });
                     ordinal.apply(options);
+                    if (ordinal.cssTry('display', 'block')) {
+                        ordinal.setBounds();
+                        ordinal.cssFinally('display');
+                    }
+                    ordinal.saveAsInitial();
                     if (!inside) {
                         ordinal.mergeGravity('gravity', node.localizeString(gravity));
                     }
@@ -213,6 +203,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (left !== 0) {
                         ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, left);
                     }
+                    ordinal.positioned = true;
                     ordinal.render(parent);
                     this.application.addLayoutTemplate(
                         parent,
@@ -256,43 +247,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             }
         }
         return undefined;
-    }
-
-    public postBaseLayout(node: T) {
-        super.postBaseLayout(node);
-        const columnCount = node.android('columnCount');
-        for (let i = 0; i < node.renderChildren.length; i++) {
-            const item = node.renderChildren[i];
-            const previous = node.renderChildren[i - 1];
-            let spaceHeight = 0;
-            if (previous) {
-                const marginBottom = $util.convertInt(previous.android(BOX_ANDROID.MARGIN_BOTTOM));
-                if (marginBottom !== 0) {
-                    spaceHeight += marginBottom;
-                    previous.delete('android', BOX_ANDROID.MARGIN_BOTTOM);
-                    previous.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, null);
-                }
-            }
-            const marginTop = $util.convertInt(item.android(BOX_ANDROID.MARGIN_TOP));
-            if (marginTop !== 0) {
-                spaceHeight += marginTop;
-                item.delete('android', BOX_ANDROID.MARGIN_TOP);
-                item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
-            }
-            if (spaceHeight > 0) {
-                const controller = this.application.controllerHandler;
-                const options = createViewAttribute({
-                    android: {
-                        layout_columnSpan: columnCount.toString()
-                    }
-                });
-                controller.addBeforeOutsideTemplate(
-                    item.id,
-                    controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, options, 'match_parent', $css.formatPX(spaceHeight)),
-                    0
-                );
-            }
-        }
     }
 
     public postOptimize(node: T) {

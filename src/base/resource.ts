@@ -673,7 +673,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     case 'borderLeft':
                     case 'outline': {
                         const style = node.css(`${attr}Style`) || 'none';
-                        const width = node.convertPX(node.css(`${attr}Width`), (attr === 'borderLeft' || attr === 'borderRight'), false) || '0px';
+                        let width = node.convertPX(node.css(`${attr}Width`), (attr === 'borderLeft' || attr === 'borderRight'), false) || '0px';
                         let color = node.css(`${attr}Color`) || 'initial';
                         switch (color.toLowerCase()) {
                             case 'initial':
@@ -685,6 +685,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 break;
                         }
                         if (style !== 'none' && width !== '0px') {
+                            if (width === '2px' && (style === 'inset' || style === 'outset')) {
+                                width = '1px';
+                            }
                             const borderColor = $color.parseColor(color, node.css('opacity'), true);
                             if (borderColor) {
                                 boxStyle[attr] = <BorderAttribute> {

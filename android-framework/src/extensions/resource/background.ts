@@ -153,7 +153,7 @@ function getBorderRadius(radius?: string[]): StringMap | undefined {
             if (radius.length === 8) {
                 corners = [];
                 for (let i = 0; i < radius.length; i += 2) {
-                    radius.push($css.formatPX((parseFloat(radius[i]) + parseFloat(radius[i + 1])) / 2));
+                    corners.push($css.formatPX((parseFloat(radius[i]) + parseFloat(radius[i + 1])) / 2));
                 }
             }
             else {

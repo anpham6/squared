@@ -19,7 +19,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
             container.inherit(node, 'initial', 'base', 'styleMap');
             container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
             container.exclude({
-                procedure: $enum.NODE_PROCEDURE.CUSTOMIZATION,
+                procedure: $enum.NODE_PROCEDURE.NONPOSITIONAL,
                 resource: $enum.NODE_RESOURCE.IMAGE_SOURCE
             });
             parent.appendTry(node, container);

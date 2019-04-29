@@ -19,7 +19,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
             const toolbar = $session.getElementAsNode<T>(element, node.sessionId);
             if (toolbar) {
                 const extension = this.application.extensionManager.retrieve(WIDGET_NAME.TOOLBAR);
-                if (extension && 'collapsingToolbar' in $utilA.createViewAttribute(extension.options[toolbar.elementId])) {
+                if (extension && extension.options[toolbar.elementId] && 'collapsingToolbar' in extension.options[toolbar.elementId]) {
                     node.android('fitsSystemWindows', 'true');
                 }
             }

@@ -1,11 +1,8 @@
 export interface UserSettings {
     builtInExtensions: string[];
     preloadImages: boolean;
-    maxWordWrapWidth: number;
     supportNegativeLeftTop: boolean;
     exclusionsDisabled: boolean;
-    customizationsDisabled: boolean;
-    customizationsOverwritePrivilege: boolean;
     showAttributes: boolean;
     insertSpaces: number;
     handleExtensionsAsync: boolean;

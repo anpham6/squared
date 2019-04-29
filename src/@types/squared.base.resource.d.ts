@@ -16,7 +16,7 @@ declare global {
             addImage(element: HTMLImageElement | undefined): void;
             getImage(src: string): ImageAsset | undefined;
             addFont(data: CSSFontFaceData): void;
-            getFont(fontFamily: string, fontStyle?: string, fontWeighte?: string): CSSFontFaceData | undefined;
+            getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): CSSFontFaceData | undefined;
             setBoxStyle(node: T): void;
             setFontStyle(node: T): void;
             setValueString(node: T): void;

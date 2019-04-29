@@ -108,7 +108,7 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
 }
 
 function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top = true, bottom = true) {
-    if (node.imageElement || node.svgElement) {
+    if (node.imageElement || node.svgElement || node.actualHeight === 0) {
         return;
     }
     if (node.multiline) {
@@ -129,10 +129,10 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
         }
         if (Math.floor(offset) > 0) {
             if (top) {
-                node.modifyBox(node.textElement ? $enum.BOX_STANDARD.PADDING_TOP : $enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset));
+                node.modifyBox(node.textElement ? $enum.BOX_STANDARD.PADDING_TOP : $enum.BOX_STANDARD.MARGIN_TOP, Math.ceil(offset));
             }
             if (bottom) {
-                node.modifyBox(node.textElement ? $enum.BOX_STANDARD.PADDING_BOTTOM : $enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset));
+                node.modifyBox(node.textElement ? $enum.BOX_STANDARD.PADDING_BOTTOM : $enum.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
             }
         }
     }
@@ -681,7 +681,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     this.android('adjustViewBounds', 'true');
                                 }
                             }
-                            if (value === -1 && layoutHeight === '') {
+                            if (layoutHeight === '') {
                                 if (this.imageElement) {
                                     if (this.android('adjustViewBounds') === 'true') {
                                         layoutHeight = 'wrap_content';
@@ -690,7 +690,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                         value = this.bounds.height;
                                     }
                                 }
-                                else {
+                                else if (this.hasHeight) {
                                     value = this.actualHeight;
                                 }
                             }

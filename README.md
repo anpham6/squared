@@ -121,11 +121,9 @@ squared.settings = {
     resolutionDPI: 160,
     supportRTL: true,
     preloadImages: true,
-    maxWordWrapWidth: 1024,
     supportNegativeLeftTop: true,
     collapseUnattributedElements: true,
     exclusionsDisabled: true,
-    customizationsDisabled: true,
     customizationsOverwritePrivilege: true,
     showAttributes: true,
     convertPixels: 'dp',
@@ -173,7 +171,7 @@ Most attributes can be excluded from the generated XML using the dataset feature
 
 ```xml
 <div data-exclude-section="DOM_TRAVERSE | EXTENSION | RENDER | ALL"
-     data-exclude-procedure="LAYOUT | ALIGNMENT | AUTOFIT | OPTIMIZATION | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION | ALL"
+     data-exclude-procedure="LAYOUT | ALIGNMENT | AUTOFIT | OPTIMIZATION | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION | NONPOSITIONAL | ALL"
      data-exclude-resource="BOX_STYLE | BOX_SPACING | FONT_STYLE | VALUE_STRING | IMAGE_SOURCE | ASSET | ALL">
 </div>
 <div>

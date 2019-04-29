@@ -73,7 +73,6 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     }
 
     public postParseDocument(node: T) {
-        const application = this.application;
         const options = $utilA.createViewAttribute(this.options.navigationView);
         const menu = $util.optionalAsString(Drawer.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $const.EXT_NAME.EXTERNAL), 'dataset.layoutName');
@@ -87,9 +86,9 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             $util.assignEmptyValue(options, 'android', 'id', `${node.documentId}_navigation`);
             $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
             $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
-            application.controllerHandler.addAfterInsideTemplate(
+            this.application.controllerHandler.addAfterInsideTemplate(
                 node.id,
-                application.controllerHandler.renderNodeStatic(
+                this.application.controllerHandler.renderNodeStatic(
                     $constA.SUPPORT_ANDROID.NAVIGATION_VIEW,
                     $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
                     'wrap_content',
