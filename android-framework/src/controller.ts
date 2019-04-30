@@ -756,7 +756,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             if (item.autoMargin.leftRight || item.inlineStatic && item.cssAscend('textAlign', true) === 'center') {
                                 item.anchorParent(AXIS_ANDROID.HORIZONTAL);
                             }
-                            else if (item.rightAligned && item.outerWrapper === undefined) {
+                            else if (item.rightAligned) {
                                 item.anchor('right', 'parent');
                             }
                             else if ($util.withinRange(item.linear.left, node.box.left) || item.linear.left < node.box.left || item.autoMargin.right) {
@@ -1724,7 +1724,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     previous.anchor(alignSibling, item.documentId);
                                 }
                             }
-                            if (!previous.floating && !retainMultiline && item.multiline) {
+                            if (!previous.floating && !retainMultiline && item.multiline && !item.has('width')) {
                                 item.multiline = false;
                                 multiline = false;
                             }
@@ -1961,6 +1961,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 break;
         }
+        function setParentVertical(item: T) {
+            item.anchorParent(AXIS_ANDROID.VERTICAL);
+            item.anchorStyle(AXIS_ANDROID.VERTICAL);
+        }
         for (let i = 0; i < children.length; i++) {
             const item = children[i];
             if (i === 0) {
@@ -1976,10 +1980,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
             }
             if (item.inlineVertical) {
-                function setParentVertical() {
-                    item.anchorParent(AXIS_ANDROID.VERTICAL);
-                    item.anchorStyle(AXIS_ANDROID.VERTICAL);
-                }
                 let alignTop = false;
                 switch (item.verticalAlign) {
                     case 'text-top':
@@ -2037,11 +2037,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         alignTop = true;
                         break;
                     default:
-                        setParentVertical();
+                        setParentVertical(item);
                         break;
                 }
                 if (alignTop) {
-                    setParentVertical();
+                    setParentVertical(item);
                     item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
                     item.baselineAltered = true;
                 }
@@ -2049,6 +2049,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
             else if (baseline && item !== baseline && item.plainText && item.baseline) {
                 item.anchor('baseline', baseline.documentId);
+            }
+            else {
+                setParentVertical(item);
+                Controller.setConstraintDimension(item);
             }
             item.anchored = true;
         }
@@ -2179,7 +2183,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             else {
                 const columns: T[][] = [];
                 const columnMin = Math.min(row.length, columnSized, columnCount || Number.POSITIVE_INFINITY);
-                const perRowCount = row.length >= columnMin ? Math.ceil(row.length / columnMin) : 1;
+                let perRowCount = row.length >= columnMin ? Math.ceil(row.length / columnMin) : 1;
                 let maxHeight = Math.floor(row.reduce((a, b) => a + b.bounds.height, 0) / columnMin);
                 let excessCount = perRowCount > 1 && row.length % columnMin !== 0 ? row.length - columnMin : Number.POSITIVE_INFINITY;
                 let totalGap = 0;
@@ -2204,6 +2208,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     columns[k].push(column);
                     if (column.length) {
                         totalGap += $math.maxArray($util.objectMap<T, number>(column.children as T[], child => child.marginLeft + child.marginRight));
+                    }
+                    if (row.length - j === columnMin) {
+                        perRowCount = 1;
                     }
                 }
                 const percentGap = columnMin > 1 ? Math.max(((totalGap + (columnGap * (columnMin - 1))) / node.box.width) / columnMin, 0.01) : 0;
@@ -2444,7 +2451,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     get containerTypePercent(): LayoutType {
         return {
             containerType: CONTAINER_NODE.CONSTRAINT,
-            alignmentType: $enum.NODE_ALIGNMENT.COLUMN,
+            alignmentType: $enum.NODE_ALIGNMENT.HORIZONTAL,
             renderType: 0
         };
     }

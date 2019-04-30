@@ -1,4 +1,4 @@
-/* android.widget 0.9.4
+/* android.widget 0.9.5
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -28,13 +28,13 @@ this.android.widget.menu = (function () {
         actionProviderClass: /^.+$/,
         alphabeticShortcut: /^[a-zA-Z]+$/,
         alphabeticModifiers: /(META|CTRL|ALT|SHIFT|SYM|FUNCTION)+/g,
-        numericShortcut: /^[0-9]+$/,
+        numericShortcut: /^\d+$/,
         numericModifiers: /(META|CTRL|ALT|SHIFT|SYM|FUNCTION)+/g,
         checkable: /^(true|false)$/,
         visible: /^(true|false)$/,
         enabled: /^(true|false)$/,
         menuCategory: /^(container|system|secondary|alternative)$/,
-        orderInCategory: /^[0-9]+$/
+        orderInCategory: /^\d+$/
     };
     const REGEXP_GROUP = {
         id: /^@\+id\/\w+$/,
@@ -42,7 +42,7 @@ this.android.widget.menu = (function () {
         visible: /^(true|false)$/,
         enabled: /^(true|false)$/,
         menuCategory: /^(container|system|secondary|alternative)$/,
-        orderInCategory: /^[0-9]+$/
+        orderInCategory: /^\d+$/
     };
     const NAMESPACE_APP = ['showAsAction', 'actionViewClass', 'actionProviderClass'];
     const NAVIGATION = {

@@ -142,10 +142,11 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set attributeName(value) {
-        if (value !== 'transform' && !this.baseValue) {
-            const baseElement = this.animationElement && this.animationElement.parentElement || this.element;
-            if (baseElement) {
-                this.baseValue = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || getParentAttribute(baseElement, value);
+        if (value !== 'transform' && !$util.isString(this.baseValue)) {
+            this.baseValue = getParentAttribute(this.element, value);
+            if (!$util.isString(this.baseValue)) {
+                const baseElement = this.animationElement && this.animationElement.parentElement;
+                this.baseValue = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`);
                 if ($css.isLength(this.baseValue)) {
                     this.baseValue = $css.parseUnit(this.baseValue, $css.getFontSize(baseElement)).toString();
                 }

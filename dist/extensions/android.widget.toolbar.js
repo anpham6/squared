@@ -1,4 +1,4 @@
-/* android.widget 0.9.4
+/* android.widget 0.9.5
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -120,7 +120,7 @@ this.android.widget.toolbar = (function () {
             let collapsingToolbarNode;
             if (hasAppBar) {
                 $util.assignEmptyValue(appBarOptions, 'android', 'id', `${node.documentId}_appbar`);
-                $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $css.formatPX(node.height) : 'wrap_content');
+                $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $css.formatPX(node.actualHeight) : 'wrap_content');
                 $util.assignEmptyValue(appBarOptions, 'android', 'fitsSystemWindows', 'true');
                 if (hasMenu) {
                     if (appBarOptions.android.theme) {
@@ -169,7 +169,7 @@ this.android.widget.toolbar = (function () {
                     collapsingToolbarNode.render(appBarNode);
                     collapsingToolbarNode.android('layout_width', 'match_parent');
                     collapsingToolbarNode.android('layout_height', 'match_parent');
-                    application.addRenderTemplate((collapsingToolbarNode.renderParent || parent), collapsingToolbarNode, {
+                    application.addLayoutTemplate((collapsingToolbarNode.renderParent || parent), collapsingToolbarNode, {
                         type: 1 /* XML */,
                         node: collapsingToolbarNode,
                         controlName: $constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR
@@ -238,7 +238,7 @@ this.android.widget.toolbar = (function () {
             }
             return undefined;
         }
-        postProcedure(node) {
+        postOptimize(node) {
             const menu = $util.optionalAsString(Toolbar.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
             if (menu !== '') {
                 const toolbarOptions = $utilA.createViewAttribute(this.options[node.elementId] && this.options[node.elementId].self);

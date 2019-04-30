@@ -801,6 +801,17 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 }
                 node.retain(Array.from(mainData.children));
                 node.cssSort('zIndex');
+                if (node.cssTry('display', 'block')) {
+                    node.each((item: T) => {
+                        const bounds = item.initial.bounds;
+                        if (bounds) {
+                            const rect = (<Element> item.element).getBoundingClientRect();
+                            bounds.width = rect.width;
+                            bounds.height = rect.height;
+                        }
+                    });
+                    node.cssFinally('display');
+                }
                 node.data(EXT_NAME.CSS_GRID, 'mainData', mainData);
             }
         }

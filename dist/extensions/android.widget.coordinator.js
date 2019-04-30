@@ -1,4 +1,4 @@
-/* android.widget 0.9.4
+/* android.widget 0.9.5
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -21,7 +21,7 @@ this.android.widget.coordinator = (function () {
                 const toolbar = $session.getElementAsNode(element, node.sessionId);
                 if (toolbar) {
                     const extension = this.application.extensionManager.retrieve("android.widget.toolbar" /* TOOLBAR */);
-                    if (extension && 'collapsingToolbar' in $utilA.createViewAttribute(extension.options[toolbar.elementId])) {
+                    if (extension && extension.options[toolbar.elementId] && 'collapsingToolbar' in extension.options[toolbar.elementId]) {
                         node.android('fitsSystemWindows', 'true');
                     }
                 }
@@ -37,7 +37,7 @@ this.android.widget.coordinator = (function () {
                 }
             };
         }
-        postProcedure(node) {
+        postOptimize(node) {
             if (node.documentRoot) {
                 if (node.inlineWidth) {
                     for (const item of node) {

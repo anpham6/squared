@@ -1,4 +1,4 @@
-/* squared.svg 0.9.4
+/* squared.svg 0.9.5
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -575,8 +575,8 @@
         static drawPath(values, precision) {
             let result = '';
             for (const value of values) {
-                result += (result !== '' ? ' ' : '') + value.name;
-                switch (value.name.toUpperCase()) {
+                result += (result !== '' ? ' ' : '') + value.key;
+                switch (value.key.toUpperCase()) {
                     case 'M':
                     case 'L':
                     case 'C':
@@ -699,7 +699,7 @@
                 let previousPoint;
                 if (result.length) {
                     const previous = result[result.length - 1];
-                    previousCommand = previous.name.toUpperCase();
+                    previousCommand = previous.key.toUpperCase();
                     previousPoint = previous.end;
                 }
                 let radiusX;
@@ -810,7 +810,7 @@
                         points.push({ x, y });
                     }
                     result.push({
-                        name: match[1],
+                        key: match[1],
                         value: points,
                         start: points[0],
                         end: points[points.length - 1],
@@ -842,7 +842,7 @@
                         y = item.coordinates[j + 1];
                     }
                     const pt = { x, y };
-                    if (item.name.toUpperCase() === 'A') {
+                    if (item.key.toUpperCase() === 'A') {
                         pt.rx = item.radiusX;
                         pt.ry = item.radiusY;
                         if (radius) {
@@ -857,7 +857,7 @@
                     result.push(pt);
                 }
                 if (item.relative) {
-                    item.name = item.name.toUpperCase();
+                    item.key = item.key.toUpperCase();
                 }
             }
             return result;
@@ -868,7 +868,7 @@
                 for (const item of values) {
                     if (item.relative) {
                         if (location) {
-                            if (transformed && (item.name === 'H' || item.name === 'V')) {
+                            if (transformed && (item.key === 'H' || item.key === 'V')) {
                                 const pt = points.shift();
                                 if (pt) {
                                     item.coordinates[0] = pt.x;
@@ -876,7 +876,7 @@
                                     item.value[0] = pt;
                                     item.start = pt;
                                     item.end = pt;
-                                    item.name = 'L';
+                                    item.key = 'L';
                                     item.relative = false;
                                 }
                                 else {
@@ -889,7 +889,7 @@
                                     if (pt) {
                                         item.coordinates[i] = pt.x - location.x;
                                         item.coordinates[i + 1] = pt.y - location.y;
-                                        if (item.name === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
+                                        if (item.key === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
                                             item.radiusX = pt.rx;
                                             item.radiusY = pt.ry;
                                         }
@@ -899,7 +899,7 @@
                                         break invalid;
                                     }
                                 }
-                                item.name = item.name.toLowerCase();
+                                item.key = item.key.toLowerCase();
                             }
                             location = item.end;
                         }
@@ -908,7 +908,7 @@
                         }
                     }
                     else {
-                        switch (item.name.toUpperCase()) {
+                        switch (item.key.toUpperCase()) {
                             case 'M':
                             case 'L':
                             case 'H':
@@ -1380,10 +1380,11 @@
             }
         }
         set attributeName(value) {
-            if (value !== 'transform' && !this.baseValue) {
-                const baseElement = this.animationElement && this.animationElement.parentElement || this.element;
-                if (baseElement) {
-                    this.baseValue = $util$1.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || getParentAttribute(baseElement, value);
+            if (value !== 'transform' && !$util$1.isString(this.baseValue)) {
+                this.baseValue = getParentAttribute(this.element, value);
+                if (!$util$1.isString(this.baseValue)) {
+                    const baseElement = this.animationElement && this.animationElement.parentElement;
+                    this.baseValue = $util$1.optionalAsString(baseElement, `${value}.baseVal.valueAsString`);
                     if ($css$1.isLength(this.baseValue)) {
                         this.baseValue = $css$1.parseUnit(this.baseValue, $css$1.getFontSize(baseElement)).toString();
                     }
@@ -2416,21 +2417,21 @@
         let previousValue;
         let previous;
         let next;
-        for (const [index, value] of map.entries()) {
-            if (time === index) {
-                previous = { index, value };
+        for (const [key, value] of map.entries()) {
+            if (time === key) {
+                previous = { key, value };
                 break;
             }
-            else if (time > previousTime && time < index && previousValue !== undefined) {
-                previous = { index: previousTime, value: previousValue };
-                next = { index, value };
+            else if (time > previousTime && time < key && previousValue !== undefined) {
+                previous = { key: previousTime, value: previousValue };
+                next = { key, value };
                 break;
             }
-            previousTime = index;
+            previousTime = key;
             previousValue = value;
         }
         if (previous && next) {
-            setTimelineValue(map, time, getItemSplitValue(time, previous.index, previous.value, next.index, next.value), true);
+            setTimelineValue(map, time, getItemSplitValue(time, previous.key, previous.value, next.key, next.value), true);
         }
         else if (previous) {
             setTimelineValue(map, time, previous.value, true);
@@ -2518,14 +2519,14 @@
         }
         const transformOrigin = TRANSFORM.origin(path.element);
         for (let i = 0; i < entries.length; i++) {
-            const index = entries[i][0];
+            const key = entries[i][0];
             const data = entries[i][1];
             const values = [];
             for (const attr of baseVal) {
                 let value = data.get(attr);
                 if (value === undefined) {
                     if (value === undefined) {
-                        value = getForwardValue(forwardMap[attr], index);
+                        value = getForwardValue(forwardMap[attr], key);
                     }
                     if (value === undefined) {
                         value = path.getBaseValue(attr);
@@ -2579,7 +2580,7 @@
                         break;
                 }
                 if (value !== undefined) {
-                    result.push({ index, value });
+                    result.push({ key, value });
                 }
             }
         }
@@ -3264,9 +3265,9 @@
                                         forwardMap[attr] = [];
                                     }
                                     forwardMap[attr].push({
-                                        time,
+                                        key: type,
                                         value,
-                                        index: type
+                                        time
                                     });
                                 }
                                 if (item && SvgBuild.isAnimate(item) && !item.fillReplace) {
@@ -3828,19 +3829,19 @@
                                     }
                                 }
                                 if (previousComplete && previousComplete.fillReplace && infiniteMap[attr] === undefined) {
-                                    let type = 0;
+                                    let key = 0;
                                     let value;
                                     if (forwardMap[attr]) {
                                         const item = getForwardItem(attr);
                                         if (item) {
-                                            type = item.index;
+                                            key = item.key;
                                             value = item.value;
                                         }
                                     }
                                     else {
                                         if (transforming) {
-                                            type = Array.from(animateTimeRangeMap.values()).pop();
-                                            value = TRANSFORM.typeAsValue(type);
+                                            key = Array.from(animateTimeRangeMap.values()).pop();
+                                            value = TRANSFORM.typeAsValue(key);
                                         }
                                         else {
                                             value = baseValueMap[attr];
@@ -3849,7 +3850,7 @@
                                     if (value !== undefined && !$util$5.isEqual(repeatingMap[attr].get(maxTime), value)) {
                                         maxTime = setTimelineValue(repeatingMap[attr], maxTime, value);
                                         if (transforming) {
-                                            setTimeRange(animateTimeRangeMap, type, maxTime);
+                                            setTimeRange(animateTimeRangeMap, key, maxTime);
                                         }
                                     }
                                 }
@@ -4134,7 +4135,7 @@
                                                 }
                                                 animate.duration = duration;
                                                 animate.keySplines = keySplines;
-                                                animate.synchronized = { index: i, value: '' };
+                                                animate.synchronized = { key: i, value: '' };
                                                 previousEndTime = endTime;
                                                 this._insertAnimate(animate, repeating);
                                             }
@@ -4153,7 +4154,7 @@
                                                     object = new SvgAnimate();
                                                     object.attributeName = 'd';
                                                     for (const item of pathData) {
-                                                        object.keyTimes.push(item.index);
+                                                        object.keyTimes.push(item.key);
                                                         object.values.push(item.value.toString());
                                                     }
                                                 }
@@ -4246,7 +4247,7 @@
                                             }
                                             object.duration = keyTimeTo - keyTimeFrom;
                                             object.keyTimes = [0, 1];
-                                            object.synchronized = { index: i, value };
+                                            object.synchronized = { key: i, value };
                                             const interpolator = interpolatorMap.get(keyTimeTo);
                                             if (interpolator) {
                                                 object.keySplines = [interpolator];
@@ -4382,7 +4383,7 @@
             element.setAttribute('opacity', opacity.toString());
         }
     }
-    const sortAttribute = (value) => value.sort((a, b) => a.index >= b.index ? 1 : -1);
+    const sortAttribute = (value) => value.sort((a, b) => a.key >= b.key ? 1 : -1);
     var SvgView$MX = (Base) => {
         return class extends Base {
             getTransforms(companion) {
@@ -4456,7 +4457,7 @@
                         cssData[name] = values;
                     }
                     for (let i = 0; i < animationName.length; i++) {
-                        const keyframes = KEYFRAME_NAME.get(animationName[i]);
+                        const keyframes = KEYFRAME_NAME[animationName[i]];
                         const duration = SvgAnimation.convertClockTime(cssData['animation-duration'][i]);
                         if (keyframes && duration > 0) {
                             id++;
@@ -4478,30 +4479,29 @@
                                 fillMode
                             });
                             for (const percent in keyframes) {
-                                const fraction = parseInt(percent) / 100;
+                                const key = parseFloat(percent) / 100;
                                 for (const name in keyframes[percent]) {
                                     const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
                                     if (map[name] === undefined) {
                                         map[name] = [];
                                     }
                                     let value = keyframes[percent][name];
-                                    if ($css$3.isCalc(value)) {
-                                        value = $css$3.calculateVar(element, value, name);
-                                    }
-                                    else if ($css$3.isCustomProperty(value)) {
-                                        value = $css$3.parseVar(element, value);
-                                    }
-                                    if (value !== undefined) {
-                                        map[name].push({
-                                            index: fraction,
-                                            value: value.toString()
-                                        });
+                                    if (value) {
+                                        if ($css$3.isCalc(value)) {
+                                            value = $css$3.calculateVar(element, value, name);
+                                        }
+                                        else if ($css$3.isCustomProperty(value)) {
+                                            value = $css$3.parseVar(element, value);
+                                        }
+                                        if (value !== undefined) {
+                                            map[name].push({ key, value: value.toString() });
+                                        }
                                     }
                                 }
                             }
                             if (attrMap['transform']) {
                                 function getKeyframeOrigin(order) {
-                                    const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.index === order);
+                                    const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.key === order);
                                     if (origin) {
                                         return TRANSFORM.origin(element, origin.value);
                                     }
@@ -4510,7 +4510,7 @@
                                 for (const transform of sortAttribute(attrMap['transform'])) {
                                     const transforms = TRANSFORM.parse(element, transform.value);
                                     if (transforms) {
-                                        const origin = getKeyframeOrigin(transform.index);
+                                        const origin = getKeyframeOrigin(transform.key);
                                         transforms.forEach(item => {
                                             const m = item.matrix;
                                             let name;
@@ -4524,7 +4524,7 @@
                                                 case SVGTransform.SVG_TRANSFORM_SCALE:
                                                     name = 'scale';
                                                     value = `${m.a} ${m.d} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
-                                                    if (origin && (transform.index !== 0 || origin.x !== 0 || origin.y !== 0)) {
+                                                    if (origin && (transform.key !== 0 || origin.x !== 0 || origin.y !== 0)) {
                                                         transformOrigin = {
                                                             x: origin.x * (1 - m.a),
                                                             y: origin.y * (1 - m.d)
@@ -4538,7 +4538,7 @@
                                                 case SVGTransform.SVG_TRANSFORM_SKEWX:
                                                     name = 'skewX';
                                                     value = item.angle.toString();
-                                                    if (origin && (transform.index !== 0 || origin.y !== 0)) {
+                                                    if (origin && (transform.key !== 0 || origin.y !== 0)) {
                                                         transformOrigin = {
                                                             x: origin.y * m.c * -1,
                                                             y: 0
@@ -4548,7 +4548,7 @@
                                                 case SVGTransform.SVG_TRANSFORM_SKEWY:
                                                     name = 'skewY';
                                                     value = item.angle.toString();
-                                                    if (origin && (transform.index !== 0 || origin.x !== 0)) {
+                                                    if (origin && (transform.key !== 0 || origin.x !== 0)) {
                                                         transformOrigin = {
                                                             x: 0,
                                                             y: origin.x * m.b * -1
@@ -4561,14 +4561,14 @@
                                             if (attrMap[name] === undefined) {
                                                 attrMap[name] = [];
                                             }
-                                            const previousIndex = attrMap[name].findIndex(subitem => subitem.index === transform.index);
+                                            const previousIndex = attrMap[name].findIndex(subitem => subitem.key === transform.key);
                                             if (previousIndex !== -1) {
                                                 attrMap[name][previousIndex].value = value;
                                                 attrMap[name][previousIndex].transformOrigin = transformOrigin;
                                             }
                                             else {
                                                 attrMap[name].push({
-                                                    index: transform.index,
+                                                    key: transform.key,
                                                     value,
                                                     transformOrigin
                                                 });
@@ -4605,10 +4605,10 @@
                                 const keySplines = [];
                                 sortAttribute(animation);
                                 for (let j = 0; j < animation.length; j++) {
-                                    keyTimes.push(animation[j].index);
+                                    keyTimes.push(animation[j].key);
                                     values.push(animation[j].value);
                                     if (j < animation.length - 1) {
-                                        const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.index === animation[j].index);
+                                        const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.key === animation[j].key);
                                         keySplines.push(spline ? spline.value : timingFunction);
                                     }
                                     const transformOrigin = animation[j].transformOrigin;
@@ -5603,7 +5603,7 @@
     function updatePathRadius(path, rx, ry) {
         for (let i = 0; i < path.length; i++) {
             const seg = path[i];
-            if (seg.name.toUpperCase() === 'A') {
+            if (seg.key.toUpperCase() === 'A') {
                 if (rx !== undefined) {
                     const offset = rx - seg.radiusX;
                     seg.radiusX = rx;
@@ -5674,7 +5674,7 @@
                             case 'width':
                                 for (const index of [1, 2]) {
                                     const seg = path[index];
-                                    switch (seg.name) {
+                                    switch (seg.key) {
                                         case 'm':
                                         case 'l':
                                         case 'h':
@@ -5691,7 +5691,7 @@
                             case 'height':
                                 for (const index of [2, 3]) {
                                     const seg = path[index];
-                                    switch (seg.name) {
+                                    switch (seg.key) {
                                         case 'm':
                                         case 'l':
                                         case 'v':
@@ -5909,7 +5909,7 @@
                             const pathStartPoint = pathStart.start;
                             const pathEnd = commands[commands.length - 1];
                             const pathEndPoint = pathEnd.end;
-                            const name = pathEnd.name.toUpperCase();
+                            const name = pathEnd.key.toUpperCase();
                             const leading = data.leading;
                             const trailing = data.trailing;
                             let modified = false;

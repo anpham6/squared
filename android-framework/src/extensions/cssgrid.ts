@@ -16,6 +16,9 @@ const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
+const REGEXP_ALIGNSELF = /(start|end|center|baseline)/;
+const REGEXP_JUSTIFYSELF = /(start|end|center|baseline|left|right)/;
+
 function getRowData(mainData: CssGridData<View>, direction: string) {
     const result: Undefined<View[]>[][] = [];
     if (direction === 'column') {
@@ -221,7 +224,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const data: CssGridDirectionData = mainData[direction];
                 const cellStart = cellData[`${direction}Start`];
                 const cellSpan = cellData[`${direction}Span`];
-                const minDimension = `min${$util.capitalize(dimension)}`;
+                const dimensionA = $util.capitalize(dimension);
+                const minDimension = `min${dimensionA}`;
                 let size = 0;
                 let minSize = 0;
                 let fitContent = false;
@@ -330,7 +334,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
                 else if (size > 0) {
-                    const maxDimension = `max${$util.capitalize(dimension)}`;
+                    const maxDimension = `max${dimensionA}`;
+                    if (item.contentBox) {
+                        size -= item[`contentBox${dimensionA}`];
+                    }
                     if (fitContent && !item.has(maxDimension)) {
                         item.css(maxDimension, $css.formatPX(size), true);
                         item.mergeGravity('layout_gravity', direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
@@ -343,7 +350,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             const alignSelf = node.flexbox.alignSelf;
             const justifySelf = node.flexbox.justifySelf;
-            if (/(start|end|center|baseline)/.test(alignSelf) || /(start|end|center|baseline|left|right)/.test(justifySelf)) {
+            if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf)) {
                 renderAs = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
                 renderAs.tagName = node.tagName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -405,9 +412,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             const [rowStart, rowSpan] = applyLayout(target, 'row', 'height');
             if (mainData.alignContent === 'normal' && rowSpan === 1 && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === 'auto') && (mainData.rowHeightCount[rowStart] === 1 || node.bounds.height < mainData.rowHeight[rowStart]) && (parent.hasHeight && !target.has('height') || mainData.rowSpanMultiple[rowStart] === true)) {
-                target.android('layout_height', '0px');
-                if (mainData.rowHeightCount[rowStart] === 1) {
-                    target.android('layout_rowWeight', $math.truncate(mainData.rowWeight[rowStart] || 1, node.localSettings.floatPrecision));
+                if (node.initial.bounds && node.bounds.height > node.initial.bounds.height) {
+                    target.android('layout_height', '0px');
+                    if (mainData.rowHeightCount[rowStart] === 1) {
+                        target.android('layout_rowWeight', $math.truncate(mainData.rowWeight[rowStart] || 1, node.localSettings.floatPrecision));
+                    }
                 }
             }
             if (!target.has('height') && !(mainData.row.count === 1 && mainData.alignContent === 'space-between')) {

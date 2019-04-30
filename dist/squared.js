@@ -1,4 +1,4 @@
-/* squared 0.9.4
+/* squared 0.9.5
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -18,7 +18,7 @@
         CSS_URL: 'url\\("?(.+?)"?\\)',
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
         CSS_CALC: 'calc(\\(.+\\))',
-        CSS_VAR: 'var\\((--[A-Za-z0-9\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
+        CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
     };
     const UNIT = {
         DECIMAL: new RegExp(`^${STRING.DECIMAL}$`),
@@ -35,9 +35,9 @@
     };
     const XML = {
         ATTRIBUTE: /([^\s]+)="([^"]+)"/,
-        ENTITY: /&#?[A-Za-z0-9]+;/,
+        ENTITY: /&#?[A-Za-z\d]+;/,
         SEPARATOR: /\s*,\s*/,
-        BREAKWORD: /[^A-Za-z0-9&#;]+/,
+        BREAKWORD: /[^A-Za-z\d&#;]+/,
         TAGNAME_G: /(<([^>]+)>)/g,
         NONWORD_G: /[^A-Za-z\d]+/g
     };
@@ -55,7 +55,7 @@
     };
     const ESCAPE = {
         ENTITY: /&#(\d+);/g,
-        NONENTITY: /&(?!#?[A-Za-z0-9]{2,};)/g,
+        NONENTITY: /&(?!#?[A-Za-z\d]{2,};)/g,
         NBSP: /&nbsp;/g,
         AMP: /&/g,
         LT: /</g,
@@ -91,12 +91,7 @@
     const CACHE_CAMELCASE = {};
     const CACHE_UNDERSCORE = {};
     function capitalize(value, upper = true) {
-        if (upper) {
-            return value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
-        }
-        else {
-            return value.charAt(0).toLowerCase() + value.substring(1);
-        }
+        return upper ? value.charAt(0).toUpperCase() + value.substring(1).toLowerCase() : value.charAt(0).toLowerCase() + value.substring(1);
     }
     function convertUnderscore(value) {
         if (CACHE_UNDERSCORE[value]) {
@@ -403,19 +398,10 @@
             }
         }
         else {
-            let search;
-            if (/^\*.+\*$/.test(value)) {
-                search = (a) => a.indexOf(value.replace(/\*/g, '')) !== -1;
-            }
-            else if (/^\*/.test(value)) {
-                search = (a) => a.endsWith(value.replace(/\*/, ''));
-            }
-            else if (/\*$/.test(value)) {
-                search = (a) => a.startsWith(value.replace(/\*/, ''));
-            }
-            else {
-                search = (a) => a === value;
-            }
+            const search = /^\*.+\*$/.test(value) ? (a) => a.indexOf(value.replace(/\*/g, '')) !== -1 :
+                /^\*/.test(value) ? (a) => a.endsWith(value.replace(/\*/, '')) :
+                    /\*$/.test(value) ? (a) => a.startsWith(value.replace(/\*/, '')) :
+                        (a) => a === value;
             for (const i in obj) {
                 if (search(i)) {
                     result.push([i, obj[i]]);
@@ -844,7 +830,7 @@
     const COLOR_CSS3 = [
         {
             value: '#000000',
-            name: 'black',
+            key: 'black',
             rgb: {
                 r: 0,
                 g: 0,
@@ -858,7 +844,7 @@
         },
         {
             value: '#696969',
-            name: 'dimgray',
+            key: 'dimgray',
             rgb: {
                 r: 105,
                 g: 105,
@@ -872,7 +858,7 @@
         },
         {
             value: '#696969',
-            name: 'dimgrey',
+            key: 'dimgrey',
             rgb: {
                 r: 105,
                 g: 105,
@@ -886,7 +872,7 @@
         },
         {
             value: '#808080',
-            name: 'gray',
+            key: 'gray',
             rgb: {
                 r: 128,
                 g: 128,
@@ -900,7 +886,7 @@
         },
         {
             value: '#808080',
-            name: 'grey',
+            key: 'grey',
             rgb: {
                 r: 128,
                 g: 128,
@@ -914,7 +900,7 @@
         },
         {
             value: '#A9A9A9',
-            name: 'darkgray',
+            key: 'darkgray',
             rgb: {
                 r: 169,
                 g: 169,
@@ -928,7 +914,7 @@
         },
         {
             value: '#A9A9A9',
-            name: 'darkgrey',
+            key: 'darkgrey',
             rgb: {
                 r: 169,
                 g: 169,
@@ -942,7 +928,7 @@
         },
         {
             value: '#C0C0C0',
-            name: 'silver',
+            key: 'silver',
             rgb: {
                 r: 192,
                 g: 192,
@@ -956,7 +942,7 @@
         },
         {
             value: '#D3D3D3',
-            name: 'lightgray',
+            key: 'lightgray',
             rgb: {
                 r: 211,
                 g: 211,
@@ -970,7 +956,7 @@
         },
         {
             value: '#D3D3D3',
-            name: 'lightgrey',
+            key: 'lightgrey',
             rgb: {
                 r: 211,
                 g: 211,
@@ -984,7 +970,7 @@
         },
         {
             value: '#DCDCDC',
-            name: 'gainsboro',
+            key: 'gainsboro',
             rgb: {
                 r: 220,
                 g: 220,
@@ -998,7 +984,7 @@
         },
         {
             value: '#F5F5F5',
-            name: 'whitesmoke',
+            key: 'whitesmoke',
             rgb: {
                 r: 245,
                 g: 245,
@@ -1012,7 +998,7 @@
         },
         {
             value: '#FFFFFF',
-            name: 'white',
+            key: 'white',
             rgb: {
                 r: 255,
                 g: 255,
@@ -1026,7 +1012,7 @@
         },
         {
             value: '#BC8F8F',
-            name: 'rosybrown',
+            key: 'rosybrown',
             rgb: {
                 r: 188,
                 g: 143,
@@ -1040,7 +1026,7 @@
         },
         {
             value: '#CD5C5C',
-            name: 'indianred',
+            key: 'indianred',
             rgb: {
                 r: 205,
                 g: 92,
@@ -1054,7 +1040,7 @@
         },
         {
             value: '#A52A2A',
-            name: 'brown',
+            key: 'brown',
             rgb: {
                 r: 165,
                 g: 42,
@@ -1068,7 +1054,7 @@
         },
         {
             value: '#B22222',
-            name: 'firebrick',
+            key: 'firebrick',
             rgb: {
                 r: 178,
                 g: 34,
@@ -1082,7 +1068,7 @@
         },
         {
             value: '#F08080',
-            name: 'lightcoral',
+            key: 'lightcoral',
             rgb: {
                 r: 240,
                 g: 128,
@@ -1096,7 +1082,7 @@
         },
         {
             value: '#800000',
-            name: 'maroon',
+            key: 'maroon',
             rgb: {
                 r: 128,
                 g: 0,
@@ -1110,7 +1096,7 @@
         },
         {
             value: '#8B0000',
-            name: 'darkred',
+            key: 'darkred',
             rgb: {
                 r: 139,
                 g: 0,
@@ -1124,7 +1110,7 @@
         },
         {
             value: '#FF0000',
-            name: 'red',
+            key: 'red',
             rgb: {
                 r: 255,
                 g: 0,
@@ -1138,7 +1124,7 @@
         },
         {
             value: '#FFFAFA',
-            name: 'snow',
+            key: 'snow',
             rgb: {
                 r: 255,
                 g: 250,
@@ -1152,7 +1138,7 @@
         },
         {
             value: '#FFE4E1',
-            name: 'mistyrose',
+            key: 'mistyrose',
             rgb: {
                 r: 255,
                 g: 228,
@@ -1166,7 +1152,7 @@
         },
         {
             value: '#FA8072',
-            name: 'salmon',
+            key: 'salmon',
             rgb: {
                 r: 250,
                 g: 128,
@@ -1180,7 +1166,7 @@
         },
         {
             value: '#FF6347',
-            name: 'tomato',
+            key: 'tomato',
             rgb: {
                 r: 255,
                 g: 99,
@@ -1194,7 +1180,7 @@
         },
         {
             value: '#E9967A',
-            name: 'darksalmon',
+            key: 'darksalmon',
             rgb: {
                 r: 233,
                 g: 150,
@@ -1208,7 +1194,7 @@
         },
         {
             value: '#FF7F50',
-            name: 'coral',
+            key: 'coral',
             rgb: {
                 r: 255,
                 g: 127,
@@ -1222,7 +1208,7 @@
         },
         {
             value: '#FF4500',
-            name: 'orangered',
+            key: 'orangered',
             rgb: {
                 r: 255,
                 g: 69,
@@ -1236,7 +1222,7 @@
         },
         {
             value: '#FFA07A',
-            name: 'lightsalmon',
+            key: 'lightsalmon',
             rgb: {
                 r: 255,
                 g: 160,
@@ -1250,7 +1236,7 @@
         },
         {
             value: '#A0522D',
-            name: 'sienna',
+            key: 'sienna',
             rgb: {
                 r: 160,
                 g: 82,
@@ -1264,7 +1250,7 @@
         },
         {
             value: '#FFF5EE',
-            name: 'seashell',
+            key: 'seashell',
             rgb: {
                 r: 255,
                 g: 245,
@@ -1278,7 +1264,7 @@
         },
         {
             value: '#D2691E',
-            name: 'chocolate',
+            key: 'chocolate',
             rgb: {
                 r: 210,
                 g: 105,
@@ -1292,7 +1278,7 @@
         },
         {
             value: '#8B4513',
-            name: 'saddlebrown',
+            key: 'saddlebrown',
             rgb: {
                 r: 139,
                 g: 69,
@@ -1306,7 +1292,7 @@
         },
         {
             value: '#F4A460',
-            name: 'sandybrown',
+            key: 'sandybrown',
             rgb: {
                 r: 244,
                 g: 164,
@@ -1320,7 +1306,7 @@
         },
         {
             value: '#FFDAB9',
-            name: 'peachpuff',
+            key: 'peachpuff',
             rgb: {
                 r: 255,
                 g: 218,
@@ -1334,7 +1320,7 @@
         },
         {
             value: '#CD853F',
-            name: 'peru',
+            key: 'peru',
             rgb: {
                 r: 205,
                 g: 133,
@@ -1348,7 +1334,7 @@
         },
         {
             value: '#FAF0E6',
-            name: 'linen',
+            key: 'linen',
             rgb: {
                 r: 250,
                 g: 240,
@@ -1362,7 +1348,7 @@
         },
         {
             value: '#FFE4C4',
-            name: 'bisque',
+            key: 'bisque',
             rgb: {
                 r: 255,
                 g: 228,
@@ -1376,7 +1362,7 @@
         },
         {
             value: '#FF8C00',
-            name: 'darkorange',
+            key: 'darkorange',
             rgb: {
                 r: 255,
                 g: 140,
@@ -1390,7 +1376,7 @@
         },
         {
             value: '#DEB887',
-            name: 'burlywood',
+            key: 'burlywood',
             rgb: {
                 r: 222,
                 g: 184,
@@ -1404,7 +1390,7 @@
         },
         {
             value: '#FAEBD7',
-            name: 'antiquewhite',
+            key: 'antiquewhite',
             rgb: {
                 r: 250,
                 g: 235,
@@ -1418,7 +1404,7 @@
         },
         {
             value: '#D2B48C',
-            name: 'tan',
+            key: 'tan',
             rgb: {
                 r: 210,
                 g: 180,
@@ -1432,7 +1418,7 @@
         },
         {
             value: '#FFDEAD',
-            name: 'navajowhite',
+            key: 'navajowhite',
             rgb: {
                 r: 255,
                 g: 222,
@@ -1446,7 +1432,7 @@
         },
         {
             value: '#FFEBCD',
-            name: 'blanchedalmond',
+            key: 'blanchedalmond',
             rgb: {
                 r: 255,
                 g: 235,
@@ -1460,7 +1446,7 @@
         },
         {
             value: '#FFEFD5',
-            name: 'papayawhip',
+            key: 'papayawhip',
             rgb: {
                 r: 255,
                 g: 239,
@@ -1474,7 +1460,7 @@
         },
         {
             value: '#FFE4B5',
-            name: 'moccasin',
+            key: 'moccasin',
             rgb: {
                 r: 255,
                 g: 228,
@@ -1488,7 +1474,7 @@
         },
         {
             value: '#FFA500',
-            name: 'orange',
+            key: 'orange',
             rgb: {
                 r: 255,
                 g: 165,
@@ -1502,7 +1488,7 @@
         },
         {
             value: '#F5DEB3',
-            name: 'wheat',
+            key: 'wheat',
             rgb: {
                 r: 245,
                 g: 222,
@@ -1516,7 +1502,7 @@
         },
         {
             value: '#FDF5E6',
-            name: 'oldlace',
+            key: 'oldlace',
             rgb: {
                 r: 253,
                 g: 245,
@@ -1530,7 +1516,7 @@
         },
         {
             value: '#FFFAF0',
-            name: 'floralwhite',
+            key: 'floralwhite',
             rgb: {
                 r: 255,
                 g: 250,
@@ -1544,7 +1530,7 @@
         },
         {
             value: '#B8860B',
-            name: 'darkgoldenrod',
+            key: 'darkgoldenrod',
             rgb: {
                 r: 184,
                 g: 134,
@@ -1558,7 +1544,7 @@
         },
         {
             value: '#DAA520',
-            name: 'goldenrod',
+            key: 'goldenrod',
             rgb: {
                 r: 218,
                 g: 165,
@@ -1572,7 +1558,7 @@
         },
         {
             value: '#FFF8DC',
-            name: 'cornsilk',
+            key: 'cornsilk',
             rgb: {
                 r: 255,
                 g: 248,
@@ -1586,7 +1572,7 @@
         },
         {
             value: '#FFD700',
-            name: 'gold',
+            key: 'gold',
             rgb: {
                 r: 255,
                 g: 215,
@@ -1600,7 +1586,7 @@
         },
         {
             value: '#FFFACD',
-            name: 'lemonchiffon',
+            key: 'lemonchiffon',
             rgb: {
                 r: 255,
                 g: 250,
@@ -1614,7 +1600,7 @@
         },
         {
             value: '#F0E68C',
-            name: 'khaki',
+            key: 'khaki',
             rgb: {
                 r: 240,
                 g: 230,
@@ -1628,7 +1614,7 @@
         },
         {
             value: '#EEE8AA',
-            name: 'palegoldenrod',
+            key: 'palegoldenrod',
             rgb: {
                 r: 238,
                 g: 232,
@@ -1642,7 +1628,7 @@
         },
         {
             value: '#BDB76B',
-            name: 'darkkhaki',
+            key: 'darkkhaki',
             rgb: {
                 r: 189,
                 g: 183,
@@ -1656,7 +1642,7 @@
         },
         {
             value: '#F5F5DC',
-            name: 'beige',
+            key: 'beige',
             rgb: {
                 r: 245,
                 g: 245,
@@ -1670,7 +1656,7 @@
         },
         {
             value: '#FAFAD2',
-            name: 'lightgoldenrodyellow',
+            key: 'lightgoldenrodyellow',
             rgb: {
                 r: 250,
                 g: 250,
@@ -1684,7 +1670,7 @@
         },
         {
             value: '#808000',
-            name: 'olive',
+            key: 'olive',
             rgb: {
                 r: 128,
                 g: 128,
@@ -1698,7 +1684,7 @@
         },
         {
             value: '#FFFF00',
-            name: 'yellow',
+            key: 'yellow',
             rgb: {
                 r: 255,
                 g: 255,
@@ -1712,7 +1698,7 @@
         },
         {
             value: '#FFFFE0',
-            name: 'lightyellow',
+            key: 'lightyellow',
             rgb: {
                 r: 255,
                 g: 255,
@@ -1726,7 +1712,7 @@
         },
         {
             value: '#FFFFF0',
-            name: 'ivory',
+            key: 'ivory',
             rgb: {
                 r: 255,
                 g: 255,
@@ -1740,7 +1726,7 @@
         },
         {
             value: '#6B8E23',
-            name: 'olivedrab',
+            key: 'olivedrab',
             rgb: {
                 r: 107,
                 g: 142,
@@ -1754,7 +1740,7 @@
         },
         {
             value: '#9ACD32',
-            name: 'yellowgreen',
+            key: 'yellowgreen',
             rgb: {
                 r: 154,
                 g: 205,
@@ -1768,7 +1754,7 @@
         },
         {
             value: '#556B2F',
-            name: 'darkolivegreen',
+            key: 'darkolivegreen',
             rgb: {
                 r: 85,
                 g: 107,
@@ -1782,7 +1768,7 @@
         },
         {
             value: '#ADFF2F',
-            name: 'greenyellow',
+            key: 'greenyellow',
             rgb: {
                 r: 173,
                 g: 255,
@@ -1796,7 +1782,7 @@
         },
         {
             value: '#7FFF00',
-            name: 'chartreuse',
+            key: 'chartreuse',
             rgb: {
                 r: 127,
                 g: 255,
@@ -1810,7 +1796,7 @@
         },
         {
             value: '#7CFC00',
-            name: 'lawngreen',
+            key: 'lawngreen',
             rgb: {
                 r: 124,
                 g: 252,
@@ -1824,7 +1810,7 @@
         },
         {
             value: '#8FBC8F',
-            name: 'darkseagreen',
+            key: 'darkseagreen',
             rgb: {
                 r: 143,
                 g: 188,
@@ -1838,7 +1824,7 @@
         },
         {
             value: '#228B22',
-            name: 'forestgreen',
+            key: 'forestgreen',
             rgb: {
                 r: 34,
                 g: 139,
@@ -1852,7 +1838,7 @@
         },
         {
             value: '#32CD32',
-            name: 'limegreen',
+            key: 'limegreen',
             rgb: {
                 r: 50,
                 g: 205,
@@ -1866,7 +1852,7 @@
         },
         {
             value: '#90EE90',
-            name: 'lightgreen',
+            key: 'lightgreen',
             rgb: {
                 r: 144,
                 g: 238,
@@ -1880,7 +1866,7 @@
         },
         {
             value: '#98FB98',
-            name: 'palegreen',
+            key: 'palegreen',
             rgb: {
                 r: 152,
                 g: 251,
@@ -1894,7 +1880,7 @@
         },
         {
             value: '#006400',
-            name: 'darkgreen',
+            key: 'darkgreen',
             rgb: {
                 r: 0,
                 g: 100,
@@ -1908,7 +1894,7 @@
         },
         {
             value: '#008000',
-            name: 'green',
+            key: 'green',
             rgb: {
                 r: 0,
                 g: 128,
@@ -1922,7 +1908,7 @@
         },
         {
             value: '#00FF00',
-            name: 'lime',
+            key: 'lime',
             rgb: {
                 r: 0,
                 g: 255,
@@ -1936,7 +1922,7 @@
         },
         {
             value: '#F0FFF0',
-            name: 'honeydew',
+            key: 'honeydew',
             rgb: {
                 r: 240,
                 g: 255,
@@ -1950,7 +1936,7 @@
         },
         {
             value: '#2E8B57',
-            name: 'seagreen',
+            key: 'seagreen',
             rgb: {
                 r: 46,
                 g: 139,
@@ -1964,7 +1950,7 @@
         },
         {
             value: '#3CB371',
-            name: 'mediumseagreen',
+            key: 'mediumseagreen',
             rgb: {
                 r: 60,
                 g: 179,
@@ -1978,7 +1964,7 @@
         },
         {
             value: '#00FF7F',
-            name: 'springgreen',
+            key: 'springgreen',
             rgb: {
                 r: 0,
                 g: 255,
@@ -1992,7 +1978,7 @@
         },
         {
             value: '#F5FFFA',
-            name: 'mintcream',
+            key: 'mintcream',
             rgb: {
                 r: 245,
                 g: 255,
@@ -2006,7 +1992,7 @@
         },
         {
             value: '#00FA9A',
-            name: 'mediumspringgreen',
+            key: 'mediumspringgreen',
             rgb: {
                 r: 0,
                 g: 250,
@@ -2020,7 +2006,7 @@
         },
         {
             value: '#66CDAA',
-            name: 'mediumaquamarine',
+            key: 'mediumaquamarine',
             rgb: {
                 r: 102,
                 g: 205,
@@ -2034,7 +2020,7 @@
         },
         {
             value: '#7FFFD4',
-            name: 'aquamarine',
+            key: 'aquamarine',
             rgb: {
                 r: 127,
                 g: 255,
@@ -2048,7 +2034,7 @@
         },
         {
             value: '#40E0D0',
-            name: 'turquoise',
+            key: 'turquoise',
             rgb: {
                 r: 64,
                 g: 224,
@@ -2062,7 +2048,7 @@
         },
         {
             value: '#20B2AA',
-            name: 'lightseagreen',
+            key: 'lightseagreen',
             rgb: {
                 r: 32,
                 g: 178,
@@ -2076,7 +2062,7 @@
         },
         {
             value: '#48D1CC',
-            name: 'mediumturquoise',
+            key: 'mediumturquoise',
             rgb: {
                 r: 72,
                 g: 209,
@@ -2090,7 +2076,7 @@
         },
         {
             value: '#2F4F4F',
-            name: 'darkslategray',
+            key: 'darkslategray',
             rgb: {
                 r: 47,
                 g: 79,
@@ -2104,7 +2090,7 @@
         },
         {
             value: '#2F4F4F',
-            name: 'darkslategrey',
+            key: 'darkslategrey',
             rgb: {
                 r: 47,
                 g: 79,
@@ -2118,7 +2104,7 @@
         },
         {
             value: '#AFEEEE',
-            name: 'paleturquoise',
+            key: 'paleturquoise',
             rgb: {
                 r: 175,
                 g: 238,
@@ -2132,7 +2118,7 @@
         },
         {
             value: '#008080',
-            name: 'teal',
+            key: 'teal',
             rgb: {
                 r: 0,
                 g: 128,
@@ -2146,7 +2132,7 @@
         },
         {
             value: '#008B8B',
-            name: 'darkcyan',
+            key: 'darkcyan',
             rgb: {
                 r: 0,
                 g: 139,
@@ -2160,7 +2146,7 @@
         },
         {
             value: '#00FFFF',
-            name: 'aqua',
+            key: 'aqua',
             rgb: {
                 r: 0,
                 g: 255,
@@ -2174,7 +2160,7 @@
         },
         {
             value: '#00FFFF',
-            name: 'cyan',
+            key: 'cyan',
             rgb: {
                 r: 0,
                 g: 255,
@@ -2188,7 +2174,7 @@
         },
         {
             value: '#E0FFFF',
-            name: 'lightcyan',
+            key: 'lightcyan',
             rgb: {
                 r: 224,
                 g: 255,
@@ -2202,7 +2188,7 @@
         },
         {
             value: '#F0FFFF',
-            name: 'azure',
+            key: 'azure',
             rgb: {
                 r: 240,
                 g: 255,
@@ -2216,7 +2202,7 @@
         },
         {
             value: '#00CED1',
-            name: 'darkturquoise',
+            key: 'darkturquoise',
             rgb: {
                 r: 0,
                 g: 206,
@@ -2230,7 +2216,7 @@
         },
         {
             value: '#5F9EA0',
-            name: 'cadetblue',
+            key: 'cadetblue',
             rgb: {
                 r: 95,
                 g: 158,
@@ -2244,7 +2230,7 @@
         },
         {
             value: '#B0E0E6',
-            name: 'powderblue',
+            key: 'powderblue',
             rgb: {
                 r: 176,
                 g: 224,
@@ -2258,7 +2244,7 @@
         },
         {
             value: '#ADD8E6',
-            name: 'lightblue',
+            key: 'lightblue',
             rgb: {
                 r: 173,
                 g: 216,
@@ -2272,7 +2258,7 @@
         },
         {
             value: '#00BFFF',
-            name: 'deepskyblue',
+            key: 'deepskyblue',
             rgb: {
                 r: 0,
                 g: 191,
@@ -2286,7 +2272,7 @@
         },
         {
             value: '#87CEEB',
-            name: 'skyblue',
+            key: 'skyblue',
             rgb: {
                 r: 135,
                 g: 206,
@@ -2300,7 +2286,7 @@
         },
         {
             value: '#87CEFA',
-            name: 'lightskyblue',
+            key: 'lightskyblue',
             rgb: {
                 r: 135,
                 g: 206,
@@ -2314,7 +2300,7 @@
         },
         {
             value: '#4682B4',
-            name: 'steelblue',
+            key: 'steelblue',
             rgb: {
                 r: 70,
                 g: 130,
@@ -2328,7 +2314,7 @@
         },
         {
             value: '#F0F8FF',
-            name: 'aliceblue',
+            key: 'aliceblue',
             rgb: {
                 r: 240,
                 g: 248,
@@ -2342,7 +2328,7 @@
         },
         {
             value: '#1E90FF',
-            name: 'dodgerblue',
+            key: 'dodgerblue',
             rgb: {
                 r: 30,
                 g: 144,
@@ -2356,7 +2342,7 @@
         },
         {
             value: '#708090',
-            name: 'slategray',
+            key: 'slategray',
             rgb: {
                 r: 112,
                 g: 128,
@@ -2370,7 +2356,7 @@
         },
         {
             value: '#708090',
-            name: 'slategrey',
+            key: 'slategrey',
             rgb: {
                 r: 112,
                 g: 128,
@@ -2384,7 +2370,7 @@
         },
         {
             value: '#778899',
-            name: 'lightslategray',
+            key: 'lightslategray',
             rgb: {
                 r: 119,
                 g: 136,
@@ -2398,7 +2384,7 @@
         },
         {
             value: '#778899',
-            name: 'lightslategrey',
+            key: 'lightslategrey',
             rgb: {
                 r: 119,
                 g: 136,
@@ -2412,7 +2398,7 @@
         },
         {
             value: '#B0C4DE',
-            name: 'lightsteelblue',
+            key: 'lightsteelblue',
             rgb: {
                 r: 176,
                 g: 196,
@@ -2426,7 +2412,7 @@
         },
         {
             value: '#6495ED',
-            name: 'cornflower',
+            key: 'cornflower',
             rgb: {
                 r: 100,
                 g: 149,
@@ -2440,7 +2426,7 @@
         },
         {
             value: '#4169E1',
-            name: 'royalblue',
+            key: 'royalblue',
             rgb: {
                 r: 65,
                 g: 105,
@@ -2454,7 +2440,7 @@
         },
         {
             value: '#191970',
-            name: 'midnightblue',
+            key: 'midnightblue',
             rgb: {
                 r: 25,
                 g: 25,
@@ -2468,7 +2454,7 @@
         },
         {
             value: '#E6E6FA',
-            name: 'lavender',
+            key: 'lavender',
             rgb: {
                 r: 230,
                 g: 230,
@@ -2482,7 +2468,7 @@
         },
         {
             value: '#000080',
-            name: 'navy',
+            key: 'navy',
             rgb: {
                 r: 0,
                 g: 0,
@@ -2496,7 +2482,7 @@
         },
         {
             value: '#00008B',
-            name: 'darkblue',
+            key: 'darkblue',
             rgb: {
                 r: 0,
                 g: 0,
@@ -2510,7 +2496,7 @@
         },
         {
             value: '#0000CD',
-            name: 'mediumblue',
+            key: 'mediumblue',
             rgb: {
                 r: 0,
                 g: 0,
@@ -2524,7 +2510,7 @@
         },
         {
             value: '#0000FF',
-            name: 'blue',
+            key: 'blue',
             rgb: {
                 r: 0,
                 g: 0,
@@ -2538,7 +2524,7 @@
         },
         {
             value: '#F8F8FF',
-            name: 'ghostwhite',
+            key: 'ghostwhite',
             rgb: {
                 r: 248,
                 g: 248,
@@ -2552,7 +2538,7 @@
         },
         {
             value: '#6A5ACD',
-            name: 'slateblue',
+            key: 'slateblue',
             rgb: {
                 r: 106,
                 g: 90,
@@ -2566,7 +2552,7 @@
         },
         {
             value: '#483D8B',
-            name: 'darkslateblue',
+            key: 'darkslateblue',
             rgb: {
                 r: 72,
                 g: 61,
@@ -2580,7 +2566,7 @@
         },
         {
             value: '#7B68EE',
-            name: 'mediumslateblue',
+            key: 'mediumslateblue',
             rgb: {
                 r: 123,
                 g: 104,
@@ -2594,7 +2580,7 @@
         },
         {
             value: '#9370DB',
-            name: 'mediumpurple',
+            key: 'mediumpurple',
             rgb: {
                 r: 147,
                 g: 112,
@@ -2608,7 +2594,7 @@
         },
         {
             value: '#8A2BE2',
-            name: 'blueviolet',
+            key: 'blueviolet',
             rgb: {
                 r: 138,
                 g: 43,
@@ -2622,7 +2608,7 @@
         },
         {
             value: '#4B0082',
-            name: 'indigo',
+            key: 'indigo',
             rgb: {
                 r: 75,
                 g: 0,
@@ -2636,7 +2622,7 @@
         },
         {
             value: '#9932CC',
-            name: 'darkorchid',
+            key: 'darkorchid',
             rgb: {
                 r: 153,
                 g: 50,
@@ -2650,7 +2636,7 @@
         },
         {
             value: '#9400D3',
-            name: 'darkviolet',
+            key: 'darkviolet',
             rgb: {
                 r: 148,
                 g: 0,
@@ -2664,7 +2650,7 @@
         },
         {
             value: '#BA55D3',
-            name: 'mediumorchid',
+            key: 'mediumorchid',
             rgb: {
                 r: 186,
                 g: 85,
@@ -2678,7 +2664,7 @@
         },
         {
             value: '#D8BFD8',
-            name: 'thistle',
+            key: 'thistle',
             rgb: {
                 r: 216,
                 g: 191,
@@ -2692,7 +2678,7 @@
         },
         {
             value: '#DDA0DD',
-            name: 'plum',
+            key: 'plum',
             rgb: {
                 r: 221,
                 g: 160,
@@ -2706,7 +2692,7 @@
         },
         {
             value: '#EE82EE',
-            name: 'violet',
+            key: 'violet',
             rgb: {
                 r: 238,
                 g: 130,
@@ -2720,7 +2706,7 @@
         },
         {
             value: '#800080',
-            name: 'purple',
+            key: 'purple',
             rgb: {
                 r: 128,
                 g: 0,
@@ -2734,7 +2720,7 @@
         },
         {
             value: '#8B008B',
-            name: 'darkmagenta',
+            key: 'darkmagenta',
             rgb: {
                 r: 139,
                 g: 0,
@@ -2748,7 +2734,7 @@
         },
         {
             value: '#FF00FF',
-            name: 'fuchsia',
+            key: 'fuchsia',
             rgb: {
                 r: 255,
                 g: 0,
@@ -2762,7 +2748,7 @@
         },
         {
             value: '#FF00FF',
-            name: 'magenta',
+            key: 'magenta',
             rgb: {
                 r: 255,
                 g: 0,
@@ -2776,7 +2762,7 @@
         },
         {
             value: '#DA70D6',
-            name: 'orchid',
+            key: 'orchid',
             rgb: {
                 r: 218,
                 g: 112,
@@ -2790,7 +2776,7 @@
         },
         {
             value: '#C71585',
-            name: 'mediumvioletred',
+            key: 'mediumvioletred',
             rgb: {
                 r: 199,
                 g: 21,
@@ -2804,7 +2790,7 @@
         },
         {
             value: '#FF1493',
-            name: 'deeppink',
+            key: 'deeppink',
             rgb: {
                 r: 255,
                 g: 20,
@@ -2818,7 +2804,7 @@
         },
         {
             value: '#FF69B4',
-            name: 'hotpink',
+            key: 'hotpink',
             rgb: {
                 r: 255,
                 g: 105,
@@ -2832,7 +2818,7 @@
         },
         {
             value: '#FFF0F5',
-            name: 'lavenderblush',
+            key: 'lavenderblush',
             rgb: {
                 r: 255,
                 g: 240,
@@ -2846,7 +2832,7 @@
         },
         {
             value: '#DB7093',
-            name: 'palevioletred',
+            key: 'palevioletred',
             rgb: {
                 r: 219,
                 g: 112,
@@ -2860,7 +2846,7 @@
         },
         {
             value: '#DC143C',
-            name: 'crimson',
+            key: 'crimson',
             rgb: {
                 r: 220,
                 g: 20,
@@ -2874,7 +2860,7 @@
         },
         {
             value: '#FFC0CB',
-            name: 'pink',
+            key: 'pink',
             rgb: {
                 r: 255,
                 g: 192,
@@ -2888,7 +2874,7 @@
         },
         {
             value: '#FFB6C1',
-            name: 'lightpink',
+            key: 'lightpink',
             rgb: {
                 r: 255,
                 g: 182,
@@ -2907,7 +2893,7 @@
     const parseOpacity = (value) => parseFloat(value.trim() || '1') * 255;
     function findColorName(value) {
         for (const color of COLOR_CSS3) {
-            if (color.name === value.toLowerCase()) {
+            if (color.key === value.toLowerCase()) {
                 return color;
             }
         }
@@ -2928,7 +2914,7 @@
                         result.push(color);
                     }
                 }
-                else if (hsl.h >= color.hsl.h) {
+                else if (hsl.h <= color.hsl.h) {
                     result.push(color);
                     baseline = color.hsl.h;
                 }
@@ -2960,7 +2946,7 @@
             if (CACHE_COLORDATA[value]) {
                 return CACHE_COLORDATA[value];
             }
-            let name = '';
+            let key = '';
             let rgba;
             if (value.charAt(0) === '#') {
                 rgba = parseRGBA(value);
@@ -2980,17 +2966,17 @@
                 switch (value) {
                     case 'transparent':
                         rgba = { r: 0, g: 0, b: 0, a: 0 };
-                        name = 'transparent';
+                        key = 'transparent';
                         break;
                     case 'initial':
                         rgba = { r: 0, g: 0, b: 0, a: 255 };
-                        name = 'black';
+                        key = 'black';
                         break;
                     default:
                         const color = findColorName(value);
                         if (color) {
                             rgba = Object.assign({}, color.rgb, { a: parseOpacity(opacity) });
-                            name = value;
+                            key = value;
                         }
                         break;
                 }
@@ -3000,7 +2986,7 @@
                 const alphaAsString = getHexCode(rgba.a);
                 const alpha = rgba.a / 255;
                 CACHE_COLORDATA[value] = {
-                    name,
+                    key,
                     value: `#${hexAsString}`,
                     valueAsRGBA: `#${hexAsString + alphaAsString}`,
                     valueAsARGB: `#${alphaAsString + hexAsString}`,
@@ -3210,7 +3196,7 @@
             bottom: 0
         };
     }
-    function newRectDimension() {
+    function newBoxRectDimension() {
         return {
             top: 0,
             left: 0,
@@ -3232,8 +3218,8 @@
             paddingLeft: 0
         };
     }
-    function assignRect(rect) {
-        return {
+    function assignRect(rect, scrollPosition = false) {
+        const result = {
             top: rect.top,
             right: rect.right,
             bottom: rect.bottom,
@@ -3241,6 +3227,17 @@
             width: rect.width,
             height: rect.height
         };
+        if (scrollPosition) {
+            if (window.scrollY !== 0) {
+                result.top += window.scrollY;
+                result.bottom += window.scrollY;
+            }
+            if (window.scrollX !== 0) {
+                result.left += window.scrollX;
+                result.right += window.scrollX;
+            }
+        }
+        return result;
     }
     function removeElementsByClassName(className) {
         for (const element of Array.from(document.getElementsByClassName(className))) {
@@ -3328,7 +3325,7 @@
     var dom = /*#__PURE__*/Object.freeze({
         ELEMENT_BLOCK: ELEMENT_BLOCK,
         newBoxRect: newBoxRect,
-        newRectDimension: newRectDimension,
+        newBoxRectDimension: newBoxRectDimension,
         newBoxModel: newBoxModel,
         assignRect: assignRect,
         removeElementsByClassName: removeElementsByClassName,
@@ -3362,12 +3359,12 @@
         const domRect = [];
         for (let i = 0; i < clientRects.length; i++) {
             const item = clientRects.item(i);
-            if (!(Math.round(item.width) === 0 && withinRange(item.left, item.right))) {
+            if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
                 domRect.push(item);
             }
         }
-        let bounds = newRectDimension();
-        let multiline = 0;
+        let bounds = newBoxRectDimension();
+        let numberOfLines = 0;
         let maxTop = Number.NEGATIVE_INFINITY;
         if (domRect.length) {
             bounds = assignRect(domRect[0]);
@@ -3385,19 +3382,17 @@
                 if (rect.bottom > bounds.bottom) {
                     bounds.bottom = rect.bottom;
                 }
-                if (rect.height > bounds.height) {
-                    bounds.height = rect.height;
-                }
                 bounds.width += rect.width;
+                bounds.height += rect.height;
                 if (rect.top > maxTop) {
                     maxTop = rect.top;
                 }
             }
             if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-                multiline = domRect.length - 1;
+                numberOfLines = domRect.length - 1;
             }
         }
-        bounds.multiline = multiline;
+        bounds.numberOfLines = numberOfLines;
         setElementCache(element, 'rangeClientRect', sessionId, bounds);
         return bounds;
     }
@@ -3437,7 +3432,6 @@
         getElementAsNode: getElementAsNode
     });
 
-    const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
     function convertLength(value, dimension, fontSize) {
         return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
     }
@@ -3447,9 +3441,9 @@
     const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
     const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
     const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
-    function getStyle(element, target, cache = true) {
+    function getStyle(element, target = '', cache = true) {
         if (element) {
-            const attr = 'style' + (target ? '::' + target : '');
+            const attr = 'style' + target;
             if (cache) {
                 const style = getElementCache(element, attr, '0');
                 if (style) {
@@ -3622,8 +3616,7 @@
         return result;
     }
     function getKeyframeRules() {
-        const pattern = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-        const result = new Map();
+        const result = {};
         violation: {
             for (let i = 0; i < document.styleSheets.length; i++) {
                 const styleSheet = document.styleSheets[i];
@@ -3631,32 +3624,16 @@
                     for (let j = 0; j < styleSheet.cssRules.length; j++) {
                         try {
                             const item = styleSheet.cssRules[j];
-                            if (item.type === 7) {
-                                const map = {};
-                                for (let k = 0; k < item.cssRules.length; k++) {
-                                    const match = pattern.exec(item.cssRules[k].cssText);
-                                    if (match) {
-                                        for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
-                                            percent = percent.trim();
-                                            switch (percent) {
-                                                case 'from':
-                                                    percent = '0%';
-                                                    break;
-                                                case 'to':
-                                                    percent = '100%';
-                                                    break;
-                                            }
-                                            map[percent] = {};
-                                            for (const property of match[2].split(';')) {
-                                                const [name, value] = property.split(':');
-                                                if (value) {
-                                                    map[percent][name.trim()] = value.trim();
-                                                }
-                                            }
-                                        }
+                            if (item.type === CSSRule.KEYFRAMES_RULE) {
+                                const value = parseKeyframeRule(item.cssRules);
+                                if (Object.keys(value).length) {
+                                    if (result[item.name]) {
+                                        Object.assign(result[item.name], value);
+                                    }
+                                    else {
+                                        result[item.name] = value;
                                     }
                                 }
-                                result.set(item.name, map);
                             }
                         }
                         catch (_a) {
@@ -3668,12 +3645,33 @@
         }
         return result;
     }
-    function parseConditionText(rule, value) {
-        const match = new RegExp(`^@${rule}([^{]+)`).exec(value);
-        if (match) {
-            value = match[1].trim();
+    function parseKeyframeRule(rules) {
+        const pattern = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+        const result = {};
+        for (let k = 0; k < rules.length; k++) {
+            const match = pattern.exec(rules[k].cssText);
+            if (match) {
+                for (let percent of (rules[k]['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
+                    percent = percent.trim();
+                    switch (percent) {
+                        case 'from':
+                            percent = '0%';
+                            break;
+                        case 'to':
+                            percent = '100%';
+                            break;
+                    }
+                    result[percent] = {};
+                    for (const property of match[2].split(';')) {
+                        const [name, value] = property.split(':');
+                        if (value) {
+                            result[percent][name.trim()] = value.trim();
+                        }
+                    }
+                }
+            }
         }
-        return value;
+        return result;
     }
     function validMediaRule(value, fontSize) {
         switch (value) {
@@ -3698,25 +3696,26 @@
                 if (!fontSize) {
                     fontSize = getFontSize(document.body);
                 }
+                const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
                 let match;
-                while ((match = REGEXP_MEDIARULE.exec(value)) !== null) {
+                while ((match = pattern.exec(value)) !== null) {
                     const negate = match[1] === 'not';
-                    const pattern = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-                    let condition;
+                    const conditionPattern = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+                    let conditionMatch;
                     let valid = false;
-                    while ((condition = pattern.exec(match[2])) !== null) {
-                        const attr = condition[1];
+                    while ((conditionMatch = conditionPattern.exec(match[2])) !== null) {
+                        const attr = conditionMatch[1];
                         let operation;
-                        if (condition[1].startsWith('min')) {
+                        if (conditionMatch[1].startsWith('min')) {
                             operation = '>=';
                         }
-                        else if (condition[1].startsWith('max')) {
+                        else if (conditionMatch[1].startsWith('max')) {
                             operation = '<=';
                         }
                         else {
                             operation = match[2];
                         }
-                        const rule = condition[3];
+                        const rule = conditionMatch[3];
                         switch (attr) {
                             case 'aspect-ratio':
                             case 'min-aspect-ratio':
@@ -4338,7 +4337,7 @@
         checkStyleValue: checkStyleValue,
         getDataSet: getDataSet,
         getKeyframeRules: getKeyframeRules,
-        parseConditionText: parseConditionText,
+        parseKeyframeRule: parseKeyframeRule,
         validMediaRule: validMediaRule,
         getFontSize: getFontSize,
         isParentStyle: isParentStyle,
@@ -4406,12 +4405,7 @@
         const match = REGEXP_DECIMALNOTATION.exec(value.toString());
         if (match) {
             const multiplier = parseInt(match[2]);
-            if (multiplier > 0) {
-                return value.toFixed(multiplier + 1);
-            }
-            else {
-                return value.toFixed(Math.abs(multiplier));
-            }
+            return value.toFixed(multiplier > 0 ? multiplier + 1 : Math.abs(multiplier));
         }
         return value.toString();
     }

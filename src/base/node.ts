@@ -2025,7 +2025,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     if (maxWidth > 0) {
                         width = Math.min(width, maxWidth);
                     }
-                    if (this.contentBox && !this.documentParent.gridElement && !this.tableElement) {
+                    if (this.contentBox && !this.tableElement) {
                         width += this.contentBoxWidth;
                     }
                     this._cached.actualWidth = width;
@@ -2049,7 +2049,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     if (maxHeight > 0) {
                         height = Math.min(height, maxHeight);
                     }
-                    if (this.contentBox && !this.documentParent.gridElement && !this.tableElement) {
+                    if (this.contentBox && !this.tableElement) {
                         height += this.contentBoxHeight;
                     }
                     this._cached.actualHeight = height;

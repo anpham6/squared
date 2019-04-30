@@ -1,4 +1,4 @@
-/* android.widget 0.9.4
+/* android.widget 0.9.5
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -66,7 +66,6 @@ this.android.widget.drawer = (function () {
             };
         }
         postParseDocument(node) {
-            const application = this.application;
             const options = $utilA.createViewAttribute(this.options.navigationView);
             const menu = $util.optionalAsString(Drawer.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
             const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $const.EXT_NAME.EXTERNAL), 'dataset.layoutName');
@@ -80,10 +79,10 @@ this.android.widget.drawer = (function () {
                 $util.assignEmptyValue(options, 'android', 'id', `${node.documentId}_navigation`);
                 $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                 $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
-                application.controllerHandler.addAfterInsideTemplate(node.id, application.controllerHandler.renderNodeStatic($constA.SUPPORT_ANDROID.NAVIGATION_VIEW, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'match_parent'));
+                this.application.controllerHandler.addAfterInsideTemplate(node.id, this.application.controllerHandler.renderNodeStatic($constA.SUPPORT_ANDROID.NAVIGATION_VIEW, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'match_parent'));
             }
         }
-        postProcedure(node) {
+        postOptimize(node) {
             const element = Drawer.findNestedElement(node.element, "android.widget.coordinator" /* COORDINATOR */);
             if (element) {
                 const coordinator = $session.getElementAsNode(element, node.sessionId);

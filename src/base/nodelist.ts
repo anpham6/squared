@@ -59,7 +59,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
-        const baseline = $util.filterArray(list, item => !item.baselineAltered && (item.baseline || $css.isLength(item.verticalAlign)) && !item.floating && (item.length === 0 || item.every(child => child.baseline && !child.multiline)));
+        const baseline = $util.filterArray(list, item => (item.baseline || $css.isLength(item.verticalAlign)) && !item.floating && !item.baselineAltered && (item.length === 0 || item.every(child => child.baseline && !child.multiline)));
         if (baseline.length) {
             list = baseline;
         }
@@ -68,9 +68,6 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         }
         if (text) {
             $util.spliceArray(list, item => !(item.textElement && item.naturalElement));
-            if (list.length === 0) {
-                return list;
-            }
         }
         if (list.length > 1) {
             let boundsHeight = 0;
@@ -94,50 +91,51 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 }
             }
             $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : item.bounds.height < boundsHeight);
-        }
-        return list.sort((a, b) => {
-            if (a.groupParent || a.length || !a.baseline && b.baseline) {
-                return 1;
-            }
-            else if (b.groupParent || b.length || a.baseline && !b.baseline) {
-                return -1;
-            }
-            else if (!a.imageElement || !b.imageElement) {
-                if (a.textElement && b.textElement) {
-                    if (a.fontSize === b.fontSize) {
-                        if (a.htmlElement && !b.htmlElement) {
+            list.sort((a, b) => {
+                if (a.groupParent || a.length || !a.baseline && b.baseline) {
+                    return 1;
+                }
+                else if (b.groupParent || b.length || a.baseline && !b.baseline) {
+                    return -1;
+                }
+                else if (!a.imageElement || !b.imageElement) {
+                    if (a.textElement && b.textElement) {
+                        if (a.fontSize === b.fontSize) {
+                            if (a.htmlElement && !b.htmlElement) {
+                                return -1;
+                            }
+                            else if (!a.htmlElement && b.htmlElement) {
+                                return 1;
+                            }
+                            return a.siblingIndex < b.siblingIndex ? -1 : 1;
+                        }
+                        return a.fontSize > b.fontSize ? -1 : 1;
+                    }
+                    else if (a.containerType !== b.containerType) {
+                        if (a.textElement) {
                             return -1;
                         }
-                        else if (!a.htmlElement && b.htmlElement) {
+                        else if (b.textElement) {
                             return 1;
                         }
-                        return a.siblingIndex < b.siblingIndex ? -1 : 1;
+                        else if (a.imageElement) {
+                            return -1;
+                        }
+                        else if (b.imageElement) {
+                            return 1;
+                        }
+                        return a.containerType < b.containerType ? -1 : 1;
                     }
-                    return a.fontSize > b.fontSize ? -1 : 1;
                 }
-                else if (a.containerType !== b.containerType) {
-                    if (a.textElement) {
-                        return -1;
-                    }
-                    else if (b.textElement) {
-                        return 1;
-                    }
-                    else if (a.imageElement) {
-                        return -1;
-                    }
-                    else if (b.imageElement) {
-                        return 1;
-                    }
-                    return a.containerType < b.containerType ? -1 : 1;
+                const heightA = Math.max(a.actualHeight, a.lineHeight);
+                const heightB = Math.max(b.actualHeight, b.lineHeight);
+                if (heightA !== heightB) {
+                    return heightA > heightB ? -1 : 1;
                 }
-            }
-            const heightA = Math.max(a.actualHeight, a.lineHeight);
-            const heightB = Math.max(b.actualHeight, b.lineHeight);
-            if (heightA !== heightB) {
-                return heightA > heightB ? -1 : 1;
-            }
-            return 0;
-        });
+                return 0;
+            });
+        }
+        return list;
     }
 
     public static linearData<T extends Node>(list: T[], clearOnly = false): LinearData<T> {
