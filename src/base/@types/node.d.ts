@@ -99,7 +99,7 @@ export type AutoMargin = {
     topBottom: boolean;
 };
 
-export interface SiblingDirection {
+export interface SiblingOptions {
     floating?: boolean;
     pageFlow?: boolean;
     lineBreak?: boolean;

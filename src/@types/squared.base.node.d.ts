@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../base/@types/application';
-import { AutoMargin, InitialData, SiblingDirection, Support, VisibleStyle } from '../base/@types/node';
+import { AutoMargin, InitialData, SiblingOptions, Support, VisibleStyle } from '../base/@types/node';
 
 import Container = squared.lib.base.Container;
 
@@ -210,10 +210,10 @@ declare global {
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
             inheritBox(region: number, node: Node): void;
             actualRect(direction: string, dimension?: string): number;
-            previousSiblings(options?: SiblingDirection): Node[];
-            nextSiblings(options?: SiblingDirection): Node[];
-            getFirstChildElement(options?: SiblingDirection): Element | null;
-            getLastChildElement(options?: SiblingDirection): Element | null;
+            previousSiblings(options?: SiblingOptions): Node[];
+            nextSiblings(options?: SiblingOptions): Node[];
+            getFirstChildElement(options?: SiblingOptions): Element | null;
+            getLastChildElement(options?: SiblingOptions): Element | null;
         }
 
         class Node implements Node {}

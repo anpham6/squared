@@ -495,7 +495,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         let extendedLength: number;
         let j = 0;
         const getDash = (index: number) => dashArray[index % arrayLength];
-        if (data === undefined) {
+        if (data) {
+            ({ dashArray, dashArrayTotal, extendedLength, startIndex: j } = data);
+            arrayLength = dashArray.length;
+            data.items = [];
+            data.leading = 0;
+        }
+        else {
             arrayLength = valueArray.length;
             dashArray = valueArray.slice(0);
             const dashLength = $math.nextMultiple([2, arrayLength]);
@@ -535,12 +541,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 extendedLength,
                 lengthRatio: totalLength / (pathLength || totalLength)
             };
-        }
-        else {
-            ({ dashArray, dashArrayTotal, extendedLength, startIndex: j } = data);
-            arrayLength = dashArray.length;
-            data.items = [];
-            data.leading = 0;
         }
         let dashTotal = 0;
         let end: number;

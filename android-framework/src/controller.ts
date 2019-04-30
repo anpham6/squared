@@ -655,7 +655,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public checkRelativeHorizontal(layout: $Layout<T>) {
-        if (layout.every(node => (node.imageElement || node.textElement && !node.multiline) && node.baseline && !node.positionRelative) && layout.singleRowAligned) {
+        const lineHeight = layout.children[0].lineHeight;
+        if (layout.every(node => (node.imageElement || node.textElement && !node.multiline) && node.baseline && !node.positionRelative && node.lineHeight === lineHeight) && layout.singleRowAligned) {
             return false;
         }
         return layout.some(node => node.positionRelative || !node.baseline || node.textElement || node.imageElement);

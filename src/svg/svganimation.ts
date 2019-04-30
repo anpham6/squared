@@ -1,7 +1,7 @@
 import { SvgAnimationGroup } from './@types/object';
 
 import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
-import { getParentAttribute } from './lib/util';
+import { getAttribute } from './lib/util';
 
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
@@ -142,13 +142,14 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set attributeName(value) {
-        if (value !== 'transform' && !$util.isString(this.baseValue)) {
-            this.baseValue = getParentAttribute(this.element, value);
-            if (!$util.isString(this.baseValue)) {
-                const baseElement = this.animationElement && this.animationElement.parentElement;
-                this.baseValue = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`);
+        if (!$util.isString(this.baseValue) && value !== 'transform') {
+            if (this.element) {
+                this.baseValue = getAttribute(this.element, value);
+            }
+            if (!$util.isString(this.baseValue) && this.animationElement) {
+                this.baseValue = $util.optionalAsString(this.animationElement.parentElement, `${value}.baseVal.valueAsString`);
                 if ($css.isLength(this.baseValue)) {
-                    this.baseValue = $css.parseUnit(this.baseValue, $css.getFontSize(baseElement)).toString();
+                    this.baseValue = $css.parseUnit(this.baseValue, $css.getFontSize(this.animationElement.parentElement)).toString();
                 }
             }
         }

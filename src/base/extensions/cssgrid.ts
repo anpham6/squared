@@ -361,17 +361,17 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                     const templateAreas = mainData.templateAreas;
                     $util.trimString(template.trim(), '"').split(' ').forEach((area, j) => {
                         if (area !== '.') {
-                            if (templateAreas[area] === undefined) {
+                            if (templateAreas[area]) {
+                                templateAreas[area].rowSpan = (i - templateAreas[area].rowStart) + 1;
+                                templateAreas[area].columnSpan = (j - templateAreas[area].columnStart) + 1;
+                            }
+                            else {
                                 templateAreas[area] = {
                                     rowStart: i,
                                     rowSpan: 1,
                                     columnStart: j,
                                     columnSpan: 1
                                 };
-                            }
-                            else {
-                                templateAreas[area].rowSpan = (i - templateAreas[area].rowStart) + 1;
-                                templateAreas[area].columnSpan = (j - templateAreas[area].columnStart) + 1;
                             }
                         }
                     });
@@ -477,11 +477,11 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                             }
                             else if ($util.isNumber(alias[0])) {
                                 if (i % 2 === 0) {
-                                    if (rowStart === undefined) {
-                                        rowStart = alias;
+                                    if (rowStart) {
+                                        rowSpan = parseInt(alias[0]) - parseInt(rowStart[0]);
                                     }
                                     else {
-                                        rowSpan = parseInt(alias[0]) - parseInt(rowStart[0]);
+                                        rowStart = alias;
                                     }
                                 }
                                 else {

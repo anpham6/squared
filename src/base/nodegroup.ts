@@ -1,4 +1,4 @@
-import { SiblingDirection } from './@types/node';
+import { SiblingOptions } from './@types/node';
 
 import Node from './node';
 import NodeList from './nodelist';
@@ -9,7 +9,7 @@ export default abstract class NodeGroup extends Node {
     public init() {
         if (this.length) {
             let siblingIndex = Number.POSITIVE_INFINITY;
-            for (const item of this) {
+            for (const item of this.children) {
                 siblingIndex = Math.min(siblingIndex, item.siblingIndex);
                 item.parent = this;
             }
@@ -38,12 +38,12 @@ export default abstract class NodeGroup extends Node {
         }
     }
 
-    public previousSiblings(options: SiblingDirection = {}) {
+    public previousSiblings(options: SiblingOptions = {}) {
         const node = this.item(0);
         return node ? node.previousSiblings(options) : [];
     }
 
-    public nextSiblings(options: SiblingDirection = {}) {
+    public nextSiblings(options: SiblingOptions = {}) {
         const node = this.item();
         return node ? node.nextSiblings(options) : [];
     }

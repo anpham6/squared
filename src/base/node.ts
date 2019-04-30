@@ -1,5 +1,5 @@
 import { NodeTemplate } from './@types/application';
-import { CachedValue, InitialData, SiblingDirection, Support } from './@types/node';
+import { CachedValue, InitialData, SiblingOptions, Support } from './@types/node';
 
 import Extension from './extension';
 
@@ -80,12 +80,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         super();
         if (element) {
             this._element = element;
-            this.init();
         }
-        else {
-            this.style = <CSSStyleDeclaration> {};
-            this._styleMap = {};
-        }
+        this.init();
     }
 
     public abstract setControlType(viewName: string, containerType?: number): void;
@@ -122,6 +118,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                 }
             }
+        }
+        else {
+            this._styleMap = {};
+            this.style = <CSSStyleDeclaration> {};
         }
     }
 
@@ -433,7 +433,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                 }
             }
-            const actualParent = this.actualParent;
+            const parent = this.actualParent;
             const blockStatic = this.blockStatic || this.display === 'table';
             for (const previous of previousSiblings) {
                 if (previous.lineBreak) {
@@ -443,7 +443,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else if (
-                    blockStatic && (!previous.floating || actualParent && previous.float !== 'right' && $util.withinRange(previous.linear.right, actualParent.box.right) || cleared && cleared.has(previous)) ||
+                    blockStatic && (!previous.floating || parent && previous.float !== 'right' && $util.withinRange(previous.linear.right, parent.box.right) || cleared && cleared.has(previous)) ||
                     previous.blockStatic ||
                     previous.autoMargin.leftRight ||
                     previous.float === 'left' && this.autoMargin.right ||
@@ -789,30 +789,28 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public setExclusions() {
         if (this.styleElement) {
-            const actualParent = this.actualParent;
-            if (actualParent) {
-                const applyExclusions = (attr: string, enumeration: {}) => {
-                    let exclude = this.dataset[`exclude${attr}`] || '';
-                    if (actualParent.dataset[`exclude${attr}Child`]) {
-                        exclude += (exclude !== '' ? '|' : '') + actualParent.dataset[`exclude${attr}Child`];
-                    }
-                    if (exclude !== '') {
-                        let offset = 0;
-                        for (let name of exclude.split('|')) {
-                            name = name.trim().toUpperCase();
-                            if (enumeration[name] && !$util.hasBit(offset, enumeration[name])) {
-                                offset |= enumeration[name];
-                            }
-                        }
-                        if (offset > 0) {
-                            this.exclude({ [attr.toLowerCase()]: offset });
+            const parent = this.actualParent;
+            const applyExclusions = (attr: string, enumeration: {}) => {
+                let exclude = this.dataset[`exclude${attr}`] || '';
+                if (parent && parent.dataset[`exclude${attr}Child`]) {
+                    exclude += (exclude !== '' ? '|' : '') + parent.dataset[`exclude${attr}Child`];
+                }
+                if (exclude !== '') {
+                    let offset = 0;
+                    for (let name of exclude.split('|')) {
+                        name = name.trim().toUpperCase();
+                        if (enumeration[name] && !$util.hasBit(offset, enumeration[name])) {
+                            offset |= enumeration[name];
                         }
                     }
-                };
-                applyExclusions('Section', APP_SECTION);
-                applyExclusions('Procedure', NODE_PROCEDURE);
-                applyExclusions('Resource', NODE_RESOURCE);
-            }
+                    if (offset > 0) {
+                        this.exclude({ [attr.toLowerCase()]: offset });
+                    }
+                }
+            };
+            applyExclusions('Section', APP_SECTION);
+            applyExclusions('Procedure', NODE_PROCEDURE);
+            applyExclusions('Resource', NODE_RESOURCE);
         }
     }
 
@@ -947,16 +945,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public previousSiblings(options: SiblingDirection = {}) {
+    public previousSiblings(options: SiblingOptions = {}) {
         const { floating, pageFlow, lineBreak, excluded } = options;
         const result: T[] = [];
         let element: Element | null = null;
         if (this._element) {
             element = <Element> this._element.previousSibling;
         }
-        else if (this.actualChildren.length) {
-            const children = $util.filterArray(this.actualChildren, node => node.pageFlow);
-            element = children.length && children[0].element ? <Element> children[0].element.previousSibling : null;
+        else {
+            const node = this.firstChild;
+            if (node) {
+                element = (<Element> node.element).previousSibling as Element;
+            }
         }
         while (element) {
             const node = $session.getElementAsNode<T>(element, this.sessionId);
@@ -979,18 +979,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    public nextSiblings(options: SiblingDirection = {}) {
+    public nextSiblings(options: SiblingOptions = {}) {
         const { floating, pageFlow, lineBreak, excluded } = options;
         const result: T[] = [];
         let element: Element | null = null;
         if (this._element) {
             element = <Element> this._element.nextSibling;
         }
-        else if (this.actualChildren.length) {
-            const children = $util.filterArray(this.actualChildren, node => node.pageFlow);
-            if (children.length) {
-                const lastChild = children[children.length - 1];
-                element = lastChild.element && lastChild.element.nextSibling as Element;
+        else {
+            const node = this.lastChild;
+            if (node) {
+                element = (<Element> node.element).nextSibling as Element;
             }
         }
         while (element) {
@@ -1014,7 +1013,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    public getFirstChildElement(options: SiblingDirection = {}) {
+    public getFirstChildElement(options: SiblingOptions = {}) {
         const { lineBreak, excluded } = options;
         if (this.htmlElement) {
             for (const node of this.actualChildren) {
@@ -1026,7 +1025,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return null;
     }
 
-    public getLastChildElement(options: SiblingDirection = {}) {
+    public getLastChildElement(options: SiblingOptions = {}) {
         const { lineBreak, excluded } = options;
         if (this.htmlElement) {
             const children = this.actualChildren;
@@ -1573,8 +1572,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const value = this.convertBox('padding', 'Top');
             if (this.length && value > 0 && !this.layoutElement) {
                 let top = 0;
-                for (const node of this) {
-                    if (node.inline) {
+                for (const node of this.children) {
+                    if (node.inline && !node.has('lineHeight')) {
                         top = Math.max(top, node.paddingTop);
                     }
                     else {
@@ -1601,8 +1600,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const value = this.convertBox('padding', 'Bottom');
             if (this.length && value > 0 && !this.layoutElement) {
                 let bottom = 0;
-                for (const node of this) {
-                    if (node.inline) {
+                for (const node of this.children) {
+                    if (node.inline && !node.has('lineHeight')) {
                         bottom = Math.max(bottom, node.paddingBottom);
                     }
                     else {
@@ -2066,15 +2065,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get firstChild() {
-        if (this.actualChildren.length) {
-            return this.actualChildren[0];
+        for (const node of this.actualChildren) {
+            if (node.naturalElement) {
+                return node;
+            }
         }
         return null;
     }
 
     get lastChild() {
-        if (this.actualChildren.length) {
-            return this.actualChildren[this.actualChildren.length - 1];
+        for (let i = this.actualChildren.length - 1; i >= 0; i--) {
+            const node = this.actualChildren[i];
+            if (node.naturalElement) {
+                return node;
+            }
         }
         return null;
     }

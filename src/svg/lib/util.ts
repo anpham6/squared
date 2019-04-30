@@ -385,11 +385,11 @@ export function getAttribute(element: Element, attr: string, computed = true) {
     return $dom.getNamedItem(element, attr) || computed && $css.getStyle(element).getPropertyValue(attr) || '';
 }
 
-export function getParentAttribute(element: Element | null, attr: string) {
+export function getParentAttribute(element: Element, attr: string, computed = true) {
     let current: HTMLElement | Element | null = element;
     let value = '';
     while (current) {
-        value = getAttribute(current, attr);
+        value = getAttribute(current, attr, computed);
         if (value !== '' && value !== 'inherit') {
             break;
         }
@@ -398,8 +398,8 @@ export function getParentAttribute(element: Element | null, attr: string) {
     return value;
 }
 
-export function parseAttributeURL(value: string) {
-    const match = /url\("?(#.+?)"?\)/.exec(value);
+export function getAttributeURL(value: string) {
+    const match = $regex.CSS.URL.exec(value);
     return match ? match[1] : '';
 }
 
@@ -408,14 +408,14 @@ export function getTargetElement(element: SVGElement, rootElement?: SVGElement) 
     if (value.charAt(0) === '#') {
         const id = value.substring(1);
         let parent: SVGElement | HTMLElement | null;
-        if (rootElement === undefined) {
+        if (rootElement) {
+            parent = rootElement;
+        }
+        else {
             parent = element.parentElement;
             while (parent && parent.parentElement instanceof SVGGraphicsElement) {
                 parent = parent.parentElement;
             }
-        }
-        else {
-            parent = rootElement;
         }
         if (parent) {
             const elements = parent.querySelectorAll('*');

@@ -1,6 +1,6 @@
 import SvgBuild from './svgbuild';
 
-import { getAttribute, parseAttributeURL } from './lib/util';
+import { getAttribute, getAttributeURL } from './lib/util';
 
 type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
@@ -167,7 +167,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         break;
                     case 'fill':
                     case 'stroke':
-                        const url = parseAttributeURL(value);
+                        const url = getAttributeURL(value);
                         if (url !== '') {
                             this[`${attr}Pattern`] = url;
                         }

@@ -416,10 +416,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                         }
                         else {
-                            if (items === undefined) {
-                                items = (<StringValue[]> styleData.items).slice(0);
-                            }
-                            else {
+                            if (items) {
                                 for (const item of styleData.items as StringValue[]) {
                                     const replaceIndex = items.findIndex(previous => previous.key === item.key);
                                     if (replaceIndex !== -1) {
@@ -429,6 +426,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                         items.push(item);
                                     }
                                 }
+                            }
+                            else {
+                                items = (<StringValue[]> styleData.items).slice(0);
                             }
                             styleName.push(tag);
                         }

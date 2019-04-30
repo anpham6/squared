@@ -398,10 +398,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     public addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index = -1) {
         if (template) {
             if (!node.renderExclude) {
-                if (node.renderParent === undefined) {
-                    this.session.targetQueue.set(node, template);
-                }
-                else {
+                if (node.renderParent) {
                     if (parent.renderTemplates === undefined) {
                         parent.renderTemplates = [];
                     }
@@ -413,6 +410,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                         parent.renderChildren.push(node);
                         parent.renderTemplates.push(template);
                     }
+                }
+                else {
+                    this.session.targetQueue.set(node, template);
                 }
             }
             else {

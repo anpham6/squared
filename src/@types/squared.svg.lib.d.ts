@@ -14,8 +14,8 @@ declare global {
             export import SVG = $util.SVG;
             export import TRANSFORM = $util.TRANSFORM;
             function getAttribute(element: Element, attr: string, computed?: boolean): string;
-            function getParentAttribute(element: Element | null, attr: string): string;
-            function parseAttributeURL(value: string): string;
+            function getParentAttribute(element: Element, attr: string, computed?: boolean): string;
+            function getAttributeURL(value: string): string;
             function getDOMRect(element: SVGElement): DOMRect;
             function getTargetElement(element: SVGElement, rootElement?: HTMLElement | SVGElement | null): SVGElement | null;
             function getNearestViewBox(element: SVGElement): DOMRect | undefined;

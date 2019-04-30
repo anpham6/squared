@@ -120,11 +120,11 @@ const appBase: AppFramework<T> = {
         customize(build: number, widget: string, options: {}) {
             if (customization.API_ANDROID[build]) {
                 const assign = customization.API_ANDROID[build].assign;
-                if (assign[widget] === undefined) {
-                    assign[widget] = options;
+                if (assign[widget]) {
+                    Object.assign(assign[widget], options);
                 }
                 else {
-                    Object.assign(assign[widget], options);
+                    assign[widget] = options;
                 }
                 return assign[widget];
             }
