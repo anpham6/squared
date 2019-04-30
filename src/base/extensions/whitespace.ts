@@ -33,7 +33,7 @@ function getVisibleNode(node: Node) {
 }
 
 function resetMargin(node: Node, value: number) {
-    node.modifyBox(value, null);
+    getVisibleNode(node).modifyBox(value, null);
     if (node.companion) {
         node.companion.modifyBox(value, null);
     }
@@ -68,14 +68,28 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                 }
             }
             if (child.getBox(boxMargin)[0] !== 1) {
-                if (HTML5 && node[margin] < child[margin]) {
-                    const visibleParent = getVisibleNode(node);
-                    visibleParent.modifyBox(boxMargin, null);
-                    visibleParent.modifyBox(boxMargin, child[margin]);
+                let resetChild = false;
+                if (node.documentBody) {
+                    if (node[margin] >= child[margin]) {
+                        resetChild = true;
+                    }
+                    else {
+                        resetMargin(node, boxMargin);
+                    }
                 }
-                resetMargin(child, boxMargin);
-                if (child.bounds.height === 0) {
-                    resetMargin(child, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
+                else {
+                    if (HTML5 && node[margin] < child[margin]) {
+                        const visibleParent = getVisibleNode(node);
+                        visibleParent.modifyBox(boxMargin, null);
+                        visibleParent.modifyBox(boxMargin, child[margin]);
+                    }
+                    resetChild = true;
+                }
+                if (resetChild) {
+                    resetMargin(child, boxMargin);
+                    if (child.bounds.height === 0) {
+                        resetMargin(child, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
+                    }
                 }
             }
         }

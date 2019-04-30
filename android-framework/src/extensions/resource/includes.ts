@@ -69,7 +69,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 if (merge) {
                                     content = controller.getEnclosingTag($enum.NODE_TEMPLATE.XML, <NodeTagXml<T>> { controlName: 'merge', attributes: getRootNs(content), content });
                                 }
-                                this.application.saveLayout(openData.name, content);
+                                this.application.saveDocument(openData.name, content, '', Number.POSITIVE_INFINITY);
                                 close.splice(j, 1);
                                 break;
                             }

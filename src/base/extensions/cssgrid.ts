@@ -28,7 +28,7 @@ const STRING_NAMED = '\\[([\\w\\-\\s]+)\\]';
 
 const REGEXP_GRID = {
     UNIT: new RegExp(`^(${STRING_UNIT})$`),
-    NAMED: `\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`,
+    NAMED: `\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`,
     REPEAT: `\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`,
     STARTEND: /^([\w\-]+)-(start|end)$/
 };

@@ -99,7 +99,7 @@ function adjustBaseline(baseline: View, nodes: View[]) {
 }
 
 function checkSingleLine(node: View, nowrap = false, multiline = false) {
-    if (node.textElement && node.cssAscend('textAlign', true) !== 'center' && !node.has('width') && (!node.multiline || multiline) && (nowrap || node.textContent.trim().split(String.fromCharCode(32)).length)) {
+    if (node.textElement && node.cssAscend('textAlign', true) !== 'center' && !node.has('width') && (!node.multiline || multiline) && (nowrap || node.textContent.trim().indexOf(' ') !== -1)) {
         node.android('maxLines', '1');
         node.android('ellipsize', 'end');
     }
@@ -410,6 +410,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 !node.groupParent &&
                 !node.pseudoElement &&
                 !node.elementId &&
+                !node.blockStatic &&
                 !node.marginTop &&
                 !node.marginBottom &&
                 !node.hasWidth &&
@@ -482,7 +483,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
         }
         else if (layout.some(item => item.alignedVertically(item.previousSiblings(), item.siblingIndex > 0 ? layout.children.slice(0, item.siblingIndex) : undefined, layout.cleared) > 0)) {
-            layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
+            layout.setType(layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
         }
         else {
             layout.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.UNKNOWN);
@@ -657,7 +658,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (layout.every(node => (node.imageElement || node.textElement && !node.multiline) && node.baseline && !node.positionRelative) && layout.singleRowAligned) {
             return false;
         }
-        return layout.some(node => node.positionRelative || node.textElement || node.imageElement || !node.baseline);
+        return layout.some(node => node.positionRelative || !node.baseline || node.textElement || node.imageElement);
     }
 
     public setConstraints() {
@@ -900,7 +901,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 node.css('height', $css.formatPX(height));
                             }
                         }
-                        node.android('adjustViewBounds', 'true');
                     }
                     else {
                         switch (node.css('objectFit')) {
@@ -1646,9 +1646,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                         const viewGroup = item.groupParent && !item.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED);
                         siblings = !viewGroup && item.inlineVertical && previous.inlineVertical ? $dom.getElementsBetweenSiblings(previous.element, <Element> item.element, true) : undefined;
+                        let retainMultiline = false;
                         const startNewRow = () => {
                             if (previous.textElement) {
                                 if (i === 1 && siblings === undefined && item.plainText && !$regex.CHAR.TRAILINGSPACE.test(previous.textContent) && !$regex.CHAR.LEADINGSPACE.test(item.textContent)) {
+                                    retainMultiline = true;
                                     return false;
                                 }
                                 else if (checkLineWrap && previousMultiline && (previous.bounds.width >= boxWidth || Resource.hasLineBreak(previous, false, true))) {
@@ -1662,7 +1664,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 checkWrapWidth();
                                 if (baseWidth > maxWidth) {
                                     if (previous && previous.textElement) {
-                                        checkSingleLine(previous, true, previousMultiline);
+                                        checkSingleLine(previous, false, previousMultiline);
                                     }
                                     return true;
                                 }
@@ -1721,6 +1723,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 else {
                                     previous.anchor(alignSibling, item.documentId);
                                 }
+                            }
+                            if (!previous.floating && !retainMultiline && item.multiline) {
+                                item.multiline = false;
+                                multiline = false;
                             }
                             items.push(item);
                         }
@@ -2045,7 +2051,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 item.anchor('baseline', baseline.documentId);
             }
             item.anchored = true;
-            item.positioned = true;
         }
         if (middle && baseline && textBottom === undefined && baseline.textElement && getMaxHeight(middle) > getMaxHeight(baseline)) {
             baseline.anchorParent(AXIS_ANDROID.VERTICAL, true);

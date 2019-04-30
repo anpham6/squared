@@ -120,7 +120,7 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     get singleRowAligned() {
         if (this._singleRow === undefined) {
             let previousBottom = Number.POSITIVE_INFINITY;
-            for (const node of this) {
+            for (const node of this.children) {
                 if (!node.inlineVertical && !node.plainText || node.multiline) {
                     return false;
                 }

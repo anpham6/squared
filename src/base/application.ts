@@ -146,11 +146,11 @@ export default class Application<T extends Node> implements squared.base.Applica
             const node = layout.node;
             const parent = node.renderParent;
             if (parent && parent.renderTemplates) {
-                this.saveLayout(
+                this.saveDocument(
                     layout.layoutName,
                     controller.localSettings.layout.baseTemplate + controller.cascadeDocument(<NodeTemplate<T>[]> parent.renderTemplates, 0),
                     node.dataset.pathname,
-                    !!node.renderExtension && node.renderExtension.some(item => item.documentBase)
+                    !!node.renderExtension && node.renderExtension.some(item => item.documentBase) ? 0 : undefined
                 );
             }
         }
@@ -199,7 +199,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public parseDocument(...elements: any[]): FunctionMap<void> {
-        let __THEN: () => void;
+        let __THEN: Undefined<() => void>;
         this.rootElements.clear();
         this.initialized = false;
         this.processing.sessionId = this.controllerHandler.generateSessionId;
@@ -274,7 +274,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 });
             }
             for (const image of ASSET_IMAGES.values()) {
-                if (image.width === 0 && image.height === 0 && image.uri) {
+                if (image.uri && image.width === 0 && image.height === 0) {
                     const element = document.createElement('img');
                     element.src = image.uri;
                     if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
@@ -288,7 +288,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
             for (const element of this.rootElements) {
-                element.querySelectorAll('IMG').forEach((image: HTMLImageElement) => {
+                element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
                     if (image.tagName === 'IMG') {
                         if (image.complete) {
                             this.resourceHandler.addImage(image);
@@ -300,10 +300,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 });
             }
         }
-        if (images.length === 0) {
-            parseResume();
-        }
-        else {
+        if (images.length) {
             this.initialized = true;
             Promise.all($util.objectMap<HTMLImageElement, {}>(images, image => {
                 return new Promise((resolve, reject) => {
@@ -328,6 +325,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             });
         }
+        else {
+            parseResume();
+        }
         return {
             then: (resolve: () => void) => {
                 if (this.initialized) {
@@ -338,6 +338,29 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
         };
+    }
+
+    public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
+        if ($util.isString(content)) {
+            if (pathname) {
+                pathname = $util.trimString(pathname, '/');
+            }
+            else {
+                pathname = this.controllerHandler.localSettings.layout.pathName;
+            }
+            const layout: FileAsset = {
+                pathname,
+                filename,
+                content,
+                index
+            };
+            if (index !== undefined && index >= 0 && index < this._layouts.length) {
+                this._layouts.splice(index, 0, layout);
+            }
+            else {
+                this._layouts.push(layout);
+            }
+        }
     }
 
     public renderNode(layout: Layout<T>) {
@@ -359,22 +382,6 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         return layout.containerType !== 0 ? this.renderNode(layout) : undefined;
-    }
-
-    public saveLayout(filename: string, content: string, pathname?: string, leading = false) {
-        if ($util.isString(content)) {
-            const layout: FileAsset = {
-                pathname: $util.trimString(pathname || this.controllerHandler.localSettings.layout.pathName, '/'),
-                filename,
-                content
-            };
-            if (leading) {
-                this._layouts.unshift(layout);
-            }
-            else {
-                this._layouts.push(layout);
-            }
-        }
     }
 
     public addLayout(layout: Layout<T>, outerParent?: T) {
@@ -452,10 +459,10 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected createCache(documentRoot: HTMLElement) {
+        this.processing.node = undefined;
         this.processing.cache.afterAppend = undefined;
         this.processing.cache.clear();
         this.processing.excluded.clear();
-        this.processing.node = undefined;
         for (const ext of this.extensions) {
             ext.beforeInit(documentRoot);
         }
@@ -568,55 +575,55 @@ export default class Application<T extends Node> implements squared.base.Applica
                             break;
                         }
                     case 'absolute':
-                        if (node.positionAuto && !node.previousSiblings().some(item => item.multiline || item.excluded && !item.blockStatic) && (node.nextSiblings().every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === parent.getLastChildElement())) {
-                            node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
-                            node.positionStatic = true;
-                            parent = actualParent;
-                        }
-                        else if (this.userSettings.supportNegativeLeftTop) {
-                            let outside = false;
-                            parent = node.absoluteParent as T;
-                            while (parent && parent !== rootNode) {
-                                if (!outside) {
-                                    const overflowX = parent.css('overflowX') === 'hidden';
-                                    const overflowY = parent.css('overflowY') === 'hidden';
-                                    if (overflowX && overflowY || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
-                                        break;
-                                    }
-                                    else {
-                                        const outsideX = !overflowX && node.outsideX(parent.box);
-                                        const outsideY = !overflowY && node.outsideY(parent.box);
-                                        if (outsideY && (node.top < 0 || node.marginTop < 0 || !node.has('top') && node.bottom !== 0 || !parent.pageFlow && node.top > 0)) {
-                                            outside = true;
-                                        }
-                                        else if (outsideX && (!node.has('left') && node.right > 0 || !parent.pageFlow && node.left > 0)) {
-                                            outside = true;
-                                        }
-                                        else if (outsideX && outsideY) {
-                                            outside = true;
-                                        }
-                                        else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.has('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
-                                            outside = true;
+                        const absoluteParent = node.absoluteParent as T;
+                        if (absoluteParent) {
+                            parent = absoluteParent;
+                            if (node.positionAuto && node.withinX(parent.box) && node.withinY(parent.box) && !node.previousSiblings().some(item => item.multiline || item.excluded && !item.blockStatic) && (node.nextSiblings().every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === parent.getLastChildElement())) {
+                                node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
+                                node.positionStatic = true;
+                                parent = actualParent;
+                            }
+                            else if (this.userSettings.supportNegativeLeftTop) {
+                                let outside = false;
+                                while (parent && parent !== rootNode) {
+                                    if (!outside) {
+                                        const overflowX = parent.css('overflowX') === 'hidden';
+                                        const overflowY = parent.css('overflowY') === 'hidden';
+                                        if (overflowX && overflowY || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
+                                            break;
                                         }
                                         else {
+                                            const outsideX = !overflowX && node.outsideX(parent.box);
+                                            const outsideY = !overflowY && node.outsideY(parent.box);
+                                            if (outsideY && (node.top < 0 || node.marginTop < 0 || !node.has('top') && node.bottom !== 0 || !parent.pageFlow && node.top > 0)) {
+                                                outside = true;
+                                            }
+                                            else if (outsideX && (!node.has('left') && node.right > 0 || !parent.pageFlow && node.left > 0)) {
+                                                outside = true;
+                                            }
+                                            else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.has('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
+                                                outside = true;
+                                            }
+                                            else if (!overflowX && !overflowY && !node.intersectX(parent.box) && !node.intersectY(parent.box)) {
+                                                outside = true;
+                                            }
+                                            else {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        if (parent.layoutElement) {
+                                            parent = node.absoluteParent as T;
+                                            break;
+                                        }
+                                        else if (node.withinX(parent.box) && node.withinY(parent.box)) {
                                             break;
                                         }
                                     }
+                                    parent = parent.actualParent as T;
                                 }
-                                else {
-                                    if (parent.layoutElement) {
-                                        parent = node.absoluteParent as T;
-                                        break;
-                                    }
-                                    else if (node.withinX(parent.box) && node.withinY(parent.box)) {
-                                        break;
-                                    }
-                                }
-                                parent = parent.actualParent as T;
                             }
-                        }
-                        else {
-                            parent = node.absoluteParent as T;
                         }
                         break;
                 }
@@ -867,7 +874,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     let parentY = nodeY.parent as T;
                     const extendable = nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE);
-                    if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || extendable || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || extendable) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let verticalExtended = false;
@@ -1444,22 +1451,32 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (seg === inlineAbove) {
                     if (leftAbove.length) {
                         let position = Number.NEGATIVE_INFINITY;
+                        let hasSpacing = false;
                         for (const child of leftAbove) {
-                            position = Math.max(position, child.linear.right + (child.marginLeft < 0 ? child.marginLeft : 0));
+                            const right = child.linear.right + (child.marginLeft < 0 ? child.marginLeft : 0);
+                            if (right > position) {
+                                position = right;
+                                hasSpacing = child.marginRight > 0;
+                            }
                         }
                         const offset = position - basegroup.box.left;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
                         }
                     }
                     if (rightAbove.length) {
                         let position = Number.POSITIVE_INFINITY;
+                        let hasSpacing = false;
                         for (const child of rightAbove) {
-                            position = Math.min(position, child.linear.left + (child.marginRight < 0 ? child.marginRight : 0));
+                            const left = child.linear.left + (child.marginRight < 0 ? child.marginRight : 0);
+                            if (left < position) {
+                                position = left;
+                                hasSpacing = child.marginLeft > 0;
+                            }
                         }
                         const offset = basegroup.box.right - position;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
                         }
                     }
                 }
@@ -2065,7 +2082,20 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     get layouts() {
-        return this._layouts;
+        return this._layouts.sort((a, b) => {
+            if (a.index !== b.index) {
+                if (a.index === 0 || a.index !== undefined && b.index === undefined || b.index === Number.POSITIVE_INFINITY) {
+                    return -1;
+                }
+                else if (b.index === 0 || b.index !== undefined && a.index === undefined || a.index === Number.POSITIVE_INFINITY) {
+                    return 1;
+                }
+                else if (a.index !== undefined && b.index !== undefined) {
+                    return a.index < b.index ? -1 : 1;
+                }
+            }
+            return 0;
+        });
     }
 
     get rendered() {

@@ -10,7 +10,7 @@ export const STRING = {
     CSS_URL: 'url\\("?(.+?)"?\\)',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_CALC: 'calc(\\(.+\\))',
-    CSS_VAR: 'var\\((--[A-Za-z0-9\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
+    CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
 };
 
 export const UNIT = {
@@ -30,9 +30,9 @@ export const CSS = {
 
 export const XML = {
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
-    ENTITY: /&#?[A-Za-z0-9]+;/,
+    ENTITY: /&#?[A-Za-z\d]+;/,
     SEPARATOR: /\s*,\s*/,
-    BREAKWORD: /[^A-Za-z0-9&#;]+/,
+    BREAKWORD: /[^A-Za-z\d&#;]+/,
     TAGNAME_G: /(<([^>]+)>)/g,
     NONWORD_G: /[^A-Za-z\d]+/g
 };
@@ -53,7 +53,7 @@ export const PREFIX = {
 
 export const ESCAPE = {
     ENTITY: /&#(\d+);/g,
-    NONENTITY: /&(?!#?[A-Za-z0-9]{2,};)/g,
+    NONENTITY: /&(?!#?[A-Za-z\d]{2,};)/g,
     NBSP: /&nbsp;/g,
     AMP: /&/g,
     LT: /</g,

@@ -27,13 +27,13 @@ const REGEXP_ITEM = {
     actionProviderClass: /^.+$/,
     alphabeticShortcut: /^[a-zA-Z]+$/,
     alphabeticModifiers: /(META|CTRL|ALT|SHIFT|SYM|FUNCTION)+/g,
-    numericShortcut: /^[0-9]+$/,
+    numericShortcut: /^\d+$/,
     numericModifiers: /(META|CTRL|ALT|SHIFT|SYM|FUNCTION)+/g,
     checkable: /^(true|false)$/,
     visible: /^(true|false)$/,
     enabled: /^(true|false)$/,
     menuCategory: /^(container|system|secondary|alternative)$/,
-    orderInCategory: /^[0-9]+$/
+    orderInCategory: /^\d+$/
 };
 
 const REGEXP_GROUP = {
@@ -42,7 +42,7 @@ const REGEXP_GROUP = {
     visible: /^(true|false)$/,
     enabled: /^(true|false)$/,
     menuCategory: /^(container|system|secondary|alternative)$/,
-    orderInCategory: /^[0-9]+$/
+    orderInCategory: /^\d+$/
 };
 
 const NAMESPACE_APP = ['showAsAction', 'actionViewClass', 'actionProviderClass'];

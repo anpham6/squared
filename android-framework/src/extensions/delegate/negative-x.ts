@@ -67,7 +67,7 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
             }
         }
         if (!isNaN(right)) {
-            let offset = right - node.bounds.right;
+            let offset = right - node.linear.right;
             if (offset > node.marginRight) {
                 offset -= node.marginRight;
                 node.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, offset);

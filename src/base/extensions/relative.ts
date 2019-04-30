@@ -108,7 +108,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                             }
                             break;
                         }
-                        else if (item.positionRelative) {
+                        else if (item.positionRelative && item.renderParent === renderParent) {
                             preceding = true;
                         }
                     }

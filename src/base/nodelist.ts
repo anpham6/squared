@@ -49,7 +49,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 }
             }
             else if (node.groupParent) {
-                const parent = NodeList.actualParent(node.children);
+                const parent = NodeList.actualParent(node.actualChildren);
                 if (parent) {
                     return parent as T;
                 }
@@ -59,7 +59,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
-        const baseline = $util.filterArray(list, item => !item.baselineAltered && (item.baseline || $css.isLength(item.verticalAlign)) && !item.floating && (item.length === 0 || item.every(child => child.baseline)));
+        const baseline = $util.filterArray(list, item => !item.baselineAltered && (item.baseline || $css.isLength(item.verticalAlign)) && !item.floating && (item.length === 0 || item.every(child => child.baseline && !child.multiline)));
         if (baseline.length) {
             list = baseline;
         }
@@ -73,12 +73,11 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             }
         }
         if (list.length > 1) {
-            let lineHeight = 0;
             let boundsHeight = 0;
+            let lineHeight = 0;
             for (let i = 0; i < list.length; i++) {
                 const item = list[i];
                 if (!(item.layoutVertical && item.length > 1 || item.plainText && item.multiline)) {
-                    lineHeight = Math.max(lineHeight, item.lineHeight);
                     let height: number;
                     if (item.multiline && item.cssTry('whiteSpace', 'nowrap')) {
                         height = (<Element> item.element).getBoundingClientRect().height;
@@ -88,6 +87,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                         height = item.bounds.height;
                     }
                     boundsHeight = Math.max(boundsHeight, height);
+                    lineHeight = Math.max(lineHeight, item.lineHeight);
                 }
                 else {
                     list.splice(i--, 1);

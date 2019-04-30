@@ -17,23 +17,24 @@ const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
-const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
+const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,8}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
 
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 
 function removeExcluded(node: Node, element: Element, attr: string) {
     let value: string = element[attr];
-    for (let i = 0; i < node.actualChildren.length; i++) {
+    const length = node.actualChildren.length;
+    for (let i = 0; i < length; i++) {
         const item = node.actualChildren[i];
-        if (item.excluded || item.pseudoElement || item.dataset.target) {
+        if (item.excluded || item.pseudoElement || !item.pageFlow || item.dataset.target) {
             if ($util.isString(item[attr])) {
                 value = value.replace(item[attr], '');
             }
             else if (i === 0) {
                 value = $util.trimStart(value, ' ');
             }
-            else if (i === node.actualChildren.length - 1) {
+            else if (i === length - 1) {
                 value = $util.trimEnd(value, ' ');
             }
         }

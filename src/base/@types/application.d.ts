@@ -1,3 +1,5 @@
+type Node = squared.base.Node;
+
 export interface UserSettings {
     builtInExtensions: string[];
     preloadImages: boolean;
@@ -38,7 +40,7 @@ export interface ControllerSettings {
     };
 }
 
-export interface AppFramework<T extends squared.base.Node> {
+export interface AppFramework<T extends Node> {
     base: {};
     extensions: {};
     lib: {};
@@ -47,19 +49,19 @@ export interface AppFramework<T extends squared.base.Node> {
     cached(): AppBase<T>;
 }
 
-export interface AppBase<T extends squared.base.Node> {
+export interface AppBase<T extends Node> {
     application: squared.base.Application<T>;
     framework: number;
     userSettings: UserSettings;
 }
 
-export interface AppHandler<T extends squared.base.Node> {
+export interface AppHandler<T extends Node> {
     application: squared.base.Application<T>;
     cache: squared.base.NodeList<T>;
     readonly userSettings: UserSettings;
 }
 
-export interface AppSession<T extends squared.base.Node, U> {
+export interface AppSession<T extends Node, U> {
     cache: U;
     documentRoot: { node: T, layoutName: string }[];
     excluded: squared.base.NodeList<T>;
@@ -68,7 +70,7 @@ export interface AppSession<T extends squared.base.Node, U> {
     extensionMap: Map<number, squared.base.Extension<T>[]>;
 }
 
-export interface AppProcessing<T extends squared.base.Node, U> {
+export interface AppProcessing<T extends Node, U> {
     cache: U;
     sessionId: string;
     node: T | undefined;
@@ -80,7 +82,7 @@ export interface ExtensionDependency {
     preload: boolean;
 }
 
-export interface ExtensionResult<T extends squared.base.Node> {
+export interface ExtensionResult<T extends Node> {
     parentAs?: T;
     output?: NodeTemplate<T>;
     renderAs?: T;
@@ -97,7 +99,7 @@ export interface LayoutType {
     renderType: number;
 }
 
-export interface LayoutResult<T extends squared.base.Node> {
+export interface LayoutResult<T extends Node> {
     layout: squared.base.Layout<T>;
     next?: boolean;
     renderAs?: T;
@@ -119,6 +121,7 @@ export interface ResourceStoredMap {
 
 export interface Asset {
     uri?: string;
+    index?: number;
 }
 
 export interface FileAsset extends Asset {
@@ -133,25 +136,25 @@ export interface ImageAsset extends Asset {
     position?: Point;
 }
 
-export interface NodeTag<T extends squared.base.Node> extends Optional<NodeTemplate<T>> {
+export interface NodeTag<T extends Node> extends Optional<NodeTemplate<T>> {
 }
 
-export interface NodeTagXml<T extends squared.base.Node> extends NodeTag<T> {
+export interface NodeTagXml<T extends Node> extends NodeTag<T> {
     controlName: string;
     attributes?: string;
     content?: string;
 }
 
-export interface NodeTemplate<T extends squared.base.Node> {
+export interface NodeTemplate<T extends Node> {
     type: number;
     node: T;
 }
 
-export interface NodeXmlTemplate<T extends squared.base.Node> extends NodeTemplate<T> {
+export interface NodeXmlTemplate<T extends Node> extends NodeTemplate<T> {
     controlName?: string;
     attributes?: string;
 }
 
-export interface NodeIncludeTemplate<T extends squared.base.Node> extends NodeTemplate<T> {
+export interface NodeIncludeTemplate<T extends Node> extends NodeTemplate<T> {
     content: string;
 }
