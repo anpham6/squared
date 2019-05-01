@@ -113,6 +113,10 @@ export interface SvgStrokeDash {
     offset?: number;
 }
 
+export interface SvgOffsetPath extends NumberValue<DOMPoint> {
+    rotate: number;
+}
+
 export interface SvgBuildOptions {
     exclude?: SvgTransformExclude;
     residual?: SvgTransformResidual;

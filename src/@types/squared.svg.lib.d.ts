@@ -19,6 +19,7 @@ declare global {
             function getDOMRect(element: SVGElement): DOMRect;
             function getTargetElement(element: SVGElement, rootElement?: HTMLElement | SVGElement | null): SVGElement | null;
             function getNearestViewBox(element: SVGElement): DOMRect | undefined;
+            function createPath(value: string): SVGPathElement;
             function getPathLength(value: string): string;
         }
     }

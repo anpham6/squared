@@ -80,8 +80,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         super();
         if (element) {
             this._element = element;
+            this.init();
         }
-        this.init();
+        else {
+            this._styleMap = {};
+            this.style = <CSSStyleDeclaration> {};
+        }
     }
 
     public abstract setControlType(viewName: string, containerType?: number): void;
@@ -118,10 +122,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                 }
             }
-        }
-        else {
-            this._styleMap = {};
-            this.style = <CSSStyleDeclaration> {};
         }
     }
 

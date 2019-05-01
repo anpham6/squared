@@ -72,12 +72,13 @@ declare global {
 
         interface SvgAnimateMotion extends SvgAnimate {
             animationElement: SVGAnimateMotionElement | null;
-            motionPathElement: SVGGraphicsElement | null;
+            motionPathElement: SVGGeometryElement | null;
             path: string;
             rotate: number;
             rotateAuto: boolean;
             rotateAutoReverse: boolean;
             keyPoints?: number[];
+            readonly rotationValues: number[] | undefined;
         }
 
         interface SvgAnimationIntervalMap {

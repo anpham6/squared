@@ -20,13 +20,12 @@ const $dom = squared.lib.dom;
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
-const STRING_ZEROONE = '0(?:\\.\\d+)?|1(?:\\.0+)?';
-const STRING_CUBICBEZIER = `cubic-bezier\\((${STRING_ZEROONE}), (${$regex.UNIT.DECIMAL}), (${STRING_ZEROONE}), (${$regex.UNIT.DECIMAL})\\)`;
+const STRING_CUBICBEZIER = `cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)`;
 
 const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
 
-const KEYFRAME_NAME = $css.getKeyframeRules();
-const ANIMATION_DEFAULT: StringMap = {
+const KEYFRAME_MAP = $css.getKeyframeRules();
+const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
     'animation-duration': '0s',
     'animation-iteration-count': '1',
@@ -163,7 +162,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     cssData[name] = values;
                 }
                 for (let i = 0; i < animationName.length; i++) {
-                    const keyframes = KEYFRAME_NAME[animationName[i]];
+                    const keyframes = KEYFRAME_MAP[animationName[i]];
                     const duration = SvgAnimation.convertClockTime(cssData['animation-duration'][i]);
                     if (keyframes && duration > 0) {
                         id++;

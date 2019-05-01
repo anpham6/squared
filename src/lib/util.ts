@@ -562,10 +562,14 @@ export function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): 
 
 export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char = '\n'): string {
     let result = '';
-    for (let i = 0; i < list.length; i++) {
+    const length = list.length;
+    for (let i = 0; i < length; i++) {
         const value = predicate(list[i], i, list);
         if (value !== '') {
-            result += value + char;
+            result += value;
+            if (i < length - 1) {
+                result += char;
+            }
         }
     }
     return result;

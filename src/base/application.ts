@@ -144,6 +144,9 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         for (const layout of this.session.documentRoot) {
             const node = layout.node;
+            if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.actualChildren.every(item => item.documentRoot)) {
+                continue;
+            }
             const parent = node.renderParent;
             if (parent && parent.renderTemplates) {
                 this.saveDocument(
@@ -788,6 +791,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     else {
+                        const child = this.insertNode(childElement);
+                        if (child) {
+                            child.documentRoot = true;
+                            child.visible = false;
+                            child.excluded = true;
+                            children.push(child);
+                        }
                         includeText = true;
                     }
                 }

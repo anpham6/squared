@@ -1,7 +1,7 @@
-import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
+import { SvgOffsetPath, SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { MATRIX, SVG, TRANSFORM } from './lib/util';
+import { MATRIX, SVG, TRANSFORM, createPath } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
@@ -20,6 +20,7 @@ type SvgUse = squared.svg.SvgUse;
 type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $regex = squared.lib.regex;
@@ -271,6 +272,66 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
         }
         return value;
+    }
+
+    public static translateOffsetPath(value: SVGGeometryElement | string, duration: number, from = '0%', to = '100%', rotate = 'auto') {
+        if (typeof value === 'string') {
+            value = <SVGGeometryElement> (createPath(value) as unknown);
+        }
+        const result: SvgOffsetPath[] = [];
+        const totalLength = value.getTotalLength();
+        if (totalLength > 0) {
+            function getDistance(unit: string, fallback: number) {
+                if ($css.isPercent(unit)) {
+                    return Math.min(totalLength * parseFloat(unit) / 100, totalLength);
+                }
+                else if ($util.isNumber(unit)) {
+                    return Math.min(parseFloat(unit), totalLength);
+                }
+                return fallback;
+            }
+            const start = getDistance(from, 0);
+            const end = getDistance(to, totalLength);
+            if (start >= 0 && start < end) {
+                const distance = end - start;
+                const startPoint = value.getPointAtLength(0);
+                let j: number;
+                let k: number;
+                if (duration >= distance) {
+                    j = 1;
+                    k = duration / distance;
+                }
+                else {
+                    j = distance / duration;
+                    k = 1;
+                }
+                for (let i = start, key = 0; ; i += j, key += k) {
+                    if (i >= end || key >= duration) {
+                        i = end;
+                        key = duration;
+                    }
+                    if (i === 0) {
+                        result.push({
+                            key,
+                            value: startPoint,
+                            rotate: 0
+                        });
+                    }
+                    else {
+                        const nextPoint = value.getPointAtLength(i);
+                        result.push({
+                            key,
+                            value: nextPoint,
+                            rotate: $math.offsetAngle(startPoint, nextPoint)
+                        });
+                    }
+                    if (i === end) {
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     public static getPathCommands(value: string) {

@@ -447,8 +447,13 @@ export function getNearestViewBox(element: SVGElement) {
     return undefined;
 }
 
-export function getPathLength(value: string) {
+export function createPath(value: string) {
     const element = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     element.setAttribute('d', value);
+    return element;
+}
+
+export function getPathLength(value: string) {
+    const element = createPath(value);
     return element.getTotalLength();
 }

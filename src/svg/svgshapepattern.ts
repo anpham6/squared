@@ -54,12 +54,18 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
             const patternHeight = this.patternHeight;
             const tileWidth = this.tileWidth;
             const tileHeight = this.tileHeight;
-            const boundingX =  boundingBox ? this.drawRegion.left : 0;
-            const boundingY = boundingBox ? this.drawRegion.top : 0;
             let offsetX = this.offsetX % tileWidth;
             let offsetY = this.offsetY % tileHeight;
-            let width = this.drawRegion.right - (boundingBox ? this.drawRegion.left : 0);
-            let remainingHeight = this.drawRegion.bottom - (boundingBox ? this.drawRegion.top : 0);
+            let boundingX = 0;
+            let boundingY = 0;
+            let width = this.drawRegion.right;
+            let remainingHeight = this.drawRegion.bottom;
+            if (boundingBox) {
+                width -= this.drawRegion.left;
+                remainingHeight -= this.drawRegion.top;
+                boundingX = this.drawRegion.left;
+                boundingY = this.drawRegion.top;
+            }
             let j = 0;
             if (offsetX !== 0) {
                 offsetX = tileWidth - offsetX;

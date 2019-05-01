@@ -459,7 +459,7 @@ function getTransformPropertyName(type: number) {
     return undefined;
 }
 
-function getTransformValues(item: $SvgAnimateTransform) {
+function getTransformValues(item: $SvgAnimate) {
     switch (item.type) {
         case SVGTransform.SVG_TRANSFORM_ROTATE:
             return $SvgAnimateTransform.toRotateList(item.values);
@@ -828,14 +828,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         if (valueType === undefined) {
                                             continue;
                                         }
+                                        const requireBefore = item.delay > 0;
+                                        let transforming = false;
+                                        let transformOrigin: Point[] | undefined;
                                         const insertBeforeValue = (attr: string, value: string) => {
                                             if (value && fillBefore.objectAnimator.findIndex(before => before.propertyName === attr) === -1) {
                                                 fillBefore.objectAnimator.push(this.createPropertyValue(attr, value, '0', valueType));
                                             }
                                         };
-                                        const requireBefore = item.delay > 0;
-                                        let transforming = false;
-                                        let transformOrigin: Point[] | undefined;
                                         const setFillAfter = (propertyName: string, propertyValues?: PropertyValue[], startOffset?: number) => {
                                             if (!synchronized && item.fillReplace && valueType !== undefined) {
                                                 let valueTo = item.replaceValue;
@@ -967,14 +967,27 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             }
                                             else if ($SvgBuild.asAnimateTransform(item)) {
                                                 propertyNames = getTransformPropertyName(item.type);
-                                                if (propertyNames === undefined) {
-                                                    continue;
-                                                }
                                                 values = getTransformValues(item);
-                                                if (checkBefore || requireBefore) {
-                                                    $util.concatArray(beforeValues, $util.objectMap<string, string>(propertyNames, value => getTransformInitialValue(value) || '0'));
+                                                if (propertyNames && values) {
+                                                    if (checkBefore || requireBefore) {
+                                                        $util.concatArray(beforeValues, $util.objectMap<string, string>(propertyNames, value => getTransformInitialValue(value) || '0'));
+                                                    }
+                                                    transformOrigin = item.transformOrigin;
                                                 }
-                                                transformOrigin = item.transformOrigin;
+                                                transforming = true;
+                                            }
+                                            else if ($SvgBuild.asAnimateMotion(item)) {
+                                                propertyNames = getTransformPropertyName(item.type);
+                                                values = getTransformValues(item);
+                                                if (propertyNames && values) {
+                                                    const rotationValues = item.rotationValues;
+                                                    if (rotationValues && rotationValues.length === values.length) {
+                                                        propertyNames.push('rotation');
+                                                        for (let i = 0; i < values.length; i++) {
+                                                            values[i].push(rotationValues[i]);
+                                                        }
+                                                    }
+                                                }
                                                 transforming = true;
                                             }
                                             else {
@@ -1152,7 +1165,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             (section === 0 ? repeating : fillCustom).objectAnimator.push(propertyOptions);
                                                         }
                                                     }
-                                                    if (section === 0 && !synchronized) {
+                                                    if (section === 0 && !synchronized && item.iterationCount !== -1) {
                                                         setFillAfter(propertyName, repeating.objectAnimator);
                                                     }
                                                 }
@@ -1486,7 +1499,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         }
         const baseData: VectorGroupData = {};
         const groupName = getVectorName(target, 'group');
-        if (this.queueAnimations(target, groupName, item => $SvgBuild.asAnimateTransform(item))) {
+        if (this.queueAnimations(target, groupName, item => $SvgBuild.asAnimateTransform(item) || $SvgBuild.asAnimateMotion(item))) {
             baseData.name = groupName;
         }
         else if (clipElement.length) {

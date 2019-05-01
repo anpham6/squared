@@ -1,4 +1,4 @@
-import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgTransform } from '../svg/@types/object';
+import { SvgAspectRatio, SvgOffsetPath, SvgPathCommand, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgTransform } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
@@ -96,6 +96,7 @@ declare global {
             public static drawPath(values: SvgPathCommand[], precision?: number): string;
             public static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number): string;
             public static transformRefit(value: string, transforms?: SvgTransform[], companion?: SvgShape, precision?: number): string;
+            public static translateOffsetPath(value: SVGGeometryElement | string, duration: number, from?: string, to?: string, rotate?: string): SvgOffsetPath[];
             public static getPathCommands(value: string): SvgPathCommand[];
             public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
