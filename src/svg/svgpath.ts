@@ -235,7 +235,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             if (transforms && transforms.length || requireRefit || requirePatternRefit) {
                 const commands = SvgBuild.getPathCommands(d);
                 if (commands.length) {
-                    let points = SvgBuild.extractPathPoints(commands);
+                    let points = SvgBuild.getPathPoints(commands);
                     if (points.length) {
                         if (requirePatternRefit) {
                             patternParent.patternRefitPoints(points);
@@ -252,7 +252,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         if (requireRefit) {
                             parent.refitPoints(points);
                         }
-                        d = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points, this.transformed !== undefined), precision);
+                        d = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, this.transformed !== undefined), precision);
                     }
                 }
             }
@@ -419,7 +419,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         modified = true;
                                     }
                                     else {
-                                        const angle = $math.offsetAngle(afterStartPoint, pathStartPoint);
+                                        const angle = $math.relativeAngle(afterStartPoint, pathStartPoint);
                                         pathStart.coordinates[0] = pathStart.coordinates[0] - $math.offsetAngleX(angle, leading);
                                         pathStart.coordinates[1] = pathStart.coordinates[1] - $math.offsetAngleY(angle, leading);
                                         modified = true;
@@ -452,7 +452,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 modified = true;
                                             }
                                             else {
-                                                const angle = $math.offsetAngle(beforeEndPoint, pathEndPoint);
+                                                const angle = $math.relativeAngle(beforeEndPoint, pathEndPoint);
                                                 const x = pathEnd.coordinates[0] + $math.offsetAngleX(angle, trailing);
                                                 const y = pathEnd.coordinates[1] + $math.offsetAngleY(angle, trailing);
                                                 pathEnd.coordinates[0] = x;
@@ -765,7 +765,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     if (flattenData.leading > 0 || flattenData.trailing > 0) {
                                         this.extendLength(flattenData, precision);
                                         if (flattenData.path) {
-                                            const boxRect = SvgBuild.parseBoxRect([this.value]);
+                                            const boxRect = SvgBuild.getBoxRect([this.value]);
                                             extendedLength = $math.truncateFraction(getPathLength(flattenData.path));
                                             extendedRatio = extendedLength / totalLength;
                                             flattenData.extendedLength = this.pathLength;

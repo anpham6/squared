@@ -119,13 +119,13 @@ export interface SvgOffsetPath extends NumberValue<DOMPoint> {
 
 export interface SvgBuildOptions {
     exclude?: SvgTransformExclude;
+    transforms?: SvgTransform[];
     residual?: SvgTransformResidual;
     precision?: number;
     element?: SVGGeometryElement;
     symbolElement?: SVGSymbolElement;
     patternElement?: SVGPatternElement;
-    transforms?: SvgTransform[];
-    initPath?: boolean;
+    initialize?: boolean;
 }
 
 export interface SvgSynchronizeOptions {

@@ -96,20 +96,20 @@ declare global {
             public static drawPath(values: SvgPathCommand[], precision?: number): string;
             public static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number): string;
             public static transformRefit(value: string, transforms?: SvgTransform[], companion?: SvgShape, precision?: number): string;
-            public static translateOffsetPath(value: SVGGeometryElement | string, duration: number, from?: string, to?: string, rotate?: string): SvgOffsetPath[];
+            public static translateOffsetPath(value: SVGGeometryElement | string, duration: number, from?: string, to?: string, rotation?: string): SvgOffsetPath[] | undefined;
             public static getPathCommands(value: string): SvgPathCommand[];
             public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
             public static convertTransforms(transforms: SVGTransformList): SvgTransform[];
-            public static extractPathPoints(values: SvgPathCommand[], radius?: boolean): SvgPoint[];
-            public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
+            public static getPathPoints(values: SvgPathCommand[], radius?: boolean): SvgPoint[];
+            public static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
             public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
             public static minMaxPoints(values: Point[]): number[];
-            public static centerPoints(values: Point[]): Point[];
+            public static centerPoints(...values: Point[]): Point[];
             public static convertPoints(values: number[]): Point[];
             public static parsePoints(value: string): Point[];
             public static parseCoordinates(value: string): number[];
-            public static parseBoxRect(value: string): BoxRect;
+            public static getBoxRect(value: string): BoxRect;
         }
     }
 }

@@ -26,6 +26,9 @@ const $math = squared.lib.math;
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
+const REGEXP_DECIMAL = new RegExp($regex.STRING.DECIMAL, 'g');
+const REGEXP_COMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
+
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
@@ -192,10 +195,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (parent && parent.requireRefit()) {
                 const commands = SvgBuild.getPathCommands(value);
                 if (commands.length) {
-                    const points = SvgBuild.extractPathPoints(commands);
+                    const points = SvgBuild.getPathPoints(commands);
                     if (points.length) {
                         parent.refitPoints(points);
-                        value = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
+                        value = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points), precision);
                     }
                 }
             }
@@ -259,7 +262,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static transformRefit(value: string, transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
         const commands = SvgBuild.getPathCommands(value);
         if (commands.length) {
-            let points = SvgBuild.extractPathPoints(commands);
+            let points = SvgBuild.getPathPoints(commands);
             if (points.length) {
                 const transformed = transforms && transforms.length > 0;
                 if (transformed) {
@@ -268,78 +271,147 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 if (companion && companion.parent && companion.parent.requireRefit()) {
                     companion.parent.refitPoints(points);
                 }
-                value = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points, transformed), precision);
+                value = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, transformed), precision);
             }
         }
         return value;
     }
 
-    public static translateOffsetPath(value: SVGGeometryElement | string, duration: number, from = '0%', to = '100%', rotate = 'auto') {
-        if (typeof value === 'string') {
-            value = <SVGGeometryElement> (createPath(value) as unknown);
-        }
-        const result: SvgOffsetPath[] = [];
-        const totalLength = value.getTotalLength();
-        if (totalLength > 0) {
-            function getDistance(unit: string, fallback: number) {
-                if ($css.isPercent(unit)) {
-                    return Math.min(totalLength * parseFloat(unit) / 100, totalLength);
-                }
-                else if ($util.isNumber(unit)) {
-                    return Math.min(parseFloat(unit), totalLength);
-                }
-                return fallback;
-            }
-            const start = getDistance(from, 0);
-            const end = getDistance(to, totalLength);
-            if (start >= 0 && start < end) {
-                const distance = end - start;
-                const startPoint = value.getPointAtLength(0);
-                let j: number;
-                let k: number;
-                if (duration >= distance) {
-                    j = 1;
-                    k = duration / distance;
-                }
-                else {
-                    j = distance / duration;
-                    k = 1;
-                }
-                for (let i = start, key = 0; ; i += j, key += k) {
-                    if (i >= end || key >= duration) {
-                        i = end;
-                        key = duration;
+    public static translateOffsetPath(value: string, duration: number, from = '0%', to = '100%', rotation = 'auto') {
+        if (duration > 0) {
+            const element = <SVGGeometryElement> (createPath(value) as unknown);
+            const result: SvgOffsetPath[] = [];
+            const totalLength = element.getTotalLength();
+            if (totalLength > 0) {
+                function getDistance(unit: string, fallback: number) {
+                    if ($css.isPercent(unit)) {
+                        return Math.min(totalLength * parseFloat(unit) / 100, totalLength);
                     }
-                    if (i === 0) {
-                        result.push({
-                            key,
-                            value: startPoint,
-                            rotate: 0
-                        });
+                    else if ($util.isNumber(unit)) {
+                        return Math.min(parseFloat(unit), totalLength);
+                    }
+                    return fallback;
+                }
+                const start = getDistance(from, 0);
+                const end = getDistance(to, totalLength);
+                const keyPoints: Point[] = [];
+                const rotatingPoints: boolean[] = [];
+                let fixedRotation = 0;
+                let initialRotation = 0;
+                if ($util.isNumber(rotation)) {
+                    fixedRotation = parseFloat(rotation);
+                }
+                else if (rotation === 'auto' || rotation.endsWith('reverse')) {
+                    const commands = SvgBuild.getPathCommands(value);
+                    for (const item of commands) {
+                        switch (item.key.toUpperCase()) {
+                            case 'M':
+                            case 'L':
+                            case 'H':
+                            case 'V':
+                            case 'Z':
+                                for (const pt of item.value) {
+                                    keyPoints.push(pt);
+                                    rotatingPoints.push(false);
+                                }
+                                break;
+                            case 'C':
+                            case 'S':
+                            case 'Q':
+                            case 'T':
+                            case 'A':
+                                keyPoints.push(item.end);
+                                rotatingPoints.push(true);
+                                break;
+                        }
+                    }
+                    if (rotation.endsWith('reverse')) {
+                        initialRotation = 180;
+                    }
+                }
+                if (start >= 0 && start < end) {
+                    const distance = end - start;
+                    let j: number;
+                    let k: number;
+                    if (duration >= distance) {
+                        j = 1;
+                        k = duration / distance;
                     }
                     else {
-                        const nextPoint = value.getPointAtLength(i);
+                        j = distance / duration;
+                        k = 1;
+                    }
+                    let center: SvgPoint | undefined;
+                    let previousRotation = 0;
+                    let additiveSum = 0;
+                    let rotating = false;
+                    for (let i = start, key = 0; ; i += j, key += k) {
+                        if (i >= end || key >= duration) {
+                            i = end;
+                            key = duration;
+                        }
+                        const nextPoint = element.getPointAtLength(i);
+                        if (keyPoints.length) {
+                            const index = keyPoints.findIndex(pt => {
+                                const x = pt.x.toString();
+                                const y = pt.y.toString();
+                                return x === nextPoint.x.toPrecision(x.length - (x.indexOf('.') !== -1 ? 1 : 0)) && y === nextPoint.y.toPrecision(y.length - (y.indexOf('.') !== -1 ? 1 : 0));
+                            });
+                            if (index !== -1) {
+                                const endPoint = keyPoints[index + 1];
+                                if (endPoint) {
+                                    rotating = rotatingPoints[index + 1];
+                                    if (rotating) {
+                                        center = SvgBuild.centerPoints(keyPoints[index], endPoint);
+                                        fixedRotation = 0;
+                                    }
+                                    else {
+                                        center = undefined;
+                                        fixedRotation = $math.absoluteAngle(nextPoint, endPoint);
+                                    }
+                                }
+                                else {
+                                    center = undefined;
+                                }
+                                additiveSum = 0;
+                                keyPoints.splice(0, index + 1);
+                                rotatingPoints.splice(0, index + 1);
+                            }
+                        }
+                        let rotate: number;
+                        if (rotating) {
+                            rotate = center ? $math.relativeAngle(center, nextPoint) : 0;
+                            if (previousRotation > 0 && previousRotation % 360 === 0 && Math.floor(rotate) === 0) {
+                                additiveSum = previousRotation;
+                            }
+                            rotate += additiveSum;
+                        }
+                        else {
+                            rotate = fixedRotation;
+                        }
+                        rotate += initialRotation;
                         result.push({
                             key,
                             value: nextPoint,
-                            rotate: $math.offsetAngle(startPoint, nextPoint)
+                            rotate
                         });
-                    }
-                    if (i === end) {
-                        break;
+                        if (i === end) {
+                            break;
+                        }
+                        previousRotation = Math.ceil(rotate);
                     }
                 }
             }
+            return result;
         }
-        return result;
+        return undefined;
     }
 
     public static getPathCommands(value: string) {
         const result: SvgPathCommand[] = [];
-        const pattern = /([A-Za-z])([^A-Za-z]+)?/g;
         let match: RegExpExecArray | null;
         value = value.trim();
-        while ((match = pattern.exec(value)) !== null) {
+        while ((match = REGEXP_COMMAND.exec(value)) !== null) {
             if (result.length === 0 && match[1].toUpperCase() !== 'M') {
                 break;
             }
@@ -436,7 +508,13 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                 case 'A':
                     if (coordinates.length >= 7) {
-                        [radiusX, radiusY, xAxisRotation, largeArcFlag, sweepFlag] = coordinates.splice(0, 5);
+                        radiusX = coordinates[0];
+                        radiusY = coordinates[1];
+                        xAxisRotation = coordinates[2];
+                        largeArcFlag = coordinates[3];
+                        sweepFlag = coordinates[4];
+                        coordinates[0] = coordinates[5];
+                        coordinates[1] = coordinates[6];
                         coordinates.length = 2;
                         break;
                     }
@@ -476,7 +554,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static extractPathPoints(values: SvgPathCommand[], radius = false) {
+    public static getPathPoints(values: SvgPathCommand[], radius = false) {
         const result: SvgPoint[] = [];
         let x = 0;
         let y = 0;
@@ -513,7 +591,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed = false) {
+    public static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed = false) {
         let location: Point | undefined;
         invalid: {
             for (const item of values) {
@@ -745,7 +823,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return [minX, minY, maxX, maxY];
     }
 
-    public static centerPoints(values: SvgPoint[]): SvgPoint {
+    public static centerPoints(...values: SvgPoint[]): SvgPoint {
         const result = this.minMaxPoints(values);
         return {
             x: (result[0] + result[2]) / 2,
@@ -777,9 +855,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static parseCoordinates(value: string) {
         const result: number[] = [];
-        const pattern = /-?[\d.]+/g;
         let match: RegExpExecArray | null;
-        while ((match = pattern.exec(value)) !== null) {
+        while ((match = REGEXP_DECIMAL.exec(value)) !== null) {
             const coord = parseFloat(match[0]);
             if (!isNaN(coord)) {
                 result.push(coord);
@@ -788,10 +865,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static parseBoxRect(values: string[]): BoxRect {
+    public static getBoxRect(values: string[]): BoxRect {
         const points: SvgPoint[] = [];
         for (const value of values) {
-            $util.concatArray(points, SvgBuild.extractPathPoints(SvgBuild.getPathCommands(value), true));
+            $util.concatArray(points, SvgBuild.getPathPoints(SvgBuild.getPathCommands(value), true));
         }
         const result = this.minMaxPoints(points);
         return { top: result[1], right: result[2], bottom: result[3], left: result[0] };

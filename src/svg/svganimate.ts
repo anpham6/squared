@@ -174,19 +174,25 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 this.from = $dom.getNamedItem(animationElement, 'from');
                 if (this.to === '') {
                     const by = $dom.getNamedItem(animationElement, 'by');
-                    if ($util.isNumber(by)) {
+                    const byCoords = SvgBuild.parseCoordinates(by);
+                    if (byCoords.length) {
                         if (this.from === '') {
                             if (this.baseValue) {
                                 this.from = this.baseValue;
                             }
                             this.evaluateStart = true;
                         }
-                        if ($util.isNumber(this.from)) {
-                            this.to = (parseFloat(this.from) + parseFloat(by)).toString();
+                        const fromCoords = SvgBuild.parseCoordinates(this.from);
+                        if (byCoords.length === fromCoords.length) {
+                            const to: number[] = [];
+                            for (let i = 0; i < fromCoords.length; i++) {
+                                to.push(fromCoords[i] + byCoords[i]);
+                            }
+                            this.to = to.join(',');
                         }
                     }
                 }
-                if ($util.isNumber(this.to)) {
+                if (SvgBuild.parseCoordinates(this.to).length) {
                     this.setAttribute('additive', 'sum');
                 }
                 this.convertToValues(keyTimes);
@@ -250,7 +256,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
-    public isLoop(index: number) {
+    public isLoopInterval(index: number) {
         return !!this.loopIntervals && this.loopIntervals[index] === true;
     }
 

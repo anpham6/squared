@@ -53,7 +53,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public contains(item: T) {
-        return this._children.indexOf(item) !== -1;
+        return this._children.includes(item);
     }
 
     public retain(list: T[]) {

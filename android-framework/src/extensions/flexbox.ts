@@ -150,7 +150,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         layout.itemCount = node.length;
         layout.rowCount = mainData.rowCount;
         layout.columnCount = mainData.columnCount;
-        if (mainData.directionRow && (mainData.rowCount === 1 || node.hasHeight) || mainData.directionColumn && (mainData.columnCount === 1 || node.hasWidth) || node.find(item => !item.pageFlow)) {
+        if (mainData.directionRow && (mainData.rowCount === 1 || node.hasHeight) || mainData.directionColumn && (mainData.columnCount === 1 || node.hasWidth) || node.some(item => !item.pageFlow)) {
             layout.containerType = CONTAINER_NODE.CONSTRAINT;
         }
         else {

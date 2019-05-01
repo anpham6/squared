@@ -87,10 +87,14 @@ export function triangulateASA(a: number, b: number, clen: number) {
     ];
 }
 
-export function offsetAngle(start: Point, end: Point) {
+export function absoluteAngle(start: Point, end: Point) {
     const x = end.x - start.x;
     const y = end.y - start.y;
-    let value = (Math.atan2(y, x) * 180 / Math.PI) + 90;
+    return Math.atan2(y, x) * 180 / Math.PI;
+}
+
+export function relativeAngle(start: Point, end: Point, orientation = 90) {
+    let value = absoluteAngle(start, end) + orientation;
     if (value < 0) {
         value += 360;
     }

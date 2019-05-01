@@ -66,7 +66,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             return;
                         }
                         else if (d && d.length) {
-                            const boxRect = SvgBuild.parseBoxRect(d);
+                            const boxRect = SvgBuild.getBoxRect(d);
                             const width = boxRect.right - boxRect.left;
                             const height = boxRect.bottom - boxRect.top;
                             const parent = this.parent;

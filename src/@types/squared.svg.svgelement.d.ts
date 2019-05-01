@@ -35,7 +35,7 @@ declare global {
         }
 
         class SvgShape implements SvgShape {
-            constructor(element: SVGGraphicsElement, initPath?: boolean);
+            constructor(element: SVGGraphicsElement, initialize?: boolean);
         }
 
         class SvgImage implements SvgImage {
@@ -43,7 +43,7 @@ declare global {
         }
 
         class SvgUse implements SvgUse {
-            constructor(element: SVGUseElement, shapeElement: SVGGraphicsElement, initPath?: boolean);
+            constructor(element: SVGUseElement, shapeElement: SVGGraphicsElement, initialize?: boolean);
         }
     }
 }

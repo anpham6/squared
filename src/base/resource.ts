@@ -616,16 +616,16 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                             if (x !== width && y !== height && !$math.isEqual(Math.abs(x), Math.abs(y))) {
                                                 let oppositeAngle: number;
                                                 if (angle <= 90) {
-                                                    oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
+                                                    oppositeAngle = $math.relativeAngle({ x: 0, y: height }, { x: width, y: 0 });
                                                 }
                                                 else if (angle <= 180) {
-                                                    oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
+                                                    oppositeAngle = $math.relativeAngle({ x: 0, y: 0 }, { x: width, y: height });
                                                 }
                                                 else if (angle <= 270) {
-                                                    oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
+                                                    oppositeAngle = $math.relativeAngle({ x: 0, y: 0 }, { x: -width, y: height });
                                                 }
                                                 else {
-                                                    oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
+                                                    oppositeAngle = $math.relativeAngle({ x: 0, y: height }, { x: -width, y: 0 });
                                                 }
                                                 let a = Math.abs(oppositeAngle - angle);
                                                 let b = 90 - a;

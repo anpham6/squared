@@ -12,10 +12,10 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
 
     constructor(
         public element: SVGGeometryElement | SVGUseElement,
-        initPath = true)
+        initialize = true)
     {
         super(element);
-        if (initPath) {
+        if (initialize) {
             this.setPath();
         }
     }

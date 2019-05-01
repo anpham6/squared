@@ -56,7 +56,7 @@ declare global {
             readonly length: number;
             setCalcMode(name: string): void;
             convertToValues(keyTimes?: number[]): void;
-            isLoop(index: number): boolean;
+            isLoopInterval(index: number): boolean;
             setGroupOrdering(value: SvgAnimationAttribute[]): void;
             getIntervalEndTime(leadTime: number): number;
             getTotalDuration(minimum?: boolean): number;
@@ -74,10 +74,8 @@ declare global {
             animationElement: SVGAnimateMotionElement | null;
             motionPathElement: SVGGeometryElement | null;
             path: string;
-            rotate: number;
-            rotateAuto: boolean;
-            rotateAutoReverse: boolean;
-            keyPoints?: number[];
+            rotate: string;
+            readonly keyPoints?: number[];
             readonly rotationValues: number[] | undefined;
         }
 

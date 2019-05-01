@@ -365,8 +365,8 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
     return result;
 }
 
-export function hasValue<T>(value: T): value is T {
-    return value !== undefined && value !== null && value.toString().trim() !== '';
+export function hasValue<T>(value: any): value is T {
+    return value !== undefined && value !== null && value !== '';
 }
 
 export function withinRange(a: number, b: number, offset = 1) {

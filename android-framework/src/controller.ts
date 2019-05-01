@@ -1405,7 +1405,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             if (!node.constraint.horizontal) {
                 for (const attr in node.constraint.current) {
                     const position = node.constraint.current[attr];
-                    if (position.horizontal && horizontal.find(item => item.documentId === position.documentId)) {
+                    if (position.horizontal && horizontal.some(item => item.documentId === position.documentId)) {
                         node.constraint.horizontal = true;
                         horizontal.push(node);
                         i = -1;
@@ -1416,7 +1416,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             if (!node.constraint.vertical) {
                 for (const attr in node.constraint.current) {
                     const position = node.constraint.current[attr];
-                    if (!position.horizontal && vertical.find(item => item.documentId === position.documentId)) {
+                    if (!position.horizontal && vertical.some(item => item.documentId === position.documentId)) {
                         node.constraint.vertical = true;
                         vertical.push(node);
                         i = -1;

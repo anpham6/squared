@@ -66,13 +66,13 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     public build(options?: SvgBuildOptions) {
         let element: SVGGraphicsElement | SVGSymbolElement;
         let precision: number | undefined;
-        let initPath = true;
+        let initialize = true;
         if (options) {
             options = { ...options };
             element = options.symbolElement || options.patternElement || options.element || this.element;
             precision = options.precision;
-            if (options.initPath === false) {
-                initPath = false;
+            if (options.initialize === false) {
+                initialize = false;
             }
             options.symbolElement = undefined;
             options.patternElement = undefined;
@@ -114,7 +114,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                             this.setAspectRatio(<SvgGroup> svg);
                         }
                         else {
-                            svg = new squared.svg.SvgUse(item, target, initPath);
+                            svg = new squared.svg.SvgUse(item, target, initialize);
                         }
                     }
                 }
@@ -129,7 +129,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                     this.setAspectRatio(<SvgGroup> svg);
                 }
                 else {
-                    svg = new squared.svg.SvgShape(item, initPath);
+                    svg = new squared.svg.SvgShape(item, initialize);
                 }
             }
             if (svg) {
@@ -143,7 +143,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             }
         }
         else if (requireClip && this.hasViewBox() && (this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0)) {
-            const boxRect = SvgBuild.parseBoxRect(this.getPathAll(false));
+            const boxRect = SvgBuild.getBoxRect(this.getPathAll(false));
             const x = this.refitX(this.aspectRatio.x);
             const y = this.refitY(this.aspectRatio.y);
             if (boxRect.left < x || boxRect.top < y) {

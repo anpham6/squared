@@ -138,7 +138,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 break;
                             case 'animateMotion':
                                 for (const time of times) {
-                                    addAnimation(new SvgAnimateMotion(element, <SVGAnimateMotionElement> item), time);
+                                    const animate = new SvgAnimateMotion(element, <SVGAnimateMotionElement> item);
+                                    if (animate.motionPathElement) {
+                                        animate.path = SvgBuild.drawRefit(animate.motionPathElement, this.parent, this.viewport && this.viewport.precision);
+                                    }
+                                    addAnimation(animate, time);
                                 }
                                 break;
                         }

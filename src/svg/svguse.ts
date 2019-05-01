@@ -17,10 +17,10 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     constructor(
         public readonly element: SVGUseElement,
         public shapeElement: SVGGeometryElement,
-        initPath = true)
+        initialize = true)
     {
         super(element, false);
-        if (initPath) {
+        if (initialize) {
             this.setPath();
         }
     }
