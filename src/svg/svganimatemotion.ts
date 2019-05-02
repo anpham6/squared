@@ -4,8 +4,9 @@ import SvgAnimate from './svganimate';
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
-import { SVG, getTargetElement } from './lib/util';
+import { SVG, getPathLength, getAttribute, getTargetElement } from './lib/util';
 
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
@@ -16,6 +17,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
     public readonly attributeName = 'transform';
     public readonly type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
 
+    private _offsetLength = 0;
     private _offsetPath?: SvgOffsetPath[];
     private _keyPoints?: number[];
 
@@ -41,6 +43,18 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
             }
             this.setCalcMode();
         }
+        else if (element) {
+            const match = /path\("([^"]+)"\)/.exec(getAttribute(element, 'offset-path'));
+            if (match) {
+                this.path = match[1];
+            }
+            const rotate = getAttribute(element, 'offset-rotate');
+            if (rotate !== '') {
+                if ($css.isAngle(rotate)) {
+                    this.rotate = $css.parseAngle(rotate).toString();
+                }
+            }
+        }
     }
 
     public setCalcMode() {
@@ -57,7 +71,6 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                     let keyTimes = super.keyTimes;
                     if (keyTimes.length === 0 && this.duration !== -1) {
                         keyTimes = SvgAnimate.toFractionList($dom.getNamedItem(this.animationElement, 'keyTimes'));
-                        super.values = undefined as any;
                         super.keyTimes = keyTimes;
                     }
                     if (keyPoints.length === keyTimes.length) {
@@ -68,8 +81,41 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
         }
     }
 
+    public addKeyPoint(percent: number, value: string) {
+        if (this._offsetPath === undefined) {
+            const offsetLength = this.offsetLength;
+            if (offsetLength > 0 && percent >= 0 && percent <= 1) {
+                const keyTimes = super.keyTimes;
+                const keyPoints = this.keyPoints;
+                if (keyTimes.length === keyPoints.length) {
+                    let distance = NaN;
+                    if ($css.isPercent(value)) {
+                        distance = parseFloat(value) / 100;
+                    }
+                    else if ($util.isNumber(value)) {
+                        distance = parseFloat(value) / offsetLength;
+                    }
+                    if (!isNaN(distance)) {
+                        if (distance > 1) {
+                            distance = 1;
+                        }
+                        const index = keyTimes.findIndex(previous => previous === percent);
+                        if (index !== -1) {
+                            keyTimes[index] = percent;
+                            keyPoints[index] = distance;
+                        }
+                        else {
+                            keyTimes.push(percent);
+                            keyPoints.push(distance);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private setOffsetPath() {
-        if (this.path && this._offsetPath === undefined) {
+        if (this._offsetPath === undefined && this.path !== '') {
             let offsetPath = SvgBuild.getOffsetPath(this.path, this.rotate);
             let distance = offsetPath.length;
             if (distance > 0) {
@@ -97,7 +143,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                     distance = result.length;
                 }
                 const keyPoints = this.keyPoints;
-                if (keyPoints) {
+                if (keyPoints.length) {
                     const keyTimes = super.keyTimes;
                     const length = distance - 1;
                     const result: SvgOffsetPath[] = [];
@@ -198,13 +244,18 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
         return undefined;
     }
 
-    set keyPoints(value) {
-        if (this.animationElement === null) {
-            this._keyPoints = value;
-        }
-    }
     get keyPoints() {
+        if (this._keyPoints === undefined) {
+            this._keyPoints = [];
+        }
         return this._keyPoints;
+    }
+
+    get offsetLength() {
+        if (this._offsetLength === 0 && this.path !== '') {
+            this._offsetLength = getPathLength(this.path);
+        }
+        return this._offsetLength;
     }
 
     get instanceType() {

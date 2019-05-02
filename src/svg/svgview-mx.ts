@@ -220,7 +220,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const transforms = TRANSFORM.parse(element, transform.value);
                                 if (transforms) {
                                     const origin = getKeyframeOrigin(transform.key);
-                                    transforms.forEach(item => {
+                                    for (const item of transforms) {
                                         const m = item.matrix;
                                         let name: string;
                                         let value: string;
@@ -265,15 +265,15 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                 }
                                                 break;
                                             default:
-                                                return;
+                                                continue;
                                         }
                                         if (attrMap[name] === undefined) {
                                             attrMap[name] = [];
                                         }
-                                        const previousIndex = attrMap[name].findIndex(subitem => subitem.key === transform.key);
-                                        if (previousIndex !== -1) {
-                                            attrMap[name][previousIndex].value = value;
-                                            attrMap[name][previousIndex].transformOrigin = transformOrigin;
+                                        const index = attrMap[name].findIndex(previous => previous.key === transform.key);
+                                        if (index !== -1) {
+                                            attrMap[name][index].value = value;
+                                            attrMap[name][index].transformOrigin = transformOrigin;
                                         }
                                         else {
                                             attrMap[name].push({
@@ -282,17 +282,20 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                 transformOrigin
                                             });
                                         }
-                                    });
+                                    }
                                 }
                             }
+                            delete attrMap['transform'];
+                            delete attrMap['transform-origin'];
                         }
-                        delete attrMap['transform'];
-                        delete attrMap['transform-origin'];
                         for (const name in attrMap) {
                             attributes.push(name);
                             const animation = attrMap[name];
                             let animate: SvgAnimate;
                             switch (name) {
+                                case 'offset-distance':
+                                    animate = new SvgAnimateMotion(element);
+                                    break;
                                 case 'rotate':
                                 case 'scale':
                                 case 'skewX':
@@ -307,88 +310,95 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     animate.attributeName = name;
                                     break;
                             }
-                            const timingFunction = cssData['animation-timing-function'][i];
-                            const direction = cssData['animation-direction'][i];
-                            const keyTimes: number[] = [];
-                            const values: string[] = [];
-                            const keySplines: string[] = [];
                             sortAttribute(animation);
-                            for (let j = 0; j < animation.length; j++) {
-                                keyTimes.push(animation[j].key);
-                                values.push(animation[j].value);
-                                if (j < animation.length - 1) {
-                                    const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.key === animation[j].key);
-                                    keySplines.push(spline ? spline.value : timingFunction);
+                            const direction = cssData['animation-direction'][i];
+                            if (name === 'offset-distance') {
+                                for (const item of animation) {
+                                    (<SvgAnimateMotion> animate).addKeyPoint(item.key, item.value);
                                 }
-                                const transformOrigin = animation[j].transformOrigin;
-                                if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
-                                    if (animate.transformOrigin === undefined) {
-                                        animate.transformOrigin = [];
-                                    }
-                                    animate.transformOrigin[j] = transformOrigin;
-                                }
-                            }
-                            if (keyTimes[0] !== 0) {
-                                keyTimes.unshift(0);
-                                values.unshift(animate.baseValue || '');
-                                keySplines.unshift(timingFunction);
-                                animate.evaluateStart = true;
-                            }
-                            addAnimation(animate, delay, keyframeIndex);
-                            animate.paused = paused;
-                            animate.duration = duration;
-                            if (!keySplines.every(value => value === 'linear')) {
-                                const keyTimesData: number[] = [];
-                                const valuesData: string[] = [];
-                                const keySplinesData: string[] = [];
-                                for (let j = 0; j < keyTimes.length; j++) {
-                                    if (j < keyTimes.length - 1) {
-                                        const segDuration = (keyTimes[j + 1] - keyTimes[j]) * duration;
-                                        if (KEYSPLINE_NAME[keySplines[j]]) {
-                                            keySplines[j] = KEYSPLINE_NAME[keySplines[j]];
-                                        }
-                                        else if (keySplines[j].startsWith('step')) {
-                                            if (values[j] !== '') {
-                                                const steps = SvgAnimate.convertStepTimingFunction(name, keySplines[j], keyTimes, values, j, $css.getFontSize(element));
-                                                if (steps) {
-                                                    const offset = keyTimes[j + 1] === 1 ? 1 : 0;
-                                                    for (let k = 0; k < steps[0].length - offset; k++) {
-                                                        let keyTime = (keyTimes[j] + steps[0][k] * segDuration) / duration;
-                                                        if (keyTimesData.includes(keyTime)) {
-                                                            keyTime += 1 / 1000;
-                                                        }
-                                                        keyTimesData.push(keyTime);
-                                                        valuesData.push(steps[1][k]);
-                                                        keySplinesData.push(KEYSPLINE_NAME[keySplines[j].indexOf('start') !== -1 ? 'step-start' : 'step-end']);
-                                                    }
-                                                    continue;
-                                                }
-                                            }
-                                            keySplines[j] = KEYSPLINE_NAME.linear;
-                                        }
-                                        else {
-                                            const match = new RegExp(STRING_CUBICBEZIER).exec(keySplines[j]);
-                                            keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
-                                        }
-                                        keySplinesData.push(keySplines[j]);
-                                    }
-                                    keyTimesData.push(keyTimes[j]);
-                                    valuesData.push(values[j]);
-                                }
-                                animate.values = valuesData;
-                                animate.keyTimes = keyTimesData;
-                                animate.keySplines = keySplinesData;
                             }
                             else {
-                                animate.values = values;
-                                animate.keyTimes = keyTimes;
+                                const timingFunction = cssData['animation-timing-function'][i];
+                                const keyTimes: number[] = [];
+                                const values: string[] = [];
+                                const keySplines: string[] = [];
+                                for (let j = 0; j < animation.length; j++) {
+                                    keyTimes.push(animation[j].key);
+                                    values.push(animation[j].value);
+                                    if (j < animation.length - 1) {
+                                        const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.key === animation[j].key);
+                                        keySplines.push(spline ? spline.value : timingFunction);
+                                    }
+                                    const transformOrigin = animation[j].transformOrigin;
+                                    if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
+                                        if (animate.transformOrigin === undefined) {
+                                            animate.transformOrigin = [];
+                                        }
+                                        animate.transformOrigin[j] = transformOrigin;
+                                    }
+                                }
+                                if (keyTimes[0] !== 0) {
+                                    keyTimes.unshift(0);
+                                    values.unshift(animate.baseValue || '');
+                                    keySplines.unshift(timingFunction);
+                                    animate.evaluateStart = true;
+                                }
+                                if (!keySplines.every(value => value === 'linear')) {
+                                    const keyTimesData: number[] = [];
+                                    const valuesData: string[] = [];
+                                    const keySplinesData: string[] = [];
+                                    for (let j = 0; j < keyTimes.length; j++) {
+                                        if (j < keyTimes.length - 1) {
+                                            const segDuration = (keyTimes[j + 1] - keyTimes[j]) * duration;
+                                            if (KEYSPLINE_NAME[keySplines[j]]) {
+                                                keySplines[j] = KEYSPLINE_NAME[keySplines[j]];
+                                            }
+                                            else if (keySplines[j].startsWith('step')) {
+                                                if (values[j] !== '') {
+                                                    const steps = SvgAnimate.convertStepTimingFunction(name, keySplines[j], keyTimes, values, j, $css.getFontSize(element));
+                                                    if (steps) {
+                                                        const offset = keyTimes[j + 1] === 1 ? 1 : 0;
+                                                        for (let k = 0; k < steps[0].length - offset; k++) {
+                                                            let keyTime = (keyTimes[j] + steps[0][k] * segDuration) / duration;
+                                                            if (keyTimesData.includes(keyTime)) {
+                                                                keyTime += 1 / 1000;
+                                                            }
+                                                            keyTimesData.push(keyTime);
+                                                            valuesData.push(steps[1][k]);
+                                                            keySplinesData.push(KEYSPLINE_NAME[keySplines[j].indexOf('start') !== -1 ? 'step-start' : 'step-end']);
+                                                        }
+                                                        continue;
+                                                    }
+                                                }
+                                                keySplines[j] = KEYSPLINE_NAME.linear;
+                                            }
+                                            else {
+                                                const match = new RegExp(STRING_CUBICBEZIER).exec(keySplines[j]);
+                                                keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
+                                            }
+                                            keySplinesData.push(keySplines[j]);
+                                        }
+                                        keyTimesData.push(keyTimes[j]);
+                                        valuesData.push(values[j]);
+                                    }
+                                    animate.values = valuesData;
+                                    animate.keyTimes = keyTimesData;
+                                    animate.keySplines = keySplinesData;
+                                }
+                                else {
+                                    animate.values = values;
+                                    animate.keyTimes = keyTimes;
+                                }
                             }
+                            animate.paused = paused;
+                            animate.duration = duration;
                             animate.iterationCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
                             animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
                             animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
                             animate.reverse = direction.endsWith('reverse');
                             animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && direction.startsWith('alternate');
                             groupName.push(animate);
+                            addAnimation(animate, delay, keyframeIndex);
                         }
                     }
                 }
