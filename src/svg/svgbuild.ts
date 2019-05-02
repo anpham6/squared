@@ -19,7 +19,9 @@ type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
 type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
+type SvgView = squared.svg.SvgView;
 
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $regex = squared.lib.regex;
@@ -191,7 +193,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         let value: string;
         if (SVG.path(element)) {
             value = $dom.getNamedItem(element, 'd');
-            if (parent && parent.requireRefit()) {
+            if (parent && parent.requireRefit) {
                 const commands = SvgBuild.getPathCommands(value);
                 if (commands.length) {
                     const points = SvgBuild.getPathPoints(commands);
@@ -207,7 +209,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 { x: element.x1.baseVal.value, y: element.y1.baseVal.value },
                 { x: element.x2.baseVal.value, y: element.y2.baseVal.value }
             ];
-            if (parent && parent.requireRefit()) {
+            if (parent && parent.requireRefit) {
                 parent.refitPoints(points);
             }
             value = SvgBuild.drawPolyline(points, precision);
@@ -226,7 +228,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             const points: SvgPoint[] = [
                 { x: element.cx.baseVal.value, y: element.cy.baseVal.value, rx, ry }
             ];
-            if (parent && parent.requireRefit()) {
+            if (parent && parent.requireRefit) {
                 parent.refitPoints(points);
             }
             const pt = <Required<SvgPoint>> points[0];
@@ -237,7 +239,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let y = element.y.baseVal.value;
             let width = element.width.baseVal.value;
             let height = element.height.baseVal.value;
-            if (parent && parent.requireRefit()) {
+            if (parent && parent.requireRefit) {
                 x = parent.refitX(x);
                 y = parent.refitY(y);
                 width = parent.refitSize(width);
@@ -247,7 +249,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
         else if (SVG.polygon(element) || SVG.polyline(element)) {
             const points = SvgBuild.clonePoints(element.points);
-            if (parent && parent.requireRefit()) {
+            if (parent && parent.requireRefit) {
                 parent.refitPoints(points);
             }
             value = SVG.polygon(element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
@@ -258,17 +260,17 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return value;
     }
 
-    public static transformRefit(value: string, transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
+    public static transformRefit(value: string, transforms?: SvgTransform[], parent?: SvgView, container?: SvgContainer, precision?: number) {
         const commands = SvgBuild.getPathCommands(value);
         if (commands.length) {
             let points = SvgBuild.getPathPoints(commands);
             if (points.length) {
                 const transformed = transforms && transforms.length > 0;
                 if (transformed) {
-                    points = SvgBuild.applyTransforms(<SvgTransform[]> transforms, points, companion && TRANSFORM.origin(companion.element));
+                    points = SvgBuild.applyTransforms(<SvgTransform[]> transforms, points, parent && TRANSFORM.origin(parent.element));
                 }
-                if (companion && companion.parent && companion.parent.requireRefit()) {
-                    companion.parent.refitPoints(points);
+                if (container && container.requireRefit) {
+                    container.refitPoints(points);
                 }
                 value = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, transformed), precision);
             }
@@ -288,7 +290,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if ($util.isNumber(rotation)) {
                 rotateFixed = parseFloat(rotation);
             }
-            else if (rotation === 'auto' || rotation.endsWith('reverse')) {
+            else {
                 const commands = SvgBuild.getPathCommands(value);
                 for (const item of commands) {
                     switch (item.key.toUpperCase()) {
@@ -312,9 +314,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                             break;
                     }
                 }
-                if (rotation.endsWith('reverse')) {
-                    rotateInitial = 180;
-                }
+                rotateInitial = rotation === 'auto-reverse' ? 180 : $css.parseAngle(rotation.split(' ').pop() as string);
             }
             let rotating = false;
             let rotatePrevious = 0;

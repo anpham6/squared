@@ -1,5 +1,7 @@
 import { SvgAnimationGroup } from './@types/object';
 
+import SvgBuild from './svgbuild';
+
 import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
 import { getAttribute } from './lib/util';
 
@@ -65,7 +67,6 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public paused = false;
     public fillMode = 0;
     public synchronizeState = 0;
-    public parent?: squared.svg.SvgView | squared.svg.SvgPath;
     public baseValue?: string;
     public replaceValue?: string;
     public id?: number;
@@ -75,6 +76,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     private _duration = -1;
     private _delay = 0;
     private _to = '';
+    private _parent?: squared.svg.SvgView | squared.svg.SvgPath;
     private _group?: SvgAnimationGroup;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement) {
@@ -203,6 +205,21 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     get fillReplace() {
         return this.fillMode === 0 || this.fillMode === FILL_MODE.BACKWARDS;
+    }
+
+    get parentContainer() {
+        let result = this._parent as squared.svg.SvgContainer | undefined;
+        while (result && !SvgBuild.isContainer(result)) {
+            result = result.parent;
+        }
+        return result;
+    }
+
+    set parent(value) {
+        this._parent = value;
+    }
+    get parent() {
+        return this._parent;
     }
 
     set group(value) {

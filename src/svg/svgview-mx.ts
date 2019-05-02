@@ -99,14 +99,15 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const element = companion || this.element;
             const result: SvgAnimation[] = [];
             let id = 0;
-            function addAnimation(item: SvgAnimation, delay: number, name = '') {
+            const addAnimation = (item: SvgAnimation, delay: number, name = '') => {
                 if (name === '') {
                     id++;
                 }
                 item.delay = delay;
                 item.group = { id, name };
+                item.parent = this;
                 result.push(item);
-            }
+            };
             for (let i = 0; i < element.children.length; i++) {
                 const item = element.children[i];
                 if (item instanceof SVGAnimationElement) {
@@ -310,6 +311,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     animate.attributeName = name;
                                     break;
                             }
+                            addAnimation(animate, delay, keyframeIndex);
                             sortAttribute(animation);
                             const direction = cssData['animation-direction'][i];
                             if (name === 'offset-distance') {
@@ -398,7 +400,6 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             animate.reverse = direction.endsWith('reverse');
                             animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && direction.startsWith('alternate');
                             groupName.push(animate);
-                            addAnimation(animate, delay, keyframeIndex);
                         }
                     }
                 }
@@ -406,9 +407,6 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 for (const item of groupName) {
                     item.setGroupOrdering(groupOrdering);
                 }
-            }
-            for (const item of result) {
-                item.parent = this;
             }
             return result;
         }

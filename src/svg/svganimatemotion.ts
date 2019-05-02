@@ -8,6 +8,7 @@ import { SVG, getPathLength, getAttribute, getTargetElement } from './lib/util';
 
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.SvgAnimateMotion {
@@ -71,6 +72,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                     let keyTimes = super.keyTimes;
                     if (keyTimes.length === 0 && this.duration !== -1) {
                         keyTimes = SvgAnimate.toFractionList($dom.getNamedItem(this.animationElement, 'keyTimes'));
+                        this.length = 0;
                         super.keyTimes = keyTimes;
                     }
                     if (keyPoints.length === keyTimes.length) {
@@ -205,6 +207,25 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
         }
     }
 
+    private reverseKeyPoints() {
+        let keyTimes: number[] | undefined;
+        let keyPoints: number[] | undefined;
+        if (this.validKeyPoints()) {
+            keyPoints = (this._keyPoints as number[]).slice(0);
+            keyPoints.reverse();
+            keyTimes = [];
+            for (const keyTime of super.keyTimes) {
+                keyTimes.push(1 - keyTime);
+            }
+            keyTimes.reverse();
+        }
+        return { keyTimes, keyPoints };
+    }
+
+    private validKeyPoints() {
+        return !!this._keyPoints && this._keyPoints.length > 0 && this._keyPoints.length === super.keyTimes.length;
+    }
+
     get offsetPath() {
         return this._offsetPath;
     }
@@ -249,6 +270,78 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
             this._keyPoints = [];
         }
         return this._keyPoints;
+    }
+
+    set reverse(value) {
+        if (value !== super.reverse) {
+            const { keyTimes, keyPoints } = this.reverseKeyPoints();
+            if (keyTimes && keyPoints) {
+                this.length = 0;
+                this._keyPoints = keyPoints;
+                super.keyTimes = keyTimes;
+                super.reverse = value;
+            }
+        }
+    }
+    get reverse() {
+        return super.reverse;
+    }
+
+    set alternate(value) {
+        const iterationCount = this.iterationCount;
+        if (value !== super.alternate && (iterationCount === -1 || iterationCount > 1)) {
+            const { keyTimes, keyPoints } = this.reverseKeyPoints();
+            if (keyTimes && keyPoints) {
+                const duration = this.duration;
+                const keyTimesBase = super.keyTimes;
+                if (iterationCount === -1) {
+                    for (let i = 0; i < keyTimesBase.length; i++) {
+                        keyTimesBase[i] /= 2;
+                        keyTimes[i] = 0.5 + keyTimes[i] / 2;
+                    }
+                    $util.concatArray(keyTimesBase, keyTimes);
+                    $util.concatArray(this.keyPoints, keyPoints);
+                    this.duration = duration * 2;
+                }
+                else {
+                    const keyTimesStatic = keyTimesBase.slice(0);
+                    const keyPointsStatic = this.keyPoints.slice(0);
+                    for (let i = 0; i < iterationCount; i++) {
+                        if (i === 0) {
+                            for (let j = 0; j < keyTimesBase.length; j++) {
+                                keyTimesBase[j] /= iterationCount;
+                            }
+                        }
+                        else {
+                            const baseTime = i * 1 / iterationCount;
+                            const keyTimesAppend = i % 2 === 0 ? keyTimesStatic.slice(0) : keyTimes.slice(0);
+                            for (let j = 0; j < keyTimesAppend.length; j++) {
+                                keyTimesAppend[j] = $math.truncateFraction(baseTime + keyTimesAppend[j] / iterationCount);
+                            }
+                            $util.concatArray(keyTimesBase, keyTimesAppend);
+                            $util.concatArray(this.keyPoints, i % 2 === 0 ? keyPointsStatic : keyPoints);
+                        }
+                    }
+                    this.duration = duration * iterationCount;
+                    this.iterationCount = 1;
+                }
+                super.alternate = value;
+            }
+        }
+    }
+    get alternate() {
+        return super.alternate;
+    }
+
+    set parent(value) {
+        super.parent = value;
+        const parentContainer = this.parentContainer;
+        if (parentContainer && parentContainer.requireRefit && this.path !== '') {
+            this.path = SvgBuild.transformRefit(this.path, undefined, undefined, parentContainer);
+        }
+    }
+    get parent() {
+        return super.parent;
     }
 
     get offsetLength() {

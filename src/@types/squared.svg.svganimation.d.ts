@@ -24,6 +24,7 @@ declare global {
             companion?: NumberValue<SvgAnimation>;
             readonly instanceType: number;
             readonly fillReplace: boolean;
+            readonly parentContainer?: SvgContainer;
             setAttribute(attr: string, equality?: string): void;
             addState(...values: number[]): void;
             removeState(...values: number[]): void;
@@ -42,6 +43,7 @@ declare global {
             additiveSum: boolean;
             accumulateSum: boolean;
             evaluateStart: boolean;
+            length: number;
             keySplines?: string[];
             timingFunction?: string;
             by?: number;
@@ -53,7 +55,6 @@ declare global {
             readonly valueFrom: string;
             readonly fromToType: boolean;
             readonly partialType: boolean;
-            readonly length: number;
             setCalcMode(attributeName?: string, mode?: string): void;
             convertToValues(keyTimes?: number[]): void;
             isLoopInterval(index: number): boolean;

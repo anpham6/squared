@@ -10,13 +10,13 @@ declare global {
             clipRegion: string;
             aspectRatio: SvgAspectRatio;
             readonly element: SVGSVGElement | SVGGElement | SVGUseElement;
+            readonly requireRefit: boolean;
             readonly instanceType: number;
             append(item: SvgView, viewport?: Svg): this;
             refitX(value: number): number;
             refitY(value: number): number;
             refitSize(value: number): number;
             refitPoints(values: SvgPoint[]): SvgPoint[];
-            requireRefit(): boolean;
             getPathAll(cascade?: boolean): string[];
             hasViewBox(): boolean;
             clipViewBox(x: number, y: number, width: number, height: number, precision?: number, documentRoot?: boolean): void;

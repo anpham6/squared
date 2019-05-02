@@ -194,10 +194,6 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         return values;
     }
 
-    public requireRefit() {
-        return this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0 || this.aspectRatio.position.x !== 0 || this.aspectRatio.position.y !== 0 || this.aspectRatio.parent.x !== 0 || this.aspectRatio.parent.y !== 0 || this.aspectRatio.unit !== 1;
-    }
-
     public getPathAll(cascade = true) {
         const result: string[] = [];
         for (const item of (cascade ? this.cascade() : this)) {
@@ -252,6 +248,10 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
     get clipRegion() {
         return this._clipRegion.length ? this._clipRegion.join(';') : '';
+    }
+
+    get requireRefit() {
+        return this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0 || this.aspectRatio.position.x !== 0 || this.aspectRatio.position.y !== 0 || this.aspectRatio.parent.x !== 0 || this.aspectRatio.parent.y !== 0 || this.aspectRatio.unit !== 1;
     }
 
     get instanceType() {

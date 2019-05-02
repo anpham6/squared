@@ -95,7 +95,7 @@ declare global {
             public static drawPolyline(values: Point[] | DOMPoint[], precision?: number): string;
             public static drawPath(values: SvgPathCommand[], precision?: number): string;
             public static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number): string;
-            public static transformRefit(value: string, transforms?: SvgTransform[], companion?: SvgShape, precision?: number): string;
+            public static transformRefit(value: string, transforms?: SvgTransform[], parent?: SvgView, container?: SvgContainer, precision?: number): string;
             public static getOffsetPath(value: string, rotation?: string): SvgOffsetPath[];
             public static getPathCommands(value: string): SvgPathCommand[];
             public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];

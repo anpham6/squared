@@ -100,7 +100,7 @@ function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
-        const transformRefit = !!transforms || !!companion && !!companion.parent && companion.parent.requireRefit();
+        const transformRefit = !!transforms || !!companion && !!companion.parent && companion.parent.requireRefit;
         const result: string[] = [];
         let commands: SvgPathCommand[] | undefined;
         for (let i = 0; i < values.length; i++) {
@@ -185,7 +185,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             if (result[i]) {
                 if (transformRefit) {
-                    result[i] = SvgBuild.transformRefit(result[i], transforms, companion, precision);
+                    result[i] = SvgBuild.transformRefit(result[i], transforms, companion, companion && companion.parent, precision);
                 }
             }
             else {
@@ -226,7 +226,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         const element = this.element;
         const parent = <SvgContainer> this.parent;
         const patternParent = <SvgShapePattern> this.patternParent;
-        const requireRefit = !!parent && parent.requireRefit();
+        const requireRefit = !!parent && parent.requireRefit;
         const requirePatternRefit = !!patternParent && patternParent.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
         this.transformed = undefined;
         let d: string;
