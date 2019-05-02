@@ -979,11 +979,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 propertyNames = getTransformPropertyName(item.type);
                                                 values = getTransformValues(item);
                                                 if (propertyNames && values) {
-                                                    const rotationValues = item.rotationValues;
-                                                    if (rotationValues && rotationValues.length === values.length) {
+                                                    const rotateValues = item.rotateValues;
+                                                    if (rotateValues && rotateValues.length === values.length) {
                                                         propertyNames.push('rotation');
                                                         for (let i = 0; i < values.length; i++) {
-                                                            values[i].push(rotationValues[i]);
+                                                            values[i].push(rotateValues[i]);
                                                         }
                                                     }
                                                 }

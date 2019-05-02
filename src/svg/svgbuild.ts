@@ -20,7 +20,6 @@ type SvgUse = squared.svg.SvgUse;
 type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
-const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $regex = squared.lib.regex;
@@ -277,134 +276,100 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return value;
     }
 
-    public static translateOffsetPath(value: string, duration: number, from = '0%', to = '100%', rotation = 'auto') {
-        if (duration > 0) {
-            const element = <SVGGeometryElement> (createPath(value) as unknown);
-            const result: SvgOffsetPath[] = [];
-            const totalLength = element.getTotalLength();
-            if (totalLength > 0) {
-                function getDistance(unit: string, fallback: number) {
-                    if ($css.isPercent(unit)) {
-                        return Math.min(totalLength * parseFloat(unit) / 100, totalLength);
-                    }
-                    else if ($util.isNumber(unit)) {
-                        return Math.min(parseFloat(unit), totalLength);
-                    }
-                    return fallback;
-                }
-                const start = getDistance(from, 0);
-                const end = getDistance(to, totalLength);
-                const keyPoints: Point[] = [];
-                const rotatingPoints: boolean[] = [];
-                let fixedRotation = 0;
-                let initialRotation = 0;
-                if ($util.isNumber(rotation)) {
-                    fixedRotation = parseFloat(rotation);
-                }
-                else if (rotation === 'auto' || rotation.endsWith('reverse')) {
-                    const commands = SvgBuild.getPathCommands(value);
-                    for (const item of commands) {
-                        switch (item.key.toUpperCase()) {
-                            case 'M':
-                            case 'L':
-                            case 'H':
-                            case 'V':
-                            case 'Z':
-                                for (const pt of item.value) {
-                                    keyPoints.push(pt);
-                                    rotatingPoints.push(false);
-                                }
-                                break;
-                            case 'C':
-                            case 'S':
-                            case 'Q':
-                            case 'T':
-                            case 'A':
-                                keyPoints.push(item.end);
-                                rotatingPoints.push(true);
-                                break;
-                        }
-                    }
-                    if (rotation.endsWith('reverse')) {
-                        initialRotation = 180;
-                    }
-                }
-                if (start >= 0 && start < end) {
-                    const distance = end - start;
-                    let j: number;
-                    let k: number;
-                    if (duration >= distance) {
-                        j = 1;
-                        k = duration / distance;
-                    }
-                    else {
-                        j = distance / duration;
-                        k = 1;
-                    }
-                    let center: SvgPoint | undefined;
-                    let previousRotation = 0;
-                    let additiveSum = 0;
-                    let rotating = false;
-                    for (let i = start, key = 0; ; i += j, key += k) {
-                        if (i >= end || key >= duration) {
-                            i = end;
-                            key = duration;
-                        }
-                        const nextPoint = element.getPointAtLength(i);
-                        if (keyPoints.length) {
-                            const index = keyPoints.findIndex(pt => {
-                                const x = pt.x.toString();
-                                const y = pt.y.toString();
-                                return x === nextPoint.x.toPrecision(x.length - (x.indexOf('.') !== -1 ? 1 : 0)) && y === nextPoint.y.toPrecision(y.length - (y.indexOf('.') !== -1 ? 1 : 0));
-                            });
-                            if (index !== -1) {
-                                const endPoint = keyPoints[index + 1];
-                                if (endPoint) {
-                                    rotating = rotatingPoints[index + 1];
-                                    if (rotating) {
-                                        center = SvgBuild.centerPoints(keyPoints[index], endPoint);
-                                        fixedRotation = 0;
-                                    }
-                                    else {
-                                        center = undefined;
-                                        fixedRotation = $math.absoluteAngle(nextPoint, endPoint);
-                                    }
-                                }
-                                else {
-                                    center = undefined;
-                                }
-                                additiveSum = 0;
-                                keyPoints.splice(0, index + 1);
-                                rotatingPoints.splice(0, index + 1);
+    public static getOffsetPath(value: string, rotation = 'auto') {
+        const element = <SVGGeometryElement> (createPath(value) as unknown);
+        const totalLength = Math.ceil(element.getTotalLength());
+        const result: SvgOffsetPath[] = [];
+        if (totalLength > 0) {
+            const keyPoints: Point[] = [];
+            const rotatingPoints: boolean[] = [];
+            let rotateFixed = 0;
+            let rotateInitial = 0;
+            if ($util.isNumber(rotation)) {
+                rotateFixed = parseFloat(rotation);
+            }
+            else if (rotation === 'auto' || rotation.endsWith('reverse')) {
+                const commands = SvgBuild.getPathCommands(value);
+                for (const item of commands) {
+                    switch (item.key.toUpperCase()) {
+                        case 'M':
+                        case 'L':
+                        case 'H':
+                        case 'V':
+                        case 'Z':
+                            for (const pt of item.value) {
+                                keyPoints.push(pt);
+                                rotatingPoints.push(false);
                             }
-                        }
-                        let rotate: number;
-                        if (rotating) {
-                            rotate = center ? $math.relativeAngle(center, nextPoint) : 0;
-                            if (previousRotation > 0 && previousRotation % 360 === 0 && Math.floor(rotate) === 0) {
-                                additiveSum = previousRotation;
-                            }
-                            rotate += additiveSum;
-                        }
-                        else {
-                            rotate = fixedRotation;
-                        }
-                        rotate += initialRotation;
-                        result.push({
-                            key,
-                            value: nextPoint,
-                            rotate
-                        });
-                        if (i === end) {
                             break;
-                        }
-                        previousRotation = Math.ceil(rotate);
+                        case 'C':
+                        case 'S':
+                        case 'Q':
+                        case 'T':
+                        case 'A':
+                            keyPoints.push(item.end);
+                            rotatingPoints.push(true);
+                            break;
                     }
+                }
+                if (rotation.endsWith('reverse')) {
+                    rotateInitial = 180;
                 }
             }
-            return result;
+            let rotating = false;
+            let rotatePrevious = 0;
+            let overflow = 0;
+            let center: SvgPoint | undefined;
+            for (let key = 0; key <= totalLength; key++) {
+                const nextPoint = element.getPointAtLength(key);
+                if (keyPoints.length) {
+                    const index = keyPoints.findIndex(pt => {
+                        const x = pt.x.toString();
+                        const y = pt.y.toString();
+                        return x === nextPoint.x.toPrecision(x.length - (x.indexOf('.') !== -1 ? 1 : 0)) && y === nextPoint.y.toPrecision(y.length - (y.indexOf('.') !== -1 ? 1 : 0));
+                    });
+                    if (index !== -1) {
+                        const endPoint = keyPoints[index + 1];
+                        if (endPoint) {
+                            rotating = rotatingPoints[index + 1];
+                            if (rotating) {
+                                center = SvgBuild.centerPoints(keyPoints[index], endPoint);
+                                rotateFixed = 0;
+                            }
+                            else {
+                                center = undefined;
+                                rotateFixed = $math.truncateFraction($math.absoluteAngle(nextPoint, endPoint));
+                            }
+                        }
+                        else {
+                            center = undefined;
+                        }
+                        overflow = 0;
+                        keyPoints.splice(0, index + 1);
+                        rotatingPoints.splice(0, index + 1);
+                    }
+                }
+                let rotate: number;
+                if (rotating) {
+                    rotate = center ? $math.truncateFraction($math.relativeAngle(center, nextPoint)) : 0;
+                    if (rotatePrevious > 0 && rotatePrevious % 360 === 0 && Math.floor(rotate) === 0) {
+                        overflow = rotatePrevious;
+                    }
+                    rotate += overflow;
+                }
+                else {
+                    rotate = rotateFixed;
+                }
+                rotate += rotateInitial;
+                result.push({
+                    key,
+                    value: nextPoint,
+                    rotate
+                });
+                rotatePrevious = Math.ceil(rotate);
+            }
         }
-        return undefined;
+        return result;
     }
 
     public static getPathCommands(value: string) {

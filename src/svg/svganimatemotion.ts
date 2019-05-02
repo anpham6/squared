@@ -3,7 +3,7 @@ import { SvgOffsetPath } from './@types/object';
 import SvgAnimate from './svganimate';
 import SvgBuild from './svgbuild';
 
-import { INSTANCE_TYPE } from './lib/constant';
+import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 import { SVG, getTargetElement } from './lib/util';
 
 const $dom = squared.lib.dom;
@@ -39,43 +39,158 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                     }
                 }
             }
+            this.setCalcMode();
+        }
+    }
+
+    public setCalcMode() {
+        if (this.animationElement) {
+            const mode = $dom.getNamedItem(this.animationElement, 'calcMode') || 'paced';
+            switch (mode) {
+                case 'paced':
+                case 'discrete':
+                case 'spline':
+                    super.setCalcMode('translate', mode);
+                    break;
+                case 'linear':
+                    const keyPoints = SvgAnimate.toFractionList($dom.getNamedItem(this.animationElement, 'keyPoints'), ';', false);
+                    let keyTimes = super.keyTimes;
+                    if (keyTimes.length === 0 && this.duration !== -1) {
+                        keyTimes = SvgAnimate.toFractionList($dom.getNamedItem(this.animationElement, 'keyTimes'));
+                        super.values = undefined as any;
+                        super.keyTimes = keyTimes;
+                    }
+                    if (keyPoints.length === keyTimes.length) {
+                        this._keyPoints = keyPoints;
+                    }
+                    break;
+            }
         }
     }
 
     private setOffsetPath() {
-        if (this._offsetPath === undefined && this.path) {
-            this._offsetPath = SvgBuild.translateOffsetPath(this.path, this.duration, undefined, undefined, this.rotate);
+        if (this.path && this._offsetPath === undefined) {
+            let offsetPath = SvgBuild.getOffsetPath(this.path, this.rotate);
+            let distance = offsetPath.length;
+            if (distance > 0) {
+                const duration = this.duration;
+                if (duration >= distance) {
+                    const increment = duration / distance;
+                    for (let i = 1; i < distance - 1; i++) {
+                        offsetPath[i].key *= increment;
+                    }
+                    offsetPath[distance - 1].key = duration;
+                }
+                else {
+                    const increment = distance / duration;
+                    const result: SvgOffsetPath[] = new Array(duration + 1);
+                    result[0] = offsetPath[0];
+                    for (let i = 1; i < duration; i++) {
+                        const j = Math.floor(i * increment);
+                        offsetPath[j].key = i;
+                        result[i] = offsetPath[j];
+                    }
+                    const end = <SvgOffsetPath> offsetPath.pop();
+                    end.key = duration;
+                    result[duration] = end;
+                    offsetPath = result;
+                    distance = result.length;
+                }
+                const keyPoints = this.keyPoints;
+                if (keyPoints) {
+                    const keyTimes = super.keyTimes;
+                    const length = distance - 1;
+                    const result: SvgOffsetPath[] = [];
+                    for (let i = 0; i < keyTimes.length - 1; i++) {
+                        const baseTime = keyTimes[i] * duration;
+                        const offsetTime = (keyTimes[i + 1] - keyTimes[i]) * duration;
+                        const from = keyPoints[i];
+                        const to = keyPoints[i + 1];
+                        const segment: SvgOffsetPath[] = [];
+                        let minPercent: number;
+                        let maxPercent: number;
+                        if (offsetTime === 0) {
+                            minPercent = to * length;
+                            maxPercent = length;
+                        }
+                        else {
+                            minPercent = Math.min(from, to) * length;
+                            maxPercent = Math.max(from, to) * length;
+                        }
+                        for (let j = 0; j <= length; j++) {
+                            if (offsetTime === 0) {
+                                if (j >= minPercent) {
+                                    segment.push({ ...offsetPath[j] });
+                                    break;
+                                }
+                            }
+                            else {
+                                if (j >= minPercent && j <= maxPercent) {
+                                    segment.push({ ...offsetPath[j] });
+                                }
+                            }
+                        }
+                        if (offsetTime === 0) {
+                            segment[0].key = baseTime;
+                        }
+                        else {
+                            if (from > to) {
+                                segment.reverse();
+                            }
+                            const increment = offsetTime / segment.length;
+                            for (let j = 0; j < segment.length - 1; j++) {
+                                segment[j].key = baseTime + j * increment;
+                            }
+                            segment[segment.length - 1].key = baseTime + offsetTime;
+                        }
+                        if (result.length && $util.isEqual(segment[0], result[result.length - 1])) {
+                            segment.shift();
+                        }
+                        $util.concatArray(result, segment);
+                    }
+                    this._offsetPath = result;
+                }
+                else {
+                    this._offsetPath = offsetPath;
+                }
+                this.keySplines = undefined;
+                this.timingFunction = KEYSPLINE_NAME.linear;
+            }
         }
     }
 
+    get offsetPath() {
+        return this._offsetPath;
+    }
+
     set keyTimes(value) {
-        super.keyTimes = value;
+        if (this._offsetPath === undefined) {
+            super.keyTimes = value;
+        }
     }
     get keyTimes() {
-        if (super.keyTimes.length === 0) {
-            this.setOffsetPath();
-            if (this._offsetPath) {
-                const duration = this.duration;
-                return $util.objectMap<SvgOffsetPath, number>(this._offsetPath, item => item.key / duration);
-            }
+        this.setOffsetPath();
+        if (this._offsetPath) {
+            const duration = this.duration;
+            return $util.objectMap<SvgOffsetPath, number>(this._offsetPath, item => item.key / duration);
         }
         return super.keyTimes;
     }
 
     set values(value) {
-        super.values = value;
+        if (this._offsetPath === undefined) {
+            super.values = value;
+        }
     }
     get values() {
-        if (super.values.length === 0) {
-            this.setOffsetPath();
-            if (this._offsetPath) {
-                return $util.objectMap<SvgOffsetPath, string>(this._offsetPath, item => `${item.value.x} ${item.value.y}`);
-            }
+        this.setOffsetPath();
+        if (this._offsetPath) {
+            return $util.objectMap<SvgOffsetPath, string>(this._offsetPath, item => `${item.value.x} ${item.value.y}`);
         }
         return super.values;
     }
 
-    get rotationValues() {
+    get rotateValues() {
         this.setOffsetPath();
         if (this._offsetPath) {
             return $util.objectMap<SvgOffsetPath, number>(this._offsetPath, item => item.rotate);
@@ -83,13 +198,12 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
         return undefined;
     }
 
-    get keyPoints() {
-        if (this.animationElement && $dom.getNamedItem(this.animationElement, 'calcMode') === 'linear') {
-            const keyPoints = SvgAnimate.toFractionList($dom.getNamedItem(this.animationElement, 'keyPoints'));
-            if (keyPoints.length !== super.keyTimes.length) {
-                this._keyPoints = keyPoints;
-            }
+    set keyPoints(value) {
+        if (this.animationElement === null) {
+            this._keyPoints = value;
         }
+    }
+    get keyPoints() {
         return this._keyPoints;
     }
 

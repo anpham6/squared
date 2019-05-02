@@ -18,10 +18,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return value + (next - value) * percent;
     }
 
-    public static convertStepTimingFunction(name: string, timingFunction: string, keyTimes: number[], values: string[], index: number, fontSize?: number): [number[], string[]] | undefined {
+    public static convertStepTimingFunction(attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number, fontSize?: number): [number[], string[]] | undefined {
         let currentValue: any[] | undefined;
         let nextValue: any[] | undefined;
-        switch (name) {
+        switch (attributeName) {
             case 'fill':
             case 'stroke':
                 const colorStart = $color.parseColor(values[index]);
@@ -120,17 +120,17 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return undefined;
     }
 
-    public static toFractionList(value: string, delimiter = ';') {
+    public static toFractionList(value: string, delimiter = ';', ordered = true) {
         let previous = 0;
         const result = $util.replaceMap<string, number>(value.split(delimiter), seg => {
             const fraction = parseFloat(seg);
-            if (!isNaN(fraction) && fraction >= previous && fraction <= 1) {
+            if (!isNaN(fraction) && (!ordered || fraction >= previous && fraction <= 1)) {
                 previous = fraction;
                 return fraction;
             }
             return -1;
         });
-        return result.length > 1 && result[0] === 0 && result.some(percent => percent !== -1) ? result : [];
+        return result.length > 1 && (!ordered || result[0] === 0 && result.some(percent => percent !== -1)) ? result : [];
     }
 
     public type = 0;
@@ -204,45 +204,53 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             const repeatCount = $dom.getNamedItem(animationElement, 'repeatCount');
             this.iterationCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount);
             if (animationElement.tagName === 'animate') {
-                this.setCalcMode(this.attributeName);
+                this.setCalcMode();
             }
         }
     }
 
-    public setCalcMode(name: string) {
-        switch ($dom.getNamedItem(this.animationElement, 'calcMode')) {
-            case 'discrete': {
-                if (this.keyTimes.length === 2 && this.keyTimes[0] === 0) {
-                    const keyTimes: number[] = [];
-                    const values: string[] = [];
-                    for (let i = 0; i < this.keyTimes.length - 1; i++) {
-                        const result = SvgAnimate.convertStepTimingFunction(name, 'step-end', this.keyTimes, this.values, i, $css.getFontSize(this.animationElement));
-                        if (result) {
-                            $util.concatArray(keyTimes, result[0]);
-                            $util.concatArray(values, result[1]);
-                        }
-                    }
-                    keyTimes.push(this.keyTimes.pop() as number);
-                    values.push(this.values.pop() as string);
-                    this.values = values;
-                    this.keyTimes = keyTimes;
-                    this._keySplines = [KEYSPLINE_NAME['step-end']];
-                }
-                break;
+    public setCalcMode(attributeName?: string, mode?: string) {
+        if (this.animationElement) {
+            if (mode === undefined) {
+                mode = $dom.getNamedItem(this.animationElement, 'calcMode') || 'linear';
             }
-            case 'spline':
-                this.keySplines = $util.flatMap($dom.getNamedItem(this.animationElement, 'keySplines').split(';'), value => value.trim());
-            case 'linear':
-                if (this.keyTimes[0] !== 0 && this.keyTimes[this.keyTimes.length - 1] !== 1) {
-                    const keyTimes: number[] = [];
-                    const length = this.values.length;
-                    for (let i = 0; i < length; i++) {
-                        keyTimes.push(i / (length - 1));
+            switch (mode) {
+                case 'discrete': {
+                    if (this.keyTimes.length === 2 && this.keyTimes[0] === 0) {
+                        const keyTimes: number[] = [];
+                        const values: string[] = [];
+                        for (let i = 0; i < this.keyTimes.length - 1; i++) {
+                            const result = SvgAnimate.convertStepTimingFunction(attributeName || this.attributeName, 'step-end', this.keyTimes, this.values, i, $css.getFontSize(this.animationElement));
+                            if (result) {
+                                $util.concatArray(keyTimes, result[0]);
+                                $util.concatArray(values, result[1]);
+                            }
+                        }
+                        keyTimes.push(this.keyTimes.pop() as number);
+                        values.push(this.values.pop() as string);
+                        this.values = values;
+                        this.keyTimes = keyTimes;
+                        this._keySplines = [KEYSPLINE_NAME['step-end']];
                     }
-                    this._keyTimes = keyTimes;
-                    this._keySplines = undefined;
+                    break;
                 }
-                break;
+                case 'paced':
+                    this._keySplines = undefined;
+                    break;
+                case 'spline':
+                    this.keySplines = $util.flatMap($dom.getNamedItem(this.animationElement, 'keySplines').split(';'), value => value.trim());
+                case 'linear':
+                    if (this.keyTimes[0] !== 0 && this.keyTimes[this.keyTimes.length - 1] !== 1) {
+                        const keyTimes: number[] = [];
+                        const length = this.values.length;
+                        for (let i = 0; i < length; i++) {
+                            keyTimes.push(i / (length - 1));
+                        }
+                        this._keyTimes = keyTimes;
+                        this._keySplines = undefined;
+                    }
+                    break;
+            }
         }
     }
 
@@ -363,7 +371,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     set values(value) {
         this._values = value;
-        if (this._keyTimes && this._keyTimes.length !== value.length) {
+        if (value && this._keyTimes && this._keyTimes.length !== value.length) {
             this._keyTimes = undefined;
             this._keySplines = undefined;
         }

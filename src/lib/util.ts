@@ -169,6 +169,9 @@ export function isEqual(source: any, values: any) {
     else if (Object.keys(source).length === Object.keys(values).length) {
         for (const attr in source) {
             if (source[attr] !== values[attr]) {
+                if (typeof source[attr] === 'object' && values[attr] === 'object' && isEqual(source[attr], values[attr])) {
+                    continue;
+                }
                 return false;
             }
         }
