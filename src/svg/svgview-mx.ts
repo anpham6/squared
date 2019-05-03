@@ -313,8 +313,15 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             const direction = cssData['animation-direction'][i];
                             sortAttribute(animation);
                             if (name === 'offset-distance') {
+                                const animateMotion = <SvgAnimateMotion> animate;
+                                if (animation[0].key !== 0) {
+                                    animateMotion.addKeyPoint({ key: 0, value: animateMotion.distance });
+                                }
                                 for (const item of animation) {
-                                    (<SvgAnimateMotion> animate).addKeyPoint(item);
+                                    animateMotion.addKeyPoint(item);
+                                }
+                                if ((<NumberValue> animation.pop()).key !== 1) {
+                                    animateMotion.addKeyPoint({ key: 1, value: animateMotion.distance });
                                 }
                             }
                             else {

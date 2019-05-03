@@ -56,7 +56,12 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             }
             const rotate = getAttribute(element, 'offset-rotate', false);
             if (rotate !== '') {
-                this.rotate = rotate;
+                if ($css.isAngle(rotate)) {
+                    this.rotate = $css.parseAngle(rotate).toString();
+                }
+                else {
+                    this.rotate = rotate;
+                }
             }
         }
     }
