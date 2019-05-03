@@ -159,7 +159,7 @@ function constraintMinMax(node: View, dimension: string) {
         if ($css.isLength(minWH, true)) {
             let valid = false;
             if (horizontal) {
-                if (node.ascend(false, item => item.has('width') || item.blockStatic).length > 0) {
+                if (node.ascend(false, item => item.has('width') || item.blockStatic).length) {
                     node.android('layout_width', '0px', false);
                     valid = true;
                     setAlignmentBlock();
@@ -177,7 +177,7 @@ function constraintMinMax(node: View, dimension: string) {
         if ($css.isLength(maxWH, true)) {
             let valid = false;
             if (horizontal) {
-                if (node.ascend(false, item => item.has('width') || item.blockStatic).length > 0) {
+                if (node.ascend(false, item => item.has('width') || item.blockStatic).length) {
                     node.android('layout_width', '0px', false);
                     valid = true;
                     setAlignmentBlock();
@@ -425,7 +425,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 !node.has('maxHeight') &&
                 !node.has('textAlign') &&
                 !node.has('verticalAlign') &&
-                (!node.has('lineHeight') || child.length > 0) &&
+                (!node.has('lineHeight') || child.length) &&
                 (!node.blockStatic || child.blockStatic) &&
                 !node.dataset.use &&
                 !node.dataset.target &&

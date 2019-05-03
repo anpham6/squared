@@ -660,7 +660,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     layoutWidth = 'match_parent';
                                 }
                                 else if (!documentParent.flexElement && renderParent.layoutConstraint && this.alignParent('left') && this.alignParent('right')) {
-                                    layoutWidth = this.autoMargin.horizontal || this.ascend(false, item => item.has('width') || item.blockStatic).length > 0 ? '0px' : 'match_parent';
+                                    layoutWidth = this.autoMargin.horizontal || this.ascend(false, item => item.has('width') || item.blockStatic).length ? '0px' : 'match_parent';
                                 }
                             }
                             if (layoutWidth === '' && (

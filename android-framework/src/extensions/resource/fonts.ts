@@ -323,7 +323,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     });
                 }
             }
-            while (sorted.length > 0);
+            while (sorted.length);
         }
         const resource: TagNameMap = {};
         const nodeMap: NodeStyleMap = {};

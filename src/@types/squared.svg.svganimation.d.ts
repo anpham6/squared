@@ -71,7 +71,7 @@ declare global {
             expandToValues(): void;
         }
 
-        interface SvgAnimateMotion extends SvgAnimate {
+        interface SvgAnimateMotion extends SvgAnimateTransform {
             animationElement: SVGAnimateMotionElement | null;
             motionPathElement: SVGGeometryElement | null;
             path: string;

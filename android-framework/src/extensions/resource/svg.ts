@@ -35,31 +35,29 @@ type SvgImage = squared.svg.SvgImage;
 
 type SvgView = squared.svg.SvgView;
 
-interface SetOrdering {
-    ordering?: string;
-}
-
-interface AnimTemplate {
+interface AnimatedVectorTemplate {
     'xmlns:android': string;
     'android:drawable': string;
-    target: AnimatedTargetTemplate[];
+    target: AnimatedVectorTarget[];
 }
 
-interface AnimatedTargetTemplate {
+interface AnimatedVectorTarget {
     name: string;
     animation?: string;
 }
 
-interface SetData<T = FillData[]> extends SetOrdering {
-    set: T;
-    objectAnimator: PropertyValue[];
+interface SetData extends SetOrdering, FillData {
+    set: FillData[];
 }
 
-interface SetTemplate extends SetOrdering {
+interface SetTemplate extends SetOrdering, FillData {
     'xmlns:android'?: string;
     'android:ordering'?: string;
     set: SetData[];
-    objectAnimator: PropertyValue[];
+}
+
+interface SetOrdering {
+    ordering?: string;
 }
 
 interface FillData extends SetOrdering {
@@ -678,7 +676,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 );
                 let drawable = '';
                 if (this.ANIMATE_DATA.size) {
-                    const data: AnimTemplate[] = [{
+                    const data: AnimatedVectorTemplate[] = [{
                         'xmlns:android': XMLNS_ANDROID.android,
                         'android:drawable': getDrawableSrc(vectorName),
                         target: []
@@ -712,7 +710,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 targetSetTemplate['android:ordering'] = targetSetTemplate.ordering;
                                 targetSetTemplate.ordering = undefined;
                             }
-                            const targetData: AnimatedTargetTemplate = {
+                            const targetData: AnimatedVectorTarget = {
                                 name,
                                 animation: Resource.insertStoredAsset(
                                     'animators',
@@ -789,7 +787,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         }
                                     }
                                     else {
-                                        if ($SvgBuild.asAnimateTransform(item)) {
+                                        if ($SvgBuild.isAnimateTransform(item)) {
                                             item.expandToValues();
                                         }
                                         if (item.iterationCount === -1) {
@@ -1250,7 +1248,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         repeating.objectAnimator.length = 0;
                                     }
                                 }
-                                if (repeating.objectAnimator.length > 0 || fillCustom.objectAnimator.length > 0) {
+                                if (repeating.objectAnimator.length || fillCustom.objectAnimator.length) {
                                     if (fillBefore.objectAnimator.length) {
                                         setData.ordering = 'sequentially';
                                         setData.set.push(fillBefore);
@@ -1280,11 +1278,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     }
                     for (const [name, target] of this.ANIMATE_TARGET.entries()) {
                         let objectAnimator: PropertyValue[] | undefined;
-                        const insertResetValue = (propertyName: string, value: string, valueType: string, valueFrom?: string, startOffset?: string) => {
+                        const insertResetValue = (propertyName: string, valueTo: string, valueType: string, valueFrom?: string, startOffset?: string) => {
                             if (objectAnimator === undefined) {
                                 objectAnimator = [];
                             }
-                            objectAnimator.push(this.createPropertyValue(propertyName, value, '0', valueType, valueFrom, startOffset));
+                            objectAnimator.push(this.createPropertyValue(propertyName, valueTo, '0', valueType, valueFrom, startOffset));
                         };
                         for (const item of target.animate) {
                             if ($SvgBuild.asAnimateMotion(item)) {
@@ -1300,11 +1298,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             }
                         }
                         if (objectAnimator) {
-                            const setData: SetData<any> = {
-                                set: undefined,
-                                objectAnimator
-                            };
-                            insertTargetAnimation(name, { set: [setData], objectAnimator: undefined as any });
+                            insertTargetAnimation(name, {
+                                set: [{ set: undefined as any, objectAnimator }],
+                                objectAnimator: undefined as any
+                            });
                         }
                     }
                     if (data[0].target) {

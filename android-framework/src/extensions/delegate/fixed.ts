@@ -56,7 +56,7 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                     withinBoxRegion(right, node.paddingRight + (node.documentBody ? node.marginRight : 0)) ||
                     withinBoxRegion(bottom, node.paddingBottom + (node.documentBody ? node.marginBottom : 0)) ||
                     withinBoxRegion(left, node.paddingLeft + (node.documentBody ? node.marginLeft : 0)) ||
-                    node.documentBody && (right.length > 0 && node.has('width') || bottom.length && node.has('height')))
+                    node.documentBody && (right.length && node.has('width') || bottom.length && node.has('height')))
                 {
                     if (node.documentBody) {
                         node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData', <FixedData> { fixedRight, fixedBottom });

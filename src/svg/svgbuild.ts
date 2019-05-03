@@ -49,6 +49,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
     }
 
+    public static isAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
+        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM);
+    }
+
     public static asSvg(object: SvgElement): object is Svg {
         return object.instanceType === INSTANCE_TYPE.SVG;
     }

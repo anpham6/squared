@@ -1,6 +1,6 @@
 import { SvgOffsetPath } from './@types/object';
 
-import SvgAnimate from './svganimate';
+import SvgAnimateTransform from './svganimatetransform';
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
@@ -11,7 +11,7 @@ const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
-export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.SvgAnimateMotion {
+export default class SvgAnimateMotion extends SvgAnimateTransform implements squared.svg.SvgAnimateMotion {
     public path = '';
     public motionPathElement: SVGGeometryElement | null = null;
     public rotate = 'auto';
@@ -71,10 +71,10 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                     super.setCalcMode('translate', mode);
                     break;
                 case 'linear':
-                    const keyPoints = SvgAnimate.toFractionList($dom.getNamedItem(this.animationElement, 'keyPoints'), ';', false);
+                    const keyPoints = SvgAnimateTransform.toFractionList($dom.getNamedItem(this.animationElement, 'keyPoints'), ';', false);
                     let keyTimes = super.keyTimes;
                     if (keyTimes.length === 0 && this.duration !== -1) {
-                        keyTimes = SvgAnimate.toFractionList($dom.getNamedItem(this.animationElement, 'keyTimes'));
+                        keyTimes = SvgAnimateTransform.toFractionList($dom.getNamedItem(this.animationElement, 'keyTimes'));
                         this.length = 0;
                         super.keyTimes = keyTimes;
                     }

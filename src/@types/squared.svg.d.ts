@@ -74,6 +74,7 @@ declare global {
             public static isElement(object: SvgElement): object is SvgElement;
             public static isShape(object: SvgElement): object is SvgShape;
             public static isAnimate(object: SvgAnimation): object is SvgAnimate;
+            public static isAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
             public static asSvg(object: SvgElement): object is Svg;
             public static asG(object: SvgElement): object is SvgG;
             public static asPattern(object: SvgElement): object is SvgPattern;

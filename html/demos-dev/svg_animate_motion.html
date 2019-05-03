@@ -40,12 +40,12 @@
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
-        <svg viewBox="0 0 500 100">
+        <svg viewBox="0 0 500 300">
             <path d="M-25,-12.5 L25,-12.5 L 0,-87.5 z" fill="yellow" stroke="red" stroke-width="7.06">
-                <animateMotion dur="6s" repeatCount="indefinite" rotate="auto" keyTimes="0; 1" values="0,0;100,100" />
+                <animateMotion dur="6s" repeatCount="indefinite" rotate="auto" keyTimes="0; 1" values="0,0;100,100" keySplines="0.42 0 1 1" calcMode="spline" />
             </path>
             <path d="M-25,-12.5 L25,-12.5 L 0,-87.5 z" fill="yellow" stroke="red" stroke-width="7.06">
-                <animateMotion dur="6s" repeatCount="indefinite" rotate="auto" from="100,100" by="-100,-100" />
+                <animateMotion dur="6s" repeatCount="3" rotate="auto" from="50,50" by="50,50" additive="sum" accumulate="sum" fill="freeze" />
             </path>
         </svg>
         <br />

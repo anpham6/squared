@@ -1129,7 +1129,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         this.processing.cache.sort((a, b) => {
-            if (a.depth === b.depth && a.length > 0 && b.length === 0) {
+            if (a.depth === b.depth && a.length && b.length === 0) {
                 return -1;
             }
             return 0;

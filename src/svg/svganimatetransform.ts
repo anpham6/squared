@@ -115,6 +115,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         if (this.additiveSum && this.iterationCount !== -1 && this.keyTimes.length && this.duration > 0) {
             const durationTotal = this.duration * this.iterationCount;
             invalid: {
+                const keyTimesBase = this.keyTimes;
                 const keyTimes: number[] = [];
                 const values: string[] = [];
                 const keySplines: string[] = [];
@@ -123,50 +124,50 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     if (i > 0 && this.keySplines) {
                         keySplines.push('');
                     }
-                    for (let j = 0; j < this.keyTimes.length; j++) {
-                        const floatValues = $util.replaceMap<string, number>(this.values[j].split(' '), value => parseFloat(value));
-                        if (floatValues.every(value => !isNaN(value))) {
+                    for (let j = 0; j < keyTimesBase.length; j++) {
+                        const coordinates = SvgBuild.parseCoordinates(this.values[j]);
+                        if (coordinates.length) {
                             let currentValues: number[] | undefined;
                             switch (this.type) {
                                 case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                                    if (floatValues.length === 1) {
-                                        currentValues = [floatValues[0], 0];
+                                    if (coordinates.length === 1) {
+                                        currentValues = [coordinates[0], 0];
                                     }
-                                    else if (floatValues.length === 2) {
-                                        currentValues = floatValues;
+                                    else if (coordinates.length === 2) {
+                                        currentValues = coordinates;
                                     }
                                     break;
                                 case SVGTransform.SVG_TRANSFORM_SCALE:
-                                    if (floatValues.length === 1) {
-                                        currentValues = [floatValues[0], floatValues[0]];
+                                    if (coordinates.length === 1) {
+                                        currentValues = [coordinates[0], coordinates[0]];
                                     }
-                                    else if (floatValues.length === 2) {
-                                        currentValues = floatValues;
+                                    else if (coordinates.length === 2) {
+                                        currentValues = coordinates;
                                     }
                                     break;
                                 case SVGTransform.SVG_TRANSFORM_ROTATE:
-                                    if (floatValues.length === 1) {
-                                        currentValues = [floatValues[0], 0, 0];
+                                    if (coordinates.length === 1) {
+                                        currentValues = [coordinates[0], 0, 0];
                                     }
-                                    else if (floatValues.length === 3) {
-                                        currentValues = floatValues;
+                                    else if (coordinates.length === 3) {
+                                        currentValues = coordinates;
                                     }
                                     break;
                                 case SVGTransform.SVG_TRANSFORM_SKEWX:
                                 case SVGTransform.SVG_TRANSFORM_SKEWY:
-                                    if (floatValues.length === 1) {
-                                        currentValues = floatValues;
+                                    if (coordinates.length === 1) {
+                                        currentValues = coordinates;
                                     }
                                     break;
                             }
                             if (currentValues) {
-                                let time = (this.keyTimes[j] + i) * this.duration;
+                                let time = (keyTimesBase[j] + i) * this.duration;
                                 if (previousValues) {
                                     for (let k = 0; k < currentValues.length; k++) {
                                         currentValues[k] += previousValues[k];
                                     }
                                 }
-                                if (i < this.iterationCount - 1 && j === this.keyTimes.length - 1) {
+                                if (i < this.iterationCount - 1 && j === keyTimesBase.length - 1) {
                                     if (this.accumulateSum) {
                                         previousValues = currentValues;
                                     }
@@ -174,7 +175,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                                 }
                                 keyTimes.push(time / durationTotal);
                                 values.push(currentValues.join(' '));
-                                if (this.keySplines && j < this.keyTimes.length - 1) {
+                                if (this.keySplines && j < keyTimesBase.length - 1) {
                                     keySplines.push(this.keySplines[j]);
                                 }
                             }
@@ -187,8 +188,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                         }
                     }
                 }
-                this.keyTimes = keyTimes;
                 this.values = values;
+                this.keyTimes = keyTimes;
                 this.keySplines = keySplines.length ? keySplines : undefined;
                 this.duration = durationTotal;
                 this.iterationCount = 1;
