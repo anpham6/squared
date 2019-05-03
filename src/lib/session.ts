@@ -83,7 +83,10 @@ export function setElementCache(element: Element, attr: string, sessionId: strin
     element[`__${attr}::${sessionId}`] = data;
 }
 
-export function getElementCache(element: Element, attr: string, sessionId: string) {
+export function getElementCache(element: Element, attr: string, sessionId?: string) {
+    if (!sessionId) {
+        sessionId = element['__sessionId::0'];
+    }
     return element[`__${attr}::${sessionId}`];
 }
 

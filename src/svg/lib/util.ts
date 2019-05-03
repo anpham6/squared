@@ -4,6 +4,8 @@ const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $regex = squared.lib.regex;
+const $session = squared.lib.session;
+const $util = squared.lib.util;
 
 const STRING_DECIMAL = `(${$regex.STRING.DECIMAL})`;
 
@@ -382,7 +384,17 @@ export function getDOMRect(element: SVGElement) {
 }
 
 export function getAttribute(element: Element, attr: string, computed = true) {
-    return $dom.getNamedItem(element, attr) || computed && $css.getStyle(element).getPropertyValue(attr) || '';
+    let value = $dom.getNamedItem(element, attr);
+    if (value === '') {
+        const styleMap = $session.getElementCache(element, 'styleMap');
+        if (styleMap) {
+            value = styleMap[$util.convertCamelCase(attr)] || '';
+        }
+        if (value === '' && computed) {
+            value = $css.getStyle(element).getPropertyValue(attr);
+        }
+    }
+    return value;
 }
 
 export function getParentAttribute(element: Element, attr: string, computed = true) {

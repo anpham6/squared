@@ -1793,7 +1793,6 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             const endTime = entries[entries.length - 1][0];
                                             let duration = endTime - delay;
                                             const animate = new SvgAnimateTransform();
-                                            animate.attributeName = 'transform';
                                             animate.type = entries[0][1].keys().next().value as number;
                                             for (let j = 0; j < entries.length; j++) {
                                                 const item = entries[j];
@@ -1851,7 +1850,6 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                         else {
                                             const animate = new SvgAnimateTransform();
-                                            animate.attributeName = 'transform';
                                             animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
                                             for (const [keyTime, data] of result.entries()) {
                                                 const x = data.get('x') as number || 0;
@@ -1876,7 +1874,6 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         let value = synchronizedName;
                                         if (transforming) {
                                             const animate = new SvgAnimateTransform();
-                                            animate.attributeName = 'transform';
                                             if (repeating) {
                                                 for (let j = 0; j < timeRange.length - 1; j++) {
                                                     const previous = timeRange[j];
@@ -1918,7 +1915,6 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             }
                                             else {
                                                 const animate = new SvgAnimateTransform();
-                                                animate.attributeName = 'transform';
                                                 animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
                                                 animate.values = $util.objectMap<TimelineValue, string>([dataFrom, dataTo], data => {
                                                     const x = data.get('x') as number || 0;

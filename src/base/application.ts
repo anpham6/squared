@@ -2020,6 +2020,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 specificityData[attr] = specificity;
                             }
                             $session.setElementCache(element, `style${targetElt}`, '0', style);
+                            $session.setElementCache(element, 'sessionId', '0', this.processing.sessionId);
                             $session.setElementCache(element, attrStyle, this.processing.sessionId, styleMap);
                             $session.setElementCache(element, attrSpecificity, this.processing.sessionId, specificityData);
                         }

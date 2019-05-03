@@ -1,5 +1,8 @@
-const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+import { CHAR } from './regex';
+
 const REGEXP_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
+const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+const REGEXP_TRUNCATECACHE = {};
 
 export function minArray(list: number[]): number {
     if (list.length) {
@@ -39,7 +42,7 @@ export function truncate(value: number, precision = 3) {
                 precision += 1;
             }
         }
-        return value.toPrecision(precision).replace(/\.?0+$/, '');
+        return value.toPrecision(precision).replace(CHAR.TRAILINGZERO, '');
     }
 }
 
@@ -63,14 +66,16 @@ export function truncateFraction(value: number) {
 }
 
 export function truncateString(value: string, precision = 3) {
-    const pattern = new RegExp(`(\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+    if (REGEXP_TRUNCATECACHE[precision] === undefined) {
+        REGEXP_TRUNCATECACHE[precision] = new RegExp(`(\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+    }
     let match: RegExpExecArray | null;
     let output = value;
-    while ((match = pattern.exec(value)) !== null) {
+    while ((match = REGEXP_TRUNCATECACHE[precision].exec(value)) !== null) {
         if (parseInt(match[2]) >= 5) {
             match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
         }
-        output = output.replace(match[0], match[1]);
+        output = output.replace(match[0], match[1].replace(CHAR.TRAILINGZERO, ''));
     }
     return output;
 }

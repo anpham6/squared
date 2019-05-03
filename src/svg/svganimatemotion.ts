@@ -15,6 +15,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
     public path = '';
     public motionPathElement: SVGGeometryElement | null = null;
     public rotate = 'auto';
+    public distance = '0%';
     public readonly attributeName = 'transform';
     public readonly type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
 
@@ -49,11 +50,13 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
             if (match) {
                 this.path = match[1];
             }
-            const rotate = getAttribute(element, 'offset-rotate');
+            const distance = getAttribute(element, 'offset-distance', false);
+            if (distance !== '') {
+                this.distance = distance;
+            }
+            const rotate = getAttribute(element, 'offset-rotate', false);
             if (rotate !== '') {
-                if ($css.isAngle(rotate)) {
-                    this.rotate = $css.parseAngle(rotate).toString();
-                }
+                this.rotate = rotate;
             }
         }
     }
@@ -83,10 +86,11 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
         }
     }
 
-    public addKeyPoint(percent: number, value: string) {
+    public addKeyPoint(item: NumberValue) {
         if (this._offsetPath === undefined) {
             const offsetLength = this.offsetLength;
-            if (offsetLength > 0 && percent >= 0 && percent <= 1) {
+            const { key, value } = item;
+            if (offsetLength > 0 && key >= 0 && key <= 1) {
                 const keyTimes = super.keyTimes;
                 const keyPoints = this.keyPoints;
                 if (keyTimes.length === keyPoints.length) {
@@ -101,13 +105,13 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                         if (distance > 1) {
                             distance = 1;
                         }
-                        const index = keyTimes.findIndex(previous => previous === percent);
+                        const index = keyTimes.findIndex(previous => previous === key);
                         if (index !== -1) {
-                            keyTimes[index] = percent;
+                            keyTimes[index] = item.key;
                             keyPoints[index] = distance;
                         }
                         else {
-                            keyTimes.push(percent);
+                            keyTimes.push(item.key);
                             keyPoints.push(distance);
                         }
                     }

@@ -149,6 +149,7 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                                 case 'minHeight':
                                 case 'maxHeight':
                                 case 'columnWidth':
+                                case 'offsetDistance':
                                     break;
                                 default:
                                     valid = true;

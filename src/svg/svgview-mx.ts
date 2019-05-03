@@ -290,8 +290,6 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             delete attrMap['transform-origin'];
                         }
                         for (const name in attrMap) {
-                            attributes.push(name);
-                            const animation = attrMap[name];
                             let animate: SvgAnimate;
                             switch (name) {
                                 case 'offset-distance':
@@ -303,7 +301,6 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 case 'skewY':
                                 case 'translate':
                                     animate = new SvgAnimateTransform(element);
-                                    animate.attributeName = 'transform';
                                     (<SvgAnimateTransform> animate).setType(name);
                                     break;
                                 default:
@@ -312,14 +309,16 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     break;
                             }
                             addAnimation(animate, delay, keyframeIndex);
-                            sortAttribute(animation);
+                            const animation = attrMap[name];
                             const direction = cssData['animation-direction'][i];
+                            sortAttribute(animation);
                             if (name === 'offset-distance') {
                                 for (const item of animation) {
-                                    (<SvgAnimateMotion> animate).addKeyPoint(item.key, item.value);
+                                    (<SvgAnimateMotion> animate).addKeyPoint(item);
                                 }
                             }
                             else {
+                                attributes.push(name);
                                 const timingFunction = cssData['animation-timing-function'][i];
                                 const keyTimes: number[] = [];
                                 const values: string[] = [];

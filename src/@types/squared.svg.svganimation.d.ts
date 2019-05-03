@@ -75,12 +75,13 @@ declare global {
             animationElement: SVGAnimateMotionElement | null;
             motionPathElement: SVGGeometryElement | null;
             path: string;
+            distance: string;
             rotate: string;
             readonly keyPoints: number[];
             readonly offsetLength: number;
             readonly offsetPath?: SvgOffsetPath[];
             readonly rotateValues?: number[];
-            addKeyPoint(percent: number, value: string): void;
+            addKeyPoint(item: NumberValue): void;
         }
 
         interface SvgAnimationIntervalMap {
