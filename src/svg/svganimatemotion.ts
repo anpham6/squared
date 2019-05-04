@@ -16,6 +16,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     public motionPathElement: SVGGeometryElement | null = null;
     public rotate = 'auto 0deg';
     public distance = '0%';
+    public rotateData?: NumberValue[];
     public readonly type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
 
     private _offsetLength = 0;
@@ -34,7 +35,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     this.rotate = 'auto 180deg';
                     break;
                 default:
-                    this.rotate = $util.convertFloat(rotate).toString();
+                    this.rotate = `${$util.convertFloat(rotate)}deg`;
                     break;
             }
             for (let i = 0; i < animationElement.children.length; i++) {
@@ -64,8 +65,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 this.distance = distance;
             }
             const rotate = getAttribute(element, 'offset-rotate', false);
-            if (rotate !== '') {
-                this.rotate = $css.isAngle(rotate) ? $css.parseAngle(rotate).toString() : rotate;
+            if (rotate !== '' && rotate !== 'auto') {
+                this.rotate = rotate;
             }
         }
     }
@@ -131,20 +132,22 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
 
     private setOffsetPath() {
         if (this._offsetPath === undefined && this.path !== '') {
-            let offsetPath = SvgBuild.getOffsetPath(this.path, this.rotate);
+            const rotateData = this.rotateData;
+            let offsetPath = SvgBuild.getOffsetPath(this.path, rotateData ? undefined : this.rotate);
             let distance = offsetPath.length;
             if (distance > 0) {
                 const duration = this.duration;
+                let increment = 0;
                 if (duration > 0) {
                     if (duration >= distance) {
-                        const increment = duration / distance;
+                        increment = duration / distance;
                         for (let i = 1; i < distance - 1; i++) {
                             offsetPath[i].key *= increment;
                         }
                         offsetPath[distance - 1].key = duration;
                     }
                     else {
-                        const increment = distance / duration;
+                        increment = distance / duration;
                         const result: SvgOffsetPath[] = new Array(duration + 1);
                         result[0] = offsetPath[0];
                         for (let i = 1; i < duration; i++) {
@@ -157,55 +160,59 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         result[duration] = end;
                         offsetPath = result;
                         distance = result.length;
+                        increment = NaN;
                     }
                 }
                 const keyPoints = this.keyPoints;
                 if (keyPoints.length) {
-                    const keyTimes = super.keyTimes;
                     const length = distance - 1;
+                    const keyTimes = super.keyTimes;
                     const result: SvgOffsetPath[] = [];
                     if (keyPoints.length > 1) {
                         for (let i = 0; i < keyTimes.length - 1; i++) {
                             const baseTime = keyTimes[i] * duration;
-                            const offsetTime = (keyTimes[i + 1] - keyTimes[i]) * duration;
+                            const offsetTime = keyTimes[i + 1] - keyTimes[i];
+                            const offsetDuration = offsetTime * duration;
                             const from = keyPoints[i];
                             const to = keyPoints[i + 1];
                             const segment: SvgOffsetPath[] = [];
-                            let minPercent: number;
-                            let maxPercent: number;
                             if (offsetTime === 0) {
-                                minPercent = to * length;
-                                maxPercent = length;
+                                const index = Math.floor(to * length);
+                                segment.push({
+                                    key: baseTime,
+                                    value: offsetPath[index].value,
+                                    rotate: offsetPath[index].rotate
+                                });
                             }
                             else {
-                                minPercent = Math.min(from, to) * length;
-                                maxPercent = Math.max(from, to) * length;
-                            }
-                            for (let j = 0; j <= length; j++) {
-                                if (offsetTime === 0) {
-                                    if (j >= minPercent) {
-                                        segment.push({ ...offsetPath[j] });
-                                        break;
+                                if (from === to) {
+                                    const index = Math.floor(from * length);
+                                    const value = offsetPath[index].value;
+                                    const rotate = offsetPath[index].rotate;
+                                    const k = !isNaN(increment) ? increment : 1;
+                                    for (let j = 0; j < offsetDuration; j += k) {
+                                        segment.push({
+                                            key: baseTime + j,
+                                            value,
+                                            rotate
+                                        });
                                     }
                                 }
                                 else {
-                                    if (j >= minPercent && j <= maxPercent) {
+                                    const minTime = Math.floor(Math.min(from, to) * length);
+                                    const maxTime = Math.floor(Math.max(from, to) * length);
+                                    for (let j = minTime; j <= maxTime; j++) {
                                         segment.push({ ...offsetPath[j] });
                                     }
+                                    if (from > to) {
+                                        segment.reverse();
+                                    }
+                                    const k = offsetDuration / segment.length;
+                                    for (let j = 0; j < segment.length - 1; j++) {
+                                        segment[j].key = baseTime + (j * k);
+                                    }
                                 }
-                            }
-                            if (offsetTime === 0) {
-                                segment[0].key = baseTime;
-                            }
-                            else {
-                                if (from > to) {
-                                    segment.reverse();
-                                }
-                                const increment = offsetTime / segment.length;
-                                for (let j = 0; j < segment.length - 1; j++) {
-                                    segment[j].key = baseTime + j * increment;
-                                }
-                                segment[segment.length - 1].key = baseTime + offsetTime;
+                                segment[segment.length - 1].key = baseTime + offsetDuration;
                             }
                             if (result.length && $util.isEqual(segment[0], result[result.length - 1])) {
                                 segment.shift();
@@ -214,13 +221,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         }
                     }
                     else {
-                        const minPercent = keyPoints[0] * length;
-                        for (let j = 0; j <= length; j++) {
-                            if (j >= minPercent) {
-                                result.push({ ...offsetPath[j] });
-                                break;
-                            }
-                        }
+                        result.push({ ...offsetPath[Math.floor(keyPoints[0] * length)] });
                         if (keyTimes[0] === 0) {
                             result[0].rotate = 0;
                         }
@@ -229,6 +230,61 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 }
                 else {
                     this._offsetPath = offsetPath;
+                }
+                if (rotateData) {
+                    offsetPath = this._offsetPath;
+                    for (let i = 0, j = 0; i < rotateData.length - 1; i++) {
+                        const from = rotateData[i];
+                        const to = rotateData[i + 1];
+                        const timeRange: SvgOffsetPath[] = [];
+                        if (from.key === to.key) {
+                            timeRange.push(offsetPath[j++]);
+                        }
+                        else {
+                            const maxTime = Math.floor($math.truncateFraction(to.key * duration));
+                            for ( ; ; j++) {
+                                const item = offsetPath[j];
+                                if (item && item.key <= maxTime) {
+                                    timeRange.push(item);
+                                }
+                                else {
+                                    break;
+                                }
+                            }
+                        }
+                        const angleFrom = $css.parseAngle(from.value.split(' ').pop() as string);
+                        const angleTo = $css.parseAngle(to.value.split(' ').pop() as string);
+                        if (from.value === to.value || angleFrom === angleTo) {
+                            if (from.value.startsWith('auto')) {
+                                if (angleFrom !== 0) {
+                                    for (const item of timeRange) {
+                                        item.rotate += angleFrom;
+                                    }
+                                }
+                            }
+                            else {
+                                for (const item of timeRange) {
+                                    item.rotate = angleFrom;
+                                }
+                            }
+                        }
+                        else {
+                            const offset = angleTo - angleFrom;
+                            const l = offset / timeRange.length;
+                            if (from.value.startsWith('auto')) {
+                                for (let k = 0; k < timeRange.length - 1; k++) {
+                                    timeRange[k].rotate += angleFrom + (k * l);
+                                }
+                                timeRange[timeRange.length - 1].rotate += angleFrom + offset;
+                            }
+                            else {
+                                for (let k = 0; k < timeRange.length - 1; k++) {
+                                    timeRange[k].rotate = angleFrom + (k * l);
+                                }
+                                timeRange[timeRange.length - 1].rotate = angleFrom + offset;
+                            }
+                        }
+                    }
                 }
                 this.keySplines = undefined;
                 this.timingFunction = KEYSPLINE_NAME.linear;
@@ -342,7 +398,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                             }
                         }
                         else {
-                            const baseTime = i * 1 / iterationCount;
+                            const baseTime = i * (1 / iterationCount);
                             const keyTimesAppend = i % 2 === 0 ? keyTimesStatic.slice(0) : keyTimes.slice(0);
                             for (let j = 0; j < keyTimesAppend.length; j++) {
                                 keyTimesAppend[j] = $math.truncateFraction(baseTime + keyTimesAppend[j] / iterationCount);

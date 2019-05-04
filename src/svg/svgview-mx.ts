@@ -10,7 +10,6 @@ import { KEYSPLINE_NAME } from './lib/constant';
 import { TRANSFORM, getAttribute } from './lib/util';
 
 interface AttributeData extends NumberValue {
-    offsetRotate?: string;
     transformOrigin?: Point;
 }
 
@@ -315,48 +314,44 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             delete attrMap['offset-distance'];
                             delete attrMap['offset-rotate'];
                         }
-                        else {
-                            if (attrMap['offset-rotate']) {
-                                const offsetRotate = attrMap['offset-rotate'];
-                                if (attrMap['offset-distance']) {
-                                    const offsetDistance = attrMap['offset-distance'];
-                                    for (const item of offsetDistance) {
-                                        const index = offsetRotate.findIndex(rotate => rotate.key === item.key);
-                                        if (index !== -1) {
-                                            item.offsetRotate = offsetRotate[index].value;
-                                            offsetRotate.splice(index, 1);
-                                        }
-                                    }
+                        else if (attrMap['offset-rotate']) {
+                            const offsetRotate = attrMap['offset-rotate'];
+                            if (attrMap['offset-distance'] || attrMap['rotate'] === undefined) {
+                                let distance = getAttribute(element, 'offset-rotate', false);
+                                if (distance === '' || distance === 'auto') {
+                                    distance = 'auto 0deg';
                                 }
-                                else if (attrMap['rotate'] === undefined) {
-                                    const animate = new SvgAnimateMotion(element);
-                                    animate.duration = 0;
-                                    animate.iterationCount = 1;
-                                    animate.fillForwards = true;
-                                    animate.addKeyPoint({ key: 0, value: animate.distance });
-                                    addAnimation(animate, delay, keyframeIndex);
-                                    sortAttribute(offsetRotate);
-                                    const from = offsetRotate[0];
-                                    const to = offsetRotate[offsetRotate.length - 1];
-                                    if (from.key !== 0) {
-                                        offsetRotate.unshift({ key: 0, value: 'auto 0deg' });
-                                    }
-                                    if (to.key !== 1) {
-                                        offsetRotate.push({ key: 1, value: 'auto 0deg' });
-                                    }
-                                    for (let j = 1; j < offsetRotate.length; j++) {
-                                        const previous = offsetRotate[j - 1];
-                                        const item = offsetRotate[j];
-                                        previous.value = convertRotate(previous.value);
-                                        item.value = convertRotate(item.value);
+                                sortAttribute(offsetRotate);
+                                const from = offsetRotate[0];
+                                const to = offsetRotate[offsetRotate.length - 1];
+                                if (from.key !== 0) {
+                                    offsetRotate.unshift({ key: 0, value: distance });
+                                }
+                                if (to.key !== 1) {
+                                    offsetRotate.push({ key: 1, value: distance });
+                                }
+                                for (let j = 1; j < offsetRotate.length; j++) {
+                                    const previous = offsetRotate[j - 1];
+                                    const item = offsetRotate[j];
+                                    previous.value = convertRotate(previous.value);
+                                    item.value = convertRotate(item.value);
+                                    if (previous.value.split(' ').pop() !== item.value.split(' ').pop()) {
                                         const previousAuto = previous.value.startsWith('auto');
-                                        const itemAuto = item.value.startsWith('auto');
-                                        if (previousAuto && !itemAuto || !previousAuto && itemAuto) {
+                                        const auto = item.value.startsWith('auto');
+                                        if (previousAuto && !auto || !previousAuto && auto) {
                                             const key = (previous.key + item.key) / 2;
                                             offsetRotate.splice(j++, 0, { key, value: previous.value });
                                             offsetRotate.splice(j++, 0, { key, value: item.value });
                                         }
                                     }
+                                }
+                                if (attrMap['offset-distance'] === undefined) {
+                                    const animate = new SvgAnimateMotion(element);
+                                    animate.duration = 0;
+                                    animate.iterationCount = 1;
+                                    animate.fillForwards = true;
+                                    animate.addKeyPoint({ key: 0, value: distance });
+                                    addAnimation(animate, delay, keyframeIndex);
                                     for (const item of offsetRotate) {
                                         let angle = $css.parseAngle(item.value.split(' ').pop() as string);
                                         if (item.value.startsWith('auto')) {
@@ -365,15 +360,21 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         item.value = `${angle} 0 0`;
                                     }
                                     attrMap['rotate'] = offsetRotate;
+                                    delete attrMap['offset-rotate'];
                                 }
                             }
-                            delete attrMap['offset-rotate'];
+                            else {
+                                delete attrMap['offset-rotate'];
+                            }
                         }
                         for (const name in attrMap) {
                             let animate: SvgAnimate;
                             switch (name) {
+                                case 'offset-rotate':
+                                    continue;
                                 case 'offset-distance':
                                     animate = new SvgAnimateMotion(element);
+                                    (<SvgAnimateMotion> animate).rotateData = attrMap['offset-rotate'];
                                     break;
                                 case 'rotate':
                                 case 'scale':

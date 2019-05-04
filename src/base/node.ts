@@ -92,16 +92,40 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract setLayout(width?: number, height?: number): void;
     public abstract setAlignment(): void;
     public abstract setBoxSpacing(): void;
+    public abstract clone(id?: number, attributes?: boolean, position?: boolean): T;
     public abstract extractAttributes(depth?: number): string;
     public abstract alignParent(position: string): boolean;
     public abstract alignSibling(position: string, documentId?: string): string;
     public abstract localizeString(value: string): string;
-    public abstract clone(id?: number, attributes?: boolean, position?: boolean): T;
     public abstract set containerType(value: number);
     public abstract get containerType(): number;
     public abstract get documentId(): string;
     public abstract get fontSize(): number;
     public abstract get support(): Support;
+
+    public cloneBase(node: T) {
+        Object.assign(node.localSettings, this.localSettings);
+        node.tagName = this.tagName;
+        node.alignmentType = this.alignmentType;
+        node.depth = this.depth;
+        node.visible = this.visible;
+        node.excluded = this.excluded;
+        node.rendered = this.rendered;
+        node.siblingIndex = this.siblingIndex;
+        if (this.inlineText) {
+            node.setInlineText(true, true);
+        }
+        node.lineBreakLeading = this.lineBreakLeading;
+        node.lineBreakTrailing = this.lineBreakTrailing;
+        node.renderParent = this.renderParent;
+        node.documentParent = this.documentParent;
+        node.documentRoot = this.documentRoot;
+        if (this.length) {
+            node.retain(this.duplicate());
+        }
+        node.inherit(this, 'initial', 'base', 'alignment', 'styleMap', 'textStyle');
+        Object.assign(node.unsafe('cached'), this._cached);
+    }
 
     public init() {
         const element = <HTMLElement> this._element;

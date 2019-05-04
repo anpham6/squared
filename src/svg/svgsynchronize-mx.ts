@@ -504,7 +504,7 @@ function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue,
 }
 
 function insertInterpolator(item: SvgAnimate, time: number, keySplines: string[] | undefined, index: number, keyTimeMode: number, map: InterpolatorMap, transformOriginMap?: TransformOriginMap) {
-    if (!isKeyTimeFormat(SvgBuild.asAnimateTransform(item), keyTimeMode)) {
+    if (!isKeyTimeFormat(SvgBuild.isAnimateTransform(item), keyTimeMode)) {
         if (index === 0) {
             return;
         }
@@ -637,7 +637,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             if (animations === undefined) {
                 animations = this.animations as any;
             }
-            return $util.filterArray(<SvgAnimateTransform[]> animations, item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
+            return $util.filterArray(<SvgAnimateTransform[]> animations, item => SvgBuild.isAnimateTransform(item) && item.duration > 0);
         }
 
         public animateSequentially(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions) {
@@ -1061,7 +1061,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             if (previous === undefined) {
                                                 if (!repeatingMap[attr].has(0)) {
                                                     let value: AnimateValue | undefined;
-                                                    if (transforming && SvgBuild.asAnimateTransform(set)) {
+                                                    if (transforming && SvgBuild.isAnimateTransform(set)) {
                                                         value = TRANSFORM.typeAsValue(set.type);
                                                     }
                                                     else {
@@ -1734,7 +1734,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     if (repeatingResult || infiniteResult) {
                         this._removeAnimations(staggered);
                         const timeRange = Array.from(animateTimeRangeMap.entries());
-                        const synchronizedName = $util.joinMap(staggered, item => SvgBuild.asAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-');
+                        const synchronizedName = $util.joinMap(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-');
                         for (const result of [repeatingResult, infiniteResult]) {
                             if (result) {
                                 const repeating = result === repeatingResult;

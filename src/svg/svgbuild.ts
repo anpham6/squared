@@ -291,8 +291,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             const rotatingPoints: boolean[] = [];
             let rotateFixed = 0;
             let rotateInitial = 0;
-            if ($util.isNumber(rotation)) {
-                rotateFixed = parseFloat(rotation);
+            if ($css.isAngle(rotation)) {
+                rotateFixed = $css.parseAngle(rotation);
             }
             else {
                 const commands = SvgBuild.getPathCommands(value);

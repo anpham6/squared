@@ -48,7 +48,6 @@ declare global {
             timingFunction?: string;
             by?: number;
             end?: number;
-            loopIntervals?: boolean[];
             synchronized?: NumberValue;
             readonly playable: boolean;
             readonly valueTo: string;
@@ -57,7 +56,6 @@ declare global {
             readonly partialType: boolean;
             setCalcMode(attributeName?: string, mode?: string): void;
             convertToValues(keyTimes?: number[]): void;
-            isLoopInterval(index: number): boolean;
             setGroupOrdering(value: SvgAnimationAttribute[]): void;
             getIntervalEndTime(leadTime: number): number;
             getTotalDuration(minimum?: boolean): number;
@@ -77,6 +75,7 @@ declare global {
             path: string;
             distance: string;
             rotate: string;
+            rotateData?: NumberValue[];
             readonly keyPoints: number[];
             readonly offsetLength: number;
             readonly offsetPath?: SvgOffsetPath[];

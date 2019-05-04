@@ -775,7 +775,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 else {
                                     const synchronized = item.synchronized;
                                     if (synchronized) {
-                                        if ($SvgBuild.asAnimateTransform(item)) {
+                                        if ($SvgBuild.isAnimateTransform(item)) {
                                             const values = transformMap.get(synchronized.value) || [];
                                             values.push(item);
                                             transformMap.set(synchronized.value, values);
@@ -793,7 +793,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         if (item.iterationCount === -1) {
                                             isolatedData.push(item);
                                         }
-                                        else if ((!item.fromToType || $SvgBuild.asAnimateTransform(item) && item.transformOrigin) && !(supportedKeyFrames && getValueType(item.attributeName) !== 'pathType')) {
+                                        else if ((!item.fromToType || $SvgBuild.isAnimateTransform(item) && item.transformOrigin) && !(supportedKeyFrames && getValueType(item.attributeName) !== 'pathType')) {
                                             togetherTargets.push([item]);
                                         }
                                         else if (item.fillReplace) {
@@ -838,7 +838,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 let checkBefore = false;
                                 let useKeyFrames = true;
                                 if (index <= 1 && items.some((item: $SvgAnimate) => !!item.synchronized && item.synchronized.value !== '')) {
-                                    if (!$SvgBuild.asAnimateTransform(items[0])) {
+                                    if (!$SvgBuild.isAnimateTransform(items[0])) {
                                         ordering = 'sequentially';
                                     }
                                     synchronized = true;
@@ -856,7 +856,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     if (index > 0) {
                                         ordering = 'sequentially';
                                     }
-                                    if (index > 1 && $SvgBuild.asAnimateTransform(items[0])) {
+                                    if (index > 1 && $SvgBuild.isAnimateTransform(items[0])) {
                                         checkBefore = true;
                                     }
                                 }
@@ -1050,13 +1050,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         }
                                                         break;
                                                     case 'floatType':
-                                                        switch (item.attributeName) {
-                                                            case 'stroke-dasharray':
-                                                                values = $util.objectMap<string, number[]>(item.values, value => $util.replaceMap<string, number>(value.split(' '), fraction => parseFloat(fraction)));
-                                                                break;
-                                                            default:
-                                                                values = item.values;
-                                                                break;
+                                                        if (item.attributeName === 'stroke-dasharray') {
+                                                            values = $util.objectMap<string, number[]>(item.values, value => $util.replaceMap<string, number>(value.split(' '), fraction => parseFloat(fraction)));
+                                                        }
+                                                        else {
+                                                            values = item.values;
                                                         }
                                                         if (requireBefore && item.baseValue) {
                                                             $util.concatArray(beforeValues, $util.replaceMap<number, string>($SvgBuild.parseCoordinates(item.baseValue), value => value.toString()));
@@ -1080,30 +1078,27 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             if (values && propertyNames) {
                                                 const keyName = item.synchronized ? item.synchronized.key + item.synchronized.value :
                                                                                     index !== 0 || propertyNames.length > 1 ? JSON.stringify(options) : '';
+                                                const keyTimes = item.keyTimes;
                                                 for (let i = 0; i < propertyNames.length; i++) {
                                                     const propertyName = propertyNames[i];
                                                     if (resetBefore) {
                                                         resetBeforeValue(propertyName, beforeValues[i]);
                                                     }
-                                                    if (useKeyFrames && item.keyTimes.length > 1) {
+                                                    if (useKeyFrames && keyTimes.length > 1) {
                                                         if (supportedKeyFrames && options.valueType !== 'pathType') {
                                                             if (!resetBefore && requireBefore) {
                                                                 resetBeforeValue(propertyName, beforeValues[i]);
                                                             }
                                                             const propertyValuesHolder = animatorMap.get(keyName) || [];
                                                             const keyframe: KeyFrame[] = [];
-                                                            for (let j = 0; j < item.keyTimes.length; j++) {
+                                                            for (let j = 0; j < keyTimes.length; j++) {
                                                                 let value = getPropertyValue(values, j, i, true);
                                                                 if (value !== '') {
                                                                     value = $math.truncateString(value, this.options.floatPrecisionValue);
                                                                 }
-                                                                let interpolator = j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, j - 1) : '';
-                                                                if (interpolator === '' && item.isLoopInterval(j)) {
-                                                                    interpolator = createPathInterpolator($constS.KEYSPLINE_NAME['step-start']);
-                                                                }
                                                                 keyframe.push({
-                                                                    interpolator,
-                                                                    fraction: item.keyTimes[j] === 0 && value === '' ? '' : $math.truncate(item.keyTimes[j], this.options.floatPrecisionKeyTime),
+                                                                    interpolator: j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, j - 1) : '',
+                                                                    fraction: keyTimes[j] === 0 && value === '' ? '' : $math.truncate(keyTimes[j], this.options.floatPrecisionKeyTime),
                                                                     value
                                                                 });
                                                             }
@@ -1120,11 +1115,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             ordering = 'sequentially';
                                                             const translateData = getFillData('sequentially');
                                                             const objectAnimator = repeating.objectAnimator;
-                                                            for (let j = 0; j < item.keyTimes.length; j++) {
+                                                            for (let j = 0; j < keyTimes.length; j++) {
                                                                 const propertyOptions: PropertyValue = {
                                                                     ...options,
                                                                     propertyName,
-                                                                    startOffset: j === 0 ? (item.delay + (item.keyTimes[j] > 0 ? Math.floor(item.keyTimes[j] * item.duration) : 0)).toString() : '',
+                                                                    startOffset: j === 0 ? (item.delay + (keyTimes[j] > 0 ? Math.floor(keyTimes[j] * item.duration) : 0)).toString() : '',
                                                                     propertyValuesHolder: false
                                                                 };
                                                                 let valueTo = getPropertyValue(values, j, i, false, options.valueType === 'pathType' ? group.pathData : item.baseValue);
@@ -1144,7 +1139,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                     }
                                                                     else {
                                                                         propertyOptions.valueFrom = getPropertyValue(values, j - 1, i).toString();
-                                                                        duration = Math.floor((item.keyTimes[j] - item.keyTimes[j - 1]) * item.duration);
+                                                                        duration = Math.floor((keyTimes[j] - keyTimes[j - 1]) * item.duration);
                                                                     }
                                                                     if (options.valueType === 'floatType') {
                                                                         valueTo = $math.truncateString(valueTo, this.options.floatPrecisionValue);
@@ -1166,11 +1161,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                             translateData.objectAnimator.push(valueData);
                                                                         }
                                                                     }
-                                                                    let interpolator = j > 0 ? getPathInterpolator(item.keySplines, j - 1) : '';
-                                                                    if (interpolator === '' && item.isLoopInterval(j)) {
-                                                                        interpolator = createPathInterpolator($constS.KEYSPLINE_NAME['step-start']);
+                                                                    if (j > 0) {
+                                                                        propertyOptions.interpolator = getPathInterpolator(item.keySplines, j - 1);
                                                                     }
-                                                                    propertyOptions.interpolator = interpolator;
                                                                     propertyOptions.duration = duration.toString();
                                                                     propertyOptions.valueTo = valueTo;
                                                                     objectAnimator.push(propertyOptions);
@@ -1546,7 +1539,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         }
         const baseData: VectorGroupData = {};
         const groupName = getVectorName(target, 'group');
-        if (this.queueAnimations(target, groupName, item => $SvgBuild.asAnimateTransform(item) || $SvgBuild.asAnimateMotion(item), '', target.name)) {
+        if (this.queueAnimations(target, groupName, item => $SvgBuild.isAnimateTransform(item), '', target.name)) {
             baseData.name = groupName;
         }
         else if (clipElement.length) {

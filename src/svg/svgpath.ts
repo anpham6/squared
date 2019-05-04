@@ -625,7 +625,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return data;
     }
 
-    public extractStrokeDash(animations?: SvgAnimation[], precision?: number, loopInterval = 0): [SvgStrokeDash[] | undefined, string, string] {
+    public extractStrokeDash(animations?: SvgAnimation[], precision?: number): [SvgStrokeDash[] | undefined, string, string] {
         const strokeWidth = $util.convertInt(this.strokeWidth);
         let result: SvgStrokeDash[] | undefined;
         let path = '';
@@ -778,11 +778,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 }
                                 case 'stroke-dashoffset': {
                                     const duration = item.duration;
-                                    const repeatFraction = loopInterval / 1000;
                                     const startOffset = parseFloat(item.values[0]);
                                     const values: string[] = [];
                                     const keyTimes: number[] = [];
-                                    const loopIntervals: boolean[] = [];
                                     let keyTime = 0;
                                     let previousRemaining = 0;
                                     if (valueOffset !== startOffset && item.delay === 0 && !item.fillReplace) {
@@ -850,10 +848,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         const increasing = offsetTo > offsetFrom;
                                         const segDuration = j > 0 ? (keyTimeTo - item.keyTimes[j - 1]) * duration : 0;
                                         const offsetTotal = offsetValue * flattenData.lengthRatio;
-                                        let iterationTotal = offsetTotal / extendedLength;
-                                        function getKeyTimeIncrement(offset: number) {
-                                            return (offset / offsetTotal * segDuration) / duration;
-                                        }
+                                        const getKeyTimeIncrement = (offset: number) => ((offset / offsetTotal) * segDuration) / duration;
                                         function setFinalValue(offset: number, checkInvert = false) {
                                             finalValue = (offsetRemaining - offset) / extendedLength;
                                             if (checkInvert) {
@@ -883,8 +878,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         }
                                         function insertFractionKeyTime() {
                                             if (!isDuplicateFraction()) {
-                                                loopIntervals[keyTimes.length] = true;
-                                                keyTimes.push(keyTime === 0 ? 0 : $math.truncateFraction(keyTime + repeatFraction));
+                                                keyTimes.push(keyTime === 0 ? 0 : $math.truncateFraction(keyTime));
                                                 values.push(increasing ? '1' : '0');
                                             }
                                         }
@@ -895,6 +889,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             values.push(value.toString());
                                             previousRemaining = value > 0 && value < 1 ? finalValue : 0;
                                         }
+                                        let iterationTotal = offsetTotal / extendedLength;
                                         let offsetRemaining = offsetTotal;
                                         let finalValue = 0;
                                         if (j === 0) {
@@ -958,7 +953,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     item.replaceValue = replaceValue;
                                     item.values = values;
                                     item.keyTimes = keyTimes;
-                                    item.loopIntervals = loopIntervals;
                                     const timingFunction = item.timingFunction;
                                     if (timingFunction) {
                                         item.keySplines = undefined;

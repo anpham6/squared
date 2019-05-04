@@ -164,7 +164,6 @@ function constraintMinMax(node: View, dimension: string) {
                     valid = true;
                     setAlignmentBlock();
                 }
-                valid = true;
             }
             else if (node.documentParent.has('height') && !node.has('height')) {
                 node.android('layout_height', '0px', false);
@@ -283,7 +282,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         const dimensionA = $util.capitalize(dimension);
         const flexbox = node.flexbox;
         const basis = flexbox.basis;
-        function setFlexGrow(value: string, grow: number, fromBasis = false) {
+        function setFlexGrow(value: string, grow: number) {
             node.android(`layout_${dimension}`, '0px');
             if (grow > 0) {
                 node.app(`layout_constraint${horizontal ? 'Horizontal' : 'Vertical'}_weight`, $math.truncate(grow, node.localSettings.floatPrecision));

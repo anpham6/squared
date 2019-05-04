@@ -141,7 +141,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public by?: number;
     public end?: number;
     public synchronized?: NumberValue;
-    public loopIntervals?: boolean[];
 
     private _iterationCount = 1;
     private _reverse = false;
@@ -215,7 +214,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 mode = $dom.getNamedItem(this.animationElement, 'calcMode') || 'linear';
             }
             switch (mode) {
-                case 'discrete': {
+                case 'discrete':
                     if (this.keyTimes.length === 2 && this.keyTimes[0] === 0) {
                         const keyTimes: number[] = [];
                         const values: string[] = [];
@@ -233,7 +232,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         this._keySplines = [KEYSPLINE_NAME['step-end']];
                     }
                     break;
-                }
                 case 'paced':
                     this._keySplines = undefined;
                     break;
@@ -262,10 +260,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 this.evaluateStart = true;
             }
         }
-    }
-
-    public isLoopInterval(index: number) {
-        return !!this.loopIntervals && this.loopIntervals[index] === true;
     }
 
     public setGroupOrdering(value: SvgAnimationAttribute[]) {

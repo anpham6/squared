@@ -12,16 +12,29 @@
         }
         .scissorHalf {
             offset-path: path('M900,190  L993,245 V201  A11,11 0 0,1 1004,190  H1075  A11,11 0 0,1 1086,201  V300  L1294,423 H1216  A11,11 0 0,0 1205,434  V789  A11,11 0 0,1 1194,800  H606  A11,11 0 0,1 595,789  V434  A11,11 0 0,0 584,423  H506 L900,190');
-            offset-distance: 10%;
-            animation: followpath 4s linear;
+            animation: followpath 10s linear;
             animation-iteration-count: infinite;
             animation-fill-mode: none;
         }
         @keyframes followpath {
+            0% {
+                offset-rotate: 45deg;
+                offset-distance: 0%;
+            }
             25% {
+                offset-rotate: auto 90deg;
+                offset-distance: 25%;
+            }
+            50% {
+                offset-rotate: reverse;
                 offset-distance: 50%;
             }
             75% {
+                offset-rotate: auto 90deg;
+                offset-distance: 50%;
+            }
+            100% {
+                offset-rotate: auto 45deg;
                 offset-distance: 100%;
             }
         }

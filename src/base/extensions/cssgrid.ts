@@ -484,13 +484,11 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                         rowStart = alias;
                                     }
                                 }
+                                else if (colStart) {
+                                    columnSpan = parseInt(alias[0]) - parseInt(colStart[0]);
+                                }
                                 else {
-                                    if (colStart === undefined) {
-                                        colStart = alias;
-                                    }
-                                    else {
-                                        columnSpan = parseInt(alias[0]) - parseInt(colStart[0]);
-                                    }
+                                    colStart = alias;
                                 }
                             }
                             const named = data.name[alias[1]];

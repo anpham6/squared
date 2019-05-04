@@ -154,6 +154,7 @@ declare global {
             alignSibling(position: string, documentId?: string): string;
             localizeString(value: string): string;
             clone(id?: number, attributes?: boolean, position?: boolean): Node;
+            cloneBase(node: Node): void;
             init(): void;
             saveAsInitial(overwrite?: boolean): void;
             is(...containers: number[]): boolean;

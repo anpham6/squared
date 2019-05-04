@@ -503,8 +503,6 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         public clone(id?: number, attributes = false, position = false): T {
             const node = new View(id || this.id, this.sessionId, this.element || undefined);
-            Object.assign(node.localSettings, this.localSettings);
-            node.tagName = this.tagName;
             if (id !== undefined) {
                 node.setControlType(this.controlName, this.containerType);
             }
@@ -513,45 +511,28 @@ export default (Base: Constructor<squared.base.Node>) => {
                 node.controlName = this.controlName;
                 node.containerType = this.containerType;
             }
-            node.alignmentType = this.alignmentType;
-            node.depth = this.depth;
-            node.visible = this.visible;
-            node.excluded = this.excluded;
-            node.rendered = this.rendered;
-            node.renderParent = this.renderParent;
-            node.documentParent = this.documentParent;
-            node.documentRoot = this.documentRoot;
-            if (this.length) {
-                node.retain(this.duplicate());
-            }
+            this.cloneBase(node);
             if (attributes) {
                 Object.assign(node.unsafe('boxReset'), this._boxReset);
                 Object.assign(node.unsafe('boxAdjustment'), this._boxAdjustment);
-                for (const value of this._namespaces) {
-                    const obj: StringMap = this[`__${value}`];
+                for (const name of this._namespaces) {
+                    const obj: StringMap = this[`__${name}`];
                     for (const attr in obj) {
-                        if (value === 'android' && attr === 'id') {
-                            node.attr(value, attr, node.documentId);
-                        }
-                        else {
-                            node.attr(value, attr, obj[attr]);
-                        }
+                        node.attr(name, attr, name === 'android' && attr === 'id' ? node.documentId : obj[attr]);
                     }
                 }
             }
             if (position) {
                 node.anchorClear();
                 if (node.anchor('left', this.documentId)) {
-                    Object.assign(node.unsafe('boxReset'), { marginLeft: 1 });
+                    node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
                     Object.assign(node.unsafe('boxAdjustment'), { marginLeft: 0 });
                 }
                 if (node.anchor('top', this.documentId)) {
-                    Object.assign(node.unsafe('boxReset'), { marginTop: 1 });
+                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
                     Object.assign(node.unsafe('boxAdjustment'), { marginTop: 0 });
                 }
             }
-            node.inherit(this, 'initial', 'base', 'alignment', 'styleMap');
-            Object.assign(node.unsafe('cached'), this.unsafe('cached'));
             return node;
         }
 
