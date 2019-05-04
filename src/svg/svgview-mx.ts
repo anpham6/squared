@@ -10,6 +10,7 @@ import { KEYSPLINE_NAME } from './lib/constant';
 import { TRANSFORM, getAttribute } from './lib/util';
 
 interface AttributeData extends NumberValue {
+    offsetRotate?: string;
     transformOrigin?: Point;
 }
 
@@ -79,7 +80,28 @@ function setOpacity(element: SVGGraphicsElement, value: string) {
     }
 }
 
-const sortAttribute = (value: NumberValue[]) => value.sort((a, b) => a.key >= b.key ? 1 : -1);
+function sortAttribute(value: NumberValue[]) {
+    return value.sort((a, b) => {
+        if (a.key !== b.key) {
+            return a.key < b.key ? -1 : 1;
+        }
+        return 0;
+    });
+}
+
+function convertRotate(value: string) {
+    if (value === 'reverse') {
+        return 'auto 180deg';
+    }
+    else if (value.startsWith('reverse ')) {
+        const angle = value.split(' ')[1];
+        if ($css.isAngle(angle)) {
+            return `auto ${180 + $css.parseAngle(angle)}deg`;
+        }
+        return 'auto 0deg';
+    }
+    return value;
+}
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
@@ -289,6 +311,64 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             delete attrMap['transform'];
                             delete attrMap['transform-origin'];
                         }
+                        if (getAttribute(element, 'offset-path') === 'none') {
+                            delete attrMap['offset-distance'];
+                            delete attrMap['offset-rotate'];
+                        }
+                        else {
+                            if (attrMap['offset-rotate']) {
+                                const offsetRotate = attrMap['offset-rotate'];
+                                if (attrMap['offset-distance']) {
+                                    const offsetDistance = attrMap['offset-distance'];
+                                    for (const item of offsetDistance) {
+                                        const index = offsetRotate.findIndex(rotate => rotate.key === item.key);
+                                        if (index !== -1) {
+                                            item.offsetRotate = offsetRotate[index].value;
+                                            offsetRotate.splice(index, 1);
+                                        }
+                                    }
+                                }
+                                else if (attrMap['rotate'] === undefined) {
+                                    const animate = new SvgAnimateMotion(element);
+                                    animate.duration = 0;
+                                    animate.iterationCount = 1;
+                                    animate.fillForwards = true;
+                                    animate.addKeyPoint({ key: 0, value: animate.distance });
+                                    addAnimation(animate, delay, keyframeIndex);
+                                    sortAttribute(offsetRotate);
+                                    const from = offsetRotate[0];
+                                    const to = offsetRotate[offsetRotate.length - 1];
+                                    if (from.key !== 0) {
+                                        offsetRotate.unshift({ key: 0, value: 'auto 0deg' });
+                                    }
+                                    if (to.key !== 1) {
+                                        offsetRotate.push({ key: 1, value: 'auto 0deg' });
+                                    }
+                                    for (let j = 1; j < offsetRotate.length; j++) {
+                                        const previous = offsetRotate[j - 1];
+                                        const item = offsetRotate[j];
+                                        previous.value = convertRotate(previous.value);
+                                        item.value = convertRotate(item.value);
+                                        const previousAuto = previous.value.startsWith('auto');
+                                        const itemAuto = item.value.startsWith('auto');
+                                        if (previousAuto && !itemAuto || !previousAuto && itemAuto) {
+                                            const key = (previous.key + item.key) / 2;
+                                            offsetRotate.splice(j++, 0, { key, value: previous.value });
+                                            offsetRotate.splice(j++, 0, { key, value: item.value });
+                                        }
+                                    }
+                                    for (const item of offsetRotate) {
+                                        let angle = $css.parseAngle(item.value.split(' ').pop() as string);
+                                        if (item.value.startsWith('auto')) {
+                                            angle += 90;
+                                        }
+                                        item.value = `${angle} 0 0`;
+                                    }
+                                    attrMap['rotate'] = offsetRotate;
+                                }
+                            }
+                            delete attrMap['offset-rotate'];
+                        }
                         for (const name in attrMap) {
                             let animate: SvgAnimate;
                             switch (name) {
@@ -311,6 +391,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             addAnimation(animate, delay, keyframeIndex);
                             const animation = attrMap[name];
                             const direction = cssData['animation-direction'][i];
+                            const timingFunction = cssData['animation-timing-function'][i];
                             sortAttribute(animation);
                             if (name === 'offset-distance') {
                                 const animateMotion = <SvgAnimateMotion> animate;
@@ -323,10 +404,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 if ((<NumberValue> animation.pop()).key !== 1) {
                                     animateMotion.addKeyPoint({ key: 1, value: animateMotion.distance });
                                 }
+                                if ($util.isString(timingFunction)) {
+                                    animateMotion.timingFunction = timingFunction;
+                                }
                             }
                             else {
                                 attributes.push(name);
-                                const timingFunction = cssData['animation-timing-function'][i];
                                 const keyTimes: number[] = [];
                                 const values: string[] = [];
                                 const keySplines: string[] = [];
@@ -396,6 +479,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 else {
                                     animate.values = values;
                                     animate.keyTimes = keyTimes;
+                                    animate.keySplines = keySplines;
                                 }
                             }
                             animate.paused = paused;

@@ -14,9 +14,8 @@ const $util = squared.lib.util;
 export default class SvgAnimateMotion extends SvgAnimateTransform implements squared.svg.SvgAnimateMotion {
     public path = '';
     public motionPathElement: SVGGeometryElement | null = null;
-    public rotate = 'auto';
+    public rotate = 'auto 0deg';
     public distance = '0%';
-    public readonly attributeName = 'transform';
     public readonly type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
 
     private _offsetLength = 0;
@@ -27,7 +26,17 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         super(element, animationElement);
         if (animationElement) {
             this.setAttribute('path');
-            this.setAttribute('rotate');
+            const rotate = $dom.getNamedItem(this.animationElement, 'rotate');
+            switch (rotate) {
+                case 'auto':
+                    break;
+                case 'auto-reverse':
+                    this.rotate = 'auto 180deg';
+                    break;
+                default:
+                    this.rotate = $util.convertFloat(rotate).toString();
+                    break;
+            }
             for (let i = 0; i < animationElement.children.length; i++) {
                 const item = animationElement.children[i];
                 if (item.tagName === 'mpath') {
@@ -56,12 +65,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             }
             const rotate = getAttribute(element, 'offset-rotate', false);
             if (rotate !== '') {
-                if ($css.isAngle(rotate)) {
-                    this.rotate = $css.parseAngle(rotate).toString();
-                }
-                else {
-                    this.rotate = rotate;
-                }
+                this.rotate = $css.isAngle(rotate) ? $css.parseAngle(rotate).toString() : rotate;
             }
         }
     }
@@ -131,79 +135,95 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             let distance = offsetPath.length;
             if (distance > 0) {
                 const duration = this.duration;
-                if (duration >= distance) {
-                    const increment = duration / distance;
-                    for (let i = 1; i < distance - 1; i++) {
-                        offsetPath[i].key *= increment;
+                if (duration > 0) {
+                    if (duration >= distance) {
+                        const increment = duration / distance;
+                        for (let i = 1; i < distance - 1; i++) {
+                            offsetPath[i].key *= increment;
+                        }
+                        offsetPath[distance - 1].key = duration;
                     }
-                    offsetPath[distance - 1].key = duration;
-                }
-                else {
-                    const increment = distance / duration;
-                    const result: SvgOffsetPath[] = new Array(duration + 1);
-                    result[0] = offsetPath[0];
-                    for (let i = 1; i < duration; i++) {
-                        const j = Math.floor(i * increment);
-                        offsetPath[j].key = i;
-                        result[i] = offsetPath[j];
+                    else {
+                        const increment = distance / duration;
+                        const result: SvgOffsetPath[] = new Array(duration + 1);
+                        result[0] = offsetPath[0];
+                        for (let i = 1; i < duration; i++) {
+                            const j = Math.floor(i * increment);
+                            offsetPath[j].key = i;
+                            result[i] = offsetPath[j];
+                        }
+                        const end = <SvgOffsetPath> offsetPath.pop();
+                        end.key = duration;
+                        result[duration] = end;
+                        offsetPath = result;
+                        distance = result.length;
                     }
-                    const end = <SvgOffsetPath> offsetPath.pop();
-                    end.key = duration;
-                    result[duration] = end;
-                    offsetPath = result;
-                    distance = result.length;
                 }
                 const keyPoints = this.keyPoints;
                 if (keyPoints.length) {
                     const keyTimes = super.keyTimes;
                     const length = distance - 1;
                     const result: SvgOffsetPath[] = [];
-                    for (let i = 0; i < keyTimes.length - 1; i++) {
-                        const baseTime = keyTimes[i] * duration;
-                        const offsetTime = (keyTimes[i + 1] - keyTimes[i]) * duration;
-                        const from = keyPoints[i];
-                        const to = keyPoints[i + 1];
-                        const segment: SvgOffsetPath[] = [];
-                        let minPercent: number;
-                        let maxPercent: number;
-                        if (offsetTime === 0) {
-                            minPercent = to * length;
-                            maxPercent = length;
-                        }
-                        else {
-                            minPercent = Math.min(from, to) * length;
-                            maxPercent = Math.max(from, to) * length;
-                        }
-                        for (let j = 0; j <= length; j++) {
+                    if (keyPoints.length > 1) {
+                        for (let i = 0; i < keyTimes.length - 1; i++) {
+                            const baseTime = keyTimes[i] * duration;
+                            const offsetTime = (keyTimes[i + 1] - keyTimes[i]) * duration;
+                            const from = keyPoints[i];
+                            const to = keyPoints[i + 1];
+                            const segment: SvgOffsetPath[] = [];
+                            let minPercent: number;
+                            let maxPercent: number;
                             if (offsetTime === 0) {
-                                if (j >= minPercent) {
-                                    segment.push({ ...offsetPath[j] });
-                                    break;
-                                }
+                                minPercent = to * length;
+                                maxPercent = length;
                             }
                             else {
-                                if (j >= minPercent && j <= maxPercent) {
-                                    segment.push({ ...offsetPath[j] });
+                                minPercent = Math.min(from, to) * length;
+                                maxPercent = Math.max(from, to) * length;
+                            }
+                            for (let j = 0; j <= length; j++) {
+                                if (offsetTime === 0) {
+                                    if (j >= minPercent) {
+                                        segment.push({ ...offsetPath[j] });
+                                        break;
+                                    }
+                                }
+                                else {
+                                    if (j >= minPercent && j <= maxPercent) {
+                                        segment.push({ ...offsetPath[j] });
+                                    }
                                 }
                             }
-                        }
-                        if (offsetTime === 0) {
-                            segment[0].key = baseTime;
-                        }
-                        else {
-                            if (from > to) {
-                                segment.reverse();
+                            if (offsetTime === 0) {
+                                segment[0].key = baseTime;
                             }
-                            const increment = offsetTime / segment.length;
-                            for (let j = 0; j < segment.length - 1; j++) {
-                                segment[j].key = baseTime + j * increment;
+                            else {
+                                if (from > to) {
+                                    segment.reverse();
+                                }
+                                const increment = offsetTime / segment.length;
+                                for (let j = 0; j < segment.length - 1; j++) {
+                                    segment[j].key = baseTime + j * increment;
+                                }
+                                segment[segment.length - 1].key = baseTime + offsetTime;
                             }
-                            segment[segment.length - 1].key = baseTime + offsetTime;
+                            if (result.length && $util.isEqual(segment[0], result[result.length - 1])) {
+                                segment.shift();
+                            }
+                            $util.concatArray(result, segment);
                         }
-                        if (result.length && $util.isEqual(segment[0], result[result.length - 1])) {
-                            segment.shift();
+                    }
+                    else {
+                        const minPercent = keyPoints[0] * length;
+                        for (let j = 0; j <= length; j++) {
+                            if (j >= minPercent) {
+                                result.push({ ...offsetPath[j] });
+                                break;
+                            }
                         }
-                        $util.concatArray(result, segment);
+                        if (keyTimes[0] === 0) {
+                            result[0].rotate = 0;
+                        }
                     }
                     this._offsetPath = result;
                 }

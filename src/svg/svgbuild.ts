@@ -282,7 +282,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return value;
     }
 
-    public static getOffsetPath(value: string, rotation = 'auto') {
+    public static getOffsetPath(value: string, rotation = 'auto 0deg') {
         const element = <SVGGeometryElement> (createPath(value) as unknown);
         const totalLength = Math.ceil(element.getTotalLength());
         const result: SvgOffsetPath[] = [];
@@ -318,7 +318,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                             break;
                     }
                 }
-                rotateInitial = rotation === 'auto-reverse' ? 180 : $css.parseAngle(rotation.split(' ').pop() as string);
+                if (rotation !== 'auto 0deg') {
+                    rotateInitial = $css.parseAngle(rotation.split(' ').pop() as string);
+                }
             }
             let rotating = false;
             let rotatePrevious = 0;
