@@ -132,13 +132,27 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0, precision?: number) {
-        const result = `M${x1},${y1} L${x2},${y2}`;
-        return precision ? $math.truncateString(result, precision) : result;
+        if (precision) {
+            x1 = $math.truncate(x1, precision) as any;
+            y1 = $math.truncate(y1, precision) as any;
+            x2 = $math.truncate(x2, precision) as any;
+            y2 = $math.truncate(y2, precision) as any;
+        }
+        return `M${x1},${y1} L${x2},${y2}`;
     }
 
     public static drawRect(width: number, height: number, x = 0, y = 0, precision?: number) {
-        const result = `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
-        return precision ? $math.truncateString(result, precision) : result;
+        if (precision) {
+            width = $math.truncate(x + width, precision) as any;
+            height = $math.truncate(y + height, precision) as any;
+            x = $math.truncate(x, precision) as any;
+            y = $math.truncate(y, precision) as any;
+        }
+        else {
+            width += x;
+            height += y;
+        }
+        return `M${x},${y} ${width},${y} ${width},${height} ${x},${height} Z`;
     }
 
     public static drawCircle(cx: number, cy: number, r: number, precision?: number) {
@@ -149,8 +163,18 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (ry === undefined) {
             ry = rx;
         }
-        const result = `M${cx - rx},${cy} a${rx},${ry},0,0,1,${rx * 2},0 a${rx},${ry},0,0,1,-${rx * 2},0`;
-        return precision ? $math.truncateString(result, precision) : result;
+        let radius = rx * 2;
+        if (precision) {
+            cx = $math.truncate(cx - rx, precision) as any;
+            cy = $math.truncate(cy, precision) as any;
+            rx = $math.truncate(rx, precision) as any;
+            ry = $math.truncate(ry, precision) as any;
+            radius = $math.truncate(radius, precision) as any;
+        }
+        else {
+            cx -= rx;
+        }
+        return `M${cx},${cy} a${rx},${ry},0,0,1,${radius},0 a${rx},${ry},0,0,1,-${radius},0`;
     }
 
     public static drawPolygon(values: Point[] | DOMPoint[], precision?: number) {
@@ -159,11 +183,17 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static drawPolyline(values: Point[] | DOMPoint[], precision?: number) {
         let result = 'M';
-        for (const value of values) {
-            result += `${value.x},${value.y} `;
+        if (precision) {
+            for (const value of values) {
+                result += ` ${$math.truncate(value.x, precision)},${$math.truncate(value.y, precision)}`;
+            }
         }
-        result = result.substring(0, result.length - 1);
-        return precision ? $math.truncateString(result, precision) : result;
+        else {
+            for (const value of values) {
+                result += ` ${value.x},${value.y}`;
+            }
+        }
+        return result;
     }
 
     public static drawPath(values: SvgPathCommand[], precision?: number) {

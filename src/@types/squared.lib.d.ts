@@ -84,7 +84,8 @@ declare global {
             function moreEqual(valueA: number, valueB: number, precision?: number): boolean;
             function lessEqual(valueA: number, valueB: number, precision?: number): boolean;
             function convertDecimalNotation(value: number): string;
-            function truncate(value: number, precision?: number): string;
+            function truncate(value: number | string, precision?: number): string;
+            function truncateTrailingZero(value: string): string;
             function truncateFraction(value: number): number;
             function truncateString(value: string, precision?: number): string;
             function triangulateASA(a: number, b: number, clen: number): [number, number];

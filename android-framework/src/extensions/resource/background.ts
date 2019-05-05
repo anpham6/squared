@@ -449,8 +449,17 @@ export function convertColorStops(list: ColorStop[], precision?: number) {
 }
 
 export function drawRect(width: number, height: number, x = 0, y = 0, precision?: number) {
-    const result = `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
-    return precision ? $math.truncateString(result, precision) : result;
+    if (precision) {
+        x = $math.truncate(x, precision) as any;
+        y = $math.truncate(y, precision) as any;
+        width = $math.truncate(x + width, precision) as any;
+        height = $math.truncate(y + height, precision) as any;
+    }
+    else {
+        width += x;
+        height += y;
+    }
+    return `M${x},${y} ${width},${y} ${width},${height} ${x},${height} Z`;
 }
 
 export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {

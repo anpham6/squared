@@ -30,27 +30,6 @@ export function lessEqual(valueA: number, valueB: number, precision = 8) {
     return valueA < valueB || isEqual(valueA, valueB, precision);
 }
 
-export function truncate(value: number, precision = 3) {
-    if (value === Math.floor(value)) {
-        return value.toString();
-    }
-    else {
-        let i = 1;
-        if (value > 1) {
-            precision += 1;
-            while (value / Math.pow(10, i++) >= 1) {
-                precision += 1;
-            }
-        }
-        else {
-            while (value * Math.pow(10, i++) < 1) {
-                precision -= 1;
-            }
-        }
-        return value.toPrecision(precision).replace(CHAR.TRAILINGZERO, '');
-    }
-}
-
 export function convertDecimalNotation(value: number) {
     const match = REGEXP_DECIMALNOTATION.exec(value.toString());
     if (match) {
@@ -60,19 +39,55 @@ export function convertDecimalNotation(value: number) {
     return value.toString();
 }
 
+export function truncate(value: number | string, precision = 3) {
+    if (typeof value === 'string') {
+        value = parseFloat(value);
+    }
+    if (value === Math.floor(value)) {
+        return value.toString();
+    }
+    else {
+        const absolute = Math.abs(value);
+        let i = 1;
+        if (absolute >= 1) {
+            precision += 1;
+            while (absolute / Math.pow(10, i++) >= 1) {
+                precision += 1;
+            }
+        }
+        else {
+            while (absolute * Math.pow(10, i++) < 1) {
+                precision -= 1;
+            }
+        }
+        return truncateTrailingZero(value.toPrecision(precision));
+    }
+}
+
 export function truncateFraction(value: number) {
     if (value !== Math.floor(value)) {
         const match = REGEXP_TRUNCATE.exec(convertDecimalNotation(value));
         if (match) {
-            return match[2] === '' ? Math.round(value) : parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
+            if (match[2] === '') {
+                return Math.round(value);
+            }
+            return parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
         }
+    }
+    return value;
+}
+
+export function truncateTrailingZero(value: string) {
+    const match = CHAR.TRAILINGZERO.exec(value);
+    if (match) {
+        return value.substring(0, value.length - match[match[1] !== '' ? 2 : 0].length);
     }
     return value;
 }
 
 export function truncateString(value: string, precision = 3) {
     if (REGEXP_TRUNCATECACHE[precision] === undefined) {
-        REGEXP_TRUNCATECACHE[precision] = new RegExp(`(\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+        REGEXP_TRUNCATECACHE[precision] = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
     }
     let match: RegExpExecArray | null;
     let output = value;
@@ -80,7 +95,7 @@ export function truncateString(value: string, precision = 3) {
         if (parseInt(match[2]) >= 5) {
             match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
         }
-        output = output.replace(match[0], match[1].replace(CHAR.TRAILINGZERO, ''));
+        output = output.replace(match[0], truncateTrailingZero(match[1]));
     }
     return output;
 }

@@ -41,7 +41,7 @@ export const CHAR = {
     SPACE: /\s+/,
     LEADINGSPACE: /^\s+/,
     TRAILINGSPACE: /\s+$/,
-    TRAILINGZERO: /\.?0+$/,
+    TRAILINGZERO: /\.(\d*?)(0+)$/,
     LEADINGNEWLINE: /^\s*\n+/,
     LEADINGNUMBER: /^\d/,
     WORD: /\w/,

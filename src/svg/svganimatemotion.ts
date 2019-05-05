@@ -13,9 +13,9 @@ const $util = squared.lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimateTransform implements squared.svg.SvgAnimateMotion {
     public path = '';
-    public motionPathElement: SVGGeometryElement | null = null;
-    public rotate = 'auto 0deg';
     public distance = '0%';
+    public rotate = 'auto 0deg';
+    public motionPathElement: SVGGeometryElement | null = null;
     public rotateData?: NumberValue[];
     public framesPerSecond?: number;
     public readonly type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
@@ -131,7 +131,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     private setOffsetPath() {
-        if (this._offsetPath === undefined && this.path !== '') {
+        if (this._offsetPath === undefined && this.path) {
             const rotateData = this.rotateData;
             let offsetPath = SvgBuild.getOffsetPath(this.path, rotateData ? undefined : this.rotate);
             let distance = offsetPath.length;
@@ -162,12 +162,12 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     distance = result.length;
                 }
                 const keyPoints = this.keyPoints;
+                const fps = this.framesPerSecond ? 1000 / this.framesPerSecond : 0;
                 if (keyPoints.length) {
                     const length = distance - 1;
                     const keyTimes = super.keyTimes;
                     const result: SvgOffsetPath[] = [];
                     if (keyPoints.length > 1) {
-                        const fps = this.framesPerSecond ? 1000 / this.framesPerSecond : 0;
                         let previous: SvgOffsetPath | undefined;
                         const isEqual = (time: number, point: DOMPoint, rotate: number) => !!previous && previous.key === time && rotate === previous.rotate && $util.isEqual(previous.value, point);
                         for (let i = 0; i < keyTimes.length - 1; i++) {
@@ -254,6 +254,17 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         if (keyTimes[0] === 0) {
                             result[0].rotate = 0;
                         }
+                    }
+                    this._offsetPath = result;
+                }
+                else if (fps > 0) {
+                    const result: SvgOffsetPath[] = [];
+                    for (let i = 0; i < distance; i += fps) {
+                        result.push(offsetPath[Math.floor(i)]);
+                    }
+                    const end = <SvgOffsetPath> offsetPath.pop();
+                    if (end !== result[result.length - 1]) {
+                        result.push(end);
                     }
                     this._offsetPath = result;
                 }
@@ -345,11 +356,11 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     get playable() {
-        return !this.paused && this.duration !== -1 && this.path !== '';
+        return !this.paused && this.duration !== -1 && $util.isString(this.path);
     }
 
     set keyTimes(value) {
-        if (this.path === '') {
+        if (!this.path) {
             super.keyTimes = value;
         }
     }
@@ -363,7 +374,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     set values(value) {
-        if (this.path === '') {
+        if (!this.path) {
             super.values = value;
         }
     }
@@ -412,18 +423,19 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             if (keyTimes && keyPoints) {
                 const duration = this.duration;
                 const keyTimesBase = super.keyTimes;
+                const keyPointsBase = this.keyPoints;
                 if (iterationCount === -1) {
                     for (let i = 0; i < keyTimesBase.length; i++) {
                         keyTimesBase[i] /= 2;
                         keyTimes[i] = 0.5 + keyTimes[i] / 2;
                     }
                     $util.concatArray(keyTimesBase, keyTimes);
-                    $util.concatArray(this.keyPoints, keyPoints);
+                    $util.concatArray(keyPointsBase, keyPoints);
                     this.duration = duration * 2;
                 }
                 else {
                     const keyTimesStatic = keyTimesBase.slice(0);
-                    const keyPointsStatic = this.keyPoints.slice(0);
+                    const keyPointsStatic = keyPointsBase.slice(0);
                     for (let i = 0; i < iterationCount; i++) {
                         if (i === 0) {
                             for (let j = 0; j < keyTimesBase.length; j++) {
@@ -437,7 +449,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                 keyTimesAppend[j] = $math.truncateFraction(baseTime + keyTimesAppend[j] / iterationCount);
                             }
                             $util.concatArray(keyTimesBase, keyTimesAppend);
-                            $util.concatArray(this.keyPoints, i % 2 === 0 ? keyPointsStatic : keyPoints);
+                            $util.concatArray(keyPointsBase, i % 2 === 0 ? keyPointsStatic : keyPoints);
                         }
                     }
                     this.duration = duration * iterationCount;
@@ -454,7 +466,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     set parent(value) {
         super.parent = value;
         const parentContainer = this.parentContainer;
-        if (parentContainer && parentContainer.requireRefit && this.path !== '') {
+        if (parentContainer && parentContainer.requireRefit && this.path) {
             this.path = SvgBuild.transformRefit(this.path, undefined, undefined, parentContainer);
         }
     }
@@ -463,7 +475,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     get offsetLength() {
-        if (this._offsetLength === 0 && this.path !== '') {
+        if (this._offsetLength === 0 && this.path) {
             this._offsetLength = getPathLength(this.path);
         }
         return this._offsetLength;

@@ -1095,7 +1095,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             for (let j = 0; j < keyTimes.length; j++) {
                                                                 let value = getPropertyValue(values, j, i, true);
                                                                 if (value !== '') {
-                                                                    value = $math.truncateString(value, this.options.floatPrecisionValue);
+                                                                    value = $math.truncate(value, this.options.floatPrecisionValue);
                                                                 }
                                                                 keyframe.push({
                                                                     interpolator: j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, j - 1) : '',
@@ -1143,7 +1143,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                         duration = Math.floor((keyTimes[j] - keyTimes[j - 1]) * item.duration);
                                                                     }
                                                                     if (options.valueType === 'floatType') {
-                                                                        valueTo = $math.truncateString(valueTo, this.options.floatPrecisionValue);
+                                                                        valueTo = $math.truncate(valueTo, this.options.floatPrecisionValue);
                                                                     }
                                                                     if (transformOrigin && transformOrigin[j]) {
                                                                         let direction: string | undefined;
@@ -1211,7 +1211,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         }
                                                         if (propertyOptions.valueTo) {
                                                             if (options.valueType === 'floatType') {
-                                                                propertyOptions.valueTo = $math.truncateString(propertyOptions.valueTo, this.options.floatPrecisionValue);
+                                                                propertyOptions.valueTo = $math.truncate(propertyOptions.valueTo, this.options.floatPrecisionValue);
                                                             }
                                                             (section === 0 ? repeating : fillCustom).objectAnimator.push(propertyOptions);
                                                         }
@@ -1845,8 +1845,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             duration,
             repeatCount,
             valueType,
-            valueFrom: $util.isNumber(valueFrom) ? $math.truncateString(valueFrom, this.options.floatPrecisionValue) : valueFrom,
-            valueTo: $util.isNumber(valueTo) ? $math.truncateString(valueTo, this.options.floatPrecisionValue) : valueTo,
+            valueFrom: $util.isNumber(valueFrom) ? $math.truncate(valueFrom, this.options.floatPrecisionValue) : valueFrom,
+            valueTo: $util.isNumber(valueTo) ? $math.truncate(valueTo, this.options.floatPrecisionValue) : valueTo,
             propertyValuesHolder: false
         };
     }
