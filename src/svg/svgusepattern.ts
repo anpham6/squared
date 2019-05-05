@@ -25,9 +25,9 @@ export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgS
 
     public synchronize(options?: SvgSynchronizeOptions) {
         const animations = $util.filterArray(this.animations, item => this.verifyBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y');
-        const transformations = this.getAnimateTransform();
-        if (animations.length || transformations.length) {
-            this.animateSequentially(this.getAnimateViewRect(animations), transformations, undefined, options);
+        const transforms = this.getAnimateTransform(options);
+        if (animations.length || transforms.length) {
+            this.animateSequentially(this.getAnimateViewRect(animations), transforms, undefined, options);
         }
         super.synchronize(options);
     }

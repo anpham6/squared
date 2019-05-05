@@ -3,6 +3,7 @@ type Node = squared.base.Node;
 export interface UserSettings {
     builtInExtensions: string[];
     preloadImages: boolean;
+    framesPerSecond: number;
     supportNegativeLeftTop: boolean;
     exclusionsDisabled: boolean;
     showAttributes: boolean;

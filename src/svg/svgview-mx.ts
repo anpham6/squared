@@ -317,18 +317,18 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         else if (attrMap['offset-rotate']) {
                             const offsetRotate = attrMap['offset-rotate'];
                             if (attrMap['offset-distance'] || attrMap['rotate'] === undefined) {
-                                let distance = getAttribute(element, 'offset-rotate', false);
-                                if (distance === '' || distance === 'auto') {
-                                    distance = 'auto 0deg';
+                                let rotate = getAttribute(element, 'offset-rotate', false);
+                                if (rotate === '' || rotate === 'auto') {
+                                    rotate = 'auto 0deg';
                                 }
                                 sortAttribute(offsetRotate);
                                 const from = offsetRotate[0];
                                 const to = offsetRotate[offsetRotate.length - 1];
                                 if (from.key !== 0) {
-                                    offsetRotate.unshift({ key: 0, value: distance });
+                                    offsetRotate.unshift({ key: 0, value: rotate });
                                 }
                                 if (to.key !== 1) {
-                                    offsetRotate.push({ key: 1, value: distance });
+                                    offsetRotate.push({ key: 1, value: rotate });
                                 }
                                 for (let j = 1; j < offsetRotate.length; j++) {
                                     const previous = offsetRotate[j - 1];
@@ -350,7 +350,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     animate.duration = 0;
                                     animate.iterationCount = 1;
                                     animate.fillForwards = true;
-                                    animate.addKeyPoint({ key: 0, value: distance });
+                                    animate.addKeyPoint({ key: 0, value: animate.distance });
                                     addAnimation(animate, delay, keyframeIndex);
                                     for (const item of offsetRotate) {
                                         let angle = $css.parseAngle(item.value.split(' ').pop() as string);

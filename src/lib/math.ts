@@ -35,11 +35,16 @@ export function truncate(value: number, precision = 3) {
         return value.toString();
     }
     else {
+        let i = 1;
         if (value > 1) {
             precision += 1;
-            let i = 1;
             while (value / Math.pow(10, i++) >= 1) {
                 precision += 1;
+            }
+        }
+        else {
+            while (value * Math.pow(10, i++) < 1) {
+                precision -= 1;
             }
         }
         return value.toPrecision(precision).replace(CHAR.TRAILINGZERO, '');

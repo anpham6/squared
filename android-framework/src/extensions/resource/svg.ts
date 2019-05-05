@@ -655,6 +655,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 });
                 svg.synchronize({
                     keyTimeMode: this.SYNCHRONIZE_MODE,
+                    framesPerSecond: this.application.controllerHandler.userSettings.framesPerSecond,
                     precision: this.options.floatPrecisionValue
                 });
                 this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');

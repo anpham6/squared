@@ -539,6 +539,7 @@ function setTransformOrigin(map: TransformOriginMap, item: SvgAnimate, time: num
         map.set(time, item.transformOrigin[index]);
     }
 }
+
 function checkPartialKeyTimes(keyTimes: number[], values: string[], keySplines: string[] | undefined, baseValue?: AnimateValue) {
     if (keyTimes[keyTimes.length - 1] < 1) {
         keyTimes.push(1);
@@ -567,12 +568,9 @@ const getStartIteration = (time: number, delay: number, duration: number) => Mat
 
 export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgSynchronize {
-        public getAnimateShape(element: SVGGraphicsElement, animations?: SvgAnimation[]) {
-            if (animations === undefined) {
-                animations = this.animations as any;
-            }
+        public getAnimateShape(element: SVGGraphicsElement) {
             const result: SvgAnimate[] = [];
-            for (const item of animations as SvgAnimate[]) {
+            for (const item of this.animations as SvgAnimate[]) {
                 if (playableAnimation(item)) {
                     switch (item.attributeName) {
                         case 'r':
@@ -615,9 +613,24 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             return result;
         }
 
+        public getAnimateTransform(options?: SvgSynchronizeOptions) {
+            const result: SvgAnimateTransform[] = [];
+            for (const item of this.animations as SvgAnimateTransform[]) {
+                if (SvgBuild.isAnimateTransform(item)) {
+                    if (item.duration > 0) {
+                        result.push(item);
+                        if (options && SvgBuild.asAnimateMotion(item)) {
+                            item.framesPerSecond = options.framesPerSecond;
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
         public getAnimateViewRect(animations?: SvgAnimation[]) {
             if (animations === undefined) {
-                animations = this.animations as any;
+                animations = <SvgAnimation[]> this.animations;
             }
             const result: SvgAnimate[] = [];
             for (const item of animations as SvgAnimate[]) {
@@ -633,14 +646,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             return result;
         }
 
-        public getAnimateTransform(animations?: SvgAnimation[]) {
-            if (animations === undefined) {
-                animations = this.animations as any;
-            }
-            return $util.filterArray(<SvgAnimateTransform[]> animations, item => SvgBuild.isAnimateTransform(item) && item.duration > 0);
-        }
-
-        public animateSequentially(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions) {
+        public animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions) {
             let keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | SYNCHRONIZE_MODE.FROMTO_TRANSFORM;
             let precision: number | undefined;
             if (options) {
@@ -649,8 +655,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                 }
                 precision = options.precision;
             }
-            [animations, transformations].forEach(mergeable => {
-                const transforming = mergeable === transformations;
+            [animations, transforms].forEach(mergeable => {
+                const transforming = mergeable === transforms;
                 if (!mergeable || mergeable.length === 0 || !transforming && $util.hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_ANIMATE) || transforming && $util.hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_TRANSFORM)) {
                     return;
                 }

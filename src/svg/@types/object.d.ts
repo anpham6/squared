@@ -130,6 +130,7 @@ export interface SvgBuildOptions {
 
 export interface SvgSynchronizeOptions {
     keyTimeMode?: number;
+    framesPerSecond?: number;
     precision?: number;
     element?: SVGGeometryElement;
 }

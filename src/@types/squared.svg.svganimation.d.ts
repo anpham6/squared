@@ -76,6 +76,7 @@ declare global {
             distance: string;
             rotate: string;
             rotateData?: NumberValue[];
+            framesPerSecond?: number;
             readonly keyPoints: number[];
             readonly offsetLength: number;
             readonly offsetPath?: SvgOffsetPath[];

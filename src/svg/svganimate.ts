@@ -466,7 +466,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     get playable() {
-        return !this.paused && this.keyTimes && this.keyTimes.length > 1 && this.duration > 0;
+        return !this.paused && this.duration > 0 && this.keyTimes && this.keyTimes.length > 1;
     }
 
     get fillReplace() {

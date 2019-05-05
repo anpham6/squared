@@ -63,7 +63,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
 
     public synchronize(options?: SvgSynchronizeOptions) {
         if (!this.documentRoot && this.animations.length) {
-            this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(), undefined, options);
+            this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
         }
         super.synchronize(options);
     }
