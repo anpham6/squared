@@ -68,10 +68,15 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 }
             }
             if (!requireWidth && node.has('width') && node.actualWidth < Math.floor(node.bounds.width)) {
-                if (!node.has('minWidth')) {
-                    node.android('minWidth', $css.formatPX(node.actualWidth));
+                if (mainData.layoutFixed) {
+                    node.android('width', $css.formatPX(node.bounds.width), true);
                 }
-                node.css('width', 'auto', true);
+                else {
+                    if (!node.has('minWidth')) {
+                        node.android('minWidth', $css.formatPX(node.actualWidth));
+                    }
+                    node.css('width', 'auto', true);
+                }
             }
             if (node.has('height') && node.actualHeight < Math.floor(node.bounds.height)) {
                 if (!node.has('minHeight')) {
@@ -120,9 +125,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     public postOptimize(node: T) {
         const layoutWidth = $util.convertInt(node.android('layout_width'));
         if (layoutWidth > 0) {
-            const actualWidth = node.bounds.width;
-            if (actualWidth > layoutWidth) {
-                node.android('layout_width', $css.formatPX(actualWidth));
+            if (node.bounds.width > layoutWidth) {
+                node.android('layout_width', $css.formatPX(node.bounds.width));
             }
             if (layoutWidth > 0 && node.cssInitial('width') === 'auto' && node.renderChildren.every(item => item.inlineWidth)) {
                 node.renderEach((item: T) => {

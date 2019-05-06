@@ -15,49 +15,47 @@ const $util = squared.lib.util;
 
 const getFixedNodes = (node: View) => node.filter(item => !item.pageFlow && item.leftTopAxis);
 
-const withinBoxRegion = (rect: number[], value: number) => rect.some(coord => coord < value);
-
 export default class Fixed<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
         if (node.naturalElement && (node.documentBody || node.contentBoxWidth > 0 || node.contentBoxHeight > 0)) {
             const fixed = getFixedNodes(node);
             if (fixed.length) {
-                const top: number[] = [];
-                const right: number[] = [];
-                const bottom: number[] = [];
-                const left: number[] = [];
+                const paddingTop = node.paddingTop + (node.documentBody ? node.marginTop : 0);
+                const paddingRight = node.paddingRight + (node.documentBody ? node.marginRight : 0);
+                const paddingBottom = node.paddingBottom + (node.documentBody ? node.marginBottom : 0);
+                const paddingLeft = node.paddingLeft + (node.documentBody ? node.marginLeft : 0);
+                let valid = false;
                 let fixedRight = false;
                 let fixedBottom = false;
                 for (const item of fixed) {
                     if (item.has('top')) {
-                        if (node.paddingTop > 0 && item.top >= 0) {
-                            top.push(item.top);
+                        if (item.top >= 0 && item.top < paddingTop) {
+                            valid = true;
                         }
                     }
-                    else if (node.paddingBottom > 0 && item.bottom >= 0 && item.has('bottom')) {
-                        bottom.push(item.bottom);
-                        if (item.position === 'fixed') {
-                            fixedBottom = true;
+                    else {
+                        if (item.bottom >= 0 && item.has('bottom') && (item.bottom < paddingBottom || node.documentBody && node.has('height'))) {
+                            valid = true;
+                            if (item.position === 'fixed') {
+                                fixedBottom = true;
+                            }
                         }
                     }
                     if (item.has('left')) {
-                        if (node.paddingLeft > 0 && item.left >= 0) {
-                            left.push(item.left);
+                        if (item.left >= 0 && item.left < paddingLeft) {
+                            valid = true;
                         }
                     }
-                    else if (node.paddingRight > 0 && item.right >= 0 && item.has('right')) {
-                        right.push(item.right);
-                        if (item.position === 'fixed') {
-                            fixedRight = true;
+                    else {
+                        if (item.right >= 0 && item.has('right') && (item.right < paddingRight || node.documentBody && node.has('width'))) {
+                            valid = true;
+                            if (item.position === 'fixed') {
+                                fixedRight = true;
+                            }
                         }
                     }
                 }
-                if (withinBoxRegion(top, node.paddingTop + (node.documentBody ? node.marginTop : 0)) ||
-                    withinBoxRegion(right, node.paddingRight + (node.documentBody ? node.marginRight : 0)) ||
-                    withinBoxRegion(bottom, node.paddingBottom + (node.documentBody ? node.marginBottom : 0)) ||
-                    withinBoxRegion(left, node.paddingLeft + (node.documentBody ? node.marginLeft : 0)) ||
-                    node.documentBody && (right.length && node.has('width') || bottom.length && node.has('height')))
-                {
+                if (valid) {
                     if (node.documentBody) {
                         node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData', <FixedData> { fixedRight, fixedBottom });
                     }

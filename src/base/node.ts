@@ -1498,6 +1498,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.positionRelative;
     }
 
+    set positionAuto(value) {
+        this._cached.positionAuto = value;
+    }
     get positionAuto() {
         if (this._cached.positionAuto === undefined) {
             const styleMap = this._initial.iteration === -1 ? this._styleMap : this._initial.styleMap;

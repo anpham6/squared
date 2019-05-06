@@ -75,6 +75,8 @@ export interface ListData {
 
 export interface TableData {
     layoutType: number;
+    layoutFixed: boolean;
+    borderCollapse: boolean;
     expand: boolean;
     rowCount: number;
     columnCount: number;

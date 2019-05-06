@@ -766,7 +766,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             width = this.parseUnit(this.css('maxWidth'));
                         }
                     }
-                    else if (!this.pageFlow && this.textElement && this.multiline && this.inlineWidth) {
+                    else if (!this.pageFlow && this.textElement && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && !/\n/.test(this.textContent)) {
                         width = Math.ceil(this.bounds.width);
                     }
                     if (width !== -1) {

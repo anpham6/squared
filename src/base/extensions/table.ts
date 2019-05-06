@@ -16,31 +16,31 @@ const enum LAYOUT_TABLE {
     NONE = 0,
     STRETCH = 1,
     FIXED = 2,
-    VARIABLE = 3
+    VARIABLE = 3,
+    COMPRESS = 4
 }
 
 const REGEXP_BORDER = /none|\s0px|rgba\(0, 0, 0, 0\)|transparent/;
 const REGEXP_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
 
 export default abstract class Table<T extends Node> extends Extension<T> {
-    public static createDataAttribute(): TableData {
+    public static createDataAttribute(node: Node): TableData {
         return {
             layoutType: 0,
             rowCount: 0,
             columnCount: 0,
+            layoutFixed: node.css('tableLayout') === 'fixed',
+            borderCollapse: node.css('borderCollapse') === 'collapse',
             expand: false
         };
     }
 
     public processNode(node: T) {
-        const mainData = Table.createDataAttribute();
+        const mainData = Table.createDataAttribute(node);
         const table: T[] = [];
         function setAutoWidth(td: T) {
             td.data(EXT_NAME.TABLE, 'percent', `${Math.round((td.bounds.width / node.box.width) * 100)}%`);
             td.data(EXT_NAME.TABLE, 'expand', true);
-        }
-        function setBoundsWidth(td: T) {
-            td.css('width', $css.formatPX(td.bounds.width), true);
         }
         function inheritStyles(section: T[]) {
             if (section.length) {
@@ -56,6 +56,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 }
             }
         }
+        const setBoundsWidth = (td: T) => td.css('width', $css.formatPX(td.bounds.width), true);
         const thead: T[] = [];
         const tbody: T[] = [];
         const tfoot: T[] = [];
@@ -78,12 +79,10 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             section.hide();
         }
         inheritStyles(tfoot);
-        const layoutFixed = node.css('tableLayout') === 'fixed';
-        const borderCollapse = node.css('borderCollapse') === 'collapse';
-        const [horizontal, vertical] = borderCollapse ? [0, 0] : $util.replaceMap<string, number>(node.css('borderSpacing').split(' '), value => parseInt(value));
+        const [horizontal, vertical] = mainData.borderCollapse ? [0, 0] : $util.replaceMap<string, number>(node.css('borderSpacing').split(' '), value => parseFloat(value));
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
-        const colgroup = node.element && node.element.querySelector('COLGROUP');
+        const colgroup = (<Element> node.element).querySelector('COLGROUP');
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
         const tableFilled: T[][] = [];
@@ -91,7 +90,6 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const rowCount = table.length;
         let columnIndex: number[] = new Array(rowCount).fill(0);
         let columnCount = 0;
-        let cellCount = 0;
         for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
             rowWidth[i] = horizontal;
@@ -180,7 +178,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 const columnWidth = td.cssInitial('width');
                 const m = columnIndex[i];
                 const reevaluate = mapWidth[m] === undefined || mapWidth[m] === 'auto';
-                if (i === 0 || reevaluate || !layoutFixed) {
+                if (i === 0 || reevaluate || !mainData.layoutFixed) {
                     if (columnWidth === '' || columnWidth === 'auto') {
                         if (mapWidth[m] === undefined) {
                             mapWidth[m] = columnWidth || '0px';
@@ -195,12 +193,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     else {
                         const length = $css.isLength(mapWidth[m]);
                         const percent = $css.isPercent(columnWidth);
-                        if (reevaluate || td.bounds.width < mapBounds[m] || td.bounds.width === mapBounds[m] && (
-                                length && percent ||
-                                percent && $css.isPercent(mapWidth[m]) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m]) ||
-                                length && $css.isLength(columnWidth) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m])
-                           ))
-                        {
+                        if (reevaluate || td.bounds.width < mapBounds[m] || td.bounds.width === mapBounds[m] && (length && percent || percent && $css.isPercent(mapWidth[m]) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m]) || length && $css.isLength(columnWidth) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m]))) {
                             mapWidth[m] = columnWidth;
                         }
                         if (reevaluate || element.colSpan === 1) {
@@ -228,33 +221,17 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     }
                 }
                 columnIndex[i] += element.colSpan;
-                cellCount++;
             });
             columnCount = Math.max(columnCount, columnIndex[i]);
         }
-        if (horizontal === 0) {
-            node.modifyBox(BOX_STANDARD.PADDING_LEFT, null);
-            node.modifyBox(BOX_STANDARD.PADDING_RIGHT, null);
-        }
-        else if (cellCount > 1) {
+        node.resetBox(BOX_STANDARD.PADDING);
+        if (horizontal > 0) {
             node.modifyBox(BOX_STANDARD.PADDING_LEFT, horizontal);
             node.modifyBox(BOX_STANDARD.PADDING_RIGHT, horizontal);
         }
-        else {
-            node.modifyBox(BOX_STANDARD.MARGIN_LEFT, horizontal);
-            node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, horizontal);
-        }
-        if (vertical === 0) {
-            node.modifyBox(BOX_STANDARD.PADDING_TOP, null);
-            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, null);
-        }
-        else if (cellCount > 1) {
+        if (vertical > 0) {
             node.modifyBox(BOX_STANDARD.PADDING_TOP, vertical);
             node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, vertical);
-        }
-        else {
-            node.modifyBox(BOX_STANDARD.MARGIN_TOP, vertical);
-            node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, vertical);
         }
         if (node.has('width', CSS_STANDARD.LENGTH) && mapWidth.some(value => $css.isPercent(value))) {
             $util.replaceMap<string, string>(mapWidth, (value, index) => {
@@ -286,20 +263,23 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto', true);
-                    if (!layoutFixed) {
+                    if (!mainData.layoutFixed) {
                         for (const item of node.cascade()) {
                             item.css('width', 'auto', true);
                         }
                     }
                 }
             }
-            if (layoutFixed && !node.has('width')) {
+            if (mainData.layoutFixed && !node.has('width')) {
                 node.css('width', $css.formatPX(node.bounds.width), true);
             }
         }
         const mapPercent = mapWidth.reduce((a, b) => a + ($css.isPercent(b) ? parseFloat(b) : 0), 0);
         mainData.layoutType = (() => {
-            if (mapWidth.some(value => $css.isPercent(value)) || mapWidth.every(value => $css.isLength(value) && value !== '0px')) {
+            if (mainData.layoutFixed && mapWidth.reduce((a, b) => a + ($css.isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
+                return LAYOUT_TABLE.COMPRESS;
+            }
+            else if (mapWidth.some(value => $css.isPercent(value)) || mapWidth.every(value => $css.isLength(value) && value !== '0px')) {
                 return LAYOUT_TABLE.VARIABLE;
             }
             else if (mapWidth.every(value => value === mapWidth[0])) {
@@ -400,7 +380,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                                     td.data(EXT_NAME.TABLE, 'downsized', false);
                                 }
                                 else {
-                                    if (layoutFixed) {
+                                    if (mainData.layoutFixed) {
                                         setAutoWidth(td);
                                         td.data(EXT_NAME.TABLE, 'downsized', true);
                                     }
@@ -425,13 +405,18 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                                 td.css('width', '0px');
                             }
                             else {
-                                if (layoutFixed) {
+                                if (mainData.layoutFixed) {
                                     td.data(EXT_NAME.TABLE, 'downsized', true);
                                 }
                                 else {
                                     setBoundsWidth(td);
                                 }
                                 td.data(EXT_NAME.TABLE, 'expand', false);
+                            }
+                            break;
+                        case LAYOUT_TABLE.COMPRESS:
+                            if (!$css.isLength(columnWidth)) {
+                                td.hide();
                             }
                             break;
 
@@ -451,7 +436,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             }
             tr.hide();
         }
-        if (borderCollapse) {
+        if (mainData.borderCollapse) {
             const borderTopColor = node.css('borderTopColor');
             const borderTopStyle = node.css('borderTopStyle');
             const borderTopWidth = node.css('borderTopWidth');

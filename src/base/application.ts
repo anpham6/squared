@@ -569,9 +569,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                         const absoluteParent = node.absoluteParent as T;
                         if (absoluteParent) {
                             parent = absoluteParent;
-                            if (node.positionAuto && node.withinX(parent.box) && node.withinY(parent.box) && !node.previousSiblings().some(item => item.multiline || item.excluded && !item.blockStatic) && (node.nextSiblings().every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === parent.getLastChildElement())) {
-                                node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
-                                node.positionStatic = true;
+                            if (node.positionAuto) {
+                                if (!node.previousSiblings().some(item => item.multiline || item.excluded && !item.blockStatic)) {
+                                    node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
+                                }
+                                else {
+                                    node.positionAuto = false;
+                                }
                                 parent = actualParent;
                             }
                             else if (this.userSettings.supportNegativeLeftTop) {
@@ -661,6 +665,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         for (const node of this.processing.cache) {
             if (alteredParent.has(node)) {
                 const layers: Array<T[]> = [];
+                let maxIndex = -1;
                 node.each((item: T) => {
                     if (item.siblingIndex === Number.POSITIVE_INFINITY) {
                         for (const adjacent of node.children) {
@@ -679,10 +684,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                             }
                         }
                     }
+                    else if (item.siblingIndex > maxIndex) {
+                        maxIndex = item.siblingIndex;
+                    }
                 });
                 if (layers.length) {
                     const children = node.children as T[];
-                    for (let j = 0, k = 0; j < layers.length; j++, k++) {
+                    for (let j = 0, k = 0, l = 1; j < layers.length; j++, k++) {
                         const order = layers[j];
                         if (order) {
                             order.sort((a, b) => {
@@ -694,9 +702,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 }
                                 return 0;
                             });
-                            for (let l = 0; l < children.length; l++) {
-                                if (order.includes(children[l])) {
-                                    children[l] = undefined as any;
+                            for (const item of order) {
+                                item.siblingIndex = maxIndex + l++;
+                            }
+                            for (let m = 0; m < children.length; m++) {
+                                if (order.includes(children[m])) {
+                                    children[m] = undefined as any;
                                 }
                             }
                             children.splice(k, 0, ...order);
@@ -995,6 +1006,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     }
                                     else {
                                         break traverse;
+                                    }
+                                }
+                                else if (item.positionAuto) {
+                                    if (vertical.length) {
+                                        break;
+                                    }
+                                    else {
+                                        horizontal.push(item);
                                     }
                                 }
                             }

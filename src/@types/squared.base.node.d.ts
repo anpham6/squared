@@ -14,6 +14,7 @@ declare global {
             siblingIndex: number;
             documentRoot: boolean;
             positionStatic: boolean;
+            positionAuto: boolean;
             baselineActive: boolean;
             baselineAltered: boolean;
             lineBreakLeading: boolean;
@@ -86,7 +87,6 @@ declare global {
             readonly display: string;
             readonly position: string;
             readonly positionRelative: boolean;
-            readonly positionAuto: boolean;
             readonly top: number;
             readonly right: number;
             readonly bottom: number;
