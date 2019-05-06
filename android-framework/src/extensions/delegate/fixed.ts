@@ -30,22 +30,22 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                 let fixedBottom = false;
                 for (const item of fixed) {
                     if (item.has('top')) {
-                        if (item.top >= 0) {
+                        if (node.paddingTop > 0 && item.top >= 0) {
                             top.push(item.top);
                         }
                     }
-                    else if (item.bottom >= 0 && item.has('bottom')) {
+                    else if (node.paddingBottom > 0 && item.bottom >= 0 && item.has('bottom')) {
                         bottom.push(item.bottom);
                         if (item.position === 'fixed') {
                             fixedBottom = true;
                         }
                     }
                     if (item.has('left')) {
-                        if (item.left >= 0) {
+                        if (node.paddingLeft > 0 && item.left >= 0) {
                             left.push(item.left);
                         }
                     }
-                    else if (item.right >= 0 && item.has('right')) {
+                    else if (node.paddingRight > 0 && item.right >= 0 && item.has('right')) {
                         right.push(item.right);
                         if (item.position === 'fixed') {
                             fixedRight = true;

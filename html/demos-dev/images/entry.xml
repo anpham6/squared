@@ -71,13 +71,13 @@
                     android:id="@+id/textview_18"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/u_add_u"
+                    android:text="@string/add"
                     style="@style/A" />
                 <TextView
                     android:id="@+id/textview_19"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol77986"
+                    android:text="@string/__symbol46015"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -217,13 +217,13 @@
                     android:id="@+id/textview_21"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/u_add_u"
+                    android:text="@string/add"
                     style="@style/A" />
                 <TextView
                     android:id="@+id/textview_22"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol77986"
+                    android:text="@string/__symbol46015"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -661,13 +661,13 @@
                     android:id="@+id/textview_24"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/u_add_u"
+                    android:text="@string/add"
                     style="@style/A" />
                 <TextView
                     android:id="@+id/textview_25"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol77986"
+                    android:text="@string/__symbol46015"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -799,8 +799,9 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol77986">):</string>
+    <string name="__symbol46015">):</string>
     <string name="active">Active:</string>
+    <string name="add"><u>Add</u></string>
     <string name="all">All</string>
     <string name="birth">Birth</string>
     <string name="branch">Branch:</string>
@@ -824,7 +825,6 @@
     <string name="time">Time:</string>
     <string name="topic">Topic (</string>
     <string name="type">Type:</string>
-    <string name="u_add_u"><u>Add</u></string>
     <string name="update">Update</string>
     <string name="variant">Variant</string>
     <string name="version">Version:</string>

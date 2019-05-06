@@ -411,13 +411,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
             const [rowStart, rowSpan] = applyLayout(target, 'row', 'height');
-            if (mainData.alignContent === 'normal' && rowSpan === 1 && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === 'auto') && (mainData.rowHeightCount[rowStart] === 1 || node.bounds.height < mainData.rowHeight[rowStart]) && (parent.hasHeight && !target.has('height') || mainData.rowSpanMultiple[rowStart] === true)) {
-                if (node.initial.bounds && node.bounds.height > node.initial.bounds.height) {
-                    target.android('layout_height', '0px');
-                    if (mainData.rowHeightCount[rowStart] === 1) {
-                        target.android('layout_rowWeight', $math.truncate(mainData.rowWeight[rowStart] || 1, node.localSettings.floatPrecision));
-                    }
-                }
+            if (mainData.alignContent === 'normal' && rowSpan === 1 && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === 'auto') && (mainData.rowHeightCount[rowStart] === 1 || node.bounds.height < mainData.rowHeight[rowStart]) && node.initial.bounds && node.bounds.height > node.initial.bounds.height) {
+                target.css('minHeight', $css.formatPX(node.actualHeight), true);
             }
             if (!target.has('height') && !(mainData.row.count === 1 && mainData.alignContent === 'space-between')) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');

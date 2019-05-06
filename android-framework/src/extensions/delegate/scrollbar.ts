@@ -16,7 +16,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
         return node.length > 0 && (
             node.overflowX ||
             node.overflowY ||
-            this.included(<HTMLElement> node.element) && (node.hasWidth || node.hasHeight)
+            this.included(<HTMLElement> node.element) && (node.has('width') || node.hasHeight && node.has('height'))
         );
     }
 
@@ -34,11 +34,11 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
         }
         else {
             let overflowType = 0;
-            if (node.hasWidth) {
+            if (node.has('width')) {
                 overflowType |= $enum.NODE_ALIGNMENT.HORIZONTAL;
                 overflow.push(SCROLL_HORIZONTAL);
             }
-            if (node.hasHeight) {
+            if (node.hasHeight && node.has('height')) {
                 overflowType |= $enum.NODE_ALIGNMENT.VERTICAL;
                 overflow.push(SCROLL_VERTICAL);
             }

@@ -2156,10 +2156,8 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
                 default:
                     const color = findColorName(value);
                     if (color) {
-                        rgba = {
-                            ...color.rgb,
-                            a: parseOpacity(opacity)
-                        };
+                        rgba = <RGBA> color.rgb;
+                        rgba.a = parseOpacity(opacity);
                         key = value;
                     }
                     break;

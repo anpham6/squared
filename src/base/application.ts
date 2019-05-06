@@ -176,9 +176,10 @@ export default class Application<T extends Node> implements squared.base.Applica
     public reset() {
         for (const id of this.session.active) {
             this.session.cache.each(node => {
-                if (node.element && node.naturalElement && !node.pseudoElement) {
-                    $session.deleteElementCache(node.element, 'node', id);
-                    $session.deleteElementCache(node.element, 'styleMap', id);
+                if (node.naturalElement && !node.pseudoElement) {
+                    const element = <Element> node.element;
+                    $session.deleteElementCache(element, 'node', id);
+                    $session.deleteElementCache(element, 'styleMap', id);
                 }
             });
         }
@@ -367,35 +368,22 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public renderNode(layout: Layout<T>) {
-        if (layout.itemCount === 0) {
-            return this.controllerHandler.renderNode(layout);
-        }
-        else {
-            return this.controllerHandler.renderNodeGroup(layout);
-        }
+        return layout.itemCount === 0 ? this.controllerHandler.renderNode(layout) : this.controllerHandler.renderNodeGroup(layout);
     }
 
-    public renderLayout(layout: Layout<T>, outerParent: T) {
+    public addLayout(layout: Layout<T>) {
         if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.FLOAT)) {
             if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.HORIZONTAL)) {
                 layout = this.processFloatHorizontal(layout);
             }
             else if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.VERTICAL)) {
-                layout = this.processFloatVertical(layout, outerParent);
+                layout = this.processFloatVertical(layout);
             }
         }
-        return layout.containerType !== 0 ? this.renderNode(layout) : undefined;
-    }
-
-    public addLayout(layout: Layout<T>, outerParent?: T) {
-        let template: NodeTemplate<T> | undefined;
-        if (outerParent) {
-            template = this.renderLayout(layout, outerParent);
+        if (layout.containerType !== 0) {
+            return this.addLayoutTemplate(layout.parent, layout.node, this.renderNode(layout), layout.renderIndex);
         }
-        else {
-            template = this.renderNode(layout);
-        }
-        return this.addLayoutTemplate(layout.parent, layout.node, template, layout.renderIndex);
+        return false;
     }
 
     public addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index = -1) {
@@ -871,25 +859,27 @@ export default class Application<T extends Node> implements squared.base.Applica
                     continue;
                 }
                 const axisY = parent.duplicate() as T[];
-                const hasFloat = axisY.some(node => node.floating);
+                let hasFloat = false;
                 let cleared!: Map<T, string>;
-                if (hasFloat) {
-                    cleared = <Map<T, string>> NodeList.linearData(parent.actualChildren, true).cleared;
+                if (axisY.length > 1) {
+                    hasFloat = parent.some(node => node.floating);
+                    if (hasFloat) {
+                        cleared = <Map<T, string>> NodeList.linearData(parent.actualChildren, true).cleared;
+                    }
                 }
                 let k = -1;
                 while (++k < axisY.length) {
                     let nodeY = axisY[k];
-                    if (!nodeY.visible || nodeY.rendered || nodeY.htmlElement && this.rootElements.has(<HTMLElement> nodeY.element) && !nodeY.documentRoot && !nodeY.documentBody) {
+                    if (!nodeY.visible || nodeY.rendered || nodeY.htmlElement && !nodeY.documentRoot && this.rootElements.has(<HTMLElement> nodeY.element)) {
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    const extendable = nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE);
-                    if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || extendable) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
-                        let verticalExtended = false;
+                        let extended = false;
                         function checkHorizontal(node: T) {
-                            if (vertical.length || verticalExtended) {
+                            if (vertical.length || extended) {
                                 return false;
                             }
                             horizontal.push(node);
@@ -907,7 +897,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         let l = k;
                         let m = 0;
-                        if (extendable && parentY.layoutVertical) {
+                        if (nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE) && parentY.layoutVertical) {
                             horizontal.push(nodeY);
                             l++;
                             m++;
@@ -967,7 +957,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                                 if (!item.floating && floatActive.size > 0) {
                                                                     item.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
                                                                     horizontal.push(item);
-                                                                    verticalExtended = true;
+                                                                    extended = true;
                                                                     continue;
                                                                 }
                                                                 break traverse;
@@ -1025,7 +1015,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) && segEnd === axisY[axisY.length - 1]) {
                             parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
                         }
-                        if (result && this.addLayout(result.layout, parentY)) {
+                        if (result && this.addLayout(result.layout)) {
                             parentY = nodeY.parent as T;
                         }
                     }
@@ -1123,7 +1113,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             k--;
                             continue;
                         }
-                        this.addLayout(result.layout, parentY);
+                        this.addLayout(result.layout);
                     }
                 }
             }
@@ -1190,7 +1180,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         break;
                 }
             }
-            if (inline.length === itemCount || left.length === itemCount || right.length === itemCount || (left.length === 0 || right.length === 0) && !inline.some(item => item.blockStatic)) {
+            if (left.length === itemCount || right.length === itemCount || inline.length === itemCount || (left.length === 0 || right.length === 0) && !inline.some(item => item.blockStatic)) {
                 controller.processLayoutHorizontal(layout);
                 return layout;
             }
@@ -1208,7 +1198,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         let pendingFloat = 0;
         for (const node of layout) {
             const cleared = layout.cleared.get(node);
-            if (cleared && ($util.hasBit(pendingFloat, cleared === 'right' ? 4 : 2) || pendingFloat !== 0 && cleared === 'both')) {
+            if (cleared) {
                 switch (cleared) {
                     case 'left':
                         if ($util.hasBit(pendingFloat, 2)) {
@@ -1495,11 +1485,11 @@ export default class Application<T extends Node> implements squared.base.Applica
         return layout;
     }
 
-    protected processFloatVertical(layout: Layout<T>, outerParent: T) {
+    protected processFloatVertical(layout: Layout<T>) {
         const controller = this.controllerHandler;
         const vertical = controller.containerTypeVertical;
         if (layout.containerType !== 0) {
-            const parent = controller.createNodeGroup(layout.node, [layout.node], outerParent);
+            const parent = controller.createNodeGroup(layout.node, [layout.node], layout.parent);
             this.addLayout(new Layout(
                 parent,
                 layout.node,
@@ -1743,12 +1733,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                 case '""':
                     break;
                 case 'open-quote':
-                    content = target === 'before' ? '&quot;' : '';
-                    tagName = 'span';
+                    if (target === 'before') {
+                        content = '&quot;';
+                    }
                     break;
                 case 'close-quote':
-                    content = target === 'after' ? '&quot;' : '';
-                    tagName = 'span';
+                    if (target === 'after') {
+                        content = '&quot;';
+                    }
                     break;
                 default:
                     if (value.startsWith('url(')) {
@@ -2048,15 +2040,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                         const fontStyle = styleMatch ? styleMatch[1].toLowerCase() : 'normal';
                         const fontWeight = weightMatch ? parseInt(weightMatch[1]) : 400;
                         for (const value of srcMatch[1].split($regex.XML.SEPARATOR)) {
-                            const url = REGEXP_CACHED.URL.exec(value);
-                            if (url) {
+                            const urlMatch = REGEXP_CACHED.URL.exec(value);
+                            if (urlMatch) {
                                 let srcUrl: string | undefined;
                                 let srcLocal: string | undefined;
-                                if (url[1] === 'url') {
-                                    srcUrl = $util.resolvePath(url[2].trim());
+                                if (urlMatch[1] === 'url') {
+                                    srcUrl = $util.resolvePath(urlMatch[2].trim());
                                 }
                                 else {
-                                    srcLocal = url[2].trim();
+                                    srcLocal = urlMatch[2].trim();
                                 }
                                 this.resourceHandler.addFont({
                                     fontFamily,
@@ -2064,7 +2056,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     fontStyle,
                                     srcUrl,
                                     srcLocal,
-                                    srcFormat: url[3].toLowerCase().trim()
+                                    srcFormat: urlMatch[3].toLowerCase().trim()
                                 });
                             }
                         }

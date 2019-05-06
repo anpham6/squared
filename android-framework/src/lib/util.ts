@@ -6,6 +6,8 @@ import View from '../view';
 import { XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
+const REGEXP_ID = /^@\+?id\//;
+
 function calculateBias(start: number, end: number, accuracy = 4) {
     if (start === 0) {
         return 0;
@@ -19,7 +21,7 @@ function calculateBias(start: number, end: number, accuracy = 4) {
 }
 
 export function stripId(value: string) {
-    return value ? value.replace(/^@\+?id\//, '') : '';
+    return value ? value.replace(REGEXP_ID, '') : '';
 }
 
 export function getHorizontalBias(node: View) {

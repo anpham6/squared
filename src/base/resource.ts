@@ -17,15 +17,15 @@ const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
-const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,8}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
+const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
 
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
+const REGEXP_NEWLINE = /\n/g;
 
 function removeExcluded(node: Node, element: Element, attr: string) {
     let value: string = element[attr];
-    const length = node.actualChildren.length;
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < node.actualChildren.length; i++) {
         const item = node.actualChildren[i];
         if (item.excluded || item.pseudoElement || !item.pageFlow || item.dataset.target) {
             if ($util.isString(item[attr])) {
@@ -34,7 +34,7 @@ function removeExcluded(node: Node, element: Element, attr: string) {
             else if (i === 0) {
                 value = $util.trimStart(value, ' ');
             }
-            else if (i === length - 1) {
+            else if (i === node.actualChildren.length - 1) {
                 value = $util.trimEnd(value, ' ');
             }
         }
@@ -49,8 +49,8 @@ function parseColorStops(node: Node, gradient: Gradient, value: string, opacity:
     const radial = <RadialGradient> gradient;
     const repeating = radial.repeating === true;
     const extent = repeating && gradient.type === 'radial' ? radial.radiusExtent / radial.radius : 1;
-    const result: ColorStop[] = [];
     const pattern = new RegExp(STRING_COLORSTOP, 'g');
+    const result: ColorStop[] = [];
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(value)) !== null) {
         const color = $color.parseColor(match[1], opacity, true);
@@ -154,7 +154,7 @@ function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: st
     value = value.replace($regex.ESCAPE.U00A0, '&#160;');
     switch (node.css('whiteSpace')) {
         case 'nowrap':
-            value = value.replace(/\n/g, ' ');
+            value = value.replace(REGEXP_NEWLINE, ' ');
             break;
         case 'pre':
         case 'pre-wrap':
@@ -162,12 +162,12 @@ function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: st
                 value = value.replace(/^\s*?\n/, '');
             }
             value = value
-                .replace(/\n/g, '\\n')
+                .replace(REGEXP_NEWLINE, '\\n')
                 .replace(/\s/g, '&#160;');
             break;
         case 'pre-line':
             value = value
-                .replace(/\n/g, '\\n')
+                .replace(REGEXP_NEWLINE, '\\n')
                 .replace(/\s+/g, ' ');
             break;
         default:

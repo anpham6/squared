@@ -25,8 +25,7 @@ declare global {
             saveAllToDisk(): void;
             parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
             renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
-            renderLayout(layout: Layout<T>, outerParent: T): NodeTemplate<T> | undefined;
-            addLayout(layout: Layout<T>, outerParent?: T): boolean;
+            addLayout(layout: Layout<T>): boolean;
             addLayoutTemplate(parent: T, node: T, template?: NodeTemplate<T>, index?: number): boolean;
             saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
             createNode(element: Element, append?: boolean, parent?: T, children?: T[]): T;

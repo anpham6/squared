@@ -136,10 +136,10 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
         }
         if (Math.floor(offset) > 0) {
             if (top) {
-                node.modifyBox(usePadding && node.textElement && !inlineStyle ? $enum.BOX_STANDARD.PADDING_TOP : $enum.BOX_STANDARD.MARGIN_TOP, Math.round(offset));
+                node.modifyBox(usePadding && node.textElement && !node.plainText && !inlineStyle ? $enum.BOX_STANDARD.PADDING_TOP : $enum.BOX_STANDARD.MARGIN_TOP, Math.round(offset));
             }
             if (bottom) {
-                node.modifyBox(usePadding && node.textElement && !inlineStyle ? $enum.BOX_STANDARD.PADDING_BOTTOM : $enum.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
+                node.modifyBox(usePadding && node.textElement && !node.plainText && !inlineStyle ? $enum.BOX_STANDARD.PADDING_BOTTOM : $enum.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
             }
         }
     }
@@ -586,7 +586,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         else if ($css.isPercent(width)) {
                             if (this.imageElement) {
-                                if (this.android('adjustViewBounds') === 'true') {
+                                if (width === '100%') {
+                                    layoutWidth = 'match_parent';
+                                    this.android('adjustViewBounds', 'true');
+                                }
+                                else if (this.android('adjustViewBounds') === 'true') {
                                     layoutWidth = 'wrap_content';
                                 }
                                 else {
@@ -669,7 +673,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         else if ($css.isPercent(height)) {
                             if (this.imageElement) {
-                                if (this.android('adjustViewBounds') === 'true') {
+                                if (height === '100%') {
+                                    layoutHeight = 'match_parent';
+                                    this.android('adjustViewBounds', 'true');
+                                }
+                                else if (this.android('adjustViewBounds') === 'true') {
                                     layoutHeight = 'wrap_content';
                                 }
                                 else {
@@ -1199,11 +1207,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                 }
             }
             else if (this.layoutVertical) {
-                if (this.layoutLinear) {
-                    const firstChild = renderChildren[0];
-                    if (firstChild.textElement && firstChild.baseline) {
-                        this.android('baselineAlignedChildIndex', '0');
-                    }
+                if (this.layoutLinear && !renderParent.is(CONTAINER_NODE.GRID) && renderChildren[0].textElement && renderChildren[0].baseline) {
+                    this.android('baselineAlignedChildIndex', '0');
                 }
             }
             if (renderParent.layoutConstraint) {

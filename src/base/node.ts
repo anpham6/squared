@@ -695,12 +695,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (parent) {
                     const absoluteParent = this.absoluteParent;
                     if (absoluteParent) {
-                        if (absoluteParent.has(attr, CSS_STANDARD.LENGTH)) {
-                            result *= horizontal ? absoluteParent.toFloat('width') : absoluteParent.toFloat('height');
-                        }
-                        else {
-                            result *= absoluteParent.box[attr];
-                        }
+                        result *= absoluteParent.has(attr, CSS_STANDARD.LENGTH) ? absoluteParent.toFloat(attr) : absoluteParent.box[attr];
                         return result;
                     }
                 }

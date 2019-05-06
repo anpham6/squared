@@ -11,8 +11,8 @@ import Resource from './resource';
 
 import Accessibility from './extensions/accessibility';
 import CssGrid from './extensions/cssgrid';
-import Flexbox from './extensions/flexbox';
 import External from './extensions/external';
+import Flexbox from './extensions/flexbox';
 import Grid from './extensions/grid';
 import List from './extensions/list';
 import Relative from './extensions/relative';

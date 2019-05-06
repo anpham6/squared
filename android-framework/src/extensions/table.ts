@@ -34,7 +34,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 if (percent > 0) {
                                     item.android('layout_width', '0px');
                                     item.android('layout_columnWeight', $util.trimEnd(percent.toPrecision(3), '0'));
-                                    requireWidth = true;
+                                    requireWidth = !node.hasWidth;
                                 }
                             }
                             else {
@@ -50,14 +50,14 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 if (item.textElement && !/[\s\n\-]/.test(item.textContent.trim())) {
                                     item.android('maxLines', '1');
                                 }
-                                if (item.has('width') && item.toFloat('width') < item.bounds.width) {
+                                if (item.has('width') && item.actualWidth < item.bounds.width) {
                                     item.android('layout_width', $css.formatPX(item.bounds.width));
                                 }
                             }
                         }
                     }
                 });
-                if (!node.hasWidth && requireWidth) {
+                if (requireWidth) {
                     const above = node.ascend(false, item => item.hasWidth);
                     if (above.length && node.actualWidth >= above[0].actualWidth) {
                         node.android('layout_width', 'match_parent');
@@ -65,9 +65,6 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     else {
                         node.css('width', $css.formatPX(node.actualWidth), true);
                     }
-                }
-                else {
-                    requireWidth = false;
                 }
             }
             if (!requireWidth && node.has('width') && node.actualWidth < Math.floor(node.bounds.width)) {

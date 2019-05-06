@@ -4,6 +4,8 @@ import { CSS, STRING, UNIT, XML } from './regex';
 import { getElementCache, setElementCache } from './session';
 import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isNumber, isString, replaceMap, resolvePath } from './util';
 
+const REGEXP_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+
 function convertLength(value: string, dimension: number, fontSize?: number) {
     return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
 }
@@ -239,10 +241,9 @@ export function getKeyframeRules(): ObjectMap<CSSKeyframesData> {
 }
 
 export function parseKeyframeRule(rules: CSSRuleList) {
-    const pattern = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
     const result: CSSKeyframesData = {};
     for (let k = 0; k < rules.length; k++) {
-        const match = pattern.exec(rules[k].cssText);
+        const match = REGEXP_KEYFRAME.exec(rules[k].cssText);
         if (match) {
             for (let percent of (rules[k]['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
                 percent = percent.trim();

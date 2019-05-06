@@ -66,6 +66,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
         let maxRatio = NaN;
         for (const item of items) {
             const dimension = item.bounds[attr];
+            let growPercent = false;
             if (item.flexbox.grow > 0 || item.flexbox.shrink !== 1) {
                 const basis = item.flexbox.basis === 'auto' ? item.parseUnit(item.css(attr), horizontal) : item.parseUnit(item.flexbox.basis, horizontal);
                 if (basis > 0) {
@@ -99,8 +100,11 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
                     });
                     continue;
                 }
+                else if (item.flexbox.grow > 0 && dimension > item[attr]) {
+                    growPercent = true;
+                }
             }
-            if (percent && item.flexbox.alignSelf === 'auto' && !item[hasDimension]) {
+            if (item.flexbox.alignSelf === 'auto' && (percent && !item[hasDimension] || growPercent)) {
                 percentage.push(item);
             }
         }
@@ -511,7 +515,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             break;
                                         default: {
                                             chain.anchorParent(orientationInverse);
-                                            chain.anchorStyle(orientationInverse, 'packed', wrapReverse ? 1 : 0);
+                                            if (chain.innerWrapped === undefined || !chain.innerWrapped.autoMargin[orientationInverse]) {
+                                                chain.anchorStyle(orientationInverse, 'packed', wrapReverse ? 1 : 0);
+                                            }
                                             if (chain[HWL] === 0) {
                                                 const bounds = chain.initial.bounds && chain.initial.bounds[HWL];
                                                 const smaller = bounds < maxSize;
@@ -623,7 +629,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         if (spreadInside) {
                             segStart.anchorStyle(orientation, 'spread_inside', 0, false);
                         }
-                        else if (!centered) {
+                        else if (!centered && (seg.length > 1 || mainData.directionReverse)) {
                             segStart.anchorStyle(orientation, 'packed', mainData.directionReverse ? 1 : 0, false);
                         }
                     }

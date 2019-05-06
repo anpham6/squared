@@ -119,6 +119,7 @@ squared.settings = {
     ],
     targetAPI: 28,
     resolutionDPI: 160,
+    framesPerSecond: 60,
     supportRTL: true,
     preloadImages: true,
     supportNegativeLeftTop: true,

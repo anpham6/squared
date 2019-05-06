@@ -62,6 +62,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                         if (stored) {
                             const renderParent = node.renderParent as T;
                             let value = stored.value;
+                            let name = stored.key || value;
                             if (renderParent && renderParent.layoutRelative) {
                                 if (node.alignParent('left') && !$css.isParentStyle(node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
                                     const textContent = node.textContent;
@@ -125,7 +126,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                 const width = metrics && metrics.width || node.fontSize / 2;
                                 value = '&#160;'.repeat(Math.max(Math.floor(textIndent / width), 1)) + value;
                             }
-                            const name = Resource.addString(value, stored.key, this.options.numberResourceValue);
+                            name = Resource.addString(value, name, this.options.numberResourceValue);
                             if (name !== '') {
                                 node.android('text', this.options.numberResourceValue || !$util.isNumber(name) ? `@string/${name}` : name, false);
                             }

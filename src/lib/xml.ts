@@ -9,7 +9,6 @@ type XMLTagData = {
 };
 
 const REGEXP_INDENT = /^(\t+)(.*)$/;
-
 const REGEXP_FORMAT = {
     ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
     OPENTAG: /\s*>$/,

@@ -96,14 +96,14 @@ export default abstract class NodeGroup extends Node {
 
     get inlineFlow() {
         if (this._cached.inlineStatic === undefined) {
-            this._cached.inlineStatic = this.hasAlign(NODE_ALIGNMENT.SEGMENTED) || this.inlineStatic;
+            this._cached.inlineStatic = this.inlineStatic || this.hasAlign(NODE_ALIGNMENT.SEGMENTED);
         }
         return this._cached.inlineStatic;
     }
 
     get pageFlow() {
         if (this._cached.pageFlow === undefined) {
-            this._cached.pageFlow = this.every(node => node.pageFlow);
+            this._cached.pageFlow = !this.cssAny('position', 'absolute', 'fixed');
         }
         return this._cached.pageFlow;
     }
@@ -115,7 +115,7 @@ export default abstract class NodeGroup extends Node {
                 this._cached.baseline = value === 'baseline';
             }
             else {
-                this._cached.baseline = this.every(node => node.baseline);
+                this._cached.baseline = this.layoutHorizontal && this.every(node => node.baseline);
             }
         }
         return this._cached.baseline;

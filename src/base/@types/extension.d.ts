@@ -11,7 +11,6 @@ export interface CssGridData<T> {
     rowHeight: number[];
     rowHeightCount: number[];
     rowWeight: number[];
-    rowSpanMultiple: (true | undefined)[];
     templateAreas: ObjectMap<CssGridCellData>;
     alignItems: string;
     alignContent: string;

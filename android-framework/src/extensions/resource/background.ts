@@ -1181,10 +1181,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let ascend = node;
                 while (ascend) {
                     if (ascend.hasWidth) {
-                        imageWidth = ascend.actualWidth;
+                        imageWidth = ascend.bounds.width;
                     }
                     if (ascend.hasHeight) {
-                        imageHeight = ascend.actualHeight;
+                        imageHeight = ascend.bounds.height;
                     }
                     if (imageWidth > 0 && imageHeight > 0 || ascend.documentBody || !ascend.pageFlow) {
                         break;

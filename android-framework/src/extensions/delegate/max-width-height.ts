@@ -24,10 +24,10 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
         const maxWidth = node.css('maxWidth');
         const maxHeight = node.css('maxHeight');
         if ($css.isLength(maxWidth, true)) {
-            if (!node.hasWidth) {
+            if (!node.has('width')) {
                 node.android('layout_width', node.some(item => item.blockStatic) ? 'match_parent' : 'wrap_content');
             }
-            const width = $css.formatPX(node.parseUnit(maxWidth) + ($css.isPercent(maxWidth) ? 0 : node.contentBoxWidth + (node.marginLeft > 0 ? node.marginLeft : 0) + (node.marginRight > 0 ? node.marginRight : 0)));
+            const width = $css.formatPX(node.parseUnit(maxWidth) + ($css.isPercent(maxWidth) ? 0 : node.contentBoxWidth + Math.max(node.marginLeft, 0) + Math.max(node.marginRight, 0)));
             container.cssApply({ width, maxWidth: width }, true);
             if (parent.layoutElement) {
                 node.autoMargin.horizontal = false;
@@ -37,10 +37,10 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
             }
         }
         if ($css.isLength(maxHeight, true)) {
-            if (!node.hasHeight) {
+            if (!node.has('height')) {
                 node.android('layout_height', 'wrap_content');
             }
-            const height = $css.formatPX(node.parseUnit(maxHeight) + ($css.isPercent(maxHeight) ? 0 : node.contentBoxHeight + (node.marginTop > 0 ? node.marginTop : 0) + (node.marginBottom > 0 ? node.marginBottom : 0)));
+            const height = $css.formatPX(node.parseUnit(maxHeight) + ($css.isPercent(maxHeight) ? 0 : node.contentBoxHeight + Math.max(node.marginTop, 0) + Math.max(node.marginBottom, 0)));
             container.cssApply({ height, maxHeight: height }, true);
             if (parent.layoutElement) {
                 node.autoMargin.vertical = false;

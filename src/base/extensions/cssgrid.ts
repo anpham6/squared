@@ -83,7 +83,6 @@ export default class CssGrid<T extends Node> extends Extension<T> {
             rowHeight: [],
             rowHeightCount: [],
             rowWeight: [],
-            rowSpanMultiple: [],
             templateAreas: {},
             row: CssGrid.createDataRowAttribute(),
             column: CssGrid.createDataRowAttribute(),
@@ -708,16 +707,9 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 placement[colB] = placement[colA] + COLUMN_SPAN;
             }
             if (setDataRows(item, placement)) {
-                const rowStart = placement[0] - 1;
-                const rowSpan = placement[2] - placement[0];
-                if (rowSpan > 1) {
-                    for (let i = rowStart; i < rowSpan; i++) {
-                        mainData.rowSpanMultiple[i] = true;
-                    }
-                }
                 item.data(EXT_NAME.CSS_GRID, 'cellData', <CssGridCellData> {
-                    rowStart,
-                    rowSpan,
+                    rowStart: placement[0] - 1,
+                    rowSpan: placement[2] - placement[0],
                     columnStart: placement[1] - 1,
                     columnSpan: placement[3] - placement[1]
                 });
