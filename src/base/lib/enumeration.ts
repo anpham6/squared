@@ -15,7 +15,8 @@ export const enum NODE_ALIGNMENT {
     FLOAT = 512,
     RIGHT = 1024,
     SINGLE = 2048,
-    EXTENDABLE = 4096
+    EXTENDABLE = 4096,
+    CUSTOM = 8192
 }
 
 export const enum NODE_TEMPLATE {

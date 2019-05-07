@@ -224,11 +224,7 @@ function constraintPercentValue(node: View, dimension: string, opposing: boolean
         }
     }
     else if ($css.isPercent(value) && value !== '100%') {
-        let percent = parseFloat(value) / 100;
-        const paddingOffset = horizontal ? node.contentBoxWidth : node.contentBoxHeight;
-        if (paddingOffset > 0) {
-            percent += paddingOffset / (node.absoluteParent || node.documentParent).box[dimension];
-        }
+        const percent = parseFloat(value) / 100;
         node.app(`layout_constraint${$util.capitalize(dimension)}_percent`, $math.truncate(percent, node.localSettings.floatPrecision));
         node.android(`layout_${dimension}`, '0px');
         return true;
@@ -755,51 +751,57 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                             }
                                         }
                                     }
-                                    else if (item.outerWrapper) {
-                                        item.anchor('top', 'parent');
-                                        item.anchor('left', 'parent');
+                                    if (item.outerWrapper) {
+                                        if (!item.alignParent('bottom')) {
+                                            item.anchor('top', 'parent', false);
+                                        }
+                                        if (!item.alignParent('right')) {
+                                            item.anchor('left', 'parent', false);
+                                        }
                                     }
                                 }
                                 item.positioned = true;
                             }
                         }
-                        if (node.layoutHorizontal) {
-                            this.processConstraintHorizontal(node, pageFlow);
-                        }
-                        else if (node.hasAlign($enum.NODE_ALIGNMENT.COLUMN)) {
-                            this.processConstraintColumn(node, pageFlow);
-                        }
-                        else if (pageFlow.length > 1) {
-                            this.processConstraintChain(node, pageFlow);
-                        }
-                        else if (pageFlow.length) {
-                            const item = pageFlow[0];
-                            if (item.autoMargin.leftRight || item.inlineStatic && item.cssAscend('textAlign', true) === 'center') {
-                                item.anchorParent(AXIS_ANDROID.HORIZONTAL);
+                        if (pageFlow.length) {
+                            if (node.layoutHorizontal) {
+                                this.processConstraintHorizontal(node, pageFlow);
                             }
-                            else if (item.rightAligned) {
-                                item.anchor('right', 'parent');
+                            else if (node.hasAlign($enum.NODE_ALIGNMENT.COLUMN)) {
+                                this.processConstraintColumn(node, pageFlow);
                             }
-                            else if ($util.withinRange(item.linear.left, node.box.left) || item.linear.left < node.box.left || item.autoMargin.right) {
-                                item.anchor('left', 'parent');
-                            }
-                            if (item.autoMargin.topBottom) {
-                                item.anchorParent(AXIS_ANDROID.VERTICAL);
+                            else if (pageFlow.length > 1) {
+                                this.processConstraintChain(node, pageFlow);
                             }
                             else {
-                                if ($util.withinRange(item.linear.top, node.box.top) || item.linear.top < node.box.top) {
-                                    item.anchor('top', 'parent');
+                                const item = pageFlow[0];
+                                if (item.autoMargin.leftRight || item.inlineStatic && item.cssAscend('textAlign', true) === 'center') {
+                                    item.anchorParent(AXIS_ANDROID.HORIZONTAL);
                                 }
-                                if (this.withinParentBottom(item.pageFlow, item.linear.bottom, bottomParent) && item.actualParent && !item.actualParent.documentBody && !item.has('height', $enum.CSS_STANDARD.PERCENT, { not: '100%' })) {
-                                    item.anchor('bottom', 'parent');
-                                    if (item.alignParent('top')) {
-                                        item.anchorStyle(AXIS_ANDROID.VERTICAL);
+                                else if (item.rightAligned) {
+                                    item.anchor('right', 'parent');
+                                }
+                                else if ($util.withinRange(item.linear.left, node.box.left) || item.linear.left < node.box.left || item.autoMargin.right) {
+                                    item.anchor('left', 'parent');
+                                }
+                                if (item.autoMargin.topBottom) {
+                                    item.anchorParent(AXIS_ANDROID.VERTICAL);
+                                }
+                                else {
+                                    if ($util.withinRange(item.linear.top, node.box.top) || item.linear.top < node.box.top) {
+                                        item.anchor('top', 'parent');
+                                    }
+                                    if (this.withinParentBottom(item.pageFlow, item.linear.bottom, bottomParent) && item.actualParent && !item.actualParent.documentBody && !item.has('height', $enum.CSS_STANDARD.PERCENT, { not: '100%' })) {
+                                        item.anchor('bottom', 'parent');
+                                        if (item.alignParent('top')) {
+                                            item.anchorStyle(AXIS_ANDROID.VERTICAL);
+                                        }
                                     }
                                 }
+                                Controller.setConstraintDimension(item);
                             }
-                            Controller.setConstraintDimension(item);
+                            this.evaluateAnchors(pageFlow);
                         }
-                        this.evaluateAnchors(pageFlow);
                         for (const item of children) {
                             if (!item.anchored) {
                                 this.addGuideline(item, node);
@@ -2264,7 +2266,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 for (let j = 0, k = 0, l = 0; j < row.length; j++, l++) {
                     const column = row[j];
                     const rowIteration = l % perRowCount === 0;
-                    if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || row.length - j > columnMin - k && j < row.length - 1 && columns[k].length && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
+                    const onePerRow = row.length - j === columnMin - k;
+                    if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && onePerRow && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                         if (j > 0) {
                             k++;
                             if (rowIteration) {
@@ -2283,7 +2286,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (column.length) {
                         totalGap += $math.maxArray($util.objectMap<T, number>(column.children as T[], child => child.marginLeft + child.marginRight));
                     }
-                    if (excessCount !== Number.POSITIVE_INFINITY && row.length - j === columnMin - k) {
+                    if (onePerRow && excessCount !== Number.POSITIVE_INFINITY) {
                         perRowCount = 1;
                     }
                 }

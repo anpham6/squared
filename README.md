@@ -124,7 +124,7 @@ squared.settings = {
     preloadImages: true,
     supportNegativeLeftTop: true,
     collapseUnattributedElements: true,
-    exclusionsDisabled: true,
+    exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
     showAttributes: true,
     convertPixels: 'dp',

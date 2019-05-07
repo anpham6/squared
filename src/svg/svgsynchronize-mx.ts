@@ -770,9 +770,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     let repeatingAsInfinite = -1;
                     let repeatingResult: KeyTimeMap | undefined;
                     let infiniteResult: KeyTimeMap | undefined;
-                    function getForwardItem(attr: string): ForwardValue | undefined {
-                        return forwardMap[attr] ? forwardMap[attr][forwardMap[attr].length - 1] : undefined;
-                    }
+                    const getForwardItem = (attr: string): ForwardValue | undefined => forwardMap[attr] && forwardMap[attr][forwardMap[attr].length - 1];
                     for (const attr in groupName) {
                         repeatingMap[attr] = new Map<number, AnimateValue>();
                         if (!transforming) {
@@ -1466,9 +1464,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         const startTime = maxTime + 1;
                                         let j = Math.floor(durationTotal / duration);
                                         let joined = false;
-                                        function insertIntermediateValue(time: number) {
-                                            return insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, j, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
-                                        }
+                                        const insertIntermediateValue = (time: number) => insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, j, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                         do {
                                             for (let k = 0; k < keyTimes.length; k++) {
                                                 let time = getItemTime(delay, duration, keyTimes, j, k);

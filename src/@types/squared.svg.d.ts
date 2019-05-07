@@ -10,8 +10,8 @@ declare global {
             translationOffset?: Point;
             readonly transforms: SvgTransform[];
             readonly animations: SvgAnimation[];
-            getTransforms(companion?: SVGGraphicsElement): SvgTransform[];
-            getAnimations(companion?: SVGGraphicsElement): SvgAnimation[];
+            getTransforms(element?: SVGGraphicsElement): SvgTransform[];
+            getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
         }
 
         interface SvgTransformable {

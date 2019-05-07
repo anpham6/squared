@@ -557,8 +557,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
             if (!node.documentRoot) {
-                let parent: T | undefined;
                 const actualParent = node.parent as T;
+                const absoluteParent = node.absoluteParent as T;
+                let parent: T | undefined;
                 switch (node.position) {
                     case 'fixed':
                         if (!node.positionAuto) {
@@ -566,7 +567,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                             break;
                         }
                     case 'absolute':
-                        const absoluteParent = node.absoluteParent as T;
                         if (absoluteParent) {
                             parent = absoluteParent;
                             if (node.positionAuto) {
@@ -609,7 +609,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     }
                                     else {
                                         if (parent.layoutElement) {
-                                            parent = node.absoluteParent as T;
+                                            parent = absoluteParent as T;
                                             break;
                                         }
                                         else if (node.withinX(parent.box) && node.withinY(parent.box)) {
@@ -626,8 +626,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     parent = !node.pageFlow ? rootNode : actualParent;
                 }
                 if (parent !== actualParent) {
-                    const absoluteParent = node.absoluteParent;
-                    if (absoluteParent && parent !== absoluteParent && absoluteParent.positionRelative) {
+                    if (absoluteParent && absoluteParent.positionRelative && parent !== absoluteParent) {
                         const bounds = node.bounds;
                         if (absoluteParent.left !== 0) {
                             bounds.left += absoluteParent.left;
@@ -827,7 +826,6 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected setBaseLayout(layoutName: string) {
-        const controller = this.controllerHandler;
         const documentRoot = this.processing.node as T;
         const extensions = $util.filterArray(this.extensions, item => !item.eventOnly);
         const mapY = new Map<number, Map<number, T>>();
@@ -955,7 +953,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 if (horizontal.length && traverse !== NODE_TRAVERSE.FLOAT_INTERSECT) {
                                                     if (floatActive.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
                                                         function getFloatBottom() {
-                                                            let floatBottom = Number.NEGATIVE_INFINITY;
+                                                            let floatBottom = 0;
                                                             $util.captureMap(
                                                                 horizontal,
                                                                 node => node.floating,
@@ -1021,11 +1019,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                         let result: LayoutResult<T> | undefined;
                         let segEnd: T | undefined;
                         if (horizontal.length > 1) {
-                            result = controller.processTraverseHorizontal(new Layout(parentY, nodeY, 0, 0, horizontal), axisY);
+                            result = this.controllerHandler.processTraverseHorizontal(new Layout(parentY, nodeY, 0, 0, horizontal), axisY);
                             segEnd = horizontal[horizontal.length - 1];
                         }
                         else if (vertical.length > 1) {
-                            result = controller.processTraverseVertical(new Layout(parentY, nodeY, 0, 0, vertical), axisY);
+                            result = this.controllerHandler.processTraverseVertical(new Layout(parentY, nodeY, 0, 0, vertical), axisY);
                             segEnd = vertical[vertical.length - 1];
                             if (segEnd.horizontalAligned && segEnd !== axisY[axisY.length - 1]) {
                                 segEnd.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
@@ -1123,7 +1121,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
                         const layout = this.createLayoutControl(parentY, nodeY);
-                        const result = nodeY.length ? controller.processUnknownParent(layout) : controller.processUnknownChild(layout);
+                        const result = nodeY.length ? this.controllerHandler.processUnknownParent(layout) : this.controllerHandler.processUnknownChild(layout);
                         if (result.next === true) {
                             continue;
                         }

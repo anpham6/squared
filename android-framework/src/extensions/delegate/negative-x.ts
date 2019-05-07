@@ -18,8 +18,8 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
     }
 
     public processNode(node: T, parent: T) {
-        const outside = node.filter((item: T) => outsideX(item, node));
-        const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, outside as T[], CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
+        const outside = node.filter((item: T) => outsideX(item, node)) as T[];
+        const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, outside, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
         if (node.marginTop > 0) {
             container.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.marginTop);
             node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
@@ -98,7 +98,7 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
                     parent,
                     container,
                     container.containerType,
-                    $enum.NODE_ALIGNMENT.SINGLE,
+                    $enum.NODE_ALIGNMENT.HORIZONTAL | $enum.NODE_ALIGNMENT.SINGLE,
                     container.children as T[]
                 )
             )

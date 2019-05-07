@@ -111,13 +111,17 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         private _transforms?: SvgTransform[];
         private _animations?: SvgAnimation[];
 
-        public getTransforms(companion?: SVGGraphicsElement) {
-            const element = companion || this.element;
+        public getTransforms(element?: SVGGraphicsElement) {
+            if (element === undefined) {
+                element = this.element;
+            }
             return SvgBuild.filterTransforms(TRANSFORM.parse(element) || SvgBuild.convertTransforms(element.transform.baseVal));
         }
 
-        public getAnimations(companion?: SVGGraphicsElement) {
-            const element = companion || this.element;
+        public getAnimations(element?: SVGGraphicsElement) {
+            if (element === undefined) {
+                element = this.element;
+            }
             const result: SvgAnimation[] = [];
             let id = 0;
             const addAnimation = (item: SvgAnimation, delay: number, name = '') => {
@@ -234,7 +238,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             function getKeyframeOrigin(order: number) {
                                 const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.key === order);
                                 if (origin) {
-                                    return TRANSFORM.origin(element, origin.value);
+                                    return TRANSFORM.origin(<SVGGraphicsElement> element, origin.value);
                                 }
                                 return undefined;
                             }

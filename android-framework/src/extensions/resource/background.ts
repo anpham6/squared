@@ -744,6 +744,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
             imageLength = backgroundImage.length;
         }
+        let centerHorizontally = false;
         for (let i = imageLength - 1; i >= 0; i--) {
             const value = backgroundImage[i];
             const bounds = node.bounds;
@@ -935,18 +936,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case 'initial':
                     case 'contain':
                         break;
-                    case 'cover':
-                        tileMode = '';
-                        tileModeX = '';
-                        tileModeY = '';
-                        gravity = '';
-                        break;
-                    case '100%':
-                        gravityX = 'fill_horizontal';
-                        break;
                     case '100% 100%':
                         gravityX = 'fill_horizontal';
                         gravityY = 'fill_vertical';
+                    case 'cover':
+                        gravity = '';
+                        tileMode = '';
+                        tileModeX = '';
+                        tileModeY = '';
+                        break;
+                    case '100%':
+                        gravityX = 'fill_horizontal';
+                        tileModeX = '';
+                        if (tileMode === 'repeat') {
+                            tileMode = '';
+                            tileModeY = 'repeat';
+                        }
                         break;
                     default:
                         backgroundSize[i].split(' ').forEach((size, index) => {
@@ -973,6 +978,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 if (dimension) {
                     const backgroundClip = data.backgroundClip;
+                    const canResizeHorizontal = () => gravityX !== 'fill_horizontal' && tileMode !== 'repeat' && tileModeX !== 'repeat';
+                    const canResizeVertical = () => gravityY !== 'fill_vertical' && tileMode !== 'repeat' && tileModeY !== 'repeat';
                     switch (backgroundSize[i]) {
                         case 'cover':
                             if (dimension.width < bounds.width || dimension.height < bounds.height) {
@@ -1006,10 +1013,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             resizable = false;
                             break;
                         default:
-                            if (width === 0 && (height > 0 || gravityY === 'fill_vertical') && gravityX !== 'fill_horizontal' && tileMode !== 'repeat' && tileModeX !== 'repeat') {
+                            if (width === 0 && height > 0 && canResizeHorizontal()) {
                                 width = dimension.width * (height === 0 ? bounds.height : height) / dimension.height;
                             }
-                            if (height === 0 && (width > 0 || gravityX === 'fill_horizontal') && gravityY !== 'fill_vertical' && tileMode !== 'repeat' && tileModeY !== 'repeat') {
+                            if (height === 0 && width > 0 && canResizeVertical()) {
                                 height = dimension.height * (width === 0 ? bounds.width : width) / dimension.width;
                             }
                             break;
@@ -1042,13 +1049,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             bottom = backgroundClip.bottom - backgroundClip.top;
                         }
                     }
-                    else if (width === 0 && height === 0 && dimension.width < node.actualWidth && tileMode !== 'repeat') {
-                        if (tileModeX !== 'repeat') {
-                            width = dimension.width;
-                        }
-                        if (tileModeY !== 'repeat') {
-                            height = dimension.height;
-                        }
+                    else if (width === 0 && height === 0 && dimension.width < node.bounds.width && dimension.height < node.bounds.height && canResizeHorizontal() && canResizeVertical()) {
+                        width = dimension.width;
+                        height = dimension.height;
                     }
                     if (width > 0) {
                         imageData.width = $css.formatPX(width);
@@ -1086,6 +1089,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 else {
                     imageData.drawable = src;
                     imageData.gravity = gravity;
+                    if (gravity === 'center' || gravity.startsWith('center_horizotnal')) {
+                        centerHorizontally = true;
+                    }
                 }
             }
             else if (value.item) {
@@ -1162,12 +1168,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
         }
         if (this.options.autoSizeBackgroundImage && result.length && resizable && !node.documentRoot && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
-            this.refitDrawableDimension(node, imageDimensions);
+            this.refitDrawableDimension(node, imageDimensions, centerHorizontally);
         }
         return result;
     }
 
-    public refitDrawableDimension(node: T, dimensions: Undefined<Dimension>[]) {
+    public refitDrawableDimension(node: T, dimensions: Undefined<Dimension>[], centerHorizontally: boolean) {
         if (!node.is(CONTAINER_NODE.IMAGE)) {
             let imageWidth = 0;
             let imageHeight = 0;
@@ -1192,7 +1198,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     ascend = ascend.actualParent as T;
                 }
             }
-            if ((!node.has('width', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) || !node.pageFlow) && (imageWidth === 0 || node.bounds.width < imageWidth)) {
+            if ((!node.has('width', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) && !(node.blockStatic && centerHorizontally) || !node.pageFlow) && (imageWidth === 0 || node.bounds.width < imageWidth)) {
                 const width = node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0);
                 if (width > 0) {
                     node.css('width', $css.formatPX(width), true);

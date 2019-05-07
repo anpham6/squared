@@ -1,8 +1,15 @@
 const $client = squared.lib.client;
 
 function hasUnsupportedAccess(element: SVGElement) {
-    const htmlElement = element.parentElement instanceof HTMLElement;
-    return element.tagName === 'svg' && (!htmlElement && $client.isUserAgent($client.USER_AGENT.SAFARI) || htmlElement && $client.isUserAgent($client.USER_AGENT.FIREFOX));
+    if (element.tagName === 'svg') {
+        if ($client.isUserAgent($client.USER_AGENT.FIREFOX)) {
+            return element.parentElement instanceof HTMLElement;
+        }
+        else if ($client.isUserAgent($client.USER_AGENT.SAFARI)) {
+            return !(element.parentElement instanceof HTMLElement);
+        }
+    }
+    return false;
 }
 
 export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {

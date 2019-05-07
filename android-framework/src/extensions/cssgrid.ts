@@ -411,10 +411,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
             const [rowStart, rowSpan] = applyLayout(target, 'row', 'height');
-            if (mainData.alignContent === 'normal' && rowSpan === 1 && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === 'auto') && (mainData.rowHeightCount[rowStart] === 1 || node.bounds.height < mainData.rowHeight[rowStart]) && node.initial.bounds && node.bounds.height > node.initial.bounds.height) {
+            if (mainData.alignContent === 'normal' && rowSpan === 1 && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === 'auto') && node.initial.bounds && node.bounds.height > node.initial.bounds.height) {
                 target.css('minHeight', $css.formatPX(node.actualHeight), true);
             }
-            if (!target.has('height') && !(mainData.row.count === 1 && mainData.alignContent === 'space-between')) {
+            else if (!target.has('height') && !(mainData.row.count === 1 && mainData.alignContent === 'space-between')) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
         }

@@ -12,24 +12,22 @@ export interface LinearData<T> {
 
 export default class NodeList<T extends Node> extends squared.lib.base.Container<T> implements squared.base.NodeList<T> {
     public static outerRegion<T extends Node>(node: T): BoxRect {
-        const nodes = node.duplicate();
-        let top = nodes[0];
+        let top = node.item(0) as T;
         let right = top;
         let bottom = top;
         let left = top;
-        node.each(item => item.companion && !item.companion.visible && nodes.push(item.companion));
-        for (let i = 1; i < nodes.length; i++) {
-            const item = nodes[i];
-            if (item.linear.top < top.linear.top) {
+        for (let i = 1; i < node.children.length; i++) {
+            const item = node.children[i] as T;
+            if (item.actualRect('top') < top.actualRect('top')) {
                 top = item;
             }
-            if (item.linear.right > right.linear.right) {
+            if (item.actualRect('right') > right.actualRect('right')) {
                 right = item;
             }
-            if (item.linear.bottom > bottom.linear.bottom) {
+            if (item.actualRect('bottom') > bottom.actualRect('bottom')) {
                 bottom = item;
             }
-            if (item.linear.left < left.linear.left) {
+            if (item.actualRect('left') < bottom.actualRect('left')) {
                 left = item;
             }
         }

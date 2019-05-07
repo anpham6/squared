@@ -538,7 +538,12 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         public setControlType(controlName: string, containerType?: number) {
             this.controlName = controlName;
-            this.containerType = containerType || CONTAINER_NODE.UNKNOWN;
+            if (containerType) {
+                this.containerType = containerType;
+            }
+            else if (this.containerType === 0) {
+                this.containerType = CONTAINER_NODE.UNKNOWN;
+            }
             this.controlId = stripId(this.android('id'));
             if (this.controlId === '') {
                 let name: string | undefined;
@@ -1259,7 +1264,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             else {
                                 for (let j = 0; j < row.length; j++) {
                                     const node = row[j];
-                                    if (node.length === 0 && !node.has('lineHeight') && !node.baselineAltered) {
+                                    if (node.length === 0 && !node.has('lineHeight') && !node.multiline && !node.baselineAltered) {
                                         setMarginOffset(node, lineHeight, false, top, bottom);
                                     }
                                 }

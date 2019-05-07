@@ -9,7 +9,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
         super.processNode(node, parent);
         return {
             output: this.application.renderNode(
-                    new $Layout(
+                new $Layout(
                     parent,
                     node,
                     CONTAINER_NODE.RELATIVE,

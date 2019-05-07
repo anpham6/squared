@@ -21,14 +21,14 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
             container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, undefined, CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
         }
         container.inherit(node, 'styleMap');
-        const maxWidth = node.css('maxWidth');
-        const maxHeight = node.css('maxHeight');
+        let maxWidth = node.css('maxWidth');
+        let maxHeight = node.css('maxHeight');
         if ($css.isLength(maxWidth, true)) {
             if (!node.has('width')) {
                 node.android('layout_width', node.some(item => item.blockStatic) ? 'match_parent' : 'wrap_content');
             }
-            const width = $css.formatPX(node.parseUnit(maxWidth) + ($css.isPercent(maxWidth) ? 0 : node.contentBoxWidth + Math.max(node.marginLeft, 0) + Math.max(node.marginRight, 0)));
-            container.cssApply({ width, maxWidth: width }, true);
+            maxWidth = $css.formatPX(node.parseUnit(maxWidth) + ($css.isPercent(maxWidth) ? 0 : node.contentBoxWidth + Math.max(node.marginLeft, 0) + Math.max(node.marginRight, 0)));
+            container.cssApply({ width: maxWidth, maxWidth }, true);
             if (parent.layoutElement) {
                 node.autoMargin.horizontal = false;
                 node.autoMargin.left = false;
@@ -40,8 +40,8 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
             if (!node.has('height')) {
                 node.android('layout_height', 'wrap_content');
             }
-            const height = $css.formatPX(node.parseUnit(maxHeight) + ($css.isPercent(maxHeight) ? 0 : node.contentBoxHeight + Math.max(node.marginTop, 0) + Math.max(node.marginBottom, 0)));
-            container.cssApply({ height, maxHeight: height }, true);
+            maxHeight = $css.formatPX(node.parseUnit(maxHeight) + ($css.isPercent(maxHeight) ? 0 : node.contentBoxHeight + Math.max(node.marginTop, 0) + Math.max(node.marginBottom, 0)));
+            container.cssApply({ height: maxHeight, maxHeight }, true);
             if (parent.layoutElement) {
                 node.autoMargin.vertical = false;
                 node.autoMargin.top = false;
