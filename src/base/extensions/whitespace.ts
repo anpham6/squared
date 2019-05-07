@@ -7,8 +7,6 @@ const $session = squared.lib.session;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
-const HTML5 = document.doctype ? document.doctype.name === 'html' : false;
-
 function setMinHeight(node: Node, offset: number) {
     const minHeight = node.has('minHeight', CSS_STANDARD.LENGTH) ? node.toFloat('minHeight') : 0;
     node.css('minHeight', $css.formatPX(Math.max(offset, minHeight)));
@@ -67,10 +65,14 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                     break;
                 }
             }
-            if (child.getBox(boxMargin)[0] !== 1) {
+            const outside = node[margin] >= child[margin];
+            if (child.bounds.height === 0 && outside) {
+                child.hide();
+            }
+            else if (child.getBox(boxMargin)[0] !== 1) {
                 let resetChild = false;
                 if (node.documentBody) {
-                    if (node[margin] >= child[margin]) {
+                    if (outside) {
                         resetChild = true;
                     }
                     else {
@@ -78,7 +80,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                     }
                 }
                 else {
-                    if (HTML5 && node[margin] < child[margin]) {
+                    if (!outside) {
                         const visibleParent = getVisibleNode(node);
                         visibleParent.modifyBox(boxMargin, null);
                         visibleParent.modifyBox(boxMargin, child[margin]);

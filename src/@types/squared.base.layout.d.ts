@@ -11,8 +11,8 @@ declare global {
             rowCount: number;
             columnCount: number;
             renderIndex: number;
-            linearX: boolean;
-            linearY: boolean;
+            readonly linearX: boolean;
+            readonly linearY: boolean;
             readonly floated: Set<string>;
             readonly cleared: Map<T, string>;
             readonly singleRowAligned: boolean;

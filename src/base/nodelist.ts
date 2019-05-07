@@ -27,7 +27,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             if (item.actualRect('bottom') > bottom.actualRect('bottom')) {
                 bottom = item;
             }
-            if (item.actualRect('left') < bottom.actualRect('left')) {
+            if (item.actualRect('left') < left.actualRect('left')) {
                 left = item;
             }
         }

@@ -272,34 +272,36 @@ export default abstract class Controller<T extends Node> implements squared.base
             const item = templates[i];
             if (item) {
                 const node = item.node;
-                switch (item.type) {
-                    case NODE_TEMPLATE.XML: {
-                        const { controlName, attributes } = <NodeXmlTemplate<T>> item;
-                        const renderDepth = depth + 1;
-                        const beforeInside = this.getBeforeInsideTemplate(node.id, renderDepth);
-                        const afterInside = this.getAfterInsideTemplate(node.id, renderDepth);
-                        let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
-                        if (node.renderTemplates || beforeInside !== '' || afterInside !== '') {
-                            template += '>\n' +
-                                        beforeInside +
-                                        (node.renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> node.renderTemplates), renderDepth) : '') +
-                                        afterInside +
-                                        indent + `</${controlName}>\n`;
+                if (node.visible) {
+                    switch (item.type) {
+                        case NODE_TEMPLATE.XML: {
+                            const { controlName, attributes } = <NodeXmlTemplate<T>> item;
+                            const renderDepth = depth + 1;
+                            const beforeInside = this.getBeforeInsideTemplate(node.id, renderDepth);
+                            const afterInside = this.getAfterInsideTemplate(node.id, renderDepth);
+                            let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
+                            if (node.renderTemplates || beforeInside !== '' || afterInside !== '') {
+                                template += '>\n' +
+                                            beforeInside +
+                                            (node.renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> node.renderTemplates), renderDepth) : '') +
+                                            afterInside +
+                                            indent + `</${controlName}>\n`;
+                            }
+                            else {
+                                template += ' />\n';
+                            }
+                            output += this.getBeforeOutsideTemplate(node.id, depth) +
+                                    template +
+                                    this.getAfterOutsideTemplate(node.id, depth);
+                            break;
                         }
-                        else {
-                            template += ' />\n';
+                        case NODE_TEMPLATE.INCLUDE: {
+                            const { content } = <NodeIncludeTemplate<T>> item;
+                            if (content) {
+                                output += $xml.pushIndent(content, depth);
+                            }
+                            break;
                         }
-                        output += this.getBeforeOutsideTemplate(node.id, depth) +
-                                  template +
-                                  this.getAfterOutsideTemplate(node.id, depth);
-                        break;
-                    }
-                    case NODE_TEMPLATE.INCLUDE: {
-                        const { content } = <NodeIncludeTemplate<T>> item;
-                        if (content) {
-                            output += $xml.pushIndent(content, depth);
-                        }
-                        break;
                     }
                 }
             }

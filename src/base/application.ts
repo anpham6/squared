@@ -556,11 +556,43 @@ export default class Application<T extends Node> implements squared.base.Applica
                     element.dir = 'rtl';
                 }
             }
+            node.saveAsInitial();
             if (!node.documentRoot) {
                 const actualParent = node.parent as T;
                 const absoluteParent = node.absoluteParent as T;
                 let parent: T | undefined;
                 switch (node.position) {
+                    case 'relative':
+                        if (node === actualParent.lastChild) {
+                            let valid = false;
+                            if (node.outsideX(actualParent.box)) {
+                                if (!actualParent.has('width') || actualParent.css('overflowX') === 'hidden') {
+                                    continue;
+                                }
+                                valid = true;
+                            }
+                            if (node.outsideY(actualParent.box)) {
+                                if (!actualParent.hasHeight && !actualParent.has('height') || actualParent.css('overflowY') === 'hidden') {
+                                    continue;
+                                }
+                                valid = true;
+                            }
+                            if (valid) {
+                                parent = actualParent.actualParent as T;
+                                do {
+                                    if (node.withinX(parent.box) && node.withinY(parent.box) || parent.css('overflow') === 'hidden') {
+                                        break;
+                                    }
+                                    parent = actualParent.actualParent as T;
+                                }
+                                while (parent && parent !== rootNode);
+                                if (parent) {
+                                    node.css('position', 'absolute', true);
+                                    node.setBounds(false);
+                                }
+                            }
+                        }
+                        break;
                     case 'fixed':
                         if (!node.positionAuto) {
                             parent = rootNode;
@@ -647,8 +679,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                         node.unsafe('box', true);
                         node.unsafe('linear', true);
                     }
-                    let current: T | undefined = actualParent;
                     let opacity = $util.convertFloat(node.css('opacity')) || 1;
+                    let current = actualParent;
                     while (current && current !== parent) {
                         opacity *= $util.convertFloat(current.css('opacity')) || 1;
                         current = current.actualParent as T;
@@ -716,7 +748,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                     node.retain($util.flatArray(children));
                 }
             }
-            node.saveAsInitial();
         }
         this.processing.cache.sort((a, b) => {
             if (a.depth !== b.depth) {
@@ -1136,8 +1167,13 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         this.processing.cache.sort((a, b) => {
-            if (a.depth === b.depth && a.length && b.length === 0) {
-                return -1;
+            if (a.depth === b.depth) {
+                if (a.length && b.length === 0) {
+                    return -1;
+                }
+                else if (a.length === 0 && b.length) {
+                    return 1;
+                }
             }
             return 0;
         });
@@ -1705,7 +1741,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     private createPseduoElement(element: HTMLElement, target: string) {
         const styleMap: StringMap = $session.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
         if (styleMap && styleMap.content) {
-            if ((styleMap.position === 'absolute' || styleMap.position === 'fixed') && $util.trimString(styleMap.content, '"').trim() === '' && (!styleMap.width || !$css.isLength(styleMap.width, true))) {
+            if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
                 return undefined;
             }
             let value = styleMap.content;

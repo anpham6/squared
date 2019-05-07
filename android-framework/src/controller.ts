@@ -428,7 +428,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 !node.marginBottom &&
                 !node.hasWidth &&
                 !node.hasHeight &&
-                !node.visibleStyle.padding &&
+                !node.contentBoxWidth &&
+                !node.contentBoxHeight &&
                 !node.visibleStyle.background &&
                 !node.rightAligned &&
                 !node.autoMargin.horizontal &&
@@ -672,7 +673,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public checkRelativeHorizontal(layout: $Layout<T>) {
         const lineHeight = layout.children[0].lineHeight;
-        if (layout.every(node => (node.imageElement || node.textElement && !node.multiline) && node.baseline && !node.positionRelative && node.lineHeight === lineHeight) && layout.singleRowAligned) {
+        if (layout.every(node => node.baseline && !node.positionRelative && node.lineHeight === lineHeight && (node.imageElement || node.textElement && !node.multiline)) && layout.singleRowAligned) {
             return false;
         }
         return layout.some(node => node.textElement || !node.baseline || node.imageElement || node.positionRelative || !node.pageFlow && node.positionAuto);
@@ -947,6 +948,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     node.android('scaleType', scaleType);
                     if (node.baseline) {
                         node.android('baselineAlignBottom', 'true');
+                        if (node.marginBottom > 0 && parent.layoutLinear && parent.layoutHorizontal) {
+                            node.mergeGravity('layout_gravity', 'bottom');
+                        }
                     }
                     if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
                         const container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
@@ -1252,10 +1256,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 if (pageFlow || !node.pageFlow && !item.pageFlow && node.bounds[LT] >= 0 && node.bounds[LT] >= 0) {
                                     if ($util.withinRange(node.bounds[LT], item.bounds[LT])) {
                                         node.anchor(!horizontal && node.textElement && node.baseline && item.textElement && item.baseline ? 'baseline' : LT, item.documentId, true);
+                                        node.modifyBox(horizontal ? $enum.BOX_STANDARD.MARGIN_LEFT : $enum.BOX_STANDARD.MARGIN_TOP, null);
                                         valid = true;
                                     }
                                     else if ($util.withinRange(node.bounds[RB], item.bounds[RB])) {
                                         node.anchor(RB, item.documentId, true);
+                                        node.modifyBox(horizontal ? $enum.BOX_STANDARD.MARGIN_RIGHT : $enum.BOX_STANDARD.MARGIN_BOTTOM, null);
                                         valid = true;
                                     }
                                 }
@@ -1808,13 +1814,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 let baseline: T | undefined;
                 if (items.length > 1) {
                     const baselineItems = $NodeList.baseline(items);
-                    baseline = baselineItems[0];
                     let textBottom: T | undefined;
+                    baseline = baselineItems[0];
                     if (baseline) {
                         textBottom = getTextBottom(items);
                         if (textBottom) {
-                            const height = baseline.actualHeight;
-                            if (textBottom.actualHeight > height || textBottom.companion && textBottom.companion.actualHeight > height) {
+                            if (baseline !== textBottom && (textBottom.actualHeight > baseline.actualHeight || textBottom.companion && textBottom.companion.actualHeight > baseline.actualHeight)) {
                                 baseline.anchor('bottom', textBottom.documentId);
                             }
                             else {
@@ -2102,38 +2107,44 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 else {
                     setParentVertical(item);
                 }
+                item.anchored = true;
             }
             else {
                 baseline.baselineActive = true;
             }
             Controller.setConstraintDimension(item);
-            item.anchored = true;
         }
-        if (baseline && tallest && tallest !== baseline && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
-            switch (tallest.verticalAlign) {
-                case 'middle':
-                    baseline.anchorParent(AXIS_ANDROID.VERTICAL, true);
-                    break;
-                case 'baseline':
-                    baseline.anchor('baseline', tallest.documentId);
-                    break;
-                case 'bottom':
-                case 'text-bottom':
-                    baseline.anchor('bottom', tallest.documentId);
-                    break;
-                case 'sub':
-                    if (!tallest.textElement) {
+        if (baseline) {
+            if (tallest && tallest !== baseline && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
+                switch (tallest.verticalAlign) {
+                    case 'middle':
+                        baseline.anchorParent(AXIS_ANDROID.VERTICAL, true);
+                        break;
+                    case 'baseline':
+                        baseline.anchor('baseline', tallest.documentId);
+                        break;
+                    case 'bottom':
+                    case 'text-bottom':
                         baseline.anchor('bottom', tallest.documentId);
-                        baseline.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(baseline.fontSize * this.localSettings.deviations.subscriptBottomOffset) * -1);
-                    }
-                    break;
-                case 'super':
-                    if (!tallest.textElement) {
-                        baseline.anchor('bottom', tallest.documentId);
-                        baseline.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.ceil(baseline.fontSize * this.localSettings.deviations.superscriptTopOffset) * -1);
-                    }
-                    break;
+                        break;
+                    case 'sub':
+                        if (!tallest.textElement) {
+                            baseline.anchor('bottom', tallest.documentId);
+                            baseline.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(baseline.fontSize * this.localSettings.deviations.subscriptBottomOffset) * -1);
+                        }
+                        break;
+                    case 'super':
+                        if (!tallest.textElement) {
+                            baseline.anchor('bottom', tallest.documentId);
+                            baseline.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.ceil(baseline.fontSize * this.localSettings.deviations.superscriptTopOffset) * -1);
+                        }
+                        break;
+                }
             }
+            else {
+                setParentVertical(baseline);
+            }
+            baseline.anchored = true;
         }
     }
 

@@ -852,6 +852,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._bounds = $dom.assignRect(rect, true);
             this._cached.multiline = (rect.numberOfLines as number) > 0;
         }
+        if (!cache) {
+            this._linear = undefined;
+            this._box = undefined;
+        }
     }
 
     public setInlineText(value: boolean, overwrite = false) {
@@ -1606,7 +1610,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.paddingTop = Math.max(0, value - top);
             }
             else {
-                this._cached.paddingTop = value;
+                this._cached.paddingTop = this.inlineStatic && !this.visibleStyle.background ? 0 : value;
             }
         }
         return this._cached.paddingTop;
@@ -1634,7 +1638,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.paddingBottom = Math.max(0, value - bottom);
             }
             else {
-                this._cached.paddingBottom = value;
+                this._cached.paddingBottom = this.inlineStatic && !this.visibleStyle.background ? 0 : value;
             }
         }
         return this._cached.paddingBottom;
@@ -1923,7 +1927,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get leftTopAxis() {
-        return this.absoluteParent === this.documentParent || this.position === 'fixed';
+        return this.cssInitial('position') === 'absolute' && this.absoluteParent === this.documentParent || this.position === 'fixed';
     }
 
     set renderExclude(value) {
@@ -1945,7 +1949,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const backgroundImage = $regex.CSS.URL.test(this.css('backgroundImage')) || $regex.CSS.URL.test(this.css('background'));
             const backgroundColor = this.has('backgroundColor');
             this._cached.visibleStyle = {
-                padding: this.paddingTop > 0 || this.paddingRight > 0 || this.paddingBottom > 0 || this.paddingLeft > 0,
                 background: borderWidth || backgroundImage || backgroundColor,
                 borderWidth,
                 backgroundImage,

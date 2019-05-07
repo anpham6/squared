@@ -11,9 +11,9 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     public renderType = 0;
     public renderIndex = -1;
     public itemCount = 0;
-    public linearX = false;
-    public linearY = false;
 
+    private _linearX?: boolean;
+    private _linearY?: boolean;
     private _floated?: Set<string>;
     private _cleared?: Map<T, string>;
     private _singleRow?: boolean;
@@ -35,8 +35,8 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         const linearData = NodeList.linearData(this.children);
         this._floated = linearData.floated;
         this._cleared = linearData.cleared;
-        this.linearX = linearData.linearX;
-        this.linearY = linearData.linearY;
+        this._linearX = linearData.linearX;
+        this._linearY = linearData.linearY;
         if (linearData.floated.size) {
             this.add(NODE_ALIGNMENT.FLOAT);
             if (this.some(node => node.blockStatic)) {
@@ -57,8 +57,8 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         this.renderType = 0;
         this.renderIndex = -1;
         this.itemCount = 0;
-        this.linearX = false;
-        this.linearY = false;
+        this._linearX = undefined;
+        this._linearY = undefined;
         this._floated = undefined;
         this._cleared = undefined;
         if (parent) {
@@ -99,6 +99,14 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         super.retain(list);
         this.init();
         return this;
+    }
+
+    get linearX() {
+        return this._linearX !== undefined ? this._linearX : true;
+    }
+
+    get linearY() {
+        return this._linearY !== undefined ? this._linearY : false;
     }
 
     get floated() {

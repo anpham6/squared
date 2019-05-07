@@ -74,7 +74,6 @@ export interface CachedValue<T> {
 }
 
 export interface VisibleStyle {
-    padding: boolean;
     borderWidth: boolean;
     background: boolean;
     backgroundImage: boolean;

@@ -269,7 +269,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         public anchor(position: string, documentId = '', overwrite?: boolean) {
             const node = this.actualAnchor;
             const renderParent = node.renderParent as T;
-            if (renderParent) {
+            if (renderParent && node.documentId !== documentId) {
                 if (renderParent.layoutConstraint) {
                     if (documentId === '' || this.constraint.current[position] === undefined || overwrite) {
                         if (documentId && overwrite === undefined) {
@@ -882,6 +882,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                             this.mergeGravity('layout_gravity', gravity);
                         }
                     }
+                    else if (outerRenderParent.layoutFrame && renderParent.blockWidth && this.rightAligned) {
+                        this.mergeGravity('layout_gravity', 'right');
+                    }
                     if (floating !== '') {
                         if (this.blockWidth) {
                             if (textAlign === '' || floating === 'right') {
@@ -928,7 +931,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         return;
                     }
                     else if (renderParent.layoutConstraint) {
-                        if (!this.positioned) {
+                        if (!renderParent.layoutHorizontal && !this.positioned) {
                             switch (alignment) {
                                 case 'top':
                                     this.anchor('top', 'parent', false);

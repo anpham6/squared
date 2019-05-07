@@ -122,8 +122,8 @@ declare global {
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
             function convertWord(value: string, dash?: boolean): string;
-            function convertInt(value: string): number;
-            function convertFloat(value: string): number;
+            function convertInt(value: UndefNull<string>): number;
+            function convertFloat(value: UndefNull<string>): number;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;

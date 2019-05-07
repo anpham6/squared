@@ -80,11 +80,11 @@ export function convertWord(value: string, dash = false) {
     return result;
 }
 
-export function convertInt(value: string) {
+export function convertInt(value: UndefNull<string>) {
     return value && parseInt(value) || 0;
 }
 
-export function convertFloat(value: string) {
+export function convertFloat(value: UndefNull<string>) {
     return value && parseFloat(value) || 0;
 }
 

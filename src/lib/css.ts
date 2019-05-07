@@ -141,6 +141,18 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                     case 'borderLeftColor':
                         valid = true;
                         break;
+                    case 'borderTopWidth':
+                    case 'borderRightWidth':
+                    case 'borderBottomWidth':
+                    case 'borderLeftWidth':
+                        switch (value) {
+                            case 'thin':
+                            case 'medium':
+                            case 'thick':
+                                valid = true;
+                                break;
+                        }
+                        break;
                     default:
                         if (isPercent(value)) {
                             switch (attr) {
@@ -164,24 +176,6 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                     setElementCache(element, attr, specificity.toString(), value);
                     return computed;
                 }
-            }
-            switch (attr) {
-                case 'borderTopWidth':
-                case 'borderRightWidth':
-                case 'borderBottomWidth':
-                case 'borderLeftWidth':
-                    switch (value) {
-                        case 'thin':
-                            value = '1px';
-                            break;
-                        case 'medium':
-                            value = '2px';
-                            break;
-                        case 'thick':
-                            value = '3px';
-                            break;
-                    }
-                    break;
             }
             if (numeric) {
                 setElementCache(element, attr, specificity.toString(), value);

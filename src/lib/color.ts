@@ -2124,7 +2124,7 @@ export function findColorShade(value: string) {
 
 export function parseColor(value: string, opacity = '1', transparency = false) {
     if (value && (value !== 'transparent' || transparency)) {
-        if (CACHE_COLORDATA[value]) {
+        if (CACHE_COLORDATA[value] && opacity === '1') {
             return CACHE_COLORDATA[value];
         }
         let key = '';
@@ -2166,11 +2166,15 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
         if (rgba && (rgba.a > 0 || transparency)) {
             const hexAsString = getHexCode(rgba.r, rgba.g, rgba.b);
             const alphaAsString = getHexCode(rgba.a);
+            const valueAsRGBA = `#${hexAsString + alphaAsString}`;
+            if (CACHE_COLORDATA[valueAsRGBA]) {
+                return CACHE_COLORDATA[valueAsRGBA];
+            }
             const alpha = rgba.a / 255;
-            CACHE_COLORDATA[value] = <ColorData> {
+            const colorData = <ColorData> {
                 key,
                 value: `#${hexAsString}`,
-                valueAsRGBA: `#${hexAsString + alphaAsString}`,
+                valueAsRGBA,
                 valueAsARGB: `#${alphaAsString + hexAsString}`,
                 rgba,
                 hsl: convertHSLA(rgba),
@@ -2178,8 +2182,14 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
                 semiopaque: alpha > 0 && alpha < 1,
                 transparent: alpha === 0
             };
-            Object.freeze(CACHE_COLORDATA[value]);
-            return CACHE_COLORDATA[value];
+            Object.freeze(colorData);
+            if (opacity === '1') {
+                CACHE_COLORDATA[value] = colorData;
+            }
+            else {
+                CACHE_COLORDATA[valueAsRGBA] = colorData;
+            }
+            return colorData;
         }
     }
     return undefined;
