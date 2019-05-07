@@ -76,8 +76,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     const offset = i === 0 && match[2] === 'start' ? 1 : 0;
                     const time = keyTimes[index] + keyTimeTotal * (i / stepSize);
                     const percent = (interval * (i + offset)) / 100;
-                    const value: string[] = [];
-                    switch (name) {
+                    const result: string[] = [];
+                    switch (attributeName) {
                         case 'fill':
                         case 'stroke': {
                             const current = <ColorData> currentValue[0];
@@ -88,27 +88,27 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                                 SvgAnimate.getSplitValue(current.rgba.b, next.rgba.b, percent)
                             );
                             const a = $color.getHexCode(SvgAnimate.getSplitValue(current.rgba.a, next.rgba.a, percent));
-                            value.push(`#${rgb + (a !== 'FF' ? a : '')}`);
+                            result.push(`#${rgb + (a !== 'FF' ? a : '')}`);
                             break;
                         }
                         case 'points':
                             for (let j = 0; j < currentValue.length; j++) {
                                 const current = <Point> currentValue[j];
                                 const next = <Point> nextValue[j];
-                                value.push(`${SvgAnimate.getSplitValue(current.x, next.x, percent)},${SvgAnimate.getSplitValue(current.y, next.y, percent)}`);
+                                result.push(`${SvgAnimate.getSplitValue(current.x, next.x, percent)},${SvgAnimate.getSplitValue(current.y, next.y, percent)}`);
                             }
                             break;
                         default:
                             for (let j = 0; j < currentValue.length; j++) {
                                 const current = currentValue[j] as number;
                                 const next = nextValue[j] as number;
-                                value.push(SvgAnimate.getSplitValue(current, next, percent).toString());
+                                result.push(SvgAnimate.getSplitValue(current, next, percent).toString());
                             }
                             break;
                     }
-                    if (value.length) {
+                    if (result.length) {
                         splitTimes.push(time);
-                        splitValues.push(value.join(' '));
+                        splitValues.push(result.join(' '));
                     }
                     else {
                         return undefined;

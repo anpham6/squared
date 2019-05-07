@@ -1,4 +1,4 @@
-/* squared 0.9.5
+/* squared 0.9.6
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -15,7 +15,7 @@
         LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
         LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
         CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
-        CSS_URL: 'url\\("?(.+?)"?\\)',
+        CSS_URL: 'url\\("?([^")]+)"?\\)',
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
         CSS_CALC: 'calc(\\(.+\\))',
         CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
@@ -45,6 +45,7 @@
         SPACE: /\s+/,
         LEADINGSPACE: /^\s+/,
         TRAILINGSPACE: /\s+$/,
+        TRAILINGZERO: /\.(\d*?)(0+)$/,
         LEADINGNEWLINE: /^\s*\n+/,
         LEADINGNUMBER: /^\d/,
         WORD: /\w/,
@@ -236,6 +237,9 @@
         else if (Object.keys(source).length === Object.keys(values).length) {
             for (const attr in source) {
                 if (source[attr] !== values[attr]) {
+                    if (typeof source[attr] === 'object' && values[attr] === 'object' && isEqual(source[attr], values[attr])) {
+                        continue;
+                    }
                     return false;
                 }
             }
@@ -411,7 +415,7 @@
         return result;
     }
     function hasValue(value) {
-        return value !== undefined && value !== null && value.toString().trim() !== '';
+        return value !== undefined && value !== null && value !== '';
     }
     function withinRange(a, b, offset = 1) {
         return b >= (a - offset) && b <= (a + offset);
@@ -591,10 +595,14 @@
     }
     function joinMap(list, predicate, char = '\n') {
         let result = '';
-        for (let i = 0; i < list.length; i++) {
+        const length = list.length;
+        for (let i = 0; i < length; i++) {
             const value = predicate(list[i], i, list);
             if (value !== '') {
-                result += value + char;
+                result += value;
+                if (i < length - 1) {
+                    result += char;
+                }
             }
         }
         return result;
@@ -709,7 +717,7 @@
             return [];
         }
         contains(item) {
-            return this._children.indexOf(item) !== -1;
+            return this._children.includes(item);
         }
         retain(list) {
             this._children = list;
@@ -754,7 +762,7 @@
             return this;
         }
         every(predicate) {
-            if (this.length > 0) {
+            if (this.length) {
                 for (let i = 0; i < this._children.length; i++) {
                     if (!predicate(this._children[i], i, this._children)) {
                         return false;
@@ -2943,7 +2951,7 @@
     }
     function parseColor(value, opacity = '1', transparency = false) {
         if (value && (value !== 'transparent' || transparency)) {
-            if (CACHE_COLORDATA[value]) {
+            if (CACHE_COLORDATA[value] && opacity === '1') {
                 return CACHE_COLORDATA[value];
             }
             let key = '';
@@ -2975,7 +2983,8 @@
                     default:
                         const color = findColorName(value);
                         if (color) {
-                            rgba = Object.assign({}, color.rgb, { a: parseOpacity(opacity) });
+                            rgba = color.rgb;
+                            rgba.a = parseOpacity(opacity);
                             key = value;
                         }
                         break;
@@ -2984,11 +2993,15 @@
             if (rgba && (rgba.a > 0 || transparency)) {
                 const hexAsString = getHexCode(rgba.r, rgba.g, rgba.b);
                 const alphaAsString = getHexCode(rgba.a);
+                const valueAsRGBA = `#${hexAsString + alphaAsString}`;
+                if (CACHE_COLORDATA[valueAsRGBA]) {
+                    return CACHE_COLORDATA[valueAsRGBA];
+                }
                 const alpha = rgba.a / 255;
-                CACHE_COLORDATA[value] = {
+                const colorData = {
                     key,
                     value: `#${hexAsString}`,
-                    valueAsRGBA: `#${hexAsString + alphaAsString}`,
+                    valueAsRGBA,
                     valueAsARGB: `#${alphaAsString + hexAsString}`,
                     rgba,
                     hsl: convertHSLA(rgba),
@@ -2996,8 +3009,14 @@
                     semiopaque: alpha > 0 && alpha < 1,
                     transparent: alpha === 0
                 };
-                Object.freeze(CACHE_COLORDATA[value]);
-                return CACHE_COLORDATA[value];
+                Object.freeze(colorData);
+                if (opacity === '1') {
+                    CACHE_COLORDATA[value] = colorData;
+                }
+                else {
+                    CACHE_COLORDATA[valueAsRGBA] = colorData;
+                }
+                return colorData;
             }
         }
         return undefined;
@@ -3412,6 +3431,9 @@
         element[`__${attr}::${sessionId}`] = data;
     }
     function getElementCache(element, attr, sessionId) {
+        if (!sessionId) {
+            sessionId = element['__sessionId::0'];
+        }
         return element[`__${attr}::${sessionId}`];
     }
     function deleteElementCache(element, attr, sessionId) {
@@ -3432,6 +3454,7 @@
         getElementAsNode: getElementAsNode
     });
 
+    const REGEXP_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
     function convertLength(value, dimension, fontSize) {
         return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
     }
@@ -3550,6 +3573,18 @@
                         case 'borderLeftColor':
                             valid = true;
                             break;
+                        case 'borderTopWidth':
+                        case 'borderRightWidth':
+                        case 'borderBottomWidth':
+                        case 'borderLeftWidth':
+                            switch (value) {
+                                case 'thin':
+                                case 'medium':
+                                case 'thick':
+                                    valid = true;
+                                    break;
+                            }
+                            break;
                         default:
                             if (isPercent(value)) {
                                 switch (attr) {
@@ -3560,6 +3595,7 @@
                                     case 'minHeight':
                                     case 'maxHeight':
                                     case 'columnWidth':
+                                    case 'offsetDistance':
                                         break;
                                     default:
                                         valid = true;
@@ -3572,24 +3608,6 @@
                         setElementCache(element, attr, specificity.toString(), value);
                         return computed;
                     }
-                }
-                switch (attr) {
-                    case 'borderTopWidth':
-                    case 'borderRightWidth':
-                    case 'borderBottomWidth':
-                    case 'borderLeftWidth':
-                        switch (value) {
-                            case 'thin':
-                                value = '1px';
-                                break;
-                            case 'medium':
-                                value = '2px';
-                                break;
-                            case 'thick':
-                                value = '3px';
-                                break;
-                        }
-                        break;
                 }
                 if (numeric) {
                     setElementCache(element, attr, specificity.toString(), value);
@@ -3646,10 +3664,9 @@
         return result;
     }
     function parseKeyframeRule(rules) {
-        const pattern = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
         const result = {};
         for (let k = 0; k < rules.length; k++) {
-            const match = pattern.exec(rules[k].cssText);
+            const match = REGEXP_KEYFRAME.exec(rules[k].cssText);
             if (match) {
                 for (let percent of (rules[k]['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
                     percent = percent.trim();
@@ -4363,8 +4380,9 @@
         isPercent: isPercent
     });
 
-    const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
     const REGEXP_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
+    const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+    const REGEXP_TRUNCATECACHE = {};
     function minArray(list) {
         if (list.length) {
             return Math.min.apply(null, list);
@@ -4386,21 +4404,6 @@
     function lessEqual(valueA, valueB, precision = 8) {
         return valueA < valueB || isEqual$1(valueA, valueB, precision);
     }
-    function truncate(value, precision = 3) {
-        if (value === Math.floor(value)) {
-            return value.toString();
-        }
-        else {
-            if (value > 1) {
-                precision += 1;
-                let i = 1;
-                while (value / Math.pow(10, i++) >= 1) {
-                    precision += 1;
-                }
-            }
-            return value.toPrecision(precision).replace(/\.?0+$/, '');
-        }
-    }
     function convertDecimalNotation(value) {
         const match = REGEXP_DECIMALNOTATION.exec(value.toString());
         if (match) {
@@ -4409,24 +4412,66 @@
         }
         return value.toString();
     }
+    function truncate(value, precision = 3) {
+        if (typeof value === 'string') {
+            value = parseFloat(value);
+        }
+        if (value === Math.floor(value)) {
+            return value.toString();
+        }
+        else if (value >= 0 && value <= 1 / Math.pow(10, precision)) {
+            return '0';
+        }
+        else if (value < 0 && value >= -1 / Math.pow(10, precision)) {
+            return '0';
+        }
+        else {
+            const absolute = Math.abs(value);
+            let i = 1;
+            if (absolute >= 1) {
+                precision += 1;
+                while (absolute / Math.pow(10, i++) >= 1) {
+                    precision += 1;
+                }
+            }
+            else {
+                while (precision > 1 && absolute * Math.pow(10, i++) < 1) {
+                    precision -= 1;
+                }
+            }
+            return truncateTrailingZero(value.toPrecision(precision));
+        }
+    }
     function truncateFraction(value) {
         if (value !== Math.floor(value)) {
             const match = REGEXP_TRUNCATE.exec(convertDecimalNotation(value));
             if (match) {
-                return match[2] === '' ? Math.round(value) : parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
+                if (match[2] === '') {
+                    return Math.round(value);
+                }
+                return parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
             }
         }
         return value;
     }
+    function truncateTrailingZero(value) {
+        const match = CHAR.TRAILINGZERO.exec(value);
+        if (match) {
+            return value.substring(0, value.length - match[match[1] !== '' ? 2 : 0].length);
+        }
+        return value;
+    }
     function truncateString(value, precision = 3) {
-        const pattern = new RegExp(`(\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+        if (REGEXP_TRUNCATECACHE[precision] === undefined) {
+            REGEXP_TRUNCATECACHE[precision] = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+        }
         let match;
         let output = value;
-        while ((match = pattern.exec(value)) !== null) {
+        while ((match = REGEXP_TRUNCATECACHE[precision].exec(value)) !== null) {
             if (parseInt(match[2]) >= 5) {
                 match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
             }
-            output = output.replace(match[0], match[1]);
+            output = output.replace(match[0], truncateTrailingZero(match[1]));
         }
         return output;
     }
@@ -4440,10 +4485,13 @@
             (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(b))
         ];
     }
-    function offsetAngle(start, end) {
+    function absoluteAngle(start, end) {
         const x = end.x - start.x;
         const y = end.y - start.y;
-        let value = (Math.atan2(y, x) * 180 / Math.PI) + 90;
+        return Math.atan2(y, x) * 180 / Math.PI;
+    }
+    function relativeAngle(start, end, orientation = 90) {
+        let value = absoluteAngle(start, end) + orientation;
         if (value < 0) {
             value += 360;
         }
@@ -4507,13 +4555,15 @@
         isEqual: isEqual$1,
         moreEqual: moreEqual,
         lessEqual: lessEqual,
-        truncate: truncate,
         convertDecimalNotation: convertDecimalNotation,
+        truncate: truncate,
         truncateFraction: truncateFraction,
+        truncateTrailingZero: truncateTrailingZero,
         truncateString: truncateString,
         convertRadian: convertRadian,
         triangulateASA: triangulateASA,
-        offsetAngle: offsetAngle,
+        absoluteAngle: absoluteAngle,
+        relativeAngle: relativeAngle,
         offsetAngleX: offsetAngleX,
         offsetAngleY: offsetAngleY,
         clampRange: clampRange,

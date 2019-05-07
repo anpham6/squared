@@ -46,6 +46,12 @@ export function truncate(value: number | string, precision = 3) {
     if (value === Math.floor(value)) {
         return value.toString();
     }
+    else if (value >= 0 && value <= 1 / Math.pow(10, precision)) {
+         return '0';
+    }
+    else if (value < 0 && value >= -1 / Math.pow(10, precision)) {
+        return '0';
+    }
     else {
         const absolute = Math.abs(value);
         let i = 1;
@@ -56,7 +62,7 @@ export function truncate(value: number | string, precision = 3) {
             }
         }
         else {
-            while (absolute * Math.pow(10, i++) < 1) {
+            while (precision > 1 && absolute * Math.pow(10, i++) < 1) {
                 precision -= 1;
             }
         }

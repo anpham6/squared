@@ -1094,7 +1094,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             const keyframe: KeyFrame[] = [];
                                                             for (let j = 0; j < keyTimes.length; j++) {
                                                                 let value = getPropertyValue(values, j, i, true);
-                                                                if (value !== '') {
+                                                                if (value && options.valueType === 'floatType') {
                                                                     value = $math.truncate(value, this.options.floatPrecisionValue);
                                                                 }
                                                                 keyframe.push({
@@ -1378,6 +1378,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 }
                 if (!node.hasHeight) {
                     node.android('layout_height', 'wrap_content');
+                }
+                if (node.baseline) {
+                    node.android('baselineAlignBottom', 'true');
                 }
             }
         }

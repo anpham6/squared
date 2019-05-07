@@ -819,25 +819,16 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (this.pageFlow) {
                     let floating = '';
                     if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.container.positionRelative || outerRenderParent.is(CONTAINER_NODE.GRID))) {
-                        let target: T;
-                        let gravity: string;
-                        if (this.display === 'table-cell') {
-                            target = this;
-                            gravity = 'gravity';
-                        }
-                        else {
-                            target = node;
-                            gravity = 'layout_gravity';
-                        }
+                        const gravity = this.documentParent.display === 'table-cell' ? 'gravity' : 'layout_gravity';
                         switch (this.cssInitial('verticalAlign', true)) {
                             case 'top':
-                                target.mergeGravity(gravity, 'top');
+                                node.mergeGravity(gravity, 'top');
                                 break;
                             case 'middle':
-                                target.mergeGravity(gravity, 'center_vertical');
+                                node.mergeGravity(gravity, 'center_vertical');
                                 break;
                             case 'bottom':
-                                target.mergeGravity(gravity, 'bottom');
+                                node.mergeGravity(gravity, 'bottom');
                                 break;
                         }
                     }
@@ -866,7 +857,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 renderParent.mergeGravity('layout_gravity', floating);
                             }
                         }
-                        if (renderParent.display === 'table-cell' && this.singleChild) {
+                        if (this.singleChild && renderParent.display === 'table-cell') {
                             let gravity: string;
                             switch (renderParent.css('verticalAlign')) {
                                 case 'top':

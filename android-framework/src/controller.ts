@@ -1922,6 +1922,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     if (!item.baselineAltered) {
                                         baselineAlign.push(item);
                                     }
+                                    if (item.svgElement) {
+                                        item.android('baselineAlignBottom', 'true');
+                                    }
                                     break;
                             }
                         }
@@ -2093,6 +2096,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             break;
                         default:
                             setParentVertical(item);
+                            if (item.svgElement) {
+                                item.android('baselineAlignBottom', 'true');
+                            }
                             break;
                     }
                     if (alignTop) {

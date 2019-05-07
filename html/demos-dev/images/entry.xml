@@ -77,7 +77,7 @@
                     android:id="@+id/textview_19"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol46015"
+                    android:text="@string/__symbol99185"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -223,7 +223,7 @@
                     android:id="@+id/textview_22"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol46015"
+                    android:text="@string/__symbol99185"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -667,7 +667,7 @@
                     android:id="@+id/textview_25"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol46015"
+                    android:text="@string/__symbol99185"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -799,7 +799,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol46015">):</string>
+    <string name="__symbol99185">):</string>
     <string name="active">Active:</string>
     <string name="add"><u>Add</u></string>
     <string name="all">All</string>
@@ -1179,7 +1179,7 @@
     </item>
     <item android:left="-1dp" android:top="-1dp" android:right="-1dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/darkgray_1" />
+            <stroke android:width="2dp" android:color="@color/darkgray_1" />
         </shape>
     </item>
 </layer-list>

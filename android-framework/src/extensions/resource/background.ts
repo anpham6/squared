@@ -115,27 +115,27 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
     return result;
 }
 
-function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false): ExternalData | undefined {
+function getBorderStroke(border: BorderAttribute, direction = -1, offset = 0, hasInset = false, isInset = false): ExternalData | undefined {
     if (border) {
         const style = border.style;
         if (isAlternatingBorder(style)) {
             const width = parseFloat(border.width);
             if (isInset) {
                 return {
-                    width: $css.formatPX(Math.ceil(width / 2) * 2),
+                    width: $css.formatPX(Math.ceil(width / 2) * 2) + offset,
                     ...getBorderStyle(border, direction)
                 };
             }
             else {
                 return {
-                    width: hasInset ? $css.formatPX(Math.ceil(width / 2)) : $css.formatPX(roundFloat(border.width)),
+                    width: hasInset ? $css.formatPX(Math.ceil(width / 2) + offset) : $css.formatPX(roundFloat(border.width) + offset),
                     ...getBorderStyle(border, direction, true)
                 };
             }
         }
         else {
             return {
-                width: $css.formatPX(roundFloat(border.width)),
+                width: $css.formatPX(roundFloat(border.width) + offset),
                 ...getBorderStyle(border)
             };
         }
@@ -497,10 +497,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 const images = this.getDrawableImages(node, stored);
-                let [shapeData, layerListData] = this.getDrawableBorder(stored, [stored.borderTop, stored.borderRight, stored.borderBottom, stored.borderLeft], stored.border, images, this.options.drawOutlineAsInsetBorder && stored.outline ? getIndentOffset(stored.outline) : 0, false);
+                let [shapeData, layerListData] = this.getDrawableBorder(node, stored, [stored.borderTop, stored.borderRight, stored.borderBottom, stored.borderLeft], stored.border, images, this.options.drawOutlineAsInsetBorder && stored.outline ? getIndentOffset(stored.outline) : 0, false);
                 const emptyBackground = shapeData === undefined && layerListData === undefined;
                 if (stored.outline && (this.options.drawOutlineAsInsetBorder || emptyBackground)) {
-                    const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(stored, [stored.outline, stored.outline, stored.outline, stored.outline], emptyBackground ? stored.outline : undefined);
+                    const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(node, stored, [stored.outline, stored.outline, stored.outline, stored.outline], emptyBackground ? stored.outline : undefined);
                     if (emptyBackground) {
                         shapeData = outlineShapeData;
                         layerListData = outlineLayerListData;
@@ -537,7 +537,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         }
     }
 
-    public getDrawableBorder(data: BoxStyle, borders: (BorderAttribute | undefined)[], border?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = true) {
+    public getDrawableBorder(node: T, data: BoxStyle, borders: (BorderAttribute | undefined)[], border?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = true) {
         const borderVisible: boolean[] = [];
         const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
         const indentOffset = indentWidth > 0 ? $css.formatPX(indentWidth) : '';
@@ -612,7 +612,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             else {
-                function setBorderStyle(layerList: ObjectMap<any>, index: number) {
+                function setBorderStyle(layerList: ObjectMap<any>, index: number, offset = 0) {
                     const item = borders[index];
                     if (item) {
                         const width = roundFloat(item.width);
@@ -639,7 +639,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 shape: {
                                     'android:shape': 'rectangle',
                                     corners,
-                                    stroke: getBorderStroke(item, index, inset)
+                                    stroke: getBorderStroke(item, index, offset, inset)
                                 }
                             });
                             if (inset) {
@@ -651,7 +651,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     left: index === 3 ? '' : hideOffset,
                                     shape: {
                                         'android:shape': 'rectangle',
-                                        stroke: getBorderStroke(item, index, inset, true)
+                                        stroke: getBorderStroke(item, index, offset, inset, true)
                                     }
                                 });
                             }
@@ -661,7 +661,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 setBorderStyle(layerListData[0], 0);
                 setBorderStyle(layerListData[0], 1);
                 setBorderStyle(layerListData[0], 3);
-                setBorderStyle(layerListData[0], 2);
+                setBorderStyle(layerListData[0], 2, node.is(CONTAINER_NODE.BUTTON) ? 1 : 0);
             }
         }
         return [shapeData, layerListData];
