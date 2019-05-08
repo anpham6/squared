@@ -622,10 +622,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         else {
                                             const outsideX = !overflowX && node.outsideX(parent.box);
                                             const outsideY = !overflowY && node.outsideY(parent.box);
-                                            if (outsideY && (node.top < 0 || node.marginTop < 0 || !node.has('top') && node.bottom !== 0 || !parent.pageFlow && node.top > 0)) {
+                                            if (outsideY && (node.top < 0 || node.marginTop < 0 || !node.has('top') && node.bottom !== 0)) {
                                                 outside = true;
                                             }
-                                            else if (outsideX && (!node.has('left') && node.right > 0 || !parent.pageFlow && node.left > 0)) {
+                                            else if (outsideX && !node.has('left') && node.right > 0) {
+                                                outside = true;
+                                            }
+                                            else if (!parent.pageFlow && outsideX && outsideY && (node.top > 0 || node.left > 0)) {
                                                 outside = true;
                                             }
                                             else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.has('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
@@ -639,14 +642,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             }
                                         }
                                     }
-                                    else {
-                                        if (parent.layoutElement) {
-                                            parent = absoluteParent as T;
-                                            break;
-                                        }
-                                        else if (node.withinX(parent.box) && node.withinY(parent.box)) {
-                                            break;
-                                        }
+                                    else if (parent.layoutElement) {
+                                        parent = absoluteParent as T;
+                                        break;
+                                    }
+                                    else if (node.withinX(parent.box) && node.withinY(parent.box)) {
+                                        break;
                                     }
                                     parent = parent.actualParent as T;
                                 }

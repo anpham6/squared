@@ -819,7 +819,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (this.pageFlow) {
                     let floating = '';
                     if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.container.positionRelative || outerRenderParent.is(CONTAINER_NODE.GRID))) {
-                        const gravity = this.documentParent.display === 'table-cell' ? 'gravity' : 'layout_gravity';
+                        const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
                         switch (this.cssInitial('verticalAlign', true)) {
                             case 'top':
                                 node.mergeGravity(gravity, 'top');
@@ -844,7 +844,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         if (this.hasAlign($enum.NODE_ALIGNMENT.RIGHT) || this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
                             floating = 'right';
                         }
-                        else if (alignFloat && this.groupParent && !this.renderChildren.some(item => item.float === 'right')) {
+                        else if (alignFloat && this.groupParent && !this.renderChildren.some(item => item.rightAligned)) {
                             floating = 'left';
                         }
                     }

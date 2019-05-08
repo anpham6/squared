@@ -416,7 +416,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;
         }
-        else if (this.pageFlow && previousSiblings.length) {
+        else if ((this.pageFlow || this.positionAuto) && previousSiblings.length) {
             if ($util.isArray(siblings)) {
                 const previous = siblings[siblings.length - 1];
                 if (cleared && cleared.has(this)) {
@@ -2031,6 +2031,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.actualChildren = actualChildren;
             }
             else {
+                if (this._initial.iteration === -1) {
+                    this.saveAsInitial();
+                }
                 this._cached.actualChildren = this._initial.children;
             }
         }

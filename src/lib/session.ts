@@ -52,11 +52,11 @@ export function getRangeClientRect(element: Element, sessionId: string, cache = 
                 bounds.bottom = rect.bottom;
             }
             bounds.width += rect.width;
-            bounds.height += rect.height;
             if (rect.top > maxTop) {
                 maxTop = rect.top;
             }
         }
+        bounds.height = bounds.bottom - bounds.top;
         if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
             numberOfLines = domRect.length - 1;
         }

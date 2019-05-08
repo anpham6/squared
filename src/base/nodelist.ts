@@ -74,7 +74,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 const item = list[i];
                 if (!(item.layoutVertical && item.length > 1 || item.plainText && item.multiline)) {
                     let height: number;
-                    if (item.multiline && item.cssTry('whiteSpace', 'nowrap')) {
+                    if (item.htmlElement && item.multiline && item.cssTry('whiteSpace', 'nowrap')) {
                         height = (<Element> item.element).getBoundingClientRect().height;
                         item.cssFinally('whiteSpace');
                     }
@@ -137,119 +137,128 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static linearData<T extends Node>(list: T[], clearOnly = false): LinearData<T> {
-        const nodes: T[] = [];
-        const floating = new Set<string>();
-        const clearable: ObjectMap<Undefined<T>> = {};
         const floated = new Set<string>();
         const cleared = new Map<T, string>();
         let linearX = false;
         let linearY = false;
-        for (const node of list) {
-            if (node.pageFlow) {
-                if (floating.size) {
-                    const previousFloat = [];
-                    const clear = node.css('clear');
-                    switch (clear) {
-                        case 'left':
-                            previousFloat.push(clearable.left);
-                            break;
-                        case 'right':
-                            previousFloat.push(clearable.right);
-                            break;
-                        case 'both':
-                            previousFloat.push(clearable.left, clearable.right);
-                            break;
-                    }
-                    for (const item of previousFloat) {
-                        if (item && floating.has(item.float) && !node.floating && node.linear.top >= item.linear.bottom) {
-                            floating.delete(item.float);
-                            clearable[item.float] = undefined;
+        if (list.length > 1) {
+            const nodes: T[] = [];
+            const floating = new Set<string>();
+            const clearable: ObjectMap<Undefined<T>> = {};
+            for (const node of list) {
+                if (node.pageFlow) {
+                    if (floating.size) {
+                        const previousFloat = [];
+                        const clear = node.css('clear');
+                        switch (clear) {
+                            case 'left':
+                                previousFloat.push(clearable.left);
+                                break;
+                            case 'right':
+                                previousFloat.push(clearable.right);
+                                break;
+                            case 'both':
+                                previousFloat.push(clearable.left, clearable.right);
+                                break;
+                        }
+                        for (const item of previousFloat) {
+                            if (item && floating.has(item.float) && !node.floating && node.linear.top >= item.linear.bottom) {
+                                floating.delete(item.float);
+                                clearable[item.float] = undefined;
+                            }
+                        }
+                        if (clear === 'both') {
+                            cleared.set(node, floating.size === 2 ? 'both' : floating.values().next().value);
+                            floating.clear();
+                            clearable.left = undefined;
+                            clearable.right = undefined;
+                        }
+                        else if (floating.has(clear)) {
+                            cleared.set(node, clear);
+                            floating.delete(clear);
+                            clearable[clear] = undefined;
                         }
                     }
-                    if (clear === 'both') {
-                        cleared.set(node, floating.size === 2 ? 'both' : floating.values().next().value);
-                        floating.clear();
-                        clearable.left = undefined;
-                        clearable.right = undefined;
+                    if (node.floating) {
+                        floating.add(node.float);
+                        floated.add(node.float);
+                        clearable[node.float] = node;
                     }
-                    else if (floating.has(clear)) {
-                        cleared.set(node, clear);
-                        floating.delete(clear);
-                        clearable[clear] = undefined;
+                    nodes.push(node);
+                }
+                else if (node.positionAuto) {
+                    nodes.push(node);
+                }
+            }
+            if (nodes.length) {
+                if (!clearOnly) {
+                    const siblings = [nodes[0]];
+                    let x = 1;
+                    let y = 1;
+                    for (let i = 1; i < nodes.length; i++) {
+                        if (nodes[i].alignedVertically(nodes[i].previousSiblings() as T[], siblings, cleared)) {
+                            y++;
+                        }
+                        else {
+                            x++;
+                        }
+                        siblings.push(nodes[i]);
+                    }
+                    linearX = x === nodes.length;
+                    linearY = y === nodes.length;
+                    if (linearX && floated.size) {
+                        let boxLeft = Number.POSITIVE_INFINITY;
+                        let boxRight = Number.NEGATIVE_INFINITY;
+                        let floatLeft = Number.NEGATIVE_INFINITY;
+                        let floatRight = Number.POSITIVE_INFINITY;
+                        for (const node of nodes) {
+                            boxLeft = Math.min(boxLeft, node.linear.left);
+                            boxRight = Math.max(boxRight, node.linear.right);
+                            if (node.floating) {
+                                if (node.float === 'left') {
+                                    floatLeft = Math.max(floatLeft, node.linear.right);
+                                }
+                                else {
+                                    floatRight = Math.min(floatRight, node.linear.left);
+                                }
+                            }
+                        }
+                        for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < nodes.length; i++) {
+                            const item = nodes[i];
+                            if (Math.floor(item.linear.left) <= boxLeft) {
+                                j++;
+                            }
+                            if (Math.ceil(item.linear.right) >= boxRight) {
+                                k++;
+                            }
+                            if (!item.floating) {
+                                if (item.linear.left === floatLeft) {
+                                    l++;
+                                }
+                                if (item.linear.right === floatRight) {
+                                    m++;
+                                }
+                            }
+                            if (i === 0) {
+                                continue;
+                            }
+                            if (j === 2 || k === 2 || l === 2 || m === 2) {
+                                linearX = false;
+                                break;
+                            }
+                            const previous = nodes[i - 1];
+                            if (previous.floating && item.linear.top >= previous.linear.bottom || $util.withinRange(item.linear.left, previous.linear.left)) {
+                                linearX = false;
+                                break;
+                            }
+                        }
                     }
                 }
-                if (node.floating) {
-                    floating.add(node.float);
-                    floated.add(node.float);
-                    clearable[node.float] = node;
-                }
-                nodes.push(node);
             }
         }
-        if (nodes.length) {
-            if (!clearOnly) {
-                const siblings = [nodes[0]];
-                let x = 1;
-                let y = 1;
-                for (let i = 1; i < nodes.length; i++) {
-                    if (nodes[i].alignedVertically(nodes[i].previousSiblings() as T[], siblings, cleared)) {
-                        y++;
-                    }
-                    else {
-                        x++;
-                    }
-                    siblings.push(nodes[i]);
-                }
-                linearX = x === nodes.length;
-                linearY = y === nodes.length;
-                if (linearX && floated.size) {
-                    let boxLeft = Number.POSITIVE_INFINITY;
-                    let boxRight = Number.NEGATIVE_INFINITY;
-                    let floatLeft = Number.NEGATIVE_INFINITY;
-                    let floatRight = Number.POSITIVE_INFINITY;
-                    for (const node of nodes) {
-                        boxLeft = Math.min(boxLeft, node.linear.left);
-                        boxRight = Math.max(boxRight, node.linear.right);
-                        if (node.floating) {
-                            if (node.float === 'left') {
-                                floatLeft = Math.max(floatLeft, node.linear.right);
-                            }
-                            else {
-                                floatRight = Math.min(floatRight, node.linear.left);
-                            }
-                        }
-                    }
-                    for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < nodes.length; i++) {
-                        const item = nodes[i];
-                        if (Math.floor(item.linear.left) <= boxLeft) {
-                            j++;
-                        }
-                        if (Math.ceil(item.linear.right) >= boxRight) {
-                            k++;
-                        }
-                        if (!item.floating) {
-                            if (item.linear.left === floatLeft) {
-                                l++;
-                            }
-                            if (item.linear.right === floatRight) {
-                                m++;
-                            }
-                        }
-                        if (i === 0) {
-                            continue;
-                        }
-                        if (j === 2 || k === 2 || l === 2 || m === 2) {
-                            linearX = false;
-                            break;
-                        }
-                        const previous = nodes[i - 1];
-                        if (previous.floating && item.linear.top >= previous.linear.bottom || $util.withinRange(item.linear.left, previous.linear.left)) {
-                            linearX = false;
-                            break;
-                        }
-                    }
-                }
-            }
+        else if (list.length) {
+            linearY = list[0].blockStatic;
+            linearX = !linearY;
         }
         return {
             linearX,

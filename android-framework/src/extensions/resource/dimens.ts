@@ -37,13 +37,15 @@ export default class ResourceDimens<T extends android.base.View> extends squared
                 for (const namespace of NAMESPACE_ATTR) {
                     const obj = node.namespace(namespace);
                     for (const attr in obj) {
-                        const value = obj[attr].trim();
-                        if (REGEXP_DEVICEUNIT.test(value)) {
-                            const dimen = `${namespace},${attr},${value}`;
-                            if (groups[tagName][dimen] === undefined) {
-                                groups[tagName][dimen] = [];
+                        if (attr !== 'text') {
+                            const value = obj[attr].trim();
+                            if (REGEXP_DEVICEUNIT.test(value)) {
+                                const dimen = `${namespace},${attr},${value}`;
+                                if (groups[tagName][dimen] === undefined) {
+                                    groups[tagName][dimen] = [];
+                                }
+                                groups[tagName][dimen].push(node);
                             }
-                            groups[tagName][dimen].push(node);
                         }
                     }
                 }
@@ -67,9 +69,11 @@ export default class ResourceDimens<T extends android.base.View> extends squared
             let content = layout.content;
             let match: RegExpExecArray | null;
             while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
-                const key = getResourceName(STORED.dimens, `${getDisplayName(match[1]).toLowerCase()}_${$util.convertUnderscore(match[3])}`, match[4]);
-                STORED.dimens.set(key, match[4]);
-                content = content.replace(match[0], match[0].replace(match[4], `@dimen/${key}`));
+                if (match[3] !== 'text') {
+                    const key = getResourceName(STORED.dimens, `${getDisplayName(match[1]).toLowerCase()}_${$util.convertUnderscore(match[3])}`, match[4]);
+                    STORED.dimens.set(key, match[4]);
+                    content = content.replace(match[0], match[0].replace(match[4], `@dimen/${key}`));
+                }
             }
             layout.content = content;
         }

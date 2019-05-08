@@ -47,14 +47,14 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 item.android('layout_columnWeight', '0.01');
                             }
                             else {
-                                if (item.textElement && !/[\s\n\-]/.test(item.textContent.trim())) {
-                                    item.android('maxLines', '1');
-                                }
                                 if (item.has('width') && item.actualWidth < item.bounds.width) {
                                     item.android('layout_width', $css.formatPX(item.bounds.width));
                                 }
                             }
                         }
+                    }
+                    if (item.textElement && !/[\s\n\-]/.test(item.textContent.trim())) {
+                        item.android('maxLines', '1');
                     }
                 });
                 if (requireWidth) {

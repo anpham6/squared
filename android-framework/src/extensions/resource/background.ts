@@ -122,7 +122,7 @@ function getBorderStroke(border: BorderAttribute, direction = -1, offset = 0, ha
             const width = parseFloat(border.width);
             if (isInset) {
                 return {
-                    width: $css.formatPX(Math.ceil(width / 2) * 2) + offset,
+                    width: $css.formatPX(Math.ceil(width / 2) * 2 + offset),
                     ...getBorderStyle(border, direction)
                 };
             }

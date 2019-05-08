@@ -9,7 +9,7 @@ export interface CssGridData<T> {
     emptyRows: Array<Undefined<number[]>>;
     rowData: (T[] | undefined)[][];
     rowHeight: number[];
-    rowHeightCount: number[];
+    rowSpanMultiple: (true | undefined)[];
     rowWeight: number[];
     templateAreas: ObjectMap<CssGridCellData>;
     alignItems: string;

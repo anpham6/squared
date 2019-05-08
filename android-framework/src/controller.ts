@@ -52,14 +52,14 @@ function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
         templates.sort((a, b) => {
             const above = (a.node.innerWrapped as View) || a.node;
             const below = (b.node.innerWrapped as View) || b.node;
-            if (above.intersectX(below.bounds, 'bounds') && above.intersectY(below.bounds, 'bounds')) {
+            if (above.documentParent === below.documentParent) {
+                if (above.zIndex === below.zIndex) {
+                    return above.siblingIndex < below.siblingIndex ? -1 : 1;
+                }
+                return above.zIndex < below.zIndex ? -1 : 1;
+            }
+            else if (above.intersectX(below.bounds, 'bounds') && above.intersectY(below.bounds, 'bounds')) {
                 if (above.depth === below.depth) {
-                    if (above.documentParent === below.documentParent) {
-                        if (above.zIndex === below.zIndex) {
-                            return above.siblingIndex < below.siblingIndex ? -1 : 1;
-                        }
-                        return above.zIndex < below.zIndex ? -1 : 1;
-                    }
                     return 0;
                 }
                 return above.id < below.id ? -1 : 1;
@@ -2283,8 +2283,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 for (let j = 0, k = 0, l = 0; j < row.length; j++, l++) {
                     const column = row[j];
                     const rowIteration = l % perRowCount === 0;
-                    const onePerRow = row.length - j === columnMin - k;
-                    if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && onePerRow && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
+                    if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && (row.length - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                         if (j > 0) {
                             k++;
                             if (rowIteration) {
@@ -2303,7 +2302,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (column.length) {
                         totalGap += $math.maxArray($util.objectMap<T, number>(column.children as T[], child => child.marginLeft + child.marginRight));
                     }
-                    if (onePerRow && excessCount !== Number.POSITIVE_INFINITY) {
+                    if (row.length - j === columnMin - k && excessCount !== Number.POSITIVE_INFINITY) {
                         perRowCount = 1;
                     }
                 }
