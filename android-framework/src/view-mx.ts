@@ -16,6 +16,7 @@ const $enum = squared.base.lib.enumeration;
 const $client = squared.lib.client;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 
 const REGEXP_DATASETATTR = /^attr[A-Z]/;
@@ -337,8 +338,8 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public anchorStyle(orientation: string, value = 'packed', bias = 0, overwrite = true) {
-            orientation = $util.capitalize(orientation);
             const node = this.actualAnchor;
+            orientation = $util.capitalize(orientation);
             node.app(`layout_constraint${orientation}_chainStyle`, value, overwrite);
             node.app(`layout_constraint${orientation}_bias`, bias.toString(), overwrite);
         }
@@ -590,7 +591,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                             value = this.actualWidth;
                         }
                         else if ($css.isPercent(width)) {
-                            if (this.imageElement) {
+                            if (renderParent.is(CONTAINER_NODE.GRID)) {
+                                layoutWidth = '0px';
+                                this.android('layout_columnWeight', $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
+                            }
+                            else if (this.imageElement) {
                                 if (width === '100%') {
                                     layoutWidth = 'match_parent';
                                     this.android('adjustViewBounds', 'true');
@@ -608,7 +613,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     const maxWidth = this.css('maxWidth');
                                     const maxValue = this.parseUnit(maxWidth);
                                     if (maxWidth === '100%') {
-                                        if (!documentParent.inlineWidth && Math.ceil(maxValue) >= Math.floor(documentParent.box.width)) {
+                                        if (!documentParent.inlineWidth && $util.aboveRange(maxValue, documentParent.box.width)) {
                                             layoutWidth = 'match_parent';
                                         }
                                         else {
@@ -695,7 +700,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     const maxHeight = this.css('maxHeight');
                                     const maxValue = this.parseUnit(maxHeight);
                                     if (maxHeight === '100%') {
-                                        if (!documentParent.inlineHeight && Math.ceil(maxValue) >= Math.floor(documentParent.box.height)) {
+                                        if (!documentParent.inlineHeight && $util.aboveRange(maxValue, documentParent.box.height)) {
                                             layoutHeight = 'match_parent';
                                         }
                                         else {

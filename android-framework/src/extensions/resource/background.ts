@@ -1089,7 +1089,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 else {
                     imageData.drawable = src;
                     imageData.gravity = gravity;
-                    if (gravity === 'center' || gravity.startsWith('center_horizotnal')) {
+                    if (gravity === 'center' || gravity.startsWith('center_horizontal')) {
                         centerHorizontally = true;
                     }
                 }

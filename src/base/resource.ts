@@ -753,7 +753,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             node.imageElement ||
             node.svgElement ||
             node.tagName === 'HR' ||
-            node.inlineText && !node.preserveWhiteSpace && node.element.innerHTML.trim() === '' && !node.visibleStyle.background))
+            node.textEmpty && !node.visibleStyle.background))
         {
             const opacity = node.css('opacity');
             const color = $color.parseColor(node.css('color'), opacity);

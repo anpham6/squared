@@ -153,6 +153,8 @@ declare global {
             function hasValue<T>(value: any): value is T;
             function compareRange(operation: string, range: number, value: number): boolean;
             function withinRange(a: number, b: number, offset?: number): boolean;
+            function aboveRange(a: number, b: number): boolean;
+            function belowRange(a: number, b: number): boolean;
             function assignEmptyProperty(dest: {}, source: {}): {};
             function assignEmptyValue(dest: {}, ...attrs: string[]): void;
             function sortNumber(values: number[], ascending?: boolean): number[];

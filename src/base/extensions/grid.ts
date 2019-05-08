@@ -5,8 +5,9 @@ import Node from '../node';
 import NodeList from '../nodelist';
 
 import { EXT_NAME } from '../lib/constant';
-import { BOX_STANDARD } from '../lib/enumeration';
+import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
 
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 function getRowIndex(columns: Node[][], target: Node) {
@@ -39,7 +40,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
             cellEnd: false,
             rowEnd: false,
             rowStart: false,
-            siblings: []
+            block: false
         };
     }
 
@@ -116,7 +117,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                     columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
                     for (let j = 0; j < nextAxisX.length; j++) {
                         const nextX = nextAxisX[j];
-                        if (i === 0 || nextX.linear.left >= columnRight[i - 1]) {
+                        if (i === 0 || $util.aboveRange(nextX.linear.left, columnRight[i - 1])) {
                             if (columns[i] === undefined) {
                                 columns[i] = [];
                             }
@@ -142,7 +143,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                                     minLeft = Math.min(minLeft, item.linear.left);
                                     maxRight = Math.max(maxRight, item.linear.right);
                                 });
-                                if (nextX.linear.left > Math.ceil(minLeft) && nextX.linear.right > Math.ceil(maxRight)) {
+                                if (Math.floor(nextX.linear.left) > Math.ceil(minLeft) && Math.floor(nextX.linear.right) > Math.ceil(maxRight)) {
                                     const index = getRowIndex(columns, nextX);
                                     if (index !== -1) {
                                         for (let k = columns.length - 1; k >= 0; k--) {
@@ -196,6 +197,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
         if (columns.length > 1 && columns[0].length === node.length) {
             const mainData = { ...Grid.createDataAttribute(), columnCount: columns.length };
             const children: T[][] = [];
+            const assigned = new Set<T>();
             for (let i = 0, count = 0; i < columns.length; i++) {
                 let spacer = 0;
                 for (let j = 0, start = 0; j < columns[i].length; j++) {
@@ -229,10 +231,12 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                         }
                         if (columnEnd.length) {
                             const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
-                            const actualChildren = item.documentParent.actualChildren;
-                            for (const sibling of actualChildren) {
-                                if (sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[l]) {
-                                    data.siblings.push(sibling as T);
+                            for (const sibling of item.documentParent.actualChildren as T[]) {
+                                if (!assigned.has(sibling) && sibling.visible && !sibling.rendered && $util.aboveRange(sibling.linear.left, item.linear.right) && $util.belowRange(sibling.linear.right, columnEnd[l])) {
+                                    if (data.siblings === undefined) {
+                                        data.siblings = [];
+                                    }
+                                    data.siblings.push(sibling);
                                 }
                             }
                         }
@@ -246,6 +250,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                         spacer = 0;
                         item.data(EXT_NAME.GRID, 'cellData', data);
                         children[j].push(item);
+                        assigned.add(item);
                     }
                     else if (item['spacer'] === 1) {
                         spacer++;
@@ -257,8 +262,49 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
             }
             node.clear();
             for (const group of children) {
+                let hasLength = true;
+                let hasPercent = false;
+                for (const item of group) {
+                    const width = item.css('width');
+                    if ($css.isPercent(width)) {
+                        hasPercent = true;
+                    }
+                    else if (!$css.isLength(width)) {
+                        hasLength = false;
+                        break;
+                    }
+                }
+                if (hasLength && hasPercent && group.length > 1) {
+                    const cellData: GridCellData<T> = group[0].data(EXT_NAME.GRID, 'cellData');
+                    if (cellData && cellData.rowSpan === 1) {
+                        const siblings: T[] = cellData.siblings ? cellData.siblings.slice(0) : [];
+                        for (let i = 1; i < group.length; i++) {
+                            const item = group[i];
+                            const siblingData = item.data(EXT_NAME.GRID, 'cellData');
+                            if (siblingData && siblingData.rowSpan === 1) {
+                                siblings.push(group[i]);
+                                if (siblingData.sibling) {
+                                    $util.concatArray(siblings, siblingData.sibling);
+                                }
+                            }
+                            else {
+                                siblings.length = 0;
+                                break;
+                            }
+                        }
+                        if (siblings.length) {
+                            cellData.block = true;
+                            cellData.columnSpan = mainData.columnCount;
+                            cellData.siblings = siblings;
+                            group.length = 1;
+                        }
+                    }
+                }
                 for (const item of group) {
                     item.parent = node;
+                    if (!hasLength && item.has('width', CSS_STANDARD.PERCENT)) {
+                        item.css('width', $css.formatPX(item.bounds.width));
+                    }
                 }
             }
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {

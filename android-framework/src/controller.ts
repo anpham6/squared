@@ -209,7 +209,7 @@ function constraintMinMax(node: View, dimension: string) {
 
 function constraintPercentValue(node: View, dimension: string, opposing: boolean) {
     const horizontal = dimension === 'width';
-    const value = node.cssInitial(dimension);
+    const value = node.css(dimension);
     if (opposing) {
         if ($css.isLength(value, true)) {
             node.android(`layout_${dimension}`, $css.formatPX(node.bounds[dimension]), false);
@@ -1715,7 +1715,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     }
                                     return true;
                                 }
-                                else if (Math.ceil(baseWidth) >= Math.floor(maxWidth) && !item.alignParent(alignParent)) {
+                                else if ($util.aboveRange(baseWidth, maxWidth) && !item.alignParent(alignParent)) {
                                     checkSingleLine(item, true, multiline);
                                 }
                                 if (multiline && Resource.hasLineBreak(item) || item.preserveWhiteSpace && $regex.CHAR.LEADINGNEWLINE.test(item.textContent)) {
@@ -1727,7 +1727,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         const textNewRow = item.textElement && startNewRow();
                         if (textNewRow ||
                             viewGroup ||
-                            Math.ceil(item.linear.top) >= Math.floor(previous.linear.bottom) && (item.blockStatic || item.floating && previous.float === item.float) ||
+                            $util.aboveRange(item.linear.top, previous.linear.bottom) && (item.blockStatic || item.floating && previous.float === item.float) ||
                             previous.autoMargin.horizontal ||
                             cleared.has(item) ||
                             !item.textElement && checkWrapWidth() && Math.floor(baseWidth) > maxWidth ||
@@ -1780,7 +1780,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     if (item.float === 'left' && leftAlign) {
                         if (previousRowLeft) {
-                            if (Math.floor(item.linear.bottom) >= Math.floor(previousRowLeft.linear.bottom)) {
+                            if ($util.aboveRange(item.linear.bottom, previousRowLeft.linear.bottom)) {
                                 previousRowLeft = item;
                             }
                         }

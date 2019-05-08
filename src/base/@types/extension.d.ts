@@ -64,7 +64,8 @@ export interface GridCellData<T> {
     cellEnd: boolean;
     rowEnd: boolean;
     rowStart: boolean;
-    siblings: T[];
+    block: boolean;
+    siblings?: T[];
 }
 
 export interface ListData {

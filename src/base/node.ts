@@ -423,7 +423,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else if (this.floating && previous.floating) {
-                    if (this.linear.top >= Math.floor(previous.linear.bottom)) {
+                    if ($util.aboveRange(this.linear.top, previous.linear.bottom)) {
                         return NODE_TRAVERSE.FLOAT_WRAP;
                     }
                 }
@@ -475,11 +475,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 {
                     return NODE_TRAVERSE.VERTICAL;
                 }
-                else if (this.blockDimension) {
-                    const previousBottom = $util.isArray(siblings) && this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom);
-                    if (previousBottom && (!previous.floating || this.has('width', CSS_STANDARD.PERCENT)) || this.css('width') === '100%' && !this.has('maxWidth')) {
-                        return NODE_TRAVERSE.INLINE_WRAP;
-                    }
+                else if (this.blockDimension && $util.isArray(siblings) && $util.aboveRange(this.linear.top, siblings[siblings.length - 1].linear.bottom) && (!previous.floating || this.has('width', CSS_STANDARD.PERCENT)) || this.css('width') === '100%' && !this.has('maxWidth')) {
+                    return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }
         }
@@ -508,12 +505,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public withinX(rect: BoxRectDimension, dimension = 'linear') {
         const self: BoxRectDimension = this[dimension];
-        return Math.ceil(self.left) >= Math.floor(rect.left) && Math.floor(self.right) <= Math.ceil(rect.right);
+        return $util.aboveRange(self.left, rect.left) && $util.belowRange(self.right, rect.right);
     }
 
     public withinY(rect: BoxRectDimension, dimension = 'linear') {
         const self: BoxRectDimension = this[dimension];
-        return Math.ceil(self.top) >= Math.floor(rect.top) && Math.floor(self.bottom) <= Math.ceil(rect.bottom);
+        return $util.aboveRange(self.top, rect.top) && $util.belowRange(self.bottom, rect.bottom);
     }
 
     public outsideX(rect: BoxRectDimension, dimension = 'linear') {
@@ -1509,10 +1506,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.positionAuto === undefined) {
             const styleMap = this._initial.iteration === -1 ? this._styleMap : this._initial.styleMap;
             this._cached.positionAuto = !this.pageFlow && (
-                (styleMap.top === undefined || styleMap.top === 'auto') &&
-                (styleMap.right === undefined || styleMap.right === 'auto') &&
-                (styleMap.bottom === undefined || styleMap.bottom === 'auto') &&
-                (styleMap.left === undefined || styleMap.left === 'auto')
+                (!styleMap.top || styleMap.top === 'auto') &&
+                (!styleMap.right || styleMap.right === 'auto') &&
+                (!styleMap.bottom || styleMap.bottom === 'auto') &&
+                (!styleMap.left || styleMap.left === 'auto')
             );
         }
         return this._cached.positionAuto;
@@ -1847,11 +1844,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get src() {
-        const element = <HTMLInputElement> this._element;
-        if (element && (this.imageElement || element.type === 'image')) {
-            return element.src;
-        }
-        return '';
+        return this.imageElement || this.tagName === 'IMAGE' ? (<HTMLInputElement> this._element).src : '';
     }
 
     set overflow(value) {
@@ -2066,10 +2059,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get actualHeight() {
         if (this._cached.actualHeight === undefined) {
-            if (this.plainText) {
-                this._cached.actualHeight = this.bounds.bottom - this.bounds.top;
-            }
-            else if (!this.documentParent.flexElement && this.display !== 'table-cell') {
+            if (!this.plainText && !this.documentParent.flexElement && this.display !== 'table-cell') {
                 let height = this.parseUnit(this.cssInitial('height', true), false);
                 if (height > 0) {
                     const maxHeight = this.parseUnit(this.css('maxHeight'));

@@ -7,37 +7,31 @@ import $Layout = squared.base.Layout;
 type View = android.base.View;
 
 const $const = squared.base.lib.constant;
-const $css = squared.lib.css;
 const $enum = squared.base.lib.enumeration;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 function transferData(parent: View, siblings: View[])  {
-    let destination: GridCellData<View> | undefined;
-    for (let i = 0; i < siblings.length; i++) {
-        const item = siblings[i];
-        if (destination) {
-            const source: GridCellData<View> = item.data($const.EXT_NAME.GRID, 'cellData');
-            if (source) {
-                for (const attr in source) {
-                    switch (typeof source[attr]) {
-                        case 'number':
-                            destination[attr] += source[attr];
-                            break;
-                        case 'boolean':
-                            if (source[attr] === true) {
-                                destination[attr] = true;
-                            }
-                            break;
-                    }
-                }
+    const data = squared.base.extensions.Grid.createDataCellAttribute();
+    for (const item of siblings) {
+        const source: GridCellData<View> = item.data($const.EXT_NAME.GRID, 'cellData');
+        if (source) {
+            if (source.cellStart) {
+                data.cellStart = true;
             }
+            if (source.cellEnd) {
+                data.cellEnd = true;
+            }
+            if (source.rowEnd) {
+                data.rowEnd = true;
+            }
+            if (source.rowStart) {
+                data.rowStart = true;
+            }
+            item.data($const.EXT_NAME.GRID, 'cellData', null);
         }
-        else {
-            destination = item.data($const.EXT_NAME.GRID, 'cellData');
-        }
-        item.data($const.EXT_NAME.GRID, 'cellData', null);
     }
-    parent.data($const.EXT_NAME.GRID, 'cellData', destination);
+    parent.data($const.EXT_NAME.GRID, 'cellData', data);
 }
 
 export default class <T extends View> extends squared.base.extensions.Grid<T> {
@@ -65,6 +59,32 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         const mainData: GridData = parent.data($const.EXT_NAME.GRID, 'mainData');
         const cellData: GridCellData<T> = node.data($const.EXT_NAME.GRID, 'cellData');
         if (mainData && cellData) {
+            const siblings = cellData.siblings ? cellData.siblings.slice(0) : undefined;
+            let layout: $Layout<T> | undefined;
+            if (siblings) {
+                siblings.unshift(node);
+                layout = this.application.controllerHandler.processLayoutHorizontal(
+                    new $Layout(
+                        parent,
+                        this.application.controllerHandler.createNodeGroup(node, siblings, parent),
+                        0,
+                        cellData.block ? $enum.NODE_ALIGNMENT.BLOCK : 0,
+                        siblings
+                    )
+                ).layout;
+                node = layout.node;
+                if (cellData.block) {
+                    node.css('display', 'block');
+                }
+                else {
+                    for (const item of siblings) {
+                        if (item.has('width', $enum.CSS_STANDARD.PERCENT)) {
+                            item.css('width', $css.formatPX(item.bounds.width), true);
+                        }
+                    }
+                }
+                transferData(node, siblings);
+            }
             if (cellData.rowSpan > 1) {
                 node.android('layout_rowSpan', cellData.rowSpan.toString());
             }
@@ -74,33 +94,13 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
             if (node.display === 'table-cell') {
                 node.mergeGravity('layout_gravity', 'fill');
             }
-            const siblings = cellData.siblings && cellData.siblings.length ? cellData.siblings.slice(0) : undefined;
-            if (siblings) {
-                const controller = <android.base.Controller<T>> this.application.controllerHandler;
-                siblings.unshift(node);
-                let layout = new $Layout(
-                    parent,
-                    node,
-                    0,
-                    0,
-                    siblings
-                );
-                if (layout.linearY) {
-                    layout.node = controller.createNodeGroup(node, siblings, parent);
-                    layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL);
-                }
-                else {
-                    layout = controller.processTraverseHorizontal(layout).layout;
-                }
-                if (layout.containerType !== 0) {
-                    transferData(layout.node, siblings);
-                    return {
-                        parent: layout.node,
-                        renderAs: layout.node,
-                        outputAs: this.application.renderNode(layout),
-                        complete: true
-                    };
-                }
+            if (layout) {
+                return {
+                    parent: layout.node,
+                    renderAs: layout.node,
+                    outputAs: this.application.renderNode(layout),
+                    complete: true
+                };
             }
         }
         return undefined;

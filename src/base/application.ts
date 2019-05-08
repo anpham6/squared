@@ -1007,7 +1007,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                                 const floatBottom = getFloatBottom();
                                                                 if (floated.size === 1 && (!item.floating && item.linear.top < floatBottom || floatActive.has(item.float))) {
                                                                     horizontal.push(item);
-                                                                    if (!item.floating && item.linear.bottom >= Math.floor(floatBottom)) {
+                                                                    if (!item.floating && $util.aboveRange(item.linear.bottom, floatBottom)) {
                                                                         break traverse;
                                                                     }
                                                                     else {
@@ -1742,8 +1742,17 @@ export default class Application<T extends Node> implements squared.base.Applica
     private createPseduoElement(element: HTMLElement, target: string) {
         const styleMap: StringMap = $session.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
         if (styleMap && styleMap.content) {
-            if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
-                return undefined;
+            if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
+                let valid = true;
+                for (const attr in styleMap) {
+                    if (/(Width|Height)$/.test(attr)) {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (valid) {
+                    return undefined;
+                }
             }
             let value = styleMap.content;
             if (value === 'inherit') {
