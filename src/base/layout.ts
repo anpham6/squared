@@ -32,28 +32,40 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     }
 
     public init() {
-        if (this.children.length) {
-            if (this.children.length > 1) {
+        const length = this.children.length;
+        if (length) {
+            if (length > 1) {
                 const linearData = NodeList.linearData(this.children);
                 this._floated = linearData.floated;
                 this._cleared = linearData.cleared;
                 this._linearX = linearData.linearX;
                 this._linearY = linearData.linearY;
-                if (linearData.floated.size) {
-                    this.add(NODE_ALIGNMENT.FLOAT);
-                    if (this.some(node => node.blockStatic)) {
-                        this.add(NODE_ALIGNMENT.BLOCK);
-                    }
-                }
             }
             else {
                 this._linearY = this.children[0].blockStatic;
                 this._linearX = !this._linearY;
             }
-            if (this.every(item => item.rightAligned)) {
+            let A = 0;
+            let B = 0;
+            for (let i = 0; i < length; i++) {
+                const item = this.children[i];
+                if (item.floating) {
+                    A++;
+                }
+                if (item.rightAligned) {
+                    B++;
+                }
+            }
+            if (A === length || this._floated && this._floated.size === 2) {
+                this.add(NODE_ALIGNMENT.FLOAT);
+                if (this.some(node => node.blockStatic)) {
+                    this.add(NODE_ALIGNMENT.BLOCK);
+                }
+            }
+            if (B === length) {
                 this.add(NODE_ALIGNMENT.RIGHT);
             }
-            this.itemCount = this.children.length;
+            this.itemCount = length;
         }
     }
 

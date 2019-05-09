@@ -1,4 +1,4 @@
-/* squared 0.9.6
+/* squared 0.9.7
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -420,6 +420,12 @@
     function withinRange(a, b, offset = 1) {
         return b >= (a - offset) && b <= (a + offset);
     }
+    function aboveRange(a, b) {
+        return Math.ceil(a) >= Math.floor(b);
+    }
+    function belowRange(a, b) {
+        return Math.floor(a) <= Math.ceil(b);
+    }
     function assignEmptyProperty(dest, source) {
         for (const attr in source) {
             if (!dest.hasOwnProperty(attr)) {
@@ -653,6 +659,8 @@
         searchObject: searchObject,
         hasValue: hasValue,
         withinRange: withinRange,
+        aboveRange: aboveRange,
+        belowRange: belowRange,
         assignEmptyProperty: assignEmptyProperty,
         assignEmptyValue: assignEmptyValue,
         sortNumber: sortNumber,
@@ -3402,11 +3410,11 @@
                     bounds.bottom = rect.bottom;
                 }
                 bounds.width += rect.width;
-                bounds.height += rect.height;
                 if (rect.top > maxTop) {
                     maxTop = rect.top;
                 }
             }
+            bounds.height = bounds.bottom - bounds.top;
             if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
                 numberOfLines = domRect.length - 1;
             }

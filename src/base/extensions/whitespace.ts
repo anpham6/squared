@@ -227,28 +227,28 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                             const abovePrevious = previousSiblings.pop() as T;
                             if (abovePrevious.lineBreak) {
                                 abovePrevious.setBounds();
-                                if (abovePrevious.bounds.bottom !== 0) {
+                                if (Math.floor(abovePrevious.bounds.bottom) > 0) {
                                     above = abovePrevious;
                                 }
                             }
                         }
                     }
-                    valid = true;
                     let offset: number;
-                    if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
+                    if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', 'normal')) {
                         offset = $session.getClientRect(below.element, below.sessionId).top - below.marginTop;
                         below.cssFinally('lineHeight');
                     }
                     else {
                         offset = below.linear.top;
                     }
-                    if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
+                    if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', 'normal')) {
                         offset -= $session.getClientRect(above.element, above.sessionId).bottom + above.marginBottom;
                         above.cssFinally('lineHeight');
                     }
                     else {
                         offset -= above.linear.bottom;
                     }
+                    valid = true;
                     if (offset !== 0) {
                         above = getVisibleNode(above) as T;
                         below = getVisibleNode(below) as T;

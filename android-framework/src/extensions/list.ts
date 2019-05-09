@@ -22,14 +22,8 @@ const PADDINGRIGHT_DFN = 8;
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const layout = new $Layout(
-            parent,
-            node,
-            0,
-            0,
-            node.children as T[]
-        );
-        if (layout.linearY) {
+        const layout = new $Layout(parent, node, 0, 0, node.children as T[]);
+        if (layout.linearY && !layout.linearX) {
             layout.rowCount = node.length;
             layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
             layout.setType(CONTAINER_NODE.GRID, $enum.NODE_ALIGNMENT.AUTO_LAYOUT);
@@ -237,13 +231,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     0,
                     node.children as T[]
                 );
-                if (layout.linearX || layout.linearY) {
-                    layout.add(layout.linearX ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL);
-                    return {
-                        output: this.application.renderNode(layout),
-                        next: true
-                    };
-                }
+                layout.add(layout.length === 1 || layout.linearX ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL);
+                return {
+                    output: this.application.renderNode(layout),
+                    next: true
+                };
             }
         }
         return undefined;
