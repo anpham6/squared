@@ -1,5 +1,5 @@
 import { FileAsset, LayoutType, NodeTagXml, NodeTemplate, NodeXmlTemplate } from '../../src/base/@types/application';
-import { ControllereSettingsAndroid, UserSettingsAndroid } from './@types/application';
+import { ControllerSettingsAndroid, UserSettingsAndroid } from './@types/application';
 import { ViewAttribute } from './@types/node';
 
 import Resource from './resource';
@@ -345,18 +345,22 @@ export default class Controller<T extends View> extends squared.base.Controller<
         constraintMinMax(node, 'height');
     }
 
-    public readonly localSettings: ControllereSettingsAndroid = {
+    public readonly localSettings: ControllerSettingsAndroid = {
         layout: {
             pathName: 'res/layout',
             fileExtension: 'xml',
             baseTemplate: $xml.STRING_XMLENCODING
+        },
+        directory: {
+            font: 'res/font',
+            image: 'res/drawable'
         },
         svg: {
             enabled: false
         },
         supported: {
             fontFormat: ['truetype', 'opentype'],
-            imageFormat: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'ico', 'cur']
+            imageFormat: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'cur']
         },
         unsupported: {
             excluded: new Set(['BR']),

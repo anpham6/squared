@@ -22,6 +22,10 @@ export interface ControllerSettings {
         fileExtension: string;
         baseTemplate: string;
     };
+    directory: {
+        font: string;
+        image: string;
+    };
     svg: {
         enabled: boolean;
     };
@@ -110,6 +114,7 @@ export interface ResourceAssetMap {
     ids: Map<string, string[]>;
     images: Map<string, ImageAsset>;
     fonts: Map<string, squared.lib.css.CSSFontFaceData[]>;
+    rawData: Map<string, FileAsset>;
 }
 
 export interface ResourceStoredMap {
@@ -123,12 +128,13 @@ export interface ResourceStoredMap {
 export interface Asset {
     uri?: string;
     index?: number;
+    mimeType?: string;
 }
 
 export interface FileAsset extends Asset {
+    content: string;
     pathname: string;
     filename: string;
-    content: string;
 }
 
 export interface ImageAsset extends Asset {

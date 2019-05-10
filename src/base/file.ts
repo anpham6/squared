@@ -72,8 +72,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 `?directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
                 (appName ? `&appname=${encodeURIComponent(appName.trim())}` : '') +
                 `&filetype=${settings.outputArchiveFileType.toLowerCase()}` +
-                `&processingtime=${settings.outputMaxProcessingTime.toString().trim()}`,
-                {
+                `&processingtime=${settings.outputMaxProcessingTime.toString().trim()}`, {
                     method: 'POST',
                     headers: new Headers({
                         'Accept': 'application/json, text/plain, */*',

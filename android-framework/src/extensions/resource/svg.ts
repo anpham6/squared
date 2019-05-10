@@ -636,8 +636,32 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
 
     public afterResources() {
         for (const node of this.application.processing.cache) {
-            if (node.svgElement) {
-                const svg = new $Svg(<SVGSVGElement> node.element);
+            let parentElement: HTMLElement | undefined;
+            let element: SVGSVGElement | undefined;
+            if (node.imageElement) {
+                const src = node.src;
+                if (src.toLowerCase().endsWith('.svg') || src.startsWith('data:image/svg+xml')) {
+                    const fileAsset = this.application.resourceHandler.getRawData(src);
+                    if (fileAsset) {
+                        parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;
+                        parentElement.insertAdjacentHTML('beforeend', fileAsset.content);
+                        if (parentElement.lastElementChild instanceof SVGSVGElement) {
+                            element = parentElement.lastElementChild;
+                            if (element.width.baseVal.value === 0) {
+                                element.setAttribute('width', node.actualWidth.toString());
+                            }
+                            if (element.height.baseVal.value === 0) {
+                                element.setAttribute('height', node.actualHeight.toString());
+                            }
+                        }
+                    }
+                }
+            }
+            else if (node.svgElement) {
+                element = <SVGSVGElement> node.element;
+            }
+            if (element) {
+                const svg = new $Svg(element);
                 const supportedKeyFrames = node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW;
                 this.SVG_INSTANCE = svg;
                 this.VECTOR_DATA.clear();
@@ -1381,6 +1405,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 }
                 if (node.baseline) {
                     node.android('baselineAlignBottom', 'true');
+                }
+                if (parentElement) {
+                    parentElement.removeChild(element);
                 }
             }
         }

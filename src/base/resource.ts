@@ -227,7 +227,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public static ASSETS: ResourceAssetMap = {
         ids: new Map(),
         images: new Map(),
-        fonts: new Map()
+        fonts: new Map(),
+        rawData: new Map()
     };
 
     public static STORED: ResourceStoredMap = {
@@ -407,10 +408,10 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public reset() {
         for (const name in Resource.ASSETS) {
-            (<Map<any, any>> Resource.ASSETS[name]).clear();
+            Resource.ASSETS[name].clear();
         }
         for (const name in Resource.STORED) {
-            (<Map<any, any>> Resource.STORED[name]).clear();
+            Resource.STORED[name].clear();
         }
         if (this.fileHandler) {
             this.fileHandler.reset();
@@ -447,6 +448,39 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             return font.find(item => item.fontStyle === fontStyle && item.fontWeight === parseInt(fontWeight) && fontFormat.includes(item.srcFormat));
         }
         return undefined;
+    }
+
+    public addRawData(complete: string, mimeType: string, encoding: string, content: string) {
+        const settings = this.application.controllerHandler.localSettings;
+        if (encoding.toLowerCase().indexOf('base64') !== -1) {
+            content = window.atob(content);
+        }
+        else {
+            content = content.replace(/\\"/g, '"');
+        }
+        for (const format of settings.supported.imageFormat) {
+            if (mimeType.indexOf(format) !== -1) {
+                let filename: string;
+                if (complete.endsWith(`.${format}`)) {
+                    filename = $util.fromLastIndexOf(complete, '/');
+                }
+                else {
+                    filename = `${new Date().getTime()}-${Math.floor(Math.random() * 100000)}.${format}`;
+                }
+                Resource.ASSETS.rawData.set(complete, {
+                    pathname: '',
+                    filename,
+                    content,
+                    mimeType
+                });
+                return filename;
+            }
+        }
+        return '';
+    }
+
+    public getRawData(complete: string) {
+        return Resource.ASSETS.rawData.get(complete);
     }
 
     public setBoxStyle(node: T) {

@@ -748,6 +748,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         let overflowVertically = false;
         for (let i = imageLength - 1; i >= 0; i--) {
             const value = backgroundImage[i];
+            if (!$util.hasValue(value)) {
+                continue;
+            }
             const bounds = node.bounds;
             const position = backgroundPosition[i];
             const imageData: BackgroundImageData = {

@@ -199,7 +199,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         if (images.mdpi) {
             const src = $util.fromLastIndexOf(images.mdpi, '/');
             const format = $util.fromLastIndexOf(src, '.').toLowerCase();
-            if (IMAGE_FORMAT.includes(format)) {
+            if (IMAGE_FORMAT.includes(format) && format !== 'svg') {
                 return Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
             }
         }

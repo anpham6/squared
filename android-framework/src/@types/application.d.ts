@@ -12,7 +12,7 @@ export interface UserSettingsAndroid extends UserSettings {
     manifestParentThemeName: string;
 }
 
-export interface ControllereSettingsAndroid extends ControllerSettings {
+export interface ControllerSettingsAndroid extends ControllerSettings {
     deviations: {
         textMarginBoundarySize: number;
         constraintParentBottomOffset: number;

@@ -17,6 +17,8 @@ const $session = squared.lib.session;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
+const STRING_DATAURI = '(?:data:([^;]+);([^,]+),)?(.*?)';
+
 const REGEXP_CACHED: ObjectMap<RegExp> = {};
 
 let NodeConstructor!: Constructor<Node>;
@@ -48,6 +50,17 @@ function parseConditionText(rule: string, value: string) {
         value = match[1].trim();
     }
     return value;
+}
+
+async function getImageSvgAsync(value: string)  {
+    const response = await fetch(value, {
+        method: 'GET',
+        headers: new Headers({
+            'Accept': 'application/xhtml+xml, image/svg+xml',
+            'Content-Type': 'image/svg+xml'
+        })
+    });
+    return await response.text();
 }
 
 export default class Application<T extends Node> implements squared.base.Application<T> {
@@ -253,7 +266,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 __THEN.call(this);
             }
         };
-        const images: HTMLImageElement[] = [];
+        const images: (HTMLImageElement | string)[] = [];
         if (this.userSettings.preloadImages) {
             for (const element of this.rootElements) {
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
@@ -278,52 +291,86 @@ export default class Application<T extends Node> implements squared.base.Applica
                 });
             }
             for (const image of ASSET_IMAGES.values()) {
-                if (image.uri && image.width === 0 && image.height === 0) {
-                    const element = document.createElement('img');
-                    element.src = image.uri;
-                    if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
-                        image.width = element.naturalWidth;
-                        image.height = element.naturalHeight;
+                if (image.uri) {
+                    if (image.uri.toLowerCase().endsWith('.svg')) {
+                        images.push(image.uri);
                     }
-                    else {
-                        documentRoot.appendChild(element);
-                        preloadImages.push(element);
+                    else if (image.width === 0 && image.height === 0) {
+                        const element = document.createElement('img');
+                        element.src = image.uri;
+                        if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
+                            image.width = element.naturalWidth;
+                            image.height = element.naturalHeight;
+                        }
+                        else {
+                            documentRoot.appendChild(element);
+                            preloadImages.push(element);
+                        }
                     }
                 }
             }
-            for (const element of this.rootElements) {
-                element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                    if (image.tagName === 'IMG') {
-                        if (image.complete) {
-                            this.resourceHandler.addImage(image);
-                        }
-                        else {
-                            images.push(image);
+        }
+        for (const element of this.rootElements) {
+            element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
+                if (image.tagName === 'IMG') {
+                    if (image.src.toLowerCase().endsWith('.svg')) {
+                        if (this.userSettings.preloadImages) {
+                            images.push(image.src);
                         }
                     }
-                });
-            }
+                    else if (image.complete) {
+                        if (image.src.startsWith('data:image/')) {
+                            if (REGEXP_CACHED.DATAURI === undefined) {
+                                REGEXP_CACHED.DATAURI = new RegExp(`^${STRING_DATAURI}$`);
+                            }
+                            const match = REGEXP_CACHED.DATAURI.exec(image.src);
+                            if (match && match[1] && match[2]) {
+                                this.resourceHandler.addRawData(image.src, match[1], match[2], match[3]);
+                            }
+                        }
+                        else {
+                            this.resourceHandler.addImage(image);
+                        }
+                    }
+                    else if (this.userSettings.preloadImages) {
+                        images.push(image);
+                    }
+                }
+            });
         }
         if (images.length) {
             this.initialized = true;
-            Promise.all($util.objectMap<HTMLImageElement, {}>(images, image => {
+            Promise.all($util.objectMap<HTMLImageElement | string, {}>(images, image => {
                 return new Promise((resolve, reject) => {
-                    image.onload = () => {
-                        resolve(image);
-                    };
-                    image.onerror = () => {
-                        reject(image);
-                    };
+                    if (typeof image === 'string') {
+                        resolve(getImageSvgAsync(image));
+                    }
+                    else {
+                        image.onload = () => {
+                            resolve(image);
+                        };
+                        image.onerror = () => {
+                            reject(image);
+                        };
+                    }
                 });
             }))
-            .then((result: HTMLImageElement[]) => {
-                for (const item of result) {
-                    this.resourceHandler.addImage(item);
+            .then((result: (HTMLImageElement | string)[]) => {
+                for (let i = 0; i < result.length; i++) {
+                    const value = result[i];
+                    if (typeof value === 'string') {
+                        if (typeof images[i] === 'string') {
+                            this.resourceHandler.addRawData(images[i] as string, 'image/svg+xml', 'utf8', value);
+                        }
+                    }
+                    else {
+                        this.resourceHandler.addImage(value);
+                    }
                 }
                 parseResume();
             })
             .catch((error: Event) => {
-                const message = error.target && (<HTMLImageElement> error.target).src;
+                const message = error.target ? (<HTMLImageElement> error.target).src : error['message'];
                 if (!message || confirm(`FAIL: ${message}`)) {
                     parseResume();
                 }
@@ -1745,7 +1792,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
                 let valid = true;
                 for (const attr in styleMap) {
-                    if (/(Width|Height)$/.test(attr)) {
+                    if (/(Width|Height)$/.test(attr) && $css.isLength(styleMap[attr], true) && $util.convertFloat(styleMap[attr]) !== 0) {
                         valid = false;
                         break;
                     }
@@ -2045,18 +2092,23 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 styleMap[attr] = value;
                             }
                         }
-                        if (this.userSettings.preloadImages) {
-                            [styleMap.backgroundImage, styleMap.listStyleImage, styleMap.content].forEach(image => {
-                                if (image && image.startsWith('url(')) {
-                                    for (const value of image.split($regex.XML.SEPARATOR)) {
-                                        const uri = $css.resolveURL(value.trim());
+                        [styleMap.backgroundImage, styleMap.listStyleImage, styleMap.content].forEach(image => {
+                            if (image) {
+                                const pattern = new RegExp(`url\\("(${STRING_DATAURI})"\\),?\\s*`, 'g');
+                                let match: RegExpExecArray | null = null;
+                                while ((match = pattern.exec(image)) !== null) {
+                                    if (match[2] && match[3]) {
+                                        this.resourceHandler.addRawData(match[1], match[2], match[3], match[4]);
+                                    }
+                                    else if (this.userSettings.preloadImages) {
+                                        const uri = $css.resolveURL(match[4].trim());
                                         if (uri !== '' && this.resourceHandler.getImage(uri) === undefined) {
                                             this.resourceHandler.assets.images.set(uri, { width: 0, height: 0, uri });
                                         }
                                     }
                                 }
-                            });
-                        }
+                            }
+                        });
                         const attrStyle = `styleMap${targetElt}`;
                         const attrSpecificity = `styleSpecificity${targetElt}`;
                         const styleData: StringMap = $session.getElementCache(element, attrStyle, this.processing.sessionId);
