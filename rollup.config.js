@@ -1,4 +1,5 @@
 import { terser } from 'rollup-plugin-terser';
+import async from 'rollup-plugin-async';
 
 export default [
     {
@@ -10,6 +11,7 @@ export default [
             format: 'umd'
         },
         plugins: [
+            async(),
             terser({
                 compress: {
                     pure_getters: true,
@@ -27,6 +29,7 @@ export default [
             format: 'umd'
         },
         plugins: [
+            async(),
             terser({
                 compress: {
                     pure_getters: true,
@@ -44,6 +47,7 @@ export default [
             format: 'umd'
         },
         plugins: [
+            async(),
             terser({
                 compress: {
                     pure_getters: true,

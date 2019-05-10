@@ -3,9 +3,10 @@ import { ResourceBackgroundOptions } from '../../@types/extension';
 import { GradientColorStop, GradientTemplate } from '../../@types/resource';
 
 import Resource from '../../resource';
+import ResourceSvg from './svg';
 import View from '../../view';
 
-import { XMLNS_ANDROID } from '../../lib/constant';
+import { EXT_ANDROID, XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
 import LAYERLIST_TMPL from '../../template/layer-list';
@@ -470,6 +471,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public readonly eventOnly = true;
 
+    private _resourceSvgInstance?: ResourceSvg<T>;
+
+    public afterInit() {
+        this._resourceSvgInstance = this.application.controllerHandler.localSettings.svg.enabled ? <ResourceSvg<T>> this.application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
+    }
+
     public afterResources() {
         const settings = <UserSettingsAndroid> this.application.userSettings;
         function setDrawableBackground(node: T, value: string) {
@@ -690,10 +697,24 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let valid = false;
                     if (typeof value === 'string') {
                         if (value !== 'initial') {
-                            backgroundImage[j] = Resource.addImageURL(value);
-                            if (backgroundImage[j] !== '') {
-                                imageDimensions[j] = this.application.resourceHandler.getImage($css.resolveURL(value));
-                                valid = true;
+                            if (this._resourceSvgInstance) {
+                                const [parentElement, element] = this._resourceSvgInstance.createSvgElement(node, value);
+                                if (parentElement && element) {
+                                    const drawable = this._resourceSvgInstance.createSvgDrawable(node, element);
+                                    if (drawable !== '') {
+                                        backgroundImage[j] = drawable;
+                                        imageDimensions[j] = { width: element.width.baseVal.value, height: element.height.baseVal.value };
+                                        valid = true;
+                                    }
+                                    parentElement.removeChild(element);
+                                }
+                            }
+                            if (!valid) {
+                                backgroundImage[j] = Resource.addImageURL(value);
+                                if (backgroundImage[j] !== '') {
+                                    imageDimensions[j] = this.application.resourceHandler.getImage($css.resolveURL(value));
+                                    valid = true;
+                                }
                             }
                         }
                     }

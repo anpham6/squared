@@ -5,8 +5,8 @@
   "main": "dist/squared.js",
   "scripts": {
     "express": "node app.js",
-    "watch": "tsc -w",
-    "dev": "tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js",
+    "watch": "tsc -p tsconfig.dev.json -w",
+    "dev": "tsc -p tsconfig.dev.json --inlineSourceMap false && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js",
     "prod": "npm run clean && tslint -c tslint.json '**/*.ts' && tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },
@@ -57,6 +57,7 @@
   "devDependencies": {
     "rimraf": "^2.6.3",
     "rollup": "^1.11.3",
+    "rollup-plugin-async": "^1.2.0",
     "rollup-plugin-terser": "^4.0.4",
     "systemjs": "^0.21.6",
     "systemjs-plugin-babel": "0.0.25",
