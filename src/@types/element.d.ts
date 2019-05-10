@@ -10,6 +10,7 @@ interface BoxRectDimension extends BoxRect, Dimension {
 }
 
 interface BoxRectPosition extends BoxRect {
+    static: boolean;
     topAsPercent: number;
     rightAsPercent: number;
     bottomAsPercent: number;

@@ -745,6 +745,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             imageLength = backgroundImage.length;
         }
         let centerHorizontally = false;
+        let overflowVertically = false;
         for (let i = imageLength - 1; i >= 0; i--) {
             const value = backgroundImage[i];
             const bounds = node.bounds;
@@ -1093,6 +1094,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         centerHorizontally = true;
                     }
                 }
+                overflowVertically = true;
             }
             else if (value.item) {
                 let width: number;
@@ -1130,10 +1132,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 );
                 if (src !== '') {
                     imageData.drawable = `@drawable/${src}`;
+                    if (position.static) {
+                        imageData.gravity = 'fill';
+                    }
                 }
             }
             else {
                 imageData.gradient = value;
+                if (position.static) {
+                    imageData.gravity = 'fill';
+                }
             }
             if (imageData.drawable || imageData.bitmap || imageData.gradient) {
                 if (position.bottom !== 0) {
@@ -1167,7 +1175,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 result.push(imageData);
             }
         }
-        if (this.options.autoSizeBackgroundImage && result.length && resizable && !node.documentRoot && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
+        if (this.options.autoSizeBackgroundImage && overflowVertically && resizable && !node.documentRoot && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
             this.refitDrawableDimension(node, imageDimensions, centerHorizontally);
         }
         return result;

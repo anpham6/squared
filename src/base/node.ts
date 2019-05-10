@@ -10,7 +10,6 @@ type T = Node;
 
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
-const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
@@ -859,7 +858,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (overwrite) {
             this._inlineText = value;
         }
-        else if (this.htmlElement && !this.svgElement) {
+        else if (this.htmlElement) {
             const element = <Element> this._element;
             switch (element.tagName) {
                 case 'INPUT':
@@ -1696,6 +1695,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.block === undefined) {
             const value = this.display;
             switch (value) {
+                case 'inline':
+                    this._cached.block = this.svgElement && !this.has('width');
+                    break;
                 case 'block':
                 case 'flex':
                 case 'grid':
@@ -1723,7 +1725,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get blockDimension() {
         if (this._cached.blockDimension === undefined) {
             const value = this.display;
-            this._cached.blockDimension = this.block || value.startsWith('inline-') || value === 'table' || this.imageElement;
+            this._cached.blockDimension = this.block || value.startsWith('inline-') || value === 'table' || this.imageElement || this.svgElement;
         }
         return this._cached.blockDimension;
     }
@@ -1886,7 +1888,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.baseline === undefined) {
             const value = this.verticalAlign;
             const initialValue = this.cssInitial('verticalAlign');
-            this._cached.baseline = this.pageFlow && !this.floating && !this.svgElement && (value === 'baseline' || value === 'initial' || $css.isLength(initialValue) && parseInt(initialValue) === 0);
+            this._cached.baseline = this.pageFlow && !this.floating && (value === 'baseline' || value === 'initial' || $css.isLength(initialValue) && parseFloat(initialValue) === 0);
         }
         return this._cached.baseline;
     }
@@ -1939,7 +1941,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get visibleStyle() {
         if (this._cached.visibleStyle === undefined) {
             const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-            const backgroundImage = $regex.CSS.URL.test(this.css('backgroundImage')) || $regex.CSS.URL.test(this.css('background'));
+            const backgroundImage = this.has('backgroundImage');
             const backgroundColor = this.has('backgroundColor');
             this._cached.visibleStyle = {
                 background: borderWidth || backgroundImage || backgroundColor,
@@ -1954,8 +1956,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get preserveWhiteSpace() {
         if (this._cached.preserveWhiteSpace === undefined) {
-            const value = this.css('whiteSpace');
-            this._cached.preserveWhiteSpace = value === 'pre' || value === 'pre-wrap';
+            this._cached.preserveWhiteSpace = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
         }
         return this._cached.preserveWhiteSpace;
     }

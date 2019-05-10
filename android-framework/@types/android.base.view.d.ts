@@ -7,6 +7,7 @@ declare global {
             readonly constraint: Constraint;
             readonly localSettings: LocalSettings;
             readonly documentId: string;
+            readonly imageOrSvgElement: boolean;
             readonly layoutFrame: boolean;
             readonly layoutLinear: boolean;
             readonly layoutRelative: boolean;

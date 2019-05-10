@@ -231,7 +231,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     0,
                     node.children as T[]
                 );
-                layout.add(layout.length === 1 || layout.linearX ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL);
+                if (layout.length === 1 || layout.linearX) {
+                    layout.add($enum.NODE_ALIGNMENT.HORIZONTAL);
+                }
+                else {
+                    layout.add($enum.NODE_ALIGNMENT.VERTICAL);
+                    layout.add($enum.NODE_ALIGNMENT.UNKNOWN);
+                }
                 return {
                     output: this.application.renderNode(layout),
                     next: true

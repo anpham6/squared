@@ -443,6 +443,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
 export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number) {
     const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
     const result: BoxRectPosition = {
+        static: true,
         top: 0,
         left: 0,
         right: 0,
@@ -542,6 +543,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
             }
         }
     }
+    result.static = result.top === 0 && result.right === 0 && result.left === 0 && result.bottom === 0;
     return result;
 }
 

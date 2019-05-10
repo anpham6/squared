@@ -111,7 +111,7 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
 }
 
 function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top = true, bottom = true) {
-    if (node.imageElement || node.svgElement || node.actualHeight === 0) {
+    if (node.imageOrSvgElement || node.actualHeight === 0) {
         return;
     }
     if (node.multiline) {
@@ -383,13 +383,13 @@ export default (Base: Constructor<squared.base.Node>) => {
             const renderParent = node.renderParent as T;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
-                    const attr: string | undefined = LAYOUT_ANDROID.constraint[position];
+                    const attr = LAYOUT_ANDROID.constraint[position];
                     if (attr) {
                         return node.app(this.localizeString(attr)) === 'parent' || node.app(attr) === 'parent';
                     }
                 }
                 else if (renderParent.layoutRelative) {
-                    const attr: string | undefined = LAYOUT_ANDROID.relativeParent[position];
+                    const attr = LAYOUT_ANDROID.relativeParent[position];
                     if (attr) {
                         return node.android(this.localizeString(attr)) === 'true' || node.android(attr) === 'true';
                     }
@@ -404,13 +404,13 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (renderParent) {
                 if (documentId) {
                     if (renderParent.layoutConstraint) {
-                        const attr: string | undefined = LAYOUT_ANDROID.constraint[position];
+                        const attr = LAYOUT_ANDROID.constraint[position];
                         if (attr) {
                             node.app(this.localizeString(attr), documentId);
                         }
                     }
                     else if (renderParent.layoutRelative) {
-                        const attr: string | undefined = LAYOUT_ANDROID.relative[position];
+                        const attr = LAYOUT_ANDROID.relative[position];
                         if (attr) {
                             node.android(this.localizeString(attr), documentId);
                         }
@@ -418,14 +418,14 @@ export default (Base: Constructor<squared.base.Node>) => {
                 }
                 else {
                     if (renderParent.layoutConstraint) {
-                        const attr: string | undefined = LAYOUT_ANDROID.constraint[position];
+                        const attr = LAYOUT_ANDROID.constraint[position];
                         if (attr) {
                             const value = node.app(this.localizeString(attr)) || node.app(attr);
                             return value !== 'parent' && value !== renderParent.documentId ? value : '';
                         }
                     }
                     else if (renderParent.layoutRelative) {
-                        const attr: string | undefined = LAYOUT_ANDROID.relative[position];
+                        const attr = LAYOUT_ANDROID.relative[position];
                         if (attr) {
                             return node.android(this.localizeString(attr)) || node.android(attr);
                         }
@@ -612,8 +612,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 if (!this.support.maxWidth) {
                                     const maxWidth = this.css('maxWidth');
                                     const maxValue = this.parseUnit(maxWidth);
+                                    const absoluteParent = this.absoluteParent || documentParent;
                                     if (maxWidth === '100%') {
-                                        if (!documentParent.inlineWidth && $util.aboveRange(maxValue, documentParent.box.width)) {
+                                        if (!documentParent.inlineWidth && $util.aboveRange(maxValue, absoluteParent.width)) {
                                             layoutWidth = 'match_parent';
                                         }
                                         else {
@@ -625,7 +626,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                             value = Math.min(this.actualWidth, maxValue);
                                         }
                                         else {
-                                            layoutWidth = Math.ceil(maxValue) < Math.floor(documentParent.box.width) ? 'wrap_content' : 'match_parent';
+                                            layoutWidth = Math.ceil(maxValue) < Math.floor(absoluteParent.width) ? 'wrap_content' : 'match_parent';
                                         }
                                     }
                                 }
@@ -699,8 +700,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 if (!this.support.maxHeight) {
                                     const maxHeight = this.css('maxHeight');
                                     const maxValue = this.parseUnit(maxHeight);
+                                    const absoluteParent = this.absoluteParent || documentParent;
                                     if (maxHeight === '100%') {
-                                        if (!documentParent.inlineHeight && $util.aboveRange(maxValue, documentParent.box.height)) {
+                                        if (!documentParent.inlineHeight && $util.aboveRange(maxValue, absoluteParent.box.height)) {
                                             layoutHeight = 'match_parent';
                                         }
                                         else {
@@ -712,7 +714,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                             value = Math.min(this.actualHeight, maxValue);
                                         }
                                         else {
-                                            layoutHeight = Math.ceil(maxValue) < Math.floor(documentParent.box.height) ? 'wrap_content' : 'match_parent';
+                                            layoutHeight = Math.ceil(maxValue) < Math.floor(absoluteParent.box.height) ? 'wrap_content' : 'match_parent';
                                         }
                                     }
                                 }
@@ -1300,6 +1302,10 @@ export default (Base: Constructor<squared.base.Node>) => {
             return this._containerType || 0;
         }
 
+        get imageOrSvgElement() {
+            return this.imageElement || this.svgElement;
+        }
+
         get layoutFrame() {
             return this.is(CONTAINER_NODE.FRAME);
         }
@@ -1323,7 +1329,7 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         get support() {
             if (this._cached.support === undefined) {
-                const maxWidth = this.textElement || this.imageElement || this.svgElement;
+                const maxWidth = this.textElement || this.imageOrSvgElement;
                 const support = <SupportAndroid> {
                     container: {
                         positionRelative: this.layoutRelative || this.layoutConstraint

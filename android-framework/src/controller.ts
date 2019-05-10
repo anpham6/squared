@@ -52,7 +52,7 @@ function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
         templates.sort((a, b) => {
             const above = (a.node.innerWrapped as View) || a.node;
             const below = (b.node.innerWrapped as View) || b.node;
-            if (above.documentParent === below.documentParent) {
+            if (above.absoluteParent === below.absoluteParent) {
                 if (above.zIndex === below.zIndex) {
                     return above.siblingIndex < below.siblingIndex ? -1 : 1;
                 }
@@ -78,11 +78,11 @@ function adjustBaseline(baseline: View, nodes: View[]) {
                 if ($util.withinRange(node.linear.top, node.documentParent.box.top)) {
                     node.anchor('top', 'true');
                 }
-                if (node.imageElement && (imageBaseline === undefined || node.bounds.height > imageBaseline.bounds.height)) {
+                if (node.imageOrSvgElement && (imageBaseline === undefined || node.bounds.height > imageBaseline.bounds.height)) {
                     imageBaseline = node;
                 }
             }
-            else if (node.imageElement && baseline.imageElement) {
+            else if (node.imageOrSvgElement && baseline.imageOrSvgElement) {
                 if (node.bounds.height < baseline.bounds.height && node.baseline) {
                     node.anchor('baseline', baseline.documentId);
                 }
@@ -873,6 +873,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             switch (node.element.tagName) {
                 case 'IMG': {
                     const element = <HTMLImageElement> node.element;
+                    const absoluteParent = node.absoluteParent || node.documentParent;
                     let width = node.toFloat('width');
                     let height = node.toFloat('height');
                     let percentWidth = node.has('width', $enum.CSS_STANDARD.PERCENT) ? width : -1;
@@ -914,14 +915,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     if (percentWidth !== -1 || percentHeight !== -1) {
                         if (percentWidth >= 0) {
-                            width *= node.documentParent.box.width / 100;
+                            width *= absoluteParent.box.width / 100;
                             if (percentWidth < 100 && !parent.layoutConstraint) {
                                 node.css('width', $css.formatPX(width));
                             }
                         }
                         if (percentHeight >= 0) {
-                            height *= node.documentParent.box.height / 100;
-                            if (percentHeight < 100 && !(parent.layoutConstraint && node.documentParent.has('height', $enum.CSS_STANDARD.LENGTH))) {
+                            height *= absoluteParent.box.height / 100;
+                            if (percentHeight < 100 && !(parent.layoutConstraint && absoluteParent.has('height', $enum.CSS_STANDARD.LENGTH))) {
                                 node.css('height', $css.formatPX(height));
                             }
                         }
@@ -967,13 +968,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         parent.appendTry(node, container);
                         node.parent = container;
                         if (width > 0) {
-                            container.android('layout_width', width < node.documentParent.box.width ? $css.formatPX(width) : 'match_parent');
+                            container.android('layout_width', width < absoluteParent.box.width ? $css.formatPX(width) : 'match_parent');
                         }
                         else {
                             container.android('layout_width', 'wrap_content');
                         }
                         if (height > 0) {
-                            container.android('layout_height', height < node.documentParent.box.height ? $css.formatPX(height) : 'match_parent');
+                            container.android('layout_height', height < absoluteParent.box.height ? $css.formatPX(height) : 'match_parent');
                         }
                         else {
                             container.android('layout_height', 'wrap_content');
@@ -1922,9 +1923,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     if (!item.baselineAltered) {
                                         baselineAlign.push(item);
                                     }
-                                    if (item.svgElement) {
-                                        item.android('baselineAlignBottom', 'true');
-                                    }
                                     break;
                             }
                         }
@@ -2096,9 +2094,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             break;
                         default:
                             setParentVertical(item);
-                            if (item.svgElement) {
-                                item.android('baselineAlignBottom', 'true');
-                            }
                             break;
                     }
                     if (alignTop) {
@@ -2275,7 +2270,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
             else {
                 const columns: T[][] = [];
-                const columnMin = Math.min(row.length, columnSized, columnCount || Number.POSITIVE_INFINITY);
+                let columnMin = Math.min(row.length, columnSized, columnCount || Number.POSITIVE_INFINITY);
                 let perRowCount = row.length >= columnMin ? Math.ceil(row.length / columnMin) : 1;
                 let maxHeight = Math.floor(row.reduce((a, b) => a + b.bounds.height, 0) / columnMin);
                 let excessCount = perRowCount > 1 && row.length % columnMin !== 0 ? row.length - columnMin : Number.POSITIVE_INFINITY;
@@ -2302,7 +2297,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (column.length) {
                         totalGap += $math.maxArray($util.objectMap<T, number>(column.children as T[], child => child.marginLeft + child.marginRight));
                     }
-                    if (row.length - j === columnMin - k && excessCount !== Number.POSITIVE_INFINITY) {
+                    if (columns[k].length === 1 && /H\d/.test(column.tagName) && j === row.length - 2) {
+                        columnMin--;
+                        excessCount = 0;
+                    }
+                    else if (row.length - j === columnMin - k && excessCount !== Number.POSITIVE_INFINITY) {
                         perRowCount = 1;
                     }
                 }

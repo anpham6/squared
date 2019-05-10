@@ -573,13 +573,18 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         let centered = false;
                         if (justifyContent) {
                             switch (mainData.justifyContent) {
+                                case 'normal':
+                                    if (mainData.directionColumn) {
+                                        segStart.anchorStyle(orientation, 'packed', mainData.directionReverse ? 1 : 0);
+                                    }
+                                    break;
                                 case 'left':
                                     if (!horizontal) {
                                         break;
                                     }
                                 case 'start':
                                 case 'flex-start':
-                                    segStart.anchorStyle(orientation);
+                                    segStart.anchorStyle(orientation, 'packed', mainData.directionReverse ? 1 : 0);
                                     break;
                                 case 'center':
                                     if (seg.length > 1) {

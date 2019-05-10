@@ -112,10 +112,12 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         continue;
                     }
                     if (node.blockStatic) {
-                        if (firstChild === undefined) {
-                            firstChild = current;
+                        if (!current.floating) {
+                            if (firstChild === undefined) {
+                                firstChild = current;
+                            }
+                            lastChild = current;
                         }
-                        lastChild = current;
                     }
                     if (i === 0) {
                         continue;
