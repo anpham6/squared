@@ -127,6 +127,7 @@ declare global {
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
+            function buildAlphaString(length: number): string;
             function formatString(value: string, ...params: string[]): string;
             function hasBit(value: number, offset: number): boolean;
             function isNumber(value: any): boolean;

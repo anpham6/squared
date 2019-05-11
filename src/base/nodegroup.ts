@@ -108,6 +108,9 @@ export default abstract class NodeGroup extends Node {
         return this._cached.pageFlow;
     }
 
+    set baseline(value) {
+        super.baseline = value;
+    }
     get baseline() {
         if (this._cached.baseline === undefined) {
             const value = this.cssInitial('verticalAlign', true);

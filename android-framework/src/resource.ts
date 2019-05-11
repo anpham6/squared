@@ -156,59 +156,15 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return '';
     }
 
-    public static addImageSrc(element: HTMLImageElement, prefix = '', imageSet?: ImageSrcSet[]) {
-        const result: StringMap = {};
-        if (element.srcset) {
-            if (imageSet === undefined) {
-                imageSet = $css.getSrcSet(element, IMAGE_FORMAT);
-            }
-            for (const image of imageSet) {
-                const pixelRatio = image.pixelRatio;
-                if (pixelRatio > 0) {
-                    const src = image.src;
-                    if (pixelRatio < 1) {
-                        result.ldpi = src;
-                    }
-                    else if (pixelRatio === 1) {
-                        if (result.mdpi === undefined || image.actualWidth) {
-                            result.mdpi = src;
-                        }
-                    }
-                    else if (pixelRatio <= 1.5) {
-                        result.hdpi = src;
-                    }
-                    else if (pixelRatio <= 2) {
-                        result.xhdpi = src;
-                    }
-                    else if (pixelRatio <= 3) {
-                        result.xxhdpi = src;
-                    }
-                    else {
-                        result.xxxhdpi = src;
-                    }
-                }
-            }
-        }
-        if (result.mdpi === undefined) {
-            result.mdpi = element.src;
-        }
-        return this.addImage(result, prefix);
-    }
-
     public static addImage(images: StringMap, prefix = '') {
         if (images.mdpi) {
             const src = $util.fromLastIndexOf(images.mdpi, '/');
             const format = $util.fromLastIndexOf(src, '.').toLowerCase();
-            if (IMAGE_FORMAT.includes(format) && format !== 'svg') {
+            if (format !== 'svg' && IMAGE_FORMAT.includes(format)) {
                 return Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
             }
         }
         return '';
-    }
-
-    public static addImageURL(value: string, prefix = '') {
-        value = $css.resolveURL(value) || $util.resolvePath(value);
-        return value !== '' ? this.addImage({ mdpi: value }, prefix) : '';
     }
 
     public static addColor(color: ColorData | string | undefined, transparency = false) {
@@ -239,6 +195,66 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         STORED.drawables = new Map();
         STORED.animators = new Map();
         IMAGE_FORMAT = application.controllerHandler.localSettings.supported.imageFormat;
+    }
+
+    public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
+        const result: StringMap = {};
+        if (typeof element === 'string') {
+            const match = $regex.CSS.URL.exec(element);
+            if (match) {
+                if (match[1].startsWith('data:image/')) {
+                    result.mdpi = match[1];
+                }
+                else {
+                    return Resource.addImage({ mdpi: $util.resolvePath(match[1]) }, prefix);
+                }
+            }
+        }
+        else {
+            if (element.srcset) {
+                if (imageSet === undefined) {
+                    imageSet = $css.getSrcSet(element, IMAGE_FORMAT);
+                }
+                for (const image of imageSet) {
+                    const pixelRatio = image.pixelRatio;
+                    if (pixelRatio > 0) {
+                        const src = image.src;
+                        if (pixelRatio < 1) {
+                            result.ldpi = src;
+                        }
+                        else if (pixelRatio === 1) {
+                            if (result.mdpi === undefined || image.actualWidth) {
+                                result.mdpi = src;
+                            }
+                        }
+                        else if (pixelRatio <= 1.5) {
+                            result.hdpi = src;
+                        }
+                        else if (pixelRatio <= 2) {
+                            result.xhdpi = src;
+                        }
+                        else if (pixelRatio <= 3) {
+                            result.xxhdpi = src;
+                        }
+                        else {
+                            result.xxxhdpi = src;
+                        }
+                    }
+                }
+            }
+            if (result.mdpi === undefined) {
+                result.mdpi = element.src;
+            }
+        }
+        if (result.mdpi) {
+            const rawData = this.application.resourceHandler.getRawData(result.mdpi);
+            if (rawData && rawData.base64) {
+                const filename = prefix + rawData.filename;
+                this.application.resourceHandler.writeRawImage(filename, rawData.base64);
+                return filename.substring(0, filename.lastIndexOf('.'));
+            }
+        }
+        return Resource.addImage(result, prefix);
     }
 
     get userSettings() {

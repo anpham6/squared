@@ -8,7 +8,6 @@ export default class <T extends android.base.View> extends squared.base.extensio
     public readonly options: AccessibilityOptions = {
         showLabel: false
     };
-
     public readonly eventOnly = true;
 
     public afterBaseLayout() {

@@ -1,4 +1,4 @@
-import { FileAsset, UserSettings } from './@types/application';
+import { FileAsset, RawAsset, UserSettings } from './@types/application';
 
 import Node from './node';
 import Resource from './resource';
@@ -29,7 +29,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public appName = '';
-    public readonly assets: FileAsset[] = [];
+    public readonly assets: RawAsset[] = [];
 
     protected constructor(public resource: Resource<T>) {
         resource.fileHandler = this;
@@ -38,20 +38,14 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public abstract saveAllToDisk(layouts: FileAsset[]): void;
     public abstract get userSettings(): UserSettings;
 
-    public addAsset(pathname: string, filename: string, content = '', uri: string = '') {
-        if (content || uri) {
-            const index = this.assets.findIndex(item => item.pathname === pathname && item.filename === filename);
+    public addAsset(data: Optional<RawAsset>) {
+        if (data.content || data.uri || data.base64) {
+            const index = this.assets.findIndex(item => item.pathname === data.pathname && item.filename === data.filename);
             if (index !== -1) {
-                this.assets[index].content = content;
-                this.assets[index].uri = uri;
+                Object.assign(this.assets[index], data);
             }
             else {
-                this.assets.push({
-                    pathname,
-                    filename,
-                    content,
-                    uri
-                });
+                this.assets.push(<RawAsset> data);
             }
         }
     }
@@ -60,7 +54,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         this.assets.length = 0;
     }
 
-    public saveToDisk(files: FileAsset[], appName?: string) {
+    public saveToDisk(files: RawAsset[], appName?: string) {
         if (!location.protocol.startsWith('http')) {
             alert('SERVER (required): See README for instructions');
             return;

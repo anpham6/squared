@@ -18,7 +18,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         if (mainData) {
             let requireWidth = false;
             if (mainData.columnCount > 1) {
-                requireWidth = !!node.data($const.EXT_NAME.TABLE, 'expand');
+                requireWidth = node.data($const.EXT_NAME.TABLE, 'expand') === true;
                 node.each((item: T) => {
                     if (item.css('width') === '0px') {
                         item.android('layout_width', '0px');

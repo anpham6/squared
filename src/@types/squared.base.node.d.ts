@@ -123,6 +123,7 @@ declare global {
             readonly zIndex: number;
             readonly positiveAxis: boolean;
             readonly leftTopAxis: boolean;
+            readonly backgroundImage: string;
             readonly visibleStyle: VisibleStyle;
             readonly fontSize: number;
             readonly src: string;

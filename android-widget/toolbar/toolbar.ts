@@ -53,6 +53,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     public processNode(node: T, parent: T) {
         const application = this.application;
         const controller = application.controllerHandler;
+        const resource = <android.base.Resource<T>> this.application.resourceHandler;
         const settings = <UserSettingsAndroid> application.userSettings;
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;
@@ -69,13 +70,13 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             const item = <HTMLElement> element.children[i];
             if (item.tagName === 'IMG') {
                 if (item.dataset.navigationIcon) {
-                    const src = $Resource.addImageSrc(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
+                    const src = resource.addImageSrc(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
                     if (src !== '') {
                         $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', `@drawable/${src}`);
                     }
                 }
                 if (item.dataset.collapseIcon) {
-                    const src = $Resource.addImageSrc(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
+                    const src = resource.addImageSrc(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
                     if (src !== '') {
                         $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', `@drawable/${src}`);
                     }
@@ -105,8 +106,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         else {
             $util.assignEmptyValue(toolbarOptions, 'app', 'popupTheme', '@style/ThemeOverlay.AppCompat.Light');
             if (backgroundImage) {
-                $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${$Resource.addImageURL(node.css('backgroundImage'))}`);
-                node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
+                const drawable = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
+                if (drawable !== '') {
+                    $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${drawable}`);
+                    node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
+                }
             }
             else {
                 $util.assignEmptyValue(toolbarOptions, 'app', 'layout_scrollFlags', 'scroll|enterAlways');
@@ -200,7 +204,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             node.render(target ? application.resolveTarget(target) : parent);
         }
         if (backgroundImage && hasCollapsingToolbar) {
-            const src = $Resource.addImageURL(node.css('backgroundImage'));
+            const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
             if (src !== '') {
                 const backgroundImageOptions = $utilA.createViewAttribute(options.backgroundImage);
                 let scaleType = 'center';

@@ -97,9 +97,11 @@ export function convertAlpha(value: number) {
                 result += ALPHABET.charAt(base - 1);
                 value -= base * ALPHABET.length;
             }
-            else if (base > ALPHABET.length) {
-                result += convertAlpha(base * ALPHABET.length);
-                value -= base * ALPHABET.length;
+            else if (base > 0) {
+                result += 'Z';
+                value -= Math.pow(ALPHABET.length, 2);
+                result += convertAlpha(value);
+                return result;
             }
             const index = value % ALPHABET.length;
             result += ALPHABET.charAt(index);
@@ -127,6 +129,14 @@ export function convertEnum(value: number, base: {}, derived: {}): string {
         }
     }
     return '';
+}
+
+export function buildAlphaString(length: number) {
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += ALPHABET.charAt(Math.floor(Math.random() * 26));
+    }
+    return result;
 }
 
 export function formatString(value: string, ...params: string[]) {

@@ -7,7 +7,6 @@ export const STRING = {
     LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
     CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
-    CSS_URL: 'url\\("?([^")]+)"?\\)',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_CALC: 'calc(\\(.+\\))',
     CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
@@ -22,7 +21,7 @@ export const UNIT = {
 export const CSS = {
     ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
     CALC: new RegExp(`^${STRING.CSS_CALC}$`),
-    URL: new RegExp(STRING.CSS_URL),
+    URL: /^url\("?(.+?)"?\)$/,
     CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
     HEX: /[A-Za-z\d]{3,8}/,
     RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/
@@ -44,6 +43,7 @@ export const CHAR = {
     TRAILINGZERO: /\.(\d*?)(0+)$/,
     LEADINGNEWLINE: /^\s*\n+/,
     LEADINGNUMBER: /^\d/,
+    LOWERCASE: /^[a-z]+$/,
     WORD: /\w/,
     WORDDASH: /[a-zA-Z\d]/
 };

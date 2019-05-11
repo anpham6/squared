@@ -22,6 +22,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
     }
 
     public processNode(node: T, parent: T) {
+        const resource = <android.base.Resource<T>> this.application.resourceHandler;
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;
         const options = $utilA.createViewAttribute(this.options[element.id]);
@@ -33,18 +34,15 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         let src = '';
         switch (element.tagName) {
             case 'IMG':
-                src = $Resource.addImageSrc(<HTMLImageElement> element, $constA.PREFIX_ANDROID.DIALOG);
+                src = resource.addImageSrc(<HTMLImageElement> element, $constA.PREFIX_ANDROID.DIALOG);
                 break;
             case 'INPUT':
                 if ((<HTMLInputElement> element).type === 'image') {
-                    src = $Resource.addImage({ mdpi: node.src }, $constA.PREFIX_ANDROID.DIALOG);
+                    src = resource.addImageSrc(<HTMLImageElement> element, $constA.PREFIX_ANDROID.DIALOG);
+                    break;
                 }
-                else {
-                    src = $Resource.addImageURL(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);
-                }
-                break;
             case 'BUTTON':
-                src = $Resource.addImageURL(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);
+                src = resource.addImageSrc(node.backgroundImage, $constA.PREFIX_ANDROID.DIALOG);
                 break;
         }
         if (src !== '') {

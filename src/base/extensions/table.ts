@@ -22,6 +22,7 @@ const enum LAYOUT_TABLE {
 
 const REGEXP_BORDER = /none|\s0px|rgba\(0, 0, 0, 0\)|transparent/;
 const REGEXP_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
+const REGEXP_BORDERSTYLE = /^(\d+[a-z]+) ([a-z]+) (.+)$/;
 
 export default abstract class Table<T extends Node> extends Extension<T> {
     public static createDataAttribute(node: Node): TableData {
@@ -142,7 +143,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         function setBorderStyle(attr: string) {
                             const value = $css.getInheritedStyle(element, attr, REGEXP_BORDER, 'TABLE');
                             if (value !== '') {
-                                const match = /^(\d+[a-z]+) ([a-z]+) (.+)$/.exec(value);
+                                const match = REGEXP_BORDERSTYLE.exec(value);
                                 if (match) {
                                     td.css(`${attr}Style`, match[2]);
                                     td.css(`${attr}Color`, match[3]);

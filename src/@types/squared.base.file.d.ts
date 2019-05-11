@@ -1,4 +1,4 @@
-import { FileAsset, ResourceStoredMap, UserSettings } from '../base/@types/application';
+import { FileAsset, RawAsset, ResourceStoredMap, UserSettings } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
@@ -9,7 +9,7 @@ declare global {
             readonly stored: ResourceStoredMap;
             readonly assets: FileAsset[];
             saveAllToDisk(layouts: FileAsset[]): void;
-            addAsset(pathname: string, filename: string, content?: string, uri?: string): void;
+            addAsset(data: Optional<RawAsset>): void;
             reset(): void;
             saveToDisk(files: FileAsset[], appName?: string): void;
         }

@@ -912,7 +912,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                     }
                     if (node.hasResource($enum.NODE_RESOURCE.IMAGE_SOURCE)) {
-                        const src = Resource.addImageSrc(element, '', imageSet);
+                        const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(element, '', imageSet);
                         if (src !== '') {
                             node.android('src', `@drawable/${src}`);
                         }

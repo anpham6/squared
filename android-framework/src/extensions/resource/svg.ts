@@ -140,6 +140,7 @@ type AnimateCompanion = NumberValue<SvgAnimation>;
 const $util = squared.lib.util;
 const $css = squared.lib.css;
 const $math = squared.lib.math;
+const $regex = squared.lib.regex;
 const $xml = squared.lib.xml;
 const $constS = squared.svg.lib.constant;
 const $utilS = squared.svg.lib.util;
@@ -673,7 +674,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     public createSvgElement(node: T, src: string): [HTMLElement | undefined, SVGSVGElement | undefined] {
         let parentElement: HTMLElement | undefined;
         let element: SVGSVGElement | undefined;
-        const match = /^url\("(.+)"\)$/.exec(src);
+        const match = $regex.CSS.URL.exec(src);
         if (match) {
             src = match[1];
         }

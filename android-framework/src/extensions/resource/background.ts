@@ -238,7 +238,7 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
 function checkBackgroundPosition(value: string, adjacent: string, fallback: string) {
     const initial = value === 'initial' || value === 'unset';
     if (value.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
-        return /^[a-z]+$/.test(value) ? `${initial ? fallback : value} 0px` : `${fallback} ${value}`;
+        return $regex.CHAR.LOWERCASE.test(value) ? `${initial ? fallback : value} 0px` : `${fallback} ${value}`;
     }
     else if (initial) {
         return '0px';
@@ -468,7 +468,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         autoSizeBackgroundImage: true,
         drawOutlineAsInsetBorder: true
     };
-
     public readonly eventOnly = true;
 
     private _resourceSvgInstance?: ResourceSvg<T>;
@@ -693,7 +692,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 backgroundSize.length = imageLength;
                 for (let i = 0, j = 0; i < imageLength; i++) {
-                    const value = data.backgroundImage[i];
+                    let value = data.backgroundImage[i];
                     let valid = false;
                     if (typeof value === 'string') {
                         if (value !== 'initial') {
@@ -710,10 +709,25 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                             }
                             if (!valid) {
-                                backgroundImage[j] = Resource.addImageURL(value);
-                                if (backgroundImage[j] !== '') {
-                                    imageDimensions[j] = this.application.resourceHandler.getImage($css.resolveURL(value));
-                                    valid = true;
+                                const match = $regex.CSS.URL.exec(value);
+                                if (match) {
+                                    if (match[1].startsWith('data:image/')) {
+                                        const rawData = this.application.resourceHandler.getRawData(match[1]);
+                                        if (rawData && rawData.base64) {
+                                            backgroundImage[j] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));
+                                            imageDimensions[j] = { width: rawData.width, height: rawData.height };
+                                            this.application.resourceHandler.writeRawImage(rawData.filename, rawData.base64);
+                                            valid = true;
+                                        }
+                                    }
+                                    else {
+                                        value = $util.resolvePath(match[1]);
+                                        backgroundImage[j] = Resource.addImage({ mdpi: value });
+                                        if (backgroundImage[j] !== '') {
+                                            imageDimensions[j] = this.application.resourceHandler.getImage(value);
+                                            valid = true;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -748,7 +762,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 for (let i = 0, j = imageLength; i < extracted.length; i++) {
                     const image = extracted[i];
                     const element = <HTMLImageElement> image.element;
-                    const src = Resource.addImageSrc(element);
+                    const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(element);
                     if (src !== '') {
                         backgroundImage[j] = src;
                         backgroundRepeat[j] = 'no-repeat';

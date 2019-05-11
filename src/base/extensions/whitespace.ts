@@ -66,7 +66,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                 }
             }
             const outside = node[margin] >= child[margin];
-            if (child.bounds.height === 0 && outside && child.textElement && child.textContent === '') {
+            if (child.bounds.height === 0 && outside && child.textElement && child.textContent === '' && child.extensions.length === 0) {
                 child.hide();
             }
             else if (child.getBox(boxMargin)[0] !== 1) {

@@ -6,27 +6,19 @@ import Node from '../node';
 import { EXT_NAME } from '../lib/constant';
 
 const $css = squared.lib.css;
-const $regex = squared.lib.regex;
 
 export default abstract class Sprite<T extends Node> extends Extension<T> {
     public condition(node: T) {
         let valid = false;
-        if (node.hasWidth && node.hasHeight && node.length === 0 && (this.included(<HTMLElement> node.element) || !node.dataset.use)) {
-            let url = node.css('backgroundImage');
-            if (url === '' || url === 'none') {
-                const match = $regex.CSS.URL.exec(node.css('background'));
-                url = match ? match[0] : '';
-            }
-            if (url !== '') {
-                const image = <ImageAsset> this.application.resourceHandler.getImage($css.resolveURL(url));
-                if (image) {
-                    const dimension = node.actualDimension;
-                    const position = $css.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, node.fontSize);
-                    if (position.left <= 0 && position.top <= 0 && image.width > dimension.width && image.height > dimension.height) {
-                        image.position = { x: position.left, y: position.top };
-                        node.data(EXT_NAME.SPRITE, 'mainData', image);
-                        valid = true;
-                    }
+        if (node.hasWidth && node.hasHeight && node.length === 0 && node.backgroundImage !== '' && (this.included(<HTMLElement> node.element) || !node.dataset.use)) {
+            const image = <ImageAsset> (this.application.resourceHandler.getRawData(node.backgroundImage) || this.application.resourceHandler.getImage($css.resolveURL(node.backgroundImage)));
+            if (image) {
+                const dimension = node.actualDimension;
+                const position = $css.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, node.fontSize);
+                if (position.left <= 0 && position.top <= 0 && image.width > dimension.width && image.height > dimension.height) {
+                    image.position = { x: position.left, y: position.top };
+                    node.data(EXT_NAME.SPRITE, 'mainData', image);
+                    valid = true;
                 }
             }
         }

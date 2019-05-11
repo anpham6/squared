@@ -1,7 +1,6 @@
 import { NodeXmlTemplate } from '../../../src/base/@types/application';
 import { ListData } from '../../../src/base/@types/extension';
 
-import Resource from '../resource';
 import View from '../view';
 
 import { CONTAINER_ANDROID } from '../lib/constant';
@@ -107,8 +106,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 if (mainData.imageSrc !== '') {
                     if (mainData.imagePosition) {
                         const position = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize);
-                        top = position.top;
-                        left = position.left;
+                        ({ top, left } = position);
                         gravity = 'left';
                         if (node.marginLeft < 0) {
                             resetPadding = node.marginLeft;
@@ -124,7 +122,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         }
                         minWidth = 0;
                     }
-                    image = Resource.addImageURL(mainData.imageSrc);
+                    image = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(mainData.imageSrc);
                 }
                 let paddingRight = 0;
                 if (gravity === 'left') {

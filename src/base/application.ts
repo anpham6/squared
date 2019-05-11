@@ -55,10 +55,7 @@ function parseConditionText(rule: string, value: string) {
 async function getImageSvgAsync(value: string)  {
     const response = await fetch(value, {
         method: 'GET',
-        headers: new Headers({
-            'Accept': 'application/xhtml+xml, image/svg+xml',
-            'Content-Type': 'image/svg+xml'
-        })
+        headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' })
     });
     return await response.text();
 }
@@ -231,7 +228,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 this.rootElements.add(element);
             }
         }
-        const ASSET_IMAGES = this.resourceHandler.assets.images;
+        const ASSETS = this.resourceHandler.assets;
         const documentRoot = this.rootElements.values().next().value;
         const preloadImages: HTMLImageElement[] = [];
         const parseResume = () => {
@@ -272,25 +269,17 @@ export default class Application<T extends Node> implements squared.base.Applica
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
                     const uri = image.src;
                     if (uri !== '') {
-                        ASSET_IMAGES.set(uri, {
-                            width: image.width,
-                            height: image.height,
-                            uri
-                        });
+                        ASSETS.images.set(uri, { width: image.width, height: image.height, uri });
                     }
                 });
                 element.querySelectorAll('svg image').forEach((image: SVGImageElement) => {
                     const uri = $util.resolvePath(image.href.baseVal);
                     if (uri !== '') {
-                        ASSET_IMAGES.set(uri, {
-                            width: image.width.baseVal.value,
-                            height: image.height.baseVal.value,
-                            uri
-                        });
+                        ASSETS.images.set(uri, { width: image.width.baseVal.value, height: image.height.baseVal.value, uri });
                     }
                 });
             }
-            for (const image of ASSET_IMAGES.values()) {
+            for (const image of ASSETS.images.values()) {
                 if (image.uri) {
                     if (image.uri.toLowerCase().endsWith('.svg')) {
                         images.push(image.uri);
@@ -310,6 +299,22 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
         }
+        for (const [uri, data] of ASSETS.rawData.entries()) {
+            if (data.mimeType && data.mimeType.startsWith('image/') && !data.mimeType.endsWith('svg+xml')) {
+                const element = document.createElement('img');
+                if (data.base64) {
+                    element.src = `data:${data.mimeType};base64,${data.base64}`;
+                }
+                else {
+                    element.src = `data:${data.mimeType};${data.content}`;
+                }
+                if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
+                    data.width = element.naturalWidth;
+                    data.height = element.naturalHeight;
+                    ASSETS.images.set(uri, { width: data.width, height: data.height, uri: data.filename });
+                }
+            }
+        }
         for (const element of this.rootElements) {
             element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
                 if (image.tagName === 'IMG') {
@@ -325,7 +330,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             }
                             const match = REGEXP_CACHED.DATAURI.exec(image.src);
                             if (match && match[1] && match[2]) {
-                                this.resourceHandler.addRawData(image.src, match[1], match[2], match[3]);
+                                this.resourceHandler.addRawData(image.src, match[1], match[2], match[3], image.naturalWidth, image.naturalHeight);
                             }
                         }
                         else {

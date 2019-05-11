@@ -8,9 +8,7 @@ type View = android.base.View;
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 
-function outsideX(node: View, parent: View) {
-    return !node.pageFlow && node.absoluteParent === parent && (node.left < 0 || !node.has('left') && node.right < 0);
-}
+const  outsideX = (node: View, parent: View) => !node.pageFlow && node.absoluteParent === parent && (node.left < 0 || !node.has('left') && node.right < 0);
 
 export default class NegativeX<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {

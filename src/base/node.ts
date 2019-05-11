@@ -16,6 +16,8 @@ const $util = squared.lib.util;
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 
+const REGEXP_BACKGROUND = /\s*(url\(.+?\))\s*/;
+
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public alignmentType = 0;
     public depth = -1;
@@ -1886,9 +1888,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get baseline() {
         if (this._cached.baseline === undefined) {
-            const value = this.verticalAlign;
-            const initialValue = this.cssInitial('verticalAlign');
-            this._cached.baseline = this.pageFlow && !this.floating && (value === 'baseline' || value === 'initial' || $css.isLength(initialValue) && parseFloat(initialValue) === 0);
+            this._cached.baseline = this.pageFlow && !this.floating && this.cssInitialAny('verticalAlign', 'baseline', 'initial', '0px', '0%');
         }
         return this._cached.baseline;
     }
@@ -1897,7 +1897,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.verticalAlign === undefined) {
             let value = this.css('verticalAlign');
             if ($css.isPercent(value)) {
-                value = $css.formatPX(parseInt(value) / 100 * this.bounds.height);
+                value = this.convertPX(value, false);
             }
             this._cached.verticalAlign = value;
         }
@@ -1938,11 +1938,25 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.renderExclude;
     }
 
+    get backgroundImage() {
+        if (this._cached.backgroundImage === undefined) {
+            const value = this.css('backgroundImage');
+            if (value !== '' && value !== 'none') {
+                this._cached.backgroundImage = value;
+            }
+            else {
+                const match = REGEXP_BACKGROUND.exec(this.css('background'));
+                this._cached.backgroundImage = match ? match[1] : '';
+            }
+        }
+        return this._cached.backgroundImage;
+    }
+
     get visibleStyle() {
         if (this._cached.visibleStyle === undefined) {
             const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-            const backgroundImage = this.has('backgroundImage');
             const backgroundColor = this.has('backgroundColor');
+            const backgroundImage = this.backgroundImage !== '';
             this._cached.visibleStyle = {
                 background: borderWidth || backgroundImage || backgroundColor,
                 borderWidth,

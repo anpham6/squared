@@ -62,9 +62,9 @@ app.post('/api/savetodisk', (req, res) => {
                 fileerror = filename;
                 mkdirp.sync(pathname);
                 const data = { name: `${(req.query.directory ? `${req.query.directory}/` : '') + file.pathname}/${file.filename}` };
-                if (file.content && file.content.trim() !== '') {
+                if (file.content || file.base64) {
                     delayed++;
-                    fs.writeFile(filename, file.content, err => {
+                    fs.writeFile(filename, file.base64 || file.content, file.base64 ? 'base64' : 'utf8', err => {
                         if (delayed !== -1) {
                             if (!err) {
                                 archive.file(filename, data);

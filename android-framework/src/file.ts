@@ -56,14 +56,6 @@ function getImageAssets(items: string[]) {
     return result;
 }
 
-function createFileAsset(pathname: string, filename: string, content: string): FileAsset {
-    return {
-        pathname,
-        filename,
-        content
-    };
-}
-
 function convertLength(value: string, dpi = 160, font = false, precision = 3) {
     let result = parseFloat(value);
     if (!isNaN(result)) {
@@ -84,6 +76,8 @@ function replaceLength(value: string, dpi = 160, format = 'dp', font = false, pr
     }
     return value;
 }
+
+const createFileAsset = (pathname: string, filename: string, content: string): FileAsset => ({ pathname, filename, content });
 
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
@@ -211,6 +205,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (this.stored.fonts.size) {
             const settings = this.userSettings;
             const xmlns = XMLNS_ANDROID[settings.targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
+            const pathname = this.resource.application.controllerHandler.localSettings.directory.font;
             for (const [name, font] of Array.from(this.stored.fonts.entries()).sort()) {
                 const data: ExternalData[] = [{
                     'xmlns:android': xmlns,
@@ -220,12 +215,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     const [fontFamily, fontStyle, fontWeight] = attr.split('|');
                     let fontName = name;
                     if (fontStyle === 'normal') {
-                        if (fontWeight === '400') {
-                            fontName += '_normal';
-                        }
-                        else {
-                            fontName += `_${font[attr]}`;
-                        }
+                        fontName += fontWeight === '400' ? '_normal' : `_${font[attr]}`;
                     }
                     else {
                         fontName += `_${fontStyle}`;
@@ -240,7 +230,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     });
                     const src = this.resource.getFont(fontFamily, fontStyle, fontWeight);
                     if (src && src.srcUrl) {
-                        this.addAsset('res/font', fontName + '.' + $util.fromLastIndexOf(src.srcUrl, '.').toLowerCase(), '', src.srcUrl);
+                        this.addAsset({
+                            pathname,
+                            filename: fontName + '.' + $util.fromLastIndexOf(src.srcUrl, '.').toLowerCase(),
+                            uri: src.srcUrl
+                        });
                     }
                 }
                 let output = $xml.replaceTab(
@@ -250,7 +244,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 if (settings.targetAPI < BUILD_ANDROID.OREO) {
                     output = output.replace(/\s+android:/g, ' app:');
                 }
-                result.push(output, 'res/font', `${name}.xml`);
+                result.push(output, pathname, `${name}.xml`);
             }
             if (saveToDisk) {
                 this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
@@ -353,26 +347,24 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.dimens.size) {
             const data: ExternalData[] = [{ dimen: [] }];
+            const settings = this.userSettings;
             for (const [name, innerText] of Array.from(this.stored.dimens.entries()).sort()) {
-                data[0].dimen.push({
-                    name,
-                    innerText
-                });
+                data[0].dimen.push({ name, innerText });
             }
             result.push(
                 $xml.replaceTab(
                     replaceLength(
                         $xml.applyTemplate('resources', DIMEN_TMPL, data),
-                        this.userSettings.resolutionDPI,
-                        this.userSettings.convertPixels
+                        settings.resolutionDPI,
+                        settings.convertPixels
                     ),
-                    this.userSettings.insertSpaces
+                    settings.insertSpaces
                 ),
                 'res/values',
                 'dimens.xml'
             );
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
             }
         }
         return result;
@@ -397,7 +389,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 );
             }
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
             }
         }
         return result;
@@ -434,15 +426,16 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceAnimToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.animators.size) {
+            const settings = this.userSettings;
             for (const [name, value] of this.stored.animators.entries()) {
                 result.push(
-                    $xml.replaceTab(value, this.userSettings.insertSpaces),
+                    $xml.replaceTab(value, settings.insertSpaces),
                     'res/anim',
                     `${name}.xml`
                 );
             }
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
             }
         }
         return result;

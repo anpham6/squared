@@ -114,7 +114,7 @@ export interface ResourceAssetMap {
     ids: Map<string, string[]>;
     images: Map<string, ImageAsset>;
     fonts: Map<string, squared.lib.css.CSSFontFaceData[]>;
-    rawData: Map<string, FileAsset>;
+    rawData: Map<string, RawAsset>;
 }
 
 export interface ResourceStoredMap {
@@ -141,6 +141,10 @@ export interface ImageAsset extends Asset {
     width: number;
     height: number;
     position?: Point;
+}
+
+export interface RawAsset extends FileAsset, ImageAsset {
+    base64?: string;
 }
 
 export interface NodeTag<T extends Node> extends Optional<NodeTemplate<T>> {

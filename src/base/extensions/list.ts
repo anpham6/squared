@@ -84,7 +84,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
                                 let src = '';
                                 let position = '';
                                 if (!item.visibleStyle.backgroundRepeat) {
-                                    src = item.css('backgroundImage');
+                                    src = item.backgroundImage;
                                     position = item.css('backgroundPosition');
                                 }
                                 if (src && src !== 'none') {

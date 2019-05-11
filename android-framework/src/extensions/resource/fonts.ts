@@ -113,7 +113,6 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         defaultSystemFont: 'sans-serif',
         fontResourceValue: true
     };
-
     public readonly eventOnly = true;
 
     public afterParseDocument() {

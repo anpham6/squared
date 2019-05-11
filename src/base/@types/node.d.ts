@@ -68,6 +68,7 @@ export interface CachedValue<T> {
     nextSibling?: T | null;
     flexbox?: Flexbox;
     autoMargin?: AutoMargin;
+    backgroundImage?: string;
     visibleStyle?: VisibleStyle;
     support?: Support;
     extensions?: string[];

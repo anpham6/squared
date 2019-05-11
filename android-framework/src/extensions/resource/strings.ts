@@ -15,7 +15,6 @@ export default class ResourceStrings<T extends android.base.View> extends square
         replaceCharacterEntities: true,
         fontVariantSmallCapsReduction: 0.8
     };
-
     public readonly eventOnly = true;
 
     public afterResources() {

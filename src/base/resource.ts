@@ -422,11 +422,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         if (element && element.complete) {
             const uri = element.src.trim();
             if (uri !== '') {
-                Resource.ASSETS.images.set(uri, {
-                    width: element.naturalWidth,
-                    height: element.naturalHeight,
-                    uri
-                });
+                Resource.ASSETS.images.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
             }
         }
     }
@@ -450,10 +446,15 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return undefined;
     }
 
-    public addRawData(complete: string, mimeType: string, encoding: string, content: string) {
+    public addRawData(dataURI: string, mimeType: string, encoding: string, content: string, width = 0, height = 0) {
+        encoding = encoding.toLowerCase();
         const settings = this.application.controllerHandler.localSettings;
-        if (encoding.toLowerCase().indexOf('base64') !== -1) {
-            content = window.atob(content);
+        let base64: string | undefined;
+        if (encoding === 'base64') {
+            base64 = content;
+            if (mimeType === 'image/svg+xml') {
+                content = window.atob(content);
+            }
         }
         else {
             content = content.replace(/\\"/g, '"');
@@ -461,17 +462,20 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         for (const format of settings.supported.imageFormat) {
             if (mimeType.indexOf(format) !== -1) {
                 let filename: string;
-                if (complete.endsWith(`.${format}`)) {
-                    filename = $util.fromLastIndexOf(complete, '/');
+                if (dataURI.endsWith(`.${format}`)) {
+                    filename = $util.fromLastIndexOf(dataURI, '/');
                 }
                 else {
-                    filename = `${new Date().getTime()}-${Math.floor(Math.random() * 100000)}.${format}`;
+                    filename = `${$util.buildAlphaString(5).toLowerCase()}_${new Date().getTime()}.${format}`;
                 }
-                Resource.ASSETS.rawData.set(complete, {
+                Resource.ASSETS.rawData.set(dataURI, {
                     pathname: '',
                     filename,
                     content,
-                    mimeType
+                    base64,
+                    mimeType,
+                    width,
+                    height
                 });
                 return filename;
             }
@@ -479,8 +483,24 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return '';
     }
 
-    public getRawData(complete: string) {
-        return Resource.ASSETS.rawData.get(complete);
+    public getRawData(dataURI: string) {
+        if (dataURI.startsWith('url(')) {
+            const match = $regex.CSS.URL.exec(dataURI);
+            if (match) {
+                dataURI = match[1];
+            }
+        }
+        return Resource.ASSETS.rawData.get(dataURI);
+    }
+
+    public writeRawImage(filename: string, base64: string) {
+        if (this.fileHandler) {
+            this.fileHandler.addAsset({
+                pathname: this.application.controllerHandler.localSettings.directory.image,
+                filename,
+                base64
+            });
+        }
     }
 
     public setBoxStyle(node: T) {
@@ -503,7 +523,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 boxStyle.borderLeft = undefined;
             }
             for (const attr in boxStyle) {
-                const value = node.css(attr);
+                const value = attr === 'backgroundImage' ? node.backgroundImage : node.css(attr);
                 switch (attr) {
                     case 'backgroundColor': {
                         if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && Resource.isInheritedStyle(node, 'backgroundColor'))) {
@@ -522,7 +542,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         boxStyle[attr] = value;
                         break;
                     case 'backgroundImage':
-                        if (value !== 'none' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                        if (value !== '' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                             const images: (string | Gradient)[] = [];
                             const opacity = node.css('opacity');
                             let match: RegExpExecArray | null;
@@ -782,13 +802,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     }
 
     public setFontStyle(node: T) {
-        if (!(node.element === null ||
-            node.renderChildren.length ||
-            node.imageElement ||
-            node.svgElement ||
-            node.tagName === 'HR' ||
-            node.textEmpty && !node.visibleStyle.background))
-        {
+        if (!(node.element === null || node.renderChildren.length || node.imageElement || node.svgElement || node.tagName === 'HR' || node.textEmpty && !node.visibleStyle.background)) {
             const opacity = node.css('opacity');
             const color = $color.parseColor(node.css('color'), opacity);
             let fontFamily = node.css('fontFamily').trim();

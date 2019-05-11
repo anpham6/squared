@@ -1,4 +1,4 @@
-import { AppHandler, FileAsset, ImageAsset, ResourceAssetMap, ResourceStoredMap, UserSettings } from '../base/@types/application';
+import { AppHandler, FileAsset, ImageAsset, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings } from '../base/@types/application';
 
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
 
@@ -17,8 +17,9 @@ declare global {
             getImage(src: string): ImageAsset | undefined;
             addFont(data: CSSFontFaceData): void;
             getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): CSSFontFaceData | undefined;
-            addRawData(complete: string, mimeType: string, encoding: string, content: string): string;
-            getRawData(complete: string): FileAsset | undefined;
+            addRawData(dataURI: string, mimeType: string, encoding: string, content: string): string;
+            getRawData(dataURI: string): RawAsset | undefined;
+            writeRawImage(filename: string, base64: string): void;
             setBoxStyle(node: T): void;
             setFontStyle(node: T): void;
             setValueString(node: T): void;
