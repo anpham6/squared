@@ -46,13 +46,21 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                             valid = true;
                         }
                     }
-                    else {
-                        if (item.right >= 0 && item.has('right') && (item.right < paddingRight || node.documentBody && node.has('width'))) {
+                    else if (item.has('right')) {
+                        if (item.right >= 0 && (item.right < paddingRight || node.documentBody && node.has('width'))) {
                             valid = true;
                             if (item.position === 'fixed') {
                                 fixedRight = true;
                             }
                         }
+                    }
+                    else if (!item.rightAligned) {
+                        if (item.marginLeft < 0 && (node.documentRoot || $util.aboveRange(item.linear.left, node.bounds.left))) {
+                            valid = true;
+                        }
+                    }
+                    else if (item.marginRight < 0 && (node.documentRoot || $util.belowRange(item.linear.right, node.bounds.right))) {
+                        valid = true;
                     }
                 }
                 if (valid) {

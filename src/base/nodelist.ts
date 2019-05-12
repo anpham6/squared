@@ -46,10 +46,16 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                     return node.actualParent as T;
                 }
             }
-            else if (node.groupParent) {
-                const parent = NodeList.actualParent(node.actualChildren);
-                if (parent) {
-                    return parent as T;
+            else {
+                const innerWrapped = node.innerWrapped;
+                if (innerWrapped && innerWrapped.naturalElement && innerWrapped.actualParent) {
+                    return innerWrapped.actualParent as T;
+                }
+                else if (node.groupParent) {
+                    const parent = NodeList.actualParent(node.actualChildren);
+                    if (parent) {
+                        return parent as T;
+                    }
                 }
             }
         }
@@ -275,8 +281,21 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         const groupParent = $util.filterArray(list, node => node.groupParent);
         const result: T[][] = [];
         let row: T[] = [];
+        function includes(node: T) {
+            if (list.includes(node)) {
+                return node;
+            }
+            let current = node.outerWrapper as T;
+            while (current) {
+                if (list.includes(current)) {
+                    return current as T;
+                }
+                current = current.outerWrapper as T;
+            }
+            return undefined;
+        }
         for (let i = 0; i < children.length; i++) {
-            const node = children[i];
+            let node: T | undefined = children[i];
             let next = false;
             for (let j = 0; j < groupParent.length; j++) {
                 const group = groupParent[j];
@@ -296,7 +315,8 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             }
             const previousSiblings = node.previousSiblings() as T[];
             if (i === 0 || previousSiblings.length === 0) {
-                if (list.includes(node)) {
+                node = includes(node);
+                if (node) {
                     row.push(node);
                 }
             }
@@ -305,15 +325,19 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                     if (row.length) {
                         result.push(row);
                     }
-                    if (list.includes(node)) {
+                    node = includes(node);
+                    if (node) {
                         row = [node];
                     }
                     else {
                         row = [];
                     }
                 }
-                else if (list.includes(node)) {
-                    row.push(node);
+                else {
+                    node = includes(node);
+                    if (node) {
+                        row.push(node);
+                    }
                 }
             }
             if (i === children.length - 1 && row.length) {

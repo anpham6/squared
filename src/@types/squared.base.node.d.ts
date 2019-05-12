@@ -160,7 +160,7 @@ declare global {
             saveAsInitial(overwrite?: boolean): void;
             is(...containers: number[]): boolean;
             of(containerType: number, ...alignmentType: number[]): boolean;
-            unsafe(name: string, reset?: boolean): any;
+            unsafe(name: string, unset?: boolean): any;
             attr(name: string, attr: string, value?: string, overwrite?: boolean): string;
             namespace(name: string): StringMap;
             delete(name: string, ...attrs: string[]): void;

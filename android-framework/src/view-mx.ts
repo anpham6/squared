@@ -339,9 +339,8 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         public anchorStyle(orientation: string, value = 'packed', bias = 0, overwrite = true) {
             const node = this.actualAnchor;
-            orientation = $util.capitalize(orientation);
-            node.app(`layout_constraint${orientation}_chainStyle`, value, overwrite);
-            node.app(`layout_constraint${orientation}_bias`, bias.toString(), overwrite);
+            node.app(orientation === AXIS_ANDROID.HORIZONTAL ? 'layout_constraintHorizontal_chainStyle' : 'layout_constraintVertical_chainStyle', value, overwrite);
+            node.app(orientation === AXIS_ANDROID.HORIZONTAL ? 'layout_constraintHorizontal_bias' : 'layout_constraintVertical_bias', bias.toString(), overwrite);
         }
 
         public anchorDelete(...position: string[]) {
@@ -596,7 +595,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 this.android('layout_columnWeight', $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
                             }
                             else if (this.imageElement) {
-                                if (width === '100%') {
+                                if (width === '100%' && !renderParent.flexibleWidth) {
                                     layoutWidth = 'match_parent';
                                     this.android('adjustViewBounds', 'true');
                                 }
@@ -608,13 +607,16 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     this.android('adjustViewBounds', 'true');
                                 }
                             }
+                            else if (this.inputElement) {
+                                value = this.bounds.width;
+                            }
                             else if (width === '100%') {
                                 if (!this.support.maxWidth) {
                                     const maxWidth = this.css('maxWidth');
                                     const maxValue = this.parseUnit(maxWidth);
                                     const absoluteParent = this.absoluteParent || documentParent;
                                     if (maxWidth === '100%') {
-                                        if (!documentParent.inlineWidth && $util.aboveRange(maxValue, absoluteParent.width)) {
+                                        if (!renderParent.inlineWidth && $util.aboveRange(maxValue, absoluteParent.box.width)) {
                                             layoutWidth = 'match_parent';
                                         }
                                         else {
@@ -622,7 +624,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                         }
                                     }
                                     else if (maxValue > 0) {
-                                        if (this.inputElement || this.blockDimension) {
+                                        if (this.blockDimension) {
                                             value = Math.min(this.actualWidth, maxValue);
                                         }
                                         else {
@@ -660,7 +662,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 }
                             }
                             if (layoutWidth === '' && (
-                                    this.layoutVertical && this.layoutLinear && renderParent.blockWidth && this.actualChildren.some(item => item.lineBreak) ||
+                                    this.layoutVertical && this.layoutLinear && renderParent.blockWidth && (renderParent.layoutFrame && this.rightAligned || this.actualChildren.some(item => item.lineBreak)) ||
                                     !this.pageFlow && this.absoluteParent === documentParent && this.has('left') && this.has('right') ||
                                     documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') !== 'column'
                                ))
@@ -684,7 +686,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         else if ($css.isPercent(height)) {
                             if (this.imageElement) {
-                                if (height === '100%') {
+                                if (height === '100%' && !renderParent.flexibleHeight) {
                                     layoutHeight = 'match_parent';
                                     this.android('adjustViewBounds', 'true');
                                 }
@@ -696,13 +698,16 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     this.android('adjustViewBounds', 'true');
                                 }
                             }
+                            else if (this.inputElement) {
+                                value = this.bounds.height;
+                            }
                             else if (height === '100%') {
                                 if (!this.support.maxHeight) {
                                     const maxHeight = this.css('maxHeight');
                                     const maxValue = this.parseUnit(maxHeight);
                                     const absoluteParent = this.absoluteParent || documentParent;
                                     if (maxHeight === '100%') {
-                                        if (!documentParent.inlineHeight && $util.aboveRange(maxValue, absoluteParent.box.height)) {
+                                        if (!renderParent.inlineHeight && $util.aboveRange(maxValue, absoluteParent.box.height)) {
                                             layoutHeight = 'match_parent';
                                         }
                                         else {
@@ -710,7 +715,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                         }
                                     }
                                     else if (maxValue > 0) {
-                                        if (this.inputElement || this.blockDimension) {
+                                        if (this.blockDimension) {
                                             value = Math.min(this.actualHeight, maxValue);
                                         }
                                         else {
@@ -750,7 +755,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 layoutHeight = $css.formatPX(this.actualHeight);
                             }
                         }
-                        else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.has('top') && this.has('bottom') || this.singleChild && renderParent.flexElement && renderParent.css('flexDirection') === 'row') {
+                        else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.has('top') && this.has('bottom') || this.outerWrapper === undefined && this.singleChild && renderParent.flexElement && renderParent.css('flexDirection') === 'row') {
                             layoutHeight = 'match_parent';
                         }
                     }
@@ -1062,8 +1067,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                         let value = this[attr];
                         if (value !== 0) {
                             if (attr === 'marginRight') {
-                                if (value < 0 && this.float === 'right') {
-                                    value = 0;
+                                if (value < 0) {
+                                    if (this.float === 'right') {
+                                        value = 0;
+                                    }
                                 }
                                 else if (this.inline) {
                                     const boxRight = this.documentParent.box.right;
@@ -1081,6 +1088,29 @@ export default (Base: Constructor<squared.base.Node>) => {
                             }
                             boxModel[attr] += value;
                         }
+                    }
+                }
+                if (this.positionStatic && !this.blockWidth && prefix === 'layout_margin' && (boxModel[left] < 0 || boxModel[right] < 0)) {
+                    switch (this.cssAscend('textAlign')) {
+                        case 'center': {
+                            if (boxModel[left] < boxModel[right]) {
+                                boxModel[left] = 0;
+                                boxModel[right] += Math.abs(boxModel[left]);
+                                boxModel[right] /= 2;
+                            }
+                            else {
+                                boxModel[right] = 0;
+                                boxModel[left] += Math.abs(boxModel[right]);
+                                boxModel[left] /= 2;
+                            }
+                            break;
+                        }
+                        case 'right':
+                        case 'end':
+                            if (boxModel[left] < 0) {
+                                boxModel[left] = 0;
+                            }
+                            break;
                     }
                 }
                 if (supported && mergeable) {
@@ -1169,7 +1199,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     borderWidth = true;
                 }
-                if (borderWidth && this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE)) {
+                if (borderWidth && this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE) && !this.actualChildren.every(node => !node.pageFlow && node.absoluteParent === this)) {
                     this.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, this.borderLeftWidth);
                     this.modifyBox($enum.BOX_STANDARD.PADDING_RIGHT, this.borderRightWidth);
                     this.modifyBox($enum.BOX_STANDARD.PADDING_TOP, this.borderTopWidth);

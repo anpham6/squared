@@ -1,4 +1,4 @@
-import { CHAR, PREFIX, UNIT } from './regex';
+import { CHAR, PREFIX, UNIT, XML } from './regex';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
@@ -11,6 +11,28 @@ const CACHE_UNDERSCORE: StringMap = {};
 
 export function capitalize(value: string, upper = true) {
     return upper ? value.charAt(0).toUpperCase() + value.substring(1).toLowerCase() : value.charAt(0).toLowerCase() + value.substring(1);
+}
+
+export function capitalizeString(value: string) {
+    const result = value.split('');
+    let match: RegExpMatchArray | null;
+    while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
+        if (match.index !== undefined) {
+            result[match.index] = match[1].charAt(0).toUpperCase();
+        }
+    }
+    return result.join('');
+}
+
+export function lowerCaseString(value: string) {
+    let result = value;
+    let match: RegExpMatchArray | null;
+    while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
+        if (match.index !== undefined && !XML.ENTITY.test(match[1])) {
+            result = (match.index > 0 ? result.substring(0, match.index) : '') + value.substring(match.index, match.index + match[1].length).toLowerCase() + result.substring(match.index + match[1].length);
+        }
+    }
+    return result;
 }
 
 export function convertUnderscore(value: string) {

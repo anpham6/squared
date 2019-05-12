@@ -20,7 +20,6 @@ const $util = squared.lib.util;
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
 
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
-const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 const REGEXP_NEWLINE = /\n/g;
 
 function removeExcluded(node: Node, element: Element, attr: string) {
@@ -28,7 +27,15 @@ function removeExcluded(node: Node, element: Element, attr: string) {
     for (let i = 0; i < node.actualChildren.length; i++) {
         const item = node.actualChildren[i];
         if (item.excluded || item.pseudoElement || !item.pageFlow || item.dataset.target) {
-            if ($util.isString(item[attr])) {
+            if (item.htmlElement && attr === 'innerHTML') {
+                if (item.lineBreak) {
+                    value = value.replace((<Element> item.element).outerHTML, '\\n');
+                }
+                else {
+                    value = value.replace((<Element> item.element).outerHTML, item.pageFlow && item.textContent ? '&#160;' : '');
+                }
+            }
+            else if ($util.isString(item[attr])) {
                 value = value.replace(item[attr], '');
             }
             else if (i === 0) {
@@ -190,35 +197,6 @@ function getBackgroundSize(node: Node, index: number, value?: string) {
     return undefined;
 }
 
-function applyTextTransform(type: string, value: string) {
-    if (type === 'none' || type === 'initial') {
-        return value;
-    }
-    const words = value.split($regex.XML.BREAKWORD);
-    switch (type) {
-        case 'uppercase':
-            for (const word of words) {
-                if (!$regex.XML.ENTITY.test(word)) {
-                    value = value.replace(word, word.toUpperCase());
-                }
-            }
-            break;
-        case 'lowercase':
-            for (const word of words) {
-                if (!$regex.XML.ENTITY.test(word)) {
-                    value = value.replace(word, word.toLowerCase());
-                }
-            }
-            break;
-        case 'capitalize':
-            for (const word of words) {
-                value = value.replace(word, $util.capitalize(word));
-            }
-            break;
-    }
-    return value;
-}
-
 const getGradientPosition = (value: string) => value ? /(.+?)?\s*at (.+?)$/.exec(value) : null;
 
 export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
@@ -288,7 +266,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public static getOptionArray(element: HTMLSelectElement) {
         const stringArray: string[] = [];
-        const textTransform = $css.getStyle(element).getPropertyValue('text-transform');
         let numberArray: string[] | undefined = [];
         let i = -1;
         while (++i < element.children.length) {
@@ -305,7 +282,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         continue;
                     }
                     if (value !== '') {
-                        stringArray.push(applyTextTransform(textTransform, value));
+                        stringArray.push(value);
                     }
                 }
             }
@@ -879,7 +856,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 let value = '';
                 let trimming = false;
                 let inlined = false;
-                const transform = node.css('textTransform');
                 switch (element.tagName) {
                     case 'INPUT':
                         value = element.value;
@@ -944,7 +920,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         value = element.value;
                         break;
                     case 'BUTTON':
-                        value = applyTextTransform(transform, element.innerText);
+                        value = element.innerText;
                         break;
                     case 'IFRAME':
                         value = element.src;
@@ -956,27 +932,24 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 renderParent,
                                 node,
                                 element,
-                                applyTextTransform(transform, node.textContent.replace($regex.ESCAPE.AMP, '&amp;'))
+                                node.textContent.replace($regex.ESCAPE.AMP, '&amp;')
                             );
                             inlined = true;
                             trimming = true;
                         }
                         else if (node.inlineText) {
                             name = node.textContent.trim();
-                            if (element.tagName === 'CODE') {
+                            if (element.children.length || element.tagName === 'CODE') {
                                 value = removeExcluded(node, element, 'innerHTML');
                             }
-                            else if (Resource.hasLineBreak(node, true)) {
-                                value = applyTextTransform(transform, removeExcluded(node, element, 'innerHTML')).replace(REGEXP_LINEBREAK, '\\n').replace($regex.XML.TAGNAME_G, '');
-                            }
                             else {
-                                value = applyTextTransform(transform, removeExcluded(node, element, 'textContent'));
+                                value = removeExcluded(node, element, 'textContent');
                             }
                             [value, inlined] = replaceWhiteSpace(renderParent, node, element, value);
                             trimming = true;
                         }
                         else if (Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle')) && element.innerText.trim() === '') {
-                            value = applyTextTransform(transform, element.innerText);
+                            value = element.innerText;
                         }
                         break;
                 }

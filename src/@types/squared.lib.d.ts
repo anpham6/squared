@@ -119,6 +119,8 @@ declare global {
 
         namespace util {
             function capitalize(value: string, upper?: boolean): string;
+            function capitalizeString(value: string): string;
+            function lowerCaseString(value: string): string;
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
             function convertWord(value: string, dash?: boolean): string;

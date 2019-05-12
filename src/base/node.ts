@@ -171,8 +171,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.containerType === containerType && alignmentType.some(value => this.hasAlign(value));
     }
 
-    public unsafe(name: string, reset = false): any {
-        if (reset) {
+    public unsafe(name: string, unset = false): any {
+        if (unset) {
             delete this[`_${name}`];
         }
         else {
@@ -834,16 +834,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public setBounds(cache = true) {
         if (this.styleElement) {
             this._bounds = $dom.assignRect($session.getClientRect(<Element> this._element, this.sessionId, cache), true);
-            if (this.documentBody) {
-                let marginTop = this.marginTop;
-                if (marginTop > 0) {
-                    const firstChild = this.firstChild;
-                    if (firstChild && firstChild.blockStatic && !firstChild.lineBreak && firstChild.marginTop >= marginTop) {
-                        marginTop = 0;
-                    }
-                }
-                this._bounds.top = marginTop;
-            }
         }
         else if (this.plainText) {
             const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId, cache);
@@ -971,7 +961,19 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const result: T[] = [];
         let element: Element | null = null;
         if (this._element) {
-            element = <Element> this._element.previousSibling;
+            if (this.naturalElement) {
+                element = <Element> this._element.previousSibling;
+            }
+            else {
+                let current = this.innerWrapped;
+                while (current) {
+                    if (current.naturalElement) {
+                        element = <Element> (current.element as Element).previousSibling;
+                        break;
+                    }
+                    current = current.innerWrapped;
+                }
+            }
         }
         else {
             const node = this.firstChild;
@@ -1005,7 +1007,19 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const result: T[] = [];
         let element: Element | null = null;
         if (this._element) {
-            element = <Element> this._element.nextSibling;
+            if (this.naturalElement) {
+                element = <Element> this._element.nextSibling;
+            }
+            else {
+                let current = this.innerWrapped;
+                while (current) {
+                    if (current.naturalElement) {
+                        element = <Element> (current.element as Element).nextSibling;
+                        break;
+                    }
+                    current = current.innerWrapped;
+                }
+            }
         }
         else {
             const node = this.lastChild;
@@ -1396,13 +1410,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get width() {
         if (this._cached.width === undefined) {
-            this._cached.width = Math.max(this.parseUnit(this._styleMap.width), this.parseUnit(this._styleMap.minWidth));
+            const value = Math.max(this.parseUnit(this._styleMap.width), this.parseUnit(this._styleMap.minWidth));
+            const maxValue = value > 0 && !this.imageElement ? this.parseUnit(this._styleMap.maxWidth) : 0;
+            this._cached.width = maxValue > 0 ? Math.min(value, maxValue) : value;
         }
         return this._cached.width;
     }
     get height() {
         if (this._cached.height === undefined) {
-            this._cached.height = Math.max(this.parseUnit(this._styleMap.height, false), this.parseUnit(this._styleMap.minHeight, false));
+            const value = Math.max(this.parseUnit(this._styleMap.height, false), this.parseUnit(this._styleMap.minHeight, false));
+            const maxValue = value > 0 && !this.imageElement ? this.parseUnit(this._styleMap.maxHeight) : 0;
+            this._cached.height = maxValue > 0 ? Math.min(value, maxValue) : value;
         }
         return this._cached.height;
     }
@@ -1888,7 +1906,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get baseline() {
         if (this._cached.baseline === undefined) {
-            this._cached.baseline = this.pageFlow && !this.floating && this.cssInitialAny('verticalAlign', 'baseline', 'initial', '0px', '0%');
+            this._cached.baseline = this.pageFlow && !this.floating && this.cssAny('verticalAlign', 'baseline', 'initial', '0px', '0%');
         }
         return this._cached.baseline;
     }

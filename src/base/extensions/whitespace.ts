@@ -31,10 +31,14 @@ function getVisibleNode(node: Node) {
 }
 
 function resetMargin(node: Node, value: number) {
-    getVisibleNode(node).modifyBox(value, null);
-    if (node.companion) {
-        node.companion.modifyBox(value, null);
+    if (node.getBox(value)[0] !== 1) {
+        getVisibleNode(node).modifyBox(value, null);
+        if (node.companion) {
+            node.companion.modifyBox(value, null);
+        }
+        return true;
     }
+    return false;
 }
 
 function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
@@ -75,8 +79,15 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                     if (outside) {
                         resetChild = true;
                     }
-                    else {
-                        resetMargin(node, boxMargin);
+                    else if (resetMargin(node, boxMargin)) {
+                        if (direction) {
+                            node.bounds.top = 0;
+                        }
+                        else {
+                            node.bounds.bottom += node.marginBottom;
+                        }
+                        node.unsafe('box', true);
+                        node.unsafe('linear', true);
                     }
                 }
                 else {

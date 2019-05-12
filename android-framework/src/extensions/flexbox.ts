@@ -304,8 +304,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 const HWL = HW.toLowerCase();
                 const dimension: boolean = node[`has${HW}`];
                 const dimensionInverse: boolean = node[`has${WH}`];
+                const orientationWeight = `layout_constraint${$util.capitalize(orientation)}_weight`;
                 function setLayoutWeight(chain: T, value: number) {
-                    chain.app(`layout_constraint${$util.capitalize(orientation)}_weight`, $math.truncate(value, chain.localSettings.floatPrecision));
+                    chain.app(orientationWeight, $math.truncate(value, chain.localSettings.floatPrecision));
                     chain.android(`layout_${WH.toLowerCase()}`, '0px');
                 }
                 for (let i = 0; i < partition.length; i++) {
@@ -631,10 +632,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                             }
                         }
-                        if (spreadInside) {
+                        if (spreadInside || partition[i].some(item => item.app(orientationWeight) !== '')) {
                             segStart.anchorStyle(orientation, 'spread_inside', 0, false);
                         }
-                        else if (!centered && (seg.length > 1 || mainData.directionReverse)) {
+                        else if (!centered) {
                             segStart.anchorStyle(orientation, 'packed', mainData.directionReverse ? 1 : 0, false);
                         }
                     }

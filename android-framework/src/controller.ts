@@ -112,13 +112,21 @@ function checkSingleLine(node: View, nowrap = false, multiline = false) {
     }
 }
 
-function adjustDocumentRootOffset(value: number, parent: View, direction: string, boxReset = false) {
-    if (value > 0) {
-        if (boxReset) {
-            value -= parent[`padding${direction}`];
-        }
-        if (parent.documentBody) {
-            value -= parent[`margin${direction}`];
+function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number) {
+    if (value > 0 && parent.getBox(direction)[0] !== 1) {
+        switch (direction) {
+            case $enum.BOX_STANDARD.PADDING_TOP:
+                value -= parent.paddingTop;
+                break;
+            case $enum.BOX_STANDARD.PADDING_RIGHT:
+                value -= parent.paddingRight;
+                break;
+            case $enum.BOX_STANDARD.PADDING_BOTTOM:
+                value -= parent.paddingBottom;
+                break;
+            case $enum.BOX_STANDARD.PADDING_LEFT:
+                value -= parent.paddingLeft;
+                break;
         }
         return Math.max(value, 0);
     }
@@ -151,57 +159,60 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
 }
 
 function constraintMinMax(node: View, dimension: string) {
-    if (!node.inputElement) {
-        const horizontal = dimension === 'width';
-        const dimensionA = $util.capitalize(dimension);
-        const minWH = node.cssInitial(`min${dimensionA}`);
-        const maxWH = node.cssInitial(`max${dimensionA}`);
-        function setAlignmentBlock() {
-            const renderParent = node.renderParent;
-            if (renderParent && renderParent.groupParent) {
-                renderParent.alignmentType |= $enum.NODE_ALIGNMENT.BLOCK;
-                renderParent.unsetCache('blockStatic');
-            }
-        }
-        if ($css.isLength(minWH, true)) {
-            let valid = false;
-            if (horizontal) {
-                if (node.ascend(false, item => item.has('width') || item.blockStatic).length) {
-                    node.android('layout_width', '0px', false);
-                    valid = true;
-                    setAlignmentBlock();
+    if (!node.documentParent.flexElement && !node.inputElement) {
+        const renderParent = node.renderParent as View;
+        if (renderParent) {
+            const horizontal = dimension === 'width';
+            const dimensionA = $util.capitalize(dimension);
+            const minWH = node.cssInitial(`min${dimensionA}`, true);
+            const maxWH = node.cssInitial(`max${dimensionA}`, true);
+            function setAlignmentBlock() {
+                if (renderParent.groupParent) {
+                    renderParent.alignmentType |= $enum.NODE_ALIGNMENT.BLOCK;
+                    renderParent.unsetCache('blockStatic');
                 }
             }
-            else if (node.documentParent.has('height') && !node.has('height')) {
-                node.android('layout_height', '0px', false);
-                valid = true;
-            }
-            if (valid) {
-                node.app(`layout_constraint${dimensionA}_min`, $css.formatPX(node.parseUnit(minWH, horizontal)));
-            }
-        }
-        let contentBox = 0;
-        if ($css.isLength(maxWH, true)) {
-            let valid = false;
-            if (horizontal) {
-                if (node.ascend(false, item => item.has('width') || item.blockStatic).length) {
-                    node.android('layout_width', '0px', false);
-                    valid = true;
-                    if (!$css.isPercent(maxWH)) {
-                        contentBox += node.contentBoxWidth;
+            if ($css.isLength(minWH, true) && minWH !== '0px') {
+                let valid = false;
+                if (horizontal) {
+                    if (node.ascend(false, item => item.has('width') || item.blockStatic).length) {
+                        node.android('layout_width', '0px', node.blockWidth);
+                        valid = true;
+                        setAlignmentBlock();
                     }
-                    setAlignmentBlock();
+                }
+                else if ((node.absoluteParent || node.documentParent).hasHeight && !node.has('height')) {
+                    node.android('layout_height', '0px', node.blockHeight);
+                    valid = true;
+                }
+                if (valid) {
+                    node.app(`layout_constraint${dimensionA}_min`, $css.formatPX(node.parseUnit(minWH, horizontal)));
+                    node.css(`min${dimensionA}`, 'auto');
                 }
             }
-            else if (node.documentParent.has('height') && !node.has('height')) {
-                node.android('layout_height', '0px', false);
-                if (!$css.isPercent(maxWH)) {
-                    contentBox += node.contentBoxHeight;
+            let contentBox = 0;
+            if ($css.isLength(maxWH, true)) {
+                let valid = false;
+                if (horizontal) {
+                    if (node.outerWrapper || node.ascend(false, item => item.has('width') || item.blockStatic).length) {
+                        node.android('layout_width', renderParent.flexibleWidth ? 'match_parent' : '0px');
+                        valid = true;
+                        if (!$css.isPercent(maxWH)) {
+                            contentBox += node.contentBoxWidth;
+                        }
+                        setAlignmentBlock();
+                    }
                 }
-                valid = true;
-            }
-            if (valid) {
-                node.app(`layout_constraint${dimensionA}_max`, $css.formatPX(node.parseUnit(maxWH, horizontal) + contentBox));
+                else if ((node.absoluteParent || node.documentParent).hasHeight && !node.has('height')) {
+                    node.android('layout_height', renderParent.flexibleHeight ? 'match_parent' : '0px');
+                    if (!$css.isPercent(maxWH)) {
+                        contentBox += node.contentBoxHeight;
+                    }
+                    valid = true;
+                }
+                if (valid) {
+                    node.app(`layout_constraint${dimensionA}_max`, $css.formatPX(node.parseUnit(maxWH, horizontal) + contentBox));
+                }
             }
         }
     }
@@ -209,7 +220,7 @@ function constraintMinMax(node: View, dimension: string) {
 
 function constraintPercentValue(node: View, dimension: string, opposing: boolean) {
     const horizontal = dimension === 'width';
-    const value = node.css(dimension);
+    const value = node.cssInitial(dimension, true);
     if (opposing) {
         if ($css.isLength(value, true)) {
             node.android(`layout_${dimension}`, $css.formatPX(node.bounds[dimension]), false);
@@ -720,11 +731,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                                 if (!item.has('right') && item.css('width') === '100%') {
                                                     item.anchor('right', 'parent');
                                                 }
-                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, adjustDocumentRootOffset(item.left, node, 'Left', true));
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, adjustAbsolutePaddingOffset(node, $enum.BOX_STANDARD.PADDING_LEFT, item.left));
                                             }
                                             if (item.has('right') && (!item.has('width') || item.css('width') === '100%' || !item.has('left'))) {
                                                 item.anchor('right', 'parent');
-                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, adjustDocumentRootOffset(item.right, node, 'Right', true));
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, adjustAbsolutePaddingOffset(node, $enum.BOX_STANDARD.PADDING_RIGHT, item.right));
                                             }
                                         }
                                         if (item.hasHeight && item.autoMargin.vertical) {
@@ -748,11 +759,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                                 if (!item.has('bottom') && item.css('height') === '100%') {
                                                     item.anchor('bottom', 'parent');
                                                 }
-                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, adjustDocumentRootOffset(item.top, node, 'Top', true));
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, adjustAbsolutePaddingOffset(node, $enum.BOX_STANDARD.PADDING_TOP, item.top));
                                             }
                                             if (item.has('bottom') && (!item.has('height') || item.css('height') === '100%' || !item.has('top'))) {
                                                 item.anchor('bottom', 'parent');
-                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, adjustDocumentRootOffset(item.bottom, node, 'Bottom', true));
+                                                item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, adjustAbsolutePaddingOffset(node, $enum.BOX_STANDARD.PADDING_BOTTOM, item.bottom));
                                             }
                                         }
                                     }
@@ -1312,7 +1323,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         location += boxParent[!opposite ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
                     }
                     else if (absoluteParent === node.documentParent) {
-                        location = horizontal ? adjustDocumentRootOffset(location, boxParent, 'Left') : adjustDocumentRootOffset(location, boxParent, 'Top', boxParent.getBox($enum.BOX_STANDARD.PADDING_TOP)[0] === 0);
+                        let direction: number;
+                        if (horizontal) {
+                            direction = !opposite ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.PADDING_RIGHT;
+                        }
+                        else {
+                            direction = !opposite ? $enum.BOX_STANDARD.PADDING_TOP : $enum.BOX_STANDARD.PADDING_BOTTOM;
+                        }
+                        location = adjustAbsolutePaddingOffset(boxParent, direction, location);
                     }
                 }
                 else if (node.inlineVertical) {
@@ -1500,6 +1518,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             if (renderTemplates) {
                 for (let i = 0; i < renderTemplates.length; i++) {
                     if (renderTemplates[i].node === node) {
+                        node.renderChildren.splice(i, 1);
                         renderTemplates.splice(i, 1);
                         break;
                     }

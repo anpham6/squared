@@ -1,66 +1,87 @@
-import { CONTAINER_ANDROID } from '../../lib/constant';
+import { CONTAINER_ANDROID, EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 
+type MaxWidthHeightData = {
+    maxWidth: boolean;
+    maxHeight: boolean;
+};
+
 const $enum = squared.base.lib.enumeration;
-const $css = squared.lib.css;
 
 export default class MaxWidthHeight<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {
-        return !parent.layoutConstraint && (!node.support.maxWidth && node.has('maxWidth') && node.css('width') !== '100%' && !parent.has('columnCount') && !parent.has('columnWidth') || !node.support.maxHeight && node.has('maxHeight') && node.css('height') !== '100%');
+        let maxWidth = false;
+        let maxHeight = false;
+        if (!node.support.maxWidth && node.has('maxWidth') && !parent.hasAlign($enum.NODE_ALIGNMENT.COLUMN)) {
+            const blockWidth = node.css('width') === '100%';
+            if (node.width === 0 || blockWidth) {
+                if (node.blockStatic && !node.autoMargin.horizontal || blockWidth) {
+                    node.css('width', node.css('maxWidth'));
+                }
+                else {
+                    maxWidth = true;
+                }
+            }
+            else if (node.parseUnit(node.css('maxWidth')) <= node.width) {
+                maxWidth = true;
+            }
+        }
+        if (!node.support.maxHeight && node.has('maxHeight') && parent.hasHeight) {
+            if (node.hasHeight && node.css('height') === '100%') {
+                node.css('height', node.css('maxHeight'));
+            }
+            else if (node.height === 0 || node.parseUnit(node.css('maxHeight'), true) <= node.height) {
+                maxHeight = true;
+            }
+        }
+        if (maxWidth || maxHeight) {
+            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { maxWidth, maxHeight });
+            return true;
+        }
+        return false;
     }
 
     public processNode(node: T, parent: T) {
-        const absolute = node.filter(item => !item.pageFlow && (item.absoluteParent !== node || node.documentRoot));
-        let container: T;
-        if (absolute.length) {
-            container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, absolute as T[], CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
-        }
-        else {
-            container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, undefined, CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-        }
-        container.inherit(node, 'styleMap');
-        let maxWidth = node.css('maxWidth');
-        let maxHeight = node.css('maxHeight');
-        if ($css.isLength(maxWidth, true)) {
-            if (!node.has('width')) {
-                node.android('layout_width', node.some(item => item.blockStatic) ? 'match_parent' : 'wrap_content');
+        const mainData: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
+        if (mainData) {
+            const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, undefined, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
+            container.inherit(node, 'styleMap');
+            if (mainData.maxWidth) {
+                node.android('layout_width', '0px');
+                container.android('layout_width', 'match_parent');
+                if (parent.layoutElement) {
+                    node.autoMargin.horizontal = false;
+                    node.autoMargin.left = false;
+                    node.autoMargin.right = false;
+                    node.autoMargin.leftRight = false;
+                }
             }
-            maxWidth = $css.formatPX(node.parseUnit(maxWidth) + ($css.isPercent(maxWidth) ? 0 : node.contentBoxWidth + Math.max(node.marginLeft, 0) + Math.max(node.marginRight, 0)));
-            container.cssApply({ width: maxWidth, maxWidth }, true);
-            if (parent.layoutElement) {
-                node.autoMargin.horizontal = false;
-                node.autoMargin.left = false;
-                node.autoMargin.right = false;
-                node.autoMargin.leftRight = false;
+            if (mainData.maxHeight) {
+                node.android('layout_height', '0px');
+                container.android('layout_height', 'match_parent');
+                if (parent.layoutElement) {
+                    node.autoMargin.vertical = false;
+                    node.autoMargin.top = false;
+                    node.autoMargin.bottom = false;
+                    node.autoMargin.topBottom = false;
+                }
             }
-        }
-        if ($css.isLength(maxHeight, true)) {
-            if (!node.has('height')) {
-                node.android('layout_height', 'wrap_content');
-            }
-            maxHeight = $css.formatPX(node.parseUnit(maxHeight) + ($css.isPercent(maxHeight) ? 0 : node.contentBoxHeight + Math.max(node.marginTop, 0) + Math.max(node.marginBottom, 0)));
-            container.cssApply({ height: maxHeight, maxHeight }, true);
-            if (parent.layoutElement) {
-                node.autoMargin.vertical = false;
-                node.autoMargin.top = false;
-                node.autoMargin.bottom = false;
-                node.autoMargin.topBottom = false;
-            }
-        }
-        return {
-            parent: container,
-            renderAs: container,
-            outputAs: this.application.renderNode(
-                new $Layout(
-                    parent,
-                    container,
-                    container.containerType,
-                    $enum.NODE_ALIGNMENT.SINGLE,
-                    container.children as T[]
+            return {
+                parent: container,
+                renderAs: container,
+                outputAs: this.application.renderNode(
+                    new $Layout(
+                        parent,
+                        container,
+                        container.containerType,
+                        $enum.NODE_ALIGNMENT.SINGLE,
+                        container.children as T[]
+                    )
                 )
-            )
-        };
+            };
+        }
+        return undefined;
     }
 }

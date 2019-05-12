@@ -5,7 +5,6 @@ import Resource from '../../resource';
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
-const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -13,7 +12,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false,
         replaceCharacterEntities: true,
-        fontVariantSmallCapsReduction: 0.8
+        fontVariantSmallCapsReduction: 0.7
     };
     public readonly eventOnly = true;
 
@@ -60,8 +59,8 @@ export default class ResourceStrings<T extends android.base.View> extends square
                         const stored: StringValue = node.data(Resource.KEY_NAME, 'valueString');
                         if (stored) {
                             const renderParent = node.renderParent as T;
+                            let name = stored.key || stored.value;
                             let value = stored.value;
-                            let name = stored.key || value;
                             if (renderParent && renderParent.layoutRelative) {
                                 if (node.alignParent('left') && !$css.isParentStyle(node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
                                     const textContent = node.textContent;
@@ -82,16 +81,22 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                 }
                             }
                             if (node.css('fontVariant') === 'small-caps') {
-                                const words = value.split($regex.XML.BREAKWORD);
-                                for (const word of words) {
-                                    if (!$regex.XML.ENTITY.test(word)) {
-                                        value = value.replace(word, word.toUpperCase());
-                                    }
-                                }
+                                node.android('textAllCaps', 'true');
                                 const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
                                 if (fontStyle) {
                                     fontStyle.fontSize = `${parseFloat(fontStyle.fontSize) * this.options.fontVariantSmallCapsReduction}px`;
                                 }
+                            }
+                            switch (node.css('textTransform')) {
+                                case 'uppercase':
+                                    node.android('textAllCaps', 'true');
+                                    break;
+                                case 'lowercase':
+                                    value = $util.lowerCaseString(value);
+                                    break;
+                                case 'capitalize':
+                                    value = $util.capitalizeString(value);
+                                    break;
                             }
                             if (this.options.replaceCharacterEntities) {
                                 value = $xml.replaceEntity(value);

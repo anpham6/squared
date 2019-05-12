@@ -1567,7 +1567,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         const offset = position - basegroup.box.left;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? controller.localSettings.deviations.textMarginBoundarySize : 0));
                         }
                     }
                     if (rightAbove.length) {
@@ -1582,7 +1582,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         const offset = basegroup.box.right - position;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? controller.localSettings.deviations.textMarginBoundarySize : 0));
                         }
                     }
                 }
@@ -2106,7 +2106,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         this.resourceHandler.addRawData(match[1], match[2], match[3], match[4]);
                                     }
                                     else if (this.userSettings.preloadImages) {
-                                        const uri = $css.resolveURL(match[4].trim());
+                                        const uri = $util.resolvePath(match[4]);
                                         if (uri !== '' && this.resourceHandler.getImage(uri) === undefined) {
                                             this.resourceHandler.assets.images.set(uri, { width: 0, height: 0, uri });
                                         }

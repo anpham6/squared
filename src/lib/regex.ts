@@ -9,7 +9,7 @@ export const STRING = {
     CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_CALC: 'calc(\\(.+\\))',
-    CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
+    CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)'
 };
 
 export const UNIT = {
@@ -31,9 +31,9 @@ export const XML = {
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
     ENTITY: /&#?[A-Za-z\d]+;/,
     SEPARATOR: /\s*,\s*/,
-    BREAKWORD: /[^A-Za-z\d&#;]+/,
-    TAGNAME_G: /(<([^>]+)>)/g,
-    NONWORD_G: /[^A-Za-z\d]+/g
+    BREAKWORD_G: /([A-Za-z\\d]+|&#?[A-Za-z\\d]+;)/g,
+    NONWORD_G: /[^A-Za-z\d]+/g,
+    TAGNAME_G: /(<([^>]+)>)/g
 };
 
 export const CHAR = {
