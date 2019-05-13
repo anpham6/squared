@@ -300,6 +300,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         this._cached.blockStatic = undefined;
                         this._cached.autoMargin = undefined;
                         break;
+                    case 'backgroundColor':
+                    case 'backgroundImage':
+                        this._cached.visibleStyle = undefined;
+                        break;
                     case 'pageFlow':
                         this._cached.positionAuto = undefined;
                         this._cached.blockStatic = undefined;
@@ -1882,10 +1886,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const overflow = this.css('overflow');
                 const overflowX = this.css('overflowX');
                 const overflowY = this.css('overflowY');
-                if (this.has('width') && (overflow === 'scroll' || overflowX === 'scroll' || overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth)) {
+                if ((this.has('width') || this.has('maxWidth')) && (overflow === 'scroll' || overflowX === 'scroll' || overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth)) {
                     value |= NODE_ALIGNMENT.HORIZONTAL;
                 }
-                if (this.has('height') && (overflow === 'scroll' || overflowY === 'scroll' || overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
+                if ((this.has('height') || this.has('maxHeight')) && (overflow === 'scroll' || overflowY === 'scroll' || overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
                     value |= NODE_ALIGNMENT.VERTICAL;
                 }
             }
@@ -1956,6 +1960,27 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.renderExclude;
     }
 
+    get backgroundColor() {
+        if (this._cached.backgroundColor === undefined) {
+            let value = this._styleMap.backgroundColor || '';
+            if (value !== '' && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === value)) {
+                let current = this.actualParent;
+                while (current && current.id !== 0) {
+                    const color = current.cssInitial('backgroundColor', true);
+                    if (color !== '') {
+                        if (color === value) {
+                            value = '';
+                        }
+                        break;
+                    }
+                    current = current.actualParent;
+                }
+            }
+            this._cached.backgroundColor = value;
+        }
+        return this._cached.backgroundColor;
+    }
+
     get backgroundImage() {
         if (this._cached.backgroundImage === undefined) {
             const value = this.css('backgroundImage');
@@ -1973,7 +1998,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get visibleStyle() {
         if (this._cached.visibleStyle === undefined) {
             const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-            const backgroundColor = this.has('backgroundColor');
+            const backgroundColor = this.backgroundColor !== '';
             const backgroundImage = this.backgroundImage !== '';
             this._cached.visibleStyle = {
                 background: borderWidth || backgroundImage || backgroundColor,

@@ -853,7 +853,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 node.mergeGravity('layout_gravity', textAlign, false);
                             }
                         }
-                        if (this.hasAlign($enum.NODE_ALIGNMENT.RIGHT) || this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
+                        if (this.rightAligned || this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
                             floating = 'right';
                         }
                         else if (alignFloat && this.groupParent && !this.renderChildren.some(item => item.rightAligned)) {
@@ -1056,7 +1056,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         public setBoxSpacing() {
             const supported = this.localSettings.targetAPI >= BUILD_ANDROID.OREO;
             const setBoxModel = (attrs: string[], prefix: string, mergeable = true) => {
-                const [top, right, bottom, left] = attrs;
+                const { 0: top, 1: right, 2: bottom, 3: left } = attrs;
                 const boxModel: ObjectMap<number> = {};
                 let mergeAll = 0;
                 let mergeHorizontal = 0;
@@ -1165,7 +1165,8 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (this.styleElement) {
                 const dataset = $css.getDataSet(<HTMLElement> this.element, 'android');
                 for (const name in dataset) {
-                    const obj = name === 'attr' ? 'android' : (REGEXP_DATASETATTR.test(name) ? $util.capitalize(name.substring(4), false) : '');
+                    const obj = name === 'attr' ? 'android'
+                                                : REGEXP_DATASETATTR.test(name) ? $util.capitalize(name.substring(4), false) : '';
                     if (obj !== '') {
                         for (const values of dataset[name].split(';')) {
                             const [key, value] = values.split('::');
@@ -1199,7 +1200,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     borderWidth = true;
                 }
-                if (borderWidth && this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE) && !this.actualChildren.every(node => !node.pageFlow && node.absoluteParent === this)) {
+                if (borderWidth && this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE) && (this.actualChildren.length === 0 || !this.actualChildren.every(node => !node.pageFlow && node.absoluteParent === this))) {
                     this.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, this.borderLeftWidth);
                     this.modifyBox($enum.BOX_STANDARD.PADDING_RIGHT, this.borderRightWidth);
                     this.modifyBox($enum.BOX_STANDARD.PADDING_TOP, this.borderTopWidth);

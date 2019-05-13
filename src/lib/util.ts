@@ -408,12 +408,12 @@ export function withinRange(a: number, b: number, offset = 1) {
     return b >= (a - offset) && b <= (a + offset);
 }
 
-export function aboveRange(a: number, b: number) {
-    return Math.ceil(a) >= Math.floor(b);
+export function aboveRange(a: number, b: number, offset = 1) {
+    return a + offset > b;
 }
 
-export function belowRange(a: number, b: number) {
-    return Math.floor(a) <= Math.ceil(b);
+export function belowRange(a: number, b: number, offset = 1) {
+    return a - offset < b;
 }
 
 export function assignEmptyProperty(dest: {}, source: {}) {

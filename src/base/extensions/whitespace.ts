@@ -129,6 +129,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                             }
                             lastChild = current;
                         }
+                        else {
+                            lastChild = undefined;
+                        }
                     }
                     if (i === 0) {
                         continue;
@@ -167,8 +170,10 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                             if (isBlockElement(bottomChild) && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
                                                 const childMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
                                                 if (childMarginBottom > marginBottom) {
-                                                    marginBottom = childMarginBottom;
-                                                    previousVisible.css('marginBottom', $css.formatPX(marginBottom), true);
+                                                    if (marginBottom > 0) {
+                                                        marginBottom = childMarginBottom;
+                                                    }
+                                                    previousVisible.css('marginBottom', $css.formatPX(childMarginBottom), true);
                                                 }
                                                 resetMargin(getVisibleNode(bottomChild), BOX_STANDARD.MARGIN_BOTTOM);
                                             }
@@ -178,8 +183,10 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                             if (isBlockElement(topChild) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
                                                 const childMarginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
                                                 if (childMarginTop > marginTop) {
-                                                    marginTop = childMarginTop;
-                                                    currentVisible.css('marginTop', $css.formatPX(marginTop), true);
+                                                    if (marginTop > 0) {
+                                                        marginTop = childMarginTop;
+                                                    }
+                                                    currentVisible.css('marginTop', $css.formatPX(childMarginTop), true);
                                                 }
                                                 resetMargin(getVisibleNode(topChild), BOX_STANDARD.MARGIN_TOP);
                                             }

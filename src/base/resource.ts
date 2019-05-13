@@ -483,7 +483,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public setBoxStyle(node: T) {
         if (node.visible && node.styleElement) {
             const boxStyle: BoxStyle = {
-                backgroundColor: '',
                 backgroundSize: '',
                 backgroundRepeat: '',
                 backgroundPositionX: '',
@@ -774,6 +773,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     boxStyle.border = boxStyle.borderTop;
                 }
             }
+            boxStyle.backgroundColor = node.backgroundColor;
             node.data(Resource.KEY_NAME, 'boxStyle', boxStyle);
         }
     }

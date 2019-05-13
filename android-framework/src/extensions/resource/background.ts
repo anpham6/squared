@@ -177,7 +177,7 @@ function getBorderRadius(radius?: string[]): StringMap | undefined {
     return undefined;
 }
 
-function getBackgroundColor(value: string) {
+function getBackgroundColor(value: string | undefined) {
     const color = Resource.addColor(value);
     if (color !== '') {
         return { color: `@color/${color}` };
@@ -416,11 +416,14 @@ function createShapeData(stroke?: ObjectMap<any> | false, solid?: StringMap | fa
     }];
 }
 
-function setBodyBackground(name: string, parent: string, attr: string, value: string) {
+function setBodyBackground(name: string, parent: string, value: string) {
     Resource.addTheme({
         name,
         parent,
-        items: { [attr]: value }
+        items: {
+            'android:windowBackground': value,
+            'android:windowFullscreen': 'true'
+        }
     });
 }
 
@@ -483,7 +486,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             if (drawable !== '') {
                 drawable = `@drawable/${drawable}`;
                 if (node.documentBody) {
-                    setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, 'android:background', drawable);
+                    setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
                 }
                 else {
                     node.android('background', drawable, false);
@@ -526,7 +529,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (color !== '') {
                         color = `@color/${color}`;
                         if (node.documentBody) {
-                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, 'android:windowBackground', color);
+                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
                         }
                         else {
                             const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
@@ -1116,7 +1119,19 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                 }
-                if (tileMode === 'repeat' || tileModeX === 'repeat' || tileModeY === 'repeat') {
+                if (node.documentBody || tileMode === 'repeat' || tileModeX === 'repeat' || tileModeY === 'repeat') {
+                    if (node.documentBody) {
+                        if (gravity !== '') {
+                            if (!/fill(?!_)/.test(gravity)) {
+                                gravity += '|fill';
+                            }
+                            imageData.gravity = gravity;
+                            gravity = '';
+                        }
+                        else {
+                            imageData.gravity = 'fill';
+                        }
+                    }
                     imageData.bitmap = [{
                         src,
                         gravity,
@@ -1213,17 +1228,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 result.push(imageData);
             }
         }
-        if (this.options.autoSizeBackgroundImage && overflowVertically && resizable && !node.documentRoot && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
-            this.refitDrawableDimension(node, imageDimensions, centerHorizontally);
-        }
-        return result;
-    }
-
-    public refitDrawableDimension(node: T, dimensions: Undefined<Dimension>[], centerHorizontally: boolean) {
-        if (!node.is(CONTAINER_NODE.IMAGE)) {
+        if (this.options.autoSizeBackgroundImage && overflowVertically && resizable && !node.is(CONTAINER_NODE.IMAGE) && !node.documentRoot && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
             let imageWidth = 0;
             let imageHeight = 0;
-            for (const image of dimensions) {
+            for (const image of imageDimensions) {
                 if (image) {
                     imageWidth = Math.max(imageWidth, image.width);
                     imageHeight = Math.max(imageHeight, image.height);
@@ -1260,5 +1268,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
         }
+        return result;
     }
 }

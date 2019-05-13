@@ -149,6 +149,25 @@ export const PREFIX_ANDROID = {
     DIALOG: 'ic_dialog_'
 };
 
+export const LOCALIZE_ANDROID = {
+    'left': 'start',
+    'right': 'end',
+    'layout_marginLeft': 'layout_marginStart',
+    'layout_marginRight': 'layout_marginEnd',
+    'paddingLeft': 'paddingStart',
+    'paddingRight': 'paddingEnd',
+    'layout_alignParentLeft': 'layout_alignParentStart',
+    'layout_alignParentRight': 'layout_alignParentEnd',
+    'layout_alignLeft': 'layout_alignStart',
+    'layout_alignRight': 'layout_alignEnd',
+    'layout_toRightOf': 'layout_toEndOf',
+    'layout_toLeftOf': 'layout_toStartOf',
+    'layout_constraintLeft_toLeftOf': 'layout_constraintStart_toStartOf',
+    'layout_constraintRight_toRightOf': 'layout_constraintEnd_toEndOf',
+    'layout_constraintLeft_toRightOf': 'layout_constraintStart_toEndOf',
+    'layout_constraintRight_toLeftOf': 'layout_constraintEnd_toStartOf'
+};
+
 export const RESERVED_JAVA = [
     'abstract',
     'assert',

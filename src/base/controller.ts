@@ -88,31 +88,31 @@ export default abstract class Controller<T extends Node> implements squared.base
                 }
             }
             switch (element.tagName) {
-                case 'INPUT':
+                case 'INPUT': {
+                    const style = $css.getStyle(element);
                     switch ((<HTMLInputElement> element).type) {
-                        case 'file': {
-                            const style = $css.getStyle(element);
-                            const color = $color.parseColor(style.getPropertyValue('background-color'));
-                            if (color === undefined) {
-                                styleMap.backgroundColor = '#DDDDDD';
-                                if (style.getPropertyValue('border-style') === 'none') {
-                                    for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
-                                        styleMap[`${border}Style`] = 'outset';
-                                        styleMap[`${border}Color`] = '#DDDDDD';
-                                        styleMap[`${border}Width`] = '2px';
-                                    }
-                                }
-                            }
-                        }
+                        case 'file':
                         case 'reset':
                         case 'submit':
                         case 'button':
+                            const color = $color.parseColor(style.getPropertyValue('background-color'));
+                            if (color === undefined) {
+                                styleMap.backgroundColor = '#DDDDDD';
+                            }
                             if (styleMap.textAlign === undefined) {
                                 styleMap.textAlign = 'center';
                             }
                             break;
                     }
+                    if (style.getPropertyValue('border-style') === 'none') {
+                        for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
+                            styleMap[`${border}Style`] = 'outset';
+                            styleMap[`${border}Color`] = '#6C6C6C';
+                            styleMap[`${border}Width`] = '2px';
+                        }
+                    }
                     break;
+                }
                 case 'BUTTON':
                     if (styleMap.textAlign === undefined) {
                         styleMap.textAlign = 'center';

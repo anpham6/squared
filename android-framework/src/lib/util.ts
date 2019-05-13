@@ -3,7 +3,7 @@ import { ViewAttribute } from '../@types/node';
 
 import View from '../view';
 
-import { XMLNS_ANDROID } from './constant';
+import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
 const REGEXP_ID = /^@\+?id\//;
@@ -62,44 +62,8 @@ export function createStyleAttribute(options?: ExternalData) {
     return result;
 }
 
-export function localizeString(value: string, rtl: boolean, api: number) {
-    if (rtl && api >= BUILD_ANDROID.JELLYBEAN_1) {
-        switch (value) {
-            case 'left':
-                return 'start';
-            case 'right':
-                return 'end';
-            case 'layout_marginLeft':
-                return 'layout_marginStart';
-            case 'layout_marginRight':
-                return 'layout_marginEnd';
-            case 'paddingLeft':
-                return 'paddingStart';
-            case 'paddingRight':
-                return 'paddingEnd';
-            case 'layout_alignParentLeft':
-                return 'layout_alignParentStart';
-            case 'layout_alignParentRight':
-                return 'layout_alignParentEnd';
-            case 'layout_alignLeft':
-                return 'layout_alignStart';
-            case 'layout_alignRight':
-                return 'layout_alignEnd';
-            case 'layout_toRightOf':
-                return 'layout_toEndOf';
-            case 'layout_toLeftOf':
-                return 'layout_toStartOf';
-            case 'layout_constraintLeft_toLeftOf':
-                return 'layout_constraintStart_toStartOf';
-            case 'layout_constraintRight_toRightOf':
-                return 'layout_constraintEnd_toEndOf';
-            case 'layout_constraintLeft_toRightOf':
-                return 'layout_constraintStart_toEndOf';
-            case 'layout_constraintRight_toLeftOf':
-                return 'layout_constraintEnd_toStartOf';
-        }
-    }
-    return value;
+export function localizeString(value: string, rtl: boolean, api: number): string {
+    return rtl && api >= BUILD_ANDROID.JELLYBEAN_1 && LOCALIZE_ANDROID[value] || value;
 }
 
 export function getXmlNs(value: string) {

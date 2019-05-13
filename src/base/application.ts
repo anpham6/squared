@@ -1221,14 +1221,15 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         this.processing.cache.sort((a, b) => {
             if (a.depth === b.depth) {
-                if (a.length && b.length === 0) {
+                if (a.groupParent && b.length === 0) {
                     return -1;
                 }
-                else if (a.length === 0 && b.length) {
+                else if (a.length === 0 && b.groupParent) {
                     return 1;
                 }
+                return 0;
             }
-            return 0;
+            return a.depth < b.depth ? -1 : 1;
         });
         this.session.cache.concat(this.processing.cache.children);
         this.session.excluded.concat(this.processing.excluded.children);
@@ -2033,8 +2034,7 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     private setStyleMap() {
         let warning = false;
-        for (let i = 0; i < document.styleSheets.length; i++) {
-            const item = <CSSStyleSheet> document.styleSheets[i];
+        const applyStyleSheet = (item: CSSStyleSheet) => {
             try {
                 if (item.cssRules) {
                     for (let j = 0; j < item.cssRules.length; j++) {
@@ -2043,6 +2043,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                             case CSSRule.STYLE_RULE:
                             case CSSRule.FONT_FACE_RULE:
                                 this.applyStyleRule(<CSSStyleRule> rule);
+                                break;
+                            case CSSRule.IMPORT_RULE:
+                                applyStyleSheet((<CSSImportRule> rule).styleSheet);
                                 break;
                             case CSSRule.MEDIA_RULE:
                                 if ($css.validMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
@@ -2067,6 +2070,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                     warning = true;
                 }
             }
+        };
+        for (let i = 0; i < document.styleSheets.length; i++) {
+            applyStyleSheet(<CSSStyleSheet> document.styleSheets[i]);
         }
     }
 

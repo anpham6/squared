@@ -118,23 +118,21 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     if (colgroup) {
                         const style = $css.getStyle(colgroup.children[columnIndex[i]]);
-                        if (style.background) {
-                            element.style.setProperty('background', style.background);
+                        if (style.backgroundImage && style.backgroundImage !== 'none') {
+                            td.css('backgroundImage', style.backgroundImage, true);
                         }
-                        else if (style.backgroundColor) {
-                            element.style.setProperty('background-color', style.backgroundColor);
+                        if (style.backgroundColor && !REGEXP_BACKGROUND.test(style.backgroundColor)) {
+                            td.css('backgroundColor', style.backgroundColor, true);
                         }
                     }
                     else {
-                        let value = $css.getInheritedStyle(element, 'background', REGEXP_BACKGROUND, 'TABLE');
+                        let value = $css.getInheritedStyle(element, 'backgroundImage', /none/, 'TABLE');
                         if (value !== '') {
-                            element.style.setProperty('background', value);
+                            td.css('backgroundImage', value, true);
                         }
-                        else {
-                            value = $css.getInheritedStyle(element, 'backgroundColor', REGEXP_BACKGROUND, 'TABLE');
-                            if (value !== '') {
-                                element.style.setProperty('background-color', value);
-                            }
+                        value = $css.getInheritedStyle(element, 'backgroundColor', REGEXP_BACKGROUND, 'TABLE');
+                        if (value !== '') {
+                            td.css('backgroundColor', value, true);
                         }
                     }
                 }

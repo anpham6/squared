@@ -1135,7 +1135,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     node.android('scrollbars', overflow);
                 }
                 if (node.has('letterSpacing')) {
-                    node.android('letterSpacing', node.css('letterSpacing'));
+                    node.android('letterSpacing', $math.truncate(node.toFloat('letterSpacing') / node.fontSize, this.localSettings.precision.standardFloat));
                 }
                 if (node.css('textAlign') === 'justify') {
                     node.android('justificationMode', 'inter_word');
