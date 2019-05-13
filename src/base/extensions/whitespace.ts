@@ -32,13 +32,11 @@ function getVisibleNode(node: Node) {
 
 function resetMargin(node: Node, value: number) {
     if (node.getBox(value)[0] !== 1) {
-        getVisibleNode(node).modifyBox(value, null);
+        getVisibleNode(node).modifyBox(value);
         if (node.companion) {
-            node.companion.modifyBox(value, null);
+            node.companion.modifyBox(value);
         }
-        return true;
     }
-    return false;
 }
 
 function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
@@ -79,21 +77,19 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                     if (outside) {
                         resetChild = true;
                     }
-                    else if (resetMargin(node, boxMargin)) {
+                    else {
+                        resetMargin(node, boxMargin);
                         if (direction) {
                             node.bounds.top = 0;
+                            node.unsafe('box', true);
+                            node.unsafe('linear', true);
                         }
-                        else {
-                            node.bounds.bottom += node.marginBottom;
-                        }
-                        node.unsafe('box', true);
-                        node.unsafe('linear', true);
                     }
                 }
                 else {
                     if (!outside) {
                         const visibleParent = getVisibleNode(node);
-                        visibleParent.modifyBox(boxMargin, null);
+                        visibleParent.modifyBox(boxMargin);
                         visibleParent.modifyBox(boxMargin, child[margin]);
                     }
                     resetChild = true;
@@ -144,12 +140,22 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                 const currentVisible = getVisibleNode(current);
                                 if (isBlockElement(previous)) {
                                     const previousVisible = getVisibleNode(previous);
+                                    let inheritedBottom = false;
+                                    let inheritedTop = false;
                                     let marginBottom = $util.convertFloat(previous.cssInitial('marginBottom', false, true));
+                                    if (marginBottom === 0 && previous.marginBottom > 0) {
+                                        marginBottom = previous.marginBottom;
+                                        inheritedBottom = true;
+                                    }
                                     let marginTop = $util.convertFloat(current.cssInitial('marginTop', false, true));
+                                    if (marginTop === 0 && current.marginTop > 0) {
+                                        marginTop = previous.marginTop;
+                                        inheritedTop = true;
+                                    }
                                     if (previous.excluded && !current.excluded) {
-                                        const offset = Math.min(marginBottom, $util.convertFloat(previous.cssInitial('marginTop', false, true)));
+                                        const offset = Math.min(marginBottom, previous.marginTop);
                                         if (offset < 0) {
-                                            const top = Math.abs(offset) >= marginTop ? null : offset;
+                                            const top = Math.abs(offset) >= marginTop ? undefined : offset;
                                             currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
                                             if (currentVisible.companion) {
                                                 currentVisible.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
@@ -160,7 +166,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                     else if (!previous.excluded && current.excluded) {
                                         const offset = Math.min(marginTop, $util.convertFloat(current.cssInitial('marginBottom', false, true)));
                                         if (offset < 0) {
-                                            previousVisible.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) >= marginBottom ? null : offset);
+                                            previousVisible.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) >= marginBottom ? undefined : offset);
                                             processed.add(current);
                                         }
                                     }
@@ -170,10 +176,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                             if (isBlockElement(bottomChild) && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
                                                 const childMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
                                                 if (childMarginBottom > marginBottom) {
-                                                    if (marginBottom > 0) {
-                                                        marginBottom = childMarginBottom;
-                                                    }
+                                                    marginBottom = childMarginBottom;
                                                     previousVisible.css('marginBottom', $css.formatPX(childMarginBottom), true);
+                                                    inheritedBottom = true;
                                                 }
                                                 resetMargin(getVisibleNode(bottomChild), BOX_STANDARD.MARGIN_BOTTOM);
                                             }
@@ -183,10 +188,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                             if (isBlockElement(topChild) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
                                                 const childMarginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
                                                 if (childMarginTop > marginTop) {
-                                                    if (marginTop > 0) {
-                                                        marginTop = childMarginTop;
-                                                    }
+                                                    marginTop = childMarginTop;
                                                     currentVisible.css('marginTop', $css.formatPX(childMarginTop), true);
+                                                    inheritedTop = true;
                                                 }
                                                 resetMargin(getVisibleNode(topChild), BOX_STANDARD.MARGIN_TOP);
                                             }
@@ -194,10 +198,20 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                         if (marginBottom > 0) {
                                             if (marginTop > 0) {
                                                 if (marginTop <= marginBottom) {
-                                                    resetMargin(currentVisible, BOX_STANDARD.MARGIN_TOP);
+                                                    if (inheritedTop) {
+                                                        currentVisible.css('marginTop', '0px', true);
+                                                    }
+                                                    else {
+                                                        resetMargin(currentVisible, BOX_STANDARD.MARGIN_TOP);
+                                                    }
                                                 }
                                                 else {
-                                                    resetMargin(previousVisible, BOX_STANDARD.MARGIN_BOTTOM);
+                                                    if (inheritedBottom) {
+                                                        currentVisible.css('marginBottom', '0px', true);
+                                                    }
+                                                    else {
+                                                        resetMargin(previousVisible, BOX_STANDARD.MARGIN_BOTTOM);
+                                                    }
                                                 }
                                             }
                                             else if (previous.bounds.height === 0) {
@@ -247,7 +261,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                             const abovePrevious = previousSiblings.pop() as T;
                             if (abovePrevious.lineBreak) {
                                 abovePrevious.setBounds();
-                                if (Math.floor(abovePrevious.bounds.bottom) > 0) {
+                                if (abovePrevious.linear.bottom > above.linear.bottom) {
                                     above = abovePrevious;
                                 }
                             }

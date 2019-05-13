@@ -100,9 +100,9 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                         container.css('height', node.css('height'));
                     }
                     node.cssApply({
-                        display: 'block',
                         width: 'auto',
                         height: 'auto',
+                        display: 'block',
                         float: 'none'
                     }, true);
                     if (mainData.fixedRight) {

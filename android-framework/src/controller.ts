@@ -113,20 +113,38 @@ function checkSingleLine(node: View, nowrap = false, multiline = false) {
 }
 
 function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number) {
-    if (value > 0 && parent.getBox(direction)[0] !== 1) {
-        switch (direction) {
-            case $enum.BOX_STANDARD.PADDING_TOP:
-                value -= parent.paddingTop;
-                break;
-            case $enum.BOX_STANDARD.PADDING_RIGHT:
-                value -= parent.paddingRight;
-                break;
-            case $enum.BOX_STANDARD.PADDING_BOTTOM:
-                value -= parent.paddingBottom;
-                break;
-            case $enum.BOX_STANDARD.PADDING_LEFT:
-                value -= parent.paddingLeft;
-                break;
+    if (value > 0) {
+        if (parent.documentBody) {
+            switch (direction) {
+                case $enum.BOX_STANDARD.PADDING_TOP:
+                    value -= parent.marginTop;
+                    break;
+                case $enum.BOX_STANDARD.PADDING_RIGHT:
+                    value -= parent.marginRight;
+                    break;
+                case $enum.BOX_STANDARD.PADDING_BOTTOM:
+                    value -= parent.marginBottom;
+                    break;
+                case $enum.BOX_STANDARD.PADDING_LEFT:
+                    value -= parent.marginLeft;
+                    break;
+            }
+        }
+        if (parent.getBox(direction)[0] !== 1) {
+            switch (direction) {
+                case $enum.BOX_STANDARD.PADDING_TOP:
+                    value += parent.borderTopWidth - parent.paddingTop;
+                    break;
+                case $enum.BOX_STANDARD.PADDING_RIGHT:
+                    value += parent.borderRightWidth - parent.paddingRight;
+                    break;
+                case $enum.BOX_STANDARD.PADDING_BOTTOM:
+                    value += parent.borderBottomWidth - parent.paddingBottom;
+                    break;
+                case $enum.BOX_STANDARD.PADDING_LEFT:
+                    value += parent.borderLeftWidth - parent.paddingLeft;
+                    break;
+            }
         }
         return Math.max(value, 0);
     }
@@ -137,9 +155,9 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
     if (previous.float === 'left') {
         if (previous.marginRight < 0) {
             const right = Math.abs(previous.marginRight);
-            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, (previous.actualWidth + (previous.hasWidth ? previous.paddingLeft + previous.borderLeftWidth : 0)) - right);
+            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, previous.actualWidth + (previous.hasWidth ? previous.paddingLeft + previous.borderLeftWidth : 0) - right);
             node.anchor('left', previous.documentId);
-            previous.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, null);
+            previous.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT);
             return true;
         }
     }
@@ -151,18 +169,18 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
                 node.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, width - left);
             }
             node.anchor('right', previous.documentId);
-            previous.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+            previous.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT);
             return true;
         }
     }
     return false;
 }
 
-function constraintMinMax(node: View, dimension: string) {
-    if (!node.documentParent.flexElement && !node.inputElement) {
+function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
+    const documentParent = node.documentParent;
+    if (!node.inputElement) {
         const renderParent = node.renderParent as View;
         if (renderParent) {
-            const horizontal = dimension === 'width';
             const dimensionA = $util.capitalize(dimension);
             const minWH = node.cssInitial(`min${dimensionA}`, true);
             const maxWH = node.cssInitial(`max${dimensionA}`, true);
@@ -181,7 +199,7 @@ function constraintMinMax(node: View, dimension: string) {
                         setAlignmentBlock();
                     }
                 }
-                else if ((node.absoluteParent || node.documentParent).hasHeight && !node.has('height')) {
+                else if ((node.absoluteParent || documentParent).hasHeight && !node.has('height')) {
                     node.android('layout_height', '0px', node.blockHeight);
                     valid = true;
                 }
@@ -203,7 +221,7 @@ function constraintMinMax(node: View, dimension: string) {
                         setAlignmentBlock();
                     }
                 }
-                else if ((node.absoluteParent || node.documentParent).hasHeight && !node.has('height')) {
+                else if ((node.absoluteParent || documentParent).hasHeight && !node.has('height')) {
                     node.android('layout_height', renderParent.flexibleHeight ? 'match_parent' : '0px');
                     if (!$css.isPercent(maxWH)) {
                         contentBox += node.contentBoxHeight;
@@ -298,8 +316,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
     public static setConstraintDimension<T extends View>(node: T) {
         constraintPercentWidth(node);
         constraintPercentHeight(node);
-        constraintMinMax(node, 'width');
-        constraintMinMax(node, 'height');
+        constraintMinMax(node, 'width', true);
+        constraintMinMax(node, 'height', false);
     }
 
     public static setFlexDimension<T extends View>(node: T, dimension: string) {
@@ -346,14 +364,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (flexbox.shrink > 1) {
             node.app(`layout_constrained${dimensionA}`, 'true');
         }
-        constraintMinMax(node, 'width');
+        constraintMinMax(node, 'width', true);
         if (horizontal) {
             constraintPercentHeight(node, true);
         }
         else {
             constraintPercentWidth(node, true);
         }
-        constraintMinMax(node, 'height');
+        constraintMinMax(node, 'height', false);
     }
 
     public readonly localSettings: ControllerSettingsAndroid = {
@@ -1272,12 +1290,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 if (pageFlow || !node.pageFlow && !item.pageFlow && node.bounds[LT] >= 0 && node.bounds[LT] >= 0) {
                                     if ($util.withinRange(node.bounds[LT], item.bounds[LT])) {
                                         node.anchor(!horizontal && node.textElement && node.baseline && item.textElement && item.baseline ? 'baseline' : LT, item.documentId, true);
-                                        node.modifyBox(horizontal ? $enum.BOX_STANDARD.MARGIN_LEFT : $enum.BOX_STANDARD.MARGIN_TOP, null);
+                                        node.modifyBox(horizontal ? $enum.BOX_STANDARD.MARGIN_LEFT : $enum.BOX_STANDARD.MARGIN_TOP);
                                         valid = true;
                                     }
                                     else if ($util.withinRange(node.bounds[RB], item.bounds[RB])) {
                                         node.anchor(RB, item.documentId, true);
-                                        node.modifyBox(horizontal ? $enum.BOX_STANDARD.MARGIN_RIGHT : $enum.BOX_STANDARD.MARGIN_BOTTOM, null);
+                                        node.modifyBox(horizontal ? $enum.BOX_STANDARD.MARGIN_RIGHT : $enum.BOX_STANDARD.MARGIN_BOTTOM);
                                         valid = true;
                                     }
                                 }
@@ -1295,7 +1313,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (node.positionAuto) {
                         const previousSiblings = node.previousSiblings() as T[];
                         if (previousSiblings.length && !node.alignedVertically(previousSiblings)) {
-                            const previous = previousSiblings[previousSiblings.length - 1];
+                            const previous = previousSiblings.pop() as T;
                             if (previous.renderParent === node.renderParent) {
                                 node.anchor(horizontal ? 'rightLeft' : 'top', previous.documentId, true);
                                 node.constraint[value] = previous.constraint[value];
@@ -1311,7 +1329,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     else {
                         location = bounds[LT] - box[!opposite ? LT : RB];
-                        if (!horizontal && absoluteParent !== boxParent && absoluteParent.getBox($enum.BOX_STANDARD.MARGIN_TOP)[0] === 1) {
+                        if (!horizontal && !boxParent.groupParent && boxParent !== absoluteParent && absoluteParent.getBox($enum.BOX_STANDARD.MARGIN_TOP)[0] === 1) {
                             location -= absoluteParent.marginTop;
                         }
                         beginPercent += 'begin';
@@ -1341,7 +1359,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 if (!horizontal && node.marginTop < 0) {
                     location -= node.marginTop;
-                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
+                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP);
                 }
                 node.constraint[value] = true;
                 if (location <= 0) {
@@ -1970,6 +1988,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             }
                         }
                     }
+                    checkSingleLine(items[items.length - 1]);
                 }
                 else {
                     baseline = items[0];
@@ -2236,7 +2255,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         else {
                             item.anchor('top', rowStart.documentId);
                             item.anchorStyle(AXIS_ANDROID.VERTICAL);
-                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
+                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP);
                         }
                     }
                     else {
@@ -2347,7 +2366,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             item.pop();
                             horizontal[j + 1] = columnEnd;
                             columns[j + 1].unshift(columnEnd);
-                            columnEnd.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
+                            columnEnd.modifyBox($enum.BOX_STANDARD.MARGIN_TOP);
                         }
                     }
                     const elements: Element[] = [];

@@ -1625,7 +1625,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             else {
                 if (layout.cleared.has(node)) {
                     if (!node.floating) {
-                        node.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                        node.modifyBox(BOX_STANDARD.MARGIN_TOP);
                         staticRows.push(current.slice(0));
                         floatedRows.push(floated.slice(0));
                         current.length = 0;

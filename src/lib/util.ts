@@ -567,6 +567,23 @@ export function concatMultiArray<T>(dest: T[], ...source: T[][]) {
     return dest;
 }
 
+export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
+    if (list.length) {
+        let baseValue!: any;
+        for (let i = 0; i < list.length; i++) {
+            const value = predicate(list[i], i, list);
+            if (i === 0) {
+                baseValue = value;
+            }
+            else if (value !== baseValue) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
     const result: U[] = [];
     for (let i = 0; i < list.length; i++) {

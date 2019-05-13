@@ -308,10 +308,10 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                 }
             }
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {
-                node.modifyBox(BOX_STANDARD.PADDING_TOP, null);
-                node.modifyBox(BOX_STANDARD.PADDING_RIGHT, null);
-                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, null);
-                node.modifyBox(BOX_STANDARD.PADDING_LEFT, null);
+                node.modifyBox(BOX_STANDARD.PADDING_TOP);
+                node.modifyBox(BOX_STANDARD.PADDING_RIGHT);
+                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM);
+                node.modifyBox(BOX_STANDARD.PADDING_LEFT);
             }
             node.data(EXT_NAME.GRID, 'mainData', mainData);
         }

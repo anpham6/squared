@@ -207,7 +207,7 @@ declare global {
             setInlineText(value: boolean, overwrite?: boolean): void;
             setBoxSpacing(): void;
             extractAttributes(depth: number): string;
-            modifyBox(region: number, offset: number | null, negative?: boolean): void;
+            modifyBox(region: number, offset?: number, negative?: boolean): void;
             getBox(region: number): [number, number];
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
             inheritBox(region: number, node: Node): void;

@@ -838,6 +838,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public setBounds(cache = true) {
         if (this.styleElement) {
             this._bounds = $dom.assignRect($session.getClientRect(<Element> this._element, this.sessionId, cache), true);
+            if (this.documentBody && this.marginTop === 0) {
+                this._bounds.top = 0;
+            }
         }
         else if (this.plainText) {
             const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId, cache);
@@ -888,12 +891,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return valid;
     }
 
-    public modifyBox(region: number, offset: number | null, negative = true) {
+    public modifyBox(region: number, offset?: number, negative = true) {
         if (offset !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
-                if (offset === null) {
+                if (offset === undefined) {
                     this._boxReset[attr] = 1;
+                }
+                else if (isNaN(offset)) {
+                    this._boxReset[attr] = 0;
                 }
                 else if (!negative) {
                     if (this[attr] + this._boxAdjustment[attr] + offset <= 0) {
@@ -1095,7 +1101,40 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return node[dimension][direction] as number;
     }
 
-    private setDimensions(dimension: 'box' | 'linear') {
+    private setDimension(attr: string, horizontal: boolean) {
+        let value = Math.max(this.parseUnit(this._styleMap[attr], horizontal), this.parseUnit(this._styleMap[`min${$util.capitalize(attr)}`], horizontal));
+        if (value === 0 && this.naturalElement && this.styleElement) {
+            switch (this.tagName) {
+                case 'IMG':
+                case 'IMAGE':
+                case 'TD':
+                case 'TH':
+                case 'SVG':
+                case 'IFRAME':
+                case 'VIDEO':
+                case 'CANVAS':
+                case 'OBJECT':
+                case 'EMBED':
+                    const dimension = $dom.getNamedItem(this._element, attr);
+                    if (dimension !== '') {
+                        value = this.parseUnit(dimension, horizontal);
+                        if (value > 0) {
+                            if ($css.isPercent(dimension)) {
+                                this.css(attr, dimension);
+                            }
+                            else if ($util.isNumber(dimension)) {
+                                this.css(attr, $css.formatPX(dimension));
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+        const maxValue = value > 0 && !this.imageElement ? this.parseUnit(this._styleMap[`max${$util.capitalize(attr)}`], horizontal) : 0;
+        return maxValue > 0 ? Math.min(value, maxValue) : value;
+    }
+
+    private setBoxModel(dimension: 'box' | 'linear') {
         const bounds: BoxRectDimension = this.unsafe(dimension);
         if (bounds) {
             bounds.width = this.bounds.width;
@@ -1324,7 +1363,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             else {
                 this._linear = $dom.assignRect(this._bounds);
             }
-            this.setDimensions('linear');
+            this.setBoxModel('linear');
         }
         return this._linear || $dom.newBoxRectDimension();
     }
@@ -1345,7 +1384,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             else {
                 this._box = $dom.assignRect(this._bounds);
             }
-            this.setDimensions('box');
+            this.setBoxModel('box');
         }
         return this._box || $dom.newBoxRectDimension();
     }
@@ -1414,17 +1453,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get width() {
         if (this._cached.width === undefined) {
-            const value = Math.max(this.parseUnit(this._styleMap.width), this.parseUnit(this._styleMap.minWidth));
-            const maxValue = value > 0 && !this.imageElement ? this.parseUnit(this._styleMap.maxWidth) : 0;
-            this._cached.width = maxValue > 0 ? Math.min(value, maxValue) : value;
+            this._cached.width = this.setDimension('width', true);
         }
         return this._cached.width;
     }
     get height() {
         if (this._cached.height === undefined) {
-            const value = Math.max(this.parseUnit(this._styleMap.height, false), this.parseUnit(this._styleMap.minHeight, false));
-            const maxValue = value > 0 && !this.imageElement ? this.parseUnit(this._styleMap.maxHeight) : 0;
-            this._cached.height = maxValue > 0 ? Math.min(value, maxValue) : value;
+            this._cached.height = this.setDimension('height', false);
         }
         return this._cached.height;
     }
@@ -1577,7 +1612,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get marginBottom() {
         if (this._cached.marginBottom === undefined) {
-            this._cached.marginBottom = this.inlineStatic || this.bounds.height === 0 && this.every(node => !node.pageFlow || node.floating && node.css('clear') === 'none') && !this.overflowY ? 0 : this.convertBox('margin', 'Bottom');
+            if (this.inlineStatic) {
+                this._cached.marginBottom = 0;
+            }
+            else {
+                const value = this.convertBox('margin', 'Bottom');
+                this._cached.marginBottom = this.bounds.height === 0 && !this.overflowY && value > 0 ? 0 : value;
+            }
         }
         return this._cached.marginBottom;
     }
@@ -1720,7 +1761,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const value = this.display;
             switch (value) {
                 case 'inline':
-                    this._cached.block = this.svgElement && !this.has('width');
+                    this._cached.block = this.svgElement && !this.hasWidth;
                     break;
                 case 'block':
                 case 'flex':
@@ -1962,7 +2003,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get backgroundColor() {
         if (this._cached.backgroundColor === undefined) {
-            let value = this._styleMap.backgroundColor || '';
+            let value = this.css('backgroundColor');
             if (value !== '' && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === value)) {
                 let current = this.actualParent;
                 while (current && current.id !== 0) {

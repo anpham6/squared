@@ -156,8 +156,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             return true;
                         }
                         else if (stored.fontStyle && stored.fontWeight) {
+                            let createFont = true;
                             if (this.application.resourceHandler.getFont(value, stored.fontStyle, stored.fontWeight) === undefined) {
-                                if (index < array.length - 1) {
+                                if (this.application.resourceHandler.getFont(value, stored.fontStyle)) {
+                                    createFont = false;
+                                }
+                                else if (index < array.length - 1) {
                                     return false;
                                 }
                                 else if (index > 0) {
@@ -166,9 +170,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 }
                             }
                             fontFamily = $util.convertWord(fontFamily);
-                            const fonts = Resource.STORED.fonts.get(fontFamily) || {};
-                            fonts[value + '|' + stored.fontStyle + '|' + stored.fontWeight] = FONTWEIGHT_ANDROID[stored.fontWeight] || stored.fontWeight;
-                            Resource.STORED.fonts.set(fontFamily, fonts);
+                            if (createFont) {
+                                const fonts = Resource.STORED.fonts.get(fontFamily) || {};
+                                fonts[value + '|' + stored.fontStyle + '|' + stored.fontWeight] = FONTWEIGHT_ANDROID[stored.fontWeight] || stored.fontWeight;
+                                Resource.STORED.fonts.set(fontFamily, fonts);
+                            }
                             stored.fontFamily = `@font/${fontFamily}`;
                             stored.fontStyle = '';
                             stored.fontWeight = '';

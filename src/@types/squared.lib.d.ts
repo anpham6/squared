@@ -168,6 +168,7 @@ declare global {
             function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): T[];
             function concatArray<T>(dest: T[], source: T[]): T[];
             function concatMultiArray<T>(dest: T[], ...source: T[][]): T[];
+            function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>): boolean;
             function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
             function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[];
             function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];

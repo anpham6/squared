@@ -20,11 +20,11 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
         const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, outside, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
         if (node.marginTop > 0) {
             container.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.marginTop);
-            node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
+            node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP);
         }
         if (node.marginBottom > 0) {
             container.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, node.marginBottom);
-            node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, null);
+            node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM);
         }
         let left = NaN;
         let right = NaN;

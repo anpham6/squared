@@ -1049,14 +1049,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         repeatCount = item.iterationCount !== -1 ? Math.ceil(item.iterationCount - 1).toString() : '-1';
                                     }
                                     const options = this.createPropertyValue('', '', item.duration.toString(), valueType, '', item.delay > 0 ? item.delay.toString() : '', repeatCount);
-                                    if (item.keySplines === undefined) {
-                                        if (item.timingFunction) {
-                                            options.interpolator = createPathInterpolator(item.timingFunction);
-                                        }
-                                        else if (this.options.animateInterpolator !== '') {
-                                            options.interpolator = this.options.animateInterpolator;
-                                        }
-                                    }
                                     const beforeValues: string[] = [];
                                     let propertyNames: string[] | undefined;
                                     let values: string[] | number[][] | undefined;
@@ -1135,6 +1127,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     }
                                                 }
                                                 break;
+                                        }
+                                    }
+                                    if (item.keySplines === undefined) {
+                                        if (item.timingFunction) {
+                                            options.interpolator = createPathInterpolator(item.timingFunction);
+                                        }
+                                        else if (this.options.animateInterpolator !== '') {
+                                            options.interpolator = this.options.animateInterpolator;
                                         }
                                     }
                                     if (values && propertyNames) {

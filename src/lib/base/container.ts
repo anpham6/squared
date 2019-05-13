@@ -1,4 +1,4 @@
-import { concatArray, filterArray, flatMap, objectMap, partitionArray, spliceArray } from '../util';
+import { concatArray, filterArray, flatMap, objectMap, partitionArray, sameArray, spliceArray } from '../util';
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[];
@@ -124,6 +124,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
             }
         }
         return false;
+    }
+
+    public same(predicate: IteratorPredicate<T, any>) {
+        return sameArray(this._children, predicate);
     }
 
     public filter(predicate: IteratorPredicate<T, any>) {

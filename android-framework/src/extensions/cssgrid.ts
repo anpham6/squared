@@ -477,7 +477,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             const lastChild = Array.from(mainData.children)[mainData.children.size - 1];
             if (mainData.column.unit.length && mainData.column.unit.every(value => $css.isPercent(value))) {
-                const percentTotal = mainData.column.unit.reduce((a, b) => a + parseFloat(b), 0);
+                const percentTotal = mainData.column.unit.reduce((a, b) => a + parseFloat(b), 0) + (mainData.column.gap * mainData.column.count * 100) / node.actualWidth;
                 if (percentTotal < 100) {
                     node.android('columnCount', (mainData.column.count + 1).toString());
                     for (let i = 0; i < mainData.row.count; i++) {

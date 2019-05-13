@@ -177,7 +177,7 @@ function getBorderRadius(radius?: string[]): StringMap | undefined {
     return undefined;
 }
 
-function getBackgroundColor(value: string | undefined) {
+function getBackgroundColor(value: string) {
     const color = Resource.addColor(value);
     if (color !== '') {
         return { color: `@color/${color}` };
@@ -670,7 +670,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 setBorderStyle(layerListData[0], 0);
                 setBorderStyle(layerListData[0], 1);
                 setBorderStyle(layerListData[0], 3);
-                setBorderStyle(layerListData[0], 2, node.is(CONTAINER_NODE.BUTTON) ? 1 : 0);
+                setBorderStyle(layerListData[0], 2);
             }
         }
         return [shapeData, layerListData];
@@ -1238,18 +1238,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             if (imageWidth === 0) {
-                let ascend = node;
-                while (ascend) {
-                    if (ascend.hasWidth) {
-                        imageWidth = ascend.bounds.width;
+                let current = node;
+                while (current) {
+                    if (current.hasWidth) {
+                        imageWidth = current.bounds.width;
                     }
-                    if (ascend.hasHeight) {
-                        imageHeight = ascend.bounds.height;
+                    if (current.hasHeight) {
+                        imageHeight = current.bounds.height;
                     }
-                    if (imageWidth > 0 && imageHeight > 0 || ascend.documentBody || !ascend.pageFlow) {
+                    if (imageWidth > 0 && imageHeight > 0 || current.documentBody || !current.pageFlow) {
                         break;
                     }
-                    ascend = ascend.actualParent as T;
+                    current = current.actualParent as T;
                 }
             }
             if ((!node.has('width', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) && !(node.blockStatic && centerHorizontally) || !node.pageFlow) && (imageWidth === 0 || node.bounds.width < imageWidth)) {
@@ -1263,7 +1263,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 if (height > 0) {
                     node.css('height', $css.formatPX(height), true);
                     if (node.marginBottom < 0) {
-                        node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, null);
+                        node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM);
                     }
                 }
             }

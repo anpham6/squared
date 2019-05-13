@@ -178,10 +178,10 @@ function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: st
                 .replace(/\s+/g, ' ');
             break;
         default:
-            if (element.previousSibling && $session.causesLineBreak(<Element> element.previousSibling, node.sessionId)) {
+            if (element.previousSibling && $session.causesLineBreak(<Element> element.previousSibling, node.sessionId) || node.singleChild && node.htmlElement) {
                 value = value.replace($regex.CHAR.LEADINGSPACE, '');
             }
-            if (element.nextSibling && $session.causesLineBreak(<Element> element.nextSibling, node.sessionId)) {
+            if (element.nextSibling && $session.causesLineBreak(<Element> element.nextSibling, node.sessionId) || node.singleChild && node.htmlElement) {
                 value = value.replace($regex.CHAR.TRAILINGSPACE, '');
             }
             return [value, false];
@@ -414,11 +414,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         Resource.ASSETS.fonts.set(data.fontFamily, fonts);
     }
 
-    public getFont(fontFamily: string, fontStyle = 'normal', fontWeight = '400') {
+    public getFont(fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
         const font = Resource.ASSETS.fonts.get(fontFamily);
         if (font) {
             const fontFormat = this.application.controllerHandler.localSettings.supported.fontFormat;
-            return font.find(item => item.fontStyle === fontStyle && item.fontWeight === parseInt(fontWeight) && fontFormat.includes(item.srcFormat));
+            return font.find(item => item.fontStyle === fontStyle && (fontWeight === undefined || item.fontWeight === parseInt(fontWeight)) && fontFormat.includes(item.srcFormat));
         }
         return undefined;
     }
@@ -483,6 +483,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public setBoxStyle(node: T) {
         if (node.visible && node.styleElement) {
             const boxStyle: BoxStyle = {
+                backgroundColor: '',
                 backgroundSize: '',
                 backgroundRepeat: '',
                 backgroundPositionX: '',
@@ -499,13 +500,14 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 boxStyle.borderLeft = undefined;
             }
             for (const attr in boxStyle) {
-                const value = attr === 'backgroundImage' ? node.backgroundImage : node.css(attr);
+                const value = attr === 'backgroundImage' || attr === 'backgroundColor' ? node[attr] : node.css(attr);
                 switch (attr) {
                     case 'backgroundColor': {
-                        if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && Resource.isInheritedStyle(node, 'backgroundColor'))) {
+                        const opacity = node.css('opacity');
+                        if (Resource.isInheritedStyle(node, 'backgroundColor') && opacity === '1' && node.documentParent.visible) {
                             continue;
                         }
-                        const color = $color.parseColor(value, node.css('opacity'));
+                        const color = $color.parseColor(value, opacity);
                         if (color) {
                             boxStyle.backgroundColor = color.valueAsRGBA;
                         }
@@ -773,7 +775,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     boxStyle.border = boxStyle.borderTop;
                 }
             }
-            boxStyle.backgroundColor = node.backgroundColor;
             node.data(Resource.KEY_NAME, 'boxStyle', boxStyle);
         }
     }
@@ -939,13 +940,12 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         }
                         else if (node.inlineText) {
                             name = node.textContent.trim();
-                            if (element.children.length || element.tagName === 'CODE') {
-                                value = removeExcluded(node, element, 'innerHTML');
-                            }
-                            else {
-                                value = removeExcluded(node, element, 'textContent');
-                            }
-                            [value, inlined] = replaceWhiteSpace(renderParent, node, element, value);
+                            [value, inlined] = replaceWhiteSpace(
+                                renderParent,
+                                node,
+                                element,
+                                removeExcluded(node, element, element.children.length || element.tagName === 'CODE' ? 'innerHTML' : 'textContent')
+                            );
                             trimming = true;
                         }
                         else if (Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle')) && element.innerText.trim() === '') {

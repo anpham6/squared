@@ -160,6 +160,11 @@ function adjustMinHeight(node: T, value: number) {
     }
 }
 
+function setSingleLine(node: T) {
+    node.android('maxLines', '1');
+    node.android('ellipsize', 'end');
+}
+
 const validateString = (value: string) => value ? value.trim().replace(REGEXP_VALIDSTRING, '_') : '';
 
 export default (Base: Constructor<squared.base.Node>) => {
@@ -525,11 +530,11 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (position) {
                 node.anchorClear();
                 if (node.anchor('left', this.documentId)) {
-                    node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+                    node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT);
                     Object.assign(node.unsafe('boxAdjustment'), { marginLeft: 0 });
                 }
                 if (node.anchor('top', this.documentId)) {
-                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
+                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP);
                     Object.assign(node.unsafe('boxAdjustment'), { marginTop: 0 });
                 }
             }
@@ -1076,8 +1081,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     const boxRight = this.documentParent.box.right;
                                     if (Math.floor(this.bounds.right) > boxRight) {
                                         if (this.textElement && !this.multiline) {
-                                            this.android('maxLines', '1');
-                                            this.android('ellipsize', 'end');
+                                            setSingleLine(this);
                                         }
                                         continue;
                                     }
@@ -1223,21 +1227,27 @@ export default (Base: Constructor<squared.base.Node>) => {
                             this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
                         }
                     }
+                    if (renderChildren.length > 1) {
+                        const child = renderChildren[renderChildren.length - 1];
+                        if (child.textElement) {
+                            setSingleLine(child);
+                        }
+                    }
                 }
                 if (this.horizontalRows === undefined && !this.hasAlign($enum.NODE_ALIGNMENT.RIGHT) && !this.visibleStyle.background) {
                     const firstChild = this.find(node => node.float === 'left') || this.renderChildren[0];
                     if (firstChild && firstChild.marginLeft < 0) {
                         const value = Math.abs(firstChild.marginLeft);
                         if (value === this.marginLeft) {
-                            this.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
-                            firstChild.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+                            this.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT);
+                            firstChild.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT);
                         }
                         else if (value < this.marginLeft) {
                             this.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, firstChild.marginLeft);
-                            firstChild.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+                            firstChild.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT);
                         }
                         else {
-                            this.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+                            this.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT);
                             firstChild.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, this.marginLeft);
                         }
                     }

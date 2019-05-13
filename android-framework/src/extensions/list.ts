@@ -49,7 +49,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             let columnCount = 0;
             let adjustPadding = false;
             let resetPadding: number | null = null;
-            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT);
             if (parent.is(CONTAINER_NODE.GRID)) {
                 columnCount = $util.convertInt(parent.android('columnCount'));
                 adjustPadding = true;
@@ -89,7 +89,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 if (minWidth > 0 && !ordinal.hasWidth) {
                     ordinal.android('minWidth', $css.formatPX(minWidth));
                 }
-                ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+                ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT);
                 this.application.addLayoutTemplate(
                     parent,
                     ordinal,
@@ -127,7 +127,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 let paddingRight = 0;
                 if (gravity === 'left') {
                     minWidth += node.paddingLeft - left;
-                    node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
+                    node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT);
                 }
                 else {
                     const length = mainData.ordinal ? mainData.ordinal.length : 1;
@@ -168,7 +168,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     else {
                         ordinal.setControlType(CONTAINER_ANDROID.SPACE, CONTAINER_NODE.SPACE);
-                        node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
+                        node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT);
                     }
                     ordinal.inherit(node, 'textStyle');
                     ordinal.cssApply({
@@ -215,7 +215,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             }
             if (adjustPadding) {
                 if (resetPadding === null || resetPadding <= 0) {
-                    parent.modifyBox(parent.paddingLeft > 0 ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.MARGIN_LEFT, null);
+                    parent.modifyBox(parent.paddingLeft > 0 ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.MARGIN_LEFT);
                 }
                 if (typeof resetPadding === 'number' && resetPadding < 0) {
                     parent.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, resetPadding);

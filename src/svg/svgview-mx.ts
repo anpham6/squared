@@ -204,6 +204,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         const fillMode = cssData['animation-fill-mode'][i];
                         const keyframeIndex = `${animationName[i]}_${i}`;
                         const attributes: string[] = [];
+                        let includeKeySplines = true;
                         groupOrdering.push({
                             name: keyframeIndex,
                             attributes,
@@ -365,6 +366,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     }
                                     attrMap['rotate'] = offsetRotate;
                                     delete attrMap['offset-rotate'];
+                                    includeKeySplines = false;
                                 }
                             }
                             else {
@@ -421,7 +423,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 for (let j = 0; j < animation.length; j++) {
                                     keyTimes.push(animation[j].key);
                                     values.push(animation[j].value);
-                                    if (j < animation.length - 1) {
+                                    if (includeKeySplines && j < animation.length - 1) {
                                         const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.key === animation[j].key);
                                         keySplines.push(spline ? spline.value : timingFunction);
                                     }
@@ -436,10 +438,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 if (keyTimes[0] !== 0) {
                                     keyTimes.unshift(0);
                                     values.unshift(animate.baseValue || '');
-                                    keySplines.unshift(timingFunction);
+                                    if (includeKeySplines) {
+                                        keySplines.unshift(timingFunction);
+                                    }
                                     animate.evaluateStart = true;
                                 }
-                                if (!keySplines.every(value => value === 'linear')) {
+                                if (includeKeySplines && !keySplines.every(value => value === 'linear')) {
                                     const keyTimesData: number[] = [];
                                     const valuesData: string[] = [];
                                     const keySplinesData: string[] = [];
@@ -484,7 +488,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 else {
                                     animate.values = values;
                                     animate.keyTimes = keyTimes;
-                                    animate.keySplines = keySplines;
+                                    if (includeKeySplines) {
+                                        animate.keySplines = keySplines;
+                                    }
+                                    else {
+                                        animate.timingFunction = timingFunction;
+                                    }
                                 }
                             }
                             animate.paused = paused;

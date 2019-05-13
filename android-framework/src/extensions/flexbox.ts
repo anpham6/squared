@@ -632,7 +632,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                             }
                         }
-                        if (spreadInside || partition[i].some(item => item.app(orientationWeight) !== '')) {
+                        if (spreadInside || partition[i].some(item => item.app(orientationWeight) !== '') && !$util.sameArray(partition[i], item => item.app(orientationWeight))) {
                             segStart.anchorStyle(orientation, 'spread_inside', 0, false);
                         }
                         else if (!centered) {

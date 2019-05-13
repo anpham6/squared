@@ -17,6 +17,7 @@ declare global {
             concat(list: T[]): this;
             every(predicate: IteratorPredicate<T, boolean>): boolean;
             some(predicate: IteratorPredicate<T, boolean>): boolean;
+            same(predicate: IteratorPredicate<T, any>): boolean;
             filter(predicate: IteratorPredicate<T, void>): T[];
             splice(predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[];
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
