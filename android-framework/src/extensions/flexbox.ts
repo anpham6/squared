@@ -145,25 +145,33 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: FlexboxData<T> = node.data($const.EXT_NAME.FLEXBOX, 'mainData');
-        const layout = new $Layout(
-            parent,
-            node,
-            0,
-            $enum.NODE_ALIGNMENT.AUTO_LAYOUT
-        );
-        layout.itemCount = node.length;
-        layout.rowCount = mainData.rowCount;
-        layout.columnCount = mainData.columnCount;
-        if (mainData.directionRow && (mainData.rowCount === 1 || node.hasHeight) || mainData.directionColumn && (mainData.columnCount === 1 || node.hasWidth) || node.some(item => !item.pageFlow)) {
-            layout.containerType = CONTAINER_NODE.CONSTRAINT;
+        if (mainData.directionRow && mainData.rowCount === 1 || mainData.directionColumn && mainData.columnCount === 1) {
+            node.containerType = CONTAINER_NODE.CONSTRAINT;
+            node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
+            mainData.wrap = false;
+            return { include: true };
         }
         else {
-            layout.setType(CONTAINER_NODE.LINEAR, mainData.directionColumn ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL);
+            const layout = new $Layout(
+                parent,
+                node,
+                0,
+                $enum.NODE_ALIGNMENT.AUTO_LAYOUT
+            );
+            layout.itemCount = node.length;
+            layout.rowCount = mainData.rowCount;
+            layout.columnCount = mainData.columnCount;
+            if (mainData.directionRow && node.hasHeight || mainData.directionColumn && node.hasWidth || node.some(item => !item.pageFlow)) {
+                layout.containerType = CONTAINER_NODE.CONSTRAINT;
+            }
+            else {
+                layout.setType(CONTAINER_NODE.LINEAR, mainData.directionColumn ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL);
+            }
+            return {
+                output: this.application.renderNode(layout),
+                complete: true
+            };
         }
-        return {
-            output: this.application.renderNode(layout),
-            complete: true
-        };
     }
 
     public processChild(node: T, parent: T) {

@@ -62,16 +62,14 @@ export default abstract class File<T extends Node> implements squared.base.File<
         if (files.length) {
             const settings = this.userSettings;
             $util.concatArray(files, this.assets);
-            fetch(`/api/savetodisk` +
+            fetch(
+                `/api/savetodisk` +
                 `?directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
                 (appName ? `&appname=${encodeURIComponent(appName.trim())}` : '') +
                 `&filetype=${settings.outputArchiveFileType.toLowerCase()}` +
                 `&processingtime=${settings.outputMaxProcessingTime.toString().trim()}`, {
                     method: 'POST',
-                    headers: new Headers({
-                        'Accept': 'application/json, text/plain, */*',
-                        'Content-Type': 'application/json'
-                    }),
+                    headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                     body: JSON.stringify(files)
                 }
             )
@@ -80,7 +78,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 if (result) {
                     if (result.zipname) {
                         fetch(`/api/downloadtobrowser?filename=${encodeURIComponent(result.zipname)}`)
-                            .then((responseBlob: Response) => responseBlob.blob())
+                            .then((response: Response) => response.blob())
                             .then((blob: Blob) => File.downloadToDisk(blob, $util.fromLastIndexOf(result.zipname, '/')));
                     }
                     else if (result.system) {

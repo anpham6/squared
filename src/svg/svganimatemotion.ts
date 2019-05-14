@@ -36,7 +36,9 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     this.rotate = 'auto 180deg';
                     break;
                 default:
-                    this.rotate = `${$util.convertFloat(rotate)}deg`;
+                    if ($util.isNumber(rotate)) {
+                        this.rotate = `${$util.convertFloat(rotate)}deg`;
+                    }
                     break;
             }
             for (let i = 0; i < animationElement.children.length; i++) {

@@ -504,7 +504,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 switch (attr) {
                     case 'backgroundColor': {
                         const opacity = node.css('opacity');
-                        if (Resource.isInheritedStyle(node, 'backgroundColor') && opacity === '1' && node.documentParent.visible) {
+                        if (node.pageFlow && Resource.isInheritedStyle(node, 'backgroundColor') && opacity === '1' && node.documentParent.visible) {
                             continue;
                         }
                         const color = $color.parseColor(value, opacity);

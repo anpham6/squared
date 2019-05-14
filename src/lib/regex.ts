@@ -62,6 +62,7 @@ export const ESCAPE = {
     SINGLEQUOTE: /'/g,
     DOUBLEQUOTE: /"/g,
     U00A0: /\u00A0/g,
+    U0003: /\u0003/g,
     U2002: /\u2002/g,
     U2003: /\u2003/g,
     U2009: /\u2009/g,

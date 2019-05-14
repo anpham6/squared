@@ -92,6 +92,7 @@ export interface ExtensionResult<T extends Node> {
     output?: NodeTemplate<T>;
     renderAs?: T;
     outputAs?: NodeTemplate<T>;
+    nodeAs?: T;
     parent?: T;
     complete?: boolean;
     next?: boolean;
@@ -140,7 +141,6 @@ export interface FileAsset extends Asset {
 export interface ImageAsset extends Asset {
     width: number;
     height: number;
-    position?: Point;
 }
 
 export interface RawAsset extends FileAsset, ImageAsset {

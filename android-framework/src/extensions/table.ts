@@ -26,9 +26,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     }
                     else {
                         const expand: boolean | undefined = item.data($const.EXT_NAME.TABLE, 'expand');
-                        const exceed: boolean = !!item.data($const.EXT_NAME.TABLE, 'exceed');
-                        const downsized: boolean = !!item.data($const.EXT_NAME.TABLE, 'downsized');
-                        if (typeof expand === 'boolean') {
+                        if (expand !== undefined) {
                             if (expand) {
                                 const percent = $util.convertFloat(item.data($const.EXT_NAME.TABLE, 'percent')) / 100;
                                 if (percent > 0) {
@@ -41,8 +39,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 item.android('layout_columnWeight', '0');
                             }
                         }
-                        if (downsized) {
-                            if (exceed) {
+                        if (item.data($const.EXT_NAME.TABLE, 'downsized') === true) {
+                            if (item.data($const.EXT_NAME.TABLE, 'exceed') === true) {
                                 item.android('layout_width', '0px');
                                 item.android('layout_columnWeight', '0.01');
                             }

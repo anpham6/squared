@@ -32,9 +32,9 @@ export default class Percent<T extends android.base.View> extends squared.base.E
     }
 
     public postConstraints(node: T) {
-        const parent = node.parent;
-        if (parent && parent.visible) {
-            node.resetBox($enum.BOX_STANDARD.MARGIN, parent, true);
+        const renderParent = node.renderParent;
+        if (renderParent) {
+            node.resetBox($enum.BOX_STANDARD.MARGIN, renderParent, true);
         }
     }
 }

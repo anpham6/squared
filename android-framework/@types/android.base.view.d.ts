@@ -12,7 +12,7 @@ declare global {
             readonly layoutLinear: boolean;
             readonly layoutRelative: boolean;
             readonly layoutConstraint: boolean;
-            readonly actualAnchor: View;
+            readonly anchorTarget: View;
             readonly inlineWidth: boolean;
             readonly inlineHeight: boolean;
             readonly blockWidth: boolean;

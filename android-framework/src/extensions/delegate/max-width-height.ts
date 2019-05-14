@@ -14,7 +14,7 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
     public condition(node: T, parent: T) {
         let maxWidth = false;
         let maxHeight = false;
-        if (!node.support.maxWidth && node.has('maxWidth') && !parent.hasAlign($enum.NODE_ALIGNMENT.COLUMN)) {
+        if (!node.support.maxWidth && !isNaN(node.width) && node.has('maxWidth') && !parent.hasAlign($enum.NODE_ALIGNMENT.COLUMN)) {
             const blockWidth = node.css('width') === '100%';
             if (node.width === 0 || blockWidth) {
                 if (node.blockStatic && !node.autoMargin.horizontal || blockWidth) {
@@ -24,15 +24,15 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
                     maxWidth = true;
                 }
             }
-            else if (node.parseUnit(node.css('maxWidth')) <= node.width) {
+            else {
                 maxWidth = true;
             }
         }
-        if (!node.support.maxHeight && node.has('maxHeight') && parent.hasHeight) {
+        if (!node.support.maxHeight && !isNaN(node.height) && node.has('maxHeight') && parent.hasHeight) {
             if (node.hasHeight && node.css('height') === '100%') {
                 node.css('height', node.css('maxHeight'));
             }
-            else if (node.height === 0 || node.parseUnit(node.css('maxHeight'), true) <= node.height) {
+            else {
                 maxHeight = true;
             }
         }

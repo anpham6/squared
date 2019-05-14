@@ -119,6 +119,7 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
             node.resetBox($enum.BOX_STANDARD.PADDING | (node.documentBody ? $enum.BOX_STANDARD.MARGIN : 0), container, true);
             node.innerWrapped = container;
             return {
+                nodeAs: container,
                 output: this.application.renderNode(
                     new $Layout(
                         parent,

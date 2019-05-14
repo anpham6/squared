@@ -9,9 +9,14 @@ const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 
+type SpriteData = {
+    image: Required<RawAsset>,
+    position: BoxRectPosition
+};
+
 export default class <T extends android.base.View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {
-        const mainData = <Required<RawAsset>> node.data($const.EXT_NAME.SPRITE, 'mainData');
+        const mainData = <SpriteData> node.data($const.EXT_NAME.SPRITE, 'mainData');
         if (mainData) {
             const drawable = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
             if (drawable !== '') {
@@ -35,12 +40,12 @@ export default class <T extends android.base.View> extends squared.base.extensio
                     bottom: 'auto',
                     left: 'auto',
                     display: 'inline-block',
-                    width: $css.formatPX(mainData.width),
-                    height: $css.formatPX(mainData.height),
-                    marginTop: $css.formatPX(mainData.position.y),
+                    width: $css.formatPX(mainData.image.width),
+                    height: $css.formatPX(mainData.image.height),
+                    marginTop: $css.formatPX(mainData.position.top),
                     marginRight: '0px',
                     marginBottom: '0px',
-                    marginLeft: $css.formatPX(mainData.position.x),
+                    marginLeft: $css.formatPX(mainData.position.left),
                     paddingTop: '0px',
                     paddingRight: '0px',
                     paddingBottom: '0px',
@@ -52,7 +57,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
                     borderRadius: '0px',
                     backgroundPositionX: '0px',
                     backgroundPositionY: '0px',
-                    backgroundColor: 'transparent'
+                    backgroundColor: 'rgba(0, 0, 0, 0)'
                 });
                 node.unsetCache();
                 node.exclude({ procedure: $enum.NODE_PROCEDURE.OPTIMIZATION });

@@ -233,6 +233,7 @@ export function replaceCharacter(value: string) {
 export function replaceEntity(value: string) {
     return value
         .replace(ESCAPE.U00A0, '&#160;')
+        .replace(ESCAPE.U0003, ' ')
         .replace(ESCAPE.U2002, '&#8194;')
         .replace(ESCAPE.U2003, '&#8195;')
         .replace(ESCAPE.U2009, '&#8201;')

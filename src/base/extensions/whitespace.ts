@@ -87,7 +87,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                     }
                 }
                 else {
-                    if (!outside) {
+                    if (!outside && node.getBox(boxMargin)[0] !== 1) {
                         const visibleParent = getVisibleNode(node);
                         visibleParent.modifyBox(boxMargin);
                         visibleParent.modifyBox(boxMargin, child[margin]);
@@ -113,14 +113,15 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                 const children = node.actualChildren;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;
-                for (let i = 0; i < children.length; i++) {
+                for (let i = 0, j = 0; i < children.length; i++) {
                     const current = children[i] as T;
                     if (!current.pageFlow) {
                         continue;
                     }
                     if (node.blockStatic) {
+                        j++;
                         if (!current.floating) {
-                            if (firstChild === undefined) {
+                            if (j === 1 && firstChild === undefined) {
                                 firstChild = current;
                             }
                             lastChild = current;
@@ -195,7 +196,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                 resetMargin(getVisibleNode(topChild), BOX_STANDARD.MARGIN_TOP);
                                             }
                                         }
-                                        if (marginBottom > 0) {
+                                        if (marginBottom > 0 && (!inheritedTop || !inheritedBottom)) {
                                             if (marginTop > 0) {
                                                 if (marginTop <= marginBottom) {
                                                     if (inheritedTop) {

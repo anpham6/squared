@@ -5,6 +5,7 @@ import { BUILD_ANDROID } from './enumeration';
 import View from '../view';
 
 type T = View;
+
 type Customizations = {
     [index: number]: {
         android: ObjectMap<boolean | CustomizationResult>;
@@ -14,6 +15,7 @@ type Customizations = {
         };
     };
 };
+
 type Deprecations = {
     android: ObjectMap<CustomizationResult>;
 };

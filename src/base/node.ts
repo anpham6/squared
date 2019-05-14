@@ -491,20 +491,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public intersectX(rect: BoxRectDimension, dimension = 'linear') {
         const self: BoxRectDimension = this[dimension];
         return (
-            rect.left >= self.left && rect.left < self.right ||
-            rect.right > self.left && rect.right <= self.right ||
-            self.left >= rect.left && self.right <= rect.right ||
-            rect.left >= self.left && rect.right <= self.right
+            $util.aboveRange(rect.left, self.left) && Math.ceil(rect.left) < Math.floor(self.right) ||
+            Math.floor(rect.right) > Math.ceil(self.left) && $util.belowRange(rect.right, self.right) ||
+            $util.aboveRange(self.left, rect.left) && $util.belowRange(self.right, rect.right) ||
+            $util.aboveRange(rect.left, self.left) && $util.belowRange(rect.right, self.right)
         );
     }
 
     public intersectY(rect: BoxRectDimension, dimension = 'linear') {
         const self: BoxRectDimension = this[dimension];
         return (
-            rect.top >= self.top && rect.top < self.bottom ||
-            rect.bottom > self.top && rect.bottom <= self.bottom ||
-            self.top >= rect.top && self.bottom <= rect.bottom ||
-            rect.top >= self.top && rect.bottom <= self.bottom
+            $util.aboveRange(rect.top, self.top) && Math.ceil(rect.top) < Math.floor(self.bottom) ||
+            Math.floor(rect.bottom) > Math.ceil(self.top) && $util.belowRange(rect.bottom, self.bottom) ||
+            $util.aboveRange(self.top, rect.top) && $util.belowRange(self.bottom, rect.bottom) ||
+            $util.aboveRange(rect.top, self.top) && $util.belowRange(rect.bottom, self.bottom)
         );
     }
 
@@ -1102,7 +1102,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     private setDimension(attr: string, horizontal: boolean) {
-        let value = Math.max(this.parseUnit(this._styleMap[attr], horizontal), this.parseUnit(this._styleMap[`min${$util.capitalize(attr)}`], horizontal));
+        const baseValue = this.parseUnit(this._styleMap[attr], horizontal);
+        let value = Math.max(baseValue, this.parseUnit(this._styleMap[`min${$util.capitalize(attr)}`], horizontal));
         if (value === 0 && this.naturalElement && this.styleElement) {
             switch (this.tagName) {
                 case 'IMG':
@@ -1130,7 +1131,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     break;
             }
         }
-        const maxValue = value > 0 && !this.imageElement ? this.parseUnit(this._styleMap[`max${$util.capitalize(attr)}`], horizontal) : 0;
+        let maxValue = 0;
+        if (baseValue > 0 && !this.imageElement) {
+            const maxAttr = `max${$util.capitalize(attr)}`;
+            maxValue = this.parseUnit(this._styleMap[maxAttr], horizontal);
+            if (maxValue > 0 && maxValue <= baseValue) {
+                maxValue = 0;
+                delete this._styleMap[maxAttr];
+            }
+        }
         return maxValue > 0 ? Math.min(value, maxValue) : value;
     }
 
@@ -1201,7 +1210,49 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 break;
         }
-        return $util.convertFloat(this.convertLength(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
+        let paddingStart = 0;
+        let paddingeEnd = 0;
+        if (region === 'padding') {
+            paddingStart = this.toFloat('paddingInlineStart');
+            paddingeEnd = this.toFloat('paddingInlineEnd');
+            if (this.css('writingMode') === 'vertical-rl') {
+                if (this.dir === 'ltr') {
+                    if (direction !== 'Top') {
+                        paddingStart = 0;
+                    }
+                    if (direction !== 'Bottom') {
+                        paddingeEnd = 0;
+                    }
+                }
+                else {
+                    if (direction !== 'Bottom') {
+                        paddingStart = 0;
+                    }
+                    if (direction !== 'Top') {
+                        paddingeEnd = 0;
+                    }
+                }
+            }
+            else {
+                if (this.dir === 'ltr') {
+                    if (direction !== 'Left') {
+                        paddingStart = 0;
+                    }
+                    if (direction !== 'Right') {
+                        paddingeEnd = 0;
+                    }
+                }
+                else {
+                    if (direction !== 'Right') {
+                        paddingStart = 0;
+                    }
+                    if (direction !== 'Left') {
+                        paddingeEnd = 0;
+                    }
+                }
+            }
+        }
+        return paddingStart + $util.convertFloat(this.convertLength(attr, this.css(attr), direction === 'Left' || direction === 'Right')) + paddingeEnd;
     }
 
     private convertLength(attr: string, value: string, horizontal: boolean, parent = true): string {
@@ -2004,7 +2055,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get backgroundColor() {
         if (this._cached.backgroundColor === undefined) {
             let value = this.css('backgroundColor');
-            if (value !== '' && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === value)) {
+            if (value !== '' && this.pageFlow && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === value)) {
                 let current = this.actualParent;
                 while (current && current.id !== 0) {
                     const color = current.cssInitial('backgroundColor', true);
@@ -2017,7 +2068,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     current = current.actualParent;
                 }
             }
-            this._cached.backgroundColor = value;
+            this._cached.backgroundColor = value !== 'rgba(0, 0, 0, 0)' ? value : '';
         }
         return this._cached.backgroundColor;
     }

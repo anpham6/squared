@@ -34,7 +34,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
     public processNode(node: T) {
         const controller = this.application.controllerHandler;
         const children = node.filter(item => {
-            if (item.pageFlow && item.pseudoElement && item.css('content') === '""' && item.contentBoxWidth === 0) {
+            if (item.pageFlow && item.pseudoElement && item.contentBoxWidth === 0 && item.css('content') === '""') {
                 item.hide();
                 return false;
             }
@@ -107,17 +107,23 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             }
             node.clear();
             let maxCount = 0;
-            for (let i = 0; i < rows.length; i++) {
-                const seg = rows[i];
-                const group = controller.createNodeGroup(seg[0], seg, node);
-                group.siblingIndex = i;
-                node.sort(NodeList.siblingIndex);
-                const box = group.unsafe('box');
-                if (box) {
-                    box[size] = node.box[size];
+            if (rows.length > 1) {
+                for (let i = 0; i < rows.length; i++) {
+                    const seg = rows[i];
+                    const group = controller.createNodeGroup(seg[0], seg, node);
+                    group.siblingIndex = i;
+                    node.sort(NodeList.siblingIndex);
+                    const box = group.unsafe('box');
+                    if (box) {
+                        box[size] = node.box[size];
+                    }
+                    group.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
+                    maxCount = Math.max(seg.length, maxCount);
                 }
-                group.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
-                maxCount = Math.max(seg.length, maxCount);
+            }
+            else {
+                maxCount = rows[0].length;
+                node.retain(rows[0]);
             }
             if (mainData.directionRow) {
                 mainData.rowCount = rows.length;

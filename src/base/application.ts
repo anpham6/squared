@@ -680,7 +680,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             else if (outsideX && !node.has('left') && node.right > 0) {
                                                 outside = true;
                                             }
-                                            else if (!parent.pageFlow && outsideX && outsideY && (node.top > 0 || node.left > 0)) {
+                                            else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent && parent.actualParent.documentBody) && (node.top > 0 || node.left > 0)) {
                                                 outside = true;
                                             }
                                             else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.has('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
@@ -732,10 +732,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                         node.unsafe('box', true);
                         node.unsafe('linear', true);
                     }
-                    let opacity = $util.convertFloat(node.css('opacity')) || 1;
+                    let opacity = node.toFloat('opacity', false, 1);
                     let current = actualParent;
                     while (current && current !== parent) {
-                        opacity *= $util.convertFloat(current.css('opacity')) || 1;
+                        opacity *= current.toFloat('opacity', false, 1);
                         current = current.actualParent as T;
                     }
                     node.css('opacity', opacity.toString());
@@ -1170,12 +1170,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         if (nodeY.styleElement) {
                             let next = false;
+                            let nodeAs = nodeY;
                             prioritizeExtensions(<HTMLElement> nodeY.element, extensions).some(item => {
                                 if (item.is(nodeY) && item.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(item))) {
-                                    const result = item.processNode(nodeY, parentY);
+                                    const result = item.processNode(nodeY, parentY, nodeAs);
                                     if (result) {
                                         if (result.output) {
-                                            this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
+                                            this.addLayoutTemplate(result.parentAs || parentY, nodeAs, result.output);
                                         }
                                         if (result.renderAs && result.outputAs) {
                                             this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
@@ -1183,7 +1184,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         if (result.parent) {
                                             parentY = result.parent as T;
                                         }
-                                        if (result.output || result.include === true) {
+                                        if (result.nodeAs) {
+                                            nodeAs = result.nodeAs;
+                                        }
+                                        if (result.output && result.include !== false || result.include === true) {
                                             if (nodeY.renderExtension === undefined) {
                                                 nodeY.renderExtension = [];
                                             }
@@ -1205,26 +1209,31 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
                         const layout = this.createLayoutControl(parentY, nodeY);
-                        const result = nodeY.length ? this.controllerHandler.processUnknownParent(layout) : this.controllerHandler.processUnknownChild(layout);
-                        if (result.next === true) {
-                            continue;
+                        if (layout.containerType === 0) {
+                            const result = nodeY.length ? this.controllerHandler.processUnknownParent(layout) : this.controllerHandler.processUnknownChild(layout);
+                            if (result.next === true) {
+                                continue;
+                            }
+                            else if (result.renderAs) {
+                                axisY[k] = result.renderAs as T;
+                                k--;
+                                continue;
+                            }
+                            this.addLayout(result.layout);
                         }
-                        else if (result.renderAs) {
-                            axisY[k] = result.renderAs as T;
-                            k--;
-                            continue;
+                        else {
+                            this.addLayout(layout);
                         }
-                        this.addLayout(result.layout);
                     }
                 }
             }
         }
         this.processing.cache.sort((a, b) => {
             if (a.depth === b.depth) {
-                if (a.groupParent && b.length === 0) {
+                if (a.groupParent && (b.length === 0 || b.naturalElement)) {
                     return -1;
                 }
-                else if (a.length === 0 && b.groupParent) {
+                else if (b.groupParent && (a.length === 0 || a.naturalElement)) {
                     return 1;
                 }
                 return 0;
@@ -1873,8 +1882,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (REGEXP_CACHED.COUNTERS === undefined) {
                             REGEXP_CACHED.COUNTERS = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
                         }
-                        let match: RegExpExecArray | null;
                         let found = false;
+                        let match: RegExpExecArray | null;
                         while ((match = REGEXP_CACHED.COUNTERS.exec(value)) !== null) {
                             if (match[1]) {
                                 content += $dom.getNamedItem(element, match[1].trim());
