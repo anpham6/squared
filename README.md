@@ -123,7 +123,6 @@ squared.settings = {
     supportRTL: true,
     preloadImages: true,
     supportNegativeLeftTop: true,
-    collapseUnattributedElements: true,
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
     showAttributes: true,

@@ -56,7 +56,7 @@
   },
   "devDependencies": {
     "rimraf": "^2.6.3",
-    "rollup": "^1.11.3",
+    "rollup": "^1.12.1",
     "rollup-plugin-async": "^1.2.0",
     "rollup-plugin-terser": "^4.0.4",
     "systemjs": "^0.21.6",

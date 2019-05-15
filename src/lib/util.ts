@@ -351,16 +351,6 @@ export function trimEnd(value: string, char: string) {
     return value.replace(new RegExp(`${char}+$`), '');
 }
 
-export function firstIndexOf(value: string, ...terms: string[]) {
-    for (const term of terms) {
-        const index = value.indexOf(term);
-        if (index !== -1) {
-            return index;
-        }
-    }
-    return -1;
-}
-
 export function fromLastIndexOf(value: string, ...char: string[]) {
     let result = value;
     for (const ch of char) {

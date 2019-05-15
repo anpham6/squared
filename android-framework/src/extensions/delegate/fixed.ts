@@ -36,7 +36,7 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                     else {
                         if (item.bottom >= 0 && item.has('bottom') && (item.bottom < paddingBottom || node.documentBody && node.has('height'))) {
                             valid = true;
-                            if (item.position === 'fixed') {
+                            if (item.css('position') === 'fixed') {
                                 fixedBottom = true;
                             }
                         }
@@ -49,7 +49,7 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                     else if (item.has('right')) {
                         if (item.right >= 0 && (item.right < paddingRight || node.documentBody && node.has('width'))) {
                             valid = true;
-                            if (item.position === 'fixed') {
+                            if (item.css('position') === 'fixed') {
                                 fixedRight = true;
                             }
                         }

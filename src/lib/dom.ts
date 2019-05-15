@@ -156,6 +156,15 @@ export function createElement(parent?: Element | null, tagName = 'span', placeho
     return element;
 }
 
+export function createStyleElement(parent: HTMLElement, tagName: string, attrs: StringMap) {
+    const element = document.createElement(tagName);
+    for (const attr in attrs) {
+        element.style[attr] = attrs[attr];
+    }
+    parent.appendChild(element);
+    return element;
+}
+
 export function getTextMetrics(value: string, fontFamily: string, fontSize: number) {
     if (fontFamily && fontSize) {
         const canvas = document.createElement('canvas');

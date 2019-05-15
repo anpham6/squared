@@ -14,7 +14,7 @@ export default abstract class Accessibility<T extends Node> extends Extension<T>
         for (const node of this.application.processing.cache) {
             if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (node.tagName) {
-                    case 'IMAGE':
+                    case 'INPUT_IMAGE':
                         node.extracted = [node];
                         break;
                     case 'RADIO':

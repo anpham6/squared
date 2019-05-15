@@ -85,7 +85,6 @@ declare global {
             readonly hasHeight: boolean;
             readonly lineHeight: number;
             readonly display: string;
-            readonly position: string;
             readonly positionRelative: boolean;
             readonly top: number;
             readonly right: number;
@@ -146,7 +145,6 @@ declare global {
             readonly nextSibling: Node | null;
             readonly singleChild: boolean;
             readonly documentId: string;
-            readonly nodes: Node[];
             readonly center: Point;
             setControlType(controlName: string, containerType?: number): void;
             setLayout(): void;
@@ -158,7 +156,7 @@ declare global {
             cloneBase(node: Node): void;
             init(): void;
             saveAsInitial(overwrite?: boolean): void;
-            is(...containers: number[]): boolean;
+            is(containerType: number): boolean;
             of(containerType: number, ...alignmentType: number[]): boolean;
             unsafe(name: string, unset?: boolean): any;
             attr(name: string, attr: string, value?: string, overwrite?: boolean): string;

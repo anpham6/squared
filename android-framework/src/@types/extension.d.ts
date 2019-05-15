@@ -23,6 +23,6 @@ export interface ResourceStringsOptions {
 }
 
 export interface ResourceFontsOptions {
-    defaultSystemFont: string;
-    fontResourceValue: boolean;
+    systemDefaultFont: string;
+    disableFontAlias: boolean;
 }

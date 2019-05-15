@@ -65,19 +65,20 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     minWidth += parent.marginLeft;
                 }
             }
+            const container = this.application.controllerHandler.createNodeGroup(node, [node], parent);
             let ordinal = !mainData.ordinal ? node.find(item => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
             if (ordinal) {
-                const layout = new $Layout(parent, ordinal);
+                const layoutOrdinal = new $Layout(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
-                    layout.containerType = CONTAINER_NODE.TEXT;
+                    layoutOrdinal.containerType = CONTAINER_NODE.TEXT;
                 }
                 else {
-                    layout.retain(ordinal.children as T[]);
-                    if (controller.checkRelativeHorizontal(layout)) {
-                        layout.setType(CONTAINER_NODE.RELATIVE, $enum.NODE_ALIGNMENT.HORIZONTAL);
+                    layoutOrdinal.retain(ordinal.children as T[]);
+                    if (controller.checkRelativeHorizontal(layoutOrdinal)) {
+                        layoutOrdinal.setType(CONTAINER_NODE.RELATIVE, $enum.NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
-                        layout.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.UNKNOWN);
+                        layoutOrdinal.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.UNKNOWN);
                     }
                 }
                 ordinal.parent = parent;
@@ -93,7 +94,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 this.application.addLayoutTemplate(
                     parent,
                     ordinal,
-                    this.application.renderNode(layout)
+                    this.application.renderNode(layoutOrdinal)
                 );
             }
             else {
@@ -141,10 +142,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     minWidth = MINWIDTH_INSIDE;
                 }
                 else if (columnCount === 3) {
-                    node.android('layout_columnSpan', '2');
+                    container.android('layout_columnSpan', '2');
                 }
                 if (node.tagName === 'DT' && !image) {
-                    node.android('layout_columnSpan', columnCount.toString());
+                    container.android('layout_columnSpan', columnCount.toString());
                 }
                 else {
                     ordinal.tagName = `${node.tagName}_ORDINAL`;
@@ -177,7 +178,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         paddingTop: node.paddingTop > 0 ? $css.formatPX(node.paddingTop) : '',
                         paddingRight: paddingRight > 0 && gravity === 'right' ? $css.formatPX(paddingRight) : '',
                         paddingLeft: paddingRight > 0 && gravity === 'left' && (!image || mainData.imagePosition) ? $css.formatPX(paddingRight) : '',
-                        fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $css.formatPX(ordinal.toInt('fontSize') * 0.75) : '',
+                        fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $css.formatPX(ordinal.toFloat('fontSize') * 0.75) : '',
                         lineHeight: node.lineHeight > 0 ? $css.formatPX(node.lineHeight) : ''
                     });
                     ordinal.apply(options);
@@ -209,10 +210,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     node.companion = ordinal;
                 }
             }
-            if (columnCount > 0) {
-                node.android('layout_width', '0px');
-                node.android('layout_columnWeight', '1');
-            }
             if (adjustPadding) {
                 if (resetPadding === null || resetPadding <= 0) {
                     parent.modifyBox(parent.paddingLeft > 0 ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.MARGIN_LEFT);
@@ -221,26 +218,29 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     parent.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, resetPadding);
                 }
             }
-            if (node.length && node.every(item => item.baseline)) {
-                const layout = new $Layout(
-                    parent,
-                    node,
-                    CONTAINER_NODE.LINEAR,
-                    0,
-                    node.children as T[]
-                );
-                if (layout.length === 1 || layout.linearX) {
-                    layout.add($enum.NODE_ALIGNMENT.HORIZONTAL);
+            if (columnCount > 0) {
+                container.android('layout_width', '0px');
+                container.android('layout_columnWeight', '1');
+                if (node.baseline) {
+                    container.android('baselineAlignedChildIndex', '0');
                 }
-                else {
-                    layout.add($enum.NODE_ALIGNMENT.VERTICAL);
-                    layout.add($enum.NODE_ALIGNMENT.UNKNOWN);
-                }
-                return {
-                    output: this.application.renderNode(layout),
-                    next: true
-                };
             }
+            if (node.marginTop !== 0) {
+                container.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.marginTop);
+                node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP);
+            }
+            const layout = new $Layout(
+                parent,
+                container,
+                CONTAINER_NODE.LINEAR,
+                $enum.NODE_ALIGNMENT.VERTICAL | $enum.NODE_ALIGNMENT.UNKNOWN,
+                container.children as T[]
+            );
+            return {
+                parent: container,
+                renderAs: container,
+                outputAs: this.application.renderNode(layout)
+            };
         }
         return undefined;
     }

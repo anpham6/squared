@@ -163,8 +163,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         this._initial.iteration++;
     }
 
-    public is(...containers: number[]) {
-        return containers.some(value => this.containerType === value);
+    public is(containerType: number) {
+        return this.containerType === containerType;
     }
 
     public of(containerType: number, ...alignmentType: number[]) {
@@ -491,8 +491,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public intersectX(rect: BoxRectDimension, dimension = 'linear') {
         const self: BoxRectDimension = this[dimension];
         return (
-            $util.aboveRange(rect.left, self.left) && Math.ceil(rect.left) < Math.floor(self.right) ||
-            Math.floor(rect.right) > Math.ceil(self.left) && $util.belowRange(rect.right, self.right) ||
+            $util.aboveRange(rect.left, self.left) && Math.ceil(rect.left) < self.right ||
+            rect.right > Math.ceil(self.left) && $util.belowRange(rect.right, self.right) ||
             $util.aboveRange(self.left, rect.left) && $util.belowRange(self.right, rect.right) ||
             $util.aboveRange(rect.left, self.left) && $util.belowRange(rect.right, self.right)
         );
@@ -501,8 +501,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public intersectY(rect: BoxRectDimension, dimension = 'linear') {
         const self: BoxRectDimension = this[dimension];
         return (
-            $util.aboveRange(rect.top, self.top) && Math.ceil(rect.top) < Math.floor(self.bottom) ||
-            Math.floor(rect.bottom) > Math.ceil(self.top) && $util.belowRange(rect.bottom, self.bottom) ||
+            $util.aboveRange(rect.top, self.top) && Math.ceil(rect.top) < self.bottom ||
+            rect.bottom > Math.ceil(self.top) && $util.belowRange(rect.bottom, self.bottom) ||
             $util.aboveRange(self.top, rect.top) && $util.belowRange(self.bottom, rect.bottom) ||
             $util.aboveRange(rect.top, self.top) && $util.belowRange(rect.bottom, self.bottom)
         );
@@ -520,12 +520,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public outsideX(rect: BoxRectDimension, dimension = 'linear') {
         const self: BoxRectDimension = this[dimension];
-        return Math.ceil(self.left) < Math.floor(rect.left) || Math.floor(self.right) > Math.ceil(rect.right);
+        return self.left < Math.floor(rect.left) || Math.floor(self.right) > rect.right;
     }
 
     public outsideY(rect: BoxRectDimension, dimension = 'linear') {
         const self: BoxRectDimension = this[dimension];
-        return Math.ceil(self.top) < Math.floor(rect.top) || Math.floor(self.bottom) > Math.ceil(rect.bottom);
+        return self.top < Math.floor(rect.top) || Math.floor(self.bottom) > rect.bottom;
     }
 
     public css(attr: string, value?: string, cache = false): string {
@@ -869,6 +869,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     break;
                 default:
                     this._inlineText = value;
+                    break;
             }
         }
     }
@@ -1107,7 +1108,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (value === 0 && this.naturalElement && this.styleElement) {
             switch (this.tagName) {
                 case 'IMG':
-                case 'IMAGE':
+                case 'INPUT_IMAGE':
                 case 'TD':
                 case 'TH':
                 case 'SVG':
@@ -1120,12 +1121,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     if (dimension !== '') {
                         value = this.parseUnit(dimension, horizontal);
                         if (value > 0) {
-                            if ($css.isPercent(dimension)) {
-                                this.css(attr, dimension);
-                            }
-                            else if ($util.isNumber(dimension)) {
-                                this.css(attr, $css.formatPX(dimension));
-                            }
+                            this.css(attr, $css.isPercent(dimension) ? dimension : $css.formatPX(dimension));
                         }
                     }
                     break;
@@ -1135,8 +1131,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (baseValue > 0 && !this.imageElement) {
             const maxAttr = `max${$util.capitalize(attr)}`;
             maxValue = this.parseUnit(this._styleMap[maxAttr], horizontal);
-            if (maxValue > 0 && maxValue <= baseValue) {
+            if (maxValue > 0 && maxValue <= baseValue && $css.isLength(this._styleMap[attr])) {
                 maxValue = 0;
+                this._styleMap[attr] = $css.formatPX(maxValue);
                 delete this._styleMap[maxAttr];
             }
         }
@@ -1211,17 +1208,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 break;
         }
         let paddingStart = 0;
-        let paddingeEnd = 0;
+        let paddingEnd = 0;
         if (region === 'padding') {
             paddingStart = this.toFloat('paddingInlineStart');
-            paddingeEnd = this.toFloat('paddingInlineEnd');
+            paddingEnd = this.toFloat('paddingInlineEnd');
             if (this.css('writingMode') === 'vertical-rl') {
                 if (this.dir === 'ltr') {
                     if (direction !== 'Top') {
                         paddingStart = 0;
                     }
                     if (direction !== 'Bottom') {
-                        paddingeEnd = 0;
+                        paddingEnd = 0;
                     }
                 }
                 else {
@@ -1229,7 +1226,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         paddingStart = 0;
                     }
                     if (direction !== 'Top') {
-                        paddingeEnd = 0;
+                        paddingEnd = 0;
                     }
                 }
             }
@@ -1239,7 +1236,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         paddingStart = 0;
                     }
                     if (direction !== 'Right') {
-                        paddingeEnd = 0;
+                        paddingEnd = 0;
                     }
                 }
                 else {
@@ -1247,12 +1244,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         paddingStart = 0;
                     }
                     if (direction !== 'Left') {
-                        paddingeEnd = 0;
+                        paddingEnd = 0;
                     }
                 }
             }
         }
-        return paddingStart + $util.convertFloat(this.convertLength(attr, this.css(attr), direction === 'Left' || direction === 'Right')) + paddingeEnd;
+        return paddingStart + $util.convertFloat(this.convertLength(attr, this.css(attr), direction === 'Left' || direction === 'Right')) + paddingEnd;
     }
 
     private convertLength(attr: string, value: string, horizontal: boolean, parent = true): string {
@@ -1294,7 +1291,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     value = 'PLAINTEXT';
                 }
                 else if (element.tagName === 'INPUT') {
-                    value = element.type;
+                    value = `INPUT_${element.type}`;
                 }
                 else {
                     value = element.tagName;
@@ -1566,17 +1563,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.css('display');
     }
 
-    get position() {
-        return this.css('position');
-    }
-
     set positionStatic(value) {
         this._cached.positionStatic = value;
         this.unsetCache('pageFlow');
     }
     get positionStatic() {
         if (this._cached.positionStatic === undefined) {
-            switch (this.position) {
+            switch (this.css('position')) {
                 case 'fixed':
                 case 'absolute':
                     this._cached.positionStatic = false;
@@ -1602,7 +1595,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get positionRelative() {
         if (this._cached.positionRelative === undefined) {
-            const value = this.position;
+            const value = this.css('position');
             this._cached.positionRelative = value === 'relative' || value === 'sticky';
         }
         return this._cached.positionRelative;
@@ -1962,28 +1955,33 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get src() {
-        return this.imageElement || this.tagName === 'IMAGE' ? (<HTMLInputElement> this._element).src : '';
+        return this.imageElement || this.tagName === 'INPUT_IMAGE' ? (<HTMLInputElement> this._element).src : '';
     }
 
     set overflow(value) {
         if (value === 0 || value === NODE_ALIGNMENT.VERTICAL || value === NODE_ALIGNMENT.HORIZONTAL || value === (NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.VERTICAL)) {
+            if ($util.hasBit(this.overflow, NODE_ALIGNMENT.BLOCK)) {
+                value |= NODE_ALIGNMENT.BLOCK;
+            }
             this._cached.overflow = value;
         }
     }
     get overflow() {
         if (this._cached.overflow === undefined) {
-            const element = this._element;
+            const overflowX = this.css('overflowX');
+            const overflowY = this.css('overflowY');
             let value = 0;
             if (!this.documentBody) {
-                const overflow = this.css('overflow');
-                const overflowX = this.css('overflowX');
-                const overflowY = this.css('overflowY');
-                if ((this.has('width') || this.has('maxWidth')) && (overflow === 'scroll' || overflowX === 'scroll' || overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth)) {
+                const element = this.htmlElement && this._element;
+                if ((this.has('width') || this.has('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth)) {
                     value |= NODE_ALIGNMENT.HORIZONTAL;
                 }
-                if ((this.has('height') || this.has('maxHeight')) && (overflow === 'scroll' || overflowY === 'scroll' || overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
+                if ((this.has('height') || this.has('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
                     value |= NODE_ALIGNMENT.VERTICAL;
                 }
+            }
+            if (overflowX === 'auto' || overflowX === 'hidden' || overflowX === 'overlay' || overflowY === 'auto' || overflowY === 'hidden' || overflowY === 'overlay') {
+                value |= NODE_ALIGNMENT.BLOCK;
             }
             this._cached.overflow = value;
         }
@@ -2036,7 +2034,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get leftTopAxis() {
-        return this.cssInitial('position') === 'absolute' && this.absoluteParent === this.documentParent || this.position === 'fixed';
+        return this.cssInitial('position') === 'absolute' && this.absoluteParent === this.documentParent || this.css('position') === 'fixed';
     }
 
     set renderExclude(value) {
@@ -2324,14 +2322,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.dir;
     }
 
-    get nodes() {
-        return this.rendered ? this.renderChildren : this.children;
-    }
-
     get center(): Point {
         return {
-            x: this.bounds.left + Math.floor(this.bounds.width / 2),
-            y: this.bounds.top + Math.floor(this.actualHeight / 2)
+            x: (this.bounds.left + this.bounds.right) / 2,
+            y: (this.bounds.top + this.bounds.bottom) / 2
         };
     }
 }

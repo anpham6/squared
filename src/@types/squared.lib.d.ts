@@ -73,6 +73,7 @@ declare global {
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
             function getNamedItem(element: Element | null, attr: string): string;
             function createElement(parent?: Element | null, tagName?: string, placeholder?: boolean, index?: number): HTMLElement;
+            function createStyleElement(parent: HTMLElement, tagName: string, attrs: StringMap): HTMLElement;
             function getTextMetrics(value: string, fontFamily: string, fontSize: number): TextMetrics | undefined;
         }
 
@@ -150,7 +151,6 @@ declare global {
             function trimString(value: string, char: string): string;
             function trimStart(value: string, char: string): string;
             function trimEnd(value: string, char: string): string;
-            function firstIndexOf(value: string, ...terms: string[]): number;
             function fromLastIndexOf(value: string, ...char: string[]): string;
             function searchObject(obj: StringMap, value: string | StringMap): any[][];
             function hasValue<T>(value: any): value is T;

@@ -376,7 +376,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             })
             .catch((error: Event) => {
                 const message = error.target ? (<HTMLImageElement> error.target).src : error['message'];
-                if (!message || confirm(`FAIL: ${message}`)) {
+                if (!$util.isString(message) || confirm(`FAIL: ${message}`)) {
                     parseResume();
                 }
             });
@@ -398,14 +398,8 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
         if ($util.isString(content)) {
-            if (pathname) {
-                pathname = $util.trimString(pathname, '/');
-            }
-            else {
-                pathname = this.controllerHandler.localSettings.layout.pathName;
-            }
             const layout: FileAsset = {
-                pathname,
+                pathname: pathname ? $util.trimString(pathname, '/') : this.controllerHandler.localSettings.layout.pathName,
                 filename,
                 content,
                 index
@@ -574,7 +568,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     const id = element.id;
                     let styleElement: HTMLElement | undefined;
                     if (item.pageFlow) {
-                        element.id = 'id_' + Math.round(Math.random() * new Date().getTime());
+                        element.id = `id_${Math.round(Math.random() * new Date().getTime())}`;
                         styleElement = $css.insertStyleSheetRule(`#${element.id}::${index === 0 ? 'before' : 'after'} { display: none !important; }`);
                     }
                     if (item.cssTry('display', item.display)) {
@@ -613,7 +607,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const actualParent = node.parent as T;
                 const absoluteParent = node.absoluteParent as T;
                 let parent: T | undefined;
-                switch (node.position) {
+                switch (node.css('position')) {
                     case 'relative':
                         if (node === actualParent.lastChild) {
                             let valid = false;
@@ -1175,6 +1169,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 if (item.is(nodeY) && item.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(item))) {
                                     const result = item.processNode(nodeY, parentY, nodeAs);
                                     if (result) {
+                                        if (result.nodeAs) {
+                                            nodeAs = result.nodeAs;
+                                        }
                                         if (result.output) {
                                             this.addLayoutTemplate(result.parentAs || parentY, nodeAs, result.output);
                                         }
@@ -1183,9 +1180,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         }
                                         if (result.parent) {
                                             parentY = result.parent as T;
-                                        }
-                                        if (result.nodeAs) {
-                                            nodeAs = result.nodeAs;
                                         }
                                         if (result.output && result.include !== false || result.include === true) {
                                             if (nodeY.renderExtension === undefined) {
@@ -1208,22 +1202,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
-                        const layout = this.createLayoutControl(parentY, nodeY);
+                        let layout = this.createLayoutControl(parentY, nodeY);
                         if (layout.containerType === 0) {
                             const result = nodeY.length ? this.controllerHandler.processUnknownParent(layout) : this.controllerHandler.processUnknownChild(layout);
                             if (result.next === true) {
                                 continue;
                             }
-                            else if (result.renderAs) {
-                                axisY[k] = result.renderAs as T;
-                                k--;
-                                continue;
-                            }
-                            this.addLayout(result.layout);
+                            layout = result.layout;
                         }
-                        else {
-                            this.addLayout(layout);
-                        }
+                        this.addLayout(layout);
                     }
                 }
             }
@@ -2222,10 +2209,10 @@ export default class Application<T extends Node> implements squared.base.Applica
     get layouts() {
         return this._layouts.sort((a, b) => {
             if (a.index !== b.index) {
-                if (a.index === 0 || a.index !== undefined && b.index === undefined || b.index === Number.POSITIVE_INFINITY) {
+                if (a.index === 0 || a.index !== undefined && a.index !== Number.POSITIVE_INFINITY && b.index === undefined || b.index === Number.POSITIVE_INFINITY) {
                     return -1;
                 }
-                else if (b.index === 0 || b.index !== undefined && a.index === undefined || a.index === Number.POSITIVE_INFINITY) {
+                else if (b.index === 0 || b.index !== undefined && b.index !== Number.POSITIVE_INFINITY && a.index === undefined || a.index === Number.POSITIVE_INFINITY) {
                     return 1;
                 }
                 else if (a.index !== undefined && b.index !== undefined) {

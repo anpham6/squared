@@ -284,23 +284,26 @@ export default (Base: Constructor<squared.base.Node>) => {
                         const attr: string = LAYOUT_ANDROID.constraint[position];
                         if (attr) {
                             node.app(this.localizeString(attr), documentId, overwrite);
-                            if (documentId === 'parent') {
-                                switch (position) {
-                                    case 'left':
-                                    case 'right':
+                            let horizontal = false;
+                            switch (position) {
+                                case 'left':
+                                case 'right':
+                                    if (documentId === 'parent') {
                                         node.constraint.horizontal = true;
-                                        break;
-                                    case 'top':
-                                    case 'bottom':
-                                    case 'baseline':
+                                    }
+                                case 'leftRight':
+                                case 'rightLeft':
+                                    horizontal = true;
+                                    break;
+                                case 'top':
+                                case 'bottom':
+                                case 'baseline':
+                                    if (documentId === 'parent') {
                                         node.constraint.vertical = true;
-                                        break;
-                                }
+                                    }
+                                    break;
                             }
-                            node.constraint.current[position] = {
-                                documentId,
-                                horizontal: position === 'left' || position === 'right'
-                            };
+                            node.constraint.current[position] = { documentId, horizontal };
                             return true;
                         }
                     }
@@ -746,10 +749,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                         this.android('adjustViewBounds', 'true');
                     }
                     if (layoutHeight === '') {
-                        if (this.textElement && this.inlineText && this.textEmpty && !this.visibleStyle.backgroundImage) {
-                            if (renderParent.layoutConstraint && this.actualHeight >= (this.absoluteParent || documentParent).box.height && this.alignParent('top')) {
-                                this.anchor('bottom', 'parent');
+                        if (this.textEmpty && !this.visibleStyle.backgroundImage) {
+                            if (renderParent.layoutConstraint && this.alignParent('top') && this.actualHeight >= (this.absoluteParent || documentParent).box.height) {
                                 layoutHeight = '0px';
+                                this.anchor('bottom', 'parent');
                             }
                             else {
                                 layoutHeight = $css.formatPX(this.actualHeight);
@@ -933,7 +936,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (attr === 'layout_gravity') {
                 const renderParent = this.renderParent as T;
                 if (renderParent) {
-                    if (isHorizontalAlign(alignment) && (renderParent.inlineWidth && this.singleChild || !overwrite && this.outerWrapper && this.has('maxWidth'))) {
+                    if (isHorizontalAlign(alignment) && (this.blockWidth || renderParent.inlineWidth && this.singleChild || !overwrite && this.outerWrapper && this.has('maxWidth'))) {
                         return;
                     }
                     else if (renderParent.layoutConstraint) {
@@ -1078,7 +1081,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 else if (this.inline) {
                                     const boxRight = this.documentParent.box.right;
                                     if (Math.floor(this.bounds.right) > boxRight) {
-                                        if (this.textElement && !this.multiline) {
+                                        if (this.textElement && !this.singleChild && !this.alignParent('left')) {
                                             setSingleLine(this);
                                         }
                                         continue;
@@ -1219,8 +1222,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                     if (renderChildren.some(node => node.floating) && !renderChildren.some(node => node.imageElement && node.baseline)) {
                         this.android('baselineAligned', 'false');
                     }
-                    else {
-                        const baseline = $NodeList.baseline($util.filterArray(renderChildren, node => node.baseline && !node.layoutRelative && !node.layoutConstraint))[0];
+                    else if (this.actualChildren.some(node => node.textElement && node.baseline)) {
+                        const baseline = $NodeList.baseline($util.filterArray(renderChildren, node => node.baseline && !node.layoutRelative && !node.layoutConstraint), true)[0];
                         if (baseline) {
                             this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
                         }
@@ -1325,7 +1328,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
                 return this;
             }
-            return this.outerWrapper && this.outerWrapper.visible ? this.outerWrapper as T : this;
+            return <T> this.outerWrapper || this;
         }
 
         set anchored(value) {

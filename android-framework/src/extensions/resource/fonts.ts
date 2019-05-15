@@ -110,8 +110,8 @@ function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number
 
 export default class ResourceFonts<T extends View> extends squared.base.Extension<T> {
     public readonly options: ResourceFontsOptions = {
-        defaultSystemFont: 'sans-serif',
-        fontResourceValue: true
+        systemDefaultFont: 'sans-serif',
+        disableFontAlias: false
     };
     public readonly eventOnly = true;
 
@@ -142,10 +142,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     stored.fontFamily.replace($regex.ESCAPE.DOUBLEQUOTE, '').split($regex.XML.SEPARATOR).some((value, index, array) => {
                         value = $util.trimString(value, "'");
                         let fontFamily = value.toLowerCase();
-                        if (this.options.fontResourceValue && FONTREPLACE_ANDROID[fontFamily]) {
-                            fontFamily = this.options.defaultSystemFont || FONTREPLACE_ANDROID[fontFamily];
+                        if (!this.options.disableFontAlias && FONTREPLACE_ANDROID[fontFamily]) {
+                            fontFamily = this.options.systemDefaultFont || FONTREPLACE_ANDROID[fontFamily];
                         }
-                        if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || this.options.fontResourceValue && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
+                        if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || !this.options.disableFontAlias && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
                             stored.fontFamily = fontFamily;
                             if (stored.fontStyle === 'normal') {
                                 stored.fontStyle = '';

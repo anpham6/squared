@@ -1,7 +1,7 @@
 import Extension from '../extension';
 import Node from '../node';
 
-import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
+import { BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
 const $session = squared.lib.session;
 const $css = squared.lib.css;
@@ -113,15 +113,14 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                 const children = node.actualChildren;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;
-                for (let i = 0, j = 0; i < children.length; i++) {
+                for (let i = 0; i < children.length; i++) {
                     const current = children[i] as T;
                     if (!current.pageFlow) {
                         continue;
                     }
                     if (node.blockStatic) {
-                        j++;
                         if (!current.floating) {
-                            if (j === 1 && firstChild === undefined) {
+                            if (firstChild === undefined) {
                                 firstChild = current;
                             }
                             lastChild = current;
@@ -196,22 +195,24 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                 resetMargin(getVisibleNode(topChild), BOX_STANDARD.MARGIN_TOP);
                                             }
                                         }
-                                        if (marginBottom > 0 && (!inheritedTop || !inheritedBottom)) {
+                                        if (marginBottom > 0) {
                                             if (marginTop > 0) {
-                                                if (marginTop <= marginBottom) {
-                                                    if (inheritedTop) {
-                                                        currentVisible.css('marginTop', '0px', true);
+                                                if (!$util.hasBit(current.overflow, NODE_ALIGNMENT.BLOCK) && !$util.hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
+                                                    if (marginTop <= marginBottom) {
+                                                        if (inheritedTop) {
+                                                            currentVisible.css('marginTop', '0px', true);
+                                                        }
+                                                        else {
+                                                            resetMargin(currentVisible, BOX_STANDARD.MARGIN_TOP);
+                                                        }
                                                     }
                                                     else {
-                                                        resetMargin(currentVisible, BOX_STANDARD.MARGIN_TOP);
-                                                    }
-                                                }
-                                                else {
-                                                    if (inheritedBottom) {
-                                                        currentVisible.css('marginBottom', '0px', true);
-                                                    }
-                                                    else {
-                                                        resetMargin(previousVisible, BOX_STANDARD.MARGIN_BOTTOM);
+                                                        if (inheritedBottom) {
+                                                            currentVisible.css('marginBottom', '0px', true);
+                                                        }
+                                                        else {
+                                                            resetMargin(previousVisible, BOX_STANDARD.MARGIN_BOTTOM);
+                                                        }
                                                     }
                                                 }
                                             }
@@ -231,15 +232,17 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         }
                     }
                 }
-                if (firstChild) {
-                    applyMarginCollapse(node, firstChild, true);
-                }
-                if (lastChild) {
-                    applyMarginCollapse(node, lastChild, false);
-                    if (lastChild.marginTop < 0) {
-                        const offset = lastChild.bounds.height + lastChild.marginBottom + lastChild.marginTop;
-                        if (offset < 0) {
-                            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset, false);
+                if (!$util.hasBit(node.overflow, NODE_ALIGNMENT.BLOCK)) {
+                    if (firstChild) {
+                        applyMarginCollapse(node, firstChild, true);
+                    }
+                    if (lastChild) {
+                        applyMarginCollapse(node, lastChild, false);
+                        if (lastChild.marginTop < 0) {
+                            const offset = lastChild.bounds.height + lastChild.marginBottom + lastChild.marginTop;
+                            if (offset < 0) {
+                                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset, false);
+                            }
                         }
                     }
                 }

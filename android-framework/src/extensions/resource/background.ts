@@ -761,7 +761,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundRepeat.length = 0;
                     backgroundSize.length = 0;
                 }
-                const extracted = node.extracted.filter(item => item.visible && (item.imageElement || item.tagName === 'IMAGE'));
+                const extracted = node.extracted.filter(item => item.visible && (item.imageElement || item.tagName === 'INPUT_IMAGE'));
                 for (let i = 0, j = imageLength; i < extracted.length; i++) {
                     const image = extracted[i];
                     const element = <HTMLImageElement> image.element;
@@ -771,7 +771,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         backgroundRepeat[j] = 'no-repeat';
                         backgroundSize[j] = `${image.actualWidth}px ${image.actualHeight}px`;
                         backgroundPosition[j] = $css.getBackgroundPosition(
-                            image.tagName === 'IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left}px ${image.bounds.top - node.bounds.top}px`,
+                            image.tagName === 'INPUT_IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left}px ${image.bounds.top - node.bounds.top}px`,
                             node.actualDimension,
                             node.fontSize
                         );

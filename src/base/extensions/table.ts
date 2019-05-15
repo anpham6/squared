@@ -204,33 +204,16 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     rowWidth[i] += td.bounds.width + horizontal;
                 }
                 if (spacingWidth > 0) {
-                    if (j < tr.length - 1) {
-                        td.modifyBox(BOX_STANDARD.MARGIN_RIGHT, spacingWidth);
-                    }
-                    if (columnIndex[i] !== 0) {
-                        td.modifyBox(BOX_STANDARD.MARGIN_LEFT, spacingWidth);
-                    }
+                    td.modifyBox(BOX_STANDARD.MARGIN_LEFT, columnIndex[i] === 0 ? horizontal : spacingWidth);
+                    td.modifyBox(BOX_STANDARD.MARGIN_RIGHT, j === 0 ? spacingWidth : horizontal);
                 }
                 if (spacingHeight > 0) {
-                    if (i > 0) {
-                        td.modifyBox(BOX_STANDARD.MARGIN_TOP, spacingHeight);
-                    }
-                    if (i + element.rowSpan < table.length) {
-                        td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, spacingHeight);
-                    }
+                    td.modifyBox(BOX_STANDARD.MARGIN_TOP, i === 0 ? vertical : spacingHeight);
+                    td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, i + element.rowSpan < table.length ? spacingHeight : vertical);
                 }
                 columnIndex[i] += element.colSpan;
             });
             columnCount = Math.max(columnCount, columnIndex[i]);
-        }
-        node.resetBox(BOX_STANDARD.PADDING);
-        if (horizontal > 0) {
-            node.modifyBox(BOX_STANDARD.PADDING_LEFT, horizontal);
-            node.modifyBox(BOX_STANDARD.PADDING_RIGHT, horizontal);
-        }
-        if (vertical > 0) {
-            node.modifyBox(BOX_STANDARD.PADDING_TOP, vertical);
-            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, vertical);
         }
         if (node.has('width', CSS_STANDARD.LENGTH) && mapWidth.some(value => $css.isPercent(value))) {
             $util.replaceMap<string, string>(mapWidth, (value, index) => {

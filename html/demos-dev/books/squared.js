@@ -35,8 +35,10 @@ System.import('/build/src/main.js').then(result => {
 
 /*document.addEventListener('DOMContentLoaded', function() {
     squared.setFramework(android);
+    const time = new Date().getTime();
     squared.parseDocument().then(function() {
         squared.close();
         squared.saveAllToDisk();
+        console.log(new Date().getTime() - time);
     });
 });*/
