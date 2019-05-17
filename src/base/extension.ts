@@ -91,7 +91,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
         return false;
     }
 
-    public processNode(node: T, parent: T, nodeAs?: T): ExtensionResult<T> | undefined {
+    public processNode(node: T, parent: T): ExtensionResult<T> | undefined {
         return undefined;
     }
 

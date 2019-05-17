@@ -262,8 +262,8 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
                 result.centerY = (center.top * 2).toString();
             }
             else {
-                result.centerX = $css.formatPercent(center.leftAsPercent * 100);
-                result.centerY = $css.formatPercent(center.topAsPercent * 100);
+                result.centerX = $css.formatPercent(center.leftAsPercent);
+                result.centerY = $css.formatPercent(center.topAsPercent);
             }
             break;
         }
@@ -278,8 +278,8 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
             }
             else {
                 result.gradientRadius = $css.formatPX(radius);
-                result.centerX = $css.formatPercent(center.leftAsPercent * 100);
-                result.centerY = $css.formatPercent(center.topAsPercent * 100);
+                result.centerX = $css.formatPercent(center.leftAsPercent);
+                result.centerY = $css.formatPercent(center.topAsPercent);
             }
             break;
         }

@@ -355,6 +355,23 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
+    public ascendOuter(condition?: (item: T) => boolean) {
+        const result: T[] = [];
+        let current: T | undefined = this.outerWrapper;
+        while (current) {
+            if (condition) {
+                if (condition(current)) {
+                    return [current];
+                }
+            }
+            else {
+                result.push(current);
+            }
+            current = current.outerWrapper;
+        }
+        return result;
+    }
+
     public inherit(node: T, ...modules: string[]) {
         const initial = <InitialData<T>> node.unsafe('initial');
         for (const name of modules) {
@@ -1133,7 +1150,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             maxValue = this.parseUnit(this._styleMap[maxAttr], horizontal);
             if (maxValue > 0 && maxValue <= baseValue && $css.isLength(this._styleMap[attr])) {
                 maxValue = 0;
-                this._styleMap[attr] = $css.formatPX(maxValue);
+                this._styleMap[attr] = this._styleMap[maxAttr];
                 delete this._styleMap[maxAttr];
             }
         }
@@ -1759,6 +1776,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.css('boxSizing') !== 'border-box';
     }
 
+    set contentBoxWidth(value) {
+        this._cached.contentBoxWidth = value;
+    }
     get contentBoxWidth() {
         if (this._cached.contentBoxWidth === undefined) {
             this._cached.contentBoxWidth = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth;
@@ -1766,6 +1786,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.contentBoxWidth;
     }
 
+    set contentBoxHeight(value) {
+        this._cached.contentBoxHeight = value;
+    }
     get contentBoxHeight() {
         if (this._cached.contentBoxHeight === undefined) {
             this._cached.contentBoxHeight = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth;
@@ -1856,7 +1879,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get centerAligned() {
         if (this._cached.centerAligned === undefined) {
-            this._cached.centerAligned = this.autoMargin.leftRight || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'center';
+            this._cached.centerAligned = this.autoMargin.leftRight || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'center' || this.inlineStatic && this.cssAscend('textAlign', true) === 'center';
         }
         return this._cached.centerAligned;
     }
@@ -2034,7 +2057,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get leftTopAxis() {
-        return this.cssInitial('position') === 'absolute' && this.absoluteParent === this.documentParent || this.css('position') === 'fixed';
+        if (this._cached.leftTopAxis === undefined) {
+            const position = this.cssInitial('position');
+            this._cached.leftTopAxis = position === 'absolute' && this.absoluteParent === this.documentParent || position === 'fixed';
+        }
+        return this._cached.leftTopAxis;
     }
 
     set renderExclude(value) {

@@ -231,7 +231,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     value = '0px';
                 }
                 else if (percentTotal - percent < 0) {
-                    value = $css.formatPercent(percentTotal);
+                    value = $css.formatPercent(percentTotal / 100);
                 }
                 percentTotal -= percent;
                 return value;

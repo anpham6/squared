@@ -13,7 +13,7 @@ declare global {
             addBarrier(nodes: T[], barrierDirection: string): string;
             evaluateAnchors(nodes: T[]): void;
             renderSpace(width: string, height?: string, columnSpan?: number, rowSpan?: number, options?: ViewAttribute): string;
-            createNodeWrapper(node: T, parent?: T, children?: T[], controlName?: string, containerType?: number): T;
+            createNodeWrapper(node: T, parent: T, children?: T[], controlName?: string, containerType?: number): T;
         }
 
         class Controller<T extends View> implements Controller<T> {

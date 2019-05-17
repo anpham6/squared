@@ -326,7 +326,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                 else {
                     const actualParent = node.actualParent;
                     if (actualParent && actualParent.visible) {
-                        if (!actualParent.documentRoot && previousSiblings.length) {
+                        if (!actualParent.documentRoot && actualParent.ascendOuter(item => item.documentRoot).length === 0 && previousSiblings.length) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
                             const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
                             if (offset !== 0) {

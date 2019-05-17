@@ -215,7 +215,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
                 let valid = false;
                 if (horizontal) {
                     if (node.outerWrapper || node.ascend(false, item => item.has('width') || item.blockStatic).length) {
-                        node.android('layout_width', renderParent.flexibleWidth ? 'match_parent' : '0px', false);
+                        node.android('layout_width', renderParent.flexibleWidth ? 'match_parent' : '0px', node.innerWrapped && node.innerWrapped.naturalElement);
                         valid = node.flexibleWidth;
                         setAlignmentBlock();
                         if (valid && !$css.isPercent(maxWH)) {
@@ -224,14 +224,22 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
                     }
                 }
                 else if ((node.absoluteParent || documentParent).hasHeight && !node.has('height')) {
-                    node.android('layout_height', renderParent.flexibleHeight ? 'match_parent' : '0px', false);
+                    node.android('layout_height', renderParent.flexibleHeight ? 'match_parent' : '0px', node.innerWrapped && node.innerWrapped.naturalElement);
                     valid = node.flexibleHeight;
                     if (valid && !$css.isPercent(maxWH)) {
                         contentBox += node.contentBoxHeight;
                     }
                 }
                 if (valid) {
-                    node.app(`layout_constraint${dimensionA}_max`, $css.formatPX(node.parseUnit(maxWH, horizontal) + contentBox));
+                    const maxDimension = node.parseUnit(maxWH, horizontal);
+                    node.app(`layout_constraint${dimensionA}_max`, $css.formatPX(maxDimension + contentBox));
+                    if (horizontal && node.layoutVertical) {
+                        node.each(item => {
+                            if (item.textElement && !item.has('maxWidth')) {
+                                item.css('maxWidth', $css.formatPX(maxDimension));
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -402,7 +410,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
         },
         deviations: {
             textMarginBoundarySize: 8,
-            constraintParentBottomOffset: 3.5,
             subscriptBottomOffset: 0.25,
             superscriptTopOffset: 0.25,
             legendBottomOffset: 0.25
@@ -682,9 +689,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     else {
                         const [pageFlow, absolute] = $util.partitionArray(children, item => item.pageFlow);
-                        let bottomParent = node.box.bottom;
                         if (absolute.length) {
-                            node.renderEach(item => bottomParent = Math.max(bottomParent, item.linear.bottom));
                             for (const item of absolute) {
                                 if (item.leftTopAxis) {
                                     if (!item.positionAuto) {
@@ -745,14 +750,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                             }
                                         }
                                     }
-                                    if (item.outerWrapper) {
-                                        if (!item.alignParent('bottom')) {
-                                            item.anchor('top', 'parent', false);
-                                        }
-                                        if (!item.alignParent('right')) {
-                                            item.anchor('left', 'parent', false);
-                                        }
-                                    }
                                 }
                                 item.positioned = true;
                             }
@@ -769,24 +766,16 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             }
                             else {
                                 const item = pageFlow[0];
-                                if (item.autoMargin.leftRight || item.inlineStatic && item.cssAscend('textAlign', true) === 'center') {
-                                    item.anchorParent(AXIS_ANDROID.HORIZONTAL);
+                                item.anchorParent(AXIS_ANDROID.HORIZONTAL);
+                                item.anchorParent(AXIS_ANDROID.VERTICAL);
+                                if (item.rightAligned) {
+                                    item.anchorStyle(AXIS_ANDROID.HORIZONTAL, 'packed', 1);
                                 }
-                                else if (item.rightAligned) {
-                                    item.anchor('right', 'parent');
+                                else if (!item.centerAligned) {
+                                    item.anchorStyle(AXIS_ANDROID.HORIZONTAL);
                                 }
-                                else {
-                                    item.anchor('left', 'parent');
-                                }
-                                if (item.autoMargin.topBottom) {
-                                    item.anchorParent(AXIS_ANDROID.VERTICAL);
-                                }
-                                else {
-                                    item.anchor('top', 'parent');
-                                    if (this.withinParentBottom(item.pageFlow, item.linear.bottom, bottomParent) && item.actualParent && !item.actualParent.documentBody && !item.has('height', $enum.CSS_STANDARD.PERCENT, { not: '100%' })) {
-                                        item.anchor('bottom', 'parent');
-                                        item.anchorStyle(AXIS_ANDROID.VERTICAL);
-                                    }
+                                if (!item.autoMargin.topBottom) {
+                                    item.anchorStyle(AXIS_ANDROID.VERTICAL);
                                 }
                                 Controller.setConstraintDimension(item);
                             }
@@ -794,9 +783,16 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                         for (const item of children) {
                             if (!item.anchored) {
-                                this.addGuideline(item, node);
-                                if (item.pageFlow) {
-                                    this.evaluateAnchors(pageFlow);
+                                if (item.outerWrapper) {
+                                    if (item.constraint.horizontal) {
+                                        item.anchorParent(AXIS_ANDROID.HORIZONTAL);
+                                    }
+                                    if (item.constraint.vertical) {
+                                        item.anchorParent(AXIS_ANDROID.VERTICAL);
+                                    }
+                                }
+                                else {
+                                    this.addGuideline(item, node);
                                 }
                             }
                         }
@@ -1231,9 +1227,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (!percent && !parent.hasAlign($enum.NODE_ALIGNMENT.AUTO_LAYOUT)) {
                         const found = parent.renderChildren.some(item => {
                             if (item !== node && item.constraint[value]) {
-                                const pageFlow = node.pageFlow && item.pageFlow;
                                 let valid = false;
-                                if (pageFlow) {
+                                if (node.pageFlow && item.pageFlow) {
                                     if ($util.withinRange(node.linear[LT], item.linear[RB])) {
                                         node.anchor(LTRB, item.documentId, true);
                                         valid = true;
@@ -1243,15 +1238,30 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                         valid = true;
                                     }
                                 }
-                                if (pageFlow || !node.pageFlow && !item.pageFlow && node.bounds[LT] >= 0 && node.bounds[LT] >= 0) {
+                                if (!valid) {
                                     if ($util.withinRange(node.bounds[LT], item.bounds[LT])) {
-                                        node.anchor(!horizontal && node.textElement && node.baseline && item.textElement && item.baseline ? 'baseline' : LT, item.documentId, true);
-                                        node.modifyBox(horizontal ? $enum.BOX_STANDARD.MARGIN_LEFT : $enum.BOX_STANDARD.MARGIN_TOP);
+                                        if (!horizontal && node.textElement && node.baseline && item.textElement && item.baseline) {
+                                            node.anchor('baseline', item.documentId, true);
+                                        }
+                                        else {
+                                            node.anchor(LT, item.documentId, true);
+                                            if (horizontal) {
+                                                node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, -item.marginLeft, false);
+                                            }
+                                            else {
+                                                node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, -item.marginTop, false);
+                                            }
+                                        }
                                         valid = true;
                                     }
                                     else if ($util.withinRange(node.bounds[RB], item.bounds[RB])) {
                                         node.anchor(RB, item.documentId, true);
                                         node.modifyBox(horizontal ? $enum.BOX_STANDARD.MARGIN_RIGHT : $enum.BOX_STANDARD.MARGIN_BOTTOM);
+                                        valid = true;
+                                    }
+                                    else if (!node.pageFlow && item.pageFlow && $util.withinRange(node.bounds[LT] + node[LT], item.bounds[LT])) {
+                                        node.anchor(LT, item.documentId, true);
+                                        node.modifyBox(horizontal ? $enum.BOX_STANDARD.MARGIN_LEFT : $enum.BOX_STANDARD.MARGIN_TOP, node[LT]);
                                         valid = true;
                                     }
                                 }
@@ -1464,7 +1474,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         return group;
     }
 
-    public createNodeWrapper(node: T, parent?: T, children?: T[], controlName?: string, containerType?: number) {
+    public createNodeWrapper(node: T, parent: T, children?: T[], controlName?: string, containerType?: number) {
         const container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element, node.block ? 'div' : 'span'), true, parent, children);
         if (node.documentRoot) {
             container.documentRoot = true;
@@ -1479,13 +1489,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
             procedure: $enum.NODE_PROCEDURE.NONPOSITIONAL,
             resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET
         });
-        if (parent) {
-            parent.appendTry(node, container);
-            node.parent = container;
-        }
-        else {
-            container.innerWrapped = node;
-            container.siblingIndex = node.siblingIndex;
+        parent.appendTry(node, container);
+        node.parent = container;
+        if (node.outerWrapper) {
+            container.outerWrapper = node.outerWrapper;
+            node.outerWrapper.innerWrapped = container;
         }
         if (node.renderParent) {
             const renderTemplates = node.renderParent.renderTemplates;
@@ -1517,6 +1525,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             borderLeftStyle: 'none',
             borderRadius: '0px'
         });
+        container.innerWrapped = node;
         node.outerWrapper = container;
         return container;
     }
@@ -2232,6 +2241,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, -adjacent.marginTop);
                             }
                         }
+                        item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM);
                     }
                     item.anchored = true;
                     item.positioned = true;
@@ -2516,10 +2526,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
         }
         this.evaluateAnchors(children);
-    }
-
-    private withinParentBottom(pageFlow: boolean, bottom: number, boxBottom: number) {
-        return $util.withinRange(bottom, boxBottom, this.localSettings.deviations.constraintParentBottomOffset) || pageFlow && bottom > boxBottom;
     }
 
     get userSettings() {

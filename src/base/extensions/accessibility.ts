@@ -7,7 +7,7 @@ import { NODE_PROCEDURE } from '../lib/enumeration';
 
 export default abstract class Accessibility<T extends Node> extends Extension<T> {
     public readonly options: AccessibilityOptions = {
-        showLabel: true
+        showLabel: false
     };
 
     public afterInit() {
@@ -17,8 +17,8 @@ export default abstract class Accessibility<T extends Node> extends Extension<T>
                     case 'INPUT_IMAGE':
                         node.extracted = [node];
                         break;
-                    case 'RADIO':
-                    case 'CHECKBOX':
+                    case 'INPUT_RADIO':
+                    case 'INPUT_CHECKBOX':
                         const element = <HTMLInputElement> node.element;
                         [node.nextSibling, node.previousSibling].some(sibling => {
                             if (sibling && sibling.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {

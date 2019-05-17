@@ -1,3 +1,5 @@
+import { MaxWidthHeightData } from './max-width-height';
+
 import View from '../../view';
 
 import { EXT_ANDROID } from '../../lib/constant';
@@ -5,68 +7,58 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 
-type FixedData = {
-    fixedRight: boolean;
-    fixedBottom: boolean;
-};
+export interface FixedData {
+    children: View[];
+    right: boolean;
+    bottom: boolean;
+}
 
 const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 
-const getFixedNodes = (node: View) => node.filter(item => !item.pageFlow && item.leftTopAxis);
-
 export default class Fixed<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
         if (node.naturalElement && (node.documentBody || node.contentBoxWidth > 0 || node.contentBoxHeight > 0)) {
-            const fixed = getFixedNodes(node);
-            if (fixed.length) {
+            const absolute = node.filter(item => !item.pageFlow && item.leftTopAxis && item.left >= 0 && item.right >= 0) as T[];
+            if (absolute.length) {
                 const paddingTop = node.paddingTop + (node.documentBody ? node.marginTop : 0);
                 const paddingRight = node.paddingRight + (node.documentBody ? node.marginRight : 0);
                 const paddingBottom = node.paddingBottom + (node.documentBody ? node.marginBottom : 0);
                 const paddingLeft = node.paddingLeft + (node.documentBody ? node.marginLeft : 0);
-                let valid = false;
-                let fixedRight = false;
-                let fixedBottom = false;
-                for (const item of fixed) {
-                    if (item.has('top')) {
-                        if (item.top >= 0 && item.top < paddingTop) {
-                            valid = true;
-                        }
-                    }
-                    else {
-                        if (item.bottom >= 0 && item.has('bottom') && (item.bottom < paddingBottom || node.documentBody && node.has('height'))) {
-                            valid = true;
-                            if (item.css('position') === 'fixed') {
-                                fixedBottom = true;
-                            }
-                        }
-                    }
+                const children = new Set<T>();
+                let right = false;
+                let bottom = false;
+                for (const item of absolute) {
+                    const fixed = item.css('position') === 'fixed';
                     if (item.has('left')) {
                         if (item.left >= 0 && item.left < paddingLeft) {
-                            valid = true;
+                            children.add(item);
                         }
                     }
-                    else if (item.has('right')) {
-                        if (item.right >= 0 && (item.right < paddingRight || node.documentBody && node.has('width'))) {
-                            valid = true;
-                            if (item.css('position') === 'fixed') {
-                                fixedRight = true;
-                            }
-                        }
+                    else if (item.has('right') && item.right >= 0 && (fixed || item.right < paddingRight || node.documentBody && node.has('width'))) {
+                        children.add(item);
+                        right = true;
                     }
                     else if (!item.rightAligned) {
-                        if (item.marginLeft < 0 && (node.documentRoot || $util.aboveRange(item.linear.left, node.bounds.left))) {
-                            valid = true;
+                        if (item.marginLeft < 0 && (node.documentRoot || $util.belowRange(item.linear.left, node.bounds.left))) {
+                            children.add(item);
                         }
                     }
-                    else if (item.marginRight < 0 && (node.documentRoot || $util.belowRange(item.linear.right, node.bounds.right))) {
-                        valid = true;
+                    else if (item.marginRight < 0 && (node.documentRoot || $util.aboveRange(item.linear.right, node.bounds.right))) {
+                        children.add(item);
+                    }
+                    if (item.has('top')) {
+                        if (item.top >= 0 && item.top < paddingTop) {
+                            children.add(item);
+                        }
+                    }
+                    else if (item.has('bottom') && item.bottom >= 0 && (fixed || item.bottom < paddingBottom || node.documentBody && node.has('height'))) {
+                        children.add(item);
+                        bottom = true;
                     }
                 }
-                if (valid) {
-                    if (node.documentBody) {
-                        node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData', <FixedData> { fixedRight, fixedBottom });
-                    }
+                if (children.size) {
+                    node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData', <FixedData> { children: Array.from(children), right, bottom });
                     return true;
                 }
             }
@@ -75,72 +67,74 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
     }
 
     public processNode(node: T, parent: T) {
-        const [children, nested] = $util.partitionArray(getFixedNodes(node), item => item.absoluteParent === node) as [T[], T[]];
-        $util.concatArray($util.sortArray(children, true, 'zIndex', 'siblingIndex'), $util.sortArray(nested, true, 'zIndex', 'siblingIndex'));
-        nested.length = 0;
-        for (const item of node.duplicate() as T[]) {
-            if (!children.includes(item)) {
-                nested.push(item);
+        const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData');
+        if (mainData) {
+            const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, mainData.children as T[]);
+            if (node.documentBody && (mainData.right || mainData.bottom)) {
+                container.cssApply({
+                    width: 'auto',
+                    height: 'auto',
+                    display: 'block',
+                    float: 'none'
+                });
+                if (mainData.right) {
+                    container.android('layout_width', 'match_parent');
+                }
+                if (mainData.bottom) {
+                    container.android('layout_height', 'match_parent');
+                }
             }
-        }
-        if (nested.length) {
-            const container = this.application.controllerHandler.createNodeGroup(nested[0], nested, node);
-            container.inherit(node, 'initial', 'base');
-            container.exclude({
-                procedure: $enum.NODE_PROCEDURE.NONPOSITIONAL,
-                resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET
-            });
-            if (node.documentBody) {
-                const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData');
-                if (mainData && (mainData.fixedRight || mainData.fixedBottom)) {
-                    if (node.has('width')) {
-                        container.css('width', node.css('width'));
+            else if (!node.pageFlow) {
+                node.resetBox($enum.BOX_STANDARD.MARGIN, container);
+            }
+            for (const item of mainData.children) {
+                if (item.has('top')) {
+                    item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
+                }
+                else if (item.has('bottom')) {
+                    item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
+                }
+                if (item.has('left')) {
+                    item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
+                }
+                else if (item.has('right')) {
+                    item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
+                }
+                item.documentParent = container;
+                item.unsetCache('leftTopAxis');
+            }
+            const maxWidthHeight: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
+            if (maxWidthHeight) {
+                const wrapped = maxWidthHeight.container;
+                if (wrapped) {
+                    if (maxWidthHeight.width) {
+                        container.css('maxWidth', node.css('maxWidth'));
+                        container.android('layout_width', '0px');
+                        container.contentBoxWidth = node.contentBoxWidth;
+                        node.android('layout_width', 'wrap_content');
                     }
-                    if (node.has('height')) {
-                        container.css('height', node.css('height'));
-                    }
-                    node.cssApply({
-                        width: 'auto',
-                        height: 'auto',
-                        display: 'block',
-                        float: 'none'
-                    }, true);
-                    if (mainData.fixedRight) {
-                        node.android('layout_width', 'match_parent');
-                    }
-                    if (mainData.fixedBottom) {
-                        node.android('layout_height', 'match_parent');
+                    if (maxWidthHeight.height) {
+                        container.css('maxHeight', node.css('maxHeight'));
+                        container.android('layout_height', '0px');
+                        container.contentBoxHeight = node.contentBoxHeight;
+                        node.android('layout_height', 'wrap_content');
                     }
                 }
             }
-            container.outerWrapper = node;
-            children.push(container);
-            node.retain(children);
-            node.resetBox($enum.BOX_STANDARD.PADDING | (node.documentBody ? $enum.BOX_STANDARD.MARGIN : 0), container, true);
-            node.innerWrapped = container;
             return {
-                nodeAs: container,
-                output: this.application.renderNode(
+                parent: container,
+                renderAs: container,
+                outputAs: this.application.renderNode(
                     new $Layout(
                         parent,
-                        node,
+                        container,
                         CONTAINER_NODE.CONSTRAINT,
                         $enum.NODE_ALIGNMENT.ABSOLUTE,
-                        children
+                        container.children as T[]
                     )
                 )
             };
         }
         return undefined;
-    }
-
-    public postBaseLayout(node: T) {
-        if (node.hasWidth && node.outerWrapper && node.documentBody && node.some(item => item.has('right'))) {
-            const width = node.cssInitial('width', true);
-            const minWidth = node.cssInitial('minWidth', true);
-            node.cssApply({ width: 'auto', minWidth: 'auto' }, true);
-            node.outerWrapper.cssApply({ width, minWidth }, true);
-            node.android('layout_width', 'match_parent');
-        }
     }
 }

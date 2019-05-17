@@ -668,10 +668,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         else {
                                             const outsideX = !overflowX && node.outsideX(parent.box);
                                             const outsideY = !overflowY && node.outsideY(parent.box);
-                                            if (outsideY && (node.top < 0 || node.marginTop < 0 || !node.has('top') && node.bottom !== 0)) {
+                                            if (!overflowY && node.linear.top < Math.floor(parent.box.top) && (node.top < 0 || node.marginTop < 0)) {
                                                 outside = true;
                                             }
-                                            else if (outsideX && !node.has('left') && node.right > 0) {
+                                            else if (outsideX && !node.has('left') && node.right > 0 || outsideY && !node.has('top') && node.bottom > 0) {
                                                 outside = true;
                                             }
                                             else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent && parent.actualParent.documentBody) && (node.top > 0 || node.left > 0)) {
@@ -1164,16 +1164,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         if (nodeY.styleElement) {
                             let next = false;
-                            let nodeAs = nodeY;
                             prioritizeExtensions(<HTMLElement> nodeY.element, extensions).some(item => {
                                 if (item.is(nodeY) && item.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(item))) {
-                                    const result = item.processNode(nodeY, parentY, nodeAs);
+                                    const result = item.processNode(nodeY, parentY);
                                     if (result) {
-                                        if (result.nodeAs) {
-                                            nodeAs = result.nodeAs;
-                                        }
                                         if (result.output) {
-                                            this.addLayoutTemplate(result.parentAs || parentY, nodeAs, result.output);
+                                            this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
                                         }
                                         if (result.renderAs && result.outputAs) {
                                             this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);

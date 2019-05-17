@@ -22,7 +22,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                 switch (node.tagName) {
                     case 'SELECT': {
                         const element = <HTMLSelectElement> node.element;
-                        const [stringArray, numberArray] = Resource.getOptionArray(element, this.options.replaceCharacterEntities);
+                        const [stringArray, numberArray] = Resource.getOptionArray(element);
                         let result: string[] | undefined;
                         if (!this.options.numberResourceValue && numberArray && numberArray.length) {
                             result = numberArray;

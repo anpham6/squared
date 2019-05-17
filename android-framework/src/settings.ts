@@ -2,10 +2,10 @@ import { UserSettingsAndroid } from './@types/application';
 
 const settings: UserSettingsAndroid = {
     builtInExtensions: [
-        'android.delegate.negative-viewport',
-        'android.delegate.negative-x',
-        'android.delegate.fixed',
         'android.delegate.max-width-height',
+        'android.delegate.fixed',
+        'android.delegate.negative-x',
+        'android.delegate.negative-viewport',
         'android.delegate.percent',
         'android.delegate.scrollbar',
         'android.delegate.radiogroup',

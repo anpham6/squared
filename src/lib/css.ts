@@ -917,6 +917,7 @@ export function formatPercent(value: string | number, round = true) {
             return '0%';
         }
     }
+    value *= 100;
     return `${round ? Math.round(value) : value}%`;
 }
 

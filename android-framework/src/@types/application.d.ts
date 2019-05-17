@@ -14,7 +14,6 @@ export interface UserSettingsAndroid extends UserSettings {
 export interface ControllerSettingsAndroid extends ControllerSettings {
     deviations: {
         textMarginBoundarySize: number;
-        constraintParentBottomOffset: number;
         subscriptBottomOffset: number;
         superscriptTopOffset: number;
         legendBottomOffset: number;

@@ -92,7 +92,6 @@ export interface ExtensionResult<T extends Node> {
     output?: NodeTemplate<T>;
     renderAs?: T;
     outputAs?: NodeTemplate<T>;
-    nodeAs?: T;
     parent?: T;
     complete?: boolean;
     next?: boolean;

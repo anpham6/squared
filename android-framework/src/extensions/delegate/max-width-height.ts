@@ -3,17 +3,20 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 
-type MaxWidthHeightData = {
-    maxWidth: boolean;
-    maxHeight: boolean;
-};
+export interface MaxWidthHeightData {
+    width: boolean;
+    height: boolean;
+    container?: View;
+}
+
+type View = android.base.View;
 
 const $enum = squared.base.lib.enumeration;
 
-export default class MaxWidthHeight<T extends android.base.View> extends squared.base.Extension<T> {
+export default class MaxWidthHeight<T extends View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {
-        let maxWidth = false;
-        let maxHeight = false;
+        let width = false;
+        let height = false;
         if (!node.support.maxWidth && !isNaN(node.width) && node.has('maxWidth') && !parent.hasAlign($enum.NODE_ALIGNMENT.COLUMN)) {
             const blockWidth = node.css('width') === '100%';
             if (node.width === 0 || blockWidth) {
@@ -21,11 +24,11 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
                     node.css('width', node.css('maxWidth'));
                 }
                 else {
-                    maxWidth = true;
+                    width = true;
                 }
             }
             else {
-                maxWidth = true;
+                width = true;
             }
         }
         if (!node.support.maxHeight && !isNaN(node.height) && node.has('maxHeight') && parent.hasHeight) {
@@ -33,11 +36,11 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
                 node.css('height', node.css('maxHeight'));
             }
             else {
-                maxHeight = true;
+                height = true;
             }
         }
-        if (maxWidth || maxHeight) {
-            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { maxWidth, maxHeight });
+        if (width || height) {
+            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { width, height });
             return true;
         }
         return false;
@@ -46,9 +49,8 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
     public processNode(node: T, parent: T) {
         const mainData: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
         if (mainData) {
-            const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, undefined, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
-            container.inherit(node, 'styleMap');
-            if (mainData.maxWidth) {
+            const container = parent.layoutConstraint ? parent : (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, undefined, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
+            if (mainData.width) {
                 node.android('layout_width', '0px');
                 container.android('layout_width', 'match_parent');
                 if (parent.layoutElement) {
@@ -58,7 +60,7 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
                     node.autoMargin.leftRight = false;
                 }
             }
-            if (mainData.maxHeight) {
+            if (mainData.height) {
                 node.android('layout_height', '0px');
                 container.android('layout_height', 'match_parent');
                 if (parent.layoutElement) {
@@ -68,19 +70,22 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
                     node.autoMargin.topBottom = false;
                 }
             }
-            return {
-                parent: container,
-                renderAs: container,
-                outputAs: this.application.renderNode(
-                    new $Layout(
-                        parent,
-                        container,
-                        container.containerType,
-                        $enum.NODE_ALIGNMENT.SINGLE,
-                        container.children as T[]
+            mainData.container = container;
+            if (parent !== container) {
+                return {
+                    parent: container,
+                    renderAs: container,
+                    outputAs: this.application.renderNode(
+                        new $Layout(
+                            parent,
+                            container,
+                            container.containerType,
+                            $enum.NODE_ALIGNMENT.SINGLE,
+                            container.children as T[]
+                        )
                     )
-                )
-            };
+                };
+            }
         }
         return undefined;
     }

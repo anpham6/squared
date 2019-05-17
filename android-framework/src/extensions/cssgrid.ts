@@ -484,7 +484,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         controller.addAfterOutsideTemplate(
                             lastChild.id,
                             controller.renderSpace(
-                                $css.formatPercent(100 - percentTotal),
+                                $css.formatPercent((100 - percentTotal) / 100),
                                 'wrap_content',
                                 0,
                                 0,

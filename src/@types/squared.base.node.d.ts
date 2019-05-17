@@ -30,6 +30,8 @@ declare global {
             textContent: string;
             multiline: boolean;
             overflow: number;
+            contentBoxWidth: number;
+            contentBoxHeight: number;
             flexbox: Flexbox;
             dir: string;
             documentParent: Node;
@@ -102,8 +104,6 @@ declare global {
             readonly paddingRight: number;
             readonly paddingBottom: number;
             readonly paddingLeft: number;
-            readonly contentBoxWidth: number;
-            readonly contentBoxHeight: number;
             readonly inlineFlow: boolean;
             readonly inline: boolean;
             readonly inlineStatic: boolean;
@@ -170,6 +170,7 @@ declare global {
             data(name: string, attr: string, value?: any, overwrite?: boolean): any;
             unsetCache(...attrs: string[]): void;
             ascend(generated?: boolean, condition?: (item: Node) => boolean, parent?: Node): Node[];
+            ascendOuter(condition?: (item: Node) => boolean): Node[];
             inherit(node: Node, ...modules: string[]): void;
             alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
             intersectX(rect: BoxRectDimension, dimension?: string): boolean;

@@ -150,12 +150,11 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
 }
 
 function adjustMinHeight(node: T, value: number) {
-    const minHeight = node.parseUnit(node.css('minHeight'), true);
     if (node.inlineText) {
         value += node.contentBoxHeight;
         node.mergeGravity('gravity', 'center_vertical', false);
     }
-    if (value > minHeight) {
+    if (value > node.height) {
         node.android('minHeight', $css.formatPX(value));
     }
 }
@@ -770,7 +769,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (this.has('minHeight')) {
                     this.android('minHeight', this.convertPX(this.css('minHeight'), false), false);
                 }
-                if (this.support.maxWidth && !this.blockWidth) {
+                if (this.support.maxWidth) {
                     const maxWidth = this.css('maxWidth');
                     let width = -1;
                     if ($css.isLength(maxWidth, true)) {
@@ -796,7 +795,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                 }
-                if (this.support.maxHeight && !this.blockHeight) {
+                if (this.support.maxHeight) {
                     const maxHeight = this.css('maxHeight');
                     if ($css.isLength(maxHeight, true)) {
                         let height = -1;

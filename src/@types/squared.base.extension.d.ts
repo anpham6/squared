@@ -21,7 +21,7 @@ declare global {
             init(element: HTMLElement): boolean;
             afterInit(element: HTMLElement, recursive?: boolean): void;
             condition(node: T, parent?: T): boolean;
-            processNode(node: T, parent: T, nodeAs?: T): ExtensionResult<T> | undefined;
+            processNode(node: T, parent: T): ExtensionResult<T> | undefined;
             processChild(node: T, parent: T): ExtensionResult<T> | undefined;
             addDescendant(node: T): void;
             postBaseLayout(node: T): void;

@@ -65,7 +65,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     minWidth += parent.marginLeft;
                 }
             }
-            const container = this.application.controllerHandler.createNodeGroup(node, [node], parent);
+            const container = node.length ? node : this.application.controllerHandler.createNodeGroup(node, [node], parent);
             let ordinal = !mainData.ordinal ? node.find(item => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
             if (ordinal) {
                 const layoutOrdinal = new $Layout(parent, ordinal);
@@ -225,7 +225,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     container.android('baselineAlignedChildIndex', '0');
                 }
             }
-            if (node.marginTop !== 0) {
+            if (container !== node && node.marginTop !== 0) {
                 container.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.marginTop);
                 node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP);
             }
