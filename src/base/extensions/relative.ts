@@ -24,6 +24,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
             let { top, right, bottom, left } = node;
             if (renderParent.support.container.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                 target = node.clone(this.application.nextId, true, true) as T;
+                target.baselineAltered = true;
                 node.hide(true);
                 this.application.session.cache.append(target, false);
                 const layout = new Layout(

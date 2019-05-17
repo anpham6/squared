@@ -87,7 +87,7 @@ function adjustBaseline(baseline: View, nodes: View[]) {
                     node.anchor('baseline', baseline.documentId);
                 }
             }
-            else if (node.inputElement) {
+            else if (node.inputElement || node.blockDimension && node.has('height')) {
                 if (node.baseline && baseline.textElement) {
                     node.anchor('bottom', baseline.documentId);
                 }
@@ -418,9 +418,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public optimize(nodes: T[]) {
         for (const node of nodes) {
-            if (node.hasProcedure($enum.NODE_PROCEDURE.OPTIMIZATION)) {
-                node.applyOptimizations();
-            }
+            node.applyOptimizations();
             if (node.hasProcedure($enum.NODE_PROCEDURE.CUSTOMIZATION)) {
                 node.applyCustomizations(this.userSettings.customizationsOverwritePrivilege);
             }
@@ -1116,9 +1114,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         const color = Resource.addColor($color.parseColor(match[1]));
                         if (color !== '') {
                             node.android('shadowColor', `@color/${color}`);
-                            node.android('shadowDx', $math.truncate($css.parseUnit(match[2], node.fontSize)));
-                            node.android('shadowDy', $math.truncate($css.parseUnit(match[3], node.fontSize)));
-                            node.android('shadowRadius', match[4] ? $math.truncate($css.parseUnit(match[4], node.fontSize)) : '0');
+                            node.android('shadowDx', $math.truncate($css.parseUnit(match[2], node.fontSize) * 2));
+                            node.android('shadowDy', $math.truncate($css.parseUnit(match[3], node.fontSize) * 2));
+                            node.android('shadowRadius', match[4] ? $math.truncate(Math.max($css.parseUnit(match[4], node.fontSize), 1)) : '1');
                         }
                     }
                 }
@@ -1128,6 +1126,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 break;
             case CONTAINER_ANDROID.BUTTON:
+                if (!node.hasHeight) {
+                    node.android('minHeight', $css.formatPX(Math.ceil(node.actualHeight)));
+                }
                 node.mergeGravity('gravity', 'center_vertical');
                 break;
             case CONTAINER_ANDROID.EDIT:
@@ -1486,7 +1487,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         }
         container.exclude({
             section: $enum.APP_SECTION.ALL,
-            procedure: $enum.NODE_PROCEDURE.NONPOSITIONAL,
+            procedure: $enum.NODE_PROCEDURE.CUSTOMIZATION,
             resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET
         });
         parent.appendTry(node, container);
@@ -2434,7 +2435,15 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     const previous = seg[j - 1];
                     const next = seg[j + 1];
                     if (i === 0) {
-                        chain.anchor('top', 'parent');
+                        if (horizontal.length === 1) {
+                            chain.anchorParent(AXIS_ANDROID.VERTICAL);
+                            if (!chain.autoMargin.topBottom) {
+                                chain.anchorStyle(AXIS_ANDROID.VERTICAL, 'packed', chain.autoMargin.top ? 1 : 0);
+                            }
+                        }
+                        else {
+                            chain.anchor('top', 'parent');
+                        }
                     }
                     else if (!bottomFloating && i === horizontal.length - 1) {
                         chain.anchor('bottom', 'parent');

@@ -6,7 +6,6 @@ import Node from '../node';
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
 
-const $client = squared.lib.client;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
@@ -296,7 +295,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const caption = node.find(item => item.tagName === 'CAPTION') as T | undefined;
         node.clear();
         if (caption) {
-            if (!caption.hasWidth && !$client.isUserAgent($client.USER_AGENT.EDGE)) {
+            if (!caption.hasWidth) {
                 if (caption.textElement) {
                     if (!caption.has('maxWidth')) {
                         caption.css('maxWidth', $css.formatPX(caption.bounds.width));

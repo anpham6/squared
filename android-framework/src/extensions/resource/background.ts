@@ -64,7 +64,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
         case 'ridge': {
             const color = $color.parseColor(border.color, '1', true);
             if (color) {
-                if (style === 'outset') {
+                if (style === 'outset' || style === 'ridge') {
                     halfSize = !halfSize;
                 }
                 if (halfSize) {
@@ -89,7 +89,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                         break;
                     case 1:
                     case 2:
-                        percent = lighten ? -0.30 : -0.75;
+                        percent = lighten ? -0.3 : -0.75;
                         break;
                 }
                 if (percent !== 1) {
@@ -638,8 +638,21 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             );
                         }
                         else {
-                            const inset = item.style === 'groove' || item.style === 'ridge';
-                            let hideOffset = '-' + $css.formatPX((inset ? Math.ceil(width / 2) : width) + indentWidth);
+                            const inset = width > 1 && isAlternatingBorder(item.style);
+                            if (inset) {
+                                const hideInsetOffset = '-' + $css.formatPX(width + indentWidth);
+                                layerList.item.push({
+                                    top:  index === 0 ? '' : hideInsetOffset,
+                                    right: index === 1 ? '' : hideInsetOffset,
+                                    bottom: index === 2 ? '' : hideInsetOffset,
+                                    left: index === 3 ? '' : hideInsetOffset,
+                                    shape: {
+                                        'android:shape': 'rectangle',
+                                        stroke: getBorderStroke(item, index, offset, inset, true)
+                                    }
+                                });
+                            }
+                            const hideOffset = '-' + $css.formatPX((inset ? Math.ceil(width / 2) : width) + indentWidth);
                             layerList.item.push({
                                 top:  index === 0 ? indentOffset : hideOffset,
                                 right: index === 1 ? indentOffset : hideOffset,
@@ -651,19 +664,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     stroke: getBorderStroke(item, index, offset, inset)
                                 }
                             });
-                            if (inset) {
-                                hideOffset = '-' + $css.formatPX(width + indentWidth);
-                                layerList.item.splice(layerList.item.length, 0, {
-                                    top:  index === 0 ? '' : hideOffset,
-                                    right: index === 1 ? '' : hideOffset,
-                                    bottom: index === 2 ? '' : hideOffset,
-                                    left: index === 3 ? '' : hideOffset,
-                                    shape: {
-                                        'android:shape': 'rectangle',
-                                        stroke: getBorderStroke(item, index, offset, inset, true)
-                                    }
-                                });
-                            }
                         }
                     }
                 }
@@ -1228,7 +1228,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 result.push(imageData);
             }
         }
-        if (this.options.autoSizeBackgroundImage && overflowVertically && resizable && !node.is(CONTAINER_NODE.IMAGE) && !node.documentRoot && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
+        if (this.options.autoSizeBackgroundImage && overflowVertically && resizable && !node.is(CONTAINER_NODE.IMAGE) && !node.documentRoot && node.renderParent && !node.renderParent.tableElement) {
             let imageWidth = 0;
             let imageHeight = 0;
             for (const image of imageDimensions) {

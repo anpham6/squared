@@ -51,7 +51,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                             }
                         }
                     }
-                    if (item.textElement && !/[\s\n\-]/.test(item.textContent.trim())) {
+                    if (item.textElement && item.textContent.length > 1 && !/[\s\n\-]/.test(item.textContent.trim())) {
                         item.android('maxLines', '1');
                     }
                 });

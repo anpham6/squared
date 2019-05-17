@@ -9,7 +9,6 @@ type T = View;
 type Customizations = {
     [index: number]: {
         android: ObjectMap<boolean | CustomizationResult>;
-        app: ObjectMap<boolean | CustomizationResult>;
         assign: {
             [namespace: string]: ObjectMap<StringMap>;
         };
@@ -33,7 +32,6 @@ function substitute(result: {}, value: string, api?: number, minApi = 0) {
 export const API_ANDROID: Customizations = {
     [BUILD_ANDROID.PIE]: {
         android: {},
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.OREO_1]: {
@@ -60,7 +58,6 @@ export const API_ANDROID: Customizations = {
             'widgetFeatures': false,
             'windowLayoutInDisplayCutoutMode': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.OREO]: {
@@ -71,7 +68,6 @@ export const API_ANDROID: Customizations = {
             'turnScreenOn': false,
             'windowLightNavigationBar': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.NOUGAT_1]: {
@@ -83,7 +79,6 @@ export const API_ANDROID: Customizations = {
             'paddingHorizontal': false,
             'paddingVertical': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.NOUGAT]: {
@@ -98,7 +93,6 @@ export const API_ANDROID: Customizations = {
             'shortcutShortLabel': false,
             'showMetadataInPreview': false,
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.MARSHMALLOW]: {
@@ -157,7 +151,6 @@ export const API_ANDROID: Customizations = {
             'version': false,
             'windowBackgroundFallback': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.LOLLIPOP_1]: {
@@ -191,7 +184,6 @@ export const API_ANDROID: Customizations = {
             'usesCleartextTraffic': false,
             'windowLightStatusBar': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.LOLLIPOP]: {
@@ -204,7 +196,6 @@ export const API_ANDROID: Customizations = {
             'revisionCode': false,
             'searchHintIcon': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.KITKAT_1]: {
@@ -405,7 +396,6 @@ export const API_ANDROID: Customizations = {
             'yearListItemTextAppearance': false,
             'yearListSelectorColor': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.KITKAT]: {
@@ -413,7 +403,6 @@ export const API_ANDROID: Customizations = {
             'allowEmbedded': false,
             'windowSwipeToDismiss': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.JELLYBEAN_2]: {
@@ -442,7 +431,6 @@ export const API_ANDROID: Customizations = {
             'windowTranslucentNavigation': false,
             'windowTranslucentStatus': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.JELLYBEAN_1]: {
@@ -462,7 +450,6 @@ export const API_ANDROID: Customizations = {
             'restrictedAccountType': false,
             'windowOverscan': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.JELLYBEAN]: {
@@ -497,7 +484,6 @@ export const API_ANDROID: Customizations = {
             'timeZone': false,
             'widgetCategory': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.ICE_CREAM_SANDWICH_1]: {
@@ -510,17 +496,14 @@ export const API_ANDROID: Customizations = {
             'mediaRouteTypes': false,
             'parentActivityName': false
         },
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.ICE_CREAM_SANDWICH]: {
         android: {},
-        app: {},
         assign: {}
     },
     [BUILD_ANDROID.ALL]: {
         android: {},
-        app: {},
         assign: {
             Button: {
                 android: {

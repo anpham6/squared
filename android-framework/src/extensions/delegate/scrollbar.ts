@@ -13,7 +13,7 @@ const SCROLL_VERTICAL = 'android.support.v4.widget.NestedScrollView';
 
 export default class ScrollBar<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
-        return node.length > 0 && (node.overflowX || node.overflowY || this.included(<HTMLElement> node.element) && (node.has('width') || node.hasHeight && node.has('height')));
+        return node.length > 0 && this.included(<HTMLElement> node.element) && (node.overflowX && node.has('width') || node.overflowY && node.hasHeight && node.has('height'));
     }
 
     public processNode(node: T, parent: T) {
@@ -59,26 +59,30 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             const item = scrollView[i];
             const previous = scrollView[i - 1];
             switch (item.controlName) {
-                case SCROLL_VERTICAL: {
+                case SCROLL_VERTICAL:
                     node.android('layout_width', 'wrap_content');
                     item.android('layout_height', $css.formatPX(node.actualHeight));
+                    item.android('scrollbars', 'vertical');
+                    item.android('fadeScrollbars', 'false');
                     item.cssApply({
+                        width: 'auto',
                         overflow: 'scroll visible',
                         overflowX: 'visible',
                         overflowY: 'scroll'
                     });
                     break;
-                }
-                case SCROLL_HORIZONTAL: {
-                    item.android('layout_width', $css.formatPX(node.actualWidth));
+                case SCROLL_HORIZONTAL:
                     node.android('layout_height', 'wrap_content');
+                    item.android('layout_width', $css.formatPX(node.actualWidth));
+                    item.android('scrollbars', 'horizontal');
+                    item.android('fadeScrollbars', 'false');
                     item.cssApply({
+                        height: 'auto',
                         overflow: 'visible scroll',
                         overflowX: 'scroll',
                         overflowY: 'visible'
                     });
                     break;
-                }
             }
             if (i === 0) {
                 item.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);

@@ -100,8 +100,6 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                 else if (item.has('right')) {
                     item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
                 }
-                item.documentParent = container;
-                item.unsetCache('leftTopAxis');
             }
             const maxWidthHeight: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
             if (maxWidthHeight) {

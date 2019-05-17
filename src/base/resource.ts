@@ -26,7 +26,7 @@ function removeExcluded(node: Node, element: Element, attr: string) {
     let value: string = element[attr];
     for (let i = 0; i < node.actualChildren.length; i++) {
         const item = node.actualChildren[i];
-        if (item.excluded || item.pseudoElement || !item.pageFlow || item.dataset.target) {
+        if (!item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
             if (item.htmlElement && attr === 'innerHTML') {
                 if (item.lineBreak) {
                     value = value.replace((<Element> item.element).outerHTML, '\\n');
@@ -781,21 +781,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public setFontStyle(node: T) {
         if (!(node.element === null || node.renderChildren.length || node.imageElement || node.svgElement || node.tagName === 'HR' || node.textEmpty && !node.visibleStyle.background)) {
-            const opacity = node.css('opacity');
-            const color = $color.parseColor(node.css('color'), opacity);
-            let fontFamily = node.css('fontFamily').trim();
+            const color = $color.parseColor(node.css('color'), node.css('opacity'));
             let fontSize = node.css('fontSize');
             let fontWeight = node.css('fontWeight');
-            if (fontFamily === '' && $client.isUserAgent($client.USER_AGENT.EDGE)) {
-                switch (node.tagName) {
-                    case 'TT':
-                    case 'CODE':
-                    case 'KBD':
-                    case 'SAMP':
-                        fontFamily = 'monospace';
-                        break;
-                }
-            }
             if ($util.convertInt(fontSize) === 0) {
                 switch (fontSize) {
                     case 'xx-small':
@@ -837,14 +825,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         break;
                 }
             }
-            const result: FontAttribute = {
-                fontFamily,
+            node.data(Resource.KEY_NAME, 'fontStyle', <FontAttribute> {
+                fontFamily: node.css('fontFamily').trim(),
                 fontStyle: node.css('fontStyle'),
                 fontSize,
                 fontWeight,
                 color: color ? color.valueAsRGBA : ''
-            };
-            node.data(Resource.KEY_NAME, 'fontStyle', result);
+            });
         }
     }
 
@@ -920,9 +907,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     case 'TEXTAREA':
                         value = element.value;
                         break;
-                    case 'BUTTON':
-                        value = element.innerText;
-                        break;
                     case 'IFRAME':
                         value = element.src;
                         break;
@@ -948,8 +932,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             );
                             trimming = true;
                         }
-                        else if (Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle')) && element.innerText.trim() === '') {
-                            value = element.innerText;
+                        else if (node.textContent.trim() === '' && Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                            value = node.textContent;
                         }
                         break;
                 }
@@ -962,7 +946,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 value = value.replace($regex.CHAR.LEADINGSPACE, '');
                             }
                             else if (previousSibling.element) {
-                                previousSpaceEnd = $regex.CHAR.TRAILINGSPACE.test((<HTMLElement> previousSibling.element).innerHTML || (<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
+                                previousSpaceEnd = $regex.CHAR.TRAILINGSPACE.test(previousSibling.textContent);
                             }
                         }
                         if (inlined) {

@@ -24,15 +24,12 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 container.inherit(node, 'initial', 'base', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 container.exclude({
-                    procedure: $enum.NODE_PROCEDURE.NONPOSITIONAL,
+                    procedure: $enum.NODE_PROCEDURE.CUSTOMIZATION,
                     resource: $enum.NODE_RESOURCE.IMAGE_SOURCE
                 });
                 parent.appendTry(node, container);
                 node.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
-                node.exclude({
-                    procedure: $enum.NODE_PROCEDURE.AUTOFIT,
-                    resource: $enum.NODE_RESOURCE.FONT_STYLE | $enum.NODE_RESOURCE.BOX_STYLE
-                });
+                node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE | $enum.NODE_RESOURCE.BOX_STYLE });
                 node.cssApply({
                     position: 'static',
                     top: 'auto',
@@ -60,7 +57,6 @@ export default class <T extends android.base.View> extends squared.base.extensio
                     backgroundColor: 'rgba(0, 0, 0, 0)'
                 });
                 node.unsetCache();
-                node.exclude({ procedure: $enum.NODE_PROCEDURE.OPTIMIZATION });
                 node.android('src', `@drawable/${drawable}`);
                 node.outerWrapper = container;
                 container.innerWrapped = node;

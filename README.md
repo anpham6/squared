@@ -171,7 +171,7 @@ Most attributes can be excluded from the generated XML using the dataset feature
 
 ```xml
 <div data-exclude-section="DOM_TRAVERSE | EXTENSION | RENDER | ALL"
-     data-exclude-procedure="LAYOUT | ALIGNMENT | AUTOFIT | OPTIMIZATION | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION | NONPOSITIONAL | ALL"
+     data-exclude-procedure="LAYOUT | ALIGNMENT | OPTIMIZATION | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION | ALL"
      data-exclude-resource="BOX_STYLE | BOX_SPACING | FONT_STYLE | VALUE_STRING | IMAGE_SOURCE | ASSET | ALL">
 </div>
 <div>

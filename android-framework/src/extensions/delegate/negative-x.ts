@@ -1,14 +1,29 @@
-import { CONTAINER_ANDROID } from '../../lib/constant';
+import { AXIS_ANDROID, CONTAINER_ANDROID, EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
+
+import Controller from '../../controller';
 
 import $Layout = squared.base.Layout;
 
 type View = android.base.View;
 
+type NegativeXData = {
+    offsetLeft: number;
+    firstChild: View;
+    adjacentChild: View;
+};
+
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 
-const  outsideX = (node: View, parent: View) => !node.pageFlow && node.absoluteParent === parent && (node.left < 0 || !node.has('left') && node.right < 0);
+function outsideX(node: View, parent: View) {
+    if (node.pageFlow) {
+        return node === parent.firstChild && node.inlineFlow && !node.centerAligned && !node.rightAligned && node.marginLeft < 0 && Math.abs(node.marginLeft) <= parent.marginLeft + parent.paddingLeft && !parent.some(item => item.multiline);
+    }
+    else {
+        return node.absoluteParent === parent && (node.left < 0 || !node.has('left') && node.right < 0);
+    }
+}
 
 export default class NegativeX<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
@@ -28,14 +43,23 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
         }
         let left = NaN;
         let right = NaN;
+        let firstChild: T | undefined;
         for (const item of outside) {
-            if (item.has('left')) {
-                if (item.left < 0 && (isNaN(left) || item.linear.left < left)) {
+            if (item.pageFlow) {
+                if (isNaN(left) || item.linear.left < left) {
                     left = item.linear.left;
                 }
+                firstChild = item;
             }
-            else if (item.right < 0 && (isNaN(right) || item.linear.right > right)) {
-                right = item.linear.right;
+            else {
+                if (item.has('left')) {
+                    if (item.left < 0 && (isNaN(left) || item.linear.left < left)) {
+                        left = item.linear.left;
+                    }
+                }
+                else if (item.right < 0 && (isNaN(right) || item.linear.right > right)) {
+                    right = item.linear.right;
+                }
             }
         }
         container.inherit(node, 'styleMap');
@@ -44,14 +68,14 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
             if (offset > 0) {
                 node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, offset);
                 for (const item of outside) {
-                    if (item.left < 0) {
+                    if (!item.pageFlow && item.left < 0) {
                         item.css('left', $css.formatPX(item.left + offset), true);
                     }
                 }
             }
             else {
                 for (const item of outside) {
-                    if (item.left < 0) {
+                    if (!item.pageFlow && item.left < 0) {
                         item.css('left', $css.formatPX(node.marginLeft + item.left), true);
                     }
                 }
@@ -88,6 +112,10 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
                 }
             }
         }
+        if (firstChild) {
+            this.subscribers.add(container);
+            container.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData', <NegativeXData> { offsetLeft: node.marginLeft + node.paddingLeft, firstChild, adjacentChild: node });
+        }
         return {
             parent: container,
             renderAs: container,
@@ -101,5 +129,27 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
                 )
             )
         };
+    }
+
+    public postBaseLayout(node: T) {
+        const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData');
+        if (mainData) {
+            const firstChild = mainData.firstChild;
+            const adjacentChild = mainData.adjacentChild;
+            firstChild.anchor('left', 'parent');
+            firstChild.anchor('rightLeft', adjacentChild.documentId);
+            firstChild.anchorStyle(AXIS_ANDROID.HORIZONTAL);
+            firstChild.anchorParent(AXIS_ANDROID.VERTICAL);
+            firstChild.anchorStyle(AXIS_ANDROID.VERTICAL);
+            firstChild.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
+            adjacentChild.anchor('leftRight', firstChild.documentId);
+            adjacentChild.anchor('right', 'parent');
+            adjacentChild.anchorParent(AXIS_ANDROID.VERTICAL);
+            adjacentChild.anchorStyle(AXIS_ANDROID.VERTICAL);
+            Controller.setConstraintDimension(firstChild as any);
+            Controller.setConstraintDimension(adjacentChild as any);
+            firstChild.positioned = true;
+            adjacentChild.positioned = true;
+        }
     }
 }

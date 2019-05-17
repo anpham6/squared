@@ -884,6 +884,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'HR':
                 case 'SVG':
                     break;
+                case 'BUTTON':
+                    this._inlineText = true;
+                    break;
                 default:
                     this._inlineText = value;
                     break;
@@ -915,9 +918,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (attr) {
                 if (offset === undefined) {
                     this._boxReset[attr] = 1;
-                }
-                else if (isNaN(offset)) {
-                    this._boxReset[attr] = 0;
                 }
                 else if (!negative) {
                     if (this[attr] + this._boxAdjustment[attr] + offset <= 0) {
