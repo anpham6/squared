@@ -1,4 +1,4 @@
-/* squared 0.9.7
+/* squared 0.9.8
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -15,10 +15,9 @@
         LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
         LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
         CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
-        CSS_URL: 'url\\("?([^")]+)"?\\)',
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
         CSS_CALC: 'calc(\\(.+\\))',
-        CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
+        CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)'
     };
     const UNIT = {
         DECIMAL: new RegExp(`^${STRING.DECIMAL}$`),
@@ -28,7 +27,7 @@
     const CSS = {
         ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
         CALC: new RegExp(`^${STRING.CSS_CALC}$`),
-        URL: new RegExp(STRING.CSS_URL),
+        URL: /^url\("?(.+?)"?\)$/,
         CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
         HEX: /[A-Za-z\d]{3,8}/,
         RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/
@@ -37,9 +36,9 @@
         ATTRIBUTE: /([^\s]+)="([^"]+)"/,
         ENTITY: /&#?[A-Za-z\d]+;/,
         SEPARATOR: /\s*,\s*/,
-        BREAKWORD: /[^A-Za-z\d&#;]+/,
-        TAGNAME_G: /(<([^>]+)>)/g,
-        NONWORD_G: /[^A-Za-z\d]+/g
+        BREAKWORD_G: /([A-Za-z\\d]+|&#?[A-Za-z\\d]+;)/g,
+        NONWORD_G: /[^A-Za-z\d]+/g,
+        TAGNAME_G: /(<([^>]+)>)/g
     };
     const CHAR = {
         SPACE: /\s+/,
@@ -48,6 +47,7 @@
         TRAILINGZERO: /\.(\d*?)(0+)$/,
         LEADINGNEWLINE: /^\s*\n+/,
         LEADINGNUMBER: /^\d/,
+        LOWERCASE: /^[a-z]+$/,
         WORD: /\w/,
         WORDDASH: /[a-zA-Z\d]/
     };
@@ -64,6 +64,7 @@
         SINGLEQUOTE: /'/g,
         DOUBLEQUOTE: /"/g,
         U00A0: /\u00A0/g,
+        U0003: /\u0003/g,
         U2002: /\u2002/g,
         U2003: /\u2003/g,
         U2009: /\u2009/g,
@@ -93,6 +94,26 @@
     const CACHE_UNDERSCORE = {};
     function capitalize(value, upper = true) {
         return upper ? value.charAt(0).toUpperCase() + value.substring(1).toLowerCase() : value.charAt(0).toLowerCase() + value.substring(1);
+    }
+    function capitalizeString(value) {
+        const result = value.split('');
+        let match;
+        while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
+            if (match.index !== undefined) {
+                result[match.index] = match[1].charAt(0).toUpperCase();
+            }
+        }
+        return result.join('');
+    }
+    function lowerCaseString(value) {
+        let result = value;
+        let match;
+        while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
+            if (match.index !== undefined && !XML.ENTITY.test(match[1])) {
+                result = (match.index > 0 ? result.substring(0, match.index) : '') + value.substring(match.index, match.index + match[1].length).toLowerCase() + result.substring(match.index + match[1].length);
+            }
+        }
+        return result;
     }
     function convertUnderscore(value) {
         if (CACHE_UNDERSCORE[value]) {
@@ -173,9 +194,11 @@
                     result += ALPHABET.charAt(base - 1);
                     value -= base * ALPHABET.length;
                 }
-                else if (base > ALPHABET.length) {
-                    result += convertAlpha(base * ALPHABET.length);
-                    value -= base * ALPHABET.length;
+                else if (base > 0) {
+                    result += 'Z';
+                    value -= Math.pow(ALPHABET.length, 2);
+                    result += convertAlpha(value);
+                    return result;
                 }
                 const index = value % ALPHABET.length;
                 result += ALPHABET.charAt(index);
@@ -201,6 +224,13 @@
             }
         }
         return '';
+    }
+    function buildAlphaString(length) {
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += ALPHABET.charAt(Math.floor(Math.random() * 26));
+        }
+        return result;
     }
     function formatString(value, ...params) {
         for (let i = 0; i < params.length; i++) {
@@ -369,15 +399,6 @@
     function trimEnd(value, char) {
         return value.replace(new RegExp(`${char}+$`), '');
     }
-    function firstIndexOf(value, ...terms) {
-        for (const term of terms) {
-            const index = value.indexOf(term);
-            if (index !== -1) {
-                return index;
-            }
-        }
-        return -1;
-    }
     function fromLastIndexOf(value, ...char) {
         let result = value;
         for (const ch of char) {
@@ -420,11 +441,11 @@
     function withinRange(a, b, offset = 1) {
         return b >= (a - offset) && b <= (a + offset);
     }
-    function aboveRange(a, b) {
-        return Math.ceil(a) >= Math.floor(b);
+    function aboveRange(a, b, offset = 1) {
+        return a + offset > b;
     }
-    function belowRange(a, b) {
-        return Math.floor(a) <= Math.ceil(b);
+    function belowRange(a, b, offset = 1) {
+        return a - offset < b;
     }
     function assignEmptyProperty(dest, source) {
         for (const attr in source) {
@@ -567,6 +588,22 @@
         }
         return dest;
     }
+    function sameArray(list, predicate) {
+        if (list.length) {
+            let baseValue;
+            for (let i = 0; i < list.length; i++) {
+                const value = predicate(list[i], i, list);
+                if (i === 0) {
+                    baseValue = value;
+                }
+                else if (value !== baseValue) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
     function flatMap(list, predicate) {
         const result = [];
         for (let i = 0; i < list.length; i++) {
@@ -626,6 +663,8 @@
 
     var util = /*#__PURE__*/Object.freeze({
         capitalize: capitalize,
+        capitalizeString: capitalizeString,
+        lowerCaseString: lowerCaseString,
         convertUnderscore: convertUnderscore,
         convertCamelCase: convertCamelCase,
         convertWord: convertWord,
@@ -634,6 +673,7 @@
         convertAlpha: convertAlpha,
         convertRoman: convertRoman,
         convertEnum: convertEnum,
+        buildAlphaString: buildAlphaString,
         formatString: formatString,
         hasBit: hasBit,
         isNumber: isNumber,
@@ -654,7 +694,6 @@
         trimString: trimString,
         trimStart: trimStart,
         trimEnd: trimEnd,
-        firstIndexOf: firstIndexOf,
         fromLastIndexOf: fromLastIndexOf,
         searchObject: searchObject,
         hasValue: hasValue,
@@ -671,6 +710,7 @@
         filterArray: filterArray,
         concatArray: concatArray,
         concatMultiArray: concatMultiArray,
+        sameArray: sameArray,
         flatMap: flatMap,
         filterMap: filterMap,
         replaceMap: replaceMap,
@@ -787,6 +827,9 @@
                 }
             }
             return false;
+        }
+        same(predicate) {
+            return sameArray(this._children, predicate);
         }
         filter(predicate) {
             return filterArray(this._children, predicate);
@@ -3328,6 +3371,14 @@
         }
         return element;
     }
+    function createStyleElement(parent, tagName, attrs) {
+        const element = document.createElement(tagName);
+        for (const attr in attrs) {
+            element.style[attr] = attrs[attr];
+        }
+        parent.appendChild(element);
+        return element;
+    }
     function getTextMetrics(value, fontFamily, fontSize) {
         if (fontFamily && fontSize) {
             const canvas = document.createElement('canvas');
@@ -3358,6 +3409,7 @@
         removeElementsByClassName: removeElementsByClassName,
         getElementsBetweenSiblings: getElementsBetweenSiblings,
         createElement: createElement,
+        createStyleElement: createStyleElement,
         getTextMetrics: getTextMetrics,
         getNamedItem: getNamedItem
     });
@@ -3873,6 +3925,7 @@
     function getBackgroundPosition(value, dimension, fontSize) {
         const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
         const result = {
+            static: true,
             top: 0,
             left: 0,
             right: 0,
@@ -3972,6 +4025,7 @@
                 }
             }
         }
+        result.static = result.top === 0 && result.right === 0 && result.left === 0 && result.bottom === 0;
         return result;
     }
     function getSrcSet(element, mimeType) {
@@ -4334,6 +4388,7 @@
                 return '0%';
             }
         }
+        value *= 100;
         return `${round ? Math.round(value) : value}%`;
     }
     function isLength(value, percent = false) {
@@ -4793,6 +4848,7 @@
     function replaceEntity(value) {
         return value
             .replace(ESCAPE.U00A0, '&#160;')
+            .replace(ESCAPE.U0003, ' ')
             .replace(ESCAPE.U2002, '&#8194;')
             .replace(ESCAPE.U2003, '&#8195;')
             .replace(ESCAPE.U2009, '&#8201;')

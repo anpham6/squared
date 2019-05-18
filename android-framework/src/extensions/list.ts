@@ -221,7 +221,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (columnCount > 0) {
                 container.android('layout_width', '0px');
                 container.android('layout_columnWeight', '1');
-                if (node.baseline) {
+                if (node !== container && node.baseline) {
                     container.android('baselineAlignedChildIndex', '0');
                 }
             }

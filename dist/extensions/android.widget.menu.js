@@ -1,4 +1,4 @@
-/* android.widget 0.9.7
+/* android.widget 0.9.8
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -188,16 +188,15 @@ this.android.widget.menu = (function () {
                 case NAVIGATION.ITEM:
                     parseDataSet(REGEXP_ITEM, element, options);
                     if (!options.android.icon) {
-                        const style = $css.getStyle(element);
-                        const backgroundImage = style.getPropertyValue('background-image');
-                        let src = $Resource.addImageURL(backgroundImage !== 'none' ? backgroundImage : style.getPropertyValue('background'), $constA.PREFIX_ANDROID.MENU);
+                        const resource = this.application.resourceHandler;
+                        let src = resource.addImageSrc(node.backgroundImage, $constA.PREFIX_ANDROID.MENU);
                         if (src !== '') {
                             options.android.icon = `@drawable/${src}`;
                         }
                         else {
                             const image = node.find(item => item.imageElement);
                             if (image) {
-                                src = $Resource.addImageSrc(image.element, $constA.PREFIX_ANDROID.MENU);
+                                src = resource.addImageSrc(image.element, $constA.PREFIX_ANDROID.MENU);
                                 if (src !== '') {
                                     options.android.icon = `@drawable/${src}`;
                                 }

@@ -1533,7 +1533,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.width > 0;
     }
     get hasHeight() {
-        const value = this.cssInitial('height', true);
+        const value = this.css('height');
         if ($css.isPercent(value)) {
             const actualParent = this.actualParent;
             if (actualParent && actualParent.hasHeight) {
@@ -1999,7 +1999,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if ((this.has('width') || this.has('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth)) {
                     value |= NODE_ALIGNMENT.HORIZONTAL;
                 }
-                if ((this.has('height') || this.has('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
+                if (this.hasHeight && (this.has('height') || this.has('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
                     value |= NODE_ALIGNMENT.VERTICAL;
                 }
             }

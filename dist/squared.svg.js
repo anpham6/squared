@@ -1,4 +1,4 @@
-/* squared.svg 0.9.7
+/* squared.svg 0.9.8
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -4485,7 +4485,9 @@
                         this.rotate = 'auto 180deg';
                         break;
                     default:
-                        this.rotate = `${$util$7.convertFloat(rotate)}deg`;
+                        if ($util$7.isNumber(rotate)) {
+                            this.rotate = `${$util$7.convertFloat(rotate)}deg`;
+                        }
                         break;
                 }
                 for (let i = 0; i < animationElement.children.length; i++) {
@@ -5089,6 +5091,7 @@
                             const fillMode = cssData['animation-fill-mode'][i];
                             const keyframeIndex = `${animationName[i]}_${i}`;
                             const attributes = [];
+                            let includeKeySplines = true;
                             groupOrdering.push({
                                 name: keyframeIndex,
                                 attributes,
@@ -5250,6 +5253,7 @@
                                         }
                                         attrMap['rotate'] = offsetRotate;
                                         delete attrMap['offset-rotate'];
+                                        includeKeySplines = false;
                                     }
                                 }
                                 else {
@@ -5306,7 +5310,7 @@
                                     for (let j = 0; j < animation.length; j++) {
                                         keyTimes.push(animation[j].key);
                                         values.push(animation[j].value);
-                                        if (j < animation.length - 1) {
+                                        if (includeKeySplines && j < animation.length - 1) {
                                             const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.key === animation[j].key);
                                             keySplines.push(spline ? spline.value : timingFunction);
                                         }
@@ -5321,10 +5325,12 @@
                                     if (keyTimes[0] !== 0) {
                                         keyTimes.unshift(0);
                                         values.unshift(animate.baseValue || '');
-                                        keySplines.unshift(timingFunction);
+                                        if (includeKeySplines) {
+                                            keySplines.unshift(timingFunction);
+                                        }
                                         animate.evaluateStart = true;
                                     }
-                                    if (!keySplines.every(value => value === 'linear')) {
+                                    if (includeKeySplines && !keySplines.every(value => value === 'linear')) {
                                         const keyTimesData = [];
                                         const valuesData = [];
                                         const keySplinesData = [];
@@ -5369,7 +5375,12 @@
                                     else {
                                         animate.values = values;
                                         animate.keyTimes = keyTimes;
-                                        animate.keySplines = keySplines;
+                                        if (includeKeySplines) {
+                                            animate.keySplines = keySplines;
+                                        }
+                                        else {
+                                            animate.timingFunction = timingFunction;
+                                        }
                                     }
                                 }
                                 animate.paused = paused;
@@ -5889,10 +5900,10 @@
                 this.resetPaint();
                 this.setAttribute('color');
                 this.setAttribute('fill');
-                this.setAttribute('fill-opacity');
+                this.setAttribute('fill-opacity', false);
                 this.setAttribute('fill-rule');
                 this.setAttribute('stroke');
-                this.setAttribute('stroke-opacity');
+                this.setAttribute('stroke-opacity', false);
                 this.setAttribute('stroke-width');
                 this.setAttribute('stroke-linecap');
                 this.setAttribute('stroke-linejoin');

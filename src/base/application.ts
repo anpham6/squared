@@ -671,7 +671,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             if (!overflowY && node.linear.top < Math.floor(parent.box.top) && (node.top < 0 || node.marginTop < 0)) {
                                                 outside = true;
                                             }
-                                            else if (outsideX && !node.has('left') && node.right > 0 || outsideY && !node.has('top') && node.bottom > 0) {
+                                            else if (outsideX && !node.has('left') && node.right > 0 || outsideY && !node.has('top') && node.bottom !== 0) {
                                                 outside = true;
                                             }
                                             else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent && parent.actualParent.documentBody) && (node.top > 0 || node.left > 0)) {

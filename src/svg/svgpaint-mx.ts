@@ -45,10 +45,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this.resetPaint();
             this.setAttribute('color');
             this.setAttribute('fill');
-            this.setAttribute('fill-opacity');
+            this.setAttribute('fill-opacity', false);
             this.setAttribute('fill-rule');
             this.setAttribute('stroke');
-            this.setAttribute('stroke-opacity');
+            this.setAttribute('stroke-opacity', false);
             this.setAttribute('stroke-width');
             this.setAttribute('stroke-linecap');
             this.setAttribute('stroke-linejoin');

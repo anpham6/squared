@@ -1,4 +1,4 @@
-/* android.widget 0.9.7
+/* android.widget 0.9.8
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -22,6 +22,7 @@ this.android.widget.floatingactionbutton = (function () {
             return this.included(node.element);
         }
         processNode(node, parent) {
+            const resource = this.application.resourceHandler;
             const element = node.element;
             const target = node.dataset.target;
             const options = $utilA.createViewAttribute(this.options[element.id]);
@@ -33,18 +34,15 @@ this.android.widget.floatingactionbutton = (function () {
             let src = '';
             switch (element.tagName) {
                 case 'IMG':
-                    src = $Resource.addImageSrc(element, $constA.PREFIX_ANDROID.DIALOG);
+                    src = resource.addImageSrc(element, $constA.PREFIX_ANDROID.DIALOG);
                     break;
                 case 'INPUT':
                     if (element.type === 'image') {
-                        src = $Resource.addImage({ mdpi: node.src }, $constA.PREFIX_ANDROID.DIALOG);
+                        src = resource.addImageSrc(element, $constA.PREFIX_ANDROID.DIALOG);
+                        break;
                     }
-                    else {
-                        src = $Resource.addImageURL(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);
-                    }
-                    break;
                 case 'BUTTON':
-                    src = $Resource.addImageURL(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);
+                    src = resource.addImageSrc(node.backgroundImage, $constA.PREFIX_ANDROID.DIALOG);
                     break;
             }
             if (src !== '') {

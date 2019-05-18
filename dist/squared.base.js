@@ -1,4 +1,4 @@
-/* squared.base 0.9.7
+/* squared.base 0.9.8
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -48,10 +48,16 @@
                         return node.actualParent;
                     }
                 }
-                else if (node.groupParent) {
-                    const parent = NodeList.actualParent(node.actualChildren);
-                    if (parent) {
-                        return parent;
+                else {
+                    const innerWrapped = node.innerWrapped;
+                    if (innerWrapped && innerWrapped.naturalElement && innerWrapped.actualParent) {
+                        return innerWrapped.actualParent;
+                    }
+                    else if (node.groupParent) {
+                        const parent = NodeList.actualParent(node.actualChildren);
+                        if (parent) {
+                            return parent;
+                        }
                     }
                 }
             }
@@ -274,8 +280,21 @@
             const groupParent = $util.filterArray(list, node => node.groupParent);
             const result = [];
             let row = [];
+            function includes(node) {
+                if (list.includes(node)) {
+                    return node;
+                }
+                let current = node.outerWrapper;
+                while (current) {
+                    if (list.includes(current)) {
+                        return current;
+                    }
+                    current = current.outerWrapper;
+                }
+                return undefined;
+            }
             for (let i = 0; i < children.length; i++) {
-                const node = children[i];
+                let node = children[i];
                 let next = false;
                 for (let j = 0; j < groupParent.length; j++) {
                     const group = groupParent[j];
@@ -295,7 +314,8 @@
                 }
                 const previousSiblings = node.previousSiblings();
                 if (i === 0 || previousSiblings.length === 0) {
-                    if (list.includes(node)) {
+                    node = includes(node);
+                    if (node) {
                         row.push(node);
                     }
                 }
@@ -304,15 +324,19 @@
                         if (row.length) {
                             result.push(row);
                         }
-                        if (list.includes(node)) {
+                        node = includes(node);
+                        if (node) {
                             row = [node];
                         }
                         else {
                             row = [];
                         }
                     }
-                    else if (list.includes(node)) {
-                        row.push(node);
+                    else {
+                        node = includes(node);
+                        if (node) {
+                            row.push(node);
+                        }
                     }
                 }
                 if (i === children.length - 1 && row.length) {
@@ -499,13 +523,10 @@
         NODE_PROCEDURE[NODE_PROCEDURE["CONSTRAINT"] = 2] = "CONSTRAINT";
         NODE_PROCEDURE[NODE_PROCEDURE["LAYOUT"] = 4] = "LAYOUT";
         NODE_PROCEDURE[NODE_PROCEDURE["ALIGNMENT"] = 8] = "ALIGNMENT";
-        NODE_PROCEDURE[NODE_PROCEDURE["AUTOFIT"] = 16] = "AUTOFIT";
-        NODE_PROCEDURE[NODE_PROCEDURE["OPTIMIZATION"] = 32] = "OPTIMIZATION";
+        NODE_PROCEDURE[NODE_PROCEDURE["ACCESSIBILITY"] = 16] = "ACCESSIBILITY";
+        NODE_PROCEDURE[NODE_PROCEDURE["LOCALIZATION"] = 32] = "LOCALIZATION";
         NODE_PROCEDURE[NODE_PROCEDURE["CUSTOMIZATION"] = 64] = "CUSTOMIZATION";
-        NODE_PROCEDURE[NODE_PROCEDURE["ACCESSIBILITY"] = 128] = "ACCESSIBILITY";
-        NODE_PROCEDURE[NODE_PROCEDURE["LOCALIZATION"] = 256] = "LOCALIZATION";
-        NODE_PROCEDURE[NODE_PROCEDURE["NONPOSITIONAL"] = 208] = "NONPOSITIONAL";
-        NODE_PROCEDURE[NODE_PROCEDURE["ALL"] = 510] = "ALL";
+        NODE_PROCEDURE[NODE_PROCEDURE["ALL"] = 126] = "ALL";
     })(NODE_PROCEDURE || (NODE_PROCEDURE = {}));
 
     var enumeration = /*#__PURE__*/Object.freeze({
@@ -520,6 +541,7 @@
     const $session = squared.lib.session;
     const $util$2 = squared.lib.util;
     const $xml = squared.lib.xml;
+    const STRING_DATAURI = '(?:data:([^;]+);([^,]+),)?(.*?)';
     const REGEXP_CACHED = {};
     let NodeConstructor;
     function prioritizeExtensions(element, extensions) {
@@ -548,6 +570,15 @@
             value = match[1].trim();
         }
         return value;
+    }
+    function getImageSvgAsync(value) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const response = yield fetch(value, {
+                method: 'GET',
+                headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' })
+            });
+            return yield response.text();
+        });
     }
     class Application {
         constructor(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor) {
@@ -695,7 +726,7 @@
                     this.rootElements.add(element);
                 }
             }
-            const ASSET_IMAGES = this.resourceHandler.assets.images;
+            const ASSETS = this.resourceHandler.assets;
             const documentRoot = this.rootElements.values().next().value;
             const preloadImages = [];
             const parseResume = () => {
@@ -736,72 +767,114 @@
                     element.querySelectorAll('input[type=image]').forEach((image) => {
                         const uri = image.src;
                         if (uri !== '') {
-                            ASSET_IMAGES.set(uri, {
-                                width: image.width,
-                                height: image.height,
-                                uri
-                            });
+                            ASSETS.images.set(uri, { width: image.width, height: image.height, uri });
                         }
                     });
                     element.querySelectorAll('svg image').forEach((image) => {
                         const uri = $util$2.resolvePath(image.href.baseVal);
                         if (uri !== '') {
-                            ASSET_IMAGES.set(uri, {
-                                width: image.width.baseVal.value,
-                                height: image.height.baseVal.value,
-                                uri
-                            });
+                            ASSETS.images.set(uri, { width: image.width.baseVal.value, height: image.height.baseVal.value, uri });
                         }
                     });
                 }
-                for (const image of ASSET_IMAGES.values()) {
-                    if (image.uri && image.width === 0 && image.height === 0) {
-                        const element = document.createElement('img');
-                        element.src = image.uri;
-                        if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
-                            image.width = element.naturalWidth;
-                            image.height = element.naturalHeight;
+                for (const image of ASSETS.images.values()) {
+                    if (image.uri) {
+                        if (image.uri.toLowerCase().endsWith('.svg')) {
+                            images.push(image.uri);
                         }
-                        else {
-                            documentRoot.appendChild(element);
-                            preloadImages.push(element);
+                        else if (image.width === 0 && image.height === 0) {
+                            const element = document.createElement('img');
+                            element.src = image.uri;
+                            if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
+                                image.width = element.naturalWidth;
+                                image.height = element.naturalHeight;
+                            }
+                            else {
+                                documentRoot.appendChild(element);
+                                preloadImages.push(element);
+                            }
                         }
                     }
                 }
-                for (const element of this.rootElements) {
-                    element.querySelectorAll('img').forEach((image) => {
-                        if (image.tagName === 'IMG') {
-                            if (image.complete) {
-                                this.resourceHandler.addImage(image);
-                            }
-                            else {
-                                images.push(image);
+            }
+            for (const [uri, data] of ASSETS.rawData.entries()) {
+                if (data.mimeType && data.mimeType.startsWith('image/') && !data.mimeType.endsWith('svg+xml')) {
+                    const element = document.createElement('img');
+                    if (data.base64) {
+                        element.src = `data:${data.mimeType};base64,${data.base64}`;
+                    }
+                    else {
+                        element.src = `data:${data.mimeType};${data.content}`;
+                    }
+                    if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
+                        data.width = element.naturalWidth;
+                        data.height = element.naturalHeight;
+                        ASSETS.images.set(uri, { width: data.width, height: data.height, uri: data.filename });
+                    }
+                }
+            }
+            for (const element of this.rootElements) {
+                element.querySelectorAll('img').forEach((image) => {
+                    if (image.tagName === 'IMG') {
+                        if (image.src.toLowerCase().endsWith('.svg')) {
+                            if (this.userSettings.preloadImages) {
+                                images.push(image.src);
                             }
                         }
-                    });
-                }
+                        else if (image.complete) {
+                            if (image.src.startsWith('data:image/')) {
+                                if (REGEXP_CACHED.DATAURI === undefined) {
+                                    REGEXP_CACHED.DATAURI = new RegExp(`^${STRING_DATAURI}$`);
+                                }
+                                const match = REGEXP_CACHED.DATAURI.exec(image.src);
+                                if (match && match[1] && match[2]) {
+                                    this.resourceHandler.addRawData(image.src, match[1], match[2], match[3], image.naturalWidth, image.naturalHeight);
+                                }
+                            }
+                            else {
+                                this.resourceHandler.addImage(image);
+                            }
+                        }
+                        else if (this.userSettings.preloadImages) {
+                            images.push(image);
+                        }
+                    }
+                });
             }
             if (images.length) {
                 this.initialized = true;
                 Promise.all($util$2.objectMap(images, image => {
                     return new Promise((resolve, reject) => {
-                        image.onload = () => {
-                            resolve(image);
-                        };
-                        image.onerror = () => {
-                            reject(image);
-                        };
+                        if (typeof image === 'string') {
+                            resolve(getImageSvgAsync(image));
+                        }
+                        else {
+                            image.onload = () => {
+                                resolve(image);
+                            };
+                            image.onerror = () => {
+                                reject(image);
+                            };
+                        }
                     });
                 }))
                     .then((result) => {
-                    for (const item of result) {
-                        this.resourceHandler.addImage(item);
+                    for (let i = 0; i < result.length; i++) {
+                        const value = result[i];
+                        if (typeof value === 'string') {
+                            if (typeof images[i] === 'string') {
+                                this.resourceHandler.addRawData(images[i], 'image/svg+xml', 'utf8', value);
+                            }
+                        }
+                        else {
+                            this.resourceHandler.addImage(value);
+                        }
                     }
                     parseResume();
                 })
                     .catch((error) => {
-                    const message = error.target && error.target.src;
-                    if (!message || confirm(`FAIL: ${message}`)) {
+                    const message = error.target ? error.target.src : error['message'];
+                    if (!$util$2.isString(message) || confirm(`FAIL: ${message}`)) {
                         parseResume();
                     }
                 });
@@ -822,14 +895,8 @@
         }
         saveDocument(filename, content, pathname, index) {
             if ($util$2.isString(content)) {
-                if (pathname) {
-                    pathname = $util$2.trimString(pathname, '/');
-                }
-                else {
-                    pathname = this.controllerHandler.localSettings.layout.pathName;
-                }
                 const layout = {
-                    pathname,
+                    pathname: pathname ? $util$2.trimString(pathname, '/') : this.controllerHandler.localSettings.layout.pathName,
                     filename,
                     content,
                     index
@@ -991,7 +1058,7 @@
                         const id = element.id;
                         let styleElement;
                         if (item.pageFlow) {
-                            element.id = 'id_' + Math.round(Math.random() * new Date().getTime());
+                            element.id = `id_${Math.round(Math.random() * new Date().getTime())}`;
                             styleElement = $css$1.insertStyleSheetRule(`#${element.id}::${index === 0 ? 'before' : 'after'} { display: none !important; }`);
                         }
                         if (item.cssTry('display', item.display)) {
@@ -1030,7 +1097,7 @@
                     const actualParent = node.parent;
                     const absoluteParent = node.absoluteParent;
                     let parent;
-                    switch (node.position) {
+                    switch (node.css('position')) {
                         case 'relative':
                             if (node === actualParent.lastChild) {
                                 let valid = false;
@@ -1090,13 +1157,13 @@
                                             else {
                                                 const outsideX = !overflowX && node.outsideX(parent.box);
                                                 const outsideY = !overflowY && node.outsideY(parent.box);
-                                                if (outsideY && (node.top < 0 || node.marginTop < 0 || !node.has('top') && node.bottom !== 0)) {
+                                                if (!overflowY && node.linear.top < Math.floor(parent.box.top) && (node.top < 0 || node.marginTop < 0)) {
                                                     outside = true;
                                                 }
-                                                else if (outsideX && !node.has('left') && node.right > 0) {
+                                                else if (outsideX && !node.has('left') && node.right > 0 || outsideY && !node.has('top') && node.bottom !== 0) {
                                                     outside = true;
                                                 }
-                                                else if (!parent.pageFlow && outsideX && outsideY && (node.top > 0 || node.left > 0)) {
+                                                else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent && parent.actualParent.documentBody) && (node.top > 0 || node.left > 0)) {
                                                     outside = true;
                                                 }
                                                 else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.has('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
@@ -1148,10 +1215,10 @@
                             node.unsafe('box', true);
                             node.unsafe('linear', true);
                         }
-                        let opacity = $util$2.convertFloat(node.css('opacity')) || 1;
+                        let opacity = node.toFloat('opacity', false, 1);
                         let current = actualParent;
                         while (current && current !== parent) {
-                            opacity *= $util$2.convertFloat(current.css('opacity')) || 1;
+                            opacity *= current.toFloat('opacity', false, 1);
                             current = current.actualParent;
                         }
                         node.css('opacity', opacity.toString());
@@ -1593,7 +1660,7 @@
                                             if (result.parent) {
                                                 parentY = result.parent;
                                             }
-                                            if (result.output || result.include === true) {
+                                            if (result.output && result.include !== false || result.include === true) {
                                                 if (nodeY.renderExtension === undefined) {
                                                     nodeY.renderExtension = [];
                                                 }
@@ -1614,31 +1681,30 @@
                             }
                         }
                         if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
-                            const layout = this.createLayoutControl(parentY, nodeY);
-                            const result = nodeY.length ? this.controllerHandler.processUnknownParent(layout) : this.controllerHandler.processUnknownChild(layout);
-                            if (result.next === true) {
-                                continue;
+                            let layout = this.createLayoutControl(parentY, nodeY);
+                            if (layout.containerType === 0) {
+                                const result = nodeY.length ? this.controllerHandler.processUnknownParent(layout) : this.controllerHandler.processUnknownChild(layout);
+                                if (result.next === true) {
+                                    continue;
+                                }
+                                layout = result.layout;
                             }
-                            else if (result.renderAs) {
-                                axisY[k] = result.renderAs;
-                                k--;
-                                continue;
-                            }
-                            this.addLayout(result.layout);
+                            this.addLayout(layout);
                         }
                     }
                 }
             }
             this.processing.cache.sort((a, b) => {
                 if (a.depth === b.depth) {
-                    if (a.length && b.length === 0) {
+                    if (a.groupParent && (b.length === 0 || b.naturalElement)) {
                         return -1;
                     }
-                    else if (a.length === 0 && b.length) {
+                    else if (b.groupParent && (a.length === 0 || a.naturalElement)) {
                         return 1;
                     }
+                    return 0;
                 }
-                return 0;
+                return a.depth < b.depth ? -1 : 1;
             });
             this.session.cache.concat(this.processing.cache.children);
             this.session.excluded.concat(this.processing.excluded.children);
@@ -1957,7 +2023,7 @@
                             }
                             const offset = position - basegroup.box.left;
                             if (offset > 0) {
-                                target.modifyBox(256 /* PADDING_LEFT */, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
+                                target.modifyBox(256 /* PADDING_LEFT */, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? controller.localSettings.deviations.textMarginBoundarySize : 0));
                             }
                         }
                         if (rightAbove.length) {
@@ -1972,7 +2038,7 @@
                             }
                             const offset = basegroup.box.right - position;
                             if (offset > 0) {
-                                target.modifyBox(64 /* PADDING_RIGHT */, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
+                                target.modifyBox(64 /* PADDING_RIGHT */, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? controller.localSettings.deviations.textMarginBoundarySize : 0));
                             }
                         }
                     }
@@ -2007,7 +2073,7 @@
                 else {
                     if (layout.cleared.has(node)) {
                         if (!node.floating) {
-                            node.modifyBox(2 /* MARGIN_TOP */, null);
+                            node.modifyBox(2 /* MARGIN_TOP */);
                             staticRows.push(current.slice(0));
                             floatedRows.push(floated.slice(0));
                             current.length = 0;
@@ -2160,7 +2226,7 @@
                 if ($util$2.trimString(styleMap.content, '"').trim() === '' && $util$2.convertFloat(styleMap.width) === 0 && $util$2.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
                     let valid = true;
                     for (const attr in styleMap) {
-                        if (/(Width|Height)$/.test(attr)) {
+                        if (/(Width|Height)$/.test(attr) && $css$1.isLength(styleMap[attr], true) && $util$2.convertFloat(styleMap[attr]) !== 0) {
                             valid = false;
                             break;
                         }
@@ -2235,8 +2301,8 @@
                             if (REGEXP_CACHED.COUNTERS === undefined) {
                                 REGEXP_CACHED.COUNTERS = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
                             }
-                            let match;
                             let found = false;
+                            let match;
                             while ((match = REGEXP_CACHED.COUNTERS.exec(value)) !== null) {
                                 if (match[1]) {
                                     content += $dom.getNamedItem(element, match[1].trim());
@@ -2394,8 +2460,7 @@
         }
         setStyleMap() {
             let warning = false;
-            for (let i = 0; i < document.styleSheets.length; i++) {
-                const item = document.styleSheets[i];
+            const applyStyleSheet = (item) => {
                 try {
                     if (item.cssRules) {
                         for (let j = 0; j < item.cssRules.length; j++) {
@@ -2404,6 +2469,9 @@
                                 case CSSRule.STYLE_RULE:
                                 case CSSRule.FONT_FACE_RULE:
                                     this.applyStyleRule(rule);
+                                    break;
+                                case CSSRule.IMPORT_RULE:
+                                    applyStyleSheet(rule.styleSheet);
                                     break;
                                 case CSSRule.MEDIA_RULE:
                                     if ($css$1.validMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
@@ -2428,6 +2496,9 @@
                         warning = true;
                     }
                 }
+            };
+            for (let i = 0; i < document.styleSheets.length; i++) {
+                applyStyleSheet(document.styleSheets[i]);
             }
         }
         applyCSSRuleList(rules) {
@@ -2456,18 +2527,23 @@
                                     styleMap[attr] = value;
                                 }
                             }
-                            if (this.userSettings.preloadImages) {
-                                [styleMap.backgroundImage, styleMap.listStyleImage, styleMap.content].forEach(image => {
-                                    if (image && image.startsWith('url(')) {
-                                        for (const value of image.split($regex.XML.SEPARATOR)) {
-                                            const uri = $css$1.resolveURL(value.trim());
+                            [styleMap.backgroundImage, styleMap.listStyleImage, styleMap.content].forEach(image => {
+                                if (image) {
+                                    const pattern = new RegExp(`url\\("(${STRING_DATAURI})"\\),?\\s*`, 'g');
+                                    let match = null;
+                                    while ((match = pattern.exec(image)) !== null) {
+                                        if (match[2] && match[3]) {
+                                            this.resourceHandler.addRawData(match[1], match[2], match[3], match[4]);
+                                        }
+                                        else if (this.userSettings.preloadImages) {
+                                            const uri = $util$2.resolvePath(match[4]);
                                             if (uri !== '' && this.resourceHandler.getImage(uri) === undefined) {
                                                 this.resourceHandler.assets.images.set(uri, { width: 0, height: 0, uri });
                                             }
                                         }
                                     }
-                                });
-                            }
+                                }
+                            });
                             const attrStyle = `styleMap${targetElt}`;
                             const attrSpecificity = `styleSpecificity${targetElt}`;
                             const styleData = $session.getElementCache(element, attrStyle, this.processing.sessionId);
@@ -2552,10 +2628,10 @@
         get layouts() {
             return this._layouts.sort((a, b) => {
                 if (a.index !== b.index) {
-                    if (a.index === 0 || a.index !== undefined && b.index === undefined || b.index === Number.POSITIVE_INFINITY) {
+                    if (a.index === 0 || a.index !== undefined && a.index !== Number.POSITIVE_INFINITY && b.index === undefined || b.index === Number.POSITIVE_INFINITY) {
                         return -1;
                     }
-                    else if (b.index === 0 || b.index !== undefined && a.index === undefined || a.index === Number.POSITIVE_INFINITY) {
+                    else if (b.index === 0 || b.index !== undefined && b.index !== Number.POSITIVE_INFINITY && a.index === undefined || a.index === Number.POSITIVE_INFINITY) {
                         return 1;
                     }
                     else if (a.index !== undefined && b.index !== undefined) {
@@ -2629,31 +2705,31 @@
                     }
                 }
                 switch (element.tagName) {
-                    case 'INPUT':
+                    case 'INPUT': {
+                        const style = $css$2.getStyle(element);
                         switch (element.type) {
-                            case 'file': {
-                                const style = $css$2.getStyle(element);
-                                const color = $color.parseColor(style.getPropertyValue('background-color'));
-                                if (color === undefined) {
-                                    styleMap.backgroundColor = '#DDDDDD';
-                                    if (style.getPropertyValue('border-style') === 'none') {
-                                        for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
-                                            styleMap[`${border}Style`] = 'outset';
-                                            styleMap[`${border}Color`] = '#DDDDDD';
-                                            styleMap[`${border}Width`] = '2px';
-                                        }
-                                    }
-                                }
-                            }
+                            case 'file':
                             case 'reset':
                             case 'submit':
                             case 'button':
+                                const color = $color.parseColor(style.getPropertyValue('background-color'));
+                                if (color === undefined) {
+                                    styleMap.backgroundColor = '#DDDDDD';
+                                }
                                 if (styleMap.textAlign === undefined) {
                                     styleMap.textAlign = 'center';
                                 }
                                 break;
                         }
+                        if (style.getPropertyValue('border-style') === 'none') {
+                            for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
+                                styleMap[`${border}Style`] = 'outset';
+                                styleMap[`${border}Color`] = '#6C6C6C';
+                                styleMap[`${border}Width`] = '2px';
+                            }
+                        }
                         break;
+                    }
                     case 'BUTTON':
                         if (styleMap.textAlign === undefined) {
                             styleMap.textAlign = 'center';
@@ -3043,20 +3119,14 @@
             document.body.removeChild(element);
             setTimeout(() => window.URL.revokeObjectURL(url), 1);
         }
-        addAsset(pathname, filename, content = '', uri = '') {
-            if (content || uri) {
-                const index = this.assets.findIndex(item => item.pathname === pathname && item.filename === filename);
+        addAsset(data) {
+            if (data.content || data.uri || data.base64) {
+                const index = this.assets.findIndex(item => item.pathname === data.pathname && item.filename === data.filename);
                 if (index !== -1) {
-                    this.assets[index].content = content;
-                    this.assets[index].uri = uri;
+                    Object.assign(this.assets[index], data);
                 }
                 else {
-                    this.assets.push({
-                        pathname,
-                        filename,
-                        content,
-                        uri
-                    });
+                    this.assets.push(data);
                 }
             }
         }
@@ -3077,10 +3147,7 @@
                     `&filetype=${settings.outputArchiveFileType.toLowerCase()}` +
                     `&processingtime=${settings.outputMaxProcessingTime.toString().trim()}`, {
                     method: 'POST',
-                    headers: new Headers({
-                        'Accept': 'application/json, text/plain, */*',
-                        'Content-Type': 'application/json'
-                    }),
+                    headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                     body: JSON.stringify(files)
                 })
                     .then((response) => response.json())
@@ -3088,7 +3155,7 @@
                     if (result) {
                         if (result.zipname) {
                             fetch(`/api/downloadtobrowser?filename=${encodeURIComponent(result.zipname)}`)
-                                .then((responseBlob) => responseBlob.blob())
+                                .then((response) => response.blob())
                                 .then((blob) => File.downloadToDisk(blob, $util$6.fromLastIndexOf(result.zipname, '/')));
                         }
                         else if (result.system) {
@@ -3136,11 +3203,11 @@
 
     const $css$4 = squared.lib.css;
     const $dom$1 = squared.lib.dom;
-    const $regex$1 = squared.lib.regex;
     const $session$2 = squared.lib.session;
     const $util$7 = squared.lib.util;
     const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
     const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
+    const REGEXP_BACKGROUND = /\s*(url\(.+?\))\s*/;
     class Node extends squared.lib.base.Container {
         constructor(id, sessionId = '0', element) {
             super();
@@ -3235,14 +3302,14 @@
             }
             this._initial.iteration++;
         }
-        is(...containers) {
-            return containers.some(value => this.containerType === value);
+        is(containerType) {
+            return this.containerType === containerType;
         }
         of(containerType, ...alignmentType) {
             return this.containerType === containerType && alignmentType.some(value => this.hasAlign(value));
         }
-        unsafe(name, reset = false) {
-            if (reset) {
+        unsafe(name, unset = false) {
+            if (unset) {
                 delete this[`_${name}`];
             }
             else {
@@ -3360,6 +3427,10 @@
                             this._cached.blockStatic = undefined;
                             this._cached.autoMargin = undefined;
                             break;
+                        case 'backgroundColor':
+                        case 'backgroundImage':
+                            this._cached.visibleStyle = undefined;
+                            break;
                         case 'pageFlow':
                             this._cached.positionAuto = undefined;
                             this._cached.blockStatic = undefined;
@@ -3406,6 +3477,22 @@
                     break;
                 }
                 current = current[attr];
+            }
+            return result;
+        }
+        ascendOuter(condition) {
+            const result = [];
+            let current = this.outerWrapper;
+            while (current) {
+                if (condition) {
+                    if (condition(current)) {
+                        return [current];
+                    }
+                }
+                else {
+                    result.push(current);
+                }
+                current = current.outerWrapper;
             }
             return result;
         }
@@ -3540,17 +3627,17 @@
         }
         intersectX(rect, dimension = 'linear') {
             const self = this[dimension];
-            return (rect.left >= self.left && rect.left < self.right ||
-                rect.right > self.left && rect.right <= self.right ||
-                self.left >= rect.left && self.right <= rect.right ||
-                rect.left >= self.left && rect.right <= self.right);
+            return ($util$7.aboveRange(rect.left, self.left) && Math.ceil(rect.left) < self.right ||
+                rect.right > Math.ceil(self.left) && $util$7.belowRange(rect.right, self.right) ||
+                $util$7.aboveRange(self.left, rect.left) && $util$7.belowRange(self.right, rect.right) ||
+                $util$7.aboveRange(rect.left, self.left) && $util$7.belowRange(rect.right, self.right));
         }
         intersectY(rect, dimension = 'linear') {
             const self = this[dimension];
-            return (rect.top >= self.top && rect.top < self.bottom ||
-                rect.bottom > self.top && rect.bottom <= self.bottom ||
-                self.top >= rect.top && self.bottom <= rect.bottom ||
-                rect.top >= self.top && rect.bottom <= self.bottom);
+            return ($util$7.aboveRange(rect.top, self.top) && Math.ceil(rect.top) < self.bottom ||
+                rect.bottom > Math.ceil(self.top) && $util$7.belowRange(rect.bottom, self.bottom) ||
+                $util$7.aboveRange(self.top, rect.top) && $util$7.belowRange(self.bottom, rect.bottom) ||
+                $util$7.aboveRange(rect.top, self.top) && $util$7.belowRange(rect.bottom, self.bottom));
         }
         withinX(rect, dimension = 'linear') {
             const self = this[dimension];
@@ -3562,11 +3649,11 @@
         }
         outsideX(rect, dimension = 'linear') {
             const self = this[dimension];
-            return Math.ceil(self.left) < Math.floor(rect.left) || Math.floor(self.right) > Math.ceil(rect.right);
+            return self.left < Math.floor(rect.left) || Math.floor(self.right) > rect.right;
         }
         outsideY(rect, dimension = 'linear') {
             const self = this[dimension];
-            return Math.ceil(self.top) < Math.floor(rect.top) || Math.floor(self.bottom) > Math.ceil(rect.bottom);
+            return self.top < Math.floor(rect.top) || Math.floor(self.bottom) > rect.bottom;
         }
         css(attr, value, cache = false) {
             if (arguments.length >= 2) {
@@ -3856,15 +3943,8 @@
         setBounds(cache = true) {
             if (this.styleElement) {
                 this._bounds = $dom$1.assignRect($session$2.getClientRect(this._element, this.sessionId, cache), true);
-                if (this.documentBody) {
-                    let marginTop = this.marginTop;
-                    if (marginTop > 0) {
-                        const firstChild = this.firstChild;
-                        if (firstChild && firstChild.blockStatic && !firstChild.lineBreak && firstChild.marginTop >= marginTop) {
-                            marginTop = 0;
-                        }
-                    }
-                    this._bounds.top = marginTop;
+                if (this.documentBody && this.marginTop === 0) {
+                    this._bounds.top = 0;
                 }
             }
             else if (this.plainText) {
@@ -3881,7 +3961,7 @@
             if (overwrite) {
                 this._inlineText = value;
             }
-            else if (this.htmlElement && !this.svgElement) {
+            else if (this.htmlElement) {
                 const element = this._element;
                 switch (element.tagName) {
                     case 'INPUT':
@@ -3891,8 +3971,12 @@
                     case 'HR':
                     case 'SVG':
                         break;
+                    case 'BUTTON':
+                        this._inlineText = true;
+                        break;
                     default:
                         this._inlineText = value;
+                        break;
                 }
             }
         }
@@ -3917,7 +4001,7 @@
             if (offset !== 0) {
                 const attr = CSS_SPACING.get(region);
                 if (attr) {
-                    if (offset === null) {
+                    if (offset === undefined) {
                         this._boxReset[attr] = 1;
                     }
                     else if (!negative) {
@@ -3986,7 +4070,19 @@
             const result = [];
             let element = null;
             if (this._element) {
-                element = this._element.previousSibling;
+                if (this.naturalElement) {
+                    element = this._element.previousSibling;
+                }
+                else {
+                    let current = this.innerWrapped;
+                    while (current) {
+                        if (current.naturalElement) {
+                            element = current.element.previousSibling;
+                            break;
+                        }
+                        current = current.innerWrapped;
+                    }
+                }
             }
             else {
                 const node = this.firstChild;
@@ -4019,7 +4115,19 @@
             const result = [];
             let element = null;
             if (this._element) {
-                element = this._element.nextSibling;
+                if (this.naturalElement) {
+                    element = this._element.nextSibling;
+                }
+                else {
+                    let current = this.innerWrapped;
+                    while (current) {
+                        if (current.naturalElement) {
+                            element = current.element.nextSibling;
+                            break;
+                        }
+                        current = current.innerWrapped;
+                    }
+                }
             }
             else {
                 const node = this.lastChild;
@@ -4087,7 +4195,44 @@
             }
             return node[dimension][direction];
         }
-        setDimensions(dimension) {
+        setDimension(attr, horizontal) {
+            const baseValue = this.parseUnit(this._styleMap[attr], horizontal);
+            let value = Math.max(baseValue, this.parseUnit(this._styleMap[`min${$util$7.capitalize(attr)}`], horizontal));
+            if (value === 0 && this.naturalElement && this.styleElement) {
+                switch (this.tagName) {
+                    case 'IMG':
+                    case 'INPUT_IMAGE':
+                    case 'TD':
+                    case 'TH':
+                    case 'SVG':
+                    case 'IFRAME':
+                    case 'VIDEO':
+                    case 'CANVAS':
+                    case 'OBJECT':
+                    case 'EMBED':
+                        const dimension = $dom$1.getNamedItem(this._element, attr);
+                        if (dimension !== '') {
+                            value = this.parseUnit(dimension, horizontal);
+                            if (value > 0) {
+                                this.css(attr, $css$4.isPercent(dimension) ? dimension : $css$4.formatPX(dimension));
+                            }
+                        }
+                        break;
+                }
+            }
+            let maxValue = 0;
+            if (baseValue > 0 && !this.imageElement) {
+                const maxAttr = `max${$util$7.capitalize(attr)}`;
+                maxValue = this.parseUnit(this._styleMap[maxAttr], horizontal);
+                if (maxValue > 0 && maxValue <= baseValue && $css$4.isLength(this._styleMap[attr])) {
+                    maxValue = 0;
+                    this._styleMap[attr] = this._styleMap[maxAttr];
+                    delete this._styleMap[maxAttr];
+                }
+            }
+            return maxValue > 0 ? Math.min(value, maxValue) : value;
+        }
+        setBoxModel(dimension) {
             const bounds = this.unsafe(dimension);
             if (bounds) {
                 bounds.width = this.bounds.width;
@@ -4151,7 +4296,49 @@
                     }
                     break;
             }
-            return $util$7.convertFloat(this.convertLength(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
+            let paddingStart = 0;
+            let paddingEnd = 0;
+            if (region === 'padding') {
+                paddingStart = this.toFloat('paddingInlineStart');
+                paddingEnd = this.toFloat('paddingInlineEnd');
+                if (this.css('writingMode') === 'vertical-rl') {
+                    if (this.dir === 'ltr') {
+                        if (direction !== 'Top') {
+                            paddingStart = 0;
+                        }
+                        if (direction !== 'Bottom') {
+                            paddingEnd = 0;
+                        }
+                    }
+                    else {
+                        if (direction !== 'Bottom') {
+                            paddingStart = 0;
+                        }
+                        if (direction !== 'Top') {
+                            paddingEnd = 0;
+                        }
+                    }
+                }
+                else {
+                    if (this.dir === 'ltr') {
+                        if (direction !== 'Left') {
+                            paddingStart = 0;
+                        }
+                        if (direction !== 'Right') {
+                            paddingEnd = 0;
+                        }
+                    }
+                    else {
+                        if (direction !== 'Right') {
+                            paddingStart = 0;
+                        }
+                        if (direction !== 'Left') {
+                            paddingEnd = 0;
+                        }
+                    }
+                }
+            }
+            return paddingStart + $util$7.convertFloat(this.convertLength(attr, this.css(attr), direction === 'Left' || direction === 'Right')) + paddingEnd;
         }
         convertLength(attr, value, horizontal, parent = true) {
             if ($css$4.isPercent(value)) {
@@ -4190,7 +4377,7 @@
                         value = 'PLAINTEXT';
                     }
                     else if (element.tagName === 'INPUT') {
-                        value = element.type;
+                        value = `INPUT_${element.type}`;
                     }
                     else {
                         value = element.tagName;
@@ -4289,7 +4476,7 @@
                 else {
                     this._linear = $dom$1.assignRect(this._bounds);
                 }
-                this.setDimensions('linear');
+                this.setBoxModel('linear');
             }
             return this._linear || $dom$1.newBoxRectDimension();
         }
@@ -4309,7 +4496,7 @@
                 else {
                     this._box = $dom$1.assignRect(this._bounds);
                 }
-                this.setDimensions('box');
+                this.setBoxModel('box');
             }
             return this._box || $dom$1.newBoxRectDimension();
         }
@@ -4370,13 +4557,13 @@
         }
         get width() {
             if (this._cached.width === undefined) {
-                this._cached.width = Math.max(this.parseUnit(this._styleMap.width), this.parseUnit(this._styleMap.minWidth));
+                this._cached.width = this.setDimension('width', true);
             }
             return this._cached.width;
         }
         get height() {
             if (this._cached.height === undefined) {
-                this._cached.height = Math.max(this.parseUnit(this._styleMap.height, false), this.parseUnit(this._styleMap.minHeight, false));
+                this._cached.height = this.setDimension('height', false);
             }
             return this._cached.height;
         }
@@ -4384,7 +4571,7 @@
             return this.width > 0;
         }
         get hasHeight() {
-            const value = this.cssInitial('height', true);
+            const value = this.css('height');
             if ($css$4.isPercent(value)) {
                 const actualParent = this.actualParent;
                 if (actualParent && actualParent.hasHeight) {
@@ -4428,16 +4615,13 @@
         get display() {
             return this.css('display');
         }
-        get position() {
-            return this.css('position');
-        }
         set positionStatic(value) {
             this._cached.positionStatic = value;
             this.unsetCache('pageFlow');
         }
         get positionStatic() {
             if (this._cached.positionStatic === undefined) {
-                switch (this.position) {
+                switch (this.css('position')) {
                     case 'fixed':
                     case 'absolute':
                         this._cached.positionStatic = false;
@@ -4462,7 +4646,7 @@
         }
         get positionRelative() {
             if (this._cached.positionRelative === undefined) {
-                const value = this.position;
+                const value = this.css('position');
                 this._cached.positionRelative = value === 'relative' || value === 'sticky';
             }
             return this._cached.positionRelative;
@@ -4518,7 +4702,13 @@
         }
         get marginBottom() {
             if (this._cached.marginBottom === undefined) {
-                this._cached.marginBottom = this.inlineStatic || this.bounds.height === 0 && this.every(node => !node.pageFlow || node.floating && node.css('clear') === 'none') && !this.overflowY ? 0 : this.convertBox('margin', 'Bottom');
+                if (this.inlineStatic) {
+                    this._cached.marginBottom = 0;
+                }
+                else {
+                    const value = this.convertBox('margin', 'Bottom');
+                    this._cached.marginBottom = this.bounds.height === 0 && !this.overflowY && value > 0 ? 0 : value;
+                }
             }
             return this._cached.marginBottom;
         }
@@ -4611,11 +4801,17 @@
         get contentBox() {
             return this.css('boxSizing') !== 'border-box';
         }
+        set contentBoxWidth(value) {
+            this._cached.contentBoxWidth = value;
+        }
         get contentBoxWidth() {
             if (this._cached.contentBoxWidth === undefined) {
                 this._cached.contentBoxWidth = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth;
             }
             return this._cached.contentBoxWidth;
+        }
+        set contentBoxHeight(value) {
+            this._cached.contentBoxHeight = value;
         }
         get contentBoxHeight() {
             if (this._cached.contentBoxHeight === undefined) {
@@ -4650,6 +4846,9 @@
             if (this._cached.block === undefined) {
                 const value = this.display;
                 switch (value) {
+                    case 'inline':
+                        this._cached.block = this.svgElement && !this.hasWidth;
+                        break;
                     case 'block':
                     case 'flex':
                     case 'grid':
@@ -4675,7 +4874,7 @@
         get blockDimension() {
             if (this._cached.blockDimension === undefined) {
                 const value = this.display;
-                this._cached.blockDimension = this.block || value.startsWith('inline-') || value === 'table' || this.imageElement;
+                this._cached.blockDimension = this.block || value.startsWith('inline-') || value === 'table' || this.imageElement || this.svgElement;
             }
             return this._cached.blockDimension;
         }
@@ -4694,7 +4893,7 @@
         }
         get centerAligned() {
             if (this._cached.centerAligned === undefined) {
-                this._cached.centerAligned = this.autoMargin.leftRight || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'center';
+                this._cached.centerAligned = this.autoMargin.leftRight || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'center' || this.inlineStatic && this.cssAscend('textAlign', true) === 'center';
             }
             return this._cached.centerAligned;
         }
@@ -4783,27 +4982,32 @@
             return this.inlineText && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
         }
         get src() {
-            return this.imageElement || this.tagName === 'IMAGE' ? this._element.src : '';
+            return this.imageElement || this.tagName === 'INPUT_IMAGE' ? this._element.src : '';
         }
         set overflow(value) {
             if (value === 0 || value === 16 /* VERTICAL */ || value === 8 /* HORIZONTAL */ || value === (8 /* HORIZONTAL */ | 16 /* VERTICAL */)) {
+                if ($util$7.hasBit(this.overflow, 64 /* BLOCK */)) {
+                    value |= 64 /* BLOCK */;
+                }
                 this._cached.overflow = value;
             }
         }
         get overflow() {
             if (this._cached.overflow === undefined) {
-                const element = this._element;
+                const overflowX = this.css('overflowX');
+                const overflowY = this.css('overflowY');
                 let value = 0;
                 if (!this.documentBody) {
-                    const overflow = this.css('overflow');
-                    const overflowX = this.css('overflowX');
-                    const overflowY = this.css('overflowY');
-                    if (this.has('width') && (overflow === 'scroll' || overflowX === 'scroll' || overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth)) {
+                    const element = this.htmlElement && this._element;
+                    if ((this.has('width') || this.has('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth)) {
                         value |= 8 /* HORIZONTAL */;
                     }
-                    if (this.has('height') && (overflow === 'scroll' || overflowY === 'scroll' || overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
+                    if (this.hasHeight && (this.has('height') || this.has('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
                         value |= 16 /* VERTICAL */;
                     }
+                }
+                if (overflowX === 'auto' || overflowX === 'hidden' || overflowX === 'overlay' || overflowY === 'auto' || overflowY === 'hidden' || overflowY === 'overlay') {
+                    value |= 64 /* BLOCK */;
                 }
                 this._cached.overflow = value;
             }
@@ -4820,9 +5024,7 @@
         }
         get baseline() {
             if (this._cached.baseline === undefined) {
-                const value = this.verticalAlign;
-                const initialValue = this.cssInitial('verticalAlign');
-                this._cached.baseline = this.pageFlow && !this.floating && !this.svgElement && (value === 'baseline' || value === 'initial' || $css$4.isLength(initialValue) && parseInt(initialValue) === 0);
+                this._cached.baseline = this.pageFlow && !this.floating && this.cssAny('verticalAlign', 'baseline', 'initial', '0px', '0%');
             }
             return this._cached.baseline;
         }
@@ -4830,7 +5032,7 @@
             if (this._cached.verticalAlign === undefined) {
                 let value = this.css('verticalAlign');
                 if ($css$4.isPercent(value)) {
-                    value = $css$4.formatPX(parseInt(value) / 100 * this.bounds.height);
+                    value = this.convertPX(value, false);
                 }
                 this._cached.verticalAlign = value;
             }
@@ -4852,7 +5054,11 @@
             return this._cached.positiveAxis;
         }
         get leftTopAxis() {
-            return this.cssInitial('position') === 'absolute' && this.absoluteParent === this.documentParent || this.position === 'fixed';
+            if (this._cached.leftTopAxis === undefined) {
+                const position = this.cssInitial('position');
+                this._cached.leftTopAxis = position === 'absolute' && this.absoluteParent === this.documentParent || position === 'fixed';
+            }
+            return this._cached.leftTopAxis;
         }
         set renderExclude(value) {
             this._cached.renderExclude = value;
@@ -4864,11 +5070,44 @@
             }
             return this._cached.renderExclude;
         }
+        get backgroundColor() {
+            if (this._cached.backgroundColor === undefined) {
+                let value = this.css('backgroundColor');
+                if (value !== '' && this.pageFlow && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === value)) {
+                    let current = this.actualParent;
+                    while (current && current.id !== 0) {
+                        const color = current.cssInitial('backgroundColor', true);
+                        if (color !== '') {
+                            if (color === value) {
+                                value = '';
+                            }
+                            break;
+                        }
+                        current = current.actualParent;
+                    }
+                }
+                this._cached.backgroundColor = value !== 'rgba(0, 0, 0, 0)' ? value : '';
+            }
+            return this._cached.backgroundColor;
+        }
+        get backgroundImage() {
+            if (this._cached.backgroundImage === undefined) {
+                const value = this.css('backgroundImage');
+                if (value !== '' && value !== 'none') {
+                    this._cached.backgroundImage = value;
+                }
+                else {
+                    const match = REGEXP_BACKGROUND.exec(this.css('background'));
+                    this._cached.backgroundImage = match ? match[1] : '';
+                }
+            }
+            return this._cached.backgroundImage;
+        }
         get visibleStyle() {
             if (this._cached.visibleStyle === undefined) {
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-                const backgroundImage = $regex$1.CSS.URL.test(this.css('backgroundImage')) || $regex$1.CSS.URL.test(this.css('background'));
-                const backgroundColor = this.has('backgroundColor');
+                const backgroundColor = this.backgroundColor !== '';
+                const backgroundImage = this.backgroundImage !== '';
                 this._cached.visibleStyle = {
                     background: borderWidth || backgroundImage || backgroundColor,
                     borderWidth,
@@ -4881,8 +5120,7 @@
         }
         get preserveWhiteSpace() {
             if (this._cached.preserveWhiteSpace === undefined) {
-                const value = this.css('whiteSpace');
-                this._cached.preserveWhiteSpace = value === 'pre' || value === 'pre-wrap';
+                this._cached.preserveWhiteSpace = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
             }
             return this._cached.preserveWhiteSpace;
         }
@@ -5084,13 +5322,10 @@
             }
             return this._cached.dir;
         }
-        get nodes() {
-            return this.rendered ? this.renderChildren : this.children;
-        }
         get center() {
             return {
-                x: this.bounds.left + Math.floor(this.bounds.width / 2),
-                y: this.bounds.top + Math.floor(this.actualHeight / 2)
+                x: (this.bounds.left + this.bounds.right) / 2,
+                y: (this.bounds.top + this.bounds.bottom) / 2
             };
         }
     }
@@ -5138,7 +5373,7 @@
         }
         get blockStatic() {
             if (this._cached.blockStatic === undefined) {
-                const value = this.actualChildren.length && this.actualChildren[0].blockStatic || this.actualWidth === this.documentParent.actualWidth || this.hasAlign(64 /* BLOCK */) || this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(256 /* COLUMN */);
+                const value = this.actualChildren.length && this.actualChildren[0].blockStatic || this.actualWidth === this.documentParent.actualWidth && !this.some(node => node.plainText) || this.hasAlign(64 /* BLOCK */) || this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(256 /* COLUMN */);
                 if (!value && this.containerType === 0) {
                     return false;
                 }
@@ -5181,6 +5416,9 @@
                 this._cached.pageFlow = !this.cssAny('position', 'absolute', 'fixed');
             }
             return this._cached.pageFlow;
+        }
+        set baseline(value) {
+            super.baseline = value;
         }
         get baseline() {
             if (this._cached.baseline === undefined) {
@@ -5234,19 +5472,26 @@
     const $client$1 = squared.lib.client;
     const $css$5 = squared.lib.css;
     const $math = squared.lib.math;
-    const $regex$2 = squared.lib.regex;
+    const $regex$1 = squared.lib.regex;
     const $session$3 = squared.lib.session;
     const $util$8 = squared.lib.util;
-    const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${$regex$2.STRING.LENGTH_PERCENTAGE}|${$regex$2.STRING.CSS_ANGLE}|(?:${$regex$2.STRING.CSS_CALC}(?=,)|${$regex$2.STRING.CSS_CALC}))?,?\\s*`;
+    const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${$regex$1.STRING.LENGTH_PERCENTAGE}|${$regex$1.STRING.CSS_ANGLE}|(?:${$regex$1.STRING.CSS_CALC}(?=,)|${$regex$1.STRING.CSS_CALC}))?,?\\s*`;
     const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
-    const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
     const REGEXP_NEWLINE = /\n/g;
     function removeExcluded(node, element, attr) {
         let value = element[attr];
         for (let i = 0; i < node.actualChildren.length; i++) {
             const item = node.actualChildren[i];
-            if (item.excluded || item.pseudoElement || !item.pageFlow || item.dataset.target) {
-                if ($util$8.isString(item[attr])) {
+            if (!item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
+                if (item.htmlElement && attr === 'innerHTML') {
+                    if (item.lineBreak) {
+                        value = value.replace(item.element.outerHTML, '\\n');
+                    }
+                    else {
+                        value = value.replace(item.element.outerHTML, item.pageFlow && item.textContent ? '&#160;' : '');
+                    }
+                }
+                else if ($util$8.isString(item[attr])) {
                     value = value.replace(item[attr], '');
                 }
                 else if (i === 0) {
@@ -5258,7 +5503,7 @@
             }
         }
         if (attr === 'innerHTML') {
-            value = value.replace($regex$2.ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
+            value = value.replace($regex$1.ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
         }
         return value;
     }
@@ -5366,7 +5611,7 @@
         return 0;
     }
     function replaceWhiteSpace(parent, node, element, value) {
-        value = value.replace($regex$2.ESCAPE.U00A0, '&#160;');
+        value = value.replace($regex$1.ESCAPE.U00A0, '&#160;');
         switch (node.css('whiteSpace')) {
             case 'nowrap':
                 value = value.replace(REGEXP_NEWLINE, ' ');
@@ -5386,11 +5631,11 @@
                     .replace(/\s+/g, ' ');
                 break;
             default:
-                if (element.previousSibling && $session$3.causesLineBreak(element.previousSibling, node.sessionId)) {
-                    value = value.replace($regex$2.CHAR.LEADINGSPACE, '');
+                if (element.previousSibling && $session$3.causesLineBreak(element.previousSibling, node.sessionId) || node.singleChild && node.htmlElement) {
+                    value = value.replace($regex$1.CHAR.LEADINGSPACE, '');
                 }
-                if (element.nextSibling && $session$3.causesLineBreak(element.nextSibling, node.sessionId)) {
-                    value = value.replace($regex$2.CHAR.TRAILINGSPACE, '');
+                if (element.nextSibling && $session$3.causesLineBreak(element.nextSibling, node.sessionId) || node.singleChild && node.htmlElement) {
+                    value = value.replace($regex$1.CHAR.TRAILINGSPACE, '');
                 }
                 return [value, false];
         }
@@ -5398,38 +5643,10 @@
     }
     function getBackgroundSize(node, index, value) {
         if (value) {
-            const sizes = value.split($regex$2.XML.SEPARATOR);
+            const sizes = value.split($regex$1.XML.SEPARATOR);
             return Resource.getBackgroundSize(node, sizes[index % sizes.length]);
         }
         return undefined;
-    }
-    function applyTextTransform(type, value) {
-        if (type === 'none' || type === 'initial') {
-            return value;
-        }
-        const words = value.split($regex$2.XML.BREAKWORD);
-        switch (type) {
-            case 'uppercase':
-                for (const word of words) {
-                    if (!$regex$2.XML.ENTITY.test(word)) {
-                        value = value.replace(word, word.toUpperCase());
-                    }
-                }
-                break;
-            case 'lowercase':
-                for (const word of words) {
-                    if (!$regex$2.XML.ENTITY.test(word)) {
-                        value = value.replace(word, word.toLowerCase());
-                    }
-                }
-                break;
-            case 'capitalize':
-                for (const word of words) {
-                    value = value.replace(word, $util$8.capitalize(word));
-                }
-                break;
-        }
-        return value;
     }
     const getGradientPosition = (value) => value ? /(.+?)?\s*at (.+?)$/.exec(value) : null;
     class Resource {
@@ -5482,7 +5699,6 @@
         }
         static getOptionArray(element) {
             const stringArray = [];
-            const textTransform = $css$5.getStyle(element).getPropertyValue('text-transform');
             let numberArray = [];
             let i = -1;
             while (++i < element.children.length) {
@@ -5499,7 +5715,7 @@
                             continue;
                         }
                         if (value !== '') {
-                            stringArray.push(applyTextTransform(textTransform, value));
+                            stringArray.push(value);
                         }
                     }
                 }
@@ -5597,11 +5813,7 @@
             if (element && element.complete) {
                 const uri = element.src.trim();
                 if (uri !== '') {
-                    Resource.ASSETS.images.set(uri, {
-                        width: element.naturalWidth,
-                        height: element.naturalHeight,
-                        uri
-                    });
+                    Resource.ASSETS.images.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
                 }
             }
         }
@@ -5613,13 +5825,67 @@
             fonts.push(data);
             Resource.ASSETS.fonts.set(data.fontFamily, fonts);
         }
-        getFont(fontFamily, fontStyle = 'normal', fontWeight = '400') {
+        getFont(fontFamily, fontStyle = 'normal', fontWeight) {
             const font = Resource.ASSETS.fonts.get(fontFamily);
             if (font) {
                 const fontFormat = this.application.controllerHandler.localSettings.supported.fontFormat;
-                return font.find(item => item.fontStyle === fontStyle && item.fontWeight === parseInt(fontWeight) && fontFormat.includes(item.srcFormat));
+                return font.find(item => item.fontStyle === fontStyle && (fontWeight === undefined || item.fontWeight === parseInt(fontWeight)) && fontFormat.includes(item.srcFormat));
             }
             return undefined;
+        }
+        addRawData(dataURI, mimeType, encoding, content, width = 0, height = 0) {
+            encoding = encoding.toLowerCase();
+            const settings = this.application.controllerHandler.localSettings;
+            let base64;
+            if (encoding === 'base64') {
+                base64 = content;
+                if (mimeType === 'image/svg+xml') {
+                    content = window.atob(content);
+                }
+            }
+            else {
+                content = content.replace(/\\"/g, '"');
+            }
+            for (const format of settings.supported.imageFormat) {
+                if (mimeType.indexOf(format) !== -1) {
+                    let filename;
+                    if (dataURI.endsWith(`.${format}`)) {
+                        filename = $util$8.fromLastIndexOf(dataURI, '/');
+                    }
+                    else {
+                        filename = `${$util$8.buildAlphaString(5).toLowerCase()}_${new Date().getTime()}.${format}`;
+                    }
+                    Resource.ASSETS.rawData.set(dataURI, {
+                        pathname: '',
+                        filename,
+                        content,
+                        base64,
+                        mimeType,
+                        width,
+                        height
+                    });
+                    return filename;
+                }
+            }
+            return '';
+        }
+        getRawData(dataURI) {
+            if (dataURI.startsWith('url(')) {
+                const match = $regex$1.CSS.URL.exec(dataURI);
+                if (match) {
+                    dataURI = match[1];
+                }
+            }
+            return Resource.ASSETS.rawData.get(dataURI);
+        }
+        writeRawImage(filename, base64) {
+            if (this.fileHandler) {
+                this.fileHandler.addAsset({
+                    pathname: this.application.controllerHandler.localSettings.directory.image,
+                    filename,
+                    base64
+                });
+            }
         }
         setBoxStyle(node) {
             if (node.visible && node.styleElement) {
@@ -5641,13 +5907,14 @@
                     boxStyle.borderLeft = undefined;
                 }
                 for (const attr in boxStyle) {
-                    const value = node.css(attr);
+                    const value = attr === 'backgroundImage' || attr === 'backgroundColor' ? node[attr] : node.css(attr);
                     switch (attr) {
                         case 'backgroundColor': {
-                            if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && Resource.isInheritedStyle(node, 'backgroundColor'))) {
+                            const opacity = node.css('opacity');
+                            if (node.pageFlow && Resource.isInheritedStyle(node, 'backgroundColor') && opacity === '1' && node.documentParent.visible) {
                                 continue;
                             }
-                            const color = $color$1.parseColor(value, node.css('opacity'));
+                            const color = $color$1.parseColor(value, opacity);
                             if (color) {
                                 boxStyle.backgroundColor = color.valueAsRGBA;
                             }
@@ -5660,7 +5927,7 @@
                             boxStyle[attr] = value;
                             break;
                         case 'backgroundImage':
-                            if (value !== 'none' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                            if (value !== '' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                                 const images = [];
                                 const opacity = node.css('opacity');
                                 let match;
@@ -5919,27 +6186,10 @@
             }
         }
         setFontStyle(node) {
-            if (!(node.element === null ||
-                node.renderChildren.length ||
-                node.imageElement ||
-                node.svgElement ||
-                node.tagName === 'HR' ||
-                node.textEmpty && !node.visibleStyle.background)) {
-                const opacity = node.css('opacity');
-                const color = $color$1.parseColor(node.css('color'), opacity);
-                let fontFamily = node.css('fontFamily').trim();
+            if (!(node.element === null || node.renderChildren.length || node.imageElement || node.svgElement || node.tagName === 'HR' || node.textEmpty && !node.visibleStyle.background)) {
+                const color = $color$1.parseColor(node.css('color'), node.css('opacity'));
                 let fontSize = node.css('fontSize');
                 let fontWeight = node.css('fontWeight');
-                if (fontFamily === '' && $client$1.isUserAgent(16 /* EDGE */)) {
-                    switch (node.tagName) {
-                        case 'TT':
-                        case 'CODE':
-                        case 'KBD':
-                        case 'SAMP':
-                            fontFamily = 'monospace';
-                            break;
-                    }
-                }
                 if ($util$8.convertInt(fontSize) === 0) {
                     switch (fontSize) {
                         case 'xx-small':
@@ -5981,14 +6231,13 @@
                             break;
                     }
                 }
-                const result = {
-                    fontFamily,
+                node.data(Resource.KEY_NAME, 'fontStyle', {
+                    fontFamily: node.css('fontFamily').trim(),
                     fontStyle: node.css('fontStyle'),
                     fontSize,
                     fontWeight,
                     color: color ? color.valueAsRGBA : ''
-                };
-                node.data(Resource.KEY_NAME, 'fontStyle', result);
+                });
             }
         }
         setValueString(node) {
@@ -6000,7 +6249,6 @@
                     let value = '';
                     let trimming = false;
                     let inlined = false;
-                    const transform = node.css('textTransform');
                     switch (element.tagName) {
                         case 'INPUT':
                             value = element.value;
@@ -6064,35 +6312,23 @@
                         case 'TEXTAREA':
                             value = element.value;
                             break;
-                        case 'BUTTON':
-                            value = applyTextTransform(transform, element.innerText);
-                            break;
                         case 'IFRAME':
                             value = element.src;
                             break;
                         default:
                             if (node.plainText) {
                                 name = node.textContent.trim();
-                                [value] = replaceWhiteSpace(renderParent, node, element, applyTextTransform(transform, node.textContent.replace($regex$2.ESCAPE.AMP, '&amp;')));
+                                [value] = replaceWhiteSpace(renderParent, node, element, node.textContent.replace($regex$1.ESCAPE.AMP, '&amp;'));
                                 inlined = true;
                                 trimming = true;
                             }
                             else if (node.inlineText) {
                                 name = node.textContent.trim();
-                                if (element.tagName === 'CODE') {
-                                    value = removeExcluded(node, element, 'innerHTML');
-                                }
-                                else if (Resource.hasLineBreak(node, true)) {
-                                    value = applyTextTransform(transform, removeExcluded(node, element, 'innerHTML')).replace(REGEXP_LINEBREAK, '\\n').replace($regex$2.XML.TAGNAME_G, '');
-                                }
-                                else {
-                                    value = applyTextTransform(transform, removeExcluded(node, element, 'textContent'));
-                                }
-                                [value, inlined] = replaceWhiteSpace(renderParent, node, element, value);
+                                [value, inlined] = replaceWhiteSpace(renderParent, node, element, removeExcluded(node, element, element.children.length || element.tagName === 'CODE' ? 'innerHTML' : 'textContent'));
                                 trimming = true;
                             }
-                            else if (Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle')) && element.innerText.trim() === '') {
-                                value = applyTextTransform(transform, element.innerText);
+                            else if (node.textContent.trim() === '' && Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                                value = node.textContent;
                             }
                             break;
                     }
@@ -6101,29 +6337,29 @@
                             const previousSibling = node.previousSiblings().pop();
                             let previousSpaceEnd = false;
                             if (value.length > 1) {
-                                if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $regex$2.CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
-                                    value = value.replace($regex$2.CHAR.LEADINGSPACE, '');
+                                if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $regex$1.CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
+                                    value = value.replace($regex$1.CHAR.LEADINGSPACE, '');
                                 }
                                 else if (previousSibling.element) {
-                                    previousSpaceEnd = $regex$2.CHAR.TRAILINGSPACE.test(previousSibling.element.innerHTML || previousSibling.element.innerText || previousSibling.textContent);
+                                    previousSpaceEnd = $regex$1.CHAR.TRAILINGSPACE.test(previousSibling.textContent);
                                 }
                             }
                             if (inlined) {
                                 const original = value;
                                 value = value.trim();
-                                if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $regex$2.CHAR.LEADINGSPACE.test(original)) {
+                                if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $regex$1.CHAR.LEADINGSPACE.test(original)) {
                                     value = '&#160;' + value;
                                 }
-                                if (!node.lineBreakTrailing && $regex$2.CHAR.TRAILINGSPACE.test(original)) {
+                                if (!node.lineBreakTrailing && $regex$1.CHAR.TRAILINGSPACE.test(original)) {
                                     value += '&#160;';
                                 }
                             }
                             else if (value.trim() !== '') {
-                                value = value.replace($regex$2.CHAR.LEADINGSPACE, previousSibling && (previousSibling.block ||
+                                value = value.replace($regex$1.CHAR.LEADINGSPACE, previousSibling && (previousSibling.block ||
                                     previousSibling.lineBreak ||
                                     previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
                                     node.multiline && Resource.hasLineBreak(node)) ? '' : '&#160;');
-                                value = value.replace($regex$2.CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : '&#160;');
+                                value = value.replace($regex$1.CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : '&#160;');
                             }
                             else if (!node.inlineText) {
                                 return;
@@ -6147,7 +6383,8 @@
     Resource.ASSETS = {
         ids: new Map(),
         images: new Map(),
-        fonts: new Map()
+        fonts: new Map(),
+        rawData: new Map()
     };
     Resource.STORED = {
         strings: new Map(),
@@ -6161,18 +6398,18 @@
         constructor() {
             super(...arguments);
             this.options = {
-                showLabel: true
+                showLabel: false
             };
         }
         afterInit() {
             for (const node of this.application.processing.cache) {
                 if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                     switch (node.tagName) {
-                        case 'IMAGE':
+                        case 'INPUT_IMAGE':
                             node.extracted = [node];
                             break;
-                        case 'RADIO':
-                        case 'CHECKBOX':
+                        case 'INPUT_RADIO':
+                        case 'INPUT_CHECKBOX':
                             const element = node.element;
                             [node.nextSibling, node.previousSibling].some(sibling => {
                                 if (sibling && sibling.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
@@ -7057,7 +7294,7 @@
         processNode(node) {
             const controller = this.application.controllerHandler;
             const children = node.filter(item => {
-                if (item.pageFlow && item.pseudoElement && item.css('content') === '""' && item.contentBoxWidth === 0) {
+                if (item.pageFlow && item.pseudoElement && item.contentBoxWidth === 0 && item.css('content') === '""') {
                     item.hide();
                     return false;
                 }
@@ -7130,17 +7367,23 @@
                 }
                 node.clear();
                 let maxCount = 0;
-                for (let i = 0; i < rows.length; i++) {
-                    const seg = rows[i];
-                    const group = controller.createNodeGroup(seg[0], seg, node);
-                    group.siblingIndex = i;
-                    node.sort(NodeList.siblingIndex);
-                    const box = group.unsafe('box');
-                    if (box) {
-                        box[size] = node.box[size];
+                if (rows.length > 1) {
+                    for (let i = 0; i < rows.length; i++) {
+                        const seg = rows[i];
+                        const group = controller.createNodeGroup(seg[0], seg, node);
+                        group.siblingIndex = i;
+                        node.sort(NodeList.siblingIndex);
+                        const box = group.unsafe('box');
+                        if (box) {
+                            box[size] = node.box[size];
+                        }
+                        group.alignmentType |= 128 /* SEGMENTED */;
+                        maxCount = Math.max(seg.length, maxCount);
                     }
-                    group.alignmentType |= 128 /* SEGMENTED */;
-                    maxCount = Math.max(seg.length, maxCount);
+                }
+                else {
+                    maxCount = rows[0].length;
+                    node.retain(rows[0]);
                 }
                 if (mainData.directionRow) {
                     mainData.rowCount = rows.length;
@@ -7472,10 +7715,10 @@
                     }
                 }
                 if (node.tableElement && node.css('borderCollapse') === 'collapse') {
-                    node.modifyBox(32 /* PADDING_TOP */, null);
-                    node.modifyBox(64 /* PADDING_RIGHT */, null);
-                    node.modifyBox(128 /* PADDING_BOTTOM */, null);
-                    node.modifyBox(256 /* PADDING_LEFT */, null);
+                    node.modifyBox(32 /* PADDING_TOP */);
+                    node.modifyBox(64 /* PADDING_RIGHT */);
+                    node.modifyBox(128 /* PADDING_BOTTOM */);
+                    node.modifyBox(256 /* PADDING_LEFT */);
                 }
                 node.data(EXT_NAME.GRID, 'mainData', mainData);
             }
@@ -7557,7 +7800,7 @@
                                     let src = '';
                                     let position = '';
                                     if (!item.visibleStyle.backgroundRepeat) {
-                                        src = item.css('backgroundImage');
+                                        src = item.backgroundImage;
                                         position = item.css('backgroundPosition');
                                     }
                                     if (src && src !== 'none') {
@@ -7600,6 +7843,7 @@
                 let { top, right, bottom, left } = node;
                 if (renderParent.support.container.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                     target = node.clone(this.application.nextId, true, true);
+                    target.baselineAltered = true;
                     node.hide(true);
                     this.application.session.cache.append(target, false);
                     const layout = new Layout(renderParent, target, target.containerType, target.alignmentType);
@@ -7710,26 +7954,17 @@
     }
 
     const $css$a = squared.lib.css;
-    const $regex$3 = squared.lib.regex;
     class Sprite extends Extension {
         condition(node) {
             let valid = false;
-            if (node.hasWidth && node.hasHeight && node.length === 0 && (this.included(node.element) || !node.dataset.use)) {
-                let url = node.css('backgroundImage');
-                if (url === '' || url === 'none') {
-                    const match = $regex$3.CSS.URL.exec(node.css('background'));
-                    url = match ? match[0] : '';
-                }
-                if (url !== '') {
-                    const image = this.application.resourceHandler.getImage($css$a.resolveURL(url));
-                    if (image) {
-                        const dimension = node.actualDimension;
-                        const position = $css$a.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, node.fontSize);
-                        if (position.left <= 0 && position.top <= 0 && image.width > dimension.width && image.height > dimension.height) {
-                            image.position = { x: position.left, y: position.top };
-                            node.data(EXT_NAME.SPRITE, 'mainData', image);
-                            valid = true;
-                        }
+            if (node.hasWidth && node.hasHeight && node.length === 0 && node.backgroundImage !== '' && (this.included(node.element) || !node.dataset.use)) {
+                const image = (this.application.resourceHandler.getRawData(node.backgroundImage) || this.application.resourceHandler.getImage($css$a.resolveURL(node.backgroundImage)));
+                if (image) {
+                    const dimension = node.actualDimension;
+                    const position = $css$a.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, node.fontSize);
+                    if (position.left <= 0 && position.top <= 0 && image.width > dimension.width && image.height > dimension.height) {
+                        node.data(EXT_NAME.SPRITE, 'mainData', { image, position });
+                        valid = true;
                     }
                 }
             }
@@ -7768,13 +8003,13 @@
         }
     }
 
-    const $client$2 = squared.lib.client;
     const $css$c = squared.lib.css;
     const $dom$3 = squared.lib.dom;
     const $math$1 = squared.lib.math;
     const $util$d = squared.lib.util;
     const REGEXP_BORDER = /none|\s0px|rgba\(0, 0, 0, 0\)|transparent/;
-    const REGEXP_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
+    const REGEXP_BACKGROUND$1 = /rgba\(0, 0, 0, 0\)|transparent/;
+    const REGEXP_BORDERSTYLE = /^([\d.]+[a-z]+) ([a-z]+) (.+)$/;
     class Table extends Extension {
         static createDataAttribute(node) {
             return {
@@ -7868,23 +8103,21 @@
                     if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                         if (colgroup) {
                             const style = $css$c.getStyle(colgroup.children[columnIndex[i]]);
-                            if (style.background) {
-                                element.style.setProperty('background', style.background);
+                            if (style.backgroundImage && style.backgroundImage !== 'none') {
+                                td.css('backgroundImage', style.backgroundImage, true);
                             }
-                            else if (style.backgroundColor) {
-                                element.style.setProperty('background-color', style.backgroundColor);
+                            if (style.backgroundColor && !REGEXP_BACKGROUND$1.test(style.backgroundColor)) {
+                                td.css('backgroundColor', style.backgroundColor, true);
                             }
                         }
                         else {
-                            let value = $css$c.getInheritedStyle(element, 'background', REGEXP_BACKGROUND, 'TABLE');
+                            let value = $css$c.getInheritedStyle(element, 'backgroundImage', /none/, 'TABLE');
                             if (value !== '') {
-                                element.style.setProperty('background', value);
+                                td.css('backgroundImage', value, true);
                             }
-                            else {
-                                value = $css$c.getInheritedStyle(element, 'backgroundColor', REGEXP_BACKGROUND, 'TABLE');
-                                if (value !== '') {
-                                    element.style.setProperty('background-color', value);
-                                }
+                            value = $css$c.getInheritedStyle(element, 'backgroundColor', REGEXP_BACKGROUND$1, 'TABLE');
+                            if (value !== '') {
+                                td.css('backgroundColor', value, true);
                             }
                         }
                     }
@@ -7893,7 +8126,7 @@
                             function setBorderStyle(attr) {
                                 const value = $css$c.getInheritedStyle(element, attr, REGEXP_BORDER, 'TABLE');
                                 if (value !== '') {
-                                    const match = /^(\d+[a-z]+) ([a-z]+) (.+)$/.exec(value);
+                                    const match = REGEXP_BORDERSTYLE.exec(value);
                                     if (match) {
                                         td.css(`${attr}Style`, match[2]);
                                         td.css(`${attr}Color`, match[3]);
@@ -7956,33 +8189,16 @@
                         rowWidth[i] += td.bounds.width + horizontal;
                     }
                     if (spacingWidth > 0) {
-                        if (j < tr.length - 1) {
-                            td.modifyBox(4 /* MARGIN_RIGHT */, spacingWidth);
-                        }
-                        if (columnIndex[i] !== 0) {
-                            td.modifyBox(16 /* MARGIN_LEFT */, spacingWidth);
-                        }
+                        td.modifyBox(16 /* MARGIN_LEFT */, columnIndex[i] === 0 ? horizontal : spacingWidth);
+                        td.modifyBox(4 /* MARGIN_RIGHT */, j === 0 ? spacingWidth : horizontal);
                     }
                     if (spacingHeight > 0) {
-                        if (i > 0) {
-                            td.modifyBox(2 /* MARGIN_TOP */, spacingHeight);
-                        }
-                        if (i + element.rowSpan < table.length) {
-                            td.modifyBox(8 /* MARGIN_BOTTOM */, spacingHeight);
-                        }
+                        td.modifyBox(2 /* MARGIN_TOP */, i === 0 ? vertical : spacingHeight);
+                        td.modifyBox(8 /* MARGIN_BOTTOM */, i + element.rowSpan < table.length ? spacingHeight : vertical);
                     }
                     columnIndex[i] += element.colSpan;
                 });
                 columnCount = Math.max(columnCount, columnIndex[i]);
-            }
-            node.resetBox(480 /* PADDING */);
-            if (horizontal > 0) {
-                node.modifyBox(256 /* PADDING_LEFT */, horizontal);
-                node.modifyBox(64 /* PADDING_RIGHT */, horizontal);
-            }
-            if (vertical > 0) {
-                node.modifyBox(32 /* PADDING_TOP */, vertical);
-                node.modifyBox(128 /* PADDING_BOTTOM */, vertical);
             }
             if (node.has('width', 2 /* LENGTH */) && mapWidth.some(value => $css$c.isPercent(value))) {
                 $util$d.replaceMap(mapWidth, (value, index) => {
@@ -8000,7 +8216,7 @@
                         value = '0px';
                     }
                     else if (percentTotal - percent < 0) {
-                        value = $css$c.formatPercent(percentTotal);
+                        value = $css$c.formatPercent(percentTotal / 100);
                     }
                     percentTotal -= percent;
                     return value;
@@ -8065,7 +8281,7 @@
             const caption = node.find(item => item.tagName === 'CAPTION');
             node.clear();
             if (caption) {
-                if (!caption.hasWidth && !$client$2.isUserAgent(16 /* EDGE */)) {
+                if (!caption.hasWidth) {
                     if (caption.textElement) {
                         if (!caption.has('maxWidth')) {
                             caption.css('maxWidth', $css$c.formatPX(caption.bounds.width));
@@ -8405,9 +8621,11 @@
         return node.renderAs || node.outerWrapper || node.innerWrapped || node;
     }
     function resetMargin(node, value) {
-        getVisibleNode(node).modifyBox(value, null);
-        if (node.companion) {
-            node.companion.modifyBox(value, null);
+        if (node.getBox(value)[0] !== 1) {
+            getVisibleNode(node).modifyBox(value);
+            if (node.companion) {
+                node.companion.modifyBox(value);
+            }
         }
     }
     function applyMarginCollapse(node, child, direction) {
@@ -8439,7 +8657,7 @@
                     }
                 }
                 const outside = node[margin] >= child[margin];
-                if (child.bounds.height === 0 && outside && child.textElement && child.textContent === '') {
+                if (child.bounds.height === 0 && outside && child.textElement && child.textContent === '' && child.extensions.length === 0) {
                     child.hide();
                 }
                 else if (child.getBox(boxMargin)[0] !== 1) {
@@ -8450,12 +8668,17 @@
                         }
                         else {
                             resetMargin(node, boxMargin);
+                            if (direction) {
+                                node.bounds.top = 0;
+                                node.unsafe('box', true);
+                                node.unsafe('linear', true);
+                            }
                         }
                     }
                     else {
-                        if (!outside) {
+                        if (!outside && node.getBox(boxMargin)[0] !== 1) {
                             const visibleParent = getVisibleNode(node);
-                            visibleParent.modifyBox(boxMargin, null);
+                            visibleParent.modifyBox(boxMargin);
                             visibleParent.modifyBox(boxMargin, child[margin]);
                         }
                         resetChild = true;
@@ -8484,10 +8707,15 @@
                             continue;
                         }
                         if (node.blockStatic) {
-                            if (firstChild === undefined) {
-                                firstChild = current;
+                            if (!current.floating) {
+                                if (firstChild === undefined) {
+                                    firstChild = current;
+                                }
+                                lastChild = current;
                             }
-                            lastChild = current;
+                            else {
+                                lastChild = undefined;
+                            }
                         }
                         if (i === 0) {
                             continue;
@@ -8500,12 +8728,22 @@
                                     const currentVisible = getVisibleNode(current);
                                     if (isBlockElement(previous)) {
                                         const previousVisible = getVisibleNode(previous);
+                                        let inheritedBottom = false;
+                                        let inheritedTop = false;
                                         let marginBottom = $util$f.convertFloat(previous.cssInitial('marginBottom', false, true));
+                                        if (marginBottom === 0 && previous.marginBottom > 0) {
+                                            marginBottom = previous.marginBottom;
+                                            inheritedBottom = true;
+                                        }
                                         let marginTop = $util$f.convertFloat(current.cssInitial('marginTop', false, true));
+                                        if (marginTop === 0 && current.marginTop > 0) {
+                                            marginTop = previous.marginTop;
+                                            inheritedTop = true;
+                                        }
                                         if (previous.excluded && !current.excluded) {
-                                            const offset = Math.min(marginBottom, $util$f.convertFloat(previous.cssInitial('marginTop', false, true)));
+                                            const offset = Math.min(marginBottom, previous.marginTop);
                                             if (offset < 0) {
-                                                const top = Math.abs(offset) >= marginTop ? null : offset;
+                                                const top = Math.abs(offset) >= marginTop ? undefined : offset;
                                                 currentVisible.modifyBox(2 /* MARGIN_TOP */, top);
                                                 if (currentVisible.companion) {
                                                     currentVisible.companion.modifyBox(2 /* MARGIN_TOP */, top);
@@ -8516,7 +8754,7 @@
                                         else if (!previous.excluded && current.excluded) {
                                             const offset = Math.min(marginTop, $util$f.convertFloat(current.cssInitial('marginBottom', false, true)));
                                             if (offset < 0) {
-                                                previousVisible.modifyBox(8 /* MARGIN_BOTTOM */, Math.abs(offset) >= marginBottom ? null : offset);
+                                                previousVisible.modifyBox(8 /* MARGIN_BOTTOM */, Math.abs(offset) >= marginBottom ? undefined : offset);
                                                 processed.add(current);
                                             }
                                         }
@@ -8527,7 +8765,8 @@
                                                     const childMarginBottom = $util$f.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
                                                     if (childMarginBottom > marginBottom) {
                                                         marginBottom = childMarginBottom;
-                                                        previousVisible.css('marginBottom', $css$e.formatPX(marginBottom), true);
+                                                        previousVisible.css('marginBottom', $css$e.formatPX(childMarginBottom), true);
+                                                        inheritedBottom = true;
                                                     }
                                                     resetMargin(getVisibleNode(bottomChild), 8 /* MARGIN_BOTTOM */);
                                                 }
@@ -8538,18 +8777,31 @@
                                                     const childMarginTop = $util$f.convertFloat(topChild.cssInitial('marginTop', false, true));
                                                     if (childMarginTop > marginTop) {
                                                         marginTop = childMarginTop;
-                                                        currentVisible.css('marginTop', $css$e.formatPX(marginTop), true);
+                                                        currentVisible.css('marginTop', $css$e.formatPX(childMarginTop), true);
+                                                        inheritedTop = true;
                                                     }
                                                     resetMargin(getVisibleNode(topChild), 2 /* MARGIN_TOP */);
                                                 }
                                             }
                                             if (marginBottom > 0) {
                                                 if (marginTop > 0) {
-                                                    if (marginTop <= marginBottom) {
-                                                        resetMargin(currentVisible, 2 /* MARGIN_TOP */);
-                                                    }
-                                                    else {
-                                                        resetMargin(previousVisible, 8 /* MARGIN_BOTTOM */);
+                                                    if (!$util$f.hasBit(current.overflow, 64 /* BLOCK */) && !$util$f.hasBit(previous.overflow, 64 /* BLOCK */)) {
+                                                        if (marginTop <= marginBottom) {
+                                                            if (inheritedTop) {
+                                                                currentVisible.css('marginTop', '0px', true);
+                                                            }
+                                                            else {
+                                                                resetMargin(currentVisible, 2 /* MARGIN_TOP */);
+                                                            }
+                                                        }
+                                                        else {
+                                                            if (inheritedBottom) {
+                                                                currentVisible.css('marginBottom', '0px', true);
+                                                            }
+                                                            else {
+                                                                resetMargin(previousVisible, 8 /* MARGIN_BOTTOM */);
+                                                            }
+                                                        }
                                                     }
                                                 }
                                                 else if (previous.bounds.height === 0) {
@@ -8568,15 +8820,17 @@
                             }
                         }
                     }
-                    if (firstChild) {
-                        applyMarginCollapse(node, firstChild, true);
-                    }
-                    if (lastChild) {
-                        applyMarginCollapse(node, lastChild, false);
-                        if (lastChild.marginTop < 0) {
-                            const offset = lastChild.bounds.height + lastChild.marginBottom + lastChild.marginTop;
-                            if (offset < 0) {
-                                node.modifyBox(128 /* PADDING_BOTTOM */, offset, false);
+                    if (!$util$f.hasBit(node.overflow, 64 /* BLOCK */)) {
+                        if (firstChild) {
+                            applyMarginCollapse(node, firstChild, true);
+                        }
+                        if (lastChild) {
+                            applyMarginCollapse(node, lastChild, false);
+                            if (lastChild.marginTop < 0) {
+                                const offset = lastChild.bounds.height + lastChild.marginBottom + lastChild.marginTop;
+                                if (offset < 0) {
+                                    node.modifyBox(128 /* PADDING_BOTTOM */, offset, false);
+                                }
                             }
                         }
                     }
@@ -8599,7 +8853,7 @@
                                 const abovePrevious = previousSiblings.pop();
                                 if (abovePrevious.lineBreak) {
                                     abovePrevious.setBounds();
-                                    if (Math.floor(abovePrevious.bounds.bottom) > 0) {
+                                    if (abovePrevious.linear.bottom > above.linear.bottom) {
                                         above = abovePrevious;
                                     }
                                 }
@@ -8660,7 +8914,7 @@
                     else {
                         const actualParent = node.actualParent;
                         if (actualParent && actualParent.visible) {
-                            if (!actualParent.documentRoot && previousSiblings.length) {
+                            if (!actualParent.documentRoot && actualParent.ascendOuter(item => item.documentRoot).length === 0 && previousSiblings.length) {
                                 const previousStart = previousSiblings[previousSiblings.length - 1];
                                 const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
                                 if (offset !== 0) {

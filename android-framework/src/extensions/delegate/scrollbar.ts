@@ -13,7 +13,7 @@ const SCROLL_VERTICAL = 'android.support.v4.widget.NestedScrollView';
 
 export default class ScrollBar<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
-        return node.length > 0 && this.included(<HTMLElement> node.element) && (node.overflowX && node.has('width') || node.overflowY && node.hasHeight && node.has('height'));
+        return node.length > 0 && (node.overflowX && node.has('width') || node.overflowY && node.hasHeight && node.has('height') || this.included(<HTMLElement> node.element));
     }
 
     public processNode(node: T, parent: T) {

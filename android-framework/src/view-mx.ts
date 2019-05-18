@@ -601,11 +601,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 this.android('layout_columnWeight', $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
                             }
                             else if (this.imageElement) {
-                                if (width === '100%' && !renderParent.flexibleWidth) {
+                                if (width === '100%' && !renderParent.flexibleWidth && !renderParent.inlineWidth) {
                                     layoutWidth = 'match_parent';
-                                }
-                                else if (this.android('adjustViewBounds') === 'true') {
-                                    layoutWidth = 'wrap_content';
                                 }
                                 else {
                                     value = this.bounds.width;
@@ -649,7 +646,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             layoutWidth = $css.formatPX(value);
                         }
                     }
-                    else if (this.imageElement && this.has('height', $enum.CSS_STANDARD.PERCENT)) {
+                    else if (this.imageElement && this.has('height')) {
                         layoutWidth = 'wrap_content';
                         this.android('adjustViewBounds', 'true');
                     }
@@ -691,11 +688,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         else if ($css.isPercent(height)) {
                             if (this.imageElement) {
-                                if (height === '100%' && !renderParent.flexibleHeight) {
+                                if (height === '100%' && !renderParent.flexibleHeight && !renderParent.inlineHeight) {
                                     layoutHeight = 'match_parent';
-                                }
-                                else if (this.android('adjustViewBounds') === 'true') {
-                                    layoutHeight = 'wrap_content';
                                 }
                                 else {
                                     value = this.bounds.height;
@@ -742,7 +736,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             layoutHeight = $css.formatPX(value);
                         }
                     }
-                    else if (this.imageElement && this.has('width', $enum.CSS_STANDARD.PERCENT)) {
+                    else if (this.imageElement && this.has('width')) {
                         layoutHeight = 'wrap_content';
                         this.android('adjustViewBounds', 'true');
                     }
@@ -1199,9 +1193,14 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         private alignLayout(renderParent: T) {
-            const renderChildren = this.renderChildren;
-            if (this.layoutHorizontal) {
-                if (this.layoutLinear) {
+            if (this.layoutLinear) {
+                const renderChildren = this.renderChildren;
+                if (this.layoutVertical) {
+                    if (!renderParent.is(CONTAINER_NODE.GRID) && renderChildren[0].textElement && renderChildren[0].baseline) {
+                        this.android('baselineAlignedChildIndex', '0');
+                    }
+                }
+                else {
                     if (renderChildren.some(node => node.floating) && !renderChildren.some(node => node.imageElement && node.baseline)) {
                         this.android('baselineAligned', 'false');
                     }
@@ -1217,11 +1216,6 @@ export default (Base: Constructor<squared.base.Node>) => {
                             setSingleLine(child);
                         }
                     }
-                }
-            }
-            else if (this.layoutVertical) {
-                if (this.layoutLinear && !renderParent.is(CONTAINER_NODE.GRID) && renderChildren[0].textElement && renderChildren[0].baseline) {
-                    this.android('baselineAlignedChildIndex', '0');
                 }
             }
         }

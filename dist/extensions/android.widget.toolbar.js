@@ -1,4 +1,4 @@
-/* android.widget 0.9.7
+/* android.widget 0.9.8
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -42,6 +42,7 @@ this.android.widget.toolbar = (function () {
         processNode(node, parent) {
             const application = this.application;
             const controller = application.controllerHandler;
+            const resource = this.application.resourceHandler;
             const settings = application.userSettings;
             const element = node.element;
             const target = node.dataset.target;
@@ -58,13 +59,13 @@ this.android.widget.toolbar = (function () {
                 const item = element.children[i];
                 if (item.tagName === 'IMG') {
                     if (item.dataset.navigationIcon) {
-                        const src = $Resource.addImageSrc(item, $constA.PREFIX_ANDROID.MENU);
+                        const src = resource.addImageSrc(item, $constA.PREFIX_ANDROID.MENU);
                         if (src !== '') {
                             $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', `@drawable/${src}`);
                         }
                     }
                     if (item.dataset.collapseIcon) {
-                        const src = $Resource.addImageSrc(item, $constA.PREFIX_ANDROID.MENU);
+                        const src = resource.addImageSrc(item, $constA.PREFIX_ANDROID.MENU);
                         if (src !== '') {
                             $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', `@drawable/${src}`);
                         }
@@ -94,8 +95,11 @@ this.android.widget.toolbar = (function () {
             else {
                 $util.assignEmptyValue(toolbarOptions, 'app', 'popupTheme', '@style/ThemeOverlay.AppCompat.Light');
                 if (backgroundImage) {
-                    $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${$Resource.addImageURL(node.css('backgroundImage'))}`);
-                    node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
+                    const drawable = this.application.resourceHandler.addImageSrc(node.backgroundImage);
+                    if (drawable !== '') {
+                        $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${drawable}`);
+                        node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
+                    }
                 }
                 else {
                     $util.assignEmptyValue(toolbarOptions, 'app', 'layout_scrollFlags', 'scroll|enterAlways');
@@ -185,7 +189,7 @@ this.android.widget.toolbar = (function () {
                 node.render(target ? application.resolveTarget(target) : parent);
             }
             if (backgroundImage && hasCollapsingToolbar) {
-                const src = $Resource.addImageURL(node.css('backgroundImage'));
+                const src = this.application.resourceHandler.addImageSrc(node.backgroundImage);
                 if (src !== '') {
                     const backgroundImageOptions = $utilA.createViewAttribute(options.backgroundImage);
                     let scaleType = 'center';
