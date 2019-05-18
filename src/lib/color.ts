@@ -2064,10 +2064,6 @@ const COLOR_CSS3: ColorResult[] = [
     }
 ];
 
-for (const color of COLOR_CSS3) {
-    Object.freeze(color);
-}
-
 const parseOpacity = (value: string) => parseFloat(value.trim() || '1') * 255;
 
 export function findColorName(value: string) {
@@ -2182,7 +2178,6 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
                 semiopaque: alpha > 0 && alpha < 1,
                 transparent: alpha === 0
             };
-            Object.freeze(colorData);
             if (opacity === '1') {
                 CACHE_COLORDATA[value] = colorData;
             }

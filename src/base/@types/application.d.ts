@@ -12,8 +12,8 @@ export interface UserSettings {
     autoCloseOnWrite: boolean;
     outputDirectory: string;
     outputMainFileName: string;
-    outputArchiveFileType: string;
-    outputMaxProcessingTime: number;
+    outputArchiveFormat: string;
+    outputArchiveTimeout: number;
 }
 
 export interface ControllerSettings {

@@ -66,8 +66,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 `/api/savetodisk` +
                 `?directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
                 (appName ? `&appname=${encodeURIComponent(appName.trim())}` : '') +
-                `&filetype=${settings.outputArchiveFileType.toLowerCase()}` +
-                `&processingtime=${settings.outputMaxProcessingTime.toString().trim()}`, {
+                `&format=${settings.outputArchiveFormat.toLowerCase()}` +
+                `&timeout=${settings.outputArchiveTimeout.toString().trim()}`, {
                     method: 'POST',
                     headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                     body: JSON.stringify(files)

@@ -83,17 +83,12 @@ function adjustBaseline(baseline: View, nodes: View[]) {
                 }
             }
             else if (node.imageOrSvgElement && baseline.imageOrSvgElement) {
-                if (node.bounds.height < baseline.bounds.height && node.baseline) {
+                if (node.baseline && node.bounds.height < baseline.bounds.height) {
                     node.anchor('baseline', baseline.documentId);
                 }
             }
-            else if (node.inputElement || node.blockDimension && node.has('height')) {
-                if (node.baseline && baseline.textElement) {
-                    node.anchor('bottom', baseline.documentId);
-                }
-                else if (!node.baseline && node.verticalAlign !== '0px') {
-                    node.anchor('baseline', baseline.documentId);
-                }
+            else if (node.blockDimension && node.has('height')) {
+                node.anchor('bottom', baseline.documentId);
             }
             else if (node.element && node.length === 0 || node.layoutHorizontal && node.renderChildren.every(item => item.baseline)) {
                 node.anchor('baseline', baseline.documentId);
@@ -291,7 +286,7 @@ function isTargeted(parent: View, node: View) {
 }
 
 function getTextBottom<T extends View>(nodes: T[]): T | undefined {
-    return $util.filterArray(nodes, node => node.verticalAlign === 'text-bottom' || node.display === 'inline-block' && node.baseline).sort((a, b) => {
+    return $util.filterArray(nodes, node => node.verticalAlign === 'text-bottom' || node.blockDimension && node.has('height')).sort((a, b) => {
         if (a.bounds.height === b.bounds.height) {
             return a.is(CONTAINER_NODE.SELECT) ? 1 : -1;
         }
@@ -2043,10 +2038,18 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
             }
             if (item !== baseline) {
-                if (item.inlineVertical) {
-                    if (tallest === undefined || getMaxHeight(item) > getMaxHeight(tallest)) {
-                        tallest = item;
+                if (tallest === undefined || getMaxHeight(item) > getMaxHeight(tallest)) {
+                    tallest = item;
+                }
+                if (item.blockDimension && item.has('height')) {
+                    if (baseline) {
+                        item.anchor('bottom', baseline.documentId);
                     }
+                    else {
+                        setParentVertical(item);
+                    }
+                }
+                else if (item.inlineVertical) {
                     let alignTop = false;
                     switch (item.verticalAlign) {
                         case 'text-top':

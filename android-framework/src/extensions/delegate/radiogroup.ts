@@ -54,7 +54,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
             node.alignmentType |= $enum.NODE_ALIGNMENT.HORIZONTAL;
             node.android('orientation', AXIS_ANDROID.HORIZONTAL);
             if (node.baseline) {
-                node.css('verticalAlign', 'text-bottom', true);
+                node.css('verticalAlign', 'middle', true);
                 node.baseline = false;
             }
             node.render(parent);
@@ -99,7 +99,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                 }
                 container.setControlType(CONTROL_NAME, CONTAINER_NODE.LINEAR);
                 container.inherit(node, 'alignment');
-                container.css('verticalAlign', 'text-bottom');
+                container.css('verticalAlign', 'middle');
                 container.baseline = false;
                 container.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, -4);
                 container.exclude({ resource: $enum.NODE_RESOURCE.ASSET });

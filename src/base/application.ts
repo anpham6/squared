@@ -2098,7 +2098,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         [styleMap.backgroundImage, styleMap.listStyleImage, styleMap.content].forEach(image => {
                             if (image) {
                                 const pattern = new RegExp(`url\\("(${STRING_DATAURI})"\\),?\\s*`, 'g');
-                                let match: RegExpExecArray | null = null;
+                                let match: RegExpExecArray | null;
                                 while ((match = pattern.exec(image)) !== null) {
                                     if (match[2] && match[3]) {
                                         this.resourceHandler.addRawData(match[1], match[2], match[3], match[4]);

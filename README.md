@@ -90,12 +90,13 @@ These settings are available in the global variable "squared" to customize your 
 ```javascript
 squared.settings = {
     builtInExtensions: [
-        'android.delegate.percent',
-        'android.delegate.fixed',
         'android.delegate.max-width-height',
+        'android.delegate.fixed',
         'android.delegate.negative-x',
-        'android.delegate.radiogroup',
+        'android.delegate.negative-viewport',
+        'android.delegate.percent',
         'android.delegate.scrollbar',
+        'android.delegate.radiogroup',
         'squared.external',
         'squared.substitute',
         'squared.sprite',
@@ -110,8 +111,8 @@ squared.settings = {
         'squared.accessibility',
         'android.constraint.guideline',
         'android.resource.includes',
-        'android.resource.background',
         'android.resource.svg',
+        'android.resource.background',
         'android.resource.strings',
         'android.resource.fonts',
         'android.resource.dimens',
@@ -135,8 +136,8 @@ squared.settings = {
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
     outputDirectory: 'app/src/main',
     outputMainFileName: 'activity_main.xml',
-    outputArchiveFileType: 'zip', // zip | tar
-    outputMaxProcessingTime: 30
+    outputArchiveFormat: 'zip', // zip | tar
+    outputArchiveTimeout: 30 // seconds
 };
 ```
 

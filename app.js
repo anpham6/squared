@@ -27,15 +27,13 @@ if (app.get('env') === 'development') {
 app.post('/api/savetodisk', (req, res) => {
     const dirname = `${__dirname.replace(/\\/g, '/')}/temp/${uuid()}`;
     const directory = dirname + (req.query.directory ? `/${req.query.directory}` : '');
-    const processingTime = !isNaN(parseInt(req.query.processingtime) ? parseInt(req.query.processingtime) : 30) * 1000;
-    const finalizeTime = Date.now() + processingTime;
+    const format = req.query.format.toLowerCase() === 'tar' ? 'tar' : 'zip';
+    const timeout = Math.max(parseInt(req.query.timeout) || 30, 1) * 1000;
+    const finalizeTime = Date.now() + timeout;
     try {
         mkdirp.sync(directory);
-        const compression = req.query.compression === 'tar' ? 'tar' : 'zip';
-        const archive = archiver(compression, {
-            zlib: { level: 9 }
-        });
-        const zipname = `${dirname}/${req.query.appname || 'squared'}.${compression}`;
+        const archive = archiver(format, { zlib: { level: 9 } });
+        const zipname = `${dirname}/${req.query.appname || 'squared'}.${format}`;
         const output = fs.createWriteStream(zipname);
         let delayed = 0;
         output.on('close', () => {
@@ -101,7 +99,7 @@ app.post('/api/savetodisk', (req, res) => {
                     .pipe(stream);
                 }
             }
-            setTimeout(finalize, processingTime);
+            setTimeout(finalize, timeout);
         }
         catch (err) {
             res.json({ application: `FILE: ${fileerror}`, system: err });
