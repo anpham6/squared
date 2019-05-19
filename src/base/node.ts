@@ -438,44 +438,60 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;
         }
-        else if ((this.pageFlow || this.positionAuto) && previousSiblings.length) {
-            if ($util.isArray(siblings)) {
-                const previous = siblings[siblings.length - 1];
+        else if ((this.pageFlow || this.positionAuto)) {
+            const checkBlockDimension = (previous: T) => $util.aboveRange(this.linear.top, previous.linear.bottom) && (this.has('height') || this.float !== previous.float || previous.blockDimension && previous.has('height')) || this.has('width', CSS_STANDARD.PERCENT);
+            if (this.blockDimension && this.css('width') === '100%' && !this.has('maxWidth')) {
+                return NODE_TRAVERSE.VERTICAL;
+            }
+            else if ($util.isArray(siblings)) {
                 if (cleared && cleared.has(this)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
-                else if (this.floating && previous.floating) {
-                    if ($util.aboveRange(this.linear.top, previous.linear.bottom)) {
+                else if (this.floating && siblings[siblings.length - 1].floating) {
+                    const adjacent = siblings[siblings.length - 1];
+                    if ($util.aboveRange(this.linear.top, adjacent.linear.bottom)) {
                         return NODE_TRAVERSE.FLOAT_WRAP;
                     }
+                    else if (this.float === adjacent.float) {
+                        return NODE_TRAVERSE.HORIZONTAL;
+                    }
                 }
-                else if (this.blockStatic && horizontal !== undefined) {
-                    if (cleared && cleared.size && siblings.some(item => cleared.has(item))) {
-                        if (this.textElement && siblings.some(item => this.linear.top < item.linear.top && this.linear.bottom > item.linear.bottom)) {
-                            return NODE_TRAVERSE.FLOAT_INTERSECT;
+                else {
+                    if (this.blockStatic && horizontal !== undefined) {
+                        if (cleared && cleared.size && siblings.some(item => cleared.has(item))) {
+                            if (this.textElement && siblings.some(item => this.linear.top < item.linear.top && this.linear.bottom > item.linear.bottom)) {
+                                return NODE_TRAVERSE.FLOAT_INTERSECT;
+                            }
+                            else {
+                                return NODE_TRAVERSE.FLOAT_BLOCK;
+                            }
                         }
-                        else {
+                        if (horizontal) {
+                            const floated = siblings.find(item => item.floating);
+                            if (floated) {
+                                let { top, bottom } = this.linear;
+                                if (this.textElement && !this.plainText) {
+                                    const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
+                                    if (rect.top > top) {
+                                        top = rect.top;
+                                    }
+                                    if (rect.bottom > bottom) {
+                                        bottom = rect.bottom;
+                                    }
+                                }
+                                return !$util.withinRange(top, floated.linear.top) && (this.multiline ? bottom > floated.linear.bottom : top >= floated.linear.bottom) ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
+                            }
+                        }
+                        else if (siblings.every(item => item.float === 'right')) {
                             return NODE_TRAVERSE.FLOAT_BLOCK;
                         }
                     }
-                    if (horizontal) {
-                        const floated = siblings.find(item => item.floating);
-                        if (floated) {
-                            let { top, bottom } = this.linear;
-                            if (this.textElement && !this.plainText) {
-                                const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
-                                if (rect.top > top) {
-                                    top = rect.top;
-                                }
-                                if (rect.bottom > bottom) {
-                                    bottom = rect.bottom;
-                                }
+                    if (this.blockDimension) {
+                        for (const previous of siblings) {
+                            if (checkBlockDimension(previous)) {
+                                return NODE_TRAVERSE.INLINE_WRAP;
                             }
-                            return !$util.withinRange(top, floated.linear.top) && (this.multiline ? bottom > floated.linear.bottom : top >= floated.linear.bottom) ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
                         }
-                    }
-                    else if (siblings.every(item => item.float === 'right')) {
-                        return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                 }
             }
@@ -497,7 +513,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 {
                     return NODE_TRAVERSE.VERTICAL;
                 }
-                else if (this.blockDimension && $util.isArray(siblings) && $util.aboveRange(this.linear.top, siblings[siblings.length - 1].linear.bottom) && (!previous.floating || this.has('width', CSS_STANDARD.PERCENT)) || this.css('width') === '100%' && !this.has('maxWidth')) {
+                else if (this.blockDimension && checkBlockDimension(previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }

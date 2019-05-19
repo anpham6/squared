@@ -7,6 +7,8 @@ const $session = squared.lib.session;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
+const doctypeHTML = document.doctype !== null && document.doctype.name === 'html';
+
 function setMinHeight(node: Node, offset: number) {
     const minHeight = node.has('minHeight', CSS_STANDARD.LENGTH) ? node.toFloat('minHeight') : 0;
     node.css('minHeight', $css.formatPX(Math.max(offset, minHeight)));
@@ -58,7 +60,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
             boxMargin = BOX_STANDARD.MARGIN_BOTTOM;
         }
         if (node[borderWidth] === 0 && node[padding] === 0) {
-            while (child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0) {
+            while (doctypeHTML && child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0) {
                 const endChild = (direction ? child.firstChild : child.lastChild) as Node;
                 if (isBlockElement(endChild)) {
                     child = endChild;
@@ -67,38 +69,43 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                     break;
                 }
             }
-            const outside = node[margin] >= child[margin];
-            if (child.bounds.height === 0 && outside && child.textElement && child.textContent === '' && child.extensions.length === 0) {
-                child.hide();
+            let resetChild = false;
+            if (!doctypeHTML && node[margin] === 0 && child[margin] > 0 && child.cssInitial(margin) === '') {
+                resetChild = true;
             }
-            else if (child.getBox(boxMargin)[0] !== 1) {
-                let resetChild = false;
-                if (node.documentBody) {
-                    if (outside) {
-                        resetChild = true;
-                    }
-                    else {
-                        resetMargin(node, boxMargin);
-                        if (direction) {
-                            node.bounds.top = 0;
-                            node.unsafe('box', true);
-                            node.unsafe('linear', true);
+            else {
+                const outside = node[margin] >= child[margin];
+                if (child.bounds.height === 0 && outside && child.textElement && child.textContent === '' && child.extensions.length === 0) {
+                    child.hide();
+                }
+                else if (child.getBox(boxMargin)[0] !== 1) {
+                    if (node.documentBody) {
+                        if (outside) {
+                            resetChild = true;
+                        }
+                        else {
+                            resetMargin(node, boxMargin);
+                            if (direction) {
+                                node.bounds.top = 0;
+                                node.unsafe('box', true);
+                                node.unsafe('linear', true);
+                            }
                         }
                     }
-                }
-                else {
-                    if (!outside && node.getBox(boxMargin)[0] !== 1) {
-                        const visibleParent = getVisibleNode(node);
-                        visibleParent.modifyBox(boxMargin);
-                        visibleParent.modifyBox(boxMargin, child[margin]);
+                    else {
+                        if (!outside && node.getBox(boxMargin)[0] !== 1) {
+                            const visibleParent = getVisibleNode(node);
+                            visibleParent.modifyBox(boxMargin);
+                            visibleParent.modifyBox(boxMargin, child[margin]);
+                        }
+                        resetChild = true;
                     }
-                    resetChild = true;
                 }
-                if (resetChild) {
-                    resetMargin(child, boxMargin);
-                    if (child.bounds.height === 0) {
-                        resetMargin(child, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
-                    }
+            }
+            if (resetChild) {
+                resetMargin(child, boxMargin);
+                if (child.bounds.height === 0) {
+                    resetMargin(child, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
                 }
             }
         }
@@ -371,7 +378,18 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
             const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
             if (renderParent && node.pageFlow && node.styleElement && node.inlineVertical && !node.positioned && !node.documentParent.layoutElement && !renderParent.tableElement && !modified.includes(node.id)) {
                 function setSpacingOffset(region: number, value: number) {
-                    const offset = (region === BOX_STANDARD.MARGIN_LEFT ? node.actualRect('left') : node.actualRect('top')) - value;
+                    let offset = 0 ;
+                    switch (region) {
+                        case BOX_STANDARD.MARGIN_LEFT:
+                            offset = node.actualRect('left') - value;
+                            break;
+                        case BOX_STANDARD.MARGIN_TOP:
+                            offset = node.actualRect('top') - value;
+                            break;
+                        case BOX_STANDARD.MARGIN_BOTTOM:
+                            offset = value - node.actualRect('bottom');
+                            break;
+                    }
                     if (offset > 0) {
                         node = getVisibleNode(node.outerWrapper || node) as T;
                         node.modifyBox(region, offset);
@@ -379,10 +397,21 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     }
                 }
                 if (renderParent.layoutVertical) {
-                    if (node.blockDimension && !node.lineBreakLeading) {
+                    if (node.blockDimension) {
                         const index = renderParent.renderChildren.findIndex(item => item === node);
-                        if (index > 0) {
-                            setSpacingOffset(BOX_STANDARD.MARGIN_TOP, renderParent.renderChildren[index - 1].linear.bottom);
+                        if (index !== -1) {
+                            if (!node.lineBreakLeading) {
+                                const previous = renderParent.renderChildren[index - 1];
+                                if (previous) {
+                                    setSpacingOffset(BOX_STANDARD.MARGIN_TOP, previous.linear.bottom);
+                                }
+                            }
+                            if (!node.lineBreakTrailing) {
+                                const next = renderParent.renderChildren[index + 1];
+                                if (next) {
+                                    setSpacingOffset(BOX_STANDARD.MARGIN_BOTTOM, next.linear.top);
+                                }
+                            }
                         }
                     }
                 }

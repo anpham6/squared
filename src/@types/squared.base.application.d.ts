@@ -26,7 +26,7 @@ declare global {
             parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
             renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
             addLayout(layout: Layout<T>): boolean;
-            addLayoutTemplate(parent: T, node: T, template?: NodeTemplate<T>, index?: number): boolean;
+            addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): boolean;
             saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
             createNode(element: Element, append?: boolean, parent?: T, children?: T[]): T;
             resolveTarget(target: string): T | undefined;

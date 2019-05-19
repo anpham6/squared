@@ -84,12 +84,12 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                     case 0:
                     case 3:
                         if (lighten) {
-                            percent = -0.15;
+                            percent = -0.25;
                         }
                         break;
                     case 1:
                     case 2:
-                        percent = lighten ? -0.3 : -0.75;
+                        percent = lighten ? -0.5 : -0.75;
                         break;
                 }
                 if (percent !== 1) {

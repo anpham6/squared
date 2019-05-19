@@ -427,7 +427,10 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         if (layout.containerType !== 0) {
-            return this.addLayoutTemplate(layout.parent, layout.node, this.renderNode(layout), layout.renderIndex);
+            const template = this.renderNode(layout);
+            if (template) {
+                return this.addLayoutTemplate(template.parent || layout.parent, layout.node, template, layout.renderIndex);
+            }
         }
         return false;
     }

@@ -63,7 +63,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
-        const baseline = $util.filterArray(list, item => (item.baseline || $css.isLength(item.verticalAlign)) && !item.floating && !item.baselineAltered && (item.length === 0 || item.every(child => child.baseline && !child.multiline)));
+        const baseline = $util.filterArray(list, item => (item.baseline || $css.isLength(item.verticalAlign)) && !item.floating && !item.baselineAltered && (item.naturalElement && item.length === 0 || item.every(child => child.baseline && !child.multiline)));
         if (baseline.length) {
             list = baseline;
         }
@@ -135,6 +135,12 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 const heightB = Math.max(b.actualHeight, b.lineHeight);
                 if (heightA !== heightB) {
                     return heightA > heightB ? -1 : 1;
+                }
+                else if (a.linear.bottom > b.linear.bottom) {
+                    return -1;
+                }
+                else if (a.linear.bottom < b.linear.bottom) {
+                    return 1;
                 }
                 return 0;
             });

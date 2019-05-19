@@ -158,6 +158,7 @@ export interface NodeTagXml<T extends Node> extends NodeTag<T> {
 export interface NodeTemplate<T extends Node> {
     type: number;
     node: T;
+    parent?: T;
 }
 
 export interface NodeXmlTemplate<T extends Node> extends NodeTemplate<T> {
