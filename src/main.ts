@@ -3,6 +3,7 @@ import { AppFramework, UserSettings } from './base/@types/application';
 import Container from './lib/base/container';
 
 import * as color from './lib/color';
+import * as constant from './lib/constant';
 import * as client from './lib/client';
 import * as css from './lib/css';
 import * as dom from './lib/dom';
@@ -216,6 +217,7 @@ const lib = {
         Container
     },
     color,
+    constant,
     client,
     css,
     dom,

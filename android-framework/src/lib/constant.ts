@@ -50,25 +50,25 @@ export const ELEMENT_ANDROID = {
     SELECT: CONTAINER_NODE.SELECT,
     TEXTAREA: CONTAINER_NODE.EDIT,
     IFRAME: CONTAINER_NODE.WEBVIEW,
-    'INPUT_RANGE': CONTAINER_NODE.RANGE,
-    'INPUT_TEXT': CONTAINER_NODE.EDIT,
-    'INPUT_PASSWORD': CONTAINER_NODE.EDIT,
-    'INPUT_NUMBER': CONTAINER_NODE.EDIT,
-    'INPUT_EMAIL': CONTAINER_NODE.EDIT,
-    'INPUT_SEARCH': CONTAINER_NODE.EDIT,
-    'INPUT_URL': CONTAINER_NODE.EDIT,
-    'INPUT_DATE': CONTAINER_NODE.EDIT,
-    'INPUT_TEL': CONTAINER_NODE.EDIT,
-    'INPUT_TIME': CONTAINER_NODE.EDIT,
-    'INPUT_WEEK': CONTAINER_NODE.EDIT,
-    'INPUT_MONTH': CONTAINER_NODE.EDIT,
-    'INPUT_BUTTON': CONTAINER_NODE.BUTTON,
-    'INPUT_FILE': CONTAINER_NODE.BUTTON,
-    'INPUT_IMAGE': CONTAINER_NODE.BUTTON,
-    'INPUT_SUBMIT': CONTAINER_NODE.BUTTON,
-    'INPUT_RESET': CONTAINER_NODE.BUTTON,
-    'INPUT_CHECKBOX': CONTAINER_NODE.CHECKBOX,
-    'INPUT_RADIO': CONTAINER_NODE.RADIO,
+    INPUT_RANGE: CONTAINER_NODE.RANGE,
+    INPUT_TEXT: CONTAINER_NODE.EDIT,
+    INPUT_PASSWORD: CONTAINER_NODE.EDIT,
+    INPUT_NUMBER: CONTAINER_NODE.EDIT,
+    INPUT_EMAIL: CONTAINER_NODE.EDIT,
+    INPUT_SEARCH: CONTAINER_NODE.EDIT,
+    INPUT_URL: CONTAINER_NODE.EDIT,
+    INPUT_DATE: CONTAINER_NODE.EDIT,
+    INPUT_TEL: CONTAINER_NODE.EDIT,
+    INPUT_TIME: CONTAINER_NODE.EDIT,
+    INPUT_WEEK: CONTAINER_NODE.EDIT,
+    INPUT_MONTH: CONTAINER_NODE.EDIT,
+    INPUT_BUTTON: CONTAINER_NODE.BUTTON,
+    INPUT_FILE: CONTAINER_NODE.BUTTON,
+    INPUT_IMAGE: CONTAINER_NODE.BUTTON,
+    INPUT_SUBMIT: CONTAINER_NODE.BUTTON,
+    INPUT_RESET: CONTAINER_NODE.BUTTON,
+    INPUT_CHECKBOX: CONTAINER_NODE.CHECKBOX,
+    INPUT_RADIO: CONTAINER_NODE.RADIO,
     'INPUT_DATETIME-LOCAL': CONTAINER_NODE.EDIT
 };
 
@@ -81,28 +81,6 @@ export const SUPPORT_ANDROID = {
     TOOLBAR: 'android.support.v7.widget.Toolbar',
     FLOATING_ACTION_BUTTON: 'android.support.design.widget.FloatingActionButton',
     BOTTOM_NAVIGATION: 'android.support.design.widget.BottomNavigationView'
-};
-
-export const BOX_ANDROID = {
-    MARGIN: 'layout_margin',
-    MARGIN_VERTICAL: 'layout_marginVertical',
-    MARGIN_HORIZONTAL: 'layout_marginHorizontal',
-    MARGIN_TOP: 'layout_marginTop',
-    MARGIN_RIGHT: 'layout_marginRight',
-    MARGIN_BOTTOM: 'layout_marginBottom',
-    MARGIN_LEFT: 'layout_marginLeft',
-    PADDING: 'padding',
-    PADDING_VERTICAL: 'paddingVertical',
-    PADDING_HORIZONTAL: 'paddingHorizontal',
-    PADDING_TOP: 'paddingTop',
-    PADDING_RIGHT: 'paddingRight',
-    PADDING_BOTTOM: 'paddingBottom',
-    PADDING_LEFT: 'paddingLeft'
-};
-
-export const AXIS_ANDROID = {
-    HORIZONTAL: 'horizontal',
-    VERTICAL: 'vertical'
 };
 
 export const LAYOUT_ANDROID = {
@@ -139,34 +117,57 @@ export const LAYOUT_ANDROID = {
 };
 
 export const XMLNS_ANDROID = {
-    'android': 'http://schemas.android.com/apk/res/android',
-    'app': 'http://schemas.android.com/apk/res-auto',
-    'aapt': 'http://schemas.android.com/aapt',
-    'tools': 'http://schemas.android.com/tools'
+    android: 'http://schemas.android.com/apk/res/android',
+    app: 'http://schemas.android.com/apk/res-auto',
+    aapt: 'http://schemas.android.com/aapt',
+    tools: 'http://schemas.android.com/tools'
 };
 
-export const PREFIX_ANDROID = {
-    MENU: 'ic_menu_',
-    DIALOG: 'ic_dialog_'
+export const STRING_ANDROID = {
+    ANDROID: 'android',
+    APP: 'app',
+    HORIZONTAL: 'horizontal',
+    VERTICAL: 'vertical',
+    PARENT: 'parent',
+    GRAVITY: 'gravity',
+    LAYOUT_GRAVITY: 'layout_gravity',
+    MATCH_PARENT: 'match_parent',
+    WRAP_CONTENT: 'wrap_content',
+    MARGIN: 'layout_margin',
+    MARGIN_VERTICAL: 'layout_marginVertical',
+    MARGIN_HORIZONTAL: 'layout_marginHorizontal',
+    MARGIN_TOP: 'layout_marginTop',
+    MARGIN_RIGHT: 'layout_marginRight',
+    MARGIN_BOTTOM: 'layout_marginBottom',
+    MARGIN_LEFT: 'layout_marginLeft',
+    PADDING: 'padding',
+    PADDING_VERTICAL: 'paddingVertical',
+    PADDING_HORIZONTAL: 'paddingHorizontal',
+    PADDING_TOP: 'paddingTop',
+    PADDING_RIGHT: 'paddingRight',
+    PADDING_BOTTOM: 'paddingBottom',
+    PADDING_LEFT: 'paddingLeft',
+    CENTER_HORIZONTAL: 'center_horizontal',
+    CENTER_VERTICAL: 'center_vertical'
 };
 
 export const LOCALIZE_ANDROID = {
-    'left': 'start',
-    'right': 'end',
-    'layout_marginLeft': 'layout_marginStart',
-    'layout_marginRight': 'layout_marginEnd',
-    'paddingLeft': 'paddingStart',
-    'paddingRight': 'paddingEnd',
-    'layout_alignParentLeft': 'layout_alignParentStart',
-    'layout_alignParentRight': 'layout_alignParentEnd',
-    'layout_alignLeft': 'layout_alignStart',
-    'layout_alignRight': 'layout_alignEnd',
-    'layout_toRightOf': 'layout_toEndOf',
-    'layout_toLeftOf': 'layout_toStartOf',
-    'layout_constraintLeft_toLeftOf': 'layout_constraintStart_toStartOf',
-    'layout_constraintRight_toRightOf': 'layout_constraintEnd_toEndOf',
-    'layout_constraintLeft_toRightOf': 'layout_constraintStart_toEndOf',
-    'layout_constraintRight_toLeftOf': 'layout_constraintEnd_toStartOf'
+    left: 'start',
+    right: 'end',
+    layout_marginLeft: 'layout_marginStart',
+    layout_marginRight: 'layout_marginEnd',
+    paddingLeft: 'paddingStart',
+    paddingRight: 'paddingEnd',
+    layout_alignParentLeft: 'layout_alignParentStart',
+    layout_alignParentRight: 'layout_alignParentEnd',
+    layout_alignLeft: 'layout_alignStart',
+    layout_alignRight: 'layout_alignEnd',
+    layout_toRightOf: 'layout_toEndOf',
+    layout_toLeftOf: 'layout_toStartOf',
+    layout_constraintLeft_toLeftOf: 'layout_constraintStart_toStartOf',
+    layout_constraintRight_toRightOf: 'layout_constraintEnd_toEndOf',
+    layout_constraintLeft_toRightOf: 'layout_constraintStart_toEndOf',
+    layout_constraintRight_toLeftOf: 'layout_constraintEnd_toStartOf'
 };
 
 export const RESERVED_JAVA = [

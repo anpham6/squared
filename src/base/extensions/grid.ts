@@ -4,9 +4,10 @@ import Extension from '../extension';
 import Node from '../node';
 import NodeList from '../nodelist';
 
-import { EXT_NAME } from '../lib/constant';
+import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
 
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
@@ -265,7 +266,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                 let hasLength = true;
                 let hasPercent = false;
                 for (const item of group) {
-                    const width = item.css('width');
+                    const width = item.css($const.CSS.WIDTH);
                     if ($css.isPercent(width)) {
                         hasPercent = true;
                     }
@@ -302,8 +303,8 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                 }
                 for (const item of group) {
                     item.parent = node;
-                    if (!hasLength && item.has('width', CSS_STANDARD.PERCENT)) {
-                        item.css('width', $css.formatPX(item.bounds.width));
+                    if (!hasLength && item.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT)) {
+                        item.css($const.CSS.WIDTH, $css.formatPX(item.bounds.width));
                     }
                 }
             }
@@ -313,7 +314,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                 node.modifyBox(BOX_STANDARD.PADDING_BOTTOM);
                 node.modifyBox(BOX_STANDARD.PADDING_LEFT);
             }
-            node.data(EXT_NAME.GRID, 'mainData', mainData);
+            node.data(EXT_NAME.GRID, STRING_BASE.EXT_DATA, mainData);
         }
         return undefined;
     }

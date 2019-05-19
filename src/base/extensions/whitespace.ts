@@ -3,8 +3,9 @@ import Node from '../node';
 
 import { BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
-const $session = squared.lib.session;
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
+const $session = squared.lib.session;
 const $util = squared.lib.util;
 
 const doctypeHTML = document.doctype !== null && document.doctype.name === 'html';
@@ -110,11 +111,11 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                     }
                 }
             }
-            else {
+            else if (child[margin] === 0 && child[borderWidth] === 0) {
                 let blockAll = true;
-                while (child[margin] === 0 && child[borderWidth] === 0) {
+                do {
                     const endChild = (direction ? child.firstChild : child.lastChild) as Node;
-                    if (endChild) {
+                    if (endChild && endChild[margin] === 0 && endChild[borderWidth] === 0) {
                         if (endChild[padding] > 0) {
                             if (endChild[padding] >= node[padding]) {
                                 node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM);
@@ -135,6 +136,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                         break;
                     }
                 }
+                while (true);
             }
         }
     }
@@ -232,10 +234,10 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                         }
                                         if (marginBottom > 0) {
                                             if (marginTop > 0) {
-                                                if (!$util.hasBit(current.overflow, NODE_ALIGNMENT.BLOCK) && !$util.hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
+                                                if (!inheritedTop && !inheritedBottom || !$util.hasBit(current.overflow, NODE_ALIGNMENT.BLOCK) && !$util.hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
                                                     if (marginTop <= marginBottom) {
                                                         if (inheritedTop) {
-                                                            currentVisible.css('marginTop', '0px', true);
+                                                            currentVisible.css('marginTop', $const.CSS.PX_ZERO, true);
                                                         }
                                                         else {
                                                             resetMargin(currentVisible, BOX_STANDARD.MARGIN_TOP);
@@ -243,7 +245,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                     }
                                                     else {
                                                         if (inheritedBottom) {
-                                                            currentVisible.css('marginBottom', '0px', true);
+                                                            currentVisible.css('marginBottom', $const.CSS.PX_ZERO, true);
                                                         }
                                                         else {
                                                             resetMargin(previousVisible, BOX_STANDARD.MARGIN_BOTTOM);
@@ -259,7 +261,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                 }
                                 else if (previous.blockDimension && !previous.block && current.length === 0) {
                                     const offset = current.linear.top - previous.linear.bottom;
-                                    if (Math.floor(offset) > 0 && current.ascend(false, item => item.has('height')).length === 0) {
+                                    if (Math.floor(offset) > 0 && current.ascend(false, item => item.has($const.CSS.HEIGHT)).length === 0) {
                                         currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                     }
                                 }
@@ -363,7 +365,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     if (actualParent && actualParent.visible) {
                         if (!actualParent.documentRoot && actualParent.ascendOuter(item => item.documentRoot).length === 0 && previousSiblings.length) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
-                            const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
+                            const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? $const.CSS.TOP : $const.CSS.BOTTOM];
                             if (offset !== 0) {
                                 if (previousStart.rendered || actualParent.visibleStyle.background) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
@@ -375,7 +377,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         }
                         else if (nextSiblings.length) {
                             const nextStart = nextSiblings[nextSiblings.length - 1];
-                            const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
+                            const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? $const.CSS.BOTTOM : $const.CSS.TOP] - actualParent.box.top;
                             if (offset !== 0) {
                                 if (nextStart.rendered || actualParent.visibleStyle.background) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
@@ -409,13 +411,13 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     let offset = 0 ;
                     switch (region) {
                         case BOX_STANDARD.MARGIN_LEFT:
-                            offset = node.actualRect('left') - value;
+                            offset = node.actualRect($const.CSS.LEFT) - value;
                             break;
                         case BOX_STANDARD.MARGIN_TOP:
-                            offset = node.actualRect('top') - value;
+                            offset = node.actualRect($const.CSS.TOP) - value;
                             break;
                         case BOX_STANDARD.MARGIN_BOTTOM:
-                            offset = value - node.actualRect('bottom');
+                            offset = value - node.actualRect($const.CSS.BOTTOM);
                             break;
                     }
                     if (offset > 0) {
@@ -443,14 +445,14 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         }
                     }
                 }
-                else if (!node.alignParent('left')) {
+                else if (!node.alignParent($const.CSS.LEFT)) {
                     let current = node;
                     while (true) {
                         const previous = current.previousSiblings() as T[];
                         if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
                             const previousSibling = previous.pop() as T;
                             if (previousSibling.inlineVertical) {
-                                setSpacingOffset(BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
+                                setSpacingOffset(BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect($const.CSS.RIGHT));
                             }
                             else if (previousSibling.floating) {
                                 current = previousSibling;

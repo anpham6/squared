@@ -27,12 +27,13 @@ interface ForwardValue extends NumberValue<AnimateValue> {
     time: number;
 }
 
+const $const = squared.lib.constant;
 const $math = squared.lib.math;
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
-const RECT_ARGS = ['width', 'height', 'x', 'y'];
+const RECT_ARGS = [$const.CSS.WIDTH, $const.CSS.HEIGHT, 'x', 'y'];
 const POLYGON_ARGS = ['points'];
 const CIRCLE_ARGS = ['cx', 'cy', 'r'];
 const ELLIPSE_ARGS = ['cx', 'cy', 'rx', 'ry'];
@@ -601,8 +602,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             break;
                         case 'x':
                         case 'y':
-                        case 'width':
-                        case 'height':
+                        case $const.CSS.WIDTH:
+                        case $const.CSS.HEIGHT:
                             if (SVG.rect(element)) {
                                 result.push(item);
                             }

@@ -5,8 +5,7 @@ import $Resource = android.base.Resource;
 
 type View = android.base.View;
 
-const $const = squared.base.lib.constant;
-const $enum = squared.base.lib.enumeration;
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
@@ -14,6 +13,8 @@ const $dom = squared.lib.dom;
 const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
+const $c = squared.base.lib.constant;
+const $e = squared.base.lib.enumeration;
 
 const REGEXP_ITEM = {
     id: /^@\+id\/\w+$/,
@@ -51,6 +52,7 @@ const NAVIGATION = {
     ITEM: 'item',
     GROUP: 'group'
 };
+const PREFIX_MENU = 'ic_menu_';
 
 function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, options: ViewAttribute) {
     for (const attr in element.dataset) {
@@ -58,7 +60,7 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
         if (value && validator[attr]) {
             const match = validator[attr].exec(value);
             if (match) {
-                options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
+                options[NAMESPACE_APP.includes(attr) ? $constA.STRING_ANDROID.APP : $constA.STRING_ANDROID.ANDROID][attr] = Array.from(new Set(match)).join('|');
             }
         }
     }
@@ -88,7 +90,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         options?: ExternalData)
     {
         super(name, framework, tagNames, options);
-        this.require($const.EXT_NAME.EXTERNAL, true);
+        this.require($c.EXT_NAME.EXTERNAL, true);
     }
 
     public init(element: HTMLElement) {
@@ -116,8 +118,8 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             }
             if (valid) {
                 element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
-                    if ($css.getStyle(element).display === 'none') {
-                        $session.setElementCache(item, 'squaredExternalDisplay', this.application.processing.sessionId, 'none');
+                    if ($css.getStyle(element).display === $const.CSS.NONE) {
+                        $session.setElementCache(item, 'squaredExternalDisplay', this.application.processing.sessionId, $const.CSS.NONE);
                         item.style.setProperty('display', 'block');
                     }
                 });
@@ -134,11 +136,11 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
     public processNode(node: T) {
         const parentAs = this.application.createNode($dom.createElement(), false);
         node.documentRoot = true;
-        node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
+        node.alignmentType |= $e.NODE_ALIGNMENT.AUTO_LAYOUT;
         node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
         node.exclude({
-            procedure: $enum.NODE_PROCEDURE.ALL,
-            resource: $enum.NODE_RESOURCE.ALL
+            procedure: $e.NODE_PROCEDURE.ALL,
+            resource: $e.NODE_RESOURCE.ALL
         });
         for (const item of node.cascade()) {
             this.addDescendant(item as T);
@@ -147,7 +149,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         node.dataset.pathname = 'res/menu';
         return {
             output: <NodeXmlTemplate<T>> {
-                type: $enum.NODE_TEMPLATE.XML,
+                type: $e.NODE_TEMPLATE.XML,
                 node,
                 controlName: NAVIGATION.MENU
             },
@@ -193,24 +195,24 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         }
         switch (controlName) {
             case NAVIGATION.MENU:
-                node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
+                node.alignmentType |= $e.NODE_ALIGNMENT.AUTO_LAYOUT;
                 break;
             case NAVIGATION.GROUP:
-                node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
+                node.alignmentType |= $e.NODE_ALIGNMENT.AUTO_LAYOUT;
                 parseDataSet(REGEXP_GROUP, element, options);
                 break;
             case NAVIGATION.ITEM:
                 parseDataSet(REGEXP_ITEM, element, options);
                 if (!options.android.icon) {
                     const resource = <android.base.Resource<T>> this.application.resourceHandler;
-                    let src = resource.addImageSrc(node.backgroundImage, $constA.PREFIX_ANDROID.MENU);
+                    let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);
                     if (src !== '') {
                         options.android.icon = `@drawable/${src}`;
                     }
                     else {
                         const image = node.find(item => item.imageElement);
                         if (image) {
-                            src = resource.addImageSrc(<HTMLImageElement> image.element, $constA.PREFIX_ANDROID.MENU);
+                            src = resource.addImageSrc(<HTMLImageElement> image.element, PREFIX_MENU);
                             if (src !== '') {
                                 options.android.icon = `@drawable/${src}`;
                             }
@@ -227,14 +229,14 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         }
         node.setControlType(controlName, $enumA.CONTAINER_NODE.INLINE);
         node.exclude({
-            procedure: $enum.NODE_PROCEDURE.ALL,
-            resource: $enum.NODE_RESOURCE.ALL
+            procedure: $e.NODE_PROCEDURE.ALL,
+            resource: $e.NODE_RESOURCE.ALL
         });
         node.render(parent);
         node.apply(options);
         return {
             output: <NodeXmlTemplate<T>> {
-                type: $enum.NODE_TEMPLATE.XML,
+                type: $e.NODE_TEMPLATE.XML,
                 node,
                 controlName
             },

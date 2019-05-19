@@ -3,17 +3,18 @@ import { ListData } from '../../../src/base/@types/extension';
 
 import View from '../view';
 
-import { CONTAINER_ANDROID } from '../lib/constant';
+import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
 import $Layout = squared.base.Layout;
 
-const $const = squared.base.lib.constant;
-const $enum = squared.base.lib.enumeration;
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
+const $c = squared.base.lib.constant;
+const $e = squared.base.lib.enumeration;
 
 const MINWIDTH_INSIDE = 24;
 const PADDINGRIGHT_DFN = 8;
@@ -25,12 +26,12 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         if (layout.linearY && !layout.linearX) {
             layout.rowCount = node.length;
             layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
-            layout.setType(CONTAINER_NODE.GRID, $enum.NODE_ALIGNMENT.AUTO_LAYOUT);
+            layout.setType(CONTAINER_NODE.GRID, $e.NODE_ALIGNMENT.AUTO_LAYOUT);
         }
         else if (layout.singleRowAligned) {
             layout.rowCount = 1;
             layout.columnCount = layout.length;
-            layout.setType(CONTAINER_NODE.RELATIVE, $enum.NODE_ALIGNMENT.HORIZONTAL);
+            layout.setType(CONTAINER_NODE.RELATIVE, $e.NODE_ALIGNMENT.HORIZONTAL);
         }
         if (layout.containerType !== 0) {
             return {
@@ -42,14 +43,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const mainData: ListData = node.data($const.EXT_NAME.LIST, 'mainData');
+        const mainData: ListData = node.data($c.EXT_NAME.LIST, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             let minWidth = node.marginLeft;
             let columnCount = 0;
             let adjustPadding = false;
             let resetPadding: number | null = null;
-            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT);
+            node.modifyBox($e.BOX_STANDARD.MARGIN_LEFT);
             if (parent.is(CONTAINER_NODE.GRID)) {
                 columnCount = $util.convertInt(parent.android('columnCount'));
                 adjustPadding = true;
@@ -66,7 +67,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
             const container = node.length ? node : this.application.controllerHandler.createNodeGroup(node, [node], parent);
-            let ordinal = !mainData.ordinal ? node.find(item => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
+            let ordinal = !mainData.ordinal ? node.find(item => item.float === $const.CSS.LEFT && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
             if (ordinal) {
                 const layoutOrdinal = new $Layout(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
@@ -74,10 +75,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 else {
                     if (layoutOrdinal.singleRowAligned) {
-                        layoutOrdinal.setType(CONTAINER_NODE.RELATIVE, $enum.NODE_ALIGNMENT.HORIZONTAL);
+                        layoutOrdinal.setType(CONTAINER_NODE.RELATIVE, $e.NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
-                        layoutOrdinal.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.UNKNOWN);
+                        layoutOrdinal.setType(CONTAINER_NODE.CONSTRAINT, $e.NODE_ALIGNMENT.UNKNOWN);
                     }
                     layoutOrdinal.retain(ordinal.children as T[]);
                 }
@@ -90,7 +91,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 if (minWidth > 0 && !ordinal.hasWidth) {
                     ordinal.android('minWidth', $css.formatPX(minWidth));
                 }
-                ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT);
+                ordinal.modifyBox($e.BOX_STANDARD.MARGIN_LEFT);
                 this.application.addLayoutTemplate(
                     parent,
                     ordinal,
@@ -100,7 +101,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             else {
                 const columnWeight = columnCount > 0 ? '0' : '';
                 const inside = node.css('listStylePosition') === 'inside';
-                let gravity = 'right';
+                let gravity = $const.CSS.RIGHT;
                 let top = 0;
                 let left = 0;
                 let image: string | undefined;
@@ -108,7 +109,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (mainData.imagePosition) {
                         const position = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize);
                         ({ top, left } = position);
-                        gravity = 'left';
+                        gravity = $const.CSS.LEFT;
                         if (node.marginLeft < 0) {
                             resetPadding = node.marginLeft;
                             if (parent.paddingLeft > 0) {
@@ -126,9 +127,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     image = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(mainData.imageSrc);
                 }
                 let paddingRight = 0;
-                if (gravity === 'left') {
+                if (gravity === $const.CSS.LEFT) {
                     minWidth += node.paddingLeft - left;
-                    node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT);
+                    node.modifyBox($e.BOX_STANDARD.PADDING_LEFT);
                 }
                 else {
                     const length = mainData.ordinal ? mainData.ordinal.length : 1;
@@ -152,32 +153,32 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (image) {
                         Object.assign(options.android, {
                             src: `@drawable/${image}`,
-                            scaleType: !inside && gravity === 'right' ? 'fitEnd' : 'fitStart',
+                            scaleType: !inside && gravity === $const.CSS.RIGHT ? 'fitEnd' : 'fitStart',
                             baselineAlignBottom: adjustPadding ? 'true' : ''
                         });
                         ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
                         (<HTMLImageElement> element).src = $css.resolveURL(mainData.imageSrc);
                     }
                     else if (mainData.ordinal) {
-                        element.innerHTML = mainData.ordinal;
+                        element.textContent = mainData.ordinal;
                         ordinal.setInlineText(true);
                         ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
                         if (node.tagName === 'DFN') {
                             minWidth += PADDINGRIGHT_DFN;
-                            ordinal.modifyBox($enum.BOX_STANDARD.PADDING_RIGHT, PADDINGRIGHT_DFN);
+                            ordinal.modifyBox($e.BOX_STANDARD.PADDING_RIGHT, PADDINGRIGHT_DFN);
                         }
                     }
                     else {
                         ordinal.setControlType(CONTAINER_ANDROID.SPACE, CONTAINER_NODE.SPACE);
-                        node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT);
+                        node.modifyBox($e.BOX_STANDARD.PADDING_LEFT);
                     }
                     ordinal.inherit(node, 'textStyle');
                     ordinal.cssApply({
                         minWidth: minWidth > 0 ? $css.formatPX(minWidth) : '',
                         marginTop: node.marginTop !== 0 ? $css.formatPX(node.marginTop) : '',
-                        paddingTop: node.paddingTop > 0 ? $css.formatPX(node.paddingTop) : '',
-                        paddingRight: paddingRight > 0 && gravity === 'right' ? $css.formatPX(paddingRight) : '',
-                        paddingLeft: paddingRight > 0 && gravity === 'left' && (!image || mainData.imagePosition) ? $css.formatPX(paddingRight) : '',
+                        paddingTop: node.paddingTop > 0 && node.getBox($e.BOX_STANDARD.PADDING_TOP)[0] === 0 ? $css.formatPX(node.paddingTop) : '',
+                        paddingRight: paddingRight > 0 && gravity === $const.CSS.RIGHT ? $css.formatPX(paddingRight) : '',
+                        paddingLeft: paddingRight > 0 && gravity === $const.CSS.LEFT && (!image || mainData.imagePosition) ? $css.formatPX(paddingRight) : '',
                         fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $css.formatPX(ordinal.toFloat('fontSize') * 0.75) : '',
                         lineHeight: node.lineHeight > 0 ? $css.formatPX(node.lineHeight) : ''
                     });
@@ -188,13 +189,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     ordinal.saveAsInitial();
                     if (!inside) {
-                        ordinal.mergeGravity('gravity', node.localizeString(gravity));
+                        ordinal.mergeGravity(STRING_ANDROID.GRAVITY, node.localizeString(gravity));
                     }
                     if (top !== 0) {
-                        ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, top);
+                        ordinal.modifyBox($e.BOX_STANDARD.MARGIN_TOP, top);
                     }
                     if (left !== 0) {
-                        ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, left);
+                        ordinal.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, left);
                     }
                     ordinal.positioned = true;
                     ordinal.render(parent);
@@ -202,7 +203,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         parent,
                         ordinal,
                         <NodeXmlTemplate<T>> {
-                            type: $enum.NODE_TEMPLATE.XML,
+                            type: $e.NODE_TEMPLATE.XML,
                             node: ordinal,
                             controlName: ordinal.controlName
                         }
@@ -212,28 +213,28 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             }
             if (adjustPadding) {
                 if (resetPadding === null || resetPadding <= 0) {
-                    parent.modifyBox(parent.paddingLeft > 0 ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.MARGIN_LEFT);
+                    parent.modifyBox(parent.paddingLeft > 0 ? $e.BOX_STANDARD.PADDING_LEFT : $e.BOX_STANDARD.MARGIN_LEFT);
                 }
                 if (typeof resetPadding === 'number' && resetPadding < 0) {
-                    parent.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, resetPadding);
+                    parent.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, resetPadding);
                 }
             }
             if (columnCount > 0) {
-                container.android('layout_width', '0px');
+                container.setLayoutWidth($const.CSS.PX_ZERO);
                 container.android('layout_columnWeight', '1');
                 if (node !== container && node.baseline) {
                     container.android('baselineAlignedChildIndex', '0');
                 }
             }
             if (container !== node && node.marginTop !== 0) {
-                container.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.marginTop);
-                node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP);
+                container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.marginTop);
+                node.modifyBox($e.BOX_STANDARD.MARGIN_TOP);
             }
             const layout = new $Layout(
                 parent,
                 container,
                 CONTAINER_NODE.LINEAR,
-                $enum.NODE_ALIGNMENT.VERTICAL | $enum.NODE_ALIGNMENT.UNKNOWN,
+                $e.NODE_ALIGNMENT.VERTICAL | $e.NODE_ALIGNMENT.UNKNOWN,
                 container.children as T[]
             );
             return {
@@ -247,7 +248,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
 
     public postOptimize(node: T) {
         if (node.blockStatic && node.inlineWidth) {
-            node.android('layout_width', 'match_parent');
+            node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
         }
     }
 }

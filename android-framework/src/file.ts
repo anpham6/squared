@@ -3,7 +3,7 @@ import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/applicat
 
 import View from './view';
 
-import { XMLNS_ANDROID } from './lib/constant';
+import { STRING_ANDROID, XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID } from './lib/enumeration';
 
 import COLOR_TMPL from './template/resources/color';
@@ -204,7 +204,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.fonts.size) {
             const settings = this.userSettings;
-            const xmlns = XMLNS_ANDROID[settings.targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
+            const xmlns = XMLNS_ANDROID[settings.targetAPI < BUILD_ANDROID.OREO ? STRING_ANDROID.APP : STRING_ANDROID.ANDROID];
             const pathname = this.resource.application.controllerHandler.localSettings.directory.font;
             for (const [name, font] of Array.from(this.stored.fonts.entries()).sort()) {
                 const data: ExternalData[] = [{

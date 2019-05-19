@@ -194,8 +194,8 @@ declare global {
             appendTry(node: Node, replacement: Node, append?: boolean): boolean;
             toInt(attr: string, initial?: boolean, fallback?: number): number;
             toFloat(attr: string, initial?: boolean, fallback?: number): number;
-            parseUnit(value: string, horizontal?: boolean, parent?: boolean): number;
-            convertPX(value: string, horizontal?: boolean, parent?: boolean): string;
+            parseUnit(value: string, dimension?: string, parent?: boolean): number;
+            convertPX(value: string, dimension?: string, parent?: boolean): string;
             has(attr: string, checkType?: number, options?: {}): boolean;
             hasAlign(value: number): boolean;
             hasProcedure(value: number): boolean;
@@ -210,7 +210,7 @@ declare global {
             modifyBox(region: number, offset?: number, negative?: boolean): void;
             getBox(region: number): [number, number];
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
-            inheritBox(region: number, node: Node): void;
+            transferBox(region: number, node: Node): void;
             actualRect(direction: string, dimension?: string): number;
             previousSiblings(options?: SiblingOptions): Node[];
             nextSiblings(options?: SiblingOptions): Node[];

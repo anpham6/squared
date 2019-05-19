@@ -4,9 +4,10 @@ import Extension from '../extension';
 import Node from '../node';
 import NodeList from '../nodelist';
 
-import { EXT_NAME } from '../lib/constant';
+import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
 
+const $const = squared.lib.constant;
 const $util = squared.lib.util;
 
 export default abstract class Flexbox<T extends Node> extends Extension<T> {
@@ -41,12 +42,12 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             return item.pageFlow;
         }) as T[];
         const mainData = Flexbox.createDataAttribute(node, children);
-        if (node.cssTry('alignItems', 'start')) {
-            if (node.cssTry('justifyItems', 'start')) {
+        if (node.cssTry('alignItems', $const.CSS.START)) {
+            if (node.cssTry('justifyItems', $const.CSS.START)) {
                 for (const item of children) {
                     const bounds = item.initial.bounds;
-                    if (bounds && item.cssTry('alignSelf', 'start')) {
-                        if (item.cssTry('justifySelf', 'start')) {
+                    if (bounds && item.cssTry('alignSelf', $const.CSS.START)) {
+                        if (item.cssTry('justifySelf', $const.CSS.START)) {
                             if (item.cssTry('flexGrow', '0')) {
                                 if (item.cssTry('flexShrink', '1')) {
                                     const rect = (<Element> item.element).getBoundingClientRect();
@@ -71,15 +72,15 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             let size: string;
             let method: string;
             if (mainData.directionRow) {
-                align = 'top';
-                sort = 'left';
-                size = 'right';
+                align = $const.CSS.TOP;
+                sort = $const.CSS.LEFT;
+                size = $const.CSS.RIGHT;
                 method = 'intersectY';
             }
             else {
-                align = 'left';
-                sort = 'top';
-                size = 'bottom';
+                align = $const.CSS.LEFT;
+                sort = $const.CSS.TOP;
+                size = $const.CSS.BOTTOM;
                 method = 'intersectX';
             }
             children.sort((a, b) => {
@@ -154,7 +155,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
                 mainData.columnCount = 1;
             }
         }
-        node.data(EXT_NAME.FLEXBOX, 'mainData', mainData);
+        node.data(EXT_NAME.FLEXBOX, STRING_BASE.EXT_DATA, mainData);
         return undefined;
     }
 }

@@ -1,6 +1,8 @@
 import { parseColor } from './color';
+import { CSS } from './constant';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
-import { CSS, STRING, UNIT, XML } from './regex';
+import { CSS as CSS_RX, STRING, UNIT, XML } from './regex';
+
 import { getElementCache, setElementCache } from './session';
 import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isNumber, isString, replaceMap, resolvePath } from './util';
 
@@ -25,7 +27,7 @@ export interface CSSFontFaceData {
     srcLocal?: string;
 }
 
-export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
+export const BOX_POSITION = [CSS.TOP, CSS.RIGHT, CSS.BOTTOM, CSS.LEFT];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
 export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
 
@@ -45,7 +47,7 @@ export function getStyle(element: Element | null, target = '', cache = true): CS
         }
         return <CSSStyleDeclaration> { display: 'inline' };
     }
-    return <CSSStyleDeclaration> { display: 'none' };
+    return <CSSStyleDeclaration> { display: CSS.NONE };
 }
 
 export function hasComputedStyle(element: Element | null): element is HTMLElement {
@@ -126,14 +128,14 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
             value = getInheritedStyle(element, attr);
         }
         const computed = style[attr];
-        if (value !== computed && value !== 'auto') {
+        if (value !== computed && value !== CSS.AUTO) {
             const numeric = isNumber(value);
             if (computed) {
                 let valid = false;
                 switch (attr) {
+                    case 'color':
                     case 'fontSize':
                     case 'fontWeight':
-                    case 'color':
                     case 'backgroundColor':
                     case 'borderTopColor':
                     case 'borderRightColor':
@@ -156,11 +158,11 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                     default:
                         if (isPercent(value)) {
                             switch (attr) {
-                                case 'width':
+                                case CSS.WIDTH:
+                                case CSS.HEIGHT:
                                 case 'minWidth':
-                                case 'maxWidth':
-                                case 'height':
                                 case 'minHeight':
+                                case 'maxWidth':
                                 case 'maxHeight':
                                 case 'columnWidth':
                                 case 'offsetDistance':
@@ -243,10 +245,10 @@ export function parseKeyframeRule(rules: CSSRuleList) {
                 percent = percent.trim();
                 switch (percent) {
                     case 'from':
-                        percent = '0%';
+                        percent = CSS.PERCENT_0;
                         break;
                     case 'to':
-                        percent = '100%';
+                        percent = CSS.PERCENT_100;
                         break;
                 }
                 result[percent] = {};
@@ -312,13 +314,13 @@ export function validMediaRule(value: string, fontSize?: number) {
                             const [width, height] = replaceMap<string, number>(rule.split('/'), ratio => parseInt(ratio));
                             valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
                             break;
-                        case 'width':
+                        case CSS.WIDTH:
                         case 'min-width':
                         case 'max-width':
-                        case 'height':
+                        case CSS.HEIGHT:
                         case 'min-height':
                         case 'max-height':
-                            valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
+                            valid = compareRange(operation, attr.indexOf(CSS.WIDTH) !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
                             break;
                         case 'orientation':
                             valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
@@ -441,7 +443,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
 }
 
 export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number) {
-    const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
+    const orientation = value === CSS.CENTER ? [CSS.CENTER, CSS.CENTER] : value.split(' ');
     const result: BoxRectPosition = {
         static: true,
         top: 0,
@@ -452,8 +454,8 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
         leftAsPercent: 0,
         rightAsPercent: 0,
         bottomAsPercent: 0,
-        horizontal: 'left',
-        vertical: 'top',
+        horizontal: CSS.LEFT,
+        vertical: CSS.TOP,
         orientation
     };
     if (orientation.length === 2) {
@@ -462,28 +464,28 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
             let direction: string;
             let offsetParent: number;
             if (i === 0) {
-                direction = 'left';
+                direction = CSS.LEFT;
                 offsetParent = dimension.width;
                 result.horizontal = position;
             }
             else {
-                direction = 'top';
+                direction = CSS.TOP;
                 offsetParent = dimension.height;
                 result.vertical = position;
             }
             const directionAsPercent = `${direction}AsPercent`;
             switch (position) {
-                case 'start':
-                    result.horizontal = 'left';
+                case CSS.START:
+                    result.horizontal = CSS.LEFT;
                     break;
-                case 'end':
-                    result.horizontal = 'right';
-                case 'right':
-                case 'bottom':
+                case CSS.END:
+                    result.horizontal = CSS.RIGHT;
+                case CSS.RIGHT:
+                case CSS.BOTTOM:
                     result[direction] = offsetParent;
                     result[directionAsPercent] = 1;
                     break;
-                case 'center':
+                case CSS.CENTER:
                     result[direction] = offsetParent / 2;
                     result[directionAsPercent] = 0.5;
                     break;
@@ -505,16 +507,16 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     const location = convertLength(position, dimension.width, fontSize);
                     const locationAsPercent = convertPercent(position, dimension.width, fontSize);
                     switch (result.horizontal) {
-                        case 'end:':
-                            result.horizontal = 'right';
-                        case 'right':
+                        case CSS.END:
+                            result.horizontal = CSS.RIGHT;
+                        case CSS.RIGHT:
                             result.right = location;
                             result.left = dimension.width - location;
                             result.rightAsPercent = locationAsPercent;
                             result.leftAsPercent = 1 - locationAsPercent;
                             break;
-                        case 'start':
-                            result.horizontal = 'left';
+                        case CSS.START:
+                            result.horizontal = CSS.LEFT;
                         default:
                             result.left = location;
                             result.leftAsPercent = locationAsPercent;
@@ -528,7 +530,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                 case 3: {
                     const location = convertLength(position, dimension.height, fontSize);
                     const locationAsPercent = convertPercent(position, dimension.height, fontSize);
-                    if (result.vertical === 'bottom') {
+                    if (result.vertical === CSS.BOTTOM) {
                         result.bottom = location;
                         result.top = dimension.height - location;
                         result.bottomAsPercent = locationAsPercent;
@@ -616,7 +618,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                     continue;
                 }
                 if (match[4]) {
-                    const calcMatch = CSS.CALC.exec(match[4]);
+                    const calcMatch = CSS_RX.CALC.exec(match[4]);
                     if (calcMatch) {
                         width = calculate(calcMatch[1]) || 0;
                     }
@@ -680,7 +682,7 @@ export function convertListStyle(name: string, value: number, valueAsDefault = f
 }
 
 export function resolveURL(value: string) {
-    const match = CSS.URL.exec(value);
+    const match = CSS_RX.URL.exec(value);
     return match ? resolvePath(match[1]) : '';
 }
 
@@ -723,12 +725,12 @@ export function convertAngle(value: string, unit = 'deg') {
 export function convertPX(value: string, fontSize?: number) {
     if (value) {
         value = value.trim();
-        if (value.endsWith('%') || value === 'auto') {
+        if (value.endsWith('%') || value === CSS.AUTO) {
             return value;
         }
         return `${parseUnit(value, fontSize)}px`;
     }
-    return '0px';
+    return CSS.PX_ZERO;
 }
 
 export function calculate(value: string, dimension = 0, fontSize?: number) {
@@ -895,7 +897,7 @@ export function parseUnit(value: string, fontSize?: number) {
 
 export function parseAngle(value: string) {
     if (value) {
-        const match = CSS.ANGLE.exec(value);
+        const match = CSS_RX.ANGLE.exec(value);
         if (match) {
             return convertAngle(match[1], match[2]);
         }
@@ -907,14 +909,14 @@ export function formatPX(value: string | number) {
     if (typeof value === 'string') {
         value = parseFloat(value);
     }
-    return isNaN(value) ? '0px' : `${Math.round(value)}px`;
+    return isNaN(value) ? CSS.PX_ZERO : `${Math.round(value)}px`;
 }
 
 export function formatPercent(value: string | number, round = true) {
     if (typeof value === 'string') {
         value = parseFloat(value);
         if (isNaN(value)) {
-            return '0%';
+            return CSS.PERCENT_0;
         }
     }
     value *= 100;
@@ -926,15 +928,15 @@ export function isLength(value: string, percent = false) {
 }
 
 export function isCalc(value: string) {
-    return CSS.CALC.test(value);
+    return CSS_RX.CALC.test(value);
 }
 
 export function isCustomProperty(value: string) {
-    return CSS.CUSTOMPROPERTY.test(value);
+    return CSS_RX.CUSTOMPROPERTY.test(value);
 }
 
 export function isAngle(value: string) {
-    return CSS.ANGLE.test(value);
+    return CSS_RX.ANGLE.test(value);
 }
 
 export function isPercent(value: string) {

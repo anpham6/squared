@@ -10,7 +10,7 @@ type NodeRenderIndex = {
     merge: boolean;
 };
 
-const $enum = squared.base.lib.enumeration;
+const $e = squared.base.lib.enumeration;
 
 export default class ResourceIncludes<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
@@ -18,8 +18,8 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
     public beforeCascade() {
         for (const node of this.application.session.cache) {
             if (node.renderParent && node.renderTemplates) {
-                const open: NodeRenderIndex[] = [];
-                const close: NodeRenderIndex[] = [];
+                let open: NodeRenderIndex[] | undefined;
+                let close: NodeRenderIndex[] | undefined;
                 node.renderEach((item: T, index) => {
                     const name = item.dataset.androidInclude || '';
                     const closing = item.dataset.androidIncludeEnd === 'true';
@@ -31,14 +31,20 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                             merge: item.dataset.androidIncludeMerge === 'true'
                         };
                         if (name) {
+                            if (open === undefined) {
+                                open = [];
+                            }
                             open.push(data);
                         }
                         if (closing) {
+                            if (close === undefined) {
+                                close = [];
+                            }
                             close.push(data);
                         }
                     }
                 });
-                if (open.length && close.length) {
+                if (open && close) {
                     const controller = this.application.controllerHandler;
                     open.length = Math.min(open.length, close.length);
                     for (let i = open.length; i < close.length; i++) {
@@ -57,7 +63,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 const merge = openData.merge || templates.length > 1;
                                 const depth = merge ? 1 : 0;
                                 node.renderTemplates[openData.index] = <NodeIncludeTemplate<T>> {
-                                    type: $enum.NODE_TEMPLATE.INCLUDE,
+                                    type: $e.NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
                                     content: controller.renderNodeStatic('include', { layout: `@layout/${openData.name}` }, '', ''),
                                     indent: true
@@ -67,7 +73,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 }
                                 let content = controller.cascadeDocument(templates, depth);
                                 if (merge) {
-                                    content = controller.getEnclosingTag($enum.NODE_TEMPLATE.XML, <NodeTagXml<T>> { controlName: 'merge', attributes: getRootNs(content), content });
+                                    content = controller.getEnclosingTag($e.NODE_TEMPLATE.XML, <NodeTagXml<T>> { controlName: 'merge', attributes: getRootNs(content), content });
                                 }
                                 this.application.saveDocument(openData.name, content, '', Number.POSITIVE_INFINITY);
                                 close.splice(j, 1);

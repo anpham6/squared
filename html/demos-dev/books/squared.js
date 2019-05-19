@@ -1,4 +1,4 @@
-var squared = null;
+/*var squared = null;
 
 System.config({
     packages: {
@@ -26,19 +26,17 @@ System.import('/build/src/main.js').then(result => {
             android = result.default;
             squared.setFramework(android);
             squared.parseDocument().then(function() {
-                squared.close();
                 squared.saveAllToDisk();
             });
         });
     });
-});
+});*/
 
-/*document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     squared.setFramework(android);
     const time = new Date().getTime();
     squared.parseDocument().then(function() {
-        squared.close();
         squared.saveAllToDisk();
         console.log(new Date().getTime() - time);
     });
-});*/
+});

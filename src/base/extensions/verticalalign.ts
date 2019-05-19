@@ -4,6 +4,7 @@ import NodeList from '../nodelist';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
@@ -75,7 +76,7 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
                                 }
                             }
                             if (item.baselineAltered) {
-                                item.css('verticalAlign', '0px', true);
+                                item.css('verticalAlign', $const.CSS.PX_ZERO, true);
                             }
                         }
                     }

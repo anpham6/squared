@@ -12,9 +12,9 @@ type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
-const $enum = squared.base.lib.enumeration;
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
+const $e = squared.base.lib.enumeration;
 
 const REGEXP_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
 
@@ -119,7 +119,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         for (const node of this.application.session.cache) {
-            if (node.visible && node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource($enum.NODE_RESOURCE.FONT_STYLE)) {
+            if (node.visible && node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource($e.NODE_RESOURCE.FONT_STYLE)) {
                 if (nameMap[node.tagName] === undefined) {
                     nameMap[node.tagName] = [];
                 }

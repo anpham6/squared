@@ -2,7 +2,7 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 
-const $enum = squared.base.lib.enumeration;
+const $e = squared.base.lib.enumeration;
 
 export default class <T extends android.base.View> extends squared.base.extensions.VerticalAlign<T> {
     public processNode(node: T, parent: T) {
@@ -13,7 +13,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
                     parent,
                     node,
                     CONTAINER_NODE.RELATIVE,
-                    $enum.NODE_ALIGNMENT.HORIZONTAL,
+                    $e.NODE_ALIGNMENT.HORIZONTAL,
                     node.children as T[]
                 )
             )

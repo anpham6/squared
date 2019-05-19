@@ -1,13 +1,14 @@
 import { NodeXmlTemplate } from '../../../../src/base/@types/application';
 
-import { AXIS_ANDROID, CONTAINER_ANDROID } from '../../lib/constant';
+import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $NodeList = squared.base.NodeList;
 
 type View = android.base.View;
 
-const $enum = squared.base.lib.enumeration;
+const $const = squared.lib.constant;
+const $e = squared.base.lib.enumeration;
 
 const CONTROL_NAME = 'RadioGroup';
 
@@ -37,7 +38,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
             }
             if (valid && inputName.size === 1 && i > 1) {
                 const linearData = $NodeList.linearData(node.children);
-                if (linearData.linearX && !linearData.floated.has('right')) {
+                if (linearData.linearX && !linearData.floated.has($const.CSS.RIGHT)) {
                     return true;
                 }
             }
@@ -51,16 +52,16 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
     public processNode(node: T, parent: T) {
         if (node.length) {
             node.setControlType(CONTROL_NAME, CONTAINER_NODE.LINEAR);
-            node.alignmentType |= $enum.NODE_ALIGNMENT.HORIZONTAL;
-            node.android('orientation', AXIS_ANDROID.HORIZONTAL);
+            node.alignmentType |= $e.NODE_ALIGNMENT.HORIZONTAL;
+            node.android('orientation', STRING_ANDROID.HORIZONTAL);
             if (node.baseline) {
-                node.css('verticalAlign', 'middle', true);
+                node.css('verticalAlign', $const.CSS.MIDDLE, true);
                 node.baseline = false;
             }
             node.render(parent);
             return {
                 output: <NodeXmlTemplate<T>> {
-                    type: $enum.NODE_TEMPLATE.XML,
+                    type: $e.NODE_TEMPLATE.XML,
                     node,
                     controlName: CONTROL_NAME
                 },
@@ -93,16 +94,16 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
             }
             if (children.length > 1) {
                 const container = this.application.controllerHandler.createNodeGroup(node, children, parent, replacement);
-                container.alignmentType |= $enum.NODE_ALIGNMENT.HORIZONTAL | (parent.length !== children.length ? $enum.NODE_ALIGNMENT.SEGMENTED : 0);
+                container.alignmentType |= $e.NODE_ALIGNMENT.HORIZONTAL | (parent.length !== children.length ? $e.NODE_ALIGNMENT.SEGMENTED : 0);
                 if (parent.layoutConstraint) {
                     container.companion = replacement || node;
                 }
                 container.setControlType(CONTROL_NAME, CONTAINER_NODE.LINEAR);
                 container.inherit(node, 'alignment');
-                container.css('verticalAlign', 'middle');
+                container.css('verticalAlign', $const.CSS.MIDDLE);
                 container.baseline = false;
-                container.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, -4);
-                container.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
+                container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, -4);
+                container.exclude({ resource: $e.NODE_RESOURCE.ASSET });
                 container.each(item => {
                     if (item !== node) {
                         item.setControlType(CONTAINER_ANDROID.RADIO, CONTAINER_NODE.RADIO);
@@ -110,7 +111,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                     item.positioned = true;
                 });
                 container.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);
-                container.android('orientation', $NodeList.linearData(children).linearX ? AXIS_ANDROID.HORIZONTAL : AXIS_ANDROID.VERTICAL);
+                container.android('orientation', $NodeList.linearData(children).linearX ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL);
                 for (const item of removeable) {
                     item.hide();
                 }
@@ -118,7 +119,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                 return {
                     renderAs: container,
                     outputAs: <NodeXmlTemplate<T>> {
-                        type: $enum.NODE_TEMPLATE.XML,
+                        type: $e.NODE_TEMPLATE.XML,
                         node: container,
                         controlName: CONTROL_NAME
                     },

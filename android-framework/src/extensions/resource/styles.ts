@@ -3,6 +3,7 @@ import { ResourceStoredMapAndroid } from '../../@types/application';
 import Resource from '../../resource';
 import View from '../../view';
 
+import { STRING_ANDROID } from '../../lib/constant';
 import { createStyleAttribute } from '../../lib/util';
 
 const $regex = squared.lib.regex;
@@ -28,7 +29,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     for (let i = 0; i < renderChildren.length; i++) {
                         const item = renderChildren[i] as T;
                         let found = false;
-                        for (const value of item.combine('_', 'android')) {
+                        for (const value of item.combine('_', STRING_ANDROID.ANDROID)) {
                             if (!found && value.startsWith('style=')) {
                                 if (i === 0) {
                                     style = value;
@@ -101,8 +102,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
             STORED.styles.set(name, {
                 ...createStyleAttribute(),
                 name,
-                items,
-                ids: []
+                items
             });
         }
     }

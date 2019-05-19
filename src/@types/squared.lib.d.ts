@@ -1,4 +1,5 @@
 import * as $client from '../lib/client';
+import * as $constant from '../lib/constant';
 import * as $css from '../lib/css';
 import * as $dom from '../lib/dom';
 import * as $regex from '../lib/regex';
@@ -11,12 +12,16 @@ declare global {
             function findColorShade(value: string): ColorResult | undefined;
             function parseColor(value: string, opacity?: string, transparency?: boolean): ColorData | undefined;
             function parseRGBA(value: string): RGBA | undefined;
-            function reduceColor(value: string, percent: number): ColorData | undefined;
+            function reduceRGBA(value: RGBA, percent: number, cacheName?: string): ColorData | undefined;
             function getHexCode(...values: number[]): string;
             function convertHex(value: RGBA): string;
             function convertHSLA(value: RGBA): HSLA;
             function formatRGBA(value: RGBA): string;
             function formatHSLA(value: HSLA): string;
+        }
+
+        namespace constant {
+            export import CSS = $constant.CSS;
         }
 
         namespace client {
@@ -74,7 +79,7 @@ declare global {
             function getNamedItem(element: Element | null, attr: string): string;
             function createElement(parent?: Element | null, tagName?: string, placeholder?: boolean, index?: number): HTMLElement;
             function createStyleElement(parent: HTMLElement, tagName: string, attrs: StringMap): HTMLElement;
-            function getTextMetrics(value: string, fontFamily: string, fontSize: number): TextMetrics | undefined;
+            function measureTextWidth(value: string, fontFamily: string, fontSize: number): number;
         }
 
         namespace math {

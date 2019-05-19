@@ -6,6 +6,7 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 import { SVG, getPathLength, getAttribute, getTargetElement } from './lib/util';
 
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
@@ -13,7 +14,7 @@ const $util = squared.lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimateTransform implements squared.svg.SvgAnimateMotion {
     public path = '';
-    public distance = '0%';
+    public distance = $const.CSS.PERCENT_0;
     public rotate = 'auto 0deg';
     public motionPathElement: SVGGeometryElement | null = null;
     public rotateData?: NumberValue[];
@@ -30,7 +31,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             this.setAttribute('path');
             const rotate = $dom.getNamedItem(this.animationElement, 'rotate');
             switch (rotate) {
-                case 'auto':
+                case $const.CSS.AUTO:
                     break;
                 case 'auto-reverse':
                     this.rotate = 'auto 180deg';
@@ -68,7 +69,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 this.distance = distance;
             }
             const rotate = getAttribute(element, 'offset-rotate', false);
-            if (rotate !== '' && rotate !== 'auto') {
+            if (rotate !== '' && rotate !== $const.CSS.AUTO) {
                 this.rotate = rotate;
             }
         }
@@ -297,7 +298,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         const angleFrom = $css.parseAngle(from.value.split(' ').pop() as string);
                         const angleTo = $css.parseAngle(to.value.split(' ').pop() as string);
                         if (from.value === to.value || angleFrom === angleTo) {
-                            if (from.value.startsWith('auto')) {
+                            if (from.value.startsWith($const.CSS.AUTO)) {
                                 if (angleFrom !== 0) {
                                     for (const item of timeRange) {
                                         item.rotate += angleFrom;
@@ -313,7 +314,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         else {
                             const offset = angleTo - angleFrom;
                             const l = offset / timeRange.length;
-                            if (from.value.startsWith('auto')) {
+                            if (from.value.startsWith($const.CSS.AUTO)) {
                                 for (let k = 0; k < timeRange.length - 1; k++) {
                                     timeRange[k].rotate += angleFrom + (k * l);
                                 }

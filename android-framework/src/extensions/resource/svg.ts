@@ -5,10 +5,9 @@ import { GradientTemplate } from '../../@types/resource';
 
 import Resource from '../../resource';
 import View from '../../view';
-
 import { convertColorStops } from './background';
 
-import { XMLNS_ANDROID } from '../../lib/constant';
+import { STRING_ANDROID, XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID } from '../../lib/enumeration';
 import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';
 
@@ -137,10 +136,11 @@ interface AnimateGroup {
 
 type AnimateCompanion = NumberValue<SvgAnimation>;
 
-const $util = squared.lib.util;
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $math = squared.lib.math;
 const $regex = squared.lib.regex;
+const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 const $constS = squared.svg.lib.constant;
 const $utilS = squared.svg.lib.util;
@@ -419,8 +419,8 @@ function getValueType(attr: string) {
         case 'r':
         case 'rx':
         case 'ry':
-        case 'width':
-        case 'height':
+        case $const.CSS.WIDTH:
+        case $const.CSS.HEIGHT:
         case 'points':
             return 'pathType';
         default:
@@ -656,10 +656,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     }
                 }
                 if (!node.hasWidth) {
-                    node.android('layout_width', 'wrap_content');
+                    node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
                 }
                 if (!node.hasHeight) {
-                    node.android('layout_height', 'wrap_content');
+                    node.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
                 }
                 if (node.baseline) {
                     node.android('baselineAlignBottom', 'true');
@@ -686,10 +686,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 if (parentElement.lastElementChild instanceof SVGSVGElement) {
                     element = parentElement.lastElementChild;
                     if (element.width.baseVal.value === 0) {
-                        element.setAttribute('width', node.actualWidth.toString());
+                        element.setAttribute($const.CSS.WIDTH, node.actualWidth.toString());
                     }
                     if (element.height.baseVal.value === 0) {
-                        element.setAttribute('height', node.actualHeight.toString());
+                        element.setAttribute($const.CSS.HEIGHT, node.actualHeight.toString());
                     }
                 }
             }
@@ -1391,8 +1391,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 const scaleY = svg.height / svg.viewBox.height;
                 let x = image.getBaseValue('x', 0) * scaleX;
                 let y = image.getBaseValue('y', 0) * scaleY;
-                let width: number = image.getBaseValue('width', 0);
-                let height: number = image.getBaseValue('height', 0);
+                let width: number = image.getBaseValue($const.CSS.WIDTH, 0);
+                let height: number = image.getBaseValue($const.CSS.HEIGHT, 0);
                 const offset = getParentOffset(image.element, <SVGSVGElement> svg.element);
                 x += offset.x;
                 y += offset.y;
@@ -1621,7 +1621,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     case 'fill':
                     case 'stroke':
                         attr += 'Color';
-                        if (value !== 'none' && (attr === 'stroke' || result['aapt:attr'] === undefined)) {
+                        if (value !== $const.CSS.NONE && (attr === 'stroke' || result['aapt:attr'] === undefined)) {
                             const colorName = Resource.addColor(value);
                             if (colorName !== '') {
                                 value = `@color/${colorName}`;

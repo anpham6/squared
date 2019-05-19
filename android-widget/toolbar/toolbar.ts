@@ -10,15 +10,18 @@ type ToolbarThemeData = {
     popupOverlay: string;
 };
 
-const $const = squared.base.lib.constant;
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
-const $enum = squared.base.lib.enumeration;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
+const $c = squared.base.lib.constant;
+const $e = squared.base.lib.enumeration;
+
+const PREFIX_MENU = 'ic_menu_';
 
 export default class Toolbar<T extends android.base.View> extends squared.base.Extension<T> {
     constructor(
@@ -35,8 +38,8 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         if (this.included(element)) {
             for (let i = 0; i < element.children.length; i++) {
                 const item = <HTMLElement> element.children[i];
-                if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $const.EXT_NAME.EXTERNAL)) {
-                    item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
+                if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
+                    item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
                     break;
                 }
             }
@@ -70,15 +73,15 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             const item = <HTMLElement> element.children[i];
             if (item.tagName === 'IMG') {
                 if (item.dataset.navigationIcon) {
-                    const src = resource.addImageSrc(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
+                    const src = resource.addImageSrc(<HTMLImageElement> item, PREFIX_MENU);
                     if (src !== '') {
-                        $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', `@drawable/${src}`);
+                        $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.APP, 'navigationIcon', `@drawable/${src}`);
                     }
                 }
                 if (item.dataset.collapseIcon) {
-                    const src = resource.addImageSrc(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
+                    const src = resource.addImageSrc(<HTMLImageElement> item, PREFIX_MENU);
                     if (src !== '') {
-                        $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', `@drawable/${src}`);
+                        $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.APP, 'collapseIcon', `@drawable/${src}`);
                     }
                 }
             }
@@ -101,19 +104,19 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         let appBarOverlay = '';
         let popupOverlay = '';
         if (hasCollapsingToolbar) {
-            $util.assignEmptyValue(toolbarOptions, 'app', 'layout_collapseMode', 'pin');
+            $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.APP, 'layout_collapseMode', 'pin');
         }
         else {
-            $util.assignEmptyValue(toolbarOptions, 'app', 'popupTheme', '@style/ThemeOverlay.AppCompat.Light');
+            $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.APP, 'popupTheme', '@style/ThemeOverlay.AppCompat.Light');
             if (backgroundImage) {
                 const drawable = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
                 if (drawable !== '') {
-                    $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${drawable}`);
-                    node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
+                    $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'background', `@drawable/${drawable}`);
+                    node.exclude({ resource: $e.NODE_RESOURCE.IMAGE_SOURCE });
                 }
             }
             else {
-                $util.assignEmptyValue(toolbarOptions, 'app', 'layout_scrollFlags', 'scroll|enterAlways');
+                $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.APP, 'layout_scrollFlags', 'scroll|enterAlways');
             }
         }
         if (hasAppBar) {
@@ -125,18 +128,18 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             }
         }
         else {
-            node.exclude({ procedure: $enum.NODE_PROCEDURE.LAYOUT });
-            $util.assignEmptyValue(toolbarOptions, 'android', 'fitsSystemWindows', 'true');
+            node.exclude({ procedure: $e.NODE_PROCEDURE.LAYOUT });
+            $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'fitsSystemWindows', 'true');
         }
-        $util.assignEmptyValue(toolbarOptions, 'android', 'layout_height', hasAppBar || !node.has('height') ? '?android:attr/actionBarSize' : '');
+        $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'layout_height', hasAppBar || !node.has($const.CSS.HEIGHT) ? '?android:attr/actionBarSize' : '');
         node.setControlType($constA.SUPPORT_ANDROID.TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
-        node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE });
+        node.exclude({ resource: $e.NODE_RESOURCE.FONT_STYLE });
         let appBarNode: T | undefined;
         let collapsingToolbarNode: T | undefined;
         if (hasAppBar) {
-            $util.assignEmptyValue(appBarOptions, 'android', 'id', `${node.documentId}_appbar`);
-            $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $css.formatPX(node.actualHeight) : 'wrap_content');
-            $util.assignEmptyValue(appBarOptions, 'android', 'fitsSystemWindows', 'true');
+            $util.assignEmptyValue(appBarOptions, $constA.STRING_ANDROID.ANDROID, 'id', `${node.documentId}_appbar`);
+            $util.assignEmptyValue(appBarOptions, $constA.STRING_ANDROID.ANDROID, 'layout_height', node.hasHeight ? $css.formatPX(node.actualHeight) : $constA.STRING_ANDROID.WRAP_CONTENT);
+            $util.assignEmptyValue(appBarOptions, $constA.STRING_ANDROID.ANDROID, 'fitsSystemWindows', 'true');
             if (hasMenu) {
                 if (appBarOptions.android.theme) {
                     appBarOverlay = appBarOptions.android.theme;
@@ -145,20 +148,20 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 node.data(WIDGET_NAME.TOOLBAR, 'themeData', <ToolbarThemeData> { appBarOverlay, popupOverlay });
             }
             else {
-                $util.assignEmptyValue(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
+                $util.assignEmptyValue(appBarOptions, $constA.STRING_ANDROID.ANDROID, 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
             }
             appBarNode = this.createPlaceholder(node, appBarChildren, target);
             appBarNode.parent = parent;
             appBarNode.controlId = $utilA.stripId(appBarOptions.android.id);
             appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
             if (hasCollapsingToolbar) {
-                $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', `${node.documentId}_collapsingtoolbar`);
-                $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
+                $util.assignEmptyValue(collapsingToolbarOptions, $constA.STRING_ANDROID.ANDROID, 'id', `${node.documentId}_collapsingtoolbar`);
+                $util.assignEmptyValue(collapsingToolbarOptions, $constA.STRING_ANDROID.ANDROID, 'fitsSystemWindows', 'true');
                 if (!backgroundImage) {
-                    $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'contentScrim', '?attr/colorPrimary');
+                    $util.assignEmptyValue(collapsingToolbarOptions, $constA.STRING_ANDROID.APP, 'contentScrim', '?attr/colorPrimary');
                 }
-                $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
-                $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'toolbarId', node.documentId);
+                $util.assignEmptyValue(collapsingToolbarOptions, $constA.STRING_ANDROID.APP, 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
+                $util.assignEmptyValue(collapsingToolbarOptions, $constA.STRING_ANDROID.APP, 'toolbarId', node.documentId);
                 collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
                 if (collapsingToolbarNode) {
                     collapsingToolbarNode.parent = appBarNode;
@@ -169,12 +172,12 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         }
         let outputAs: NodeXmlTemplate<T> | undefined;
         if (appBarNode) {
-            appBarNode.android('layout_width', 'match_parent');
-            appBarNode.android('layout_height', 'wrap_content');
+            appBarNode.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);
+            appBarNode.setLayoutHeight($constA.STRING_ANDROID.WRAP_CONTENT);
             appBarNode.apply($Resource.formatOptions(appBarOptions, numberResourceValue));
             appBarNode.render(target ? application.resolveTarget(target) : parent);
             outputAs = {
-                type: $enum.NODE_TEMPLATE.XML,
+                type: $e.NODE_TEMPLATE.XML,
                 node: appBarNode,
                 controlName: $constA.SUPPORT_ANDROID.APPBAR
             };
@@ -182,13 +185,13 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 node.parent = collapsingToolbarNode;
                 collapsingToolbarNode.apply($Resource.formatOptions(collapsingToolbarOptions, numberResourceValue));
                 collapsingToolbarNode.render(appBarNode);
-                collapsingToolbarNode.android('layout_width', 'match_parent');
-                collapsingToolbarNode.android('layout_height', 'match_parent');
+                collapsingToolbarNode.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);
+                collapsingToolbarNode.setLayoutHeight($constA.STRING_ANDROID.MATCH_PARENT);
                 application.addLayoutTemplate(
                     (collapsingToolbarNode.renderParent || parent) as T,
                     collapsingToolbarNode,
                     <NodeXmlTemplate<T>> {
-                        type: $enum.NODE_TEMPLATE.XML,
+                        type: $e.NODE_TEMPLATE.XML,
                         node: collapsingToolbarNode,
                         controlName: $constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR
                     }
@@ -207,7 +210,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
             if (src !== '') {
                 const backgroundImageOptions = $utilA.createViewAttribute(options.backgroundImage);
-                let scaleType = 'center';
+                let scaleType = $const.CSS.CENTER;
                 switch (node.css('backgroundSize')) {
                     case 'cover':
                     case '100% auto':
@@ -218,31 +221,31 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     case '100% 100%':
                         scaleType = 'fitXY';
                         break;
-                    case 'auto':
+                    case $const.CSS.AUTO:
                         scaleType = 'matrix';
                         break;
                 }
-                $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', `${node.documentId}_image`);
-                $util.assignEmptyValue(backgroundImageOptions, 'android', 'src', `@drawable/${src}`);
-                $util.assignEmptyValue(backgroundImageOptions, 'android', 'scaleType', scaleType);
-                $util.assignEmptyValue(backgroundImageOptions, 'android', 'fitsSystemWindows', 'true');
-                $util.assignEmptyValue(backgroundImageOptions, 'app', 'layout_collapseMode', 'parallax');
+                $util.assignEmptyValue(backgroundImageOptions, $constA.STRING_ANDROID.ANDROID, 'id', `${node.documentId}_image`);
+                $util.assignEmptyValue(backgroundImageOptions, $constA.STRING_ANDROID.ANDROID, 'src', `@drawable/${src}`);
+                $util.assignEmptyValue(backgroundImageOptions, $constA.STRING_ANDROID.ANDROID, 'scaleType', scaleType);
+                $util.assignEmptyValue(backgroundImageOptions, $constA.STRING_ANDROID.ANDROID, 'fitsSystemWindows', 'true');
+                $util.assignEmptyValue(backgroundImageOptions, $constA.STRING_ANDROID.APP, 'layout_collapseMode', 'parallax');
                 controller.addBeforeOutsideTemplate(
                     node.id,
                     controller.renderNodeStatic(
                         $constA.CONTAINER_ANDROID.IMAGE,
                         $Resource.formatOptions(backgroundImageOptions, numberResourceValue),
-                        'match_parent',
-                        'match_parent'
+                        $constA.STRING_ANDROID.MATCH_PARENT,
+                        $constA.STRING_ANDROID.MATCH_PARENT
                     )
                 );
-                node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
+                node.exclude({ resource: $e.NODE_RESOURCE.IMAGE_SOURCE });
             }
         }
-        node.android('layout_width', 'match_parent');
+        node.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);
         node.apply($Resource.formatOptions(toolbarOptions, numberResourceValue));
         const output = <NodeXmlTemplate<T>> {
-            type: $enum.NODE_TEMPLATE.XML,
+            type: $e.NODE_TEMPLATE.XML,
             node,
             controlName: $constA.SUPPORT_ANDROID.TOOLBAR
         };
@@ -271,7 +274,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         const menu = $util.optionalAsString(Toolbar.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
             const toolbarOptions = $utilA.createViewAttribute(this.options[node.elementId] && this.options[node.elementId].self);
-            $util.assignEmptyValue(toolbarOptions, 'app', 'menu', `@menu/${menu}`);
+            $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.APP, 'menu', `@menu/${menu}`);
             node.app('menu', toolbarOptions.app.menu);
         }
         const themeData: ToolbarThemeData = node.data(WIDGET_NAME.TOOLBAR, 'themeData');
@@ -282,11 +285,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             const optionsAppBar = $utilA.createStyleAttribute({ name: '.AppBarOverlay', output: options.output });
             const optionsPopup = $utilA.createStyleAttribute({ name: '.PopupOverlay', output: options.output });
             $util.assignEmptyValue(options, 'name', settings.manifestThemeName);
-            $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
+            $util.assignEmptyValue(options, $constA.STRING_ANDROID.PARENT, 'Theme.AppCompat.Light.DarkActionBar');
             $util.assignEmptyValue(optionsActionBar.items, 'windowActionBar', 'false');
             $util.assignEmptyValue(optionsActionBar.items, 'windowNoTitle', 'true');
-            $util.assignEmptyValue(optionsAppBar, 'parent', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
-            $util.assignEmptyValue(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
+            $util.assignEmptyValue(optionsAppBar, $constA.STRING_ANDROID.PARENT, themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
+            $util.assignEmptyValue(optionsPopup, $constA.STRING_ANDROID.PARENT, themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
             $Resource.addTheme(options, optionsActionBar, optionsAppBar, optionsPopup);
         }
     }
@@ -302,7 +305,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             placeholder.dataset.target = target;
         }
         placeholder.inherit(node, 'base');
-        placeholder.exclude({ resource: $enum.NODE_RESOURCE.ALL });
+        placeholder.exclude({ resource: $e.NODE_RESOURCE.ALL });
         placeholder.positioned = true;
         return placeholder;
     }

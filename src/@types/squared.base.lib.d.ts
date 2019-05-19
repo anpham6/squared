@@ -4,6 +4,7 @@ import * as $enum from '../base/lib/enumeration';
 declare global {
     namespace squared.base.lib {
         namespace constant {
+            export import STRING_BASE = $const.STRING_BASE;
             export import CSS_SPACING = $const.CSS_SPACING;
             export import EXT_NAME = $const.EXT_NAME;
         }

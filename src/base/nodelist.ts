@@ -1,5 +1,6 @@
 import Node from './node';
 
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
@@ -16,21 +17,22 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         let right = top;
         let bottom = top;
         let left = top;
-        for (let i = 1; i < node.children.length; i++) {
-            const item = node.children[i] as T;
-            if (item.actualRect('top') < top.actualRect('top')) {
-                top = item;
+        node.each((item: T, index) => {
+            if (index > 0) {
+                if (item.actualRect($const.CSS.TOP) < top.actualRect($const.CSS.TOP)) {
+                    top = item;
+                }
+                if (item.actualRect($const.CSS.RIGHT) > right.actualRect($const.CSS.RIGHT)) {
+                    right = item;
+                }
+                if (item.actualRect($const.CSS.BOTTOM) > bottom.actualRect($const.CSS.BOTTOM)) {
+                    bottom = item;
+                }
+                if (item.actualRect($const.CSS.LEFT) < left.actualRect($const.CSS.LEFT)) {
+                    left = item;
+                }
             }
-            if (item.actualRect('right') > right.actualRect('right')) {
-                right = item;
-            }
-            if (item.actualRect('bottom') > bottom.actualRect('bottom')) {
-                bottom = item;
-            }
-            if (item.actualRect('left') < left.actualRect('left')) {
-                left = item;
-            }
-        }
+        });
         return {
             top: top.linear.top,
             right: right.linear.right,
@@ -163,10 +165,10 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                         const previousFloat = [];
                         const clear = node.css('clear');
                         switch (clear) {
-                            case 'left':
+                            case $const.CSS.LEFT:
                                 previousFloat.push(clearable.left);
                                 break;
-                            case 'right':
+                            case $const.CSS.RIGHT:
                                 previousFloat.push(clearable.right);
                                 break;
                             case 'both':
@@ -227,7 +229,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                             boxLeft = Math.min(boxLeft, node.linear.left);
                             boxRight = Math.max(boxRight, node.linear.right);
                             if (node.floating) {
-                                if (node.float === 'left') {
+                                if (node.float === $const.CSS.LEFT) {
                                     floatLeft = Math.max(floatLeft, node.linear.right);
                                 }
                                 else {

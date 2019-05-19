@@ -2,8 +2,10 @@ import Extension from '../extension';
 import Layout from '../layout';
 import Node from '../node';
 
+import { STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
+const $const = squared.lib.constant;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
@@ -40,11 +42,11 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                 this.application.addLayout(layout);
                 if (renderParent.layoutHorizontal && node.documentParent.toInt('textIndent') < 0) {
                     renderParent.renderEach(item => {
-                        if (item.alignSibling('topBottom') === node.documentId) {
-                            item.alignSibling('topBottom', target.documentId);
+                        if (item.alignSibling(STRING_BASE.TOP_BOTTOM) === node.documentId) {
+                            item.alignSibling(STRING_BASE.TOP_BOTTOM, target.documentId);
                         }
-                        else if (item.alignSibling('bottomTop') === node.documentId) {
-                            item.alignSibling('bottomTop', target.documentId);
+                        else if (item.alignSibling(STRING_BASE.BOTTOM_TOP) === node.documentId) {
+                            item.alignSibling(STRING_BASE.BOTTOM_TOP, target.documentId);
                         }
                     });
                 }
@@ -67,7 +69,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                                     else {
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - unaligned[0].linear.top);
                                     }
-                                    item.css('verticalAlign', '0px', true);
+                                    item.css('verticalAlign', $const.CSS.PX_ZERO, true);
                                 }
                             }
                             break;
@@ -91,7 +93,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                                         bottom += bounds.bottom - node.bounds.bottom;
                                     }
                                 }
-                                if (renderParent.layoutHorizontal && (node.left !== 0 || node.right !== 0) && node.alignSibling('leftRight') === '') {
+                                if (renderParent.layoutHorizontal && (node.left !== 0 || node.right !== 0) && node.alignSibling(STRING_BASE.LEFT_RIGHT) === '') {
                                     const bounds = $dom.assignRect((<Element> node.element).getBoundingClientRect(), true);
                                     if (left !== 0) {
                                         left -= bounds.left - node.bounds.left;

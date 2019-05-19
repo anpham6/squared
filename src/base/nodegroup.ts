@@ -5,6 +5,8 @@ import NodeList from './nodelist';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
+const $const = squared.lib.constant;
+
 export default abstract class NodeGroup extends Node {
     public init() {
         if (this.length) {
@@ -114,24 +116,16 @@ export default abstract class NodeGroup extends Node {
     get baseline() {
         if (this._cached.baseline === undefined) {
             const value = this.cssInitial('verticalAlign', true);
-            if (value !== '') {
-                this._cached.baseline = value === 'baseline';
-            }
-            else {
-                this._cached.baseline = this.layoutHorizontal && this.every(node => node.baseline);
-            }
+            this._cached.baseline = value !== '' ? value === 'baseline'
+                                                 : this.layoutHorizontal && this.every(node => node.baseline);
         }
         return this._cached.baseline;
     }
 
     get float() {
         if (this._cached.float === undefined) {
-            if (this.floating) {
-                this._cached.float = this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left';
-            }
-            else {
-                this._cached.float = 'none';
-            }
+            this._cached.float = !this.floating ? $const.CSS.NONE
+                                                : this.hasAlign(NODE_ALIGNMENT.RIGHT) ? $const.CSS.RIGHT : $const.CSS.LEFT;
         }
         return this._cached.float;
     }

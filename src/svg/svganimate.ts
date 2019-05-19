@@ -6,6 +6,7 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 
 const $color = squared.lib.color;
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $regex = squared.lib.regex;
@@ -73,7 +74,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 const splitTimes: number[] = [];
                 const splitValues: string[] = [];
                 for (let i = 0; i <= stepSize; i++) {
-                    const offset = i === 0 && match[2] === 'start' ? 1 : 0;
+                    const offset = i === 0 && match[2] === $const.CSS.START ? 1 : 0;
                     const time = keyTimes[index] + keyTimeTotal * (i / stepSize);
                     const percent = (interval * (i + offset)) / 100;
                     const result: string[] = [];
@@ -302,7 +303,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     set delay(value) {
         super.delay = value;
-        const end = $dom.getNamedItem(this.animationElement, 'end');
+        const end = $dom.getNamedItem(this.animationElement, $const.CSS.END);
         if (end) {
             const endTime = $util.sortNumber($util.replaceMap<string, number>(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0];
             if (!isNaN(endTime) && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {

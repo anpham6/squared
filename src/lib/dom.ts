@@ -1,3 +1,4 @@
+import { CSS } from './constant';
 import { spliceArray } from './util';
 
 export const ELEMENT_BLOCK = [
@@ -134,17 +135,17 @@ export function createElement(parent?: Element | null, tagName = 'span', placeho
     const style = element.style;
     if (placeholder) {
         style.setProperty('position', 'static');
-        style.setProperty('margin', '0px');
-        style.setProperty('padding', '0px');
-        style.setProperty('border', 'none');
-        style.setProperty('float', 'none');
-        style.setProperty('clear', 'none');
+        style.setProperty('margin', CSS.PX_ZERO);
+        style.setProperty('padding', CSS.PX_ZERO);
+        style.setProperty('border', CSS.NONE);
+        style.setProperty('float', CSS.NONE);
+        style.setProperty('clear', CSS.NONE);
         element.className = '__squared.placeholder';
     }
     else {
         element.className = '__squared.pseudo';
     }
-    style.setProperty('display', 'none');
+    style.setProperty('display', CSS.NONE);
     if (parent) {
         if (index >= 0 && index < parent.childNodes.length) {
             parent.insertBefore(element, parent.childNodes[index]);
@@ -165,16 +166,16 @@ export function createStyleElement(parent: HTMLElement, tagName: string, attrs: 
     return element;
 }
 
-export function getTextMetrics(value: string, fontFamily: string, fontSize: number) {
+export function measureTextWidth(value: string, fontFamily: string, fontSize: number) {
     if (fontFamily && fontSize) {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         if (context) {
             context.font = `${fontSize}px ${fontFamily}`;
-            return context.measureText(value);
+            return context.measureText(value).width;
         }
     }
-    return undefined;
+    return 0;
 }
 
 export function getNamedItem(element: Element | null, attr: string) {

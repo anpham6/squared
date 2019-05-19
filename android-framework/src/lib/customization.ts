@@ -1,5 +1,6 @@
 import { CustomizationResult } from '../@types/application';
 
+import { STRING_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
 import View from '../view';
@@ -19,6 +20,7 @@ type Deprecations = {
     android: ObjectMap<CustomizationResult>;
 };
 
+const $const = squared.lib.constant;
 const $util = squared.lib.util;
 
 function substitute(result: {}, value: string, api?: number, minApi = 0) {
@@ -162,7 +164,7 @@ export const API_ANDROID: Customizations = {
             'contextClickable': false,
             'drawableTint': false,
             'drawableTintMode': false,
-            'end': (result: {}) => substitute(result, 'right'),
+            'end': (result: {}) => substitute(result, $const.CSS.RIGHT),
             'extractNativeLibs': false,
             'fingerprintAuthDrawable': false,
             'fraction': false,
@@ -173,7 +175,7 @@ export const API_ANDROID: Customizations = {
             'numbersInnerTextColor': false,
             'scrollIndicators': false,
             'showForAllUsers': false,
-            'start': (result: {}) => substitute(result, 'left'),
+            'start': (result: {}) => substitute(result, $const.CSS.LEFT),
             'subtitleTextColor': false,
             'supportsAssist': false,
             'supportsLaunchVoiceAssistFromKeyguard': false,
@@ -470,8 +472,8 @@ export const API_ANDROID: Customizations = {
             'layout_toStartOf': (result: {}) => substitute(result, 'layout_toLeftOf'),
             'listPreferredItemPaddingEnd': (result: {}) => substitute(result, 'listPreferredItemPaddingRight'),
             'listPreferredItemPaddingStart': (result: {}) => substitute(result, 'listPreferredItemPaddingLeft'),
-            'paddingEnd': (result: {}) => substitute(result, 'paddingRight'),
-            'paddingStart': (result: {}) => substitute(result, 'paddingLeft'),
+            'paddingEnd': (result: {}) => substitute(result, STRING_ANDROID.PADDING_RIGHT),
+            'paddingStart': (result: {}) => substitute(result, STRING_ANDROID.PADDING_LEFT),
             'permissionFlags': false,
             'permissionGroupFlags': false,
             'presentationTheme': false,

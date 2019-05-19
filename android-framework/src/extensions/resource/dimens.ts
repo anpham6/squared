@@ -2,6 +2,8 @@ import { ResourceStoredMapAndroid } from '../../@types/application';
 
 import Resource from '../../resource';
 
+import { STRING_ANDROID } from '../../lib/constant';
+
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
@@ -10,7 +12,7 @@ const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const REGEXP_WIDGETNAME = /[\s\n]*<([\w\-.]+)[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
 const REGEXP_DEVICEUNIT = /\d(px|dp|sp)$/;
 
-const NAMESPACE_ATTR = ['android', 'app'];
+const NAMESPACE_ATTR = [STRING_ANDROID.ANDROID, STRING_ANDROID.APP];
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     for (const [storedName, storedValue] of map.entries()) {
@@ -65,17 +67,19 @@ export default class ResourceDimens<T extends android.base.View> extends squared
     }
 
     public afterFinalize() {
-        for (const layout of this.application.layouts) {
-            let content = layout.content;
-            let match: RegExpExecArray | null;
-            while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
-                if (match[3] !== 'text') {
-                    const key = getResourceName(STORED.dimens, `${getDisplayName(match[1]).toLowerCase()}_${$util.convertUnderscore(match[3])}`, match[4]);
-                    STORED.dimens.set(key, match[4]);
-                    content = content.replace(match[0], match[0].replace(match[4], `@dimen/${key}`));
+        if (this.application.controllerHandler.hasAppendProcessing()) {
+            for (const layout of this.application.layouts) {
+                let content = layout.content;
+                let match: RegExpExecArray | null;
+                while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
+                    if (match[3] !== 'text') {
+                        const key = getResourceName(STORED.dimens, `${getDisplayName(match[1]).toLowerCase()}_${$util.convertUnderscore(match[3])}`, match[4]);
+                        STORED.dimens.set(key, match[4]);
+                        content = content.replace(match[0], match[0].replace(match[4], `@dimen/${key}`));
+                    }
                 }
+                layout.content = content;
             }
-            layout.content = content;
         }
     }
 }

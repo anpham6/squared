@@ -5,9 +5,10 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 
-const $const = squared.base.lib.constant;
-const $enum = squared.base.lib.enumeration;
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
+const $c = squared.base.lib.constant;
+const $e = squared.base.lib.enumeration;
 
 type SpriteData = {
     image: Required<RawAsset>,
@@ -16,7 +17,7 @@ type SpriteData = {
 
 export default class <T extends android.base.View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {
-        const mainData = <SpriteData> node.data($const.EXT_NAME.SPRITE, 'mainData');
+        const mainData = <SpriteData> node.data($c.EXT_NAME.SPRITE, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
             const drawable = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
             if (drawable !== '') {
@@ -24,36 +25,36 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 container.inherit(node, 'initial', 'base', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 container.exclude({
-                    procedure: $enum.NODE_PROCEDURE.CUSTOMIZATION,
-                    resource: $enum.NODE_RESOURCE.IMAGE_SOURCE
+                    procedure: $e.NODE_PROCEDURE.CUSTOMIZATION,
+                    resource: $e.NODE_RESOURCE.IMAGE_SOURCE
                 });
                 parent.appendTry(node, container);
                 node.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
-                node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE | $enum.NODE_RESOURCE.BOX_STYLE });
+                node.exclude({ resource: $e.NODE_RESOURCE.FONT_STYLE | $e.NODE_RESOURCE.BOX_STYLE });
                 node.cssApply({
                     position: 'static',
-                    top: 'auto',
-                    right: 'auto',
-                    bottom: 'auto',
-                    left: 'auto',
+                    top: $const.CSS.AUTO,
+                    right: $const.CSS.AUTO,
+                    bottom: $const.CSS.AUTO,
+                    left: $const.CSS.AUTO,
                     display: 'inline-block',
                     width: $css.formatPX(mainData.image.width),
                     height: $css.formatPX(mainData.image.height),
                     marginTop: $css.formatPX(mainData.position.top),
-                    marginRight: '0px',
-                    marginBottom: '0px',
+                    marginRight: $const.CSS.PX_ZERO,
+                    marginBottom: $const.CSS.PX_ZERO,
                     marginLeft: $css.formatPX(mainData.position.left),
-                    paddingTop: '0px',
-                    paddingRight: '0px',
-                    paddingBottom: '0px',
-                    paddingLeft: '0px',
-                    borderTopStyle: 'none',
-                    borderRightStyle: 'none',
-                    borderBottomStyle: 'none',
-                    borderLeftStyle: 'none',
-                    borderRadius: '0px',
-                    backgroundPositionX: '0px',
-                    backgroundPositionY: '0px',
+                    paddingTop: $const.CSS.PX_ZERO,
+                    paddingRight: $const.CSS.PX_ZERO,
+                    paddingBottom: $const.CSS.PX_ZERO,
+                    paddingLeft: $const.CSS.PX_ZERO,
+                    borderTopStyle: $const.CSS.NONE,
+                    borderRightStyle: $const.CSS.NONE,
+                    borderBottomStyle: $const.CSS.NONE,
+                    borderLeftStyle: $const.CSS.NONE,
+                    borderRadius: $const.CSS.PX_ZERO,
+                    backgroundPositionX: $const.CSS.PX_ZERO,
+                    backgroundPositionY: $const.CSS.PX_ZERO,
                     backgroundColor: 'rgba(0, 0, 0, 0)'
                 });
                 node.unsetCache();
@@ -68,7 +69,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
                             parent,
                             container,
                             CONTAINER_NODE.FRAME,
-                            $enum.NODE_ALIGNMENT.SINGLE,
+                            $e.NODE_ALIGNMENT.SINGLE,
                             container.children as T[]
                         )
                     ),

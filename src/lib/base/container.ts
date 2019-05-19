@@ -9,33 +9,33 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public [Symbol.iterator]() {
         const list = this._children;
+        const data: IteratorResult<T> = { done: false, value: undefined as any };
         let i = 0;
         return {
             next(): IteratorResult<T> {
                 if (i < list.length) {
-                    return { done: false, value: list[i++] };
+                    data.value = list[i++];
                 }
                 else {
-                    return { done: true, value: undefined as any };
+                    data.done = true;
                 }
+                return data;
             }
         };
     }
 
     public item(index?: number, value?: T): T | undefined {
-        if (index !== undefined && value !== undefined) {
-            if (index >= 0 && index < this._children.length) {
-                this._children[index] = value;
-                return value;
-            }
-        }
-        else {
-            if (index === undefined) {
-                return this._children[this._children.length - 1];
+        if (index !== undefined) {
+            if (value !== undefined) {
+                if (index >= 0 && index < this._children.length) {
+                    this._children[index] = value;
+                    return value;
+                }
+                return undefined;
             }
             return this._children[index];
         }
-        return undefined;
+        return this._children[this._children.length - 1];
     }
 
     public append(item: T) {
@@ -152,8 +152,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public cascadeSome(predicate: IteratorPredicate<T, boolean>) {
         function cascade(container: Container<T>) {
-            for (let i = 0; i < container.children.length; i++) {
-                const item = container.children[i];
+            for (let i = 0; i < container.length; i++) {
+                const item = container.item(i) as T;
                 if (predicate(item, i, container.children)) {
                     return true;
                 }

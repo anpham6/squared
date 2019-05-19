@@ -7,6 +7,7 @@ type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
 const $color = squared.lib.color;
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
@@ -159,7 +160,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             if ($util.isString(value)) {
                 switch (attr) {
                     case 'stroke-dasharray':
-                        value = value !== 'none' ? $util.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ') : '';
+                        value = value !== $const.CSS.NONE ? $util.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ') : '';
                         break;
                     case 'stroke-dashoffset':
                     case 'stroke-width':
@@ -174,10 +175,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         else {
                             let color: ColorData | undefined;
                             switch (value.toLowerCase()) {
-                                case 'none':
+                                case $const.CSS.NONE:
                                 case 'transparent':
                                 case 'rgba(0, 0, 0, 0)':
-                                    this[attr] = 'none';
+                                    this[attr] = $const.CSS.NONE;
                                     break;
                                 case 'currentcolor':
                                     color = $color.parseColor(this.color || getAttribute(this.element, attr));
@@ -225,7 +226,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 return $css.parseUnit(value, $css.getFontSize(this.element));
             }
             else if ($css.isPercent(value)) {
-                return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * $util.convertFloat(value) / 100);
+                return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || $const.CSS.WIDTH]) * $util.convertFloat(value) / 100);
             }
             return $util.convertFloat(value);
         }

@@ -6,6 +6,8 @@ import View from '../view';
 import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
+const $const = squared.lib.constant;
+
 const REGEXP_ID = /^@\+?id\//;
 
 function calculateBias(start: number, end: number, accuracy = 4) {
@@ -26,15 +28,15 @@ export function stripId(value: string) {
 
 export function getHorizontalBias(node: View) {
     const parent = node.documentParent;
-    const left = Math.max(0, node.actualRect('left', 'bounds') - parent.box.left);
-    const right = Math.max(0, parent.box.right - node.actualRect('right', 'bounds'));
+    const left = Math.max(0, node.actualRect($const.CSS.LEFT, 'bounds') - parent.box.left);
+    const right = Math.max(0, parent.box.right - node.actualRect($const.CSS.RIGHT, 'bounds'));
     return calculateBias(left, right, node.localSettings.floatPrecision);
 }
 
 export function getVerticalBias(node: View) {
     const parent = node.documentParent;
-    const top = Math.max(0, node.actualRect('top', 'bounds') - parent.box.top);
-    const bottom = Math.max(0, parent.box.bottom - node.actualRect('bottom', 'bounds'));
+    const top = Math.max(0, node.actualRect($const.CSS.TOP, 'bounds') - parent.box.top);
+    const bottom = Math.max(0, parent.box.bottom - node.actualRect($const.CSS.BOTTOM, 'bounds'));
     return calculateBias(top, bottom, node.localSettings.floatPrecision);
 }
 

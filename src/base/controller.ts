@@ -5,9 +5,11 @@ import Layout from './layout';
 import Node from './node';
 import NodeList from './nodelist';
 
+import { CSS_BORDER } from './lib/constant';
 import { NODE_TEMPLATE } from './lib/enumeration';
 
 const $color = squared.lib.color;
+const $const = squared.lib.constant;
 const $client = squared.lib.client;
 const $css = squared.lib.css;
 const $session = squared.lib.session;
@@ -32,8 +34,8 @@ export default abstract class Controller<T extends Node> implements squared.base
 
     public abstract processUnknownParent(layout: Layout<T>): LayoutResult<T>;
     public abstract processUnknownChild(layout: Layout<T>): LayoutResult<T>;
-    public abstract processTraverseHorizontal(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
-    public abstract processTraverseVertical(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
+    public abstract processTraverseHorizontal(layout: Layout<T>, siblings: T[]): LayoutResult<T>;
+    public abstract processTraverseVertical(layout: Layout<T>, siblings: T[]): LayoutResult<T>;
     public abstract processLayoutHorizontal(layout: Layout<T>): LayoutResult<T>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     public abstract renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
@@ -64,8 +66,8 @@ export default abstract class Controller<T extends Node> implements squared.base
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',
-                float: 'none',
-                clear: 'none'
+                float: $const.CSS.NONE,
+                clear: $const.CSS.NONE
             };
         }
         else {
@@ -97,25 +99,25 @@ export default abstract class Controller<T extends Node> implements squared.base
                         case 'button':
                             const color = $color.parseColor(style.getPropertyValue('background-color'));
                             if (color === undefined) {
-                                styleMap.backgroundColor = '#DDDDDD';
+                                styleMap.backgroundColor = 'rgb(221, 221, 221)';
                             }
                             if (styleMap.textAlign === undefined) {
-                                styleMap.textAlign = 'center';
+                                styleMap.textAlign = $const.CSS.CENTER;
                             }
                             break;
                     }
-                    if (style.getPropertyValue('border-style') === 'none') {
-                        for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
-                            styleMap[`${border}Style`] = 'outset';
-                            styleMap[`${border}Color`] = '#6C6C6C';
-                            styleMap[`${border}Width`] = '2px';
+                    if (style.getPropertyValue('border-style') === $const.CSS.NONE) {
+                        for (let i = 0; i < 4; i++) {
+                            styleMap[CSS_BORDER[i][0]] = 'outset';
+                            styleMap[CSS_BORDER[i][1]] = '2px';
+                            styleMap[CSS_BORDER[i][2]] = 'rgb(221, 221, 221)';
                         }
                     }
                     break;
                 }
                 case 'BUTTON':
                     if (styleMap.textAlign === undefined) {
-                        styleMap.textAlign = 'center';
+                        styleMap.textAlign = $const.CSS.CENTER;
                     }
                     break;
                 case 'TEXTAREA':
@@ -126,7 +128,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                     break;
                 case 'FORM':
                     if (styleMap.marginTop === undefined) {
-                        styleMap.marginTop = '0px';
+                        styleMap.marginTop = $const.CSS.PX_ZERO;
                     }
                     break;
                 case 'LI':
@@ -141,7 +143,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                     }
                 case 'IMG':
                     const setDimension = (attr: string, opposing: string) => {
-                        if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
+                        if (styleMap[attr] === undefined || styleMap[attr] === $const.CSS.AUTO) {
                             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                             if (match) {
                                 if ($css.isLength(match[1])) {
@@ -152,7 +154,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                                 }
                             }
                             else if (element.tagName === 'IFRAME') {
-                                if (attr ===  'width') {
+                                if (attr ===  $const.CSS.WIDTH) {
                                     styleMap.width = '300px';
                                 }
                                 else {
@@ -170,8 +172,8 @@ export default abstract class Controller<T extends Node> implements squared.base
                             }
                         }
                     };
-                    setDimension('width', 'height');
-                    setDimension('height', 'width');
+                    setDimension($const.CSS.WIDTH, $const.CSS.HEIGHT);
+                    setDimension($const.CSS.HEIGHT, $const.CSS.WIDTH);
                     break;
             }
         }
@@ -242,7 +244,10 @@ export default abstract class Controller<T extends Node> implements squared.base
         return this._afterOutside[id] ? $xml.pushIndentArray(this._afterOutside[id], depth) : '';
     }
 
-    public hasAppendProcessing(id: number) {
+    public hasAppendProcessing(id?: number) {
+        if (id === undefined) {
+            return Object.keys(this._beforeOutside).length > 0 || Object.keys(this._beforeInside).length > 0 || Object.keys(this._afterInside).length > 0 || Object.keys(this._afterOutside).length > 0;
+        }
         return this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined;
     }
 
@@ -260,7 +265,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                 return true;
             }
             const style = $css.getStyle(element);
-            return rect.width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) || style.getPropertyValue('clear') !== 'none';
+            return rect.width > 0 && style.getPropertyValue('float') !== $const.CSS.NONE || style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) || style.getPropertyValue('clear') !== $const.CSS.NONE;
         }
         return false;
     }
@@ -268,8 +273,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public cascadeDocument(templates: NodeTemplate<T>[], depth: number) {
         const indent = depth > 0 ? '\t'.repeat(depth) : '';
         let output = '';
-        for (let i = 0; i < templates.length; i++) {
-            const item = templates[i];
+        for (const item of templates) {
             if (item) {
                 const node = item.node;
                 switch (item.type) {
@@ -290,8 +294,8 @@ export default abstract class Controller<T extends Node> implements squared.base
                             template += ' />\n';
                         }
                         output += this.getBeforeOutsideTemplate(node.id, depth) +
-                                template +
-                                this.getAfterOutsideTemplate(node.id, depth);
+                                  template +
+                                  this.getAfterOutsideTemplate(node.id, depth);
                         break;
                     }
                     case NODE_TEMPLATE.INCLUDE: {

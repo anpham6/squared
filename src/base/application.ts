@@ -10,6 +10,7 @@ import Resource from './resource';
 
 import { APP_SECTION, BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $regex = squared.lib.regex;
@@ -533,17 +534,17 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (node.length) {
                     const textAlign = node.cssInitial('textAlign');
                     switch (textAlign) {
-                        case 'center':
-                        case 'right':
-                        case 'end':
-                            saveAlignment(element, node.id, 'textAlign', 'left', textAlign);
+                        case $const.CSS.CENTER:
+                        case $const.CSS.RIGHT:
+                        case $const.CSS.END:
+                            saveAlignment(element, node.id, 'textAlign', $const.CSS.LEFT, textAlign);
                             break;
                     }
                 }
                 if (node.positionRelative) {
                     for (const attr of $css.BOX_POSITION) {
                         if (node.has(attr)) {
-                            saveAlignment(element, node.id, attr, 'auto', node.css(attr));
+                            saveAlignment(element, node.id, attr, $const.CSS.AUTO, node.css(attr));
                             resetBounds = true;
                         }
                     }
@@ -615,13 +616,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (node === actualParent.lastChild) {
                             let valid = false;
                             if (node.outsideX(actualParent.box)) {
-                                if (!actualParent.has('width') || actualParent.css('overflowX') === 'hidden') {
+                                if (!actualParent.has($const.CSS.WIDTH) || actualParent.css('overflowX') === 'hidden') {
                                     continue;
                                 }
                                 valid = true;
                             }
                             if (node.outsideY(actualParent.box)) {
-                                if (!actualParent.hasHeight && !actualParent.has('height') || actualParent.css('overflowY') === 'hidden') {
+                                if (!actualParent.hasHeight && !actualParent.has($const.CSS.HEIGHT) || actualParent.css('overflowY') === 'hidden') {
                                     continue;
                                 }
                                 valid = true;
@@ -652,7 +653,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             parent = absoluteParent;
                             if (node.positionAuto) {
                                 if (!node.previousSiblings().some(item => item.multiline || item.excluded && !item.blockStatic)) {
-                                    node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
+                                    node.cssApply({ display: 'inline-block', verticalAlign: $const.CSS.TOP }, true);
                                 }
                                 else {
                                     node.positionAuto = false;
@@ -665,7 +666,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     if (!outside) {
                                         const overflowX = parent.css('overflowX') === 'hidden';
                                         const overflowY = parent.css('overflowY') === 'hidden';
-                                        if (overflowX && overflowY || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
+                                        if (overflowX && overflowY || node.cssInitial($const.CSS.TOP) === $const.CSS.PX_ZERO || node.cssInitial($const.CSS.RIGHT) === $const.CSS.PX_ZERO || node.cssInitial($const.CSS.BOTTOM) === $const.CSS.PX_ZERO || node.cssInitial($const.CSS.LEFT) === $const.CSS.PX_ZERO) {
                                             break;
                                         }
                                         else {
@@ -674,13 +675,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             if (!overflowY && node.linear.top < Math.floor(parent.box.top) && (node.top < 0 || node.marginTop < 0)) {
                                                 outside = true;
                                             }
-                                            else if (outsideX && !node.has('left') && node.right > 0 || outsideY && !node.has('top') && node.bottom !== 0) {
+                                            else if (outsideX && !node.has($const.CSS.LEFT) && node.right > 0 || outsideY && !node.has($const.CSS.TOP) && node.bottom !== 0) {
                                                 outside = true;
                                             }
                                             else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent && parent.actualParent.documentBody) && (node.top > 0 || node.left > 0)) {
                                                 outside = true;
                                             }
-                                            else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.has('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
+                                            else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.has($const.CSS.LEFT) && node.right < 0 && node.linear.left >= parent.linear.right)) {
                                                 outside = true;
                                             }
                                             else if (!overflowX && !overflowY && !node.intersectX(parent.box) && !node.intersectY(parent.box)) {
@@ -714,7 +715,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             bounds.left += absoluteParent.left;
                             bounds.right += absoluteParent.left;
                         }
-                        else if (!absoluteParent.has('left') && absoluteParent.right !== 0) {
+                        else if (!absoluteParent.has($const.CSS.LEFT) && absoluteParent.right !== 0) {
                             bounds.left -= absoluteParent.right;
                             bounds.right -= absoluteParent.right;
                         }
@@ -722,7 +723,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             bounds.top += absoluteParent.top;
                             bounds.bottom += absoluteParent.top;
                         }
-                        else if (!absoluteParent.has('top') && absoluteParent.bottom !== 0) {
+                        else if (!absoluteParent.has($const.CSS.TOP) && absoluteParent.bottom !== 0) {
                             bounds.top -= absoluteParent.bottom;
                             bounds.bottom -= absoluteParent.bottom;
                         }
@@ -1271,10 +1272,10 @@ export default class Application<T extends Node> implements squared.base.Applica
             const right: T[] = [];
             for (const node of layout) {
                 switch (node.float) {
-                    case 'left':
+                    case $const.CSS.LEFT:
                         left.push(node);
                         break;
-                    case 'right':
+                    case $const.CSS.RIGHT:
                         right.push(node);
                         break;
                     default:
@@ -1302,25 +1303,25 @@ export default class Application<T extends Node> implements squared.base.Applica
             const cleared = layout.cleared.get(node);
             if (cleared) {
                 switch (cleared) {
-                    case 'left':
+                    case $const.CSS.LEFT:
                         if ($util.hasBit(pendingFloat, 2)) {
                             pendingFloat ^= 2;
                         }
-                        current = 'left';
+                        current = $const.CSS.LEFT;
                         break;
-                    case 'right':
+                    case $const.CSS.RIGHT:
                         if ($util.hasBit(pendingFloat, 4)) {
                             pendingFloat ^= 4;
                         }
-                        current = 'right';
+                        current = $const.CSS.RIGHT;
                         break;
                     case 'both':
                         switch (pendingFloat) {
                             case 2:
-                                current = 'left';
+                                current = $const.CSS.LEFT;
                                 break;
                             case 4:
-                                current = 'right';
+                                current = $const.CSS.RIGHT;
                                 break;
                             default:
                                 current = 'both';
@@ -1347,13 +1348,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
             else if (current === '') {
-                if (node.float === 'right') {
+                if (node.float === $const.CSS.RIGHT) {
                     rightAbove.push(node);
                     if (!$util.hasBit(pendingFloat, 4)) {
                         pendingFloat |= 4;
                     }
                 }
-                else if (node.float === 'left') {
+                else if (node.float === $const.CSS.LEFT) {
                     leftAbove.push(node);
                     if (!$util.hasBit(pendingFloat, 2)) {
                         pendingFloat |= 2;
@@ -1381,22 +1382,22 @@ export default class Application<T extends Node> implements squared.base.Applica
                     inlineAbove.push(node);
                 }
             }
-            else if (node.float === 'right') {
+            else if (node.float === $const.CSS.RIGHT) {
                 if (rightBelow.length === 0 && !$util.hasBit(pendingFloat, 4)) {
                     pendingFloat |= 4;
                 }
-                if (current !== 'right' && rightAbove.length) {
+                if (current !== $const.CSS.RIGHT && rightAbove.length) {
                     rightAbove.push(node);
                 }
                 else {
                     rightBelow.push(node);
                 }
             }
-            else if (node.float === 'left') {
+            else if (node.float === $const.CSS.LEFT) {
                 if (leftBelow.length === 0 && !$util.hasBit(pendingFloat, 2)) {
                     pendingFloat |= 2;
                 }
-                if (current !== 'left' && leftAbove.length) {
+                if (current !== $const.CSS.LEFT && leftAbove.length) {
                     leftAbove.push(node);
                 }
                 else {
@@ -1405,10 +1406,10 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             else {
                 switch (current) {
-                    case 'left':
+                    case $const.CSS.LEFT:
                         leftBelow.push(node);
                         break;
-                    case 'right':
+                    case $const.CSS.RIGHT:
                         rightBelow.push(node);
                         break;
                     default:
@@ -1529,13 +1530,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                     seg.length < itemCount ? NODE_ALIGNMENT.SEGMENTED : 0,
                     seg
                 );
-                if (seg.some(child => child.blockStatic || child.multiline && basegroup.blockStatic || child.has('width', CSS_STANDARD.PERCENT))) {
+                if (seg.some(child => child.blockStatic || child.multiline && basegroup.blockStatic || child.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT))) {
                     group.add(NODE_ALIGNMENT.BLOCK);
                 }
                 if (seg.length === 1) {
                     target.innerWrapped = seg[0];
                     seg[0].outerWrapper = target;
-                    if (seg[0].has('width', CSS_STANDARD.PERCENT)) {
+                    if (seg[0].has($const.CSS.WIDTH, CSS_STANDARD.PERCENT)) {
                         const percent = this.controllerHandler.containerTypePercent;
                         group.setType(percent.containerType, percent.alignmentType);
                     }
@@ -1684,7 +1685,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (floating.length > 1) {
                             subgroup = controller.createNodeGroup(floating[0], floating, basegroup);
                             layoutGroup.add(NODE_ALIGNMENT.FLOAT);
-                            if (pageFlow.length === 0 && floating.every(item => item.float === 'right')) {
+                            if (pageFlow.length === 0 && floating.every(item => item.float === $const.CSS.RIGHT)) {
                                 layoutGroup.add(NODE_ALIGNMENT.RIGHT);
                             }
                         }
@@ -1768,7 +1769,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 let current = element.parentElement;
                 let valid = true;
                 while (current) {
-                    if ($css.getStyle(current).display === 'none') {
+                    if ($css.getStyle(current).display === $const.CSS.NONE) {
                         valid = false;
                         break;
                     }
@@ -1790,7 +1791,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     private createPseduoElement(element: HTMLElement, target: string) {
         const styleMap: StringMap = $session.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
         if (styleMap && styleMap.content) {
-            if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
+            if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== $const.CSS.NONE)) {
                 let valid = true;
                 for (const attr in styleMap) {
                     if (/(Width|Height)$/.test(attr) && $css.isLength(styleMap[attr], true) && $util.convertFloat(styleMap[attr]) !== 0) {
@@ -1836,7 +1837,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             let content = '';
             switch (value) {
                 case 'normal':
-                case 'none':
+                case $const.CSS.NONE:
                 case 'initial':
                 case 'inherit':
                 case 'no-open-quote':
@@ -1887,7 +1888,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     styleName = match[8] || 'decimal';
                                 }
                                 function getCounterValue(name: string) {
-                                    if (name !== 'none') {
+                                    if (name !== $const.CSS.NONE) {
                                         const counterPattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
                                         let counterMatch: RegExpExecArray | null;
                                         while ((counterMatch = counterPattern.exec(name)) !== null) {

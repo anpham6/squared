@@ -3,9 +3,10 @@ import { ListData } from '../@types/extension';
 import Extension from '../extension';
 import Node from '../node';
 
-import { EXT_NAME } from '../lib/constant';
+import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { NODE_RESOURCE } from '../lib/enumeration';
 
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 
 const hasSingleImage = (node: Node) => node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
@@ -31,8 +32,8 @@ export default abstract class List<T extends Node> extends Extension<T> {
                 let imageType = 0;
                 let listType = 0;
                 for (let i = 0; i < length; i++) {
-                    const item = node.children[i];
-                    const listStyleType = item.css('listStyleType') !== 'none';
+                    const item = node.item(i) as T;
+                    const listStyleType = item.css('listStyleType') !== $const.CSS.NONE;
                     if (item.display === 'list-item') {
                         if (listStyleType || item.innerBefore || hasSingleImage(item)) {
                             listType++;
@@ -51,7 +52,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
                         floated.add(item.float);
                         floating++;
                     }
-                    else if (i === 0 || i === length - 1 || item.blockStatic || node.children[i - 1].blockStatic && node.children[i + 1].blockStatic) {
+                    else if (i === 0 || i === length - 1 || item.blockStatic || (node.item(i - 1) as T).blockStatic && (node.item(i + 1) as T).blockStatic) {
                         blockAlternate++;
                     }
                 }
@@ -66,7 +67,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
         node.each(item => {
             const mainData = List.createDataAttribute();
             const value = item.css('listStyleType');
-            if (item.display === 'list-item' || value && value !== 'none' || hasSingleImage(item)) {
+            if (item.display === 'list-item' || value && value !== $const.CSS.NONE || hasSingleImage(item)) {
                 if (item.has('listStyleImage')) {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
@@ -80,14 +81,14 @@ export default abstract class List<T extends Node> extends Extension<T> {
                             case 'square':
                                 mainData.ordinal = '■';
                                 break;
-                            case 'none':
+                            case $const.CSS.NONE:
                                 let src = '';
                                 let position = '';
                                 if (!item.visibleStyle.backgroundRepeat) {
                                     src = item.backgroundImage;
                                     position = item.css('backgroundPosition');
                                 }
-                                if (src && src !== 'none') {
+                                if (src && src !== $const.CSS.NONE) {
                                     mainData.imageSrc = src;
                                     mainData.imagePosition = position;
                                     item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
@@ -104,7 +105,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
                 }
                 i++;
             }
-            item.data(EXT_NAME.LIST, 'mainData', mainData);
+            item.data(EXT_NAME.LIST, STRING_BASE.EXT_DATA, mainData);
         });
         return undefined;
     }

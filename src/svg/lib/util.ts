@@ -1,5 +1,6 @@
 import { SvgMatrix, SvgPoint, SvgTransform } from '../@types/object';
 
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
@@ -232,32 +233,32 @@ export const TRANSFORM = {
             }
             const positions = value.split(' ');
             if (positions.length === 1) {
-                positions.push('center');
+                positions.push($const.CSS.CENTER);
             }
             switch (positions[0]) {
-                case '0%':
-                case 'left':
+                case $const.CSS.PERCENT_0:
+                case $const.CSS.LEFT:
                     break;
-                case '100%':
-                case 'right':
+                case $const.CSS.PERCENT_100:
+                case $const.CSS.RIGHT:
                     result.x = width;
                     break;
-                case 'center':
-                    positions[0] = '50%';
+                case $const.CSS.CENTER:
+                    positions[0] = $const.CSS.PERCENT_50;
                 default:
                     setPosition('x', positions[0], width);
                     break;
             }
             switch (positions[1]) {
-                case '0%':
-                case 'top':
+                case $const.CSS.PERCENT_0:
+                case $const.CSS.TOP:
                     break;
-                case '100%':
-                case 'bottom':
+                case $const.CSS.PERCENT_100:
+                case $const.CSS.BOTTOM:
                     result.y = height;
                     break;
-                case 'center':
-                    positions[1] = '50%';
+                case $const.CSS.CENTER:
+                    positions[1] = $const.CSS.PERCENT_50;
                 default:
                     setPosition('y', positions[1], height);
                     break;

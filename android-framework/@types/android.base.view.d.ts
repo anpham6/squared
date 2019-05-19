@@ -4,6 +4,8 @@ declare global {
     namespace android.base {
         interface View extends squared.base.Node {
             anchored: boolean;
+            readonly layoutWidth: string;
+            readonly layoutHeight: string;
             readonly constraint: Constraint;
             readonly localSettings: LocalSettings;
             readonly documentId: string;
@@ -33,6 +35,8 @@ declare global {
             anchorClear(): void;
             supported(obj: string, attr: string, result?: {}): boolean;
             combine(...objs: string[]): string[];
+            setLayoutWidth(value: string, overwrite?: boolean): void;
+            setLayoutHeight(value: string, overwrite?: boolean): void;
         }
 
         class View implements View {

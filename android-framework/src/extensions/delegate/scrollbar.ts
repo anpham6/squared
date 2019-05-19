@@ -2,18 +2,20 @@ import { NodeXmlTemplate } from '../../../../src/base/@types/application';
 
 import View from '../../view';
 
+import { STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-const $enum = squared.base.lib.enumeration;
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $e = squared.base.lib.enumeration;
 
 const SCROLL_HORIZONTAL = 'HorizontalScrollView';
 const SCROLL_VERTICAL = 'android.support.v4.widget.NestedScrollView';
 
 export default class ScrollBar<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
-        return node.length > 0 && (node.overflowX && node.has('width') || node.overflowY && node.hasHeight && node.has('height') || this.included(<HTMLElement> node.element));
+        return node.length > 0 && (node.overflowX && node.has($const.CSS.WIDTH) || node.overflowY && node.hasHeight && node.has($const.CSS.HEIGHT) || this.included(<HTMLElement> node.element));
     }
 
     public processNode(node: T, parent: T) {
@@ -30,12 +32,12 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
         }
         else {
             let overflowType = 0;
-            if (node.has('width')) {
-                overflowType |= $enum.NODE_ALIGNMENT.HORIZONTAL;
+            if (node.has($const.CSS.WIDTH)) {
+                overflowType |= $e.NODE_ALIGNMENT.HORIZONTAL;
                 overflow.push(SCROLL_HORIZONTAL);
             }
-            if (node.hasHeight && node.has('height')) {
-                overflowType |= $enum.NODE_ALIGNMENT.VERTICAL;
+            if (node.hasHeight && node.has($const.CSS.HEIGHT)) {
+                overflowType |= $e.NODE_ALIGNMENT.VERTICAL;
                 overflow.push(SCROLL_VERTICAL);
             }
             node.overflow = overflowType;
@@ -49,10 +51,10 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             }
             else {
                 container.inherit(node, 'base');
-                container.exclude({ resource: $enum.NODE_RESOURCE.BOX_STYLE });
+                container.exclude({ resource: $e.NODE_RESOURCE.BOX_STYLE });
             }
-            container.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
-            container.resetBox($enum.BOX_STANDARD.PADDING);
+            container.exclude({ resource: $e.NODE_RESOURCE.ASSET });
+            container.resetBox($e.BOX_STANDARD.PADDING);
             scrollView.push(container);
         }
         for (let i = 0; i < scrollView.length; i++) {
@@ -60,24 +62,24 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             const previous = scrollView[i - 1];
             switch (item.controlName) {
                 case SCROLL_VERTICAL:
-                    node.android('layout_width', 'wrap_content');
-                    item.android('layout_height', $css.formatPX(node.actualHeight));
-                    item.android('scrollbars', 'vertical');
+                    node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
+                    item.setLayoutHeight($css.formatPX(node.actualHeight));
+                    item.android('scrollbars', STRING_ANDROID.VERTICAL);
                     item.android('fadeScrollbars', 'false');
                     item.cssApply({
-                        width: 'auto',
+                        width: $const.CSS.AUTO,
                         overflow: 'scroll visible',
                         overflowX: 'visible',
                         overflowY: 'scroll'
                     });
                     break;
                 case SCROLL_HORIZONTAL:
-                    node.android('layout_height', 'wrap_content');
-                    item.android('layout_width', $css.formatPX(node.actualWidth));
-                    item.android('scrollbars', 'horizontal');
+                    node.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
+                    item.setLayoutWidth($css.formatPX(node.actualWidth));
+                    item.android('scrollbars', STRING_ANDROID.HORIZONTAL);
                     item.android('fadeScrollbars', 'false');
                     item.cssApply({
-                        height: 'auto',
+                        height: $const.CSS.AUTO,
                         overflow: 'visible scroll',
                         overflowX: 'scroll',
                         overflowY: 'visible'
@@ -95,24 +97,24 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
                 (item.renderParent || parent) as T,
                 item,
                 <NodeXmlTemplate<T>> {
-                    type: $enum.NODE_TEMPLATE.XML,
+                    type: $e.NODE_TEMPLATE.XML,
                     node: item,
                     controlName: item.controlName
                 }
             );
         }
         if (scrollView.length === 2) {
-            node.android('layout_width', 'wrap_content');
-            node.android('layout_height', 'wrap_content');
+            node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
+            node.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
         }
         else {
             if (node.overflowX) {
-                node.android('layout_width', 'wrap_content');
-                node.android('layout_height', 'match_parent');
+                node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
+                node.setLayoutHeight(STRING_ANDROID.MATCH_PARENT);
             }
             else {
-                node.android('layout_width', 'match_parent');
-                node.android('layout_height', 'wrap_content');
+                node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
+                node.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
             }
         }
         const outer = scrollView.pop() as T;
@@ -121,8 +123,8 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             outer.companion = node;
         }
         node.overflow = 0;
-        node.resetBox($enum.BOX_STANDARD.MARGIN);
-        node.exclude({ resource: $enum.NODE_RESOURCE.BOX_STYLE });
+        node.resetBox($e.BOX_STANDARD.MARGIN);
+        node.exclude({ resource: $e.NODE_RESOURCE.BOX_STYLE });
         return { parent: node.parent as T };
     }
 }

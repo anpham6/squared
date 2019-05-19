@@ -20,11 +20,9 @@ declare global {
             export import CONTAINER_ANDROID = $const.CONTAINER_ANDROID;
             export import SUPPORT_ANDROID = $const.SUPPORT_ANDROID;
             export import ELEMENT_ANDROID = $const.ELEMENT_ANDROID;
-            export import BOX_ANDROID = $const.BOX_ANDROID;
-            export import AXIS_ANDROID = $const.AXIS_ANDROID;
+            export import STRING_ANDROID = $const.STRING_ANDROID;
             export import LAYOUT_ANDROID = $const.LAYOUT_ANDROID;
             export import XMLNS_ANDROID = $const.XMLNS_ANDROID;
-            export import PREFIX_ANDROID = $const.PREFIX_ANDROID;
             export import RESERVED_JAVA = $const.RESERVED_JAVA;
         }
 

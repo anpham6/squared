@@ -2190,21 +2190,33 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
     return undefined;
 }
 
-export function reduceColor(value: string, percent: number) {
-    const rgba = parseRGBA(value);
-    if (rgba) {
-        const base = percent < 0 ? 0 : 255;
-        percent = Math.abs(percent);
-        return parseColor(
-            formatRGBA({
-                r: (rgba.r + Math.round((base - rgba.r) * percent)) % 255,
-                g: (rgba.g + Math.round((base - rgba.g) * percent)) % 255,
-                b: (rgba.b + Math.round((base - rgba.b) * percent)) % 255,
-                a: rgba.a
-            })
-        );
+export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
+    if (cacheName) {
+        cacheName = `${cacheName}_${percent}`;
+        if (CACHE_COLORDATA[cacheName]) {
+            return CACHE_COLORDATA[cacheName];
+        }
     }
-    return undefined;
+    if (value.r === 0 && value.g === 0 && value.b === 0) {
+        value = { r: 255, g: 255, b: 255, a: value.a };
+        if (percent > 0) {
+            percent *= -1;
+        }
+    }
+    const base = percent < 0 ? 0 : 255;
+    percent = Math.abs(percent);
+    const result = <ColorData> parseColor(
+        formatRGBA({
+            r: (value.r + Math.round((base - value.r) * percent)) % 255,
+            g: (value.g + Math.round((base - value.g) * percent)) % 255,
+            b: (value.b + Math.round((base - value.b) * percent)) % 255,
+            a: value.a
+        })
+    );
+    if (cacheName) {
+        CACHE_COLORDATA[cacheName] = result;
+    }
+    return result;
 }
 
 export function getHexCode(...values: number[]) {

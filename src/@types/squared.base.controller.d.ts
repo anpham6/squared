@@ -19,8 +19,8 @@ declare global {
             applyDefaultStyles(element: Element): void;
             processUnknownParent(layout: Layout<T>): LayoutResult<T>;
             processUnknownChild(layout: Layout<T>): LayoutResult<T>;
-            processTraverseHorizontal(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
-            processTraverseVertical(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
+            processTraverseHorizontal(layout: Layout<T>, siblings: T[]): LayoutResult<T>;
+            processTraverseVertical(layout: Layout<T>, siblings: T[]): LayoutResult<T>;
             processLayoutHorizontal(layout: Layout<T>): LayoutResult<T>;
             setConstraints(): void;
             renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
@@ -36,7 +36,7 @@ declare global {
             getBeforeInsideTemplate(id: number, depth: number): string;
             getAfterInsideTemplate(id: number, depth: number): string;
             getAfterOutsideTemplate(id: number, depth: number): string;
-            hasAppendProcessing(id: number): boolean;
+            hasAppendProcessing(id?: number): boolean;
             includeElement(element: Element): boolean;
             visibleElement(element: Element, target?: string): boolean;
             cascadeDocument(templates: NodeTemplate<T>[], depth: number): string;

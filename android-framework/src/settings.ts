@@ -22,13 +22,13 @@ const settings: UserSettingsAndroid = {
         'squared.whitespace',
         'squared.accessibility',
         'android.constraint.guideline',
-        'android.resource.includes',
         'android.resource.svg',
         'android.resource.background',
         'android.resource.strings',
         'android.resource.fonts',
         'android.resource.dimens',
-        'android.resource.styles'
+        'android.resource.styles',
+        'android.resource.includes'
     ],
     targetAPI: 28,
     resolutionDPI: 160,

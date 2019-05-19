@@ -7,6 +7,7 @@ import SvgElement from './svgelement';
 import { INSTANCE_TYPE } from './lib/constant';
 import { MATRIX, SVG } from './lib/util';
 
+const $const = squared.lib.constant;
 const $util = squared.lib.util;
 
 export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) implements squared.svg.SvgImage {
@@ -84,8 +85,8 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         }
         this.setBaseValue('x', x);
         this.setBaseValue('y', y);
-        this.setBaseValue('width', width);
-        this.setBaseValue('height', height);
+        this.setBaseValue($const.CSS.WIDTH, width);
+        this.setBaseValue($const.CSS.HEIGHT, height);
     }
 
     set x(value) {

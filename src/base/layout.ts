@@ -42,13 +42,13 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
                 this._linearY = linearData.linearY;
             }
             else {
-                this._linearY = this.children[0].blockStatic;
+                this._linearY = (this.item(0) as T).blockStatic;
                 this._linearX = !this._linearY;
             }
             let A = 0;
             let B = 0;
             for (let i = 0; i < length; i++) {
-                const item = this.children[i];
+                const item = this.item(i) as T;
                 if (item.floating) {
                     A++;
                 }

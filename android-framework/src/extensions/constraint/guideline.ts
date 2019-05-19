@@ -1,13 +1,14 @@
 import { ConstraintGuidelineOptions } from '../../@types/extension';
 
-import { AXIS_ANDROID } from '../../lib/constant';
+import { STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 
-const $enum = squared.base.lib.enumeration;
+const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
+const $e = squared.base.lib.enumeration;
 
 export default class Guideline<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly options: ConstraintGuidelineOptions = {
@@ -19,14 +20,14 @@ export default class Guideline<T extends android.base.View> extends squared.base
     }
 
     public processNode(node: T, parent: T) {
-        node.exclude({ procedure: $enum.NODE_PROCEDURE.CONSTRAINT });
+        node.exclude({ procedure: $e.NODE_PROCEDURE.CONSTRAINT });
         return {
             output: this.application.renderNode(
                 new $Layout(
                     parent,
                     node,
                     CONTAINER_NODE.CONSTRAINT,
-                    $enum.NODE_ALIGNMENT.ABSOLUTE,
+                    $e.NODE_ALIGNMENT.ABSOLUTE,
                     node.children as T[]
                 )
             )
@@ -36,53 +37,38 @@ export default class Guideline<T extends android.base.View> extends squared.base
     public afterConstraints() {
         const controller = <android.base.Controller<T>> this.application.controllerHandler;
         for (const node of this.subscribers) {
-            const alignParent = new Map<T, string[]>();
+            let anchor!: T;
             node.each((item: T) => {
-                const alignment: string[] = [];
                 if ($util.withinRange(item.linear.left, node.box.left)) {
-                    alignment.push('left');
+                    item.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
+                    item.anchorStyle(STRING_ANDROID.HORIZONTAL);
                 }
                 if ($util.withinRange(item.linear.top, node.box.top)) {
-                    alignment.push('top');
+                    item.anchor($const.CSS.TOP, STRING_ANDROID.PARENT);
+                    item.anchorStyle(STRING_ANDROID.VERTICAL);
                 }
-                alignParent.set(item, alignment);
+                if (this.options.circlePosition) {
+                    if (item.anchored) {
+                        anchor = item;
+                    }
+                    else if (anchor) {
+                        if (!anchor.constraint.vertical && item.constraint.vertical) {
+                            anchor = item;
+                        }
+                    }
+                    else if (item.constraint.vertical) {
+                        anchor = item;
+                    }
+                    else if (item.constraint.horizontal) {
+                        anchor = item;
+                    }
+                }
             });
             if (this.options.circlePosition) {
-                let leftTop = false;
-                for (const value of alignParent.values()) {
-                    if (value.length === 2) {
-                        leftTop = true;
-                        break;
-                    }
-                }
-                let anchor!: T;
-                for (const [item, alignment] of alignParent.entries()) {
-                    if (leftTop) {
-                        if (alignment.length === 2) {
-                            item.anchor('left', 'parent');
-                            item.anchor('top', 'parent');
-                            anchor = item;
-                            break;
-                        }
-                    }
-                    else {
-                        if (alignment.length === 1) {
-                            if (alignment.includes('left')) {
-                                item.anchor('left', 'parent');
-                                controller.addGuideline(item, node, AXIS_ANDROID.VERTICAL);
-                                anchor = item;
-                            }
-                            else {
-                                item.anchor('top', 'parent');
-                                controller.addGuideline(item, node, AXIS_ANDROID.HORIZONTAL);
-                                anchor = item;
-                            }
-                            break;
-                        }
-                    }
-                }
                 if (anchor === undefined) {
                     anchor = node.item(0) as T;
+                }
+                if (!anchor.anchored) {
                     controller.addGuideline(anchor, node);
                 }
                 node.each((item: T) => {
@@ -136,17 +122,11 @@ export default class Guideline<T extends android.base.View> extends squared.base
                 });
             }
             else {
-                for (const [item, alignment] of alignParent.entries()) {
-                    if (alignment.includes('left')) {
-                        item.anchor('left', 'parent');
-                    }
-                    if (alignment.includes('top')) {
-                        item.anchor('top', 'parent');
-                    }
-                    if (alignment.length < 2) {
+                node.each((item: T) => {
+                    if (!item.anchored) {
                         controller.addGuideline(item, node);
                     }
-                }
+                });
             }
         }
     }

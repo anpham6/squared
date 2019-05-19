@@ -1,4 +1,5 @@
 const $client = squared.lib.client;
+const $const = squared.lib.constant;
 
 function hasUnsupportedAccess(element: SVGElement) {
     if (element.tagName === 'svg') {
@@ -33,8 +34,8 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
             }
             this.setBaseValue('x', x);
             this.setBaseValue('y', y);
-            this.setBaseValue('width', width);
-            this.setBaseValue('height', height);
+            this.setBaseValue($const.CSS.WIDTH, width);
+            this.setBaseValue($const.CSS.HEIGHT, height);
         }
 
         private _getElement() {

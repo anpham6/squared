@@ -4,11 +4,11 @@ import { WIDGET_NAME } from '../lib/constant';
 
 import $Resource = android.base.Resource;
 
-const $enum = squared.base.lib.enumeration;
 const $session = squared.lib.session;
 const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
+const $e = squared.base.lib.enumeration;
 
 export default class Coordinator<T extends android.base.View> extends squared.base.Extension<T> {
     public processNode(node: T, parent: T) {
@@ -25,11 +25,11 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
             }
         }
         node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
-        node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
+        node.exclude({ resource: $e.NODE_RESOURCE.ASSET });
         node.render(parent);
         return {
             output: <NodeXmlTemplate<T>> {
-                type: $enum.NODE_TEMPLATE.XML,
+                type: $e.NODE_TEMPLATE.XML,
                 node,
                 controlName: $constA.SUPPORT_ANDROID.COORDINATOR
             }
@@ -41,7 +41,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
             if (node.inlineWidth) {
                 for (const item of node) {
                     if (item.rightAligned) {
-                        node.android('layout_width', 'match_parent', true);
+                        node.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT, true);
                         break;
                     }
                 }
@@ -49,7 +49,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
             if (node.inlineHeight) {
                 for (const item of node) {
                     if (item.bottomAligned) {
-                        node.android('layout_height', 'match_parent', true);
+                        node.setLayoutHeight($constA.STRING_ANDROID.MATCH_PARENT, true);
                         break;
                     }
                 }

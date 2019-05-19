@@ -59,6 +59,7 @@ export const ESCAPE = {
     AMP: /&/g,
     LT: /</g,
     GT: />/g,
+    NEWLINE: /\n/g,
     SINGLEQUOTE: /'/g,
     DOUBLEQUOTE: /"/g,
     U00A0: /\u00A0/g,

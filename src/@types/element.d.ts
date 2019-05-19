@@ -53,7 +53,7 @@ interface Flexbox {
 interface BorderAttribute {
     width: string;
     style: string;
-    color: string;
+    color: ColorData;
 }
 
 interface FontAttribute {
@@ -73,11 +73,11 @@ interface BoxBorder {
 }
 
 interface BoxStyle extends Optional<BoxBorder> {
-    backgroundColor: string;
     backgroundSize: string;
     backgroundRepeat: string;
     backgroundPositionX: string;
     backgroundPositionY: string;
+    backgroundColor?: string;
     backgroundClip?: BoxRect;
     border?: BorderAttribute;
     borderRadius?: string[];
