@@ -14,7 +14,7 @@ function setMinHeight(node: Node, offset: number) {
     node.css('minHeight', $css.formatPX(Math.max(offset, minHeight)));
 }
 
-function isBlockElement(node: Node | undefined) {
+function isBlockElement(node: Node | null) {
     return node ? (node.blockStatic || node.display === 'table') && !node.lineBreak && !node.positioned : false;
 }
 
@@ -59,53 +59,81 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
             margin = 'marginBottom';
             boxMargin = BOX_STANDARD.MARGIN_BOTTOM;
         }
-        if (node[borderWidth] === 0 && node[padding] === 0) {
-            while (doctypeHTML && child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0) {
-                const endChild = (direction ? child.firstChild : child.lastChild) as Node;
-                if (isBlockElement(endChild)) {
-                    child = endChild;
+        if (node[borderWidth] === 0) {
+            if (node[padding] === 0) {
+                while (doctypeHTML && child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0) {
+                    const endChild = (direction ? child.firstChild : child.lastChild) as Node;
+                    if (isBlockElement(endChild)) {
+                        child = endChild;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                let resetChild = false;
+                if (!doctypeHTML && node[margin] === 0 && child[margin] > 0 && child.cssInitial(margin) === '') {
+                    resetChild = true;
                 }
                 else {
-                    break;
-                }
-            }
-            let resetChild = false;
-            if (!doctypeHTML && node[margin] === 0 && child[margin] > 0 && child.cssInitial(margin) === '') {
-                resetChild = true;
-            }
-            else {
-                const outside = node[margin] >= child[margin];
-                if (child.bounds.height === 0 && outside && child.textElement && child.textContent === '' && child.extensions.length === 0) {
-                    child.hide();
-                }
-                else if (child.getBox(boxMargin)[0] !== 1) {
-                    if (node.documentBody) {
-                        if (outside) {
-                            resetChild = true;
+                    const outside = node[margin] >= child[margin];
+                    if (child.bounds.height === 0 && outside && child.textElement && child.textContent === '' && child.extensions.length === 0) {
+                        child.hide();
+                    }
+                    else if (child.getBox(boxMargin)[0] !== 1) {
+                        if (node.documentBody) {
+                            if (outside) {
+                                resetChild = true;
+                            }
+                            else {
+                                resetMargin(node, boxMargin);
+                                if (direction) {
+                                    node.bounds.top = 0;
+                                    node.unsafe('box', true);
+                                    node.unsafe('linear', true);
+                                }
+                            }
                         }
                         else {
-                            resetMargin(node, boxMargin);
-                            if (direction) {
-                                node.bounds.top = 0;
-                                node.unsafe('box', true);
-                                node.unsafe('linear', true);
+                            if (!outside && node.getBox(boxMargin)[0] !== 1) {
+                                const visibleParent = getVisibleNode(node);
+                                visibleParent.modifyBox(boxMargin);
+                                visibleParent.modifyBox(boxMargin, child[margin]);
                             }
+                            resetChild = true;
+                        }
+                    }
+                }
+                if (resetChild) {
+                    resetMargin(child, boxMargin);
+                    if (child.bounds.height === 0) {
+                        resetMargin(child, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
+                    }
+                }
+            }
+            else {
+                let blockAll = true;
+                while (child[margin] === 0 && child[borderWidth] === 0) {
+                    const endChild = (direction ? child.firstChild : child.lastChild) as Node;
+                    if (endChild) {
+                        if (endChild[padding] > 0) {
+                            if (endChild[padding] >= node[padding]) {
+                                node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM);
+                            }
+                            else if (blockAll) {
+                                node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, -endChild[padding]);
+                            }
+                            break;
+                        }
+                        else {
+                            if (!isBlockElement(endChild)) {
+                                blockAll = false;
+                            }
+                            child = endChild;
                         }
                     }
                     else {
-                        if (!outside && node.getBox(boxMargin)[0] !== 1) {
-                            const visibleParent = getVisibleNode(node);
-                            visibleParent.modifyBox(boxMargin);
-                            visibleParent.modifyBox(boxMargin, child[margin]);
-                        }
-                        resetChild = true;
+                        break;
                     }
-                }
-            }
-            if (resetChild) {
-                resetMargin(child, boxMargin);
-                if (child.bounds.height === 0) {
-                    resetMargin(child, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
                 }
             }
         }

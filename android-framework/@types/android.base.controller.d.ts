@@ -8,9 +8,9 @@ declare global {
             checkFrameHorizontal(data: squared.base.Layout<T>): boolean;
             checkConstraintFloat(data: squared.base.Layout<T>, horizontal?: boolean): boolean;
             checkConstraintHorizontal(data: squared.base.Layout<T>): boolean;
-            checkRelativeHorizontal(data: squared.base.Layout<T>): boolean;
+            checkLinearHorizontal(data: squared.base.Layout<T>): boolean;
             addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposite?: boolean): void;
-            addBarrier(nodes: T[], barrierDirection: string): string;
+            addBarrier(nodes: T[], barrierDirection: string): string | undefined;
             evaluateAnchors(nodes: T[]): void;
             renderSpace(width: string, height?: string, columnSpan?: number, rowSpan?: number, options?: ViewAttribute): string;
             createNodeWrapper(node: T, parent: T, children?: T[], controlName?: string, containerType?: number): T;

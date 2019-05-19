@@ -16,6 +16,7 @@ export interface Constraint {
 export interface ViewAttribute {
     android: StringMap;
     app: StringMap;
+    documentId?: string;
 }
 
 export interface SupportAndroid extends Support {

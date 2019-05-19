@@ -27,7 +27,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
             layout.setType(CONTAINER_NODE.GRID, $enum.NODE_ALIGNMENT.AUTO_LAYOUT);
         }
-        else if ((<android.base.Controller<T>> this.application.controllerHandler).checkRelativeHorizontal(layout)) {
+        else if (layout.singleRowAligned) {
             layout.rowCount = 1;
             layout.columnCount = layout.length;
             layout.setType(CONTAINER_NODE.RELATIVE, $enum.NODE_ALIGNMENT.HORIZONTAL);
@@ -73,13 +73,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     layoutOrdinal.containerType = CONTAINER_NODE.TEXT;
                 }
                 else {
-                    layoutOrdinal.retain(ordinal.children as T[]);
-                    if (controller.checkRelativeHorizontal(layoutOrdinal)) {
+                    if (layoutOrdinal.singleRowAligned) {
                         layoutOrdinal.setType(CONTAINER_NODE.RELATIVE, $enum.NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
                         layoutOrdinal.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.UNKNOWN);
                     }
+                    layoutOrdinal.retain(ordinal.children as T[]);
                 }
                 ordinal.parent = parent;
                 ordinal.render(parent);

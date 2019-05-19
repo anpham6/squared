@@ -439,7 +439,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             return NODE_TRAVERSE.LINEBREAK;
         }
         else if ((this.pageFlow || this.positionAuto)) {
-            const checkBlockDimension = (previous: T) => $util.aboveRange(this.linear.top, previous.linear.bottom) && (this.has('height') || this.float !== previous.float || previous.blockDimension && previous.has('height')) || this.has('width', CSS_STANDARD.PERCENT);
+            const checkBlockDimension = (previous: T) => $util.aboveRange(this.linear.top, previous.linear.bottom) && (this.blockVertical || this.float !== previous.float || previous.blockVertical || this.has('width', CSS_STANDARD.PERCENT));
             if (this.blockDimension && this.css('width') === '100%' && !this.has('maxWidth')) {
                 return NODE_TRAVERSE.VERTICAL;
             }
@@ -1876,6 +1876,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.blockDimension = this.block || value.startsWith('inline-') || value === 'table' || this.imageElement || this.svgElement;
         }
         return this._cached.blockDimension;
+    }
+
+    get blockVertical() {
+        if (this._cached.blockVertical === undefined) {
+            this._cached.blockVertical = this.blockDimension && this.has('height');
+        }
+        return this._cached.blockVertical;
     }
 
     get pageFlow() {

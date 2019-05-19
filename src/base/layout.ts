@@ -140,19 +140,21 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     get singleRowAligned() {
         if (this._singleRow === undefined) {
             let previousBottom = Number.POSITIVE_INFINITY;
+            this._singleRow = true;
             for (const node of this.children) {
                 if (node.multiline) {
-                    return false;
+                    this._singleRow = false;
+                    break;
                 }
                 else {
                     const offset = $util.convertFloat(node.verticalAlign);
                     if (node.linear.top - offset >= previousBottom) {
-                        return false;
+                        this._singleRow = false;
+                        break;
                     }
                     previousBottom = node.linear.bottom + offset;
                 }
             }
-            this._singleRow = true;
         }
         return this._singleRow;
     }

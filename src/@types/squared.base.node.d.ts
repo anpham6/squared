@@ -114,6 +114,7 @@ declare global {
             readonly block: boolean;
             readonly blockStatic: boolean;
             readonly blockDimension: boolean;
+            readonly blockVertical: boolean;
             readonly contentBox: boolean;
             readonly autoMargin: AutoMargin;
             readonly pageFlow: boolean;
