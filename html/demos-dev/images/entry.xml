@@ -79,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol97274"
+                    android:text="@string/__symbol42804"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -226,7 +226,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol97274"
+                    android:text="@string/__symbol42804"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -668,7 +668,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol97274"
+                    android:text="@string/__symbol42804"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -804,7 +804,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol97274">):</string>
+    <string name="__symbol42804">):</string>
     <string name="active">Active:</string>
     <string name="add"><u>Add</u></string>
     <string name="all">All</string>
@@ -987,7 +987,6 @@
     <color name="dimgray_1">#6F6F6F</color>
     <color name="gray">#808080</color>
     <color name="yellowgreen">#9ACD32</color>
-    <color name="darkgray_1">#A6A6A6</color>
     <color name="darkgray">#A9A9A9</color>
     <color name="lightgray_1">#CCCCCC</color>
     <color name="gainsboro_1">#DDDDDD</color>
@@ -1082,22 +1081,22 @@
     <dimen name="input_button_layout_margin_start_2">4dp</dimen>
     <dimen name="input_button_min_height">25dp</dimen>
     <dimen name="input_button_min_width">35dp</dimen>
-    <dimen name="input_button_padding_horizontal">7dp</dimen>
-    <dimen name="input_button_padding_vertical">2dp</dimen>
+    <dimen name="input_button_padding_horizontal">8dp</dimen>
+    <dimen name="input_button_padding_vertical">3dp</dimen>
     <dimen name="input_checkbox_layout_margin_end">3dp</dimen>
     <dimen name="input_checkbox_layout_margin_start">7dp</dimen>
     <dimen name="input_checkbox_layout_margin_vertical">3dp</dimen>
-    <dimen name="input_checkbox_padding">1dp</dimen>
+    <dimen name="input_checkbox_padding">2dp</dimen>
     <dimen name="input_radio_layout_margin_end">3dp</dimen>
     <dimen name="input_radio_layout_margin_start">5dp</dimen>
     <dimen name="input_radio_layout_margin_start_1">8dp</dimen>
     <dimen name="input_radio_layout_margin_top">3dp</dimen>
-    <dimen name="input_radio_padding">1dp</dimen>
+    <dimen name="input_radio_padding">2dp</dimen>
     <dimen name="input_text_layout_margin_end">5dp</dimen>
-    <dimen name="input_text_layout_width">42dp</dimen>
-    <dimen name="input_text_layout_width_1">132dp</dimen>
-    <dimen name="input_text_padding_horizontal">1dp</dimen>
-    <dimen name="input_text_padding_vertical">2dp</dimen>
+    <dimen name="input_text_layout_width">44dp</dimen>
+    <dimen name="input_text_layout_width_1">134dp</dimen>
+    <dimen name="input_text_padding_horizontal">2dp</dimen>
+    <dimen name="input_text_padding_vertical">3dp</dimen>
     <dimen name="label_layout_margin_end">5dp</dimen>
     <dimen name="label_layout_width">80dp</dimen>
     <dimen name="label_padding_top">3dp</dimen>
@@ -1112,7 +1111,7 @@
     <dimen name="space_layout_height">6dp</dimen>
     <dimen name="ul_padding_bottom">11dp</dimen>
     <dimen name="ul_padding_horizontal">5dp</dimen>
-    <dimen name="ul_padding_top">5dp</dimen>
+    <dimen name="ul_padding_top">2dp</dimen>
 </resources>
 <!-- filename: res/values/dimens.xml -->
 
@@ -1139,22 +1138,22 @@
     </item>
     <item android:left="-1dp" android:right="-1dp" android:bottom="-1dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/black" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
     <item android:left="-1dp" android:top="-1dp" android:bottom="-1dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/black" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
     <item android:top="-1dp" android:right="-1dp" android:bottom="-1dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/black" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
     <item android:left="-1dp" android:top="-1dp" android:right="-1dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/black" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
 </layer-list>
@@ -1176,7 +1175,7 @@
     </item>
     <item android:left="-1dp" android:right="-1dp" android:bottom="-1dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/darkgray_1" />
+            <stroke android:width="1dp" android:color="@color/dimgray_1" />
         </shape>
     </item>
     <item android:left="-1dp" android:top="-1dp" android:bottom="-1dp">
@@ -1186,7 +1185,7 @@
     </item>
     <item android:top="-1dp" android:right="-1dp" android:bottom="-1dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/darkgray_1" />
+            <stroke android:width="1dp" android:color="@color/dimgray_1" />
         </shape>
     </item>
     <item android:left="-1dp" android:top="-1dp" android:right="-1dp">

@@ -1,3 +1,4 @@
+import { NodeTemplate } from '../../src/base/@types/application';
 import { CachedValue } from '../../src/base/@types/node';
 import { CustomizationResult } from './@types/application';
 import { Constraint, LocalSettings, SupportAndroid } from './@types/node';
@@ -5,7 +6,7 @@ import { Constraint, LocalSettings, SupportAndroid } from './@types/node';
 import { CONTAINER_ANDROID, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { localizeString, stripId } from './lib/util';
+import { localizeString } from './lib/util';
 
 import $NodeList = squared.base.NodeList;
 import $Resource = squared.base.Resource;
@@ -186,6 +187,15 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         private static _documentBody: T;
 
+        public renderParent?: T;
+        public renderTemplates?: NodeTemplate<T>[];
+        public outerWrapper?: T;
+        public innerWrapped?: T;
+        public companion?: T;
+        public extracted?: T[];
+        public horizontalRows?: T[][];
+        public innerBefore?: T;
+        public innerAfter?: T;
         public readonly renderChildren: T[] = [];
         public readonly constraint: Constraint = {
             horizontal: false,
@@ -550,7 +560,6 @@ export default (Base: Constructor<squared.base.Node>) => {
             else if (this.containerType === 0) {
                 this.containerType = CONTAINER_NODE.UNKNOWN;
             }
-            this.controlId = stripId(this.android('id'));
             if (this.controlId === '') {
                 let name: string | undefined;
                 if (this.styleElement && this.naturalElement) {
@@ -578,7 +587,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     this.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT, false);
                     return;
                 }
-                const documentParent = this.documentParent as T;
+                const documentParent = this.documentParent;
                 let adjustViewBounds = false;
                 if (this.documentBody) {
                     if (!this.hasWidth && this.renderChildren.some(node => node.alignParent($const.CSS.RIGHT))) {
@@ -598,7 +607,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         else if ($css.isPercent(width)) {
                             if (renderParent.is(CONTAINER_NODE.GRID)) {
-                                layoutWidth = $const.CSS.PX_ZERO;
+                                layoutWidth = $const.CSS.PX_0;
                                 this.android('layout_columnWeight', $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
                             }
                             else if (this.imageElement) {
@@ -661,7 +670,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     layoutWidth = STRING_ANDROID.MATCH_PARENT;
                                 }
                                 else if (!documentParent.flexElement && renderParent.layoutConstraint && this.alignParent($const.CSS.LEFT) && this.alignParent($const.CSS.RIGHT)) {
-                                    layoutWidth = this.autoMargin.horizontal || this.ascend(false, item => item.has($const.CSS.WIDTH) || item.blockStatic).length ? $const.CSS.PX_ZERO : STRING_ANDROID.MATCH_PARENT;
+                                    layoutWidth = this.autoMargin.horizontal || this.ascend(false, item => item.has($const.CSS.WIDTH) || item.blockStatic).length ? $const.CSS.PX_0 : STRING_ANDROID.MATCH_PARENT;
                                 }
                             }
                             if (layoutWidth === '' && (
@@ -744,7 +753,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     if (layoutHeight === '') {
                         if (this.textEmpty && !this.visibleStyle.backgroundImage) {
                             if (renderParent.layoutConstraint && this.alignParent($const.CSS.TOP) && this.actualHeight >= (this.absoluteParent || documentParent).box.height) {
-                                layoutHeight = $const.CSS.PX_ZERO;
+                                layoutHeight = $const.CSS.PX_0;
                                 this.anchor($const.CSS.BOTTOM, STRING_ANDROID.PARENT);
                             }
                             else {
@@ -814,10 +823,10 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public setAlignment() {
-            const renderParent = this.renderParent as T;
+            const renderParent = this.renderParent;
             if (renderParent) {
                 const alignFloat = this.hasAlign($e.NODE_ALIGNMENT.FLOAT);
-                const node = (this.outerWrapper as T) || this;
+                const node = this.outerWrapper || this;
                 const outerRenderParent = (node.renderParent as T) || renderParent;
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
@@ -927,7 +936,7 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         public mergeGravity(attr: string, alignment: string, overwrite = true) {
             if (attr === STRING_ANDROID.LAYOUT_GRAVITY) {
-                const renderParent = this.renderParent as T;
+                const renderParent = this.renderParent;
                 if (renderParent) {
                     if (isHorizontalAlign(alignment) && (this.blockWidth || renderParent.inlineWidth && this.singleChild || !overwrite && this.outerWrapper && this.has('maxWidth'))) {
                         return;
@@ -1021,7 +1030,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public applyOptimizations() {
-            const renderParent = this.renderParent as T;
+            const renderParent = this.renderParent;
             if (renderParent) {
                 let borderWidth = this.styleElement;
                 if (this.tableElement) {
@@ -1059,106 +1068,120 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public setBoxSpacing() {
-            const setBoxModel = (attrs: string[], margin: boolean, mergeable: boolean) => {
-                const { 0: top, 1: right, 2: bottom, 3: left } = attrs;
-                const boxModel: ObjectMap<number> = {};
-                let mergeAll = 0;
-                let mergeHorizontal = 0;
-                let mergeVertical = 0;
-                for (const attr of attrs) {
-                    boxModel[attr] = this._boxAdjustment[attr];
-                    if (this._boxReset[attr] === 0) {
-                        let value = this[attr];
-                        if (value !== 0) {
-                            if (attr === 'marginRight') {
-                                if (value < 0) {
-                                    if (this.float === $const.CSS.RIGHT) {
-                                        value = 0;
-                                    }
-                                }
-                                else if (this.inline) {
-                                    const boxRight = this.documentParent.box.right;
-                                    if (Math.floor(this.bounds.right) > boxRight) {
-                                        if (this.textElement && !this.singleChild && !this.alignParent($const.CSS.LEFT)) {
-                                            setSingleLine(this);
-                                        }
-                                        continue;
-                                    }
-                                    else if (this.bounds.right + value > boxRight) {
-                                        value = Math.max(0, boxRight - this.bounds.right);
-                                    }
-                                }
+            const setBoxModel = (attrs: string[], margin: boolean, unmergeable = false) => {
+                let top = 0;
+                let right = 0;
+                let bottom = 0;
+                let left = 0;
+                for (let i = 0 ; i < attrs.length; i++) {
+                    const attr = attrs[i];
+                    let value = this._boxReset[attr] === 0 ? this[attr] : 0;
+                    if (value !== 0 && attr === 'marginRight') {
+                        if (value < 0) {
+                            if (this.float === $const.CSS.RIGHT) {
+                                value = 0;
                             }
-                            boxModel[attr] += value;
+                        }
+                        else if (this.inline) {
+                            const boxRight = this.documentParent.box.right;
+                            if (Math.floor(this.bounds.right) > boxRight) {
+                                if (this.textElement && !this.singleChild && !this.alignParent($const.CSS.LEFT)) {
+                                    setSingleLine(this);
+                                }
+                                continue;
+                            }
+                            else if (this.bounds.right + value > boxRight) {
+                                value = Math.max(0, boxRight - this.bounds.right);
+                            }
                         }
                     }
-                }
-                if (margin && this.positionStatic && !this.blockWidth && (boxModel[left] < 0 || boxModel[right] < 0)) {
-                    switch (this.cssAscend('textAlign')) {
-                        case $const.CSS.CENTER: {
-                            if (boxModel[left] < boxModel[right]) {
-                                boxModel[right] += Math.abs(boxModel[left]);
-                                boxModel[right] /= 2;
-                                boxModel[left] = 0;
-                            }
-                            else {
-                                boxModel[left] += Math.abs(boxModel[right]);
-                                boxModel[left] /= 2;
-                                boxModel[right] = 0;
-                            }
+                    value += this._boxAdjustment[attr];
+                    switch (i) {
+                        case 0:
+                            top = value;
                             break;
-                        }
-                        case $const.CSS.RIGHT:
-                        case $const.CSS.END:
-                            if (boxModel[left] < 0) {
-                                boxModel[left] = 0;
-                            }
+                        case 1:
+                            right = value;
+                            break;
+                        case 2:
+                            bottom = value;
+                            break;
+                        case 3:
+                            left = value;
                             break;
                     }
                 }
-                if (mergeable && this.localSettings.targetAPI >= BUILD_ANDROID.OREO) {
-                    if (boxModel[top] === boxModel[right] && boxModel[right] === boxModel[bottom] && boxModel[bottom] === boxModel[left]) {
-                        mergeAll = boxModel[top];
+                if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
+                    let mergeAll = 0;
+                    let mergeHorizontal = 0;
+                    let mergeVertical = 0;
+                    if (margin && this.positionStatic && !this.blockWidth && (left < 0 || right < 0)) {
+                        switch (this.cssAscend('textAlign')) {
+                            case $const.CSS.CENTER: {
+                                if (left < right) {
+                                    right += Math.abs(left);
+                                    right /= 2;
+                                    left = 0;
+                                }
+                                else {
+                                    left += Math.abs(right);
+                                    left /= 2;
+                                    right = 0;
+                                }
+                                break;
+                            }
+                            case $const.CSS.RIGHT:
+                            case $const.CSS.END:
+                                if (left < 0) {
+                                    left = 0;
+                                }
+                                break;
+                        }
+                    }
+                    if (!unmergeable && this.localSettings.targetAPI >= BUILD_ANDROID.OREO) {
+                        if (top === right && right === bottom && bottom === left) {
+                            mergeAll = top;
+                        }
+                        else {
+                            if (left === right) {
+                                mergeHorizontal = left;
+                            }
+                            if (top === bottom) {
+                                mergeVertical = top;
+                            }
+                        }
+                    }
+                    if (mergeAll !== 0) {
+                        this.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, $css.formatPX(mergeAll));
                     }
                     else {
-                        if (boxModel[left] === boxModel[right]) {
-                            mergeHorizontal = boxModel[left];
+                        if (mergeHorizontal !== 0) {
+                            this.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, $css.formatPX(mergeHorizontal));
                         }
-                        if (boxModel[top] === boxModel[bottom]) {
-                            mergeVertical = boxModel[top];
+                        else {
+                            if (left !== 0) {
+                                this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_LEFT : STRING_ANDROID.PADDING_LEFT), $css.formatPX(left));
+                            }
+                            if (right !== 0) {
+                                this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_RIGHT : STRING_ANDROID.PADDING_RIGHT), $css.formatPX(right));
+                            }
                         }
-                    }
-                }
-                if (mergeAll !== 0) {
-                    this.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, $css.formatPX(mergeAll));
-                }
-                else {
-                    if (mergeHorizontal !== 0) {
-                        this.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, $css.formatPX(mergeHorizontal));
-                    }
-                    else {
-                        if (boxModel[left] !== 0) {
-                            this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_LEFT : STRING_ANDROID.PADDING_LEFT), $css.formatPX(boxModel[left]));
+                        if (mergeVertical !== 0) {
+                            this.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, $css.formatPX(mergeVertical));
                         }
-                        if (boxModel[right] !== 0) {
-                            this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_RIGHT : STRING_ANDROID.PADDING_RIGHT), $css.formatPX(boxModel[right]));
-                        }
-                    }
-                    if (mergeVertical !== 0) {
-                        this.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, $css.formatPX(mergeVertical));
-                    }
-                    else {
-                        if (boxModel[top] !== 0) {
-                            this.android(margin ? STRING_ANDROID.MARGIN_TOP : STRING_ANDROID.PADDING_TOP, $css.formatPX(boxModel[top]));
-                        }
-                        if (boxModel[bottom] !== 0) {
-                            this.android(margin ? STRING_ANDROID.MARGIN_BOTTOM : STRING_ANDROID.PADDING_BOTTOM, $css.formatPX(boxModel[bottom]));
+                        else {
+                            if (top !== 0) {
+                                this.android(margin ? STRING_ANDROID.MARGIN_TOP : STRING_ANDROID.PADDING_TOP, $css.formatPX(top));
+                            }
+                            if (bottom !== 0) {
+                                this.android(margin ? STRING_ANDROID.MARGIN_BOTTOM : STRING_ANDROID.PADDING_BOTTOM, $css.formatPX(bottom));
+                            }
                         }
                     }
                 }
             };
-            setBoxModel($css.BOX_MARGIN, true, this.renderParent === undefined || !this.renderParent.is(CONTAINER_NODE.GRID));
-            setBoxModel($css.BOX_PADDING, false, true);
+            setBoxModel($css.BOX_MARGIN, true, !!this.renderParent && this.renderParent.is(CONTAINER_NODE.GRID));
+            setBoxModel($css.BOX_PADDING, false);
         }
 
         public extractAttributes(depth: number) {
@@ -1281,7 +1304,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         get anchorTarget(): T {
-            const renderParent = this.renderParent as T;
+            const renderParent = this.renderParent;
             if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
                 return this;
             }
@@ -1367,10 +1390,10 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         get flexibleWidth() {
-            return !!this.renderParent && (this.renderParent as T).layoutConstraint && this.layoutWidth === $const.CSS.PX_ZERO;
+            return !!this.renderParent && this.renderParent.layoutConstraint && this.layoutWidth === $const.CSS.PX_0;
         }
         get flexibleHeight() {
-            return !!this.renderParent && (this.renderParent as T).layoutConstraint && this.layoutHeight === $const.CSS.PX_ZERO;
+            return !!this.renderParent && this.renderParent.layoutConstraint && this.layoutHeight === $const.CSS.PX_0;
         }
 
         get fontSize() {

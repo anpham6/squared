@@ -161,7 +161,7 @@ function getBorderRadius(radius?: string[]): StringMap | undefined {
             const result = {};
             let valid = false;
             for (let i = 0; i < corners.length; i++) {
-                if (corners[i] !== $const.CSS.PX_ZERO) {
+                if (corners[i] !== $const.CSS.PX_0) {
                     result[`${boxModel[i]}Radius`] = corners[i];
                     valid = true;
                 }
@@ -235,7 +235,7 @@ function checkBackgroundPosition(value: string, adjacent: string, fallback: stri
         return $regex.CHAR.LOWERCASE.test(value) ? `${initial ? fallback : value} 0px` : `${fallback} ${value}`;
     }
     else if (initial) {
-        return $const.CSS.PX_ZERO;
+        return $const.CSS.PX_0;
     }
     return value;
 }

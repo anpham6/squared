@@ -237,7 +237,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                 if (!inheritedTop && !inheritedBottom || !$util.hasBit(current.overflow, NODE_ALIGNMENT.BLOCK) && !$util.hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
                                                     if (marginTop <= marginBottom) {
                                                         if (inheritedTop) {
-                                                            currentVisible.css('marginTop', $const.CSS.PX_ZERO, true);
+                                                            currentVisible.css('marginTop', $const.CSS.PX_0, true);
                                                         }
                                                         else {
                                                             resetMargin(currentVisible, BOX_STANDARD.MARGIN_TOP);
@@ -245,7 +245,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                     }
                                                     else {
                                                         if (inheritedBottom) {
-                                                            currentVisible.css('marginBottom', $const.CSS.PX_ZERO, true);
+                                                            currentVisible.css('marginBottom', $const.CSS.PX_0, true);
                                                         }
                                                         else {
                                                             resetMargin(previousVisible, BOX_STANDARD.MARGIN_BOTTOM);

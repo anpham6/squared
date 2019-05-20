@@ -190,7 +190,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                         repeating.push({ unit: convertLength(node, namedMatch[2]), unitMin: convertLength(node, namedMatch[1]) });
                                     }
                                     else if ((namedMatch = new RegExp(STRING_FIT_CONTENT).exec(repeatMatch[1])) !== null) {
-                                        repeating.push({ unit: convertLength(node, namedMatch[1]), unitMin: $const.CSS.PX_ZERO });
+                                        repeating.push({ unit: convertLength(node, namedMatch[1]), unitMin: $const.CSS.PX_0 });
                                     }
                                     else if ((namedMatch = new RegExp(STRING_UNIT).exec(repeatMatch[1])) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[0]) });
@@ -227,7 +227,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                         }
                         else if (match[1].startsWith('fit-content')) {
                             data.unit.push(convertLength(node, match[7]));
-                            data.unitMin.push($const.CSS.PX_ZERO);
+                            data.unitMin.push($const.CSS.PX_0);
                             data.repeat.push(false);
                             i++;
                         }

@@ -76,7 +76,7 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
                                 }
                             }
                             if (item.baselineAltered) {
-                                item.css('verticalAlign', $const.CSS.PX_ZERO, true);
+                                item.css('verticalAlign', $const.CSS.PX_0, true);
                             }
                         }
                     }

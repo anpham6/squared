@@ -135,8 +135,8 @@ export function createElement(parent?: Element | null, tagName = 'span', placeho
     const style = element.style;
     if (placeholder) {
         style.setProperty('position', 'static');
-        style.setProperty('margin', CSS.PX_ZERO);
-        style.setProperty('padding', CSS.PX_ZERO);
+        style.setProperty('margin', CSS.PX_0);
+        style.setProperty('padding', CSS.PX_0);
         style.setProperty('border', CSS.NONE);
         style.setProperty('float', CSS.NONE);
         style.setProperty('clear', CSS.NONE);

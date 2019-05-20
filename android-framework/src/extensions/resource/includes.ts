@@ -1,4 +1,4 @@
-import { NodeTagXml, NodeTemplate, NodeIncludeTemplate } from '../../../../src/base/@types/application';
+import { NodeTemplate, NodeIncludeTemplate } from '../../../../src/base/@types/application';
 
 import View from '../../view';
 import { getRootNs } from '../../lib/util';
@@ -73,7 +73,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 }
                                 let content = controller.cascadeDocument(templates, depth);
                                 if (merge) {
-                                    content = controller.getEnclosingTag($e.NODE_TEMPLATE.XML, <NodeTagXml<T>> { controlName: 'merge', attributes: getRootNs(content), content });
+                                    content = controller.getEnclosingXmlTag('merge', getRootNs(content), content);
                                 }
                                 this.application.saveDocument(openData.name, content, '', Number.POSITIVE_INFINITY);
                                 close.splice(j, 1);

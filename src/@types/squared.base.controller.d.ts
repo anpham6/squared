@@ -1,4 +1,4 @@
-import { AppHandler, ControllerSettings, FileAsset, LayoutResult, LayoutType, NodeTag, NodeTemplate, UserSettings } from '../base/@types/application';
+import { AppHandler, ControllerSettings, FileAsset, LayoutResult, LayoutType, NodeTemplate, UserSettings } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
@@ -40,7 +40,7 @@ declare global {
             includeElement(element: Element): boolean;
             visibleElement(element: Element, target?: string): boolean;
             cascadeDocument(templates: NodeTemplate<T>[], depth: number): string;
-            getEnclosingTag(type: number, options: NodeTag<T>): string;
+            getEnclosingXmlTag(controlName: string, attributes?: string, content?: string): string;
         }
 
         class Controller<T extends Node> implements Controller<T> {

@@ -109,13 +109,13 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                 if (wrapped) {
                     if (maxWidthHeight.width) {
                         container.css('maxWidth', node.css('maxWidth'));
-                        container.setLayoutWidth($const.CSS.PX_ZERO);
+                        container.setLayoutWidth($const.CSS.PX_0);
                         container.contentBoxWidth = node.contentBoxWidth;
                         node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
                     }
                     if (maxWidthHeight.height) {
                         container.css('maxHeight', node.css('maxHeight'));
-                        container.setLayoutHeight($const.CSS.PX_ZERO);
+                        container.setLayoutHeight($const.CSS.PX_0);
                         container.contentBoxHeight = node.contentBoxHeight;
                         node.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
                     }

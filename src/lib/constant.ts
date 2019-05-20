@@ -2,7 +2,7 @@ export const CSS = {
     WIDTH: 'width',
     HEIGHT: 'height',
     AUTO: 'auto',
-    PX_ZERO: '0px',
+    PX_0: '0px',
     PERCENT_0: '0%',
     PERCENT_50: '50%',
     PERCENT_100: '100%',

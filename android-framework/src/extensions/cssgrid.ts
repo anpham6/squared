@@ -294,7 +294,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             minSize += gap;
                         }
                     }
-                    if (unitMin === $const.CSS.PX_ZERO && node.textElement) {
+                    if (unitMin === $const.CSS.PX_0 && node.textElement) {
                         fitContent = true;
                     }
                 }
@@ -329,7 +329,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 if (sizeWeight > 0) {
                     item.android(`layout_${direction}Weight`, $math.truncate(sizeWeight, node.localSettings.floatPrecision));
                     if (!item.has(dimension, $e.CSS_STANDARD.LENGTH | $e.CSS_STANDARD.PERCENT)) {
-                        item.android(`layout_${dimension}`, $const.CSS.PX_ZERO);
+                        item.android(`layout_${dimension}`, $const.CSS.PX_0);
                         item.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
                     }
                 }
@@ -347,9 +347,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 return [cellStart, cellSpan];
             }
-            const alignSelf = node.flexbox.alignSelf;
-            const justifySelf = node.flexbox.justifySelf;
-
+            const { alignSelf, justifySelf } = node.flexbox;
             if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf)) {
                 renderAs = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
                 renderAs.tagName = node.tagName;
@@ -448,7 +446,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                             column = column.outerWrapper as T;
                                         }
                                         column.android('layout_rowWeight', $math.truncate(mainData.rowWeight[i], precision).toString());
-                                        column.setLayoutHeight($const.CSS.PX_ZERO);
+                                        column.setLayoutHeight($const.CSS.PX_0);
                                     }
                                 }
                             }

@@ -296,7 +296,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             let current = node.outerWrapper as T;
             while (current) {
                 if (list.includes(current)) {
-                    return current as T;
+                    return current;
                 }
                 current = current.outerWrapper as T;
             }

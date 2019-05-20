@@ -730,7 +730,7 @@ export function convertPX(value: string, fontSize?: number) {
         }
         return `${parseUnit(value, fontSize)}px`;
     }
-    return CSS.PX_ZERO;
+    return CSS.PX_0;
 }
 
 export function calculate(value: string, dimension = 0, fontSize?: number) {
@@ -909,7 +909,7 @@ export function formatPX(value: string | number) {
     if (typeof value === 'string') {
         value = parseFloat(value);
     }
-    return isNaN(value) ? CSS.PX_ZERO : `${Math.round(value)}px`;
+    return isNaN(value) ? CSS.PX_0 : `${Math.round(value)}px`;
 }
 
 export function formatPercent(value: string | number, round = true) {

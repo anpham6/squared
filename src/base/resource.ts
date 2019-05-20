@@ -489,7 +489,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             const opacity = node.css('opacity');
             function setBorderStyle(attr: string, index: number) {
                 const style = node.css(CSS_BORDER[index][0]) || $const.CSS.NONE;
-                let width = $css.convertPX(node.css(CSS_BORDER[index][1]), node.fontSize) || $const.CSS.PX_ZERO;
+                let width = $css.convertPX(node.css(CSS_BORDER[index][1]), node.fontSize) || $const.CSS.PX_0;
                 let color = node.css(CSS_BORDER[index][2]) || 'initial';
                 switch (color) {
                     case 'initial':
@@ -500,7 +500,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         color = $css.getInheritedStyle(node.element, CSS_BORDER[index][2]);
                         break;
                 }
-                if (style !== $const.CSS.NONE && width !== $const.CSS.PX_ZERO) {
+                if (style !== $const.CSS.NONE && width !== $const.CSS.PX_0) {
                     if (width === '2px' && (style === 'inset' || style === 'outset')) {
                         width = '1px';
                     }
@@ -559,7 +559,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         setBorderStyle(attr, 4);
                         break;
                     case 'borderRadius':
-                        if (value !== $const.CSS.PX_ZERO) {
+                        if (value !== $const.CSS.PX_0) {
                             const [A, B] = node.css('borderTopLeftRadius').split(' ');
                             const [C, D] = node.css('borderTopRightRadius').split(' ');
                             const [E, F] = node.css('borderBottomRightRadius').split(' ');
@@ -567,7 +567,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
                             const horizontal = node.actualWidth >= node.actualHeight;
                             if (borderRadius.every(radius => radius === borderRadius[0])) {
-                                if (borderRadius[0] === $const.CSS.PX_ZERO || borderRadius[0] === '') {
+                                if (borderRadius[0] === $const.CSS.PX_0 || borderRadius[0] === '') {
                                     continue;
                                 }
                                 borderRadius.length = 1;

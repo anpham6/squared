@@ -146,15 +146,6 @@ export interface RawAsset extends FileAsset, ImageAsset {
     base64?: string;
 }
 
-export interface NodeTag<T extends Node> extends Optional<NodeTemplate<T>> {
-}
-
-export interface NodeTagXml<T extends Node> extends NodeTag<T> {
-    controlName: string;
-    attributes?: string;
-    content?: string;
-}
-
 export interface NodeTemplate<T extends Node> {
     type: number;
     node: T;

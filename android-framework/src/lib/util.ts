@@ -22,8 +22,8 @@ function calculateBias(start: number, end: number, accuracy = 4) {
     }
 }
 
-export function stripId(value: string) {
-    return value ? value.replace(REGEXP_ID, '') : '';
+export function getDocumentId(value: string) {
+    return value.replace(REGEXP_ID, '');
 }
 
 export function getHorizontalBias(node: View) {

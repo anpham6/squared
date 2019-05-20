@@ -23,7 +23,10 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
         if (renderParent) {
             const verticalAlign = $util.convertFloat(node.verticalAlign);
             let target = node;
-            let { top, right, bottom, left } = node;
+            let top = node.top;
+            let right = node.right;
+            let bottom = node.bottom;
+            let left = node.left;
             if (renderParent.support.container.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                 target = node.clone(this.application.nextId, true, true) as T;
                 target.baselineAltered = true;
@@ -69,7 +72,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                                     else {
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - unaligned[0].linear.top);
                                     }
-                                    item.css('verticalAlign', $const.CSS.PX_ZERO, true);
+                                    item.css('verticalAlign', $const.CSS.PX_0, true);
                                 }
                             }
                             break;

@@ -22,8 +22,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             if (mainData.columnCount > 1) {
                 requireWidth = node.data($c.EXT_NAME.TABLE, 'expand') === true;
                 node.each((item: T) => {
-                    if (item.css($const.CSS.WIDTH) === $const.CSS.PX_ZERO) {
-                        item.setLayoutWidth($const.CSS.PX_ZERO);
+                    if (item.css($const.CSS.WIDTH) === $const.CSS.PX_0) {
+                        item.setLayoutWidth($const.CSS.PX_0);
                         item.android('layout_columnWeight', ((<HTMLTableCellElement> item.element).colSpan || 1).toString());
                     }
                     else {
@@ -32,7 +32,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                             if (expand) {
                                 const percent = $util.convertFloat(item.data($c.EXT_NAME.TABLE, 'percent')) / 100;
                                 if (percent > 0) {
-                                    item.setLayoutWidth($const.CSS.PX_ZERO);
+                                    item.setLayoutWidth($const.CSS.PX_0);
                                     item.android('layout_columnWeight', $util.trimEnd(percent.toPrecision(3), '0'));
                                     requireWidth = !node.hasWidth;
                                 }
@@ -43,7 +43,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         }
                         if (item.data($c.EXT_NAME.TABLE, 'downsized') === true) {
                             if (item.data($c.EXT_NAME.TABLE, 'exceed') === true) {
-                                item.setLayoutWidth($const.CSS.PX_ZERO);
+                                item.setLayoutWidth($const.CSS.PX_0);
                                 item.android('layout_columnWeight', '0.01');
                             }
                             else {
@@ -130,7 +130,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             }
             if (layoutWidth > 0 && node.cssInitial($const.CSS.WIDTH) === $const.CSS.AUTO && node.renderChildren.every(item => item.inlineWidth)) {
                 node.renderEach((item: T) => {
-                    item.setLayoutWidth($const.CSS.PX_ZERO);
+                    item.setLayoutWidth($const.CSS.PX_0);
                     item.android('layout_columnWeight', '1');
                 });
             }

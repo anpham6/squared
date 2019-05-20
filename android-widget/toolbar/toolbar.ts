@@ -152,7 +152,9 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             }
             appBarNode = this.createPlaceholder(node, appBarChildren, target);
             appBarNode.parent = parent;
-            appBarNode.controlId = $utilA.stripId(appBarOptions.android.id);
+            if (appBarOptions.android.id) {
+                appBarNode.controlId = $utilA.getDocumentId(appBarOptions.android.id);
+            }
             appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
             if (hasCollapsingToolbar) {
                 $util.assignEmptyValue(collapsingToolbarOptions, $constA.STRING_ANDROID.ANDROID, 'id', `${node.documentId}_collapsingtoolbar`);
@@ -165,8 +167,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
                 if (collapsingToolbarNode) {
                     collapsingToolbarNode.parent = appBarNode;
-                    collapsingToolbarNode.each(item => item.dataset.target = (collapsingToolbarNode as T).controlId);
+                    if (collapsingToolbarOptions.android.id) {
+                        appBarNode.controlId = $utilA.getDocumentId(collapsingToolbarOptions.android.id);
+                    }
                     collapsingToolbarNode.setControlType($constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
+                    collapsingToolbarNode.each(item => item.dataset.target = (collapsingToolbarNode as T).controlId);
                 }
             }
         }

@@ -24,14 +24,14 @@ export default class Percent<T extends android.base.View> extends squared.base.E
         if (node.has($const.CSS.WIDTH, $e.CSS_STANDARD.PERCENT)) {
             container.css('display', 'block');
             container.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
-            node.setLayoutWidth($const.CSS.PX_ZERO);
+            node.setLayoutWidth($const.CSS.PX_0);
         }
         else {
             container.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
         }
         if (node.hasHeight && node.has($const.CSS.HEIGHT, $e.CSS_STANDARD.PERCENT)) {
             container.setLayoutHeight(STRING_ANDROID.MATCH_PARENT);
-            node.setLayoutHeight($const.CSS.PX_ZERO);
+            node.setLayoutHeight($const.CSS.PX_0);
         }
         else {
             container.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);

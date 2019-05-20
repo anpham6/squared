@@ -34,17 +34,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public positioned = false;
     public controlId = '';
     public style!: CSSStyleDeclaration;
-    public renderParent?: T;
     public renderExtension?: Extension<T>[];
-    public renderTemplates?: NodeTemplate<T>[];
-    public outerWrapper?: T;
-    public innerWrapped?: T;
-    public companion?: T;
-    public extracted?: T[];
-    public horizontalRows?: T[][];
-    public innerBefore?: T;
-    public innerAfter?: T;
 
+    public abstract renderParent?: T;
+    public abstract renderTemplates?: NodeTemplate<T>[];
+    public abstract outerWrapper?: T;
+    public abstract innerWrapped?: T;
+    public abstract companion?: T;
+    public abstract extracted?: T[];
+    public abstract horizontalRows?: T[][];
+    public abstract innerBefore?: T;
+    public abstract innerAfter?: T;
     public abstract readonly localSettings: {};
     public abstract readonly renderChildren: T[];
 
@@ -752,7 +752,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const value = (options && options.map === 'initial' ? this._initial.styleMap : this._styleMap)[attr];
         if (value) {
             switch (value) {
-                case $const.CSS.PX_ZERO:
+                case $const.CSS.PX_0:
                     if ($util.hasBit(checkType, CSS_STANDARD.ZERO)) {
                         return true;
                     }
@@ -1004,7 +1004,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public previousSiblings(options: SiblingOptions = {}) {
-        const { floating, pageFlow, lineBreak, excluded } = options;
+        const floating = options.floating;
+        const pageFlow = options.pageFlow;
+        const lineBreak = options.lineBreak;
+        const excluded = options.excluded;
         const result: T[] = [];
         let element: Element | null = null;
         if (this._element) {
@@ -1050,7 +1053,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public nextSiblings(options: SiblingOptions = {}) {
-        const { floating, pageFlow, lineBreak, excluded } = options;
+        const floating = options.floating;
+        const pageFlow = options.pageFlow;
+        const lineBreak = options.lineBreak;
+        const excluded = options.excluded;
         const result: T[] = [];
         let element: Element | null = null;
         if (this._element) {
@@ -1096,7 +1102,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public getFirstChildElement(options: SiblingOptions = {}) {
-        const { lineBreak, excluded } = options;
+        const lineBreak = options.lineBreak;
+        const excluded = options.excluded;
         if (this.htmlElement) {
             for (const node of this.actualChildren) {
                 if (!node.pseudoElement && (!node.excluded || lineBreak !== false && node.lineBreak || excluded !== false && node.excluded)) {
@@ -1108,7 +1115,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public getLastChildElement(options: SiblingOptions = {}) {
-        const { lineBreak, excluded } = options;
+        const lineBreak = options.lineBreak;
+        const excluded = options.excluded;
         if (this.htmlElement) {
             const children = this.actualChildren;
             for (let i = children.length - 1; i >= 0; i--) {
@@ -2048,7 +2056,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get baseline() {
         if (this._cached.baseline === undefined) {
-            this._cached.baseline = this.pageFlow && !this.floating && this.cssAny('verticalAlign', 'baseline', 'initial', $const.CSS.PX_ZERO, $const.CSS.PERCENT_0);
+            this._cached.baseline = this.pageFlow && !this.floating && this.cssAny('verticalAlign', 'baseline', 'initial', $const.CSS.PX_0, $const.CSS.PERCENT_0);
         }
         return this._cached.baseline;
     }

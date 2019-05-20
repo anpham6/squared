@@ -1,4 +1,4 @@
-import { ControllerSettings, FileAsset, LayoutResult, LayoutType, NodeTag, NodeTagXml, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserSettings } from './@types/application';
+import { ControllerSettings, FileAsset, LayoutResult, LayoutType, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserSettings } from './@types/application';
 
 import Application from './application';
 import Layout from './layout';
@@ -128,7 +128,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                     break;
                 case 'FORM':
                     if (styleMap.marginTop === undefined) {
-                        styleMap.marginTop = $const.CSS.PX_ZERO;
+                        styleMap.marginTop = $const.CSS.PX_0;
                     }
                     break;
                 case 'LI':
@@ -278,7 +278,8 @@ export default abstract class Controller<T extends Node> implements squared.base
                 const node = item.node;
                 switch (item.type) {
                     case NODE_TEMPLATE.XML: {
-                        const { controlName, attributes } = <NodeXmlTemplate<T>> item;
+                        const controlName = (<NodeXmlTemplate<T>> item).controlName;
+                        const attributes = (<NodeXmlTemplate<T>> item).attributes;
                         const renderDepth = depth + 1;
                         const beforeInside = this.getBeforeInsideTemplate(node.id, renderDepth);
                         const afterInside = this.getAfterInsideTemplate(node.id, renderDepth);
@@ -299,7 +300,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                         break;
                     }
                     case NODE_TEMPLATE.INCLUDE: {
-                        const { content } = <NodeIncludeTemplate<T>> item;
+                        const content = (<NodeIncludeTemplate<T>> item).content;
                         if (content) {
                             output += $xml.pushIndent(content, depth);
                         }
@@ -311,13 +312,8 @@ export default abstract class Controller<T extends Node> implements squared.base
         return output;
     }
 
-    public getEnclosingTag(type: number, options: NodeTag<T>) {
-        switch (type) {
-            case NODE_TEMPLATE.XML:
-                const { controlName, attributes, content } = <NodeTagXml<T>> options;
-                return '<' + controlName + (attributes || '') + (content ? '>\n' + content + '</' + controlName + '>\n' : ' />\n');
-        }
-        return '';
+    public getEnclosingXmlTag(controlName: string, attributes?: string, content?: string) {
+        return '<' + controlName + (attributes || '') + (content ? '>\n' + content + '</' + controlName + '>\n' : ' />\n');
     }
 
     get generateSessionId() {

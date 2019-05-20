@@ -197,10 +197,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 if (index !== -1) {
                     const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
                     container.cssApply({
-                        marginTop: $const.CSS.PX_ZERO,
-                        marginRight: $const.CSS.PX_ZERO,
-                        marginBottom: $const.CSS.PX_ZERO,
-                        marginLeft: $const.CSS.PX_ZERO,
+                        marginTop: $const.CSS.PX_0,
+                        marginRight: $const.CSS.PX_0,
+                        marginBottom: $const.CSS.PX_0,
+                        marginLeft: $const.CSS.PX_0,
                         display: 'block',
                     }, true);
                     container.saveAsInitial(true);
@@ -316,7 +316,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 const orientationWeight = `layout_constraint${$util.capitalize(orientation)}_weight`;
                 function setLayoutWeight(chain: T, value: number) {
                     chain.app(orientationWeight, $math.truncate(value, chain.localSettings.floatPrecision));
-                    chain.android(`layout_${WH.toLowerCase()}`, $const.CSS.PX_ZERO);
+                    chain.android(`layout_${WH.toLowerCase()}`, $const.CSS.PX_0);
                 }
                 for (let i = 0; i < partition.length; i++) {
                     const seg = partition[i];
@@ -467,7 +467,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     chain.anchorParent(orientationInverse);
                                     chain.anchorStyle(orientationInverse, 'packed', 0.5);
                                     if (chain[HWL] === 0 && !horizontal && !dimension && chain.cascadeSome(child => child.multiline)) {
-                                        chain.android(`layout_${HWL}`, $const.CSS.PX_ZERO);
+                                        chain.android(`layout_${HWL}`, $const.CSS.PX_0);
                                     }
                                     break;
                                 default:
@@ -534,7 +534,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 const attr = `layout_${HWL}`;
                                                 if (!smaller) {
                                                     if (dimension && (maxSize === 0 && chain.bounds[HWL] > bounds || chain.flexElement && (horizontal && chain.css('flexDirection') === 'column' || !horizontal && chain.css('flexDirection') === 'row'))) {
-                                                        chain.android(attr, $const.CSS.PX_ZERO);
+                                                        chain.android(attr, $const.CSS.PX_0);
                                                     }
                                                 }
                                                 else if (dimension || maxSize === 0 || smaller) {
@@ -542,10 +542,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                         break;
                                                     }
                                                     else if (horizontal && !dimension) {
-                                                        chain.android(attr, smaller ? $const.CSS.PX_ZERO : STRING_ANDROID.MATCH_PARENT);
+                                                        chain.android(attr, smaller ? $const.CSS.PX_0 : STRING_ANDROID.MATCH_PARENT);
                                                     }
                                                     else {
-                                                        chain.android(attr, $const.CSS.PX_ZERO);
+                                                        chain.android(attr, $const.CSS.PX_0);
                                                     }
                                                     if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
                                                         innerWrapped.android(attr, STRING_ANDROID.MATCH_PARENT);

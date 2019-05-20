@@ -186,7 +186,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 if (i === 0 || reevaluate || !mainData.layoutFixed) {
                     if (columnWidth === '' || columnWidth === $const.CSS.AUTO) {
                         if (mapWidth[m] === undefined) {
-                            mapWidth[m] = columnWidth || $const.CSS.PX_ZERO;
+                            mapWidth[m] = columnWidth || $const.CSS.PX_0;
                             mapBounds[m] = 0;
                         }
                         else if (i === table.length - 1) {
@@ -234,7 +234,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             $util.replaceMap<string, string>(mapWidth, value => {
                 const percent = parseFloat(value);
                 if (percentTotal <= 0) {
-                    value = $const.CSS.PX_ZERO;
+                    value = $const.CSS.PX_0;
                 }
                 else if (percentTotal - percent < 0) {
                     value = $css.formatPercent(percentTotal / 100);
@@ -247,7 +247,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
             if (node.hasWidth) {
                 if (width < node.width) {
-                    $util.replaceMap<string, string>(mapWidth, value => value !== $const.CSS.PX_ZERO ? `${(parseFloat(value) / width) * 100}%` : value);
+                    $util.replaceMap<string, string>(mapWidth, value => value !== $const.CSS.PX_0 ? `${(parseFloat(value) / width) * 100}%` : value);
                 }
                 else if (width > node.width) {
                     node.css($const.CSS.WIDTH, $const.CSS.AUTO, true);
@@ -267,7 +267,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             if (mainData.layoutFixed && mapWidth.reduce((a, b) => a + ($css.isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
                 return LAYOUT_TABLE.COMPRESS;
             }
-            else if (mapWidth.some(value => $css.isPercent(value)) || mapWidth.every(value => $css.isLength(value) && value !== $const.CSS.PX_ZERO)) {
+            else if (mapWidth.some(value => $css.isPercent(value)) || mapWidth.every(value => $css.isLength(value) && value !== $const.CSS.PX_0)) {
                 return LAYOUT_TABLE.VARIABLE;
             }
             else if (mapWidth.every(value => value === mapWidth[0])) {
@@ -291,7 +291,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     return LAYOUT_TABLE.FIXED;
                 }
             }
-            if (mapWidth.every(value => value === $const.CSS.AUTO || $css.isLength(value) && value !== $const.CSS.PX_ZERO)) {
+            if (mapWidth.every(value => value === $const.CSS.AUTO || $css.isLength(value) && value !== $const.CSS.PX_0)) {
                 if (!node.hasWidth) {
                     mainData.expand = true;
                 }
@@ -386,11 +386,11 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                             }
                             break;
                         case LAYOUT_TABLE.FIXED:
-                            td.css($const.CSS.WIDTH, $const.CSS.PX_ZERO);
+                            td.css($const.CSS.WIDTH, $const.CSS.PX_0);
                             break;
                         case LAYOUT_TABLE.STRETCH:
                             if (columnWidth === $const.CSS.AUTO) {
-                                td.css($const.CSS.WIDTH, $const.CSS.PX_ZERO);
+                                td.css($const.CSS.WIDTH, $const.CSS.PX_0);
                             }
                             else {
                                 if (mainData.layoutFixed) {
@@ -461,10 +461,10 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                             const next = tableFilled[i + 1][j];
                             if (next && next !== td && next.css('visibility') === 'visible') {
                                 if (td.borderBottomWidth >= next.borderTopWidth) {
-                                    next.css('borderTopWidth', $const.CSS.PX_ZERO, true);
+                                    next.css('borderTopWidth', $const.CSS.PX_0, true);
                                 }
                                 else {
-                                    td.css('borderBottomWidth', $const.CSS.PX_ZERO, true);
+                                    td.css('borderBottomWidth', $const.CSS.PX_0, true);
                                 }
                             }
                         }
@@ -496,10 +496,10 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                             const next = tableFilled[i][j + 1];
                             if (next && next !== td && next.css('visibility') === 'visible') {
                                 if (td.borderRightWidth >= next.borderLeftWidth) {
-                                    next.css('borderLeftWidth', $const.CSS.PX_ZERO, true);
+                                    next.css('borderLeftWidth', $const.CSS.PX_0, true);
                                 }
                                 else {
-                                    td.css('borderRightWidth', $const.CSS.PX_ZERO, true);
+                                    td.css('borderRightWidth', $const.CSS.PX_0, true);
                                 }
                             }
                         }
@@ -520,10 +520,10 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             }
             if (hideTop || hideRight || hideBottom || hideLeft) {
                 node.cssApply({
-                    borderTopWidth: $const.CSS.PX_ZERO,
-                    borderRightWidth: $const.CSS.PX_ZERO,
-                    borderBottomWidth: $const.CSS.PX_ZERO,
-                    borderLeftWidth: $const.CSS.PX_ZERO
+                    borderTopWidth: $const.CSS.PX_0,
+                    borderRightWidth: $const.CSS.PX_0,
+                    borderBottomWidth: $const.CSS.PX_0,
+                    borderLeftWidth: $const.CSS.PX_0
                 }, true);
             }
         }

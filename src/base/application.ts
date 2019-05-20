@@ -666,7 +666,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     if (!outside) {
                                         const overflowX = parent.css('overflowX') === 'hidden';
                                         const overflowY = parent.css('overflowY') === 'hidden';
-                                        if (overflowX && overflowY || node.cssInitial($const.CSS.TOP) === $const.CSS.PX_ZERO || node.cssInitial($const.CSS.RIGHT) === $const.CSS.PX_ZERO || node.cssInitial($const.CSS.BOTTOM) === $const.CSS.PX_ZERO || node.cssInitial($const.CSS.LEFT) === $const.CSS.PX_ZERO) {
+                                        if (overflowX && overflowY || node.cssInitial($const.CSS.TOP) === $const.CSS.PX_0 || node.cssInitial($const.CSS.RIGHT) === $const.CSS.PX_0 || node.cssInitial($const.CSS.BOTTOM) === $const.CSS.PX_0 || node.cssInitial($const.CSS.LEFT) === $const.CSS.PX_0) {
                                             break;
                                         }
                                         else {

@@ -102,11 +102,12 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
 
     public addKeyPoint(item: NumberValue) {
         if (this._offsetPath === undefined) {
-            const { key, value } = item;
+            const key = item.key;
             if (key >= 0 && key <= 1) {
                 const keyTimes = super.keyTimes;
                 const keyPoints = this.keyPoints;
                 if (keyTimes.length === keyPoints.length) {
+                    const value = item.value;
                     let distance = NaN;
                     if ($css.isPercent(value)) {
                         distance = parseFloat(value) / 100;

@@ -33,7 +33,10 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
 
     public extract(exclude?: number[]) {
         const transforms = exclude ? SvgBuild.filterTransforms(this.transforms, exclude) : this.transforms;
-        let { x, y, width, height } = this;
+        let x = this.x;
+        let y = this.y;
+        let width = this.width;
+        let height = this.height;
         if (transforms.length) {
             transforms.reverse();
             for (let i = 0; i < transforms.length; i++) {

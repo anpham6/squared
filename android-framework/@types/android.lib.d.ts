@@ -33,7 +33,7 @@ declare global {
         }
 
         namespace util {
-            function stripId(value: string): string;
+            function getDocumentId(value: string): string;
             function getHorizontalBias(node: View): number;
             function getVerticalBias(node: View): number;
             function createViewAttribute(options?: ExternalData, android?: ExternalData, app?: ExternalData): ViewAttribute;

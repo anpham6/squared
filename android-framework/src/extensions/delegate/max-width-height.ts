@@ -53,7 +53,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         if (mainData) {
             const container = parent.layoutConstraint ? parent : (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, undefined, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
             if (mainData.width) {
-                node.setLayoutWidth($const.CSS.PX_ZERO);
+                node.setLayoutWidth($const.CSS.PX_0);
                 container.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
                 if (parent.layoutElement) {
                     node.autoMargin.horizontal = false;
@@ -63,7 +63,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                 }
             }
             if (mainData.height) {
-                node.setLayoutHeight($const.CSS.PX_ZERO);
+                node.setLayoutHeight($const.CSS.PX_0);
                 container.setLayoutHeight(STRING_ANDROID.MATCH_PARENT);
                 if (parent.layoutElement) {
                     node.autoMargin.vertical = false;
