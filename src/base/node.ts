@@ -439,10 +439,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         else if (this.pageFlow || this.positionAuto) {
             const checkBlockDimension = (previous: T) => $util.aboveRange(this.linear.top, previous.linear.bottom) && (this.blockVertical || this.float !== previous.float || previous.blockVertical || this.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT));
-            if (this.blockDimension && this.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100 && !this.has('maxWidth')) {
-                return NODE_TRAVERSE.VERTICAL;
-            }
-            else if ($util.isArray(siblings)) {
+            if ($util.isArray(siblings)) {
                 if (cleared && cleared.has(this)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
@@ -461,8 +458,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     else {
                         if (this.blockStatic && horizontal !== undefined) {
+                            const linear = this.linear;
                             if (cleared && cleared.size && siblings.some(item => cleared.has(item))) {
-                                if (this.textElement && siblings.some(item => this.linear.top < item.linear.top && this.linear.bottom > item.linear.bottom)) {
+                                if (this.textElement && siblings.some(item => linear.top < item.linear.top && linear.bottom > item.linear.bottom)) {
                                     return NODE_TRAVERSE.FLOAT_INTERSECT;
                                 }
                                 else {
@@ -472,17 +470,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             if (horizontal) {
                                 const floated = siblings.find(item => item.floating);
                                 if (floated) {
-                                    let { top, bottom } = this.linear;
+                                    let bottom = linear.bottom;
                                     if (this.textElement && !this.plainText) {
                                         const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
-                                        if (rect.top > top) {
-                                            top = rect.top;
-                                        }
                                         if (rect.bottom > bottom) {
                                             bottom = rect.bottom;
                                         }
                                     }
-                                    return !$util.withinRange(top, floated.linear.top) && (this.multiline ? bottom > floated.linear.bottom : top >= floated.linear.bottom) ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
+                                    return !$util.withinRange(linear.top, floated.linear.top) && (this.multiline ? $util.aboveRange(bottom, floated.linear.bottom) : $util.aboveRange(linear.top, floated.linear.bottom)) ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
                                 }
                             }
                             else if (siblings.every(item => item.float === $const.CSS.RIGHT)) {
@@ -499,7 +494,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                 }
             }
-            const parent = this.actualParent;
+            if (this.blockDimension && this.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100 && !this.has('maxWidth')) {
+                return NODE_TRAVERSE.VERTICAL;
+            }
+            const parent = this.actualParent || this.documentParent;
             const blockStatic = this.blockStatic || this.display === 'table';
             for (const previous of previousSiblings) {
                 if (previous.lineBreak) {
@@ -509,7 +507,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else if (
-                    blockStatic && (!previous.floating || previous.float !== $const.CSS.RIGHT && parent && $util.withinRange(previous.linear.right, parent.box.right) || cleared && cleared.has(previous)) ||
+                    blockStatic && (!previous.floating || !previous.rightAligned && $util.withinRange(previous.linear.right, parent.box.right) || cleared && cleared.has(previous)) ||
                     previous.blockStatic ||
                     previous.autoMargin.leftRight ||
                     previous.float === $const.CSS.LEFT && this.autoMargin.right ||

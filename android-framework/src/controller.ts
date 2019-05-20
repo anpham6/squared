@@ -471,7 +471,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 layout.setType(CONTAINER_NODE.FRAME, $e.NODE_ALIGNMENT.SINGLE);
             }
         }
-        else if (node.element && Resource.hasLineBreak(node, true)) {
+        else if (Resource.hasLineBreak(node, true)) {
             layout.setType(layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $e.NODE_ALIGNMENT.VERTICAL, $e.NODE_ALIGNMENT.UNKNOWN);
         }
         else if (this.checkConstraintFloat(layout)) {
@@ -690,11 +690,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
     public checkLinearHorizontal(layout: $Layout<T>) {
         const floated = layout.floated;
         if ((floated.size === 0 || floated.size === 1 && floated.has($const.CSS.LEFT)) && layout.singleRowAligned) {
-            const lineHeight = (layout.item(0) as T).lineHeight;
+            const { lineHeight } = layout.children[0];
             let inputTotal = 0;
             let textTotal = 0;
-            for (let i = 0; i < layout.length; i++) {
-                const node = layout.item(i) as T;
+            for (const node of layout) {
                 if (!node.positionRelative && !node.blockVertical && node.naturalElement && node.length === 0 && (node.lineHeight === lineHeight || !node.has('lineHeight')) && (node.baseline || node.cssAny('verticalAlign', $const.CSS.TOP, $const.CSS.MIDDLE, $const.CSS.BOTTOM))) {
                     if (node.inputElement) {
                         inputTotal++;
@@ -2242,7 +2241,17 @@ export default class Controller<T extends View> extends squared.base.Controller<
         const columnGap = node.toFloat('columnGap') || $css.getFontSize(document.body) || 16;
         const columnWidth = node.toFloat('columnWidth');
         const columnCount = node.toInt('columnCount');
-        const columnSized = columnWidth > 0 ? Math.floor(node.actualWidth / columnWidth) : Number.POSITIVE_INFINITY;
+        let columnSized = 0;
+        if (columnWidth > 0) {
+            let boxWidth = node.box.width;
+            while (boxWidth - columnWidth >= 0) {
+                columnSized++;
+                boxWidth -= columnWidth + columnGap;
+            }
+        }
+        else {
+            columnSized = Number.POSITIVE_INFINITY;
+        }
         let previousRow: T | undefined;
         function setColumnHorizontal(seg: T[]) {
             const rowStart = seg[0];

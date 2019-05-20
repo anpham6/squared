@@ -334,13 +334,14 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         if (node.actualChildren.length) {
             return node.actualChildren.some(item => item.lineBreak);
         }
-        else if (!lineBreak && node.element && node.element.textContent) {
-            let value = node.element.textContent;
+        else if (!lineBreak && node.naturalElement) {
+            const element = <Element> node.element;
+            let value = element.textContent as string;
             if (trim) {
                 value = value.trim();
             }
             if (/\n/.test(value)) {
-                if (node.plainText && $css.isParentStyle(node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                if (node.plainText && $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
                     return true;
                 }
                 return node.css('whiteSpace').startsWith('pre');

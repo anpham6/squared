@@ -131,6 +131,7 @@ squared.settings = {
     insertSpaces: 4, // tabs: 0
     handleExtensionsAsync: true,
     autoCloseOnWrite: true,
+    showErrorMessages: true,
     manifestLabelAppName: 'android',
     manifestThemeName: 'AppTheme',
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',

@@ -73,10 +73,12 @@ export function parseDocument(...elements: (string | HTMLElement)[]): FunctionMa
     return {
         then: (callback: () => void) => {
             if (!main) {
-                alert('ERROR: Framework not installed.');
+                if (settings.showErrorMessages) {
+                    alert('ERROR: Framework not installed.');
+                }
             }
             else if (main.closed) {
-                if (confirm('ERROR: Document is closed. Reset and rerun?')) {
+                if (!settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
                     main.reset();
                     parseDocument.call(null, ...elements).then(callback);
                 }

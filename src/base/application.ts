@@ -1032,7 +1032,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         if (hasFloat) {
                                             const traverse = item.alignedVertically(previousSiblings, horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0);
                                             if (traverse > 0) {
-                                                if (horizontal.length && traverse !== NODE_TRAVERSE.FLOAT_INTERSECT) {
+                                                if (horizontal.length && traverse !== NODE_TRAVERSE.FLOAT_INTERSECT && traverse !== NODE_TRAVERSE.FLOAT_BLOCK) {
                                                     if (floatActive.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
                                                         function getFloatBottom() {
                                                             let floatBottom = 0;
@@ -2058,7 +2058,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
             catch (error) {
-                if (!warning) {
+                if (this.userSettings.showErrorMessages && !warning) {
                     alert('CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' +
                           'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
                           'See the README for more detailed instructions.\n\n' +

@@ -43,6 +43,7 @@ const settings: UserSettingsAndroid = {
     insertSpaces: 4,
     handleExtensionsAsync: true,
     autoCloseOnWrite: true,
+    showErrorMessages: true,
     manifestLabelAppName: 'android',
     manifestThemeName: 'AppTheme',
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',

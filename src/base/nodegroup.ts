@@ -59,13 +59,17 @@ export default abstract class NodeGroup extends Node {
 
     get blockStatic() {
         if (this._cached.blockStatic === undefined) {
-            const value = this.actualChildren.length && this.actualChildren[0].blockStatic || this.actualWidth === this.documentParent.actualWidth && !this.some(node => node.plainText) || this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(NODE_ALIGNMENT.COLUMN);
-            if (!value && this.containerType === 0) {
-                return false;
+            const value = (
+                this.actualChildren.length && this.actualChildren[0].blockStatic ||
+                this.actualWidth === this.documentParent.actualWidth && !this.some(node => node.plainText || node.naturalElement && node.rightAligned) ||
+                this.layoutVertical && this.some(node => node.naturalElement && node.blockStatic) ||
+                this.documentParent.blockStatic && this.hasAlign(NODE_ALIGNMENT.COLUMN)
+            );
+            if (value || this.containerType !== 0) {
+                this._cached.blockStatic = value;
             }
-            this._cached.blockStatic = value;
         }
-        return this._cached.blockStatic;
+        return this._cached.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK);
     }
 
     get blockDimension() {

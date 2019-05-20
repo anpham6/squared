@@ -79,15 +79,19 @@ export default abstract class File<T extends Node> implements squared.base.File<
                                 .then((response: Response) => response.blob())
                                 .then((blob: Blob) => File.downloadToDisk(blob, $util.fromLastIndexOf(result.zipname, '/')));
                         }
-                        else if (result.system) {
+                        else if (result.system && this.userSettings.showErrorMessages) {
                             alert(`${result.application}\n\n${result.system}`);
                         }
                     }
                 })
-                .catch(err => alert(`ERROR: ${err}`));
+                .catch(err => {
+                    if (this.userSettings.showErrorMessages) {
+                        alert(`ERROR: ${err}`);
+                    }
+                });
             }
         }
-        else {
+        else if (this.userSettings.showErrorMessages) {
             alert('SERVER (required): See README for instructions');
         }
     }

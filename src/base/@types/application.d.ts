@@ -10,6 +10,7 @@ export interface UserSettings {
     insertSpaces: number;
     handleExtensionsAsync: boolean;
     autoCloseOnWrite: boolean;
+    showErrorMessages: boolean;
     outputDirectory: string;
     outputMainFileName: string;
     outputArchiveFormat: string;
