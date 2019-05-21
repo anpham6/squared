@@ -81,7 +81,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
                             case 'square':
                                 mainData.ordinal = '■';
                                 break;
-                            case $const.CSS.NONE:
+                            case 'none':
                                 let src = '';
                                 let position = '';
                                 if (!item.visibleStyle.backgroundRepeat) {
@@ -91,7 +91,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
                                 if (src && src !== $const.CSS.NONE) {
                                     mainData.imageSrc = src;
                                     mainData.imagePosition = position;
-                                    item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
+                                    item.exclude(NODE_RESOURCE.IMAGE_SOURCE);
                                 }
                                 break;
                             default:

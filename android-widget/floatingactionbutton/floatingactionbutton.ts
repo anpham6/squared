@@ -52,7 +52,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
             $util.assignEmptyValue(options, $constA.STRING_ANDROID.APP, 'srcCompat', `@drawable/${src}`);
         }
         node.setControlType($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, $enumA.CONTAINER_NODE.BUTTON);
-        node.exclude({ resource: $e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET });
+        node.exclude($e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET);
         $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         let parentAs: T | undefined;
         if (!node.pageFlow || target) {
@@ -113,7 +113,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                     node.delete($constA.STRING_ANDROID.ANDROID, $constA.STRING_ANDROID.LAYOUT_GRAVITY);
                 }
                 node.app('layout_anchor', anchor);
-                node.exclude({ procedure: $e.NODE_PROCEDURE.ALIGNMENT });
+                node.exclude(0, $e.NODE_PROCEDURE.ALIGNMENT);
                 node.render(this.application.resolveTarget(target));
                 parentAs = node.renderParent as T;
             }

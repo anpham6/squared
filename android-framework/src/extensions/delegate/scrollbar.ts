@@ -2,16 +2,13 @@ import { NodeXmlTemplate } from '../../../../src/base/@types/application';
 
 import View from '../../view';
 
-import { STRING_ANDROID } from '../../lib/constant';
+import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $e = squared.base.lib.enumeration;
-
-const SCROLL_HORIZONTAL = 'HorizontalScrollView';
-const SCROLL_VERTICAL = 'android.support.v4.widget.NestedScrollView';
 
 export default class ScrollBar<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
@@ -21,24 +18,26 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
     public processNode(node: T, parent: T) {
         const overflow: string[] = [];
         const scrollView: T[] = [];
+        const horizontalScroll = CONTAINER_ANDROID.HORIZONTAL_SCROLL;
+        const verticalScroll = CONTAINER_ANDROID.VERTICAL_SCROLL;
         if (node.overflowX && node.overflowY) {
-            overflow.push(SCROLL_HORIZONTAL, SCROLL_VERTICAL);
+            overflow.push(CONTAINER_ANDROID.HORIZONTAL_SCROLL, verticalScroll);
         }
         else if (node.overflowX) {
-            overflow.push(SCROLL_HORIZONTAL);
+            overflow.push(horizontalScroll);
         }
         else if (node.overflowY) {
-            overflow.push(SCROLL_VERTICAL);
+            overflow.push(verticalScroll);
         }
         else {
             let overflowType = 0;
             if (node.has($const.CSS.WIDTH)) {
                 overflowType |= $e.NODE_ALIGNMENT.HORIZONTAL;
-                overflow.push(SCROLL_HORIZONTAL);
+                overflow.push(horizontalScroll);
             }
             if (node.hasHeight && node.has($const.CSS.HEIGHT)) {
                 overflowType |= $e.NODE_ALIGNMENT.VERTICAL;
-                overflow.push(SCROLL_VERTICAL);
+                overflow.push(verticalScroll);
             }
             node.overflow = overflowType;
         }
@@ -51,9 +50,9 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             }
             else {
                 container.inherit(node, 'base');
-                container.exclude({ resource: $e.NODE_RESOURCE.BOX_STYLE });
+                container.exclude($e.NODE_RESOURCE.BOX_STYLE);
             }
-            container.exclude({ resource: $e.NODE_RESOURCE.ASSET });
+            container.exclude($e.NODE_RESOURCE.ASSET);
             container.resetBox($e.BOX_STANDARD.PADDING);
             scrollView.push(container);
         }
@@ -61,11 +60,10 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             const item = scrollView[i];
             const previous = scrollView[i - 1];
             switch (item.controlName) {
-                case SCROLL_VERTICAL:
+                case verticalScroll:
                     node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
                     item.setLayoutHeight($css.formatPX(node.actualHeight));
                     item.android('scrollbars', STRING_ANDROID.VERTICAL);
-                    item.android('fadeScrollbars', 'false');
                     item.cssApply({
                         width: $const.CSS.AUTO,
                         overflow: 'scroll visible',
@@ -73,11 +71,10 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
                         overflowY: 'scroll'
                     });
                     break;
-                case SCROLL_HORIZONTAL:
+                case horizontalScroll:
                     node.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
                     item.setLayoutWidth($css.formatPX(node.actualWidth));
                     item.android('scrollbars', STRING_ANDROID.HORIZONTAL);
-                    item.android('fadeScrollbars', 'false');
                     item.cssApply({
                         height: $const.CSS.AUTO,
                         overflow: 'visible scroll',
@@ -124,7 +121,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
         }
         node.overflow = 0;
         node.resetBox($e.BOX_STANDARD.MARGIN);
-        node.exclude({ resource: $e.NODE_RESOURCE.BOX_STYLE });
+        node.exclude($e.NODE_RESOURCE.BOX_STYLE);
         return { parent: node.parent as T };
     }
 }

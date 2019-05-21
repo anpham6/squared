@@ -29,7 +29,7 @@ declare global {
             formatted(value: string, overwrite?: boolean): void;
             mergeGravity(attr: string, alignment: string, overwrite?: boolean): void;
             anchor(position: string, documentId?: string, overwrite?: boolean): boolean;
-            anchorParent(orientation: string, overwrite?: boolean, bias?: number): boolean;
+            anchorParent(orientation: string, style?: string, bias?: number, overwrite?: boolean): boolean;
             anchorStyle(orientation: string, value?: string, bias?: number, overwrite?: boolean): void;
             anchorDelete(...position: string[]): void;
             anchorClear(): void;

@@ -58,7 +58,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         }
         node.documentRoot = true;
         node.setControlType($constA.SUPPORT_ANDROID.DRAWER, $enumA.CONTAINER_NODE.BLOCK);
-        node.exclude({ resource: $e.NODE_RESOURCE.FONT_STYLE });
+        node.exclude($e.NODE_RESOURCE.FONT_STYLE);
         node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
         node.render(parent);
         node.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);

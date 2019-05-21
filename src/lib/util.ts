@@ -102,12 +102,12 @@ export function convertWord(value: string, dash = false) {
     return result;
 }
 
-export function convertInt(value: UndefNull<string>) {
-    return value && parseInt(value) || 0;
+export function convertInt(value: string) {
+    return parseInt(value) || 0;
 }
 
-export function convertFloat(value: UndefNull<string>) {
-    return value && parseFloat(value) || 0;
+export function convertFloat(value: string) {
+    return parseFloat(value) || 0;
 }
 
 export function convertAlpha(value: number) {
@@ -184,6 +184,10 @@ export function isArray<T>(value: any): value is Array<T> {
     return Array.isArray(value) && value.length > 0;
 }
 
+export function isPlainObject(value: any): value is {} {
+    return typeof value === 'object' && value !== null && value.constructor === Object;
+}
+
 export function isEqual(source: any, values: any) {
     if (source === values) {
         return true;
@@ -201,7 +205,7 @@ export function isEqual(source: any, values: any) {
     else if (Object.keys(source).length === Object.keys(values).length) {
         for (const attr in source) {
             if (source[attr] !== values[attr]) {
-                if (typeof source[attr] === 'object' && values[attr] === 'object' && isEqual(source[attr], values[attr])) {
+                if (isPlainObject(source[attr]) && isPlainObject(values[attr]) && isEqual(source[attr], values[attr])) {
                     continue;
                 }
                 return false;
@@ -232,7 +236,7 @@ export function cloneArray(data: any[], result: any[] = [], object = false) {
         if (Array.isArray(value)) {
             result.push(cloneArray(value, [], object));
         }
-        else if (object && typeof value === 'object' && value !== null) {
+        else if (object && isPlainObject(value)) {
             result.push(cloneObject(value, {}, true));
         }
         else {
@@ -248,7 +252,7 @@ export function cloneObject(data: {}, result = {}, array = false) {
         if (Array.isArray(value)) {
             result[attr] = array ? cloneArray(value, [], true) : value;
         }
-        else if (typeof value === 'object' && value.constructor === Object) {
+        else if (isPlainObject(value)) {
             result[attr] = cloneObject(value, {}, array);
         }
         else {
@@ -333,10 +337,6 @@ export function resolvePath(value: string) {
         }
     }
     return value;
-}
-
-export function trimNull(value: string | undefined) {
-    return value ? value.trim() : '';
 }
 
 export function trimString(value: string, char: string) {
@@ -427,11 +427,11 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
                 break;
             }
             else if (isString(name)) {
-                if (current[name] && typeof current[name] === 'object') {
+                if (current[name] === undefined || current[name] === null) {
+                    current[name] = {};
                     current = current[name];
                 }
-                else if (current[name] === undefined || current[name] === null) {
-                    current[name] = {};
+                else if (typeof current[name] === 'object') {
                     current = current[name];
                 }
                 else {

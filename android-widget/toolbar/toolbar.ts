@@ -112,7 +112,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 const drawable = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
                 if (drawable !== '') {
                     $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'background', `@drawable/${drawable}`);
-                    node.exclude({ resource: $e.NODE_RESOURCE.IMAGE_SOURCE });
+                    node.exclude($e.NODE_RESOURCE.IMAGE_SOURCE);
                 }
             }
             else {
@@ -128,12 +128,12 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             }
         }
         else {
-            node.exclude({ procedure: $e.NODE_PROCEDURE.LAYOUT });
+            node.exclude(0, $e.NODE_PROCEDURE.LAYOUT);
             $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'fitsSystemWindows', 'true');
         }
         $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'layout_height', hasAppBar || !node.has($const.CSS.HEIGHT) ? '?android:attr/actionBarSize' : '');
         node.setControlType($constA.SUPPORT_ANDROID.TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
-        node.exclude({ resource: $e.NODE_RESOURCE.FONT_STYLE });
+        node.exclude($e.NODE_RESOURCE.FONT_STYLE);
         let appBarNode: T | undefined;
         let collapsingToolbarNode: T | undefined;
         if (hasAppBar) {
@@ -226,7 +226,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     case '100% 100%':
                         scaleType = 'fitXY';
                         break;
-                    case $const.CSS.AUTO:
+                    case 'auto':
                         scaleType = 'matrix';
                         break;
                 }
@@ -244,7 +244,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                         $constA.STRING_ANDROID.MATCH_PARENT
                     )
                 );
-                node.exclude({ resource: $e.NODE_RESOURCE.IMAGE_SOURCE });
+                node.exclude($e.NODE_RESOURCE.IMAGE_SOURCE);
             }
         }
         node.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);
@@ -310,7 +310,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             placeholder.dataset.target = target;
         }
         placeholder.inherit(node, 'base');
-        placeholder.exclude({ resource: $e.NODE_RESOURCE.ALL });
+        placeholder.exclude($e.NODE_RESOURCE.ALL);
         placeholder.positioned = true;
         return placeholder;
     }

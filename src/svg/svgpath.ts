@@ -143,7 +143,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         case 'ry':
                             updatePathRadius(path, undefined, value);
                             break;
-                        case $const.CSS.WIDTH:
+                        case 'width':
                             for (const index of [1, 2]) {
                                 const seg = path[index];
                                 switch (seg.key) {
@@ -160,7 +160,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 }
                             }
                             break;
-                        case $const.CSS.HEIGHT:
+                        case 'height':
                             for (const index of [2, 3]) {
                                 const seg = path[index];
                                 switch (seg.key) {

@@ -419,8 +419,8 @@ function getValueType(attr: string) {
         case 'r':
         case 'rx':
         case 'ry':
-        case $const.CSS.WIDTH:
-        case $const.CSS.HEIGHT:
+        case 'width':
+        case 'height':
         case 'points':
             return 'pathType';
         default:

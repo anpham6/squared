@@ -279,12 +279,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'position':
                         this._cached = {};
                         return;
-                    case $const.CSS.WIDTH:
+                    case 'width':
                         this._cached.actualWidth = undefined;
                     case 'minWidth':
                         this._cached.width = undefined;
                         break;
-                    case $const.CSS.HEIGHT:
+                    case 'height':
                         this._cached.actualHeight = undefined;
                     case 'minHeight':
                         this._cached.height = undefined;
@@ -340,7 +340,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const attr = !generated ? 'actualParent'
                                 : this.renderParent ? 'renderParent' : 'parent';
         let current = this[attr];
-        while (current && current.id !== 0 && !result.includes(current)) {
+        while (current && current.id !== 0 && current !== parent) {
             if (condition) {
                 if (condition(current)) {
                     return [current];
@@ -349,18 +349,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             else {
                 result.push(current);
             }
-            if (current === parent) {
-                break;
-            }
             current = current[attr];
         }
         return result;
     }
 
-    public ascendOuter(condition?: (item: T) => boolean) {
+    public ascendOuter(condition?: (item: T) => boolean, parent?: T) {
         const result: T[] = [];
         let current = this.outerWrapper;
-        while (current && current.id !== 0) {
+        while (current && current !== parent) {
             if (condition) {
                 if (condition(current)) {
                     return [current];
@@ -391,6 +388,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     break;
                 case 'alignment':
+                    this.positionAuto = node.positionAuto;
                     for (const attr of INHERIT_ALIGNMENT) {
                         this._styleMap[attr] = node.css(attr);
                         this._initial.styleMap[attr] = initial.styleMap[attr];
@@ -459,37 +457,40 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     else {
                         if (this.blockStatic && horizontal !== undefined) {
                             const linear = this.linear;
-                            if (cleared && cleared.size && siblings.some(item => cleared.has(item))) {
-                                if (this.textElement && siblings.some(item => linear.top < item.linear.top && linear.bottom > item.linear.bottom)) {
-                                    return NODE_TRAVERSE.FLOAT_INTERSECT;
-                                }
-                                else {
-                                    return NODE_TRAVERSE.FLOAT_BLOCK;
-                                }
+                            if (this.textElement && cleared && cleared.size && siblings.some((item, index) => index > 0 && cleared.has(item)) && siblings.some(item => linear.top < item.linear.top && linear.bottom > item.linear.bottom)) {
+                                return NODE_TRAVERSE.FLOAT_INTERSECT;
                             }
-                            if (horizontal) {
-                                const floated = siblings.find(item => item.floating);
-                                if (floated) {
-                                    let bottom = linear.bottom;
+                            else if (horizontal && siblings[0].float === 'right') {
+                                let minTop = Number.POSITIVE_INFINITY;
+                                let maxBottom = Number.NEGATIVE_INFINITY;
+                                let bottom: number;
+                                for (const item of siblings) {
+                                    if (item.float === 'right') {
+                                        if (item.linear.top < minTop) {
+                                            minTop = item.linear.top;
+                                        }
+                                        if (item.linear.bottom > maxBottom) {
+                                            maxBottom = item.linear.bottom;
+                                        }
+                                    }
+                                }
+                                if (this.multiline) {
+                                    bottom = linear.bottom;
                                     if (this.textElement && !this.plainText) {
                                         const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
                                         if (rect.bottom > bottom) {
                                             bottom = rect.bottom;
                                         }
                                     }
-                                    return !$util.withinRange(linear.top, floated.linear.top) && (this.multiline ? $util.aboveRange(bottom, floated.linear.bottom) : $util.aboveRange(linear.top, floated.linear.bottom)) ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
                                 }
-                            }
-                            else if (siblings.every(item => item.float === $const.CSS.RIGHT)) {
-                                return NODE_TRAVERSE.FLOAT_BLOCK;
+                                else {
+                                    bottom = linear.top;
+                                }
+                                return $util.belowRange(bottom, maxBottom) ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
                             }
                         }
-                        if (this.blockDimension) {
-                            for (const previous of siblings) {
-                                if (checkBlockDimension(previous)) {
-                                    return NODE_TRAVERSE.INLINE_WRAP;
-                                }
-                            }
+                        if (this.blockDimension && checkBlockDimension(lastSibling)) {
+                            return NODE_TRAVERSE.INLINE_WRAP;
                         }
                     }
                 }
@@ -830,42 +831,42 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return !$util.hasBit(this.excludeSection, value);
     }
 
-    public exclude({ section = 0, procedure = 0, resource = 0 }) {
-        if (section > 0 && !$util.hasBit(this._excludeSection, section)) {
-            this._excludeSection |= section;
+    public exclude(resource = 0, procedure = 0, section = 0) {
+        if (resource > 0 && !$util.hasBit(this._excludeResource, resource)) {
+            this._excludeResource |= resource;
         }
         if (procedure > 0 && !$util.hasBit(this._excludeProcedure, procedure)) {
             this._excludeProcedure |= procedure;
         }
-        if (resource > 0 && !$util.hasBit(this._excludeResource, resource)) {
-            this._excludeResource |= resource;
+        if (section > 0 && !$util.hasBit(this._excludeSection, section)) {
+            this._excludeSection |= section;
         }
     }
 
     public setExclusions() {
         if (this.styleElement) {
             const parent = this.actualParent;
-            const applyExclusions = (attr: string, enumeration: {}) => {
+            const parseExclusions = (attr: string, enumeration: {}) => {
                 let exclude = this.dataset[`exclude${attr}`] || '';
+                let offset = 0;
                 if (parent && parent.dataset[`exclude${attr}Child`]) {
                     exclude += (exclude !== '' ? '|' : '') + parent.dataset[`exclude${attr}Child`];
                 }
                 if (exclude !== '') {
-                    let offset = 0;
                     for (let name of exclude.split('|')) {
                         name = name.trim().toUpperCase();
                         if (enumeration[name] && !$util.hasBit(offset, enumeration[name])) {
                             offset |= enumeration[name];
                         }
                     }
-                    if (offset > 0) {
-                        this.exclude({ [attr.toLowerCase()]: offset });
-                    }
                 }
+                return offset;
             };
-            applyExclusions('Section', APP_SECTION);
-            applyExclusions('Procedure', NODE_PROCEDURE);
-            applyExclusions('Resource', NODE_RESOURCE);
+            this.exclude(
+                parseExclusions('Resource', NODE_RESOURCE),
+                parseExclusions('Procedure', NODE_PROCEDURE),
+                parseExclusions('Section', APP_SECTION)
+            );
         }
     }
 

@@ -175,7 +175,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         else {
                             let color: ColorData | undefined;
                             switch (value.toLowerCase()) {
-                                case $const.CSS.NONE:
+                                case 'none':
                                 case 'transparent':
                                 case 'rgba(0, 0, 0, 0)':
                                     this[attr] = $const.CSS.NONE;

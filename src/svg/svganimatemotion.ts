@@ -31,7 +31,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             this.setAttribute('path');
             const rotate = $dom.getNamedItem(this.animationElement, 'rotate');
             switch (rotate) {
-                case $const.CSS.AUTO:
+                case 'auto':
                     break;
                 case 'auto-reverse':
                     this.rotate = 'auto 180deg';

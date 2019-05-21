@@ -570,7 +570,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
             layout.renderType |= $e.NODE_ALIGNMENT.FLOAT | $e.NODE_ALIGNMENT.VERTICAL;
         }
-        else if (floated.size && layout.children[0].float === 'right') {
+        else if (floated.size && layout.children[0].floating) {
             layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
             layout.renderType |= $e.NODE_ALIGNMENT.FLOAT | $e.NODE_ALIGNMENT.HORIZONTAL;
         }
@@ -650,7 +650,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         let B = 0;
         for (const node of layout) {
             const excluded = layout.cleared.has(node) || node.renderExclude;
-            if (A !== -1 && ((node.floating || node.autoMargin.horizontal) && node.positiveAxis || excluded)) {
+            if (A !== -1 && (node.positiveAxis && (node.floating || node.autoMargin.horizontal) || excluded)) {
                 A++;
             }
             else {
@@ -694,7 +694,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             let inputTotal = 0;
             let textTotal = 0;
             for (const node of layout) {
-                if (!node.positionRelative && !node.blockVertical && node.naturalElement && node.length === 0 && (node.lineHeight === lineHeight || !node.has('lineHeight')) && (node.baseline || node.cssAny('verticalAlign', $const.CSS.TOP, $const.CSS.MIDDLE, $const.CSS.BOTTOM))) {
+                if (node.naturalElement && node.length === 0 && !node.positionRelative && !node.blockVertical && !node.positionAuto && node.lineHeight === lineHeight && (node.baseline || node.cssAny('verticalAlign', $const.CSS.TOP, $const.CSS.MIDDLE, $const.CSS.BOTTOM))) {
                     if (node.inputElement) {
                         inputTotal++;
                     }
@@ -723,66 +723,64 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         this.processRelativeHorizontal(node, children);
                     }
                     else {
-                        const [pageFlow, absolute] = $util.partitionArray(children, item => item.pageFlow);
+                        const [pageFlow, absolute] = $util.partitionArray(children, item => item.pageFlow || item.positionAuto);
                         if (absolute.length) {
                             for (const item of absolute) {
                                 if (item.leftTopAxis) {
-                                    if (!item.positionAuto) {
-                                        if (item.hasWidth && item.autoMargin.horizontal) {
-                                            if (item.has($const.CSS.LEFT) && item.autoMargin.right) {
-                                                item.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, item.left);
-                                            }
-                                            else if (item.has($const.CSS.RIGHT) && item.autoMargin.left) {
-                                                item.anchor($const.CSS.RIGHT, STRING_ANDROID.PARENT);
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, item.right);
-                                            }
-                                            else {
-                                                item.anchorParent(STRING_ANDROID.HORIZONTAL);
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, item.left);
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, item.right);
-                                            }
+                                    if (item.hasWidth && item.autoMargin.horizontal) {
+                                        if (item.has($const.CSS.LEFT) && item.autoMargin.right) {
+                                            item.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, item.left);
+                                        }
+                                        else if (item.has($const.CSS.RIGHT) && item.autoMargin.left) {
+                                            item.anchor($const.CSS.RIGHT, STRING_ANDROID.PARENT);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, item.right);
                                         }
                                         else {
-                                            if (item.has($const.CSS.LEFT)) {
-                                                item.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
-                                                if (!item.has($const.CSS.RIGHT) && item.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100) {
-                                                    item.anchor($const.CSS.RIGHT, STRING_ANDROID.PARENT);
-                                                }
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, adjustAbsolutePaddingOffset(node, $e.BOX_STANDARD.PADDING_LEFT, item.left));
-                                            }
-                                            if (item.has($const.CSS.RIGHT) && (!item.has($const.CSS.WIDTH) || item.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100 || !item.has($const.CSS.LEFT))) {
-                                                item.anchor($const.CSS.RIGHT, STRING_ANDROID.PARENT);
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, adjustAbsolutePaddingOffset(node, $e.BOX_STANDARD.PADDING_RIGHT, item.right));
-                                            }
+                                            item.anchorParent(STRING_ANDROID.HORIZONTAL);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, item.left);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, item.right);
                                         }
-                                        if (item.hasHeight && item.autoMargin.vertical) {
-                                            if (item.has($const.CSS.TOP) && item.autoMargin.bottom) {
-                                                item.anchor($const.CSS.TOP, STRING_ANDROID.PARENT);
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, item.top);
+                                    }
+                                    else {
+                                        if (item.has($const.CSS.LEFT)) {
+                                            item.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
+                                            if (!item.has($const.CSS.RIGHT) && item.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100) {
+                                                item.anchor($const.CSS.RIGHT, STRING_ANDROID.PARENT);
                                             }
-                                            else if (item.has($const.CSS.BOTTOM) && item.autoMargin.top) {
-                                                item.anchor($const.CSS.BOTTOM, STRING_ANDROID.PARENT);
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
-                                            }
-                                            else {
-                                                item.anchorParent(STRING_ANDROID.VERTICAL);
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, item.top);
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
-                                            }
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, adjustAbsolutePaddingOffset(node, $e.BOX_STANDARD.PADDING_LEFT, item.left));
+                                        }
+                                        if (item.has($const.CSS.RIGHT) && (!item.has($const.CSS.WIDTH) || item.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100 || !item.has($const.CSS.LEFT))) {
+                                            item.anchor($const.CSS.RIGHT, STRING_ANDROID.PARENT);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, adjustAbsolutePaddingOffset(node, $e.BOX_STANDARD.PADDING_RIGHT, item.right));
+                                        }
+                                    }
+                                    if (item.hasHeight && item.autoMargin.vertical) {
+                                        if (item.has($const.CSS.TOP) && item.autoMargin.bottom) {
+                                            item.anchor($const.CSS.TOP, STRING_ANDROID.PARENT);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, item.top);
+                                        }
+                                        else if (item.has($const.CSS.BOTTOM) && item.autoMargin.top) {
+                                            item.anchor($const.CSS.BOTTOM, STRING_ANDROID.PARENT);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
                                         }
                                         else {
-                                            if (item.has($const.CSS.TOP)) {
-                                                item.anchor($const.CSS.TOP, STRING_ANDROID.PARENT);
-                                                if (!item.has($const.CSS.BOTTOM) && item.css($const.CSS.HEIGHT) === $const.CSS.PERCENT_100) {
-                                                    item.anchor($const.CSS.BOTTOM, STRING_ANDROID.PARENT);
-                                                }
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, adjustAbsolutePaddingOffset(node, $e.BOX_STANDARD.PADDING_TOP, item.top));
-                                            }
-                                            if (item.has($const.CSS.BOTTOM) && (!item.has($const.CSS.HEIGHT) || item.css($const.CSS.HEIGHT) === $const.CSS.PERCENT_100 || !item.has($const.CSS.TOP))) {
+                                            item.anchorParent(STRING_ANDROID.VERTICAL);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, item.top);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
+                                        }
+                                    }
+                                    else {
+                                        if (item.has($const.CSS.TOP)) {
+                                            item.anchor($const.CSS.TOP, STRING_ANDROID.PARENT);
+                                            if (!item.has($const.CSS.BOTTOM) && item.css($const.CSS.HEIGHT) === $const.CSS.PERCENT_100) {
                                                 item.anchor($const.CSS.BOTTOM, STRING_ANDROID.PARENT);
-                                                item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, adjustAbsolutePaddingOffset(node, $e.BOX_STANDARD.PADDING_BOTTOM, item.bottom));
                                             }
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, adjustAbsolutePaddingOffset(node, $e.BOX_STANDARD.PADDING_TOP, item.top));
+                                        }
+                                        if (item.has($const.CSS.BOTTOM) && (!item.has($const.CSS.HEIGHT) || item.css($const.CSS.HEIGHT) === $const.CSS.PERCENT_100 || !item.has($const.CSS.TOP))) {
+                                            item.anchor($const.CSS.BOTTOM, STRING_ANDROID.PARENT);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, adjustAbsolutePaddingOffset(node, $e.BOX_STANDARD.PADDING_BOTTOM, item.bottom));
                                         }
                                     }
                                 }
@@ -962,7 +960,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             case 'scale-down':
                                 scaleType = 'fitCenter';
                                 break;
-                            case $const.CSS.NONE:
+                            case 'none':
                                 scaleType = $const.CSS.CENTER;
                                 break;
                         }
@@ -981,10 +979,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         const container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
                         container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                         container.inherit(node, 'base');
-                        container.exclude({
-                            procedure: $e.NODE_PROCEDURE.ALL,
-                            resource: $e.NODE_RESOURCE.ALL
-                        });
+                        container.positionAuto = false;
+                        container.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
                         container.cssApply({
                             position: node.css('position'),
                             zIndex: node.zIndex.toString()
@@ -1531,11 +1527,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (controlName) {
             container.setControlType(controlName, containerType);
         }
-        container.exclude({
-            section: $e.APP_SECTION.ALL,
-            procedure: $e.NODE_PROCEDURE.CUSTOMIZATION,
-            resource: $e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET
-        });
+        container.exclude($e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET, $e.NODE_PROCEDURE.CUSTOMIZATION, $e.APP_SECTION.ALL);
         parent.appendTry(node, container);
         node.parent = container;
         if (node.outerWrapper) {
@@ -1908,7 +1900,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             }
                         }
                         else if (item.inlineVertical) {
-                            const baselineActive = item !== baseline && baseline;
+                            const baselineActive = item !== baseline ? baseline : undefined;
                             switch (item.verticalAlign) {
                                 case 'text-top':
                                     if (textBaseline === null) {
@@ -1945,7 +1937,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                         const heightParent = Math.max(baselineActive.actualHeight, baselineActive.lineHeight);
                                         if (height < heightParent) {
                                             item.anchor($const.CSS.TOP, baselineActive.documentId);
+                                            item.modifyBox($e.BOX_STANDARD.MARGIN_TOP);
                                             item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, Math.round((heightParent - height) / 2));
+                                        }
+                                        else if (height > maxCenterHeight) {
+                                            maxCenterHeight = height;
                                         }
                                     }
                                     break;
@@ -2082,10 +2078,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 break;
         }
-        function setParentVertical(item: T) {
-            item.anchorParent(STRING_ANDROID.VERTICAL);
-            item.anchorStyle(STRING_ANDROID.VERTICAL);
-        }
         sortHorizontalFloat(children);
         for (let i = 0; i < children.length; i++) {
             const item = children[i];
@@ -2163,7 +2155,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             break;
                     }
                     if (alignTop) {
-                        setParentVertical(item);
+                        item.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
                         item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
                         item.baselineAltered = true;
                     }
@@ -2172,7 +2164,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     item.anchor('baseline', baseline.documentId);
                 }
                 else {
-                    setParentVertical(item);
+                    item.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
                 }
                 item.anchored = true;
             }
@@ -2185,7 +2177,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             if (tallest && tallest !== baseline && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
                 switch (tallest.verticalAlign) {
                     case $const.CSS.MIDDLE:
-                        baseline.anchorParent(STRING_ANDROID.VERTICAL, true);
+                        baseline.anchorParent(STRING_ANDROID.VERTICAL, undefined, undefined, true);
                         break;
                     case 'baseline':
                         baseline.anchor('baseline', tallest.documentId);
@@ -2209,7 +2201,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
             }
             else {
-                setParentVertical(baseline);
+                baseline.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
                 baseline.modifyBox($e.BOX_STANDARD.MARGIN_TOP, baseline.linear.top - node.box.top);
             }
             baseline.anchored = true;

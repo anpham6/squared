@@ -602,8 +602,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             break;
                         case 'x':
                         case 'y':
-                        case $const.CSS.WIDTH:
-                        case $const.CSS.HEIGHT:
+                        case 'width':
+                        case 'height':
                             if (SVG.rect(element)) {
                                 result.push(item);
                             }

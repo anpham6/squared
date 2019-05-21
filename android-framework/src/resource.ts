@@ -21,7 +21,7 @@ let IMAGE_FORMAT!: string[];
 function formatObject(obj: {}, numberAlias = false) {
     if (obj) {
         for (const attr in obj) {
-            if (typeof obj[attr] === 'object') {
+            if ($util.isPlainObject(obj[attr])) {
                 formatObject(obj, numberAlias);
             }
             else {
@@ -63,7 +63,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     public static formatOptions(options: ExternalData, numberAlias = false) {
         for (const namespace in options) {
             const obj: ExternalData = options[namespace];
-            if (typeof obj === 'object') {
+            if ($util.isPlainObject(obj)) {
                 formatObject(obj, numberAlias);
             }
         }

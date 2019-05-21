@@ -171,7 +171,7 @@ declare global {
             data(name: string, attr: string, value?: any, overwrite?: boolean): any;
             unsetCache(...attrs: string[]): void;
             ascend(generated?: boolean, condition?: (item: Node) => boolean, parent?: Node): Node[];
-            ascendOuter(condition?: (item: Node) => boolean): Node[];
+            ascendOuter(condition?: (item: Node) => boolean, parent?: Node): Node[];
             inherit(node: Node, ...modules: string[]): void;
             alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
             intersectX(rect: BoxRectDimension, dimension?: string): boolean;
@@ -201,7 +201,7 @@ declare global {
             hasProcedure(value: number): boolean;
             hasResource(value: number): boolean;
             hasSection(value: number): boolean;
-            exclude(options: { section?: number, procedure?: number, resource?: number }): void;
+            exclude(resource?: number, procedure?: number, section?: number): void;
             setExclusions(): void;
             setBounds(cache?: boolean): void;
             setInlineText(value: boolean, overwrite?: boolean): void;

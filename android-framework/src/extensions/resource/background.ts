@@ -964,7 +964,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 switch (backgroundSize[i]) {
-                    case $const.CSS.AUTO:
+                    case 'auto':
                     case 'auto auto':
                     case 'initial':
                     case 'contain':

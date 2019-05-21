@@ -7,6 +7,7 @@ import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
 const $const = squared.lib.constant;
+const $util = squared.lib.util;
 
 const REGEXP_ID = /^@\+?id\//;
 
@@ -54,7 +55,7 @@ export function createStyleAttribute(options?: ExternalData) {
         parent: '',
         items: {}
     };
-    if (options && typeof options === 'object') {
+    if ($util.isPlainObject(options)) {
         for (const attr in result) {
             if (typeof options[attr] === typeof result[attr]) {
                 result[attr] = options[attr];

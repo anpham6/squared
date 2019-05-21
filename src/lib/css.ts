@@ -8,13 +8,9 @@ import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, c
 
 const REGEXP_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 
-function convertLength(value: string, dimension: number, fontSize?: number) {
-    return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
-}
+const convertLength = (value: string, dimension: number, fontSize?: number) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
 
-function convertPercent(value: string, dimension: number, fontSize?: number) {
-    return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
-}
+const convertPercent = (value: string, dimension: number, fontSize?: number) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
 
 export type CSSKeyframesData = ObjectMap<StringMap>;
 
@@ -158,8 +154,8 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                     default:
                         if (isPercent(value)) {
                             switch (attr) {
-                                case CSS.WIDTH:
-                                case CSS.HEIGHT:
+                                case 'width':
+                                case 'height':
                                 case 'minWidth':
                                 case 'minHeight':
                                 case 'maxWidth':

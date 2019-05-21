@@ -10,8 +10,6 @@ type View = android.base.View;
 const $const = squared.lib.constant;
 const $e = squared.base.lib.enumeration;
 
-const CONTROL_NAME = 'RadioGroup';
-
 const getInputName = (element: HTMLInputElement) => element.name ? element.name.trim() : '';
 
 export default class RadioGroup<T extends View> extends squared.base.Extension<T> {
@@ -50,8 +48,9 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
     }
 
     public processNode(node: T, parent: T) {
+        const controlName = CONTAINER_ANDROID.RADIOGROUP;
         if (node.length) {
-            node.setControlType(CONTROL_NAME, CONTAINER_NODE.LINEAR);
+            node.setControlType(controlName, CONTAINER_NODE.LINEAR);
             node.alignmentType |= $e.NODE_ALIGNMENT.HORIZONTAL;
             node.android('orientation', STRING_ANDROID.HORIZONTAL);
             if (node.baseline) {
@@ -63,12 +62,12 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                 output: <NodeXmlTemplate<T>> {
                     type: $e.NODE_TEMPLATE.XML,
                     node,
-                    controlName: CONTROL_NAME
+                    controlName
                 },
                 complete: true
             };
         }
-        else if (parent.controlName !== CONTROL_NAME) {
+        else if (parent.controlName !== controlName) {
             const element = <HTMLInputElement> node.element;
             const inputName = getInputName(element);
             const children: T[] = [];
@@ -98,12 +97,12 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                 if (parent.layoutConstraint) {
                     container.companion = replacement || node;
                 }
-                container.setControlType(CONTROL_NAME, CONTAINER_NODE.LINEAR);
+                container.setControlType(controlName, CONTAINER_NODE.LINEAR);
                 container.inherit(node, 'alignment');
                 container.css('verticalAlign', $const.CSS.MIDDLE);
                 container.baseline = false;
                 container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, -4);
-                container.exclude({ resource: $e.NODE_RESOURCE.ASSET });
+                container.exclude($e.NODE_RESOURCE.ASSET);
                 container.each(item => {
                     if (item !== node) {
                         item.setControlType(CONTAINER_ANDROID.RADIO, CONTAINER_NODE.RADIO);
@@ -121,7 +120,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                     outputAs: <NodeXmlTemplate<T>> {
                         type: $e.NODE_TEMPLATE.XML,
                         node: container,
-                        controlName: CONTROL_NAME
+                        controlName
                     },
                     parent: container,
                     complete: true

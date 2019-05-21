@@ -20,7 +20,7 @@ export default class Guideline<T extends android.base.View> extends squared.base
     }
 
     public processNode(node: T, parent: T) {
-        node.exclude({ procedure: $e.NODE_PROCEDURE.CONSTRAINT });
+        node.exclude(0, $e.NODE_PROCEDURE.CONSTRAINT);
         return {
             output: this.application.renderNode(
                 new $Layout(

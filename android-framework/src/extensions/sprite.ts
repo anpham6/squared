@@ -24,13 +24,10 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 const container = this.application.createNode(<HTMLElement> node.element);
                 container.inherit(node, 'initial', 'base', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                container.exclude({
-                    procedure: $e.NODE_PROCEDURE.CUSTOMIZATION,
-                    resource: $e.NODE_RESOURCE.IMAGE_SOURCE
-                });
+                container.exclude($e.NODE_RESOURCE.IMAGE_SOURCE, $e.NODE_PROCEDURE.CUSTOMIZATION);
                 parent.appendTry(node, container);
                 node.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
-                node.exclude({ resource: $e.NODE_RESOURCE.FONT_STYLE | $e.NODE_RESOURCE.BOX_STYLE });
+                node.exclude($e.NODE_RESOURCE.FONT_STYLE | $e.NODE_RESOURCE.BOX_STYLE);
                 node.cssApply({
                     position: 'static',
                     top: $const.CSS.AUTO,

@@ -140,7 +140,7 @@ export function exclude(value: any) {
 }
 
 export function configure(value: any, options: {}) {
-    if (typeof options === 'object') {
+    if (util.isPlainObject(options)) {
         if (value instanceof squared.base.Extension) {
             Object.assign(value.options, options);
             return true;
@@ -171,7 +171,7 @@ export function apply(value: any, options?: {}) {
     }
     else if (typeof value === 'string') {
         value = value.trim();
-        if (typeof options === 'object') {
+        if (util.isPlainObject(options)) {
             return configure(value, options);
         }
         else {

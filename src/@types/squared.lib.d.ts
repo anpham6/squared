@@ -130,8 +130,8 @@ declare global {
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
             function convertWord(value: string, dash?: boolean): string;
-            function convertInt(value: UndefNull<string>): number;
-            function convertFloat(value: UndefNull<string>): number;
+            function convertInt(value: string): number;
+            function convertFloat(value: string): number;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
@@ -141,6 +141,7 @@ declare global {
             function isNumber(value: any): boolean;
             function isString(value: any): value is string;
             function isArray<T>(value: any): value is Array<T>;
+            function isPlainObject(value: any): value is {};
             function isEqual(source: any, values: any): boolean;
             function includes(source: string | undefined, value: string, delimiter?: string): boolean;
             function cloneInstance<T>(value: T): T;
@@ -152,7 +153,6 @@ declare global {
             function optionalAsNumber(obj: UndefNull<object>, value: string): number;
             function optionalAsBoolean(obj: UndefNull<object>, value: string): boolean;
             function resolvePath(value: string): string;
-            function trimNull(value: string | undefined): string;
             function trimString(value: string, char: string): string;
             function trimStart(value: string, char: string): string;
             function trimEnd(value: string, char: string): string;

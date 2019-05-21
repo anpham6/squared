@@ -35,7 +35,7 @@ const CHAIN_MAP = {
 function adjustGrowRatio(parent: View, items: View[], attr: string) {
     const horizontal = attr === $const.CSS.WIDTH;
     const hasDimension = `has${$util.capitalize(attr)}`;
-    let percent = parent[hasDimension] > 0 || parent.blockStatic && $util.withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight')), parent.box.width);
+    let percent = parent[hasDimension] || parent.blockStatic && $util.withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight')), parent.box.width);
     if (percent) {
         for (const item of items) {
             const autoMargin = item.innerWrapped ? item.innerWrapped.autoMargin : item.autoMargin;
@@ -128,7 +128,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
             }
         }
     }
-    if (growShrinkType === 0 && horizontal) {
+    if (horizontal && growShrinkType === 0) {
         for (const item of items) {
             if (item.cascadeSome(child => child.multiline && child.ascend(false, above => above[hasDimension], parent).length === 0)) {
                 setPercentage(item);
@@ -464,8 +464,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                     break;
                                 case $const.CSS.CENTER:
-                                    chain.anchorParent(orientationInverse);
-                                    chain.anchorStyle(orientationInverse, 'packed', 0.5);
+                                    chain.anchorParent(orientationInverse, 'packed', 0.5);
                                     if (chain[HWL] === 0 && !horizontal && !dimension && chain.cascadeSome(child => child.multiline)) {
                                         chain.android(`layout_${HWL}`, $const.CSS.PX_0);
                                     }

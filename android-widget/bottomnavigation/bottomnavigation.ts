@@ -34,7 +34,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
             }
         }
         node.setControlType($constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION, $enumA.CONTAINER_NODE.BLOCK);
-        node.exclude({ resource: $e.NODE_RESOURCE.ASSET });
+        node.exclude($e.NODE_RESOURCE.ASSET);
         node.render(parent);
         node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
         node.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);

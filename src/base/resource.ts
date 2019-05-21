@@ -295,7 +295,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             case 'cover':
             case 'contain':
             case '100% 100%':
-            case $const.CSS.AUTO:
+            case 'auto':
             case 'auto auto':
             case 'initial':
                 return undefined;

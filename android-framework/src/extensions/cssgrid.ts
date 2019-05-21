@@ -354,10 +354,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'initial', 'base');
                 renderAs.resetBox($e.BOX_STANDARD.MARGIN | $e.BOX_STANDARD.PADDING);
-                renderAs.exclude({
-                    procedure: $e.NODE_PROCEDURE.CUSTOMIZATION,
-                    resource: $e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET
-                });
+                renderAs.exclude($e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET, $e.NODE_PROCEDURE.CUSTOMIZATION);
                 parent.appendTry(node, renderAs);
                 renderAs.render(parent);
                 node.transferBox($e.BOX_STANDARD.MARGIN, renderAs);

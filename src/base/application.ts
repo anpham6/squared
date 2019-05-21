@@ -950,22 +950,22 @@ export default class Application<T extends Node> implements squared.base.Applica
                     continue;
                 }
                 const axisY = parent.duplicate() as T[];
+                const length = axisY.length;
                 let hasFloat = false;
                 let cleared!: Map<T, string>;
-                if (axisY.length > 1) {
+                if (length > 1) {
                     hasFloat = parent.some(node => node.floating);
                     if (hasFloat) {
                         cleared = <Map<T, string>> NodeList.linearData(parent.actualChildren, true).cleared;
                     }
                 }
-                let k = -1;
-                while (++k < axisY.length) {
+                for (let k = 0; k < length; k++) {
                     let nodeY = axisY[k];
                     if (!nodeY.visible || nodeY.rendered || nodeY.htmlElement && !nodeY.documentRoot && this.rootElements.has(<HTMLElement> nodeY.element)) {
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (length > 1 && k < length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let extended = false;
@@ -996,7 +996,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         traverse: {
                             const floated = new Set<string>();
                             const floatActive = new Set<string>();
-                            for ( ; l < axisY.length; l++, m++) {
+                            for ( ; l < length; l++, m++) {
                                 const item = axisY[l];
                                 if (item.pageFlow) {
                                     if (hasFloat) {
@@ -1090,6 +1090,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 }
                                 else if (item.positionAuto) {
                                     if (vertical.length) {
+                                        if (vertical[vertical.length - 1].blockStatic) {
+                                            vertical.push(item);
+                                        }
                                         break;
                                     }
                                     else {
@@ -1107,11 +1110,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                         else if (vertical.length > 1) {
                             result = this.controllerHandler.processTraverseVertical(new Layout(parentY, nodeY, 0, 0, vertical), axisY);
                             segEnd = vertical[vertical.length - 1];
-                            if (segEnd.horizontalAligned && segEnd !== axisY[axisY.length - 1]) {
+                            if (segEnd.horizontalAligned && segEnd !== axisY[length - 1]) {
                                 segEnd.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
                             }
                         }
-                        if (parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) && segEnd === axisY[axisY.length - 1]) {
+                        if (parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) && segEnd === axisY[length - 1]) {
                             parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
                         }
                         if (result && this.addLayout(result.layout)) {
@@ -1121,7 +1124,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     if (nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
                         nodeY.alignmentType ^= NODE_ALIGNMENT.EXTENDABLE;
                     }
-                    if (k === axisY.length - 1 && parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN)) {
+                    if (k === length - 1 && parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN)) {
                         parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
                     }
                     if (nodeY.renderAs && parentY.appendTry(nodeY, nodeY.renderAs, false)) {
@@ -1265,103 +1268,43 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     protected processFloatHorizontal(layout: Layout<T>) {
         const controller = this.controllerHandler;
-        const itemCount = layout.itemCount;
-        if (layout.cleared.size === 0 && !layout.some(node => node.autoMargin.horizontal || node.multiline)) {
-            const inline: T[] = [];
-            const left: T[] = [];
-            const right: T[] = [];
-            for (const node of layout) {
-                switch (node.float) {
-                    case $const.CSS.LEFT:
-                        left.push(node);
-                        break;
-                    case $const.CSS.RIGHT:
-                        right.push(node);
-                        break;
-                    default:
-                        inline.push(node);
-                        break;
-                }
-            }
-            if (left.length === itemCount || right.length === itemCount || inline.length === itemCount || (left.length === 0 || right.length === 0) && !inline.some(item => item.blockStatic)) {
-                controller.processLayoutHorizontal(layout);
-                return layout;
-            }
-        }
         const layerIndex: Array<T[] | T[][]> = [];
         const inlineAbove: T[] = [];
         const inlineBelow: T[] = [];
         const leftAbove: T[] = [];
         const rightAbove: T[] = [];
-        const leftBelow: T[] = [];
-        const rightBelow: T[] = [];
-        let leftSub: T[] | T[][] = [];
-        let rightSub: T[] | T[][] = [];
-        let current = '';
-        let pendingFloat = 0;
-        for (const node of layout) {
-            const cleared = layout.cleared.get(node);
-            if (cleared) {
-                switch (cleared) {
-                    case $const.CSS.LEFT:
-                        if ($util.hasBit(pendingFloat, 2)) {
-                            pendingFloat ^= 2;
-                        }
-                        current = $const.CSS.LEFT;
-                        break;
-                    case $const.CSS.RIGHT:
-                        if ($util.hasBit(pendingFloat, 4)) {
-                            pendingFloat ^= 4;
-                        }
-                        current = $const.CSS.RIGHT;
-                        break;
-                    case 'both':
-                        switch (pendingFloat) {
-                            case 2:
-                                current = $const.CSS.LEFT;
-                                break;
-                            case 4:
-                                current = $const.CSS.RIGHT;
-                                break;
-                            default:
-                                current = 'both';
-                                break;
-                        }
-                        pendingFloat = 0;
-                        break;
-                }
-            }
-            if (node.autoMargin.horizontal) {
-                if (node.autoMargin.leftRight) {
-                    if (rightBelow.length) {
-                        rightAbove.push(node);
-                    }
-                    else {
-                        leftAbove.push(node);
+        let leftBelow: T[] | undefined;
+        let rightBelow: T[] | undefined;
+        let leftSub: T[] | T[][] | undefined;
+        let rightSub: T[] | T[][] | undefined;
+        let clearedFloat = 0;
+        layout.each((node, index) => {
+            if (index > 0) {
+                const cleared = layout.cleared.get(node);
+                if (cleared) {
+                    switch (cleared) {
+                        case $const.CSS.LEFT:
+                            if (!$util.hasBit(clearedFloat, 2)) {
+                                clearedFloat |= 2;
+                            }
+                            break;
+                        case $const.CSS.RIGHT:
+                            if (!$util.hasBit(clearedFloat, 4)) {
+                                clearedFloat |= 4;
+                            }
+                            break;
+                        default:
+                            clearedFloat = 6;
+                            break;
                     }
                 }
-                else if (node.autoMargin.left) {
-                    rightAbove.push(node);
-                }
-                else {
-                    leftAbove.push(node);
-                }
             }
-            else if (current === '') {
+            if (clearedFloat === 0) {
                 if (node.float === $const.CSS.RIGHT) {
                     rightAbove.push(node);
-                    if (!$util.hasBit(pendingFloat, 4)) {
-                        pendingFloat |= 4;
-                    }
                 }
                 else if (node.float === $const.CSS.LEFT) {
                     leftAbove.push(node);
-                    if (!$util.hasBit(pendingFloat, 2)) {
-                        pendingFloat |= 2;
-                    }
-                }
-                else if (leftBelow.length || rightBelow.length) {
-                    inlineBelow.push(node);
                 }
                 else if (leftAbove.length || rightAbove.length) {
                     let top = node.linear.top;
@@ -1383,61 +1326,49 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
             else if (node.float === $const.CSS.RIGHT) {
-                if (rightBelow.length === 0 && !$util.hasBit(pendingFloat, 4)) {
-                    pendingFloat |= 4;
-                }
-                if (current !== $const.CSS.RIGHT && rightAbove.length) {
-                    rightAbove.push(node);
+                if (clearedFloat === 4 || clearedFloat === 6) {
+                    if (rightBelow === undefined) {
+                        rightBelow = [];
+                    }
+                    rightBelow.push(node);
                 }
                 else {
-                    rightBelow.push(node);
+                    rightAbove.push(node);
                 }
             }
             else if (node.float === $const.CSS.LEFT) {
-                if (leftBelow.length === 0 && !$util.hasBit(pendingFloat, 2)) {
-                    pendingFloat |= 2;
-                }
-                if (current !== $const.CSS.LEFT && leftAbove.length) {
-                    leftAbove.push(node);
-                }
-                else {
+                if (clearedFloat === 2 || clearedFloat === 6) {
+                    if (leftBelow === undefined) {
+                        leftBelow = [];
+                    }
                     leftBelow.push(node);
                 }
-            }
-            else {
-                switch (current) {
-                    case $const.CSS.LEFT:
-                        leftBelow.push(node);
-                        break;
-                    case $const.CSS.RIGHT:
-                        rightBelow.push(node);
-                        break;
-                    default:
-                        inlineBelow.push(node);
-                        break;
+                else {
+                    leftAbove.push(node);
                 }
             }
-        }
-        if (leftAbove.length && leftBelow.length) {
+            else if (clearedFloat === 6) {
+                inlineBelow.push(node);
+            }
+            else {
+                inlineAbove.push(node);
+            }
+        });
+        if (leftAbove.length && leftBelow) {
             leftSub = [leftAbove, leftBelow];
         }
         else if (leftAbove.length) {
             leftSub = leftAbove;
         }
-        else if (leftBelow.length) {
-            leftSub = leftBelow;
-        }
-        if (rightAbove.length && rightBelow.length) {
+        if (rightAbove.length && rightBelow) {
             rightSub = [rightAbove, rightBelow];
         }
         else if (rightAbove.length) {
             rightSub = rightAbove;
         }
-        else if (rightBelow.length) {
-            rightSub = rightBelow;
-        }
         const vertical = controller.containerTypeVertical;
-        const alignmentType = rightAbove.length + rightBelow.length === layout.length ? NODE_ALIGNMENT.RIGHT : 0;
+        const outerVertical = controller.containerTypeVerticalMargin;
+        const alignmentType = rightAbove.length + (rightBelow ? rightBelow.length : 0) === layout.length ? NODE_ALIGNMENT.RIGHT : 0;
         if (inlineBelow.length) {
             if (inlineBelow.length > 1) {
                 inlineBelow[0].alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
@@ -1454,45 +1385,22 @@ export default class Application<T extends Node> implements squared.base.Applica
             layout.reset(parent);
         }
         layout.add(alignmentType);
-        let outerVertical = controller.containerTypeVerticalMargin;
         if (inlineAbove.length) {
-            if (rightBelow.length) {
-                leftSub = [inlineAbove, leftAbove];
-                layerIndex.push(leftSub, rightSub);
-            }
-            else if (leftBelow.length) {
-                rightSub = [inlineAbove, rightAbove];
-                layerIndex.push(rightSub, leftSub);
-            }
-            else {
-                layerIndex.push(inlineAbove, leftSub, rightSub);
-            }
+            layerIndex.push(inlineAbove);
         }
-        else {
-            if (leftSub === leftBelow && rightSub === rightAbove || leftSub === leftAbove && rightSub === rightBelow) {
-                if (leftBelow.length === 0) {
-                    layerIndex.push([leftAbove, rightBelow]);
-                }
-                else {
-                    layerIndex.push([rightAbove, leftBelow]);
-                }
-            }
-            else {
-                layerIndex.push(leftSub, rightSub);
-            }
-            if (leftSub.length === 0 || rightSub.length === 0) {
-                outerVertical = vertical;
-            }
+        if (leftSub) {
+            layerIndex.push(leftSub);
         }
-        $util.spliceArray(layerIndex, item => item.length === 0);
+        if (rightSub) {
+            layerIndex.push(rightSub);
+        }
         layout.itemCount = layerIndex.length;
         layout.setType(outerVertical.containerType, outerVertical.alignmentType);
         if (layout.hasAlign(NODE_ALIGNMENT.RIGHT)) {
             layout.add(NODE_ALIGNMENT.BLOCK);
         }
         let floatgroup: T | undefined;
-        for (let i = 0; i < layerIndex.length; i++) {
-            const item = layerIndex[i];
+        for (const item of layerIndex) {
             let segments: T[][];
             if (Array.isArray(item[0])) {
                 segments = item as T[][];
@@ -1527,7 +1435,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     basegroup,
                     target,
                     0,
-                    seg.length < itemCount ? NODE_ALIGNMENT.SEGMENTED : 0,
+                    NODE_ALIGNMENT.SEGMENTED,
                     seg
                 );
                 if (seg.some(child => child.blockStatic || child.multiline && basegroup.blockStatic || child.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT))) {
@@ -1553,31 +1461,43 @@ export default class Application<T extends Node> implements squared.base.Applica
                 this.addLayout(group);
                 if (seg === inlineAbove) {
                     if (leftAbove.length) {
-                        let position = Number.NEGATIVE_INFINITY;
+                        let floatPosition = Number.NEGATIVE_INFINITY;
+                        let contentPosition = Number.POSITIVE_INFINITY;
                         let hasSpacing = false;
                         for (const child of leftAbove) {
                             const right = child.linear.right + (child.marginLeft < 0 ? child.marginLeft : 0);
-                            if (right > position) {
-                                position = right;
+                            if (right > floatPosition) {
+                                floatPosition = right;
                                 hasSpacing = child.marginRight > 0;
                             }
                         }
-                        const offset = position - basegroup.box.left;
+                        for (const child of inlineAbove) {
+                            if (child.linear.left < contentPosition) {
+                                contentPosition = child.bounds.left;
+                            }
+                        }
+                        const offset = floatPosition - contentPosition;
                         if (offset > 0) {
                             target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? controller.localSettings.deviations.textMarginBoundarySize : 0));
                         }
                     }
                     if (rightAbove.length) {
-                        let position = Number.POSITIVE_INFINITY;
+                        let floatPosition = Number.POSITIVE_INFINITY;
+                        let contentPosition = Number.NEGATIVE_INFINITY;
                         let hasSpacing = false;
                         for (const child of rightAbove) {
                             const left = child.linear.left + (child.marginRight < 0 ? child.marginRight : 0);
-                            if (left < position) {
-                                position = left;
+                            if (left < floatPosition) {
+                                floatPosition = left;
                                 hasSpacing = child.marginLeft > 0;
                             }
                         }
-                        const offset = basegroup.box.right - position;
+                        for (const child of inlineAbove) {
+                            if (child.linear.right > contentPosition) {
+                                contentPosition = child.bounds.right;
+                            }
+                        }
+                        const offset = contentPosition - floatPosition;
                         if (offset > 0) {
                             target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? controller.localSettings.deviations.textMarginBoundarySize : 0));
                         }
@@ -1837,7 +1757,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             let content = '';
             switch (value) {
                 case 'normal':
-                case $const.CSS.NONE:
+                case 'none':
                 case 'initial':
                 case 'inherit':
                 case 'no-open-quote':

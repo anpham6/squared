@@ -9,8 +9,8 @@ type View = android.base.View;
 
 type NegativeXData = {
     offsetLeft: number;
-    firstChild: View;
-    adjacentChild: View;
+    nextSibling: View;
+    firstChild?: View;
 };
 
 const $const = squared.lib.constant;
@@ -114,10 +114,8 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
                 }
             }
         }
-        if (firstChild) {
-            this.subscribers.add(container);
-            container.data(EXT_ANDROID.DELEGATE_NEGATIVEX, $c.STRING_BASE.EXT_DATA, <NegativeXData> { offsetLeft: node.marginLeft + node.paddingLeft, firstChild, adjacentChild: node });
-        }
+        this.subscribers.add(container);
+        container.data(EXT_ANDROID.DELEGATE_NEGATIVEX, $c.STRING_BASE.EXT_DATA, <NegativeXData> { offsetLeft: node.marginLeft + node.paddingLeft, firstChild, nextSibling: node });
         return {
             parent: container,
             renderAs: container,
@@ -136,22 +134,20 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
     public postBaseLayout(node: T) {
         const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const firstChild = mainData.firstChild;
-            const adjacentChild = mainData.adjacentChild;
-            firstChild.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
-            firstChild.anchor($c.STRING_BASE.RIGHT_LEFT, adjacentChild.documentId);
-            firstChild.anchorStyle(STRING_ANDROID.HORIZONTAL);
-            firstChild.anchorParent(STRING_ANDROID.VERTICAL);
-            firstChild.anchorStyle(STRING_ANDROID.VERTICAL);
-            firstChild.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
-            adjacentChild.anchor($c.STRING_BASE.LEFT_RIGHT, firstChild.documentId);
-            adjacentChild.anchor($const.CSS.RIGHT, STRING_ANDROID.PARENT);
-            adjacentChild.anchorParent(STRING_ANDROID.VERTICAL);
-            adjacentChild.anchorStyle(STRING_ANDROID.VERTICAL);
-            Controller.setConstraintDimension(firstChild as any);
-            Controller.setConstraintDimension(adjacentChild as any);
-            firstChild.positioned = true;
-            adjacentChild.positioned = true;
+            let firstChild = mainData.firstChild;
+            if (firstChild) {
+                firstChild = <T> firstChild.ascendOuter(undefined, node).pop() || firstChild;
+                firstChild.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed');
+                firstChild.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
+                firstChild.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
+                Controller.setConstraintDimension(firstChild as any);
+                firstChild.positioned = true;
+            }
+            const nextSibling = <T> mainData.nextSibling.ascendOuter(undefined, node).pop() || mainData.nextSibling;
+            nextSibling.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed');
+            nextSibling.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
+            Controller.setConstraintDimension(nextSibling as any);
+            nextSibling.positioned = true;
         }
     }
 }
