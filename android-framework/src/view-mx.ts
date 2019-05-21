@@ -1225,7 +1225,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         if (firstChild.renderChildren.length) {
                             firstChild = firstChild.renderChildren[0] as T;
                         }
-                        if (firstChild.baseline && (firstChild.textElement || firstChild.inputElement || firstChild.imageElement)) {
+                        if (firstChild.baseline && (firstChild.textElement || firstChild.inputElement)) {
                             this.android('baselineAlignedChildIndex', '0');
                         }
                     }
@@ -1234,9 +1234,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                     if (renderChildren.some(node => node.floating) && !renderChildren.some(node => node.imageElement && node.baseline)) {
                         this.android('baselineAligned', 'false');
                     }
-                    else if (this.actualChildren.some(node => node.textElement && node.baseline)) {
-                        const baseline = $NodeList.baseline($util.filterArray(renderChildren, node => node.baseline && !node.layoutRelative && !node.layoutConstraint), true)[0];
-                        if (baseline) {
+                    else {
+                        const baseline = $NodeList.baseline(renderChildren, true)[0];
+                        if (baseline && (baseline.textElement || baseline.inputElement)) {
                             this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
                         }
                     }

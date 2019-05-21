@@ -191,9 +191,7 @@ declare global {
             function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
             function applyTemplate(tagName: string, template: ExternalData, children: ExternalData[], depth?: number): string;
             function formatTemplate(value: string, closeEmpty?: boolean, startIndent?: number, char?: string): string;
-            function replaceCharacter(value: string): string;
-            function replaceEntity(value: string): string;
-            function escapeAmpersand(value: string): string;
+            function replaceCharacterData(value: string): string;
         }
     }
 }

@@ -721,7 +721,7 @@ export function convertAngle(value: string, unit = 'deg') {
 export function convertPX(value: string, fontSize?: number) {
     if (value) {
         value = value.trim();
-        if (value.endsWith('%') || value === CSS.AUTO) {
+        if (value.endsWith('px') || value.endsWith('%') || value === CSS.AUTO) {
             return value;
         }
         return `${parseUnit(value, fontSize)}px`;

@@ -73,7 +73,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             return baseline;
         }
         if (text) {
-            $util.spliceArray(list, item => !(item.textElement && item.naturalElement));
+            $util.spliceArray(list, item => !((item.textElement || item.inputElement) && item.naturalElement));
         }
         if (list.length > 1) {
             let boundsHeight = 0;

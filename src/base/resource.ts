@@ -22,6 +22,8 @@ const $util = squared.lib.util;
 const STRING_SPACE = '&#160;';
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
 
+const REGEXP_U00A0  = /\u00A0/g;
+const REGEXP_NEWLINE = /\n/g;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 
 function removeExcluded(node: Node, element: Element, attr: string) {
@@ -63,41 +65,46 @@ function parseColorStops(node: Node, gradient: Gradient, value: string, opacity:
     const pattern = new RegExp(STRING_COLORSTOP, 'g');
     const result: ColorStop[] = [];
     let match: RegExpExecArray | null;
+    let previousOffset = 0;
     while ((match = pattern.exec(value)) !== null) {
         const color = $color.parseColor(match[1], opacity, true);
         if (color) {
-            const item: ColorStop = { color, offset: -1 };
+            let offset = -1;
             if (gradient.type === 'conic') {
                 if (match[3] && match[4]) {
-                    item.offset = $css.convertAngle(match[3], match[4]) / 360;
+                    offset = $css.convertAngle(match[3], match[4]) / 360;
                 }
             }
             else if (match[2]) {
                 if ($css.isPercent(match[2])) {
-                    item.offset = parseFloat(match[2]) / 100;
+                    offset = parseFloat(match[2]) / 100;
                 }
                 else if (repeating) {
                     const size: number = gradient.type === 'radial' ? radial.radius : (<Dimension> gradient.dimension)[dimension];
                     if ($css.isLength(match[2])) {
-                        item.offset = node.parseUnit(match[2], dimension, false) / size;
+                        offset = node.parseUnit(match[2], dimension, false) / size;
                     }
                     else if ($css.isCalc(match[2])) {
-                        item.offset = $css.calculate(match[6], size, node.fontSize) / size;
+                        offset = $css.calculate(match[6], size, node.fontSize) / size;
                     }
                 }
-                if (repeating && item.offset !== -1) {
-                    item.offset *= extent;
+                if (repeating && offset !== -1) {
+                    offset *= extent;
                 }
             }
             if (result.length === 0) {
-                if (item.offset === -1) {
-                    item.offset = 0;
+                if (offset === -1) {
+                    offset = 0;
                 }
-                else if (item.offset > 0) {
+                else if (offset > 0) {
                     result.push({ color, offset: 0 });
                 }
             }
-            result.push(item);
+            if (offset !== -1) {
+                offset = Math.max(previousOffset, offset);
+                previousOffset = offset;
+            }
+            result.push({ color, offset });
         }
     }
     const lastStop = result[result.length - 1];
@@ -161,10 +168,10 @@ function parseAngle(value: string) {
 }
 
 function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: string): [string, boolean] {
-    value = value.replace($regex.ESCAPE.U00A0, STRING_SPACE);
+    value = value.replace(REGEXP_U00A0, STRING_SPACE);
     switch (node.css('whiteSpace')) {
         case 'nowrap':
-            value = value.replace($regex.ESCAPE.NEWLINE, ' ');
+            value = value.replace(REGEXP_NEWLINE, ' ');
             break;
         case 'pre':
         case 'pre-wrap':
@@ -172,12 +179,12 @@ function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: st
                 value = value.replace(/^\s*?\n/, '');
             }
             value = value
-                .replace($regex.ESCAPE.NEWLINE, '\\n')
+                .replace(REGEXP_NEWLINE, '\\n')
                 .replace(/\s/g, STRING_SPACE);
             break;
         case 'pre-line':
             value = value
-                .replace($regex.ESCAPE.NEWLINE, '\\n')
+                .replace(REGEXP_NEWLINE, '\\n')
                 .replace(/\s+/g, ' ');
             break;
         default:
@@ -903,7 +910,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 renderParent,
                                 node,
                                 element,
-                                node.textContent.replace($regex.ESCAPE.AMP, '&amp;')
+                                node.textContent
                             );
                             inlined = true;
                             trimming = true;

@@ -12,7 +12,9 @@ const REGEXP_INDENT = /^(\t+)(.*)$/;
 const REGEXP_FORMAT = {
     ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
     OPENTAG: /\s*>$/,
-    CLOSETAG: /\/>\n*$/
+    CLOSETAG: /\/>\n*$/,
+    NBSP: /&nbsp;/g,
+    AMP: /&/g
 };
 
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
@@ -221,28 +223,71 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
     return output;
 }
 
-export function replaceCharacter(value: string) {
-    return value
-        .replace(ESCAPE.NBSP, '&#160;')
-        .replace(ESCAPE.LT, '&lt;')
-        .replace(ESCAPE.GT, '&gt;')
-        .replace(ESCAPE.DOUBLEQUOTE, '&quot;')
-        .replace(ESCAPE.SINGLEQUOTE, "\\'");
-}
-
-export function replaceEntity(value: string) {
-    return value
-        .replace(ESCAPE.U00A0, '&#160;')
-        .replace(ESCAPE.U0003, ' ')
-        .replace(ESCAPE.U2002, '&#8194;')
-        .replace(ESCAPE.U2003, '&#8195;')
-        .replace(ESCAPE.U2009, '&#8201;')
-        .replace(ESCAPE.U200C, '&#8204;')
-        .replace(ESCAPE.U200D, '&#8205;')
-        .replace(ESCAPE.U200E, '&#8206;')
-        .replace(ESCAPE.U200F, '&#8207;');
-}
-
-export function escapeAmpersand(value: string) {
-    return value.replace(ESCAPE.NONENTITY, '&amp;');
+export function replaceCharacterData(value: string) {
+    value = value
+        .replace(REGEXP_FORMAT.NBSP, '&#160;')
+        .replace(ESCAPE.NONENTITY, '&amp;');
+    const length = value.length;
+    const char = new Array(length);
+    let valid = false;
+    for (let i = 0; i < length; i++) {
+        switch (value[i]) {
+            case "'":
+                char[i] = "\\'";
+                valid = true;
+                break;
+            case '"':
+                char[i] = '&quot;';
+                valid = true;
+                break;
+            case '<':
+                char[i] = '&lt;';
+                valid = true;
+                break;
+            case '>':
+                char[i] = '&gt;';
+                valid = true;
+                break;
+            case '\u0003':
+                char[i] = ' ';
+                valid = true;
+                break;
+            case '\u00A0':
+                char[i] = '&#160;';
+                valid = true;
+                break;
+            case '\u2002':
+                char[i] = '&#8194;';
+                valid = true;
+                break;
+            case '\u2003':
+                char[i] = '&#8195;';
+                valid = true;
+                break;
+            case '\u2009':
+                char[i] = '&#8201;';
+                valid = true;
+                break;
+            case '\u200C':
+                char[i] = '&#8204;';
+                valid = true;
+                break;
+            case '\u200D':
+                char[i] = '&#8205;';
+                valid = true;
+                break;
+            case '\u200E':
+                char[i] = '&#8206;';
+                valid = true;
+                break;
+            case '\u200F':
+                char[i] = '&#8207;';
+                valid = true;
+                break;
+            default:
+                char[i] = value[i];
+                break;
+        }
+    }
+    return valid ? char.join('') : value;
 }

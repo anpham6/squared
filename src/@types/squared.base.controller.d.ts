@@ -17,6 +17,7 @@ declare global {
             finalize(layouts: FileAsset[]): void;
             reset(): void;
             applyDefaultStyles(element: Element): void;
+            evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
             processUnknownParent(layout: Layout<T>): LayoutResult<T>;
             processUnknownChild(layout: Layout<T>): LayoutResult<T>;
             processTraverseHorizontal(layout: Layout<T>, siblings: T[]): LayoutResult<T>;

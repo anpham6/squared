@@ -16,6 +16,7 @@ const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 const $e = squared.base.lib.enumeration;
 
+const REGEXP_DOUBLEQUOTE = /"/g;
 const REGEXP_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
 
 const FONT_ANDROID = {
@@ -139,7 +140,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 }
                 if (stored.fontFamily) {
-                    stored.fontFamily.replace($regex.ESCAPE.DOUBLEQUOTE, '').split($regex.XML.SEPARATOR).some((value, index, array) => {
+                    stored.fontFamily.replace(REGEXP_DOUBLEQUOTE, '').split($regex.XML.SEPARATOR).some((value, index, array) => {
                         value = $util.trimString(value, "'");
                         let fontFamily = value.toLowerCase();
                         if (!this.options.disableFontAlias && FONTREPLACE_ANDROID[fontFamily]) {

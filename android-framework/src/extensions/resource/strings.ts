@@ -12,7 +12,6 @@ const $e = squared.base.lib.enumeration;
 export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false,
-        replaceCharacterEntities: true,
         fontVariantSmallCapsReduction: 0.7
     };
     public readonly eventOnly = true;
@@ -33,10 +32,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             if (resourceArray) {
                                 result = [];
                                 for (let value of resourceArray) {
-                                    if (this.options.replaceCharacterEntities) {
-                                        value = $xml.replaceEntity(value);
-                                    }
-                                    value = Resource.addString($xml.escapeAmpersand($xml.replaceCharacter(value)), '', this.options.numberResourceValue);
+                                    value = Resource.addString($xml.replaceCharacterData(value), '', this.options.numberResourceValue);
                                     if (value !== '') {
                                         result.push(`@string/${value}`);
                                     }
@@ -54,7 +50,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                     case 'IFRAME': {
                         const stored: StringValue = node.data(Resource.KEY_NAME, 'valueString');
                         if (stored) {
-                            Resource.addString($xml.replaceCharacter(stored.value), stored.key);
+                            Resource.addString($xml.replaceCharacterData(stored.value), stored.key);
                         }
                         break;
                     }
@@ -101,10 +97,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                     value = $util.capitalizeString(value);
                                     break;
                             }
-                            if (this.options.replaceCharacterEntities) {
-                                value = $xml.replaceEntity(value);
-                            }
-                            value = $xml.escapeAmpersand($xml.replaceCharacter(value));
+                            value = $xml.replaceCharacterData(value);
                             for (const style of node.css('textDecorationLine').split(' ')) {
                                 switch (style) {
                                     case 'underline':

@@ -18,7 +18,6 @@ export interface ResourceBackgroundOptions {
 
 export interface ResourceStringsOptions {
     numberResourceValue: boolean;
-    replaceCharacterEntities: boolean;
     fontVariantSmallCapsReduction: number;
 }
 

@@ -256,18 +256,25 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             continue;
                         }
                     }
-                    if (unit === $const.CSS.AUTO || unit === 'min-content' || unit === 'max-content') {
-                        if (cellSpan < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $css.isLength(value)) || unit === 'min-content')) {
+                    if (unit === $const.CSS.AUTO || unit === 'max-content') {
+                        if (cellSpan < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $css.isLength(value)) || unit === 'max-content')) {
                             size = node.bounds[dimension];
                             minSize = 0;
                             sizeWeight = 0;
+                            break;
                         }
                         else if (dimension === $const.CSS.WIDTH) {
                             size = 0;
                             minSize = 0;
                             sizeWeight = 0.01;
+                            break;
                         }
-                        break;
+                    }
+                    else if (unit === 'min-content') {
+                        if (!item.has(dimension)) {
+                            item.android(`layout_${dimension}`, STRING_ANDROID.WRAP_CONTENT, false);
+                            break;
+                        }
                     }
                     else if ($css.isPercent(unit)) {
                         sizeWeight += parseFloat(unit) / 100;

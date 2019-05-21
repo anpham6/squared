@@ -54,21 +54,5 @@ export const PREFIX = {
 
 export const ESCAPE = {
     ENTITY: /&#(\d+);/g,
-    NONENTITY: /&(?!#?[A-Za-z\d]{2,};)/g,
-    NBSP: /&nbsp;/g,
-    AMP: /&/g,
-    LT: /</g,
-    GT: />/g,
-    NEWLINE: /\n/g,
-    SINGLEQUOTE: /'/g,
-    DOUBLEQUOTE: /"/g,
-    U00A0: /\u00A0/g,
-    U0003: /\u0003/g,
-    U2002: /\u2002/g,
-    U2003: /\u2003/g,
-    U2009: /\u2009/g,
-    U200C: /\u200C/g,
-    U200D: /\u200D/g,
-    U200E: /\u200E/g,
-    U200F: /\u200F/g
+    NONENTITY: /&(?!#?[A-Za-z\d]{2,};)/g
 };

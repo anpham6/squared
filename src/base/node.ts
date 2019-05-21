@@ -744,7 +744,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public convertPX(value: string, dimension = $const.CSS.WIDTH, parent = true) {
-        return `${Math.round(this.parseUnit(value, dimension, parent))}px`;
+        return value.endsWith('px') ? value : `${Math.round(this.parseUnit(value, dimension, parent))}px`;
     }
 
     public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[] | boolean>): boolean {
@@ -2187,7 +2187,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         this._documentParent = value;
     }
     get documentParent() {
-        return this._documentParent || this.actualParent || this.parent || this;
+        return this._documentParent || this.absoluteParent || this.actualParent || this.parent || this;
     }
 
     get absoluteParent() {
