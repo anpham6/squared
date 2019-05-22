@@ -29,7 +29,6 @@ const $util = squared.lib.util;
 
 const REGEXP_DECIMAL = new RegExp($regex.STRING.DECIMAL, 'g');
 const REGEXP_COMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
-
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {

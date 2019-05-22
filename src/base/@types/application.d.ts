@@ -24,6 +24,7 @@ export interface ControllerSettings {
         baseTemplate: string;
     };
     directory: {
+        string: string;
         font: string;
         image: string;
     };

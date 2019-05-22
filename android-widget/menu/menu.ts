@@ -36,7 +36,6 @@ const REGEXP_ITEM = {
     menuCategory: /^(container|system|secondary|alternative)$/,
     orderInCategory: /^\d+$/
 };
-
 const REGEXP_GROUP = {
     id: /^@\+id\/\w+$/,
     checkableBehavior: /^(none|all|single)$/,
@@ -45,7 +44,6 @@ const REGEXP_GROUP = {
     menuCategory: /^(container|system|secondary|alternative)$/,
     orderInCategory: /^\d+$/
 };
-
 const NAMESPACE_APP = ['showAsAction', 'actionViewClass', 'actionProviderClass'];
 const NAVIGATION = {
     MENU: 'menu',

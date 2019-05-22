@@ -35,7 +35,10 @@ const CHAIN_MAP = {
 function adjustGrowRatio(parent: View, items: View[], attr: string) {
     const horizontal = attr === $const.CSS.WIDTH;
     const hasDimension = `has${$util.capitalize(attr)}`;
+    const result = items.reduce((a, b) => a + b.flexbox.grow, 0);
+    const setPercentage = (item: View) => item.flexbox.basis = `${item.bounds[attr] / parent.box[attr] * 100}%`;
     let percent = parent[hasDimension] || parent.blockStatic && $util.withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight')), parent.box.width);
+    let growShrinkType = 0;
     if (percent) {
         for (const item of items) {
             const autoMargin = item.innerWrapped ? item.innerWrapped.autoMargin : item.autoMargin;
@@ -52,11 +55,6 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
                 }
             }
         }
-    }
-    const result = items.reduce((a, b) => a + b.flexbox.grow, 0);
-    let growShrinkType = 0;
-    function setPercentage(item: View) {
-        item.flexbox.basis = `${item.bounds[attr] / parent.box[attr] * 100}%`;
     }
     if (items.length > 1 && (horizontal || percent)) {
         const groupBasis: FlexBasis[] = [];
@@ -138,9 +136,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
     return result;
 }
 
-function getAutoMargin(node: View) {
-    return node.innerWrapped ? node.innerWrapped.autoMargin : node.autoMargin;
-}
+const getAutoMargin = (node: View) => node.innerWrapped ? node.innerWrapped.autoMargin : node.autoMargin;
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T) {

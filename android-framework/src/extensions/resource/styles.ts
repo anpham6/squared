@@ -9,9 +9,8 @@ import { createStyleAttribute } from '../../lib/util';
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
-const REGEXP_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;
-
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
+const REGEXP_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;
 
 export default class ResourceStyles<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
@@ -99,11 +98,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     items.push({ key: match[1], value: match[2] });
                 }
             }
-            STORED.styles.set(name, {
-                ...createStyleAttribute(),
-                name,
-                items
-            });
+            STORED.styles.set(name, { ...createStyleAttribute(), name, items });
         }
     }
 }

@@ -8,10 +8,8 @@ const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-
 const REGEXP_WIDGETNAME = /[\s\n]*<([\w\-.]+)[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
 const REGEXP_DEVICEUNIT = /\d(px|dp|sp)$/;
-
 const NAMESPACE_ATTR = [STRING_ANDROID.ANDROID, STRING_ANDROID.APP];
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {

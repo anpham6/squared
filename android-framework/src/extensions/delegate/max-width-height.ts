@@ -3,17 +3,17 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 
-export interface MaxWidthHeightData {
-    width: boolean;
-    height: boolean;
-    container?: View;
-}
-
 type View = android.base.View;
 
 const $const = squared.lib.constant;
 const $c = squared.base.lib.constant;
 const $e = squared.base.lib.enumeration;
+
+export interface MaxWidthHeightData {
+    width: boolean;
+    height: boolean;
+    container?: View;
+}
 
 export default class MaxWidthHeight<T extends View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {

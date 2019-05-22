@@ -10,12 +10,8 @@ const $css = squared.lib.css;
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
-const REGEXP_NONWORD = /[^\w+]/g;
-
-const DIRECTORY_THEME = 'res/values';
-const FILENAME_THEME = 'themes.xml';
-
 const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
+const REGEXP_NONWORD = /[^\w+]/g;
 let IMAGE_FORMAT!: string[];
 
 function formatObject(obj: {}, numberAlias = false) {
@@ -79,8 +75,8 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
 
     public static addTheme(...values: StyleAttribute[]) {
         for (const theme of values) {
-            const path = theme.output && $util.isString(theme.output.path) ? theme.output.path.trim() : DIRECTORY_THEME;
-            const file = theme.output && $util.isString(theme.output.file) ? theme.output.file.trim() : FILENAME_THEME;
+            const path = theme.output && $util.isString(theme.output.path) ? theme.output.path.trim() : 'res/values';
+            const file = theme.output && $util.isString(theme.output.file) ? theme.output.file.trim() : 'themes.xml';
             const filename = `${$util.trimString(path.trim(), '/')}/${$util.trimString(file.trim(), '/')}`;
             const storedFile = STORED.themes.get(filename) || new Map<string, StyleAttribute>();
             let appTheme = '';

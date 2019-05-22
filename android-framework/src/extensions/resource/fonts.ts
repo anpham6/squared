@@ -16,9 +16,9 @@ const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 const $e = squared.base.lib.enumeration;
 
+const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const REGEXP_DOUBLEQUOTE = /"/g;
 const REGEXP_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
-
 const FONT_ANDROID = {
     'sans-serif': BUILD_ANDROID.ICE_CREAM_SANDWICH,
     'sans-serif-thin': BUILD_ANDROID.JELLYBEAN,
@@ -35,7 +35,6 @@ const FONT_ANDROID = {
     'monospace': BUILD_ANDROID.LOLLIPOP,
     'sans-serif-condensed-medium': BUILD_ANDROID.OREO
 };
-
 const FONTALIAS_ANDROID = {
     'arial': 'sans-serif',
     'helvetica': 'sans-serif',
@@ -54,14 +53,12 @@ const FONTALIAS_ANDROID = {
     'courier': 'serif-monospace',
     'courier new': 'serif-monospace'
 };
-
 const FONTREPLACE_ANDROID = {
     'ms shell dlg \\32': 'sans-serif',
     'system-ui': 'sans-serif',
     '-apple-system': 'sans-serif',
     '-webkit-standard': 'sans-serif'
 };
-
 const FONTWEIGHT_ANDROID = {
     '100': 'thin',
     '200': 'extra_light',
@@ -73,7 +70,6 @@ const FONTWEIGHT_ANDROID = {
     '800': 'extra_bold',
     '900': 'black'
 };
-
 const FONT_STYLE = {
     'fontFamily': 'android:fontFamily="',
     'fontStyle': 'android:textStyle="',
@@ -82,8 +78,6 @@ const FONT_STYLE = {
     'color': 'android:textColor="@color/',
     'backgroundColor': 'android:background="@color/'
 };
-
-const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
     for (const value of attrs.split(';')) {

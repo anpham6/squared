@@ -4,6 +4,20 @@ const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
+function isButton(node: Node) {
+    switch (node.tagName) {
+        case 'BUTTON':
+        case 'INPUT_BUTTON':
+        case 'INPUT_FILE':
+        case 'INPUT_IMAGE':
+        case 'INPUT_SUBMIT':
+        case 'INPUT_RESET':
+            return true;
+        default:
+            return false;
+    }
+}
+
 export interface LinearData<T> {
     linearX: boolean;
     linearY: boolean;
@@ -96,7 +110,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                     list.splice(i--, 1);
                 }
             }
-            $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : item.bounds.height < boundsHeight);
+            $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !isButton(item) && item.bounds.height < boundsHeight);
             list.sort((a, b) => {
                 if (a.groupParent || a.length || !a.baseline && b.baseline) {
                     return 1;
@@ -104,33 +118,29 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 else if (b.groupParent || b.length || a.baseline && !b.baseline) {
                     return -1;
                 }
-                else if (!a.imageElement || !b.imageElement) {
-                    if (a.textElement && b.textElement) {
-                        if (a.fontSize === b.fontSize) {
-                            if (a.htmlElement && !b.htmlElement) {
-                                return -1;
-                            }
-                            else if (!a.htmlElement && b.htmlElement) {
-                                return 1;
-                            }
-                            return a.siblingIndex < b.siblingIndex ? -1 : 1;
+                else if (a.textElement && b.textElement) {
+                    if (a.fontSize === b.fontSize) {
+                        if (a.htmlElement && !b.htmlElement) {
+                            return -1;
                         }
-                        return a.fontSize > b.fontSize ? -1 : 1;
+                        else if (!a.htmlElement && b.htmlElement) {
+                            return 1;
+                        }
+                        return a.siblingIndex < b.siblingIndex ? -1 : 1;
                     }
-                    else if (a.containerType !== b.containerType) {
-                        if (a.textElement) {
+                    return a.fontSize > b.fontSize ? -1 : 1;
+                }
+                else if (a.inputElement && b.inputElement && !a.hasHeight && !b.hasHeight) {
+                    if (a.fontSize === b.fontSize) {
+                        if (isButton(a)) {
                             return -1;
                         }
-                        else if (b.textElement) {
+                        else if (isButton(b)) {
                             return 1;
                         }
-                        else if (a.imageElement) {
-                            return -1;
-                        }
-                        else if (b.imageElement) {
-                            return 1;
-                        }
-                        return a.containerType < b.containerType ? -1 : 1;
+                    }
+                    else {
+                        return a.fontSize > b.fontSize ? -1 : 1;
                     }
                 }
                 const heightA = Math.max(a.actualHeight, a.lineHeight);
@@ -176,7 +186,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                                 break;
                         }
                         for (const item of previousFloat) {
-                            if (item && floating.has(item.float) && !node.floating && node.linear.top >= item.linear.bottom) {
+                            if (item && floating.has(item.float) && !node.floating && $util.aboveRange(node.linear.top, item.linear.bottom)) {
                                 floating.delete(item.float);
                                 clearable[item.float] = undefined;
                             }
@@ -261,7 +271,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                                 break;
                             }
                             const previous = nodes[i - 1];
-                            if (previous.floating && item.linear.top >= previous.linear.bottom || $util.withinRange(item.linear.left, previous.linear.left)) {
+                            if (previous.floating && $util.aboveRange(item.linear.top, previous.linear.bottom) || $util.withinRange(item.linear.left, previous.linear.left)) {
                                 linearX = false;
                                 break;
                             }

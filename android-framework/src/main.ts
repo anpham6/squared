@@ -48,13 +48,11 @@ import SETTINGS from './settings';
 type T = View;
 type Application = squared.base.Application<T>;
 
+const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
 let initialized = false;
-
 let application: Application;
 let fileHandler: File<T>;
 let userSettings: UserSettingsAndroid;
-
-const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
 
 function autoClose() {
     if (application && application.userSettings.autoCloseOnWrite && !application.initialized && !application.closed) {

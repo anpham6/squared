@@ -19,7 +19,6 @@ const enum LAYOUT_TABLE {
     VARIABLE = 3,
     COMPRESS = 4
 }
-
 const REGEXP_BORDER = /none|\s0px|rgba\(0, 0, 0, 0\)|transparent/;
 const REGEXP_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
 const REGEXP_BORDERSTYLE = /^([\d.]+[a-z]+) ([a-z]+) (.+)$/;

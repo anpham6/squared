@@ -9,10 +9,10 @@ const $e = squared.base.lib.enumeration;
 export default class Percent<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {
         if (node.pageFlow && !node.documentParent.layoutElement) {
-            if (node.has($const.CSS.WIDTH, $e.CSS_STANDARD.PERCENT, { not: $const.CSS.PERCENT_100 }) && (node.documentRoot || (parent.layoutVertical || parent.layoutFrame && node.singleChild) && (node.has($const.CSS.HEIGHT) || parent.blockStatic || parent.has($const.CSS.WIDTH)))) {
+            if (node.has($const.CSS.WIDTH, $e.CSS_STANDARD.PERCENT, { not: $const.CSS.PERCENT_100 }) && !parent.layoutConstraint && (node.documentRoot || (parent.layoutVertical || node.singleChild) && (parent.blockStatic || parent.has($const.CSS.WIDTH)) || node.has($const.CSS.HEIGHT))) {
                 return true;
             }
-            else if (node.has($const.CSS.HEIGHT, $e.CSS_STANDARD.PERCENT, { not: $const.CSS.PERCENT_100 }) && (node.documentRoot || parent.hasHeight)) {
+            else if (node.has($const.CSS.HEIGHT, $e.CSS_STANDARD.PERCENT, { not: $const.CSS.PERCENT_100 }) && (node.documentRoot || parent.hasHeight && node.singleChild)) {
                 return true;
             }
         }

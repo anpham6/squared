@@ -6,7 +6,6 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 import $Layout = squared.base.Layout;
 
 type View = android.base.View;
-
 type NegativeXData = {
     offsetLeft: number;
     nextSibling: View;

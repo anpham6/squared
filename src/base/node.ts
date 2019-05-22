@@ -14,10 +14,9 @@ const $dom = squared.lib.dom;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
+const REGEXP_BACKGROUND = /\s*(url\(.+?\))\s*/;
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
-
-const REGEXP_BACKGROUND = /\s*(url\(.+?\))\s*/;
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public alignmentType = 0;
@@ -37,7 +36,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public renderExtension?: Extension<T>[];
 
     public abstract renderParent?: T;
-    public abstract renderTemplates?: NodeTemplate<T>[];
+    public abstract renderTemplates?: (NodeTemplate<T> | null)[];
     public abstract outerWrapper?: T;
     public abstract innerWrapped?: T;
     public abstract companion?: T;
@@ -255,6 +254,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public hide(invisible?: boolean) {
         this.rendered = true;
         this.visible = false;
+        const renderParent = this.renderParent;
+        if (renderParent && renderParent.renderTemplates) {
+            const index = renderParent.renderChildren.findIndex(node => node === this);
+            if (index !== -1) {
+                const template = renderParent.renderTemplates[index];
+                if (template && template.node === this) {
+                    renderParent.renderTemplates[index] = null;
+                }
+            }
+        }
     }
 
     public data(name: string, attr: string, value?: any, overwrite = true) {
@@ -436,7 +445,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             return NODE_TRAVERSE.LINEBREAK;
         }
         else if (this.pageFlow || this.positionAuto) {
-            const checkBlockDimension = (previous: T) => $util.aboveRange(this.linear.top, previous.linear.bottom) && (this.blockVertical || this.float !== previous.float || previous.blockVertical || this.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT));
+            const isBlockWrap = (node: T) => node.blockVertical || node.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT);
+            const checkBlockDimension = (previous: T) => $util.aboveRange(this.linear.top, previous.linear.bottom) && (isBlockWrap(this) || isBlockWrap(previous) || this.float !== previous.float);
             if ($util.isArray(siblings)) {
                 if (cleared && cleared.has(this)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
@@ -444,23 +454,21 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 else {
                     const lastSibling = siblings[siblings.length - 1];
                     if (this.floating && lastSibling.floating) {
-                        if ($util.aboveRange(this.linear.top, lastSibling.linear.bottom)) {
+                        if (horizontal && this.float === lastSibling.float) {
+                            return NODE_TRAVERSE.HORIZONTAL;
+                        }
+                        else if ($util.aboveRange(this.linear.top, lastSibling.linear.bottom)) {
                             return NODE_TRAVERSE.FLOAT_WRAP;
                         }
-                        else if (this.float === lastSibling.float) {
+                        else if (horizontal && cleared && !siblings.some((item, index) => index > 0 && cleared.get(item) === this.float)) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                     }
-                    else if (this.floating && horizontal === false && lastSibling.blockStatic) {
+                    else if (horizontal === false && this.floating && lastSibling.blockStatic) {
                         return NODE_TRAVERSE.HORIZONTAL;
                     }
                     else if (horizontal !== undefined) {
-                        if (this.display.startsWith('inline-')) {
-                            if (lastSibling.floating) {
-                                return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
-                            }
-                        }
-                        else {
+                        if (!this.display.startsWith('inline-')) {
                             const { top, bottom } = this.linear;
                             if (this.textElement && cleared && cleared.size && siblings.some((item, index) => index > 0 && cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;

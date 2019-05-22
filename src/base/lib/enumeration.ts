@@ -13,10 +13,10 @@ export const enum NODE_ALIGNMENT {
     SEGMENTED = 128,
     COLUMN = 256,
     FLOAT = 512,
-    RIGHT = 1024,
-    SINGLE = 2048,
-    EXTENDABLE = 4096,
-    CUSTOM = 8192
+    TOP = 1024,
+    RIGHT = 2048,
+    SINGLE = 4096,
+    EXTENDABLE = 8192
 }
 
 export const enum NODE_TEMPLATE {

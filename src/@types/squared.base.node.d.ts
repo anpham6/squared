@@ -41,7 +41,7 @@ declare global {
             parent?: Node;
             renderParent?: Node;
             renderExtension?: Extension<Node>[];
-            renderTemplates?: NodeTemplate<Node>[];
+            renderTemplates?: (NodeTemplate<Node> | null)[];
             outerWrapper?: Node;
             innerWrapped?: Node;
             innerBefore?: Node;

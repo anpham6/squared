@@ -99,4 +99,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
     get stored() {
         return this.resource.stored;
     }
+
+    get directory() {
+        return this.resource.application.controllerHandler.localSettings.directory;
+    }
 }

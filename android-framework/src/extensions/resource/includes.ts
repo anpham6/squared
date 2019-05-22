@@ -58,7 +58,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 const templates: NodeTemplate<T>[] = [];
                                 for (let k = openData.index; k <= index; k++) {
                                     templates.push(<NodeTemplate<T>> node.renderTemplates[k]);
-                                    node.renderTemplates[k] = null as any;
+                                    node.renderTemplates[k] = null;
                                 }
                                 const merge = openData.merge || templates.length > 1;
                                 const depth = merge ? 1 : 0;

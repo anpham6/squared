@@ -19,9 +19,7 @@ const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 const STRING_DATAURI = '(?:data:([^;]+);([^,]+),)?(.*?)';
-
-const REGEXP_CACHED: ObjectMap<RegExp> = {};
-
+const CACHE_PATTERN: ObjectMap<RegExp> = {};
 let NodeConstructor!: Constructor<Node>;
 
 function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[]) {
@@ -326,10 +324,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     else if (image.complete) {
                         if (image.src.startsWith('data:image/')) {
-                            if (REGEXP_CACHED.DATAURI === undefined) {
-                                REGEXP_CACHED.DATAURI = new RegExp(`^${STRING_DATAURI}$`);
+                            if (CACHE_PATTERN.DATAURI === undefined) {
+                                CACHE_PATTERN.DATAURI = new RegExp(`^${STRING_DATAURI}$`);
                             }
-                            const match = REGEXP_CACHED.DATAURI.exec(image.src);
+                            const match = CACHE_PATTERN.DATAURI.exec(image.src);
                             if (match && match[1] && match[2]) {
                                 this.resourceHandler.addRawData(image.src, match[1], match[2], match[3], image.naturalWidth, image.naturalHeight);
                             }
@@ -803,11 +801,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                         traverse: {
                             let floated!: Set<string>;
                             let floatActive!: Set<string>;
-                            let floatCleared!: Set<string>;
                             if (hasFloat) {
                                 floated = new Set<string>();
                                 floatActive = new Set<string>();
-                                floatCleared = new Set<string>();
                             }
                             for ( ; l < length; l++, m++) {
                                 const item = axisY[l];
@@ -817,12 +813,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         if (float) {
                                             if (float === 'both') {
                                                 floatActive.clear();
-                                                floatCleared.add($const.CSS.LEFT);
-                                                floatCleared.add($const.CSS.RIGHT);
                                             }
                                             else {
                                                 floatActive.delete(float);
-                                                floatCleared.add(float);
                                             }
                                         }
                                         if (item.floating) {
@@ -850,13 +843,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             if (status > 0) {
                                                 if (horizontal.length) {
                                                     if (status !== NODE_TRAVERSE.FLOAT_INTERSECT && status !== NODE_TRAVERSE.FLOAT_BLOCK && floatActive.size && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
-                                                        let floatBottom = Number.NEGATIVE_INFINITY;
-                                                        $util.captureMap(
-                                                            horizontal,
-                                                            node => node.floating,
-                                                            node => floatBottom = Math.max(floatBottom, node.linear.bottom)
-                                                        );
-                                                        if (!item.floating || item.linear.top < floatBottom) {
+                                                         if (!item.floating || previous.floating && !$util.aboveRange(item.linear.top, previous.linear.bottom)) {
                                                             if (cleared.has(item)) {
                                                                 if (!item.floating) {
                                                                     item.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
@@ -867,7 +854,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                                 break traverse;
                                                             }
                                                             else {
-                                                                if (!item.floating && $util.belowRange(item.linear.top, floatBottom) || item.floating && floatActive.has(item.float)) {
+                                                                let floatBottom = Number.NEGATIVE_INFINITY;
+                                                                if (!item.floating) {
+                                                                    $util.captureMap(
+                                                                        horizontal,
+                                                                        node => node.floating,
+                                                                        node => floatBottom = Math.max(floatBottom, node.linear.bottom)
+                                                                    );
+                                                                }
+                                                                if (!item.floating && !$util.aboveRange(item.linear.top, floatBottom) || item.floating && floatActive.has(item.float)) {
                                                                     horizontal.push(item);
                                                                     if (!item.floating && $util.aboveRange(item.linear.bottom, floatBottom)) {
                                                                         break traverse;
@@ -1607,12 +1602,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     else {
-                        if (REGEXP_CACHED.COUNTERS === undefined) {
-                            REGEXP_CACHED.COUNTERS = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
+                        if (CACHE_PATTERN.COUNTERS === undefined) {
+                            CACHE_PATTERN.COUNTERS = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
                         }
                         let found = false;
                         let match: RegExpExecArray | null;
-                        while ((match = REGEXP_CACHED.COUNTERS.exec(value)) !== null) {
+                        while ((match = CACHE_PATTERN.COUNTERS.exec(value)) !== null) {
                             if (match[1]) {
                                 content += $dom.getNamedItem(element, match[1].trim());
                             }
@@ -1884,26 +1879,26 @@ export default class Application<T extends Node> implements squared.base.Applica
                 break;
             }
             case CSSRule.FONT_FACE_RULE: {
-                if (REGEXP_CACHED.FONT_FACE === undefined) {
-                    REGEXP_CACHED.FONT_FACE = /\s*@font-face\s*{([^}]+)}\s*/;
-                    REGEXP_CACHED.FONT_FAMILY = /\s*font-family:[^\w]*([^'";]+)/;
-                    REGEXP_CACHED.FONT_SRC = /\s*src:\s*([^;]+);/;
-                    REGEXP_CACHED.FONT_STYLE = /\s*font-style:\s*(\w+)\s*;/;
-                    REGEXP_CACHED.FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-                    REGEXP_CACHED.URL = /\s*(url|local)\(['"]([^'")]+)['"]\)\s*format\(['"](\w+)['"]\)\s*/;
+                if (CACHE_PATTERN.FONT_FACE === undefined) {
+                    CACHE_PATTERN.FONT_FACE = /\s*@font-face\s*{([^}]+)}\s*/;
+                    CACHE_PATTERN.FONT_FAMILY = /\s*font-family:[^\w]*([^'";]+)/;
+                    CACHE_PATTERN.FONT_SRC = /\s*src:\s*([^;]+);/;
+                    CACHE_PATTERN.FONT_STYLE = /\s*font-style:\s*(\w+)\s*;/;
+                    CACHE_PATTERN.FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
+                    CACHE_PATTERN.URL = /\s*(url|local)\(['"]([^'")]+)['"]\)\s*format\(['"](\w+)['"]\)\s*/;
                 }
-                const match = REGEXP_CACHED.FONT_FACE.exec(item.cssText);
+                const match = CACHE_PATTERN.FONT_FACE.exec(item.cssText);
                 if (match) {
-                    const familyMatch = REGEXP_CACHED.FONT_FAMILY.exec(match[1]);
-                    const srcMatch = REGEXP_CACHED.FONT_SRC.exec(match[1]);
+                    const familyMatch = CACHE_PATTERN.FONT_FAMILY.exec(match[1]);
+                    const srcMatch = CACHE_PATTERN.FONT_SRC.exec(match[1]);
                     if (familyMatch && srcMatch) {
-                        const styleMatch = REGEXP_CACHED.FONT_STYLE.exec(match[1]);
-                        const weightMatch = REGEXP_CACHED.FONT_WEIGHT.exec(match[1]);
+                        const styleMatch = CACHE_PATTERN.FONT_STYLE.exec(match[1]);
+                        const weightMatch = CACHE_PATTERN.FONT_WEIGHT.exec(match[1]);
                         const fontFamily = familyMatch[1].trim();
                         const fontStyle = styleMatch ? styleMatch[1].toLowerCase() : 'normal';
                         const fontWeight = weightMatch ? parseInt(weightMatch[1]) : 400;
                         for (const value of srcMatch[1].split($regex.XML.SEPARATOR)) {
-                            const urlMatch = REGEXP_CACHED.URL.exec(value);
+                            const urlMatch = CACHE_PATTERN.URL.exec(value);
                             if (urlMatch) {
                                 let srcUrl: string | undefined;
                                 let srcLocal: string | undefined;

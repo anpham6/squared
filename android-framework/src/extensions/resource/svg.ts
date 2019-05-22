@@ -31,8 +31,8 @@ import $SvgShape = squared.svg.SvgShape;
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgImage = squared.svg.SvgImage;
-
 type SvgView = squared.svg.SvgView;
+type AnimateCompanion = NumberValue<SvgAnimation>;
 
 interface AnimatedVectorTemplate {
     'xmlns:android': string;
@@ -134,8 +134,6 @@ interface AnimateGroup {
     pathData?: string;
 }
 
-type AnimateCompanion = NumberValue<SvgAnimation>;
-
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $math = squared.lib.math;
@@ -146,7 +144,6 @@ const $constS = squared.svg.lib.constant;
 const $utilS = squared.svg.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-
 const INTERPOLATOR_ANDROID = {
     accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',
     accelerate:	'@android:anim/accelerate_interpolator',
@@ -175,7 +172,6 @@ const INTERPOLATOR_XML = `<?xml version="1.0" encoding="utf-8"?>
 	android:controlX2="{2}"
     android:controlY2="{3}" />
 `;
-
 const ATTRIBUTE_ANDROID = {
     'stroke': ['strokeColor'],
     'fill': ['fillColor'],

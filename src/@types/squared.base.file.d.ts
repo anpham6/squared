@@ -6,8 +6,9 @@ declare global {
             resource: Resource<T>;
             userSettings: UserSettings;
             appName: string;
-            readonly stored: ResourceStoredMap;
             readonly assets: FileAsset[];
+            readonly stored: ResourceStoredMap;
+            readonly directory: { string: string, font: string, image: string };
             saveAllToDisk(layouts: FileAsset[]): void;
             addAsset(data: Optional<RawAsset>): void;
             reset(): void;

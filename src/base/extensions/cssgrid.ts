@@ -27,7 +27,6 @@ const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
 const STRING_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
 const STRING_NAMED = '\\[([\\w\\-\\s]+)\\]';
-
 const REGEXP_GRID = {
     UNIT: new RegExp(`^(${STRING_UNIT})$`),
     NAMED: `\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`,

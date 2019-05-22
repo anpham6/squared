@@ -5,15 +5,15 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $c = squared.base.lib.constant;
-const $e = squared.base.lib.enumeration;
-
 type SpriteData = {
     image: Required<RawAsset>,
     position: BoxRectPosition
 };
+
+const $const = squared.lib.constant;
+const $css = squared.lib.css;
+const $c = squared.base.lib.constant;
+const $e = squared.base.lib.enumeration;
 
 export default class <T extends android.base.View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {

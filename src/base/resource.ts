@@ -21,9 +21,9 @@ const $util = squared.lib.util;
 
 const STRING_SPACE = '&#160;';
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
-
 const REGEXP_U00A0  = /\u00A0/g;
 const REGEXP_NEWLINE = /\n/g;
+const REGEXP_AMPERSAND = /&/g;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 
 function removeExcluded(node: Node, element: Element, attr: string) {
@@ -904,19 +904,20 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         value = element.src;
                         break;
                     default:
+                        const textContent = node.textContent;
                         if (node.plainText) {
-                            name = node.textContent.trim();
+                            name = textContent.trim();
                             [value] = replaceWhiteSpace(
                                 renderParent,
                                 node,
                                 element,
-                                node.textContent
+                                textContent.replace(REGEXP_AMPERSAND, '&amp;')
                             );
                             inlined = true;
                             trimming = true;
                         }
                         else if (node.inlineText) {
-                            name = node.textContent.trim();
+                            name = textContent.trim();
                             [value, inlined] = replaceWhiteSpace(
                                 renderParent,
                                 node,
@@ -925,8 +926,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             );
                             trimming = true;
                         }
-                        else if (node.textContent.trim() === '' && Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))) {
-                            value = node.textContent;
+                        else if (textContent.trim() === '' && Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                            value = textContent;
                         }
                         break;
                 }

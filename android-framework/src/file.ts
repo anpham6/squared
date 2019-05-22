@@ -18,7 +18,6 @@ type StyleXML = {
     pathname: string;
     filename: string;
 };
-
 type ItemValue = {
     name: string;
     innerText: string;
@@ -166,7 +165,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 $xml.applyTemplate('resources', STRING_TMPL, data),
                 this.userSettings.insertSpaces
             ),
-            'res/values',
+            this.directory.string,
             'strings.xml'
         );
         if (saveToDisk) {
@@ -190,7 +189,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     $xml.applyTemplate('resources', STRINGARRAY_TMPL, data),
                     this.userSettings.insertSpaces
                 ),
-                'res/values',
+                this.directory.string,
                 'string_arrays.xml'
             );
             if (saveToDisk) {
@@ -205,7 +204,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (this.stored.fonts.size) {
             const settings = this.userSettings;
             const xmlns = XMLNS_ANDROID[settings.targetAPI < BUILD_ANDROID.OREO ? STRING_ANDROID.APP : STRING_ANDROID.ANDROID];
-            const pathname = this.resource.application.controllerHandler.localSettings.directory.font;
+            const pathname = this.directory.font;
             for (const [name, font] of Array.from(this.stored.fonts.entries()).sort()) {
                 const data: ExternalData[] = [{
                     'xmlns:android': xmlns,
@@ -265,7 +264,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     $xml.applyTemplate('resources', COLOR_TMPL, data),
                     this.userSettings.insertSpaces
                 ),
-                'res/values',
+                this.directory.string,
                 'colors.xml'
             );
             if (saveToDisk) {
@@ -294,7 +293,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     });
                 }
             }
-            files.push({ data, pathname: 'res/values', filename: 'styles.xml' });
+            files.push({ data, pathname: this.directory.string, filename: 'styles.xml' });
         }
         if (this.stored.themes.size) {
             const appTheme: ObjectMap<boolean> = {};
@@ -360,7 +359,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     ),
                     settings.insertSpaces
                 ),
-                'res/values',
+                this.directory.string,
                 'dimens.xml'
             );
             if (saveToDisk) {
@@ -374,6 +373,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.drawables.size) {
             const settings = this.userSettings;
+            const directory = this.directory.image;
             for (const [name, value] of this.stored.drawables.entries()) {
                 result.push(
                     $xml.replaceTab(
@@ -384,7 +384,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         ),
                         settings.insertSpaces
                     ),
-                    'res/drawable',
+                    directory,
                     `${name}.xml`
                 );
             }
@@ -398,12 +398,13 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceDrawableImageToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.images.size) {
+            const directory = this.directory.image;
             for (const [name, images] of this.stored.images.entries()) {
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
                         result.push(
                             images[dpi],
-                            `res/drawable-${dpi}`,
+                            `${directory}-${dpi}`,
                             `${name}.${$util.fromLastIndexOf(images[dpi], '.')}`
                         );
                     }
@@ -411,7 +412,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 else if (images.mdpi) {
                     result.push(
                         images.mdpi,
-                        'res/drawable',
+                        directory,
                         `${name}.${$util.fromLastIndexOf(images.mdpi, '.')}`
                     );
                 }

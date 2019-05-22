@@ -84,6 +84,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                 const actualParent = node.actualParent;
                 if (actualParent) {
                     let preceding = false;
+                    let previous: T | undefined;
                     for (const item of actualParent.actualChildren) {
                         if (item === node) {
                             if (preceding) {
@@ -106,10 +107,17 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                                     }
                                 }
                             }
-                            else if (renderParent.layoutVertical && bottom !== 0) {
-                                const getBox = item.getBox(BOX_STANDARD.MARGIN_TOP);
-                                if (getBox[0] === 1) {
-                                    bottom -= item.marginTop;
+                            else if (renderParent.layoutVertical) {
+                                if (top !== 0) {
+                                    if (previous && previous.blockStatic && previous.positionRelative && item.blockStatic) {
+                                        top -= previous.top;
+                                    }
+                                }
+                                else if (bottom !== 0) {
+                                    const getBox = item.getBox(BOX_STANDARD.MARGIN_TOP);
+                                    if (getBox[0] === 1) {
+                                        bottom -= item.marginTop;
+                                    }
                                 }
                             }
                             break;
@@ -117,6 +125,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                         else if (item.positionRelative && item.renderParent === renderParent) {
                             preceding = true;
                         }
+                        previous = item as T;
                     }
                 }
             }

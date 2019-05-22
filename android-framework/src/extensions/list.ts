@@ -28,7 +28,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
             layout.setType(CONTAINER_NODE.GRID, $e.NODE_ALIGNMENT.AUTO_LAYOUT);
         }
-        else if (layout.singleRowAligned) {
+        else if (layout.linearX || layout.singleRowAligned) {
             layout.rowCount = 1;
             layout.columnCount = layout.length;
             layout.setType(CONTAINER_NODE.RELATIVE, $e.NODE_ALIGNMENT.HORIZONTAL);
@@ -66,7 +66,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     minWidth += parent.marginLeft;
                 }
             }
-            const container = node.length ? node : this.application.controllerHandler.createNodeGroup(node, [node], parent);
+            const container = node.length === 0 ? this.application.controllerHandler.createNodeGroup(node, [node], parent) : node;
             let ordinal = !mainData.ordinal ? node.find(item => item.float === $const.CSS.LEFT && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
             if (ordinal) {
                 const layoutOrdinal = new $Layout(parent, ordinal);
@@ -222,8 +222,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (columnCount > 0) {
                 container.setLayoutWidth($const.CSS.PX_0);
                 container.android('layout_columnWeight', '1');
-                if (node !== container && node.baseline) {
-                    container.android('baselineAlignedChildIndex', '0');
+                if (node !== container) {
+                    if (node.baseline) {
+                        container.android('baselineAlignedChildIndex', '0');
+                    }
+                }
+                else {
+                    node.alignmentType |= $e.NODE_ALIGNMENT.TOP;
                 }
             }
             if (container !== node && node.marginTop !== 0) {

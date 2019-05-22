@@ -90,10 +90,10 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         this.clear();
     }
 
-    public setType(containerType: number, ...alignmentType: number[]) {
+    public setType(containerType: number, alignmentType?: number) {
         this.containerType = containerType;
-        for (const value of alignmentType) {
-            this.add(value);
+        if (alignmentType) {
+            this.alignmentType = alignmentType;
         }
     }
 
@@ -139,21 +139,27 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
 
     get singleRowAligned() {
         if (this._singleRow === undefined) {
-            let previousBottom = Number.POSITIVE_INFINITY;
-            this._singleRow = true;
-            for (const node of this.children) {
-                if (node.multiline) {
-                    this._singleRow = false;
-                    break;
-                }
-                else {
-                    const offset = $util.convertFloat(node.verticalAlign);
-                    if (node.linear.top - offset >= previousBottom) {
-                        this._singleRow = false;
-                        break;
+            if (this.length) {
+                this._singleRow = true;
+                if (this.length > 1) {
+                    let previousBottom = Number.POSITIVE_INFINITY;
+                    for (const node of this.children) {
+                        if (node.multiline || node.blockStatic) {
+                            this._singleRow = false;
+                            break;
+                        }
+                        else {
+                            if ($util.aboveRange(node.linear.top, previousBottom)) {
+                                this._singleRow = false;
+                                break;
+                            }
+                            previousBottom = node.linear.bottom;
+                        }
                     }
-                    previousBottom = node.linear.bottom + offset;
                 }
+            }
+            else {
+                return false;
             }
         }
         return this._singleRow;

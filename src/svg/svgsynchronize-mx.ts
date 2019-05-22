@@ -11,7 +11,6 @@ import { SYNCHRONIZE_MODE, SYNCHRONIZE_STATE } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
-
 type AnimateValue = number | Point[] | string;
 type TimelineValue = Map<any, AnimateValue>;
 type TimelineIndex = Map<number, AnimateValue>;

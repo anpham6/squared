@@ -190,7 +190,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         private static _documentBody: T;
 
         public renderParent?: T;
-        public renderTemplates?: NodeTemplate<T>[];
+        public renderTemplates?: (NodeTemplate<T> | null)[];
         public outerWrapper?: T;
         public innerWrapped?: T;
         public companion?: T;
@@ -608,12 +608,23 @@ export default (Base: Constructor<squared.base.Node>) => {
                             value = this.actualWidth;
                         }
                         else if ($css.isPercent(width)) {
-                            if (renderParent.is(CONTAINER_NODE.GRID)) {
+                            if (renderParent.layoutConstraint) {
+                                if (width === $const.CSS.PERCENT_100) {
+                                    layoutWidth = STRING_ANDROID.MATCH_PARENT;
+                                }
+                                else {
+                                    this.app(`layout_constraintWidth_percent`, $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
+                                    layoutWidth = $const.CSS.PX_0;
+                                }
+                                adjustViewBounds = true;
+                            }
+                            else if (renderParent.is(CONTAINER_NODE.GRID)) {
                                 layoutWidth = $const.CSS.PX_0;
                                 this.android('layout_columnWeight', $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
+                                adjustViewBounds = true;
                             }
                             else if (this.imageElement) {
-                                if (width === $const.CSS.PERCENT_100 && !renderParent.flexibleWidth && !renderParent.inlineWidth) {
+                                if (width === $const.CSS.PERCENT_100 && !renderParent.inlineWidth) {
                                     layoutWidth = STRING_ANDROID.MATCH_PARENT;
                                 }
                                 else {
@@ -697,7 +708,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         else if ($css.isPercent(height)) {
                             if (this.imageElement) {
-                                if (height === $const.CSS.PERCENT_100 && !renderParent.flexibleHeight && !renderParent.inlineHeight) {
+                                if (height === $const.CSS.PERCENT_100 && !renderParent.inlineHeight) {
                                     layoutHeight = STRING_ANDROID.MATCH_PARENT;
                                 }
                                 else {
@@ -815,7 +826,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                 }
-                if (adjustViewBounds || this.imageElement && (this.blockWidth || this.blockHeight)) {
+                if (this.imageElement && (adjustViewBounds || this.blockWidth || this.blockHeight)) {
                     this.android('adjustViewBounds', 'true');
                 }
             }
@@ -1229,13 +1240,15 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (this.layoutLinear) {
                 const renderChildren = this.renderChildren;
                 if (this.layoutVertical) {
-                    let firstChild = renderChildren[0];
-                    if (firstChild.baseline) {
-                        if (firstChild.renderChildren.length) {
-                            firstChild = firstChild.renderChildren[0] as T;
-                        }
-                        if (firstChild.baseline && (firstChild.textElement || firstChild.inputElement)) {
-                            this.android('baselineAlignedChildIndex', '0');
+                    if (!this.hasAlign($e.NODE_ALIGNMENT.TOP)) {
+                        let firstChild = renderChildren[0];
+                        if (firstChild.baseline) {
+                            if (firstChild.renderChildren.length) {
+                                firstChild = firstChild.renderChildren[0] as T;
+                            }
+                            if (firstChild.baseline && (firstChild.textElement || firstChild.inputElement)) {
+                                this.android('baselineAlignedChildIndex', '0');
+                            }
                         }
                     }
                 }

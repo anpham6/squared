@@ -18,7 +18,7 @@ declare global {
             readonly singleRowAligned: boolean;
             readonly visible: T[];
             init(): void;
-            setType(containerType: number, ...alignmentType: number[]): void;
+            setType(containerType: number, alignmentType?: number): void;
             hasAlign(value: number): boolean;
             reset(): void;
             add(value: number): number;

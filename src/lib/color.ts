@@ -1,8 +1,6 @@
 import { CSS } from './regex';
 
 const STRING_HEX = '0123456789ABCDEF';
-
-const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 const COLOR_CSS3: ColorResult[] = [
     {
         value: '#000000',
@@ -2063,6 +2061,7 @@ const COLOR_CSS3: ColorResult[] = [
         }
     }
 ];
+const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 
 const parseOpacity = (value: string) => parseFloat(value.trim() || '1') * 255;
 
