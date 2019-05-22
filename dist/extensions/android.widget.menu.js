@@ -1,4 +1,4 @@
-/* android.widget 0.9.8
+/* android.widget 0.9.9
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -7,8 +7,7 @@ this.android.widget.menu = (function () {
     'use strict';
 
     var $Resource = android.base.Resource;
-    const $const = squared.base.lib.constant;
-    const $enum = squared.base.lib.enumeration;
+    const $const = squared.lib.constant;
     const $css = squared.lib.css;
     const $session = squared.lib.session;
     const $util = squared.lib.util;
@@ -16,6 +15,8 @@ this.android.widget.menu = (function () {
     const $constA = android.lib.constant;
     const $enumA = android.lib.enumeration;
     const $utilA = android.lib.util;
+    const $c = squared.base.lib.constant;
+    const $e = squared.base.lib.enumeration;
     const REGEXP_ITEM = {
         id: /^@\+id\/\w+$/,
         title: /^.+$/,
@@ -50,13 +51,14 @@ this.android.widget.menu = (function () {
         ITEM: 'item',
         GROUP: 'group'
     };
+    const PREFIX_MENU = 'ic_menu_';
     function parseDataSet(validator, element, options) {
         for (const attr in element.dataset) {
             const value = element.dataset[attr];
             if (value && validator[attr]) {
                 const match = validator[attr].exec(value);
                 if (match) {
-                    options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
+                    options[NAMESPACE_APP.includes(attr) ? $constA.STRING_ANDROID.APP : $constA.STRING_ANDROID.ANDROID][attr] = Array.from(new Set(match)).join('|');
                 }
             }
         }
@@ -78,7 +80,7 @@ this.android.widget.menu = (function () {
     class Menu extends squared.base.Extension {
         constructor(name, framework, tagNames, options) {
             super(name, framework, tagNames, options);
-            this.require($const.EXT_NAME.EXTERNAL, true);
+            this.require($c.EXT_NAME.EXTERNAL, true);
         }
         init(element) {
             if (this.included(element)) {
@@ -105,8 +107,8 @@ this.android.widget.menu = (function () {
                 }
                 if (valid) {
                     element.querySelectorAll('NAV').forEach((item) => {
-                        if ($css.getStyle(element).display === 'none') {
-                            $session.setElementCache(item, 'squaredExternalDisplay', this.application.processing.sessionId, 'none');
+                        if ($css.getStyle(element).display === $const.CSS.NONE) {
+                            $session.setElementCache(item, 'squaredExternalDisplay', this.application.processing.sessionId, $const.CSS.NONE);
                             item.style.setProperty('display', 'block');
                         }
                     });
@@ -123,10 +125,7 @@ this.android.widget.menu = (function () {
             node.documentRoot = true;
             node.alignmentType |= 4 /* AUTO_LAYOUT */;
             node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
-            node.exclude({
-                procedure: $enum.NODE_PROCEDURE.ALL,
-                resource: $enum.NODE_RESOURCE.ALL
-            });
+            node.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
             for (const item of node.cascade()) {
                 this.addDescendant(item);
             }
@@ -189,14 +188,14 @@ this.android.widget.menu = (function () {
                     parseDataSet(REGEXP_ITEM, element, options);
                     if (!options.android.icon) {
                         const resource = this.application.resourceHandler;
-                        let src = resource.addImageSrc(node.backgroundImage, $constA.PREFIX_ANDROID.MENU);
+                        let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);
                         if (src !== '') {
                             options.android.icon = `@drawable/${src}`;
                         }
                         else {
                             const image = node.find(item => item.imageElement);
                             if (image) {
-                                src = resource.addImageSrc(image.element, $constA.PREFIX_ANDROID.MENU);
+                                src = resource.addImageSrc(image.element, PREFIX_MENU);
                                 if (src !== '') {
                                     options.android.icon = `@drawable/${src}`;
                                 }
@@ -212,10 +211,7 @@ this.android.widget.menu = (function () {
                 options.android.title = numberResourceValue || !$util.isNumber(name) ? `@string/${name}` : title;
             }
             node.setControlType(controlName, $enumA.CONTAINER_NODE.INLINE);
-            node.exclude({
-                procedure: $enum.NODE_PROCEDURE.ALL,
-                resource: $enum.NODE_RESOURCE.ALL
-            });
+            node.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
             node.render(parent);
             node.apply(options);
             return {

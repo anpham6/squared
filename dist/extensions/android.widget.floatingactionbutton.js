@@ -1,4 +1,4 @@
-/* android.widget 0.9.8
+/* android.widget 0.9.9
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -7,12 +7,14 @@ this.android.widget.floatingactionbutton = (function () {
     'use strict';
 
     var $Resource = android.base.Resource;
-    const $enum = squared.base.lib.enumeration;
+    const $const = squared.lib.constant;
     const $color = squared.lib.color;
     const $util = squared.lib.util;
     const $constA = android.lib.constant;
     const $enumA = android.lib.enumeration;
     const $utilA = android.lib.util;
+    const $e = squared.base.lib.enumeration;
+    const PREFIX_DIALOG = 'ic_dialog_';
     class FloatingActionButton extends squared.base.Extension {
         is(node) {
             const element = node.element;
@@ -27,29 +29,29 @@ this.android.widget.floatingactionbutton = (function () {
             const target = node.dataset.target;
             const options = $utilA.createViewAttribute(this.options[element.id]);
             const colorName = $Resource.addColor($color.parseColor(node.css('backgroundColor'), node.css('opacity')));
-            $util.assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
-            if (!node.hasProcedure($enum.NODE_PROCEDURE.ACCESSIBILITY)) {
-                $util.assignEmptyValue(options, 'android', 'focusable', 'false');
+            $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
+            if (!node.hasProcedure($e.NODE_PROCEDURE.ACCESSIBILITY)) {
+                $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'focusable', 'false');
             }
             let src = '';
             switch (element.tagName) {
                 case 'IMG':
-                    src = resource.addImageSrc(element, $constA.PREFIX_ANDROID.DIALOG);
+                    src = resource.addImageSrc(element, PREFIX_DIALOG);
                     break;
                 case 'INPUT':
                     if (element.type === 'image') {
-                        src = resource.addImageSrc(element, $constA.PREFIX_ANDROID.DIALOG);
+                        src = resource.addImageSrc(element, PREFIX_DIALOG);
                         break;
                     }
                 case 'BUTTON':
-                    src = resource.addImageSrc(node.backgroundImage, $constA.PREFIX_ANDROID.DIALOG);
+                    src = resource.addImageSrc(node.backgroundImage, PREFIX_DIALOG);
                     break;
             }
             if (src !== '') {
-                $util.assignEmptyValue(options, 'app', 'srcCompat', `@drawable/${src}`);
+                $util.assignEmptyValue(options, $constA.STRING_ANDROID.APP, 'srcCompat', `@drawable/${src}`);
             }
             node.setControlType($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, $enumA.CONTAINER_NODE.BUTTON);
-            node.exclude({ resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET });
+            node.exclude($e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET);
             $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
             let parentAs;
             if (!node.pageFlow || target) {
@@ -58,26 +60,26 @@ this.android.widget.floatingactionbutton = (function () {
                 const documentParent = node.documentParent;
                 const gravity = [];
                 if (horizontalBias < 0.5) {
-                    gravity.push(node.localizeString('left'));
+                    gravity.push(node.localizeString($const.CSS.LEFT));
                 }
                 else if (horizontalBias > 0.5) {
-                    gravity.push(node.localizeString('right'));
+                    gravity.push(node.localizeString($const.CSS.RIGHT));
                 }
                 else {
-                    gravity.push('center_horizontal');
+                    gravity.push($constA.STRING_ANDROID.CENTER_HORIZONTAL);
                 }
                 if (verticalBias < 0.5) {
-                    gravity.push('top');
-                    node.app('layout_dodgeInsetEdges', 'top');
+                    gravity.push($const.CSS.TOP);
+                    node.app('layout_dodgeInsetEdges', $const.CSS.TOP);
                 }
                 else if (verticalBias > 0.5) {
-                    gravity.push('bottom');
+                    gravity.push($const.CSS.BOTTOM);
                 }
                 else {
-                    gravity.push('center_vertical');
+                    gravity.push($constA.STRING_ANDROID.CENTER_VERTICAL);
                 }
                 for (const value of gravity) {
-                    node.mergeGravity('layout_gravity', value);
+                    node.mergeGravity($constA.STRING_ANDROID.LAYOUT_GRAVITY, value);
                 }
                 if (horizontalBias > 0 && horizontalBias < 1 && horizontalBias !== 0.5) {
                     if (horizontalBias < 0.5) {
@@ -97,7 +99,7 @@ this.android.widget.floatingactionbutton = (function () {
                 }
                 node.positioned = true;
                 if (target) {
-                    const layoutGravity = node.android('layout_gravity');
+                    const layoutGravity = node.android($constA.STRING_ANDROID.LAYOUT_GRAVITY);
                     let anchor = parent.documentId;
                     if (parent.controlName === $constA.SUPPORT_ANDROID.TOOLBAR) {
                         const outerParent = parent.data("android.widget.toolbar" /* TOOLBAR */, 'outerParent');
@@ -107,10 +109,10 @@ this.android.widget.floatingactionbutton = (function () {
                     }
                     if (layoutGravity !== '') {
                         node.app('layout_anchorGravity', layoutGravity);
-                        node.delete('android', 'layout_gravity');
+                        node.delete($constA.STRING_ANDROID.ANDROID, $constA.STRING_ANDROID.LAYOUT_GRAVITY);
                     }
                     node.app('layout_anchor', anchor);
-                    node.exclude({ procedure: $enum.NODE_PROCEDURE.ALIGNMENT });
+                    node.exclude(0, $e.NODE_PROCEDURE.ALIGNMENT);
                     node.render(this.application.resolveTarget(target));
                     parentAs = node.renderParent;
                 }

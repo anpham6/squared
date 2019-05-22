@@ -395,7 +395,7 @@ export function getAttribute(element: Element, attr: string, computed = true) {
             value = $css.getStyle(element).getPropertyValue(attr);
         }
     }
-    return value;
+    return value.trim();
 }
 
 export function getParentAttribute(element: Element, attr: string, computed = true) {

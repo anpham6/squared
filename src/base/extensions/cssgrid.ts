@@ -20,6 +20,7 @@ type RepeatItem = {
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
+const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
@@ -359,8 +360,8 @@ export default class CssGrid<T extends Node> extends Extension<T> {
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
                 if (template !== $const.CSS.NONE) {
                     const templateAreas = mainData.templateAreas;
-                    $util.trimString(template.trim(), '"').split(' ').forEach((area, j) => {
-                        if (area !== '.') {
+                    $util.trimString(template.trim(), '"').split($regex.CHAR.SPACE).forEach((area, j) => {
+                        if (area.charAt(0) !== '.') {
                             if (templateAreas[area]) {
                                 templateAreas[area].rowSpan = (i - templateAreas[area].rowStart) + 1;
                                 templateAreas[area].columnSpan = (j - templateAreas[area].columnStart) + 1;

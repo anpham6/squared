@@ -787,14 +787,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                             return true;
                         }
                         function checkVertical(node: T) {
-                            if (parentY.layoutVertical && vertical.length) {
-                                const previousAbove = vertical[vertical.length - 1];
-                                if (previousAbove.layoutVertical) {
-                                    node.parent = previousAbove;
-                                    return;
-                                }
+                            if (horizontal.length) {
+                                return false;
                             }
                             vertical.push(node);
+                            return true;
                         }
                         let l = k;
                         let m = 0;
@@ -884,7 +881,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                     }
                                                     break traverse;
                                                 }
-                                                checkVertical(item);
+                                                if (!checkVertical(item)) {
+                                                    break traverse;
+                                                }
                                             }
                                             else if (!checkHorizontal(item)) {
                                                 break traverse;
@@ -892,7 +891,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         }
                                         else {
                                             if (item.alignedVertically(previousSiblings)) {
-                                                checkVertical(item);
+                                                if (!checkVertical(item)) {
+                                                    break traverse;
+                                                }
                                             }
                                             else if (!checkHorizontal(item)) {
                                                 break traverse;
@@ -1088,6 +1089,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         const inlineBelow: T[] = [];
         const leftAbove: T[] = [];
         const rightAbove: T[] = [];
+        const requirePadding = (node: T) => node.textElement && (node.blockStatic || node.multiline);
         let leftBelow: T[] | undefined;
         let rightBelow: T[] | undefined;
         let leftSub: T[] | T[][] | undefined;
@@ -1274,7 +1276,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     controller.processLayoutHorizontal(group);
                 }
                 this.addLayout(group);
-                if (seg === inlineAbove) {
+                if (seg === inlineAbove && (inlineAbove.some(child => requirePadding(child) || child.blockStatic && child.cascadeSome((nested: T) => requirePadding(nested))))) {
                     if (leftAbove.length) {
                         let floatPosition = Number.NEGATIVE_INFINITY;
                         let invalid = 0;
@@ -1291,7 +1293,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 invalid++;
                             }
                         }
-                        if (invalid !== inlineAbove.length) {
+                        if (invalid < inlineAbove.length) {
                             const offset = floatPosition - basegroup.box.left;
                             if (offset > 0) {
                                 target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? controller.localSettings.deviations.textMarginBoundarySize : 0));
@@ -1314,7 +1316,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 invalid++;
                             }
                         }
-                        if (invalid !== inlineAbove.length) {
+                        if (invalid < inlineAbove.length) {
                             const offset = basegroup.box.right - floatPosition;
                             if (offset > 0) {
                                 target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? controller.localSettings.deviations.textMarginBoundarySize : 0));

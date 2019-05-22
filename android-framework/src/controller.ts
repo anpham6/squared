@@ -566,15 +566,24 @@ export default class Controller<T extends View> extends squared.base.Controller<
     public processTraverseVertical(layout: $Layout<T>) {
         const floated = layout.floated;
         const cleared = layout.cleared;
-        if (floated.size && cleared.size && !(floated.size === 1 && layout.every((item, index) => index === 0 || index === layout.length - 1 || cleared.has(item)))) {
-            layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
-            layout.renderType |= $e.NODE_ALIGNMENT.FLOAT | $e.NODE_ALIGNMENT.VERTICAL;
+        let checkVertical = false;
+        if (floated.size === 1 && layout.every((item, index) => index === 0 || index === layout.length - 1 || cleared.has(item))) {
+            checkVertical = true;
         }
-        else if (floated.size && layout.children[0].floating) {
-            layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
-            layout.renderType |= $e.NODE_ALIGNMENT.FLOAT | $e.NODE_ALIGNMENT.HORIZONTAL;
+        else {
+            if (floated.size && cleared.size) {
+                layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
+                layout.renderType |= $e.NODE_ALIGNMENT.FLOAT | $e.NODE_ALIGNMENT.VERTICAL;
+            }
+            else if (floated.size && layout.children[0].floating) {
+                layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
+                layout.renderType |= $e.NODE_ALIGNMENT.FLOAT | $e.NODE_ALIGNMENT.HORIZONTAL;
+            }
+            else {
+                checkVertical = true;
+            }
         }
-        else if (!layout.parent.hasAlign($e.NODE_ALIGNMENT.VERTICAL)) {
+        if (checkVertical && !layout.parent.hasAlign($e.NODE_ALIGNMENT.VERTICAL)) {
             layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
             layout.setType(layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $e.NODE_ALIGNMENT.VERTICAL);
         }
@@ -601,7 +610,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public sortRenderPosition(parent: T, templates: NodeXmlTemplate<T>[]) {
-        if (parent.layoutConstraint && templates.some(item => !item.node.pageFlow)) {
+        if (parent.layoutConstraint && templates.some(item => !item.node.pageFlow || item.node.zIndex !== 0)) {
             const below: NodeXmlTemplate<T>[] = [];
             const middle: NodeXmlTemplate<T>[] = [];
             const above: NodeXmlTemplate<T>[] = [];
@@ -650,7 +659,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         let B = 0;
         for (const node of layout) {
             const excluded = layout.cleared.has(node) || node.renderExclude;
-            if (A !== -1 && (node.positiveAxis && (node.floating || node.autoMargin.horizontal) || excluded)) {
+            if (A !== -1 && (node.positiveAxis && (!node.positionRelative || node.positionAuto) && (node.floating || node.autoMargin.horizontal) || excluded)) {
                 A++;
             }
             else {
@@ -1629,7 +1638,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         return renderParent.box.width - (node.linear.left - renderParent.box.left);
                     }
                 }
-                return node.box.width - (node.getBox($e.BOX_STANDARD.PADDING_LEFT)[1] + node.getBox($e.BOX_STANDARD.PADDING_RIGHT)[1]);
+                return node.box.width;
             })();
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
             const cleared = $NodeList.linearData(children, true).cleared;

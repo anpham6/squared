@@ -1,12 +1,4 @@
 export const CSS = {
-    WIDTH: 'width',
-    HEIGHT: 'height',
-    AUTO: 'auto',
-    PX_0: '0px',
-    PERCENT_0: '0%',
-    PERCENT_50: '50%',
-    PERCENT_100: '100%',
-    NONE: 'none',
     TOP: 'top',
     RIGHT: 'right',
     BOTTOM: 'bottom',
@@ -14,5 +6,13 @@ export const CSS = {
     START: 'start',
     END: 'end',
     CENTER: 'center',
-    MIDDLE: 'middle'
+    MIDDLE: 'middle',
+    PX_0: '0px',
+    PERCENT_0: '0%',
+    PERCENT_50: '50%',
+    PERCENT_100: '100%',
+    WIDTH: 'width',
+    HEIGHT: 'height',
+    AUTO: 'auto',
+    NONE: 'none'
 };

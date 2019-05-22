@@ -155,9 +155,15 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
         }
 
-        public setAttribute(attr: string, computed = true) {
-            let value = this.getAttribute(attr, computed);
+        public setAttribute(attr: string, computed = true, inherited = true) {
+            let value = this.getAttribute(attr, computed, inherited);
             if ($util.isString(value)) {
+                if ($css.isCustomProperty(value)) {
+                    const result = $css.calculateVar(this.element, value, attr);
+                    if (result !== undefined) {
+                        value = result.toString();
+                    }
+                }
                 switch (attr) {
                     case 'stroke-dasharray':
                         value = value !== $const.CSS.NONE ? $util.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ') : '';

@@ -454,44 +454,54 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     else if (this.floating && horizontal === false && lastSibling.blockStatic) {
                         return NODE_TRAVERSE.HORIZONTAL;
                     }
-                    else {
-                        if (this.blockStatic && horizontal !== undefined) {
-                            const linear = this.linear;
-                            if (this.textElement && cleared && cleared.size && siblings.some((item, index) => index > 0 && cleared.has(item)) && siblings.some(item => linear.top < item.linear.top && linear.bottom > item.linear.bottom)) {
+                    else if (horizontal !== undefined) {
+                        if (this.display.startsWith('inline-')) {
+                            if (lastSibling.floating) {
+                                return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
+                            }
+                        }
+                        else {
+                            const { top, bottom } = this.linear;
+                            if (this.textElement && cleared && cleared.size && siblings.some((item, index) => index > 0 && cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
                             }
-                            else if (horizontal && siblings[0].float === 'right') {
-                                let minTop = Number.POSITIVE_INFINITY;
-                                let maxBottom = Number.NEGATIVE_INFINITY;
-                                let bottom: number;
-                                for (const item of siblings) {
-                                    if (item.float === 'right') {
-                                        if (item.linear.top < minTop) {
-                                            minTop = item.linear.top;
-                                        }
-                                        if (item.linear.bottom > maxBottom) {
-                                            maxBottom = item.linear.bottom;
-                                        }
-                                    }
-                                }
-                                if (this.multiline) {
-                                    bottom = linear.bottom;
-                                    if (this.textElement && !this.plainText) {
-                                        const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
-                                        if (rect.bottom > bottom) {
-                                            bottom = rect.bottom;
+                            else if (horizontal) {
+                                if (siblings.length > 1 && siblings[0].float === $const.CSS.RIGHT) {
+                                    let minTop = Number.POSITIVE_INFINITY;
+                                    let maxBottom = Number.NEGATIVE_INFINITY;
+                                    let actualBottom: number;
+                                    for (const item of siblings) {
+                                        if (item.float === $const.CSS.RIGHT) {
+                                            if (item.linear.top < minTop) {
+                                                minTop = item.linear.top;
+                                            }
+                                            if (item.linear.bottom > maxBottom) {
+                                                maxBottom = item.linear.bottom;
+                                            }
                                         }
                                     }
+                                    if (this.multiline) {
+                                        actualBottom = bottom;
+                                        if (this.textElement && !this.plainText) {
+                                            const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
+                                            if (rect.bottom > bottom) {
+                                                actualBottom = rect.bottom;
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        actualBottom = top;
+                                    }
+                                    return $util.belowRange(actualBottom, maxBottom) ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
                                 }
-                                else {
-                                    bottom = linear.top;
-                                }
-                                return $util.belowRange(bottom, maxBottom) ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
+                            }
+                            else if ($util.sameArray(siblings, (item, index) => item.floating ? item.float : index)) {
+                                return NODE_TRAVERSE.FLOAT_BLOCK;
                             }
                         }
-                        if (this.blockDimension && checkBlockDimension(lastSibling)) {
-                            return NODE_TRAVERSE.INLINE_WRAP;
-                        }
+                    }
+                    if (this.blockDimension && checkBlockDimension(lastSibling)) {
+                        return NODE_TRAVERSE.INLINE_WRAP;
                     }
                 }
             }
@@ -772,11 +782,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     if ($util.hasBit(checkType, CSS_STANDARD.BASELINE)) {
                         return true;
                     }
-                case $const.CSS.AUTO:
+                case 'auto':
                     if ($util.hasBit(checkType, CSS_STANDARD.AUTO)) {
                         return true;
                     }
-                case $const.CSS.NONE:
+                case 'none':
                 case 'initial':
                 case 'unset':
                 case 'normal':
@@ -819,12 +829,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return $util.hasBit(this.alignmentType, value);
     }
 
-    public hasProcedure(value: number) {
-        return !$util.hasBit(this.excludeProcedure, value);
-    }
-
     public hasResource(value: number) {
         return !$util.hasBit(this.excludeResource, value);
+    }
+
+    public hasProcedure(value: number) {
+        return !$util.hasBit(this.excludeProcedure, value);
     }
 
     public hasSection(value: number) {

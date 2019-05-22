@@ -1,4 +1,4 @@
-/* squared 0.9.8
+/* squared 0.9.9
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -56,22 +56,7 @@
     };
     const ESCAPE = {
         ENTITY: /&#(\d+);/g,
-        NONENTITY: /&(?!#?[A-Za-z\d]{2,};)/g,
-        NBSP: /&nbsp;/g,
-        AMP: /&/g,
-        LT: /</g,
-        GT: />/g,
-        SINGLEQUOTE: /'/g,
-        DOUBLEQUOTE: /"/g,
-        U00A0: /\u00A0/g,
-        U0003: /\u0003/g,
-        U2002: /\u2002/g,
-        U2003: /\u2003/g,
-        U2009: /\u2009/g,
-        U200C: /\u200C/g,
-        U200D: /\u200D/g,
-        U200E: /\u200E/g,
-        U200F: /\u200F/g
+        NONENTITY: /&(?!#?[A-Za-z\d]{2,};)/g
     };
 
     var regex = /*#__PURE__*/Object.freeze({
@@ -180,10 +165,10 @@
         return result;
     }
     function convertInt(value) {
-        return value && parseInt(value) || 0;
+        return parseInt(value) || 0;
     }
     function convertFloat(value) {
-        return value && parseFloat(value) || 0;
+        return parseFloat(value) || 0;
     }
     function convertAlpha(value) {
         if (value >= 0) {
@@ -250,6 +235,9 @@
     function isArray(value) {
         return Array.isArray(value) && value.length > 0;
     }
+    function isPlainObject(value) {
+        return typeof value === 'object' && value !== null && value.constructor === Object;
+    }
     function isEqual(source, values) {
         if (source === values) {
             return true;
@@ -267,7 +255,7 @@
         else if (Object.keys(source).length === Object.keys(values).length) {
             for (const attr in source) {
                 if (source[attr] !== values[attr]) {
-                    if (typeof source[attr] === 'object' && values[attr] === 'object' && isEqual(source[attr], values[attr])) {
+                    if (isPlainObject(source[attr]) && isPlainObject(values[attr]) && isEqual(source[attr], values[attr])) {
                         continue;
                     }
                     return false;
@@ -295,7 +283,7 @@
             if (Array.isArray(value)) {
                 result.push(cloneArray(value, [], object));
             }
-            else if (object && typeof value === 'object' && value !== null) {
+            else if (object && isPlainObject(value)) {
                 result.push(cloneObject(value, {}, true));
             }
             else {
@@ -310,7 +298,7 @@
             if (Array.isArray(value)) {
                 result[attr] = array ? cloneArray(value, [], true) : value;
             }
-            else if (typeof value === 'object' && value.constructor === Object) {
+            else if (isPlainObject(value)) {
                 result[attr] = cloneObject(value, {}, array);
             }
             else {
@@ -386,9 +374,6 @@
             }
         }
         return value;
-    }
-    function trimNull(value) {
-        return value ? value.trim() : '';
     }
     function trimString(value, char) {
         return trimStart(trimEnd(value, char), char);
@@ -467,11 +452,11 @@
                     break;
                 }
                 else if (isString(name)) {
-                    if (current[name] && typeof current[name] === 'object') {
+                    if (current[name] === undefined || current[name] === null) {
+                        current[name] = {};
                         current = current[name];
                     }
-                    else if (current[name] === undefined || current[name] === null) {
-                        current[name] = {};
+                    else if (typeof current[name] === 'object') {
                         current = current[name];
                     }
                     else {
@@ -679,6 +664,7 @@
         isNumber: isNumber,
         isString: isString,
         isArray: isArray,
+        isPlainObject: isPlainObject,
         isEqual: isEqual,
         includes: includes,
         cloneInstance: cloneInstance,
@@ -690,7 +676,6 @@
         optionalAsNumber: optionalAsNumber,
         optionalAsBoolean: optionalAsBoolean,
         resolvePath: resolvePath,
-        trimNull: trimNull,
         trimString: trimString,
         trimStart: trimStart,
         trimEnd: trimEnd,
@@ -725,32 +710,32 @@
         }
         [Symbol.iterator]() {
             const list = this._children;
+            const data = { done: false, value: undefined };
             let i = 0;
             return {
                 next() {
                     if (i < list.length) {
-                        return { done: false, value: list[i++] };
+                        data.value = list[i++];
                     }
                     else {
-                        return { done: true, value: undefined };
+                        data.done = true;
                     }
+                    return data;
                 }
             };
         }
         item(index, value) {
-            if (index !== undefined && value !== undefined) {
-                if (index >= 0 && index < this._children.length) {
-                    this._children[index] = value;
-                    return value;
-                }
-            }
-            else {
-                if (index === undefined) {
-                    return this._children[this._children.length - 1];
+            if (index !== undefined) {
+                if (value !== undefined) {
+                    if (index >= 0 && index < this._children.length) {
+                        this._children[index] = value;
+                        return value;
+                    }
+                    return undefined;
                 }
                 return this._children[index];
             }
-            return undefined;
+            return this._children[this._children.length - 1];
         }
         append(item) {
             this._children.push(item);
@@ -848,8 +833,8 @@
         }
         cascadeSome(predicate) {
             function cascade(container) {
-                for (let i = 0; i < container.children.length; i++) {
-                    const item = container.children[i];
+                for (let i = 0; i < container.length; i++) {
+                    const item = container.item(i);
                     if (predicate(item, i, container.children)) {
                         return true;
                     }
@@ -2946,9 +2931,6 @@
             }
         }
     ];
-    for (const color of COLOR_CSS3) {
-        Object.freeze(color);
-    }
     const parseOpacity = (value) => parseFloat(value.trim() || '1') * 255;
     function findColorName(value) {
         for (const color of COLOR_CSS3) {
@@ -3060,7 +3042,6 @@
                     semiopaque: alpha > 0 && alpha < 1,
                     transparent: alpha === 0
                 };
-                Object.freeze(colorData);
                 if (opacity === '1') {
                     CACHE_COLORDATA[value] = colorData;
                 }
@@ -3072,19 +3053,31 @@
         }
         return undefined;
     }
-    function reduceColor(value, percent) {
-        const rgba = parseRGBA(value);
-        if (rgba) {
-            const base = percent < 0 ? 0 : 255;
-            percent = Math.abs(percent);
-            return parseColor(formatRGBA({
-                r: (rgba.r + Math.round((base - rgba.r) * percent)) % 255,
-                g: (rgba.g + Math.round((base - rgba.g) * percent)) % 255,
-                b: (rgba.b + Math.round((base - rgba.b) * percent)) % 255,
-                a: rgba.a
-            }));
+    function reduceRGBA(value, percent, cacheName) {
+        if (cacheName) {
+            cacheName = `${cacheName}_${percent}`;
+            if (CACHE_COLORDATA[cacheName]) {
+                return CACHE_COLORDATA[cacheName];
+            }
         }
-        return undefined;
+        if (value.r === 0 && value.g === 0 && value.b === 0) {
+            value = { r: 255, g: 255, b: 255, a: value.a };
+            if (percent > 0) {
+                percent *= -1;
+            }
+        }
+        const base = percent < 0 ? 0 : 255;
+        percent = Math.abs(percent);
+        const result = parseColor(formatRGBA({
+            r: (value.r + Math.round((base - value.r) * percent)) % 255,
+            g: (value.g + Math.round((base - value.g) * percent)) % 255,
+            b: (value.b + Math.round((base - value.b) * percent)) % 255,
+            a: value.a
+        }));
+        if (cacheName) {
+            CACHE_COLORDATA[cacheName] = result;
+        }
+        return result;
     }
     function getHexCode(...values) {
         let output = '';
@@ -3175,13 +3168,36 @@
         findColorName: findColorName,
         findColorShade: findColorShade,
         parseColor: parseColor,
-        reduceColor: reduceColor,
+        reduceRGBA: reduceRGBA,
         getHexCode: getHexCode,
         convertHex: convertHex,
         parseRGBA: parseRGBA,
         convertHSLA: convertHSLA,
         formatRGBA: formatRGBA,
         formatHSLA: formatHSLA
+    });
+
+    const CSS$1 = {
+        TOP: 'top',
+        RIGHT: 'right',
+        BOTTOM: 'bottom',
+        LEFT: 'left',
+        START: 'start',
+        END: 'end',
+        CENTER: 'center',
+        MIDDLE: 'middle',
+        PX_0: '0px',
+        PERCENT_0: '0%',
+        PERCENT_50: '50%',
+        PERCENT_100: '100%',
+        WIDTH: 'width',
+        HEIGHT: 'height',
+        AUTO: 'auto',
+        NONE: 'none'
+    };
+
+    var constant = /*#__PURE__*/Object.freeze({
+        CSS: CSS$1
     });
 
     function isUserAgent(value) {
@@ -3350,17 +3366,17 @@
         const style = element.style;
         if (placeholder) {
             style.setProperty('position', 'static');
-            style.setProperty('margin', '0px');
-            style.setProperty('padding', '0px');
-            style.setProperty('border', 'none');
-            style.setProperty('float', 'none');
-            style.setProperty('clear', 'none');
+            style.setProperty('margin', CSS$1.PX_0);
+            style.setProperty('padding', CSS$1.PX_0);
+            style.setProperty('border', CSS$1.NONE);
+            style.setProperty('float', CSS$1.NONE);
+            style.setProperty('clear', CSS$1.NONE);
             element.className = '__squared.placeholder';
         }
         else {
             element.className = '__squared.pseudo';
         }
-        style.setProperty('display', 'none');
+        style.setProperty('display', CSS$1.NONE);
         if (parent) {
             if (index >= 0 && index < parent.childNodes.length) {
                 parent.insertBefore(element, parent.childNodes[index]);
@@ -3379,16 +3395,16 @@
         parent.appendChild(element);
         return element;
     }
-    function getTextMetrics(value, fontFamily, fontSize) {
+    function measureTextWidth(value, fontFamily, fontSize) {
         if (fontFamily && fontSize) {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             if (context) {
                 context.font = `${fontSize}px ${fontFamily}`;
-                return context.measureText(value);
+                return context.measureText(value).width;
             }
         }
-        return undefined;
+        return 0;
     }
     function getNamedItem(element, attr) {
         if (element) {
@@ -3410,7 +3426,7 @@
         getElementsBetweenSiblings: getElementsBetweenSiblings,
         createElement: createElement,
         createStyleElement: createStyleElement,
-        getTextMetrics: getTextMetrics,
+        measureTextWidth: measureTextWidth,
         getNamedItem: getNamedItem
     });
 
@@ -3515,13 +3531,9 @@
     });
 
     const REGEXP_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-    function convertLength(value, dimension, fontSize) {
-        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
-    }
-    function convertPercent(value, dimension, fontSize) {
-        return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
-    }
-    const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
+    const convertLength = (value, dimension, fontSize) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
+    const convertPercent = (value, dimension, fontSize) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
+    const BOX_POSITION = [CSS$1.TOP, CSS$1.RIGHT, CSS$1.BOTTOM, CSS$1.LEFT];
     const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
     const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
     function getStyle(element, target = '', cache = true) {
@@ -3540,7 +3552,7 @@
             }
             return { display: 'inline' };
         }
-        return { display: 'none' };
+        return { display: CSS$1.NONE };
     }
     function hasComputedStyle(element) {
         return !!element && typeof element['style'] === 'object' && typeof element['style']['display'] === 'string';
@@ -3618,14 +3630,14 @@
                 value = getInheritedStyle(element, attr);
             }
             const computed = style[attr];
-            if (value !== computed && value !== 'auto') {
+            if (value !== computed && value !== CSS$1.AUTO) {
                 const numeric = isNumber(value);
                 if (computed) {
                     let valid = false;
                     switch (attr) {
+                        case 'color':
                         case 'fontSize':
                         case 'fontWeight':
-                        case 'color':
                         case 'backgroundColor':
                         case 'borderTopColor':
                         case 'borderRightColor':
@@ -3649,10 +3661,10 @@
                             if (isPercent(value)) {
                                 switch (attr) {
                                     case 'width':
-                                    case 'minWidth':
-                                    case 'maxWidth':
                                     case 'height':
+                                    case 'minWidth':
                                     case 'minHeight':
+                                    case 'maxWidth':
                                     case 'maxHeight':
                                     case 'columnWidth':
                                     case 'offsetDistance':
@@ -3732,10 +3744,10 @@
                     percent = percent.trim();
                     switch (percent) {
                         case 'from':
-                            percent = '0%';
+                            percent = CSS$1.PERCENT_0;
                             break;
                         case 'to':
-                            percent = '100%';
+                            percent = CSS$1.PERCENT_100;
                             break;
                     }
                     result[percent] = {};
@@ -3800,13 +3812,13 @@
                                 const [width, height] = replaceMap(rule.split('/'), ratio => parseInt(ratio));
                                 valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
                                 break;
-                            case 'width':
+                            case CSS$1.WIDTH:
                             case 'min-width':
                             case 'max-width':
-                            case 'height':
+                            case CSS$1.HEIGHT:
                             case 'min-height':
                             case 'max-height':
-                                valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
+                                valid = compareRange(operation, attr.indexOf(CSS$1.WIDTH) !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
                                 break;
                             case 'orientation':
                                 valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
@@ -3923,7 +3935,7 @@
         return undefined;
     }
     function getBackgroundPosition(value, dimension, fontSize) {
-        const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
+        const orientation = value === CSS$1.CENTER ? [CSS$1.CENTER, CSS$1.CENTER] : value.split(' ');
         const result = {
             static: true,
             top: 0,
@@ -3934,8 +3946,8 @@
             leftAsPercent: 0,
             rightAsPercent: 0,
             bottomAsPercent: 0,
-            horizontal: 'left',
-            vertical: 'top',
+            horizontal: CSS$1.LEFT,
+            vertical: CSS$1.TOP,
             orientation
         };
         if (orientation.length === 2) {
@@ -3944,28 +3956,28 @@
                 let direction;
                 let offsetParent;
                 if (i === 0) {
-                    direction = 'left';
+                    direction = CSS$1.LEFT;
                     offsetParent = dimension.width;
                     result.horizontal = position;
                 }
                 else {
-                    direction = 'top';
+                    direction = CSS$1.TOP;
                     offsetParent = dimension.height;
                     result.vertical = position;
                 }
                 const directionAsPercent = `${direction}AsPercent`;
                 switch (position) {
-                    case 'start':
-                        result.horizontal = 'left';
+                    case CSS$1.START:
+                        result.horizontal = CSS$1.LEFT;
                         break;
-                    case 'end':
-                        result.horizontal = 'right';
-                    case 'right':
-                    case 'bottom':
+                    case CSS$1.END:
+                        result.horizontal = CSS$1.RIGHT;
+                    case CSS$1.RIGHT:
+                    case CSS$1.BOTTOM:
                         result[direction] = offsetParent;
                         result[directionAsPercent] = 1;
                         break;
-                    case 'center':
+                    case CSS$1.CENTER:
                         result[direction] = offsetParent / 2;
                         result[directionAsPercent] = 0.5;
                         break;
@@ -3987,16 +3999,16 @@
                         const location = convertLength(position, dimension.width, fontSize);
                         const locationAsPercent = convertPercent(position, dimension.width, fontSize);
                         switch (result.horizontal) {
-                            case 'end:':
-                                result.horizontal = 'right';
-                            case 'right':
+                            case CSS$1.END:
+                                result.horizontal = CSS$1.RIGHT;
+                            case CSS$1.RIGHT:
                                 result.right = location;
                                 result.left = dimension.width - location;
                                 result.rightAsPercent = locationAsPercent;
                                 result.leftAsPercent = 1 - locationAsPercent;
                                 break;
-                            case 'start':
-                                result.horizontal = 'left';
+                            case CSS$1.START:
+                                result.horizontal = CSS$1.LEFT;
                             default:
                                 result.left = location;
                                 result.leftAsPercent = locationAsPercent;
@@ -4010,7 +4022,7 @@
                     case 3: {
                         const location = convertLength(position, dimension.height, fontSize);
                         const locationAsPercent = convertPercent(position, dimension.height, fontSize);
-                        if (result.vertical === 'bottom') {
+                        if (result.vertical === CSS$1.BOTTOM) {
                             result.bottom = location;
                             result.top = dimension.height - location;
                             result.bottomAsPercent = locationAsPercent;
@@ -4199,12 +4211,12 @@
     function convertPX(value, fontSize) {
         if (value) {
             value = value.trim();
-            if (value.endsWith('%') || value === 'auto') {
+            if (value.endsWith('px') || value.endsWith('%') || value === CSS$1.AUTO) {
                 return value;
             }
             return `${parseUnit(value, fontSize)}px`;
         }
-        return '0px';
+        return CSS$1.PX_0;
     }
     function calculate(value, dimension = 0, fontSize) {
         value = value.trim();
@@ -4379,13 +4391,13 @@
         if (typeof value === 'string') {
             value = parseFloat(value);
         }
-        return isNaN(value) ? '0px' : `${Math.round(value)}px`;
+        return isNaN(value) ? CSS$1.PX_0 : `${Math.round(value)}px`;
     }
     function formatPercent(value, round = true) {
         if (typeof value === 'string') {
             value = parseFloat(value);
             if (isNaN(value)) {
-                return '0%';
+                return CSS$1.PERCENT_0;
             }
         }
         value *= 100;
@@ -4637,7 +4649,9 @@
     const REGEXP_FORMAT = {
         ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
         OPENTAG: /\s*>$/,
-        CLOSETAG: /\/>\n*$/
+        CLOSETAG: /\/>\n*$/,
+        NBSP: /&nbsp;/g,
+        AMP: /&/g
     };
     const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
     function isPlainText(value) {
@@ -4837,28 +4851,73 @@
         }
         return output;
     }
-    function replaceCharacter(value) {
-        return value
-            .replace(ESCAPE.NBSP, '&#160;')
-            .replace(ESCAPE.LT, '&lt;')
-            .replace(ESCAPE.GT, '&gt;')
-            .replace(ESCAPE.DOUBLEQUOTE, '&quot;')
-            .replace(ESCAPE.SINGLEQUOTE, "\\'");
-    }
-    function replaceEntity(value) {
-        return value
-            .replace(ESCAPE.U00A0, '&#160;')
-            .replace(ESCAPE.U0003, ' ')
-            .replace(ESCAPE.U2002, '&#8194;')
-            .replace(ESCAPE.U2003, '&#8195;')
-            .replace(ESCAPE.U2009, '&#8201;')
-            .replace(ESCAPE.U200C, '&#8204;')
-            .replace(ESCAPE.U200D, '&#8205;')
-            .replace(ESCAPE.U200E, '&#8206;')
-            .replace(ESCAPE.U200F, '&#8207;');
-    }
-    function escapeAmpersand(value) {
-        return value.replace(ESCAPE.NONENTITY, '&amp;');
+    function replaceCharacterData(value) {
+        value = value
+            .replace(REGEXP_FORMAT.NBSP, '&#160;')
+            .replace(ESCAPE.NONENTITY, '&amp;');
+        const length = value.length;
+        const char = new Array(length);
+        let valid = false;
+        for (let i = 0; i < length; i++) {
+            switch (value[i]) {
+                case "'":
+                    char[i] = "\\'";
+                    valid = true;
+                    break;
+                case '"':
+                    char[i] = '&quot;';
+                    valid = true;
+                    break;
+                case '<':
+                    char[i] = '&lt;';
+                    valid = true;
+                    break;
+                case '>':
+                    char[i] = '&gt;';
+                    valid = true;
+                    break;
+                case '\u0003':
+                    char[i] = ' ';
+                    valid = true;
+                    break;
+                case '\u00A0':
+                    char[i] = '&#160;';
+                    valid = true;
+                    break;
+                case '\u2002':
+                    char[i] = '&#8194;';
+                    valid = true;
+                    break;
+                case '\u2003':
+                    char[i] = '&#8195;';
+                    valid = true;
+                    break;
+                case '\u2009':
+                    char[i] = '&#8201;';
+                    valid = true;
+                    break;
+                case '\u200C':
+                    char[i] = '&#8204;';
+                    valid = true;
+                    break;
+                case '\u200D':
+                    char[i] = '&#8205;';
+                    valid = true;
+                    break;
+                case '\u200E':
+                    char[i] = '&#8206;';
+                    valid = true;
+                    break;
+                case '\u200F':
+                    char[i] = '&#8207;';
+                    valid = true;
+                    break;
+                default:
+                    char[i] = value[i];
+                    break;
+            }
+        }
+        return valid ? char.join('') : value;
     }
 
     var xml = /*#__PURE__*/Object.freeze({
@@ -4870,9 +4929,7 @@
         replaceTab: replaceTab,
         applyTemplate: applyTemplate,
         formatTemplate: formatTemplate,
-        replaceCharacter: replaceCharacter,
-        replaceEntity: replaceEntity,
-        escapeAmpersand: escapeAmpersand
+        replaceCharacterData: replaceCharacterData
     });
 
     let main;
@@ -4928,10 +4985,12 @@
         return {
             then: (callback) => {
                 if (!main) {
-                    alert('ERROR: Framework not installed.');
+                    if (exports.settings.showErrorMessages) {
+                        alert('ERROR: Framework not installed.');
+                    }
                 }
                 else if (main.closed) {
-                    if (confirm('ERROR: Document is closed. Reset and rerun?')) {
+                    if (!exports.settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
                         main.reset();
                         parseDocument.call(null, ...elements).then(callback);
                     }
@@ -4989,7 +5048,7 @@
         return false;
     }
     function configure(value, options) {
-        if (typeof options === 'object') {
+        if (isPlainObject(options)) {
             if (value instanceof squared.base.Extension) {
                 Object.assign(value.options, options);
                 return true;
@@ -5019,7 +5078,7 @@
         }
         else if (typeof value === 'string') {
             value = value.trim();
-            if (typeof options === 'object') {
+            if (isPlainObject(options)) {
                 return configure(value, options);
             }
             else {
@@ -5060,6 +5119,7 @@
             Container
         },
         color,
+        constant,
         client,
         css,
         dom,

@@ -79,11 +79,12 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol42804"
+                    android:text="@string/__symbol8021"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/linearlayout_2"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:orientation="vertical">
@@ -159,6 +160,7 @@
                 style="@style/Label" />
             <LinearLayout
                 android:id="@+id/linearlayout_3"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -226,11 +228,12 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol42804"
+                    android:text="@string/__symbol8021"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/linearlayout_5"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -397,6 +400,7 @@
                 style="@style/Label" />
             <LinearLayout
                 android:id="@+id/linearlayout_6"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -413,7 +417,6 @@
                 <Button
                     android:id="@+id/button_1"
                     android:background="@drawable/input_button_button_1"
-                    android:elevation="@dimen/input_button_elevation"
                     android:enabled="false"
                     android:gravity="center"
                     android:layout_height="wrap_content"
@@ -429,7 +432,6 @@
                 <Button
                     android:id="@+id/button_2"
                     android:background="@drawable/input_button_button_1"
-                    android:elevation="@dimen/input_button_elevation"
                     android:enabled="false"
                     android:gravity="center"
                     android:layout_height="wrap_content"
@@ -527,6 +529,7 @@
                 style="@style/Label" />
             <LinearLayout
                 android:id="@+id/linearlayout_7"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -554,7 +557,6 @@
                 <Button
                     android:id="@+id/button_3"
                     android:background="@drawable/input_button_button_1"
-                    android:elevation="@dimen/input_button_elevation"
                     android:gravity="center"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/input_button_layout_margin_start_1"
@@ -582,6 +584,7 @@
                 style="@style/Label" />
             <LinearLayout
                 android:id="@+id/linearlayout_8"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -609,7 +612,6 @@
                 <Button
                     android:id="@+id/button_4"
                     android:background="@drawable/input_button_button_1"
-                    android:elevation="@dimen/input_button_elevation"
                     android:gravity="center"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/input_button_layout_margin_start_1"
@@ -624,7 +626,6 @@
                 <Button
                     android:id="@+id/button_5"
                     android:background="@drawable/input_button_button_1"
-                    android:elevation="@dimen/input_button_elevation"
                     android:gravity="center"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/input_button_layout_margin_start"
@@ -668,11 +669,12 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol42804"
+                    android:text="@string/__symbol8021"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/linearlayout_10"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -739,6 +741,7 @@
                     style="@style/Select" />
                 <RadioGroup
                     android:id="@+id/radiogroup_1"
+                    android:baselineAlignedChildIndex="2"
                     android:checkedButton="@+id/c2"
                     android:layout_centerVertical="true"
                     android:layout_height="wrap_content"
@@ -760,7 +763,7 @@
                         android:id="@+id/c3"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/input_radio_layout_margin_end"
-                        android:layout_marginStart="@dimen/input_radio_layout_margin_start_1"
+                        android:layout_marginStart="@dimen/input_radio_layout_margin_start"
                         android:layout_marginTop="@dimen/input_radio_layout_margin_top"
                         android:layout_width="wrap_content"
                         android:padding="@dimen/input_radio_padding"
@@ -780,7 +783,6 @@
                 <Button
                     android:id="@+id/button_6"
                     android:background="@drawable/input_button_button_1"
-                    android:elevation="@dimen/input_button_elevation"
                     android:gravity="center"
                     android:layout_alignBaseline="@+id/person"
                     android:layout_height="wrap_content"
@@ -804,7 +806,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol42804">):</string>
+    <string name="__symbol8021">):</string>
     <string name="active">Active:</string>
     <string name="add"><u>Add</u></string>
     <string name="all">All</string>
@@ -1041,6 +1043,7 @@
         <item name="android:textStyle">italic</item>
     </style>
     <style name="Linearlayout_2">
+        <item name="android:baselineAlignedChildIndex">0</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:orientation">horizontal</item>
@@ -1075,7 +1078,6 @@
     <dimen name="hr_layout_height">1dp</dimen>
     <dimen name="hr_layout_margin_vertical">10dp</dimen>
     <dimen name="hr_layout_width">350dp</dimen>
-    <dimen name="input_button_elevation">6dp</dimen>
     <dimen name="input_button_layout_margin_start">3dp</dimen>
     <dimen name="input_button_layout_margin_start_1">7dp</dimen>
     <dimen name="input_button_layout_margin_start_2">4dp</dimen>
@@ -1089,7 +1091,6 @@
     <dimen name="input_checkbox_padding">2dp</dimen>
     <dimen name="input_radio_layout_margin_end">3dp</dimen>
     <dimen name="input_radio_layout_margin_start">5dp</dimen>
-    <dimen name="input_radio_layout_margin_start_1">8dp</dimen>
     <dimen name="input_radio_layout_margin_top">3dp</dimen>
     <dimen name="input_radio_padding">2dp</dimen>
     <dimen name="input_text_layout_margin_end">5dp</dimen>

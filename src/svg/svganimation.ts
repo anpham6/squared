@@ -146,7 +146,16 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     set attributeName(value) {
         if (!$util.isString(this.baseValue) && value !== 'transform') {
             if (this.element) {
-                this.baseValue = getAttribute(this.element, value);
+                switch (value) {
+                    case 'opacity':
+                    case 'stroke-opacity':
+                    case 'fill-opacity':
+                        this.baseValue = getAttribute(this.element, value, false) || '1';
+                        break;
+                    default:
+                        this.baseValue = getAttribute(this.element, value);
+                        break;
+                }
             }
             if (!$util.isString(this.baseValue) && this.animationElement) {
                 this.baseValue = $util.optionalAsString(this.animationElement.parentElement, `${value}.baseVal.valueAsString`);

@@ -63,7 +63,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
             lighten = true;
         case 'groove':
         case 'ridge':
-            if (style === 'outset' || style === 'ridge') {
+            if (style === 'outset' || style === 'groove') {
                 halfSize = !halfSize;
             }
             if (halfSize) {
@@ -1246,13 +1246,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             if ((!node.has($const.CSS.WIDTH, $e.CSS_STANDARD.LENGTH, { map: 'initial', not: $const.CSS.PERCENT_100 }) && !(node.blockStatic && centerHorizontally) || !node.pageFlow) && (imageWidth === 0 || node.bounds.width < imageWidth)) {
                 const width = node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0);
                 if (width > 0) {
-                    node.css($const.CSS.WIDTH, $css.formatPX(width), true);
+                    node.css($const.CSS.WIDTH, $css.formatPX(Math.ceil(width)), true);
                 }
             }
             if ((!node.has($const.CSS.HEIGHT, $e.CSS_STANDARD.LENGTH, { map: 'initial', not: $const.CSS.PERCENT_100 }) || !node.pageFlow) && (imageHeight === 0 || node.bounds.height < imageHeight)) {
                 const height = node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0);
                 if (height > 0) {
-                    node.css($const.CSS.HEIGHT, $css.formatPX(height), true);
+                    node.css($const.CSS.HEIGHT, $css.formatPX(Math.ceil(height)), true);
                     if (node.marginBottom < 0) {
                         node.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM);
                     }

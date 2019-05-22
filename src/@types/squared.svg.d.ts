@@ -4,10 +4,10 @@ declare global {
     namespace squared.svg {
         interface SvgView extends SvgElement {
             name: string;
-            opacity: string;
-            visible: boolean;
             transformed?: SvgTransform[];
             translationOffset?: Point;
+            readonly opacity: string;
+            readonly visible: boolean;
             readonly transforms: SvgTransform[];
             readonly animations: SvgAnimation[];
             getTransforms(element?: SVGGraphicsElement): SvgTransform[];
@@ -63,7 +63,7 @@ declare global {
             useParent?: SvgUse | SvgUseSymbol;
             patternParent?: SvgShapePattern;
             setPaint(d?: string[], precision?: number): void;
-            setAttribute(attr: string, computed?: boolean): void;
+            setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
             getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
             resetPaint(): void;
             convertLength(value: string, dimension?: string | number): number;

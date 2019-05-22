@@ -36,11 +36,6 @@ const ANIMATION_DEFAULT = {
     'animation-timing-function': 'ease'
 };
 
-function setAttribute(element: SVGElement, attr: string, value: string) {
-    element.style[attr] = value;
-    element.setAttribute(attr, value);
-}
-
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
@@ -56,28 +51,9 @@ function parseAttribute(element: SVGElement, attr: string) {
     }
 }
 
-function setVisible(element: SVGGraphicsElement, value: boolean) {
-    setAttribute(element, 'display', value ? 'block' : $const.CSS.NONE);
-    setAttribute(element, 'visibility', value ? 'visible' : 'hidden');
-}
-
 function isVisible(element: Element) {
     const value = getAttribute(element, 'visibility');
     return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display') !== $const.CSS.NONE;
-}
-
-function setOpacity(element: SVGGraphicsElement, value: string) {
-    if ($util.isNumber(value)) {
-        let opacity = parseFloat(value.toString());
-        if (opacity <= 0) {
-            opacity = 0;
-        }
-        else if (opacity >= 1) {
-            opacity = 1;
-        }
-        element.style.setProperty('opacity', opacity.toString());
-        element.setAttribute('opacity', opacity.toString());
-    }
 }
 
 function sortAttribute(value: NumberValue[]) {
@@ -540,18 +516,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             return this._animations;
         }
 
-        set visible(value) {
-            setVisible(this.element, value);
-        }
         get visible() {
             return isVisible(this.element);
         }
 
-        set opacity(value) {
-            setOpacity(this.element, value);
-        }
         get opacity() {
-            return getAttribute(this.element, 'opacity') || '1';
+            return getAttribute(this.element, 'opacity', false) || '1';
         }
     };
 };

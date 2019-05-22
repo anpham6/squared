@@ -1,4 +1,4 @@
-/* android.widget 0.9.8
+/* android.widget 0.9.9
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -7,11 +7,11 @@ this.android.widget.coordinator = (function () {
     'use strict';
 
     var $Resource = android.base.Resource;
-    const $enum = squared.base.lib.enumeration;
     const $session = squared.lib.session;
     const $constA = android.lib.constant;
     const $enumA = android.lib.enumeration;
     const $utilA = android.lib.util;
+    const $e = squared.base.lib.enumeration;
     class Coordinator extends squared.base.Extension {
         processNode(node, parent) {
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
@@ -27,7 +27,7 @@ this.android.widget.coordinator = (function () {
                 }
             }
             node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
-            node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
+            node.exclude($e.NODE_RESOURCE.ASSET);
             node.render(parent);
             return {
                 output: {
@@ -42,7 +42,7 @@ this.android.widget.coordinator = (function () {
                 if (node.inlineWidth) {
                     for (const item of node) {
                         if (item.rightAligned) {
-                            node.android('layout_width', 'match_parent', true);
+                            node.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT, true);
                             break;
                         }
                     }
@@ -50,7 +50,7 @@ this.android.widget.coordinator = (function () {
                 if (node.inlineHeight) {
                     for (const item of node) {
                         if (item.bottomAligned) {
-                            node.android('layout_height', 'match_parent', true);
+                            node.setLayoutHeight($constA.STRING_ANDROID.MATCH_PARENT, true);
                             break;
                         }
                     }

@@ -167,6 +167,8 @@ function setSingleLine(node: T) {
     node.android('ellipsize', $const.CSS.END);
 }
 
+const isFlexibleDimension = (node: T, value: string) => !!node.renderParent && value === $const.CSS.PX_0 && ((node.renderParent as T).layoutConstraint || node.renderParent.is(CONTAINER_NODE.GRID));
+
 const validateString = (value: string) => value ? value.trim().replace(REGEXP_VALIDSTRING, '_') : '';
 
 export default (Base: Constructor<squared.base.Node>) => {
@@ -861,9 +863,16 @@ export default (Base: Constructor<squared.base.Node>) => {
                         if (this.rightAligned || this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
                             floating = $const.CSS.RIGHT;
                         }
-                        else if (alignFloat && this.groupParent && !this.renderChildren.some(item => item.rightAligned)) {
+                        else if (this.groupParent && alignFloat && !this.renderChildren.some(item => item.rightAligned)) {
                             floating = $const.CSS.LEFT;
                         }
+                    }
+                    else if (node.groupParent && node.layoutVertical && this.rightAligned) {
+                        node.renderEach((item: T) => {
+                            if (item.rightAligned) {
+                                item.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, $const.CSS.RIGHT);
+                            }
+                        });
                     }
                     if (renderParent.layoutFrame && this.innerWrapped === undefined) {
                         if (!setAutoMargin(this)) {
@@ -1029,10 +1038,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         public applyOptimizations() {
             const renderParent = this.renderParent;
             if (renderParent) {
-                let borderWidth = this.styleElement;
-                if (this.tableElement) {
-                    borderWidth = this.css('boxSizing') === 'content-box' || $client.isUserAgent($client.USER_AGENT.FIREFOX);
-                }
+                const borderWidth = !this.tableElement ? this.styleElement : this.css('boxSizing') === 'content-box' || $client.isUserAgent($client.USER_AGENT.FIREFOX);
                 if (borderWidth && this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE) && (this.actualChildren.length === 0 || !this.actualChildren.every(node => !node.pageFlow && node.absoluteParent === this))) {
                     this.modifyBox($e.BOX_STANDARD.PADDING_LEFT, this.borderLeftWidth);
                     this.modifyBox($e.BOX_STANDARD.PADDING_RIGHT, this.borderRightWidth);
@@ -1041,6 +1047,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                 }
                 this.alignLayout();
                 this.setLineHeight(renderParent);
+                if (this.inlineWidth && this.renderChildren.some(node => node.blockWidth && node.some((item: T) => item.flexibleWidth))) {
+                    this.setLayoutWidth(this.documentRoot || renderParent.inlineWidth ? $css.formatPX(this.actualWidth) : STRING_ANDROID.MATCH_PARENT);
+                }
             }
         }
 
@@ -1311,7 +1320,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
                 return this;
             }
-            return <T> this.outerWrapper || this;
+            return this.outerWrapper || this;
         }
 
         set anchored(value) {
@@ -1392,11 +1401,11 @@ export default (Base: Constructor<squared.base.Node>) => {
             return this.layoutHeight === STRING_ANDROID.MATCH_PARENT;
         }
 
-        get flexibleWidth() {
-            return !!this.renderParent && this.renderParent.layoutConstraint && this.layoutWidth === $const.CSS.PX_0;
+        get flexibleWidth(): boolean {
+            return isFlexibleDimension(this, this.layoutWidth);
         }
-        get flexibleHeight() {
-            return !!this.renderParent && this.renderParent.layoutConstraint && this.layoutHeight === $const.CSS.PX_0;
+        get flexibleHeight(): boolean {
+            return isFlexibleDimension(this, this.layoutHeight);
         }
 
         get fontSize() {

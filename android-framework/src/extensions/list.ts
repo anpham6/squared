@@ -229,6 +229,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (container !== node && node.marginTop !== 0) {
                 container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.marginTop);
                 node.modifyBox($e.BOX_STANDARD.MARGIN_TOP);
+                node.outerWrapper = container;
+                container.innerWrapped = node;
             }
             const layout = new $Layout(
                 parent,
