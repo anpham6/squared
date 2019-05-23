@@ -80,7 +80,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 }
                 else {
                     for (const item of siblings) {
-                        if (item.has($const.CSS.WIDTH, $e.CSS_STANDARD.PERCENT)) {
+                        if (item.percentWidth) {
                             item.css($const.CSS.WIDTH, $css.formatPX(item.bounds.width), true);
                         }
                     }

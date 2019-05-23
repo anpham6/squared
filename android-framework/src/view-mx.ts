@@ -689,7 +689,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             if (layoutWidth === '' && (
                                     renderParent.blockWidth && this.layoutVertical && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.actualChildren.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) ||
                                     !this.pageFlow && this.absoluteParent === documentParent && this.has($const.CSS.LEFT) && this.has($const.CSS.RIGHT) ||
-                                    documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') !== 'column'
+                                    documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row'
                                ))
                             {
                                 layoutWidth = STRING_ANDROID.MATCH_PARENT;
@@ -776,10 +776,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     this.setLayoutHeight(layoutHeight || STRING_ANDROID.WRAP_CONTENT);
                 }
-                if (this.has('minWidth')) {
+                if (this.has('minWidth') && !(documentParent.flexElement && this.flexbox.grow > 0 && documentParent.css('flexDirection') === 'column')) {
                     this.android('minWidth', this.convertPX(this.css('minWidth')), false);
                 }
-                if (this.has('minHeight')) {
+                if (this.has('minHeight') && !(documentParent.flexElement && this.flexbox.grow > 0 && documentParent.css('flexDirection') === 'row')) {
                     this.android('minHeight', this.convertPX(this.css('minHeight'), $const.CSS.HEIGHT), false);
                 }
                 if (this.support.maxWidth) {
@@ -940,7 +940,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 }
                 if (!this.layoutConstraint && !this.layoutFrame && !this.is(CONTAINER_NODE.GRID) && !this.layoutElement) {
                     let fromParent = false;
-                    if (textAlign === '') {
+                    if (textAlign === '' && !this.inputElement) {
                         textAlign = textAlignParent;
                         fromParent = true;
                     }

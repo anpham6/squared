@@ -835,6 +835,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             if (element && renderParent) {
                 let name = '';
                 let value = '';
+                let hint = '';
                 let trimming = false;
                 let inlined = false;
                 switch (element.tagName) {
@@ -854,7 +855,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 break;
                             case 'time':
                                 if (value === '') {
-                                    value = '--:-- --';
+                                    hint = '--:-- --';
                                 }
                                 break;
                             case 'date':
@@ -862,25 +863,25 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 if (value === '') {
                                     switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
                                         case 'en-US':
-                                            value = 'mm/dd/yyyy';
+                                            hint = 'mm/dd/yyyy';
                                             break;
                                         default:
-                                            value = 'dd/mm/yyyy';
+                                            hint = 'dd/mm/yyyy';
                                             break;
                                     }
                                     if (element.type === 'datetime-local') {
-                                        value += ' --:-- --';
+                                        hint += ' --:-- --';
                                     }
                                 }
                                 break;
                             case 'week':
                                 if (value === '') {
-                                    value = 'Week: --, ----';
+                                    hint = 'Week: --, ----';
                                 }
                                 break;
                             case 'month':
                                 if (value === '') {
-                                    value = '--------- ----';
+                                    hint = '--------- ----';
                                 }
                                 break;
                             case 'url':
@@ -889,7 +890,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             case 'number':
                             case 'tel':
                                 if (value === '') {
-                                    value = element.placeholder;
+                                    hint = element.placeholder;
                                 }
                                 break;
                             case 'file':
@@ -972,6 +973,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     if (value !== '') {
                         node.data(Resource.KEY_NAME, 'valueString', { name, value });
                     }
+                }
+                if (hint !== '') {
+                    node.data(Resource.KEY_NAME, 'hintString', hint);
                 }
             }
         }

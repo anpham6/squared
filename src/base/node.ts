@@ -289,11 +289,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         this._cached = {};
                         return;
                     case 'width':
+                        this._cached.percentWidth = undefined;
                         this._cached.actualWidth = undefined;
                     case 'minWidth':
                         this._cached.width = undefined;
                         break;
                     case 'height':
+                        this._cached.percentHeight = undefined;
                         this._cached.actualHeight = undefined;
                     case 'minHeight':
                         this._cached.height = undefined;
@@ -445,7 +447,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             return NODE_TRAVERSE.LINEBREAK;
         }
         else if (this.pageFlow || this.positionAuto) {
-            const isBlockWrap = (node: T) => node.blockVertical || node.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT);
+            const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth;
             const checkBlockDimension = (previous: T) => $util.aboveRange(this.linear.top, previous.linear.bottom) && (isBlockWrap(this) || isBlockWrap(previous) || this.float !== previous.float);
             if ($util.isArray(siblings)) {
                 if (cleared && cleared.has(this)) {
@@ -2183,6 +2185,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.preserveWhiteSpace = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
         }
         return this._cached.preserveWhiteSpace;
+    }
+
+    get percentWidth() {
+        if (this._cached.percentWidth === undefined) {
+            this._cached.percentWidth = this.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT);
+        }
+        return this._cached.percentWidth;
+    }
+
+    get percentHeight() {
+        if (this._cached.percentHeight === undefined) {
+            this._cached.percentHeight = this.has($const.CSS.HEIGHT, CSS_STANDARD.PERCENT);
+        }
+        return this._cached.percentHeight;
     }
 
     get layoutHorizontal() {

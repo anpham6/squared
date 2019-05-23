@@ -9,7 +9,12 @@ const $e = squared.base.lib.enumeration;
 export default class Percent<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {
         if (node.pageFlow && !node.documentParent.layoutElement) {
-            if (node.has($const.CSS.WIDTH, $e.CSS_STANDARD.PERCENT, { not: $const.CSS.PERCENT_100 }) && !parent.layoutConstraint && (node.documentRoot || (parent.layoutVertical || node.singleChild) && (parent.blockStatic || parent.has($const.CSS.WIDTH)) || node.has($const.CSS.HEIGHT))) {
+            if (node.has($const.CSS.WIDTH, $e.CSS_STANDARD.PERCENT, { not: $const.CSS.PERCENT_100 }) && !parent.layoutConstraint && (
+                    node.documentRoot ||
+                    node.has($const.CSS.HEIGHT) ||
+                    (parent.layoutVertical || node.singleChild) && (parent.blockStatic || parent.has($const.CSS.WIDTH))
+               ))
+            {
                 return true;
             }
             else if (node.has($const.CSS.HEIGHT, $e.CSS_STANDARD.PERCENT, { not: $const.CSS.PERCENT_100 }) && (node.documentRoot || parent.hasHeight && node.singleChild)) {
@@ -21,7 +26,7 @@ export default class Percent<T extends android.base.View> extends squared.base.E
 
     public processNode(node: T, parent: T) {
         const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
-        if (node.has($const.CSS.WIDTH, $e.CSS_STANDARD.PERCENT)) {
+        if (node.percentWidth) {
             container.css('display', 'block');
             container.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
             node.setLayoutWidth($const.CSS.PX_0);
@@ -29,7 +34,7 @@ export default class Percent<T extends android.base.View> extends squared.base.E
         else {
             container.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
         }
-        if (node.hasHeight && node.has($const.CSS.HEIGHT, $e.CSS_STANDARD.PERCENT)) {
+        if (node.percentHeight) {
             container.setLayoutHeight(STRING_ANDROID.MATCH_PARENT);
             node.setLayoutHeight($const.CSS.PX_0);
         }

@@ -55,11 +55,17 @@ export default class ResourceStrings<T extends android.base.View> extends square
                         break;
                     }
                     default: {
-                        const stored: StringValue = node.data(Resource.KEY_NAME, 'valueString');
-                        if (stored) {
+                        const valueString: StringValue = node.data(Resource.KEY_NAME, 'valueString');
+                        const setTextValue = (attr: string, name: string, value: string) => {
+                            name = Resource.addString(value, name, this.options.numberResourceValue);
+                            if (name !== '') {
+                                node.android(attr, this.options.numberResourceValue || !$util.isNumber(name) ? `@string/${name}` : name, false);
+                            }
+                        };
+                        if (valueString) {
                             const renderParent = node.renderParent as T;
-                            let name = stored.key || stored.value;
-                            let value = stored.value;
+                            const name = valueString.key || valueString.value;
+                            let value = valueString.value;
                             if (renderParent && renderParent.layoutRelative) {
                                 if (node.alignParent($const.CSS.LEFT) && !$css.isParentStyle(node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
                                     const textContent = node.textContent;
@@ -125,9 +131,12 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                 const width = $dom.measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
                                 value = '&#160;'.repeat(Math.max(Math.floor(textIndent / width), 1)) + value;
                             }
-                            name = Resource.addString(value, name, this.options.numberResourceValue);
-                            if (name !== '') {
-                                node.android('text', this.options.numberResourceValue || !$util.isNumber(name) ? `@string/${name}` : name, false);
+                            setTextValue('text', name, value);
+                        }
+                        if (node.inputElement) {
+                            const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
+                            if (hintString) {
+                                setTextValue('hint', `${node.tagName.toLowerCase()}_hint`, hintString);
                             }
                         }
                     }

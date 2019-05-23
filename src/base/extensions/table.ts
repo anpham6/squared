@@ -378,7 +378,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                                 }
                             }
                             else {
-                                if (!td.has($const.CSS.WIDTH) || td.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT)) {
+                                if (!td.has($const.CSS.WIDTH) || td.percentWidth) {
                                     setBoundsWidth(td);
                                 }
                                 td.data(EXT_NAME.TABLE, 'expand', false);

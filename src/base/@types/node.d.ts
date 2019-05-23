@@ -73,6 +73,8 @@ export interface CachedValue<T> {
     backgroundColor?: string;
     backgroundImage?: string;
     visibleStyle?: VisibleStyle;
+    percentWidth?: boolean;
+    percentHeight?: boolean;
     support?: Support;
     extensions?: string[];
 }

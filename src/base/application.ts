@@ -8,7 +8,7 @@ import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
 
-import { APP_SECTION, BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
+import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
@@ -301,12 +301,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         for (const [uri, data] of ASSETS.rawData.entries()) {
             if (data.mimeType && data.mimeType.startsWith('image/') && !data.mimeType.endsWith('svg+xml')) {
                 const element = document.createElement('img');
-                if (data.base64) {
-                    element.src = `data:${data.mimeType};base64,${data.base64}`;
-                }
-                else {
-                    element.src = `data:${data.mimeType};${data.content}`;
-                }
+                element.src = `data:${data.mimeType};` + (data.base64 ? `base64,${data.base64}` : data.content);
                 if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
                     data.width = element.naturalWidth;
                     data.height = element.naturalHeight;
@@ -1250,13 +1245,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                     NODE_ALIGNMENT.SEGMENTED,
                     seg
                 );
-                if (seg.some(child => child.blockStatic || child.multiline && basegroup.blockStatic || child.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT))) {
+                if (seg.some(child => child.blockStatic || child.multiline && basegroup.blockStatic || child.percentWidth)) {
                     group.add(NODE_ALIGNMENT.BLOCK);
                 }
                 if (seg.length === 1) {
                     target.innerWrapped = seg[0];
                     seg[0].outerWrapper = target;
-                    if (seg[0].has($const.CSS.WIDTH, CSS_STANDARD.PERCENT)) {
+                    if (seg[0].percentWidth) {
                         const percent = this.controllerHandler.containerTypePercent;
                         group.setType(percent.containerType, percent.alignmentType);
                     }

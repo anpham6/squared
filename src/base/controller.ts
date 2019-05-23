@@ -72,7 +72,7 @@ export default abstract class Controller<T extends Node> implements squared.base
         }
         else {
             styleMap = $session.getElementCache(element, 'styleMap', this.application.processing.sessionId) || {};
-            function setBorderStyle() {
+            const setBorderStyle = () => {
                 if (!styleMap.border) {
                     let valid = true;
                     for (let i = 0; i < 4; i++) {
@@ -82,15 +82,15 @@ export default abstract class Controller<T extends Node> implements squared.base
                         }
                     }
                     if (valid) {
-                        styleMap.border = 'outset 1px rgb(221, 221, 221)';
+                        styleMap.border = `outset 1px ${this.localSettings.style.inputBorderColor}`;
                         for (let i = 0; i < 4; i++) {
                             styleMap[CSS_BORDER[i][0]] = 'outset';
                             styleMap[CSS_BORDER[i][1]] = '1px';
-                            styleMap[CSS_BORDER[i][2]] = 'rgb(221, 221, 221)';
+                            styleMap[CSS_BORDER[i][2]] = this.localSettings.style.inputBorderColor;
                         }
                     }
                 }
-            }
+            };
             if ($client.isUserAgent($client.USER_AGENT.FIREFOX)) {
                 switch (element.tagName) {
                     case 'INPUT':
@@ -120,7 +120,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                         case 'button':
                             const color = $color.parseColor($css.getStyle(element).getPropertyValue('background-color'));
                             if (color === undefined) {
-                                styleMap.backgroundColor = 'rgb(221, 221, 221)';
+                                styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
                             }
                             if (styleMap.textAlign === undefined) {
                                 styleMap.textAlign = $const.CSS.CENTER;
@@ -139,7 +139,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                     break;
                 case 'TEXTAREA':
                 case 'SELECT':
-                    if (styleMap.verticalAlign === undefined && (element.tagName !== 'SELECT' || (<HTMLSelectElement> element).size > 1)) {
+                    if (styleMap.verticalAlign === undefined && (element.tagName === 'TEXTAREA' || (<HTMLSelectElement> element).size > 1)) {
                         styleMap.verticalAlign = 'text-bottom';
                     }
                     setBorderStyle();
@@ -270,7 +270,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     }
 
     public includeElement(element: Element) {
-        return !this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && !this.localSettings.unsupported.tagName.has(`${element.tagName}:${(<HTMLInputElement> element).type}`) || element['contentEditable'] === 'true';
+        return !this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && !this.localSettings.unsupported.tagName.has(`${element.tagName}:${(<HTMLInputElement> element).type}`) || (<HTMLElement> element).contentEditable === 'true';
     }
 
     public visibleElement(element: Element) {
@@ -510,9 +510,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                         else {
                             template += ' />\n';
                         }
-                        output += this.getBeforeOutsideTemplate(node.id, depth) +
-                                  template +
-                                  this.getAfterOutsideTemplate(node.id, depth);
+                        output += this.getBeforeOutsideTemplate(node.id, depth) + template + this.getAfterOutsideTemplate(node.id, depth);
                         break;
                     }
                     case NODE_TEMPLATE.INCLUDE: {

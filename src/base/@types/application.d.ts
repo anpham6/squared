@@ -31,6 +31,10 @@ export interface ControllerSettings {
     svg: {
         enabled: boolean;
     };
+    style: {
+        inputBorderColor: string;
+        inputBackgroundColor: string;
+    };
     supported: {
         fontFormat: string[];
         imageFormat: string[];

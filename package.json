@@ -1,7 +1,7 @@
 {
   "name": "squared",
   "version": "0.9.9",
-  "description": "Converts and optimizes pure HTML and SVG into the various standard Android layouts in XML. Easiest to use and also most accurate with support for CSS/SMIL animations. Compatible with Chrome and Safari.",
+  "description": "Converts HTML and SVG into any mobile or desktop UI framework with the flexibility and accuracy of Chrome. CSS Grid, Flexbox, and CSS/SMIL animations are also supported.",
   "main": "dist/squared.js",
   "scripts": {
     "express": "node app.js",

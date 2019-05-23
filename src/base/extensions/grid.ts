@@ -5,7 +5,7 @@ import Node from '../node';
 import NodeList from '../nodelist';
 
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
-import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
+import { BOX_STANDARD } from '../lib/enumeration';
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
@@ -303,7 +303,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                 }
                 for (const item of group) {
                     item.parent = node;
-                    if (!hasLength && item.has($const.CSS.WIDTH, CSS_STANDARD.PERCENT)) {
+                    if (!hasLength && item.percentWidth) {
                         item.css($const.CSS.WIDTH, $css.formatPX(item.bounds.width));
                     }
                 }

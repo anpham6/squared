@@ -126,6 +126,8 @@ declare global {
             readonly backgroundImage: string;
             readonly visibleStyle: VisibleStyle;
             readonly fontSize: number;
+            readonly percentWidth: boolean;
+            readonly percentHeight: boolean;
             readonly src: string;
             readonly overflowX: boolean;
             readonly overflowY: boolean;

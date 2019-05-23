@@ -334,9 +334,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     item.css(`min${dimensionA}`, $css.formatPX(minSize), true);
                 }
                 if (sizeWeight > 0) {
-                    item.android(`layout_${direction}Weight`, $math.truncate(sizeWeight, node.localSettings.floatPrecision));
-                    if (!item.has(dimension, $e.CSS_STANDARD.LENGTH | $e.CSS_STANDARD.PERCENT)) {
+                    if (!item.has(dimension)) {
                         item.android(`layout_${dimension}`, $const.CSS.PX_0);
+                        item.android(`layout_${direction}Weight`, $math.truncate(sizeWeight, node.localSettings.floatPrecision));
                         item.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
                     }
                 }
