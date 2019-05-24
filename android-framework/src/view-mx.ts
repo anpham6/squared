@@ -607,7 +607,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                             value = this.actualWidth;
                         }
                         else if ($css.isPercent(width)) {
-                            if (renderParent.layoutConstraint) {
+                            if (this.inputElement) {
+                                value = this.bounds.width;
+                            }
+                            else if (renderParent.layoutConstraint && !renderParent.has($const.CSS.WIDTH, $e.CSS_STANDARD.LENGTH)) {
                                 if (width === $const.CSS.PERCENT_100) {
                                     layoutWidth = STRING_ANDROID.MATCH_PARENT;
                                 }
@@ -630,9 +633,6 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     value = this.bounds.width;
                                     adjustViewBounds = true;
                                 }
-                            }
-                            else if (this.inputElement) {
-                                value = this.bounds.width;
                             }
                             else if (width === $const.CSS.PERCENT_100) {
                                 if (!this.support.maxWidth) {
@@ -706,7 +706,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                             value = this.actualHeight;
                         }
                         else if ($css.isPercent(height)) {
-                            if (this.imageElement) {
+                            if (this.inputElement) {
+                                value = this.bounds.height;
+                            }
+                            else if (this.imageElement) {
                                 if (height === $const.CSS.PERCENT_100 && !renderParent.inlineHeight) {
                                     layoutHeight = STRING_ANDROID.MATCH_PARENT;
                                 }
@@ -714,9 +717,6 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     value = this.bounds.height;
                                     adjustViewBounds = true;
                                 }
-                            }
-                            else if (this.inputElement) {
-                                value = this.bounds.height;
                             }
                             else if (height === $const.CSS.PERCENT_100) {
                                 if (!this.support.maxHeight) {
@@ -836,7 +836,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (renderParent) {
                 const alignFloat = this.hasAlign($e.NODE_ALIGNMENT.FLOAT);
                 const node = this.outerWrapper || this;
-                const outerRenderParent = (node.renderParent as T) || renderParent;
+                const outerRenderParent = (node.renderParent || renderParent) as T;
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
                 if (this.groupParent && !alignFloat && textAlign === '') {
@@ -847,7 +847,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 }
                 if (this.pageFlow) {
                     let floating = '';
-                    if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.container.positionRelative || outerRenderParent.is(CONTAINER_NODE.GRID))) {
+                    if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.container.positionRelative || outerRenderParent.is(CONTAINER_NODE.GRID) || this.display === 'table-cell')) {
                         const gravity = this.display === 'table-cell' ? STRING_ANDROID.GRAVITY : STRING_ANDROID.LAYOUT_GRAVITY;
                         switch (this.cssInitial('verticalAlign', true)) {
                             case $const.CSS.TOP:
@@ -927,14 +927,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                 }
                 if (textAlignParent !== '') {
-                    if (this.blockStatic) {
+                    if (this.blockStatic && !this.centerAligned && !this.rightAligned) {
                         node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, $const.CSS.LEFT, false);
-                    }
-                    else if (!this.blockWidth && this.naturalElement && (renderParent.layoutFrame || renderParent.layoutVertical && renderParent.layoutLinear)) {
-                        const target = renderParent.inlineWidth ? renderParent : node;
-                        if (!target.documentRoot) {
-                            target.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, textAlignParent, false);
-                        }
                     }
                 }
                 if (!this.layoutConstraint && !this.layoutFrame && !this.is(CONTAINER_NODE.GRID) && !this.layoutElement) {
@@ -1055,7 +1049,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     this.modifyBox($e.BOX_STANDARD.PADDING_TOP, this.borderTopWidth);
                     this.modifyBox($e.BOX_STANDARD.PADDING_BOTTOM, this.borderBottomWidth);
                 }
-                this.alignLayout();
+                this.alignLayout(renderParent);
                 this.setLineHeight(renderParent);
                 if (this.inlineWidth && this.renderChildren.some(node => node.blockWidth && node.some((item: T) => item.flexibleWidth))) {
                     this.setLayoutWidth(this.documentRoot || renderParent.inlineWidth ? $css.formatPX(this.actualWidth) : STRING_ANDROID.MATCH_PARENT);
@@ -1235,11 +1229,11 @@ export default (Base: Constructor<squared.base.Node>) => {
             this.android('layout_height', value, overwrite);
         }
 
-        private alignLayout() {
+        private alignLayout(renderParent: T) {
             if (this.layoutLinear) {
                 const renderChildren = this.renderChildren;
                 if (this.layoutVertical) {
-                    if (!this.hasAlign($e.NODE_ALIGNMENT.TOP)) {
+                    if (!renderParent.layoutVertical && !renderParent.layoutFrame && !this.documentRoot && !this.hasAlign($e.NODE_ALIGNMENT.TOP)) {
                         let firstChild = renderChildren[0];
                         if (firstChild.baseline) {
                             if (firstChild.renderChildren.length) {

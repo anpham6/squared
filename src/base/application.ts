@@ -18,7 +18,6 @@ const $session = squared.lib.session;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const STRING_DATAURI = '(?:data:([^;]+);([^,]+),)?(.*?)';
 const CACHE_PATTERN: ObjectMap<RegExp> = {};
 let NodeConstructor!: Constructor<Node>;
 
@@ -307,6 +306,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                     data.height = element.naturalHeight;
                     ASSETS.images.set(uri, { width: data.width, height: data.height, uri: data.filename });
                 }
+                else {
+                    document.body.appendChild(element);
+                    preloadImages.push(element);
+                }
             }
         }
         for (const element of this.rootElements) {
@@ -318,18 +321,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     else if (image.complete) {
-                        if (image.src.startsWith('data:image/')) {
-                            if (CACHE_PATTERN.DATAURI === undefined) {
-                                CACHE_PATTERN.DATAURI = new RegExp(`^${STRING_DATAURI}$`);
-                            }
-                            const match = CACHE_PATTERN.DATAURI.exec(image.src);
-                            if (match && match[1] && match[2]) {
-                                this.resourceHandler.addRawData(image.src, match[1], match[2], match[3], image.naturalWidth, image.naturalHeight);
-                            }
-                        }
-                        else {
-                            this.resourceHandler.addImage(image);
-                        }
+                        this.resourceHandler.addImage(image);
                     }
                     else if (this.userSettings.preloadImages) {
                         images.push(image);
@@ -684,24 +676,60 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
             }
-            for (let i = 0; i < children.length; i++) {
-                const child = children[i];
-                if (child.lineBreak) {
-                    if (i > 0) {
-                        children[i - 1].lineBreakTrailing = true;
+            const length = children.length;
+            if (length) {
+                let siblingsLeading: T[] = [];
+                let siblingsTrailing: T[] = [];
+                if (length > 1) {
+                    let trailing = children[0];
+                    for (let i = 0; i < length; i++) {
+                        const child = children[i];
+                        if (child.excluded) {
+                            this.processing.excluded.append(child);
+                        }
+                        else if (includeText || !child.plainText) {
+                            child.parent = node;
+                            this.processing.cache.append(child);
+                        }
+                        if (child.pageFlow) {
+                            if (i > 0) {
+                                siblingsTrailing.push(child);
+                                if (child.lineBreak) {
+                                    children[i - 1].lineBreakTrailing = true;
+                                }
+                            }
+                            if (!child.excluded) {
+                                child.siblingsLeading = siblingsLeading;
+                                trailing.siblingsTrailing = siblingsTrailing;
+                                siblingsLeading = [];
+                                siblingsTrailing = [];
+                                trailing = child;
+                            }
+                            if (i < length - 1) {
+                                siblingsLeading.push(child);
+                                if (child.lineBreak) {
+                                    children[i + 1].lineBreakLeading = true;
+                                }
+                            }
+                        }
+                        child.siblingIndex = i;
                     }
-                    if (i < children.length - 1) {
-                        children[i + 1].lineBreakLeading = true;
+                    trailing.siblingsTrailing = siblingsTrailing;
+                }
+                else {
+                    const child = children[0];
+                    if (child.excluded) {
+                        this.processing.excluded.append(child);
+                    }
+                    else {
+                        child.siblingsLeading = siblingsLeading;
+                        child.siblingsTrailing = siblingsTrailing;
+                        if (includeText || !child.plainText) {
+                            child.parent = node;
+                            this.processing.cache.append(child);
+                        }
                     }
                 }
-                if (child.excluded) {
-                    this.processing.excluded.append(child);
-                }
-                else if (includeText || !child.plainText) {
-                    child.parent = node;
-                    this.processing.cache.append(child);
-                }
-                child.siblingIndex = i;
             }
             node.setInlineText(!includeText);
             node.actualChildren = children;
@@ -819,9 +847,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         }
                                     }
                                     if (m === 0) {
-                                        const next = item.nextSiblings().shift();
+                                        const next = item.siblingsTrailing[0];
                                         if (next) {
-                                            if (!item.horizontalAligned || next.alignedVertically([item], [item])) {
+                                            if (!item.horizontalAligned || next.alignedVertically([item])) {
                                                 vertical.push(item);
                                             }
                                             else {
@@ -830,14 +858,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             continue;
                                         }
                                     }
-                                    const previousSiblings = item.previousSiblings() as T[];
-                                    const previous = previousSiblings[previousSiblings.length - 1];
+                                    const previous = item.siblingsLeading[0];
                                     if (previous) {
                                         if (hasFloat) {
-                                            const status = item.alignedVertically(previousSiblings, horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0);
+                                            const status = item.alignedVertically(horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0);
                                             if (status > 0) {
                                                 if (horizontal.length) {
-                                                    if (status !== NODE_TRAVERSE.FLOAT_INTERSECT && status !== NODE_TRAVERSE.FLOAT_BLOCK && floatActive.size && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
+                                                    if (status !== NODE_TRAVERSE.FLOAT_INTERSECT && status !== NODE_TRAVERSE.FLOAT_BLOCK && floatActive.size && cleared.get(item) !== 'both' && !item.siblingsLeading.some((node: T) => node.lineBreak && !cleared.has(node))) {
                                                          if (!item.floating || previous.floating && !$util.aboveRange(item.linear.top, previous.linear.bottom)) {
                                                             if (cleared.has(item)) {
                                                                 if (!item.floating) {
@@ -880,7 +907,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             }
                                         }
                                         else {
-                                            if (item.alignedVertically(previousSiblings)) {
+                                            if (item.alignedVertically()) {
                                                 if (!checkVertical(item)) {
                                                     break traverse;
                                                 }
@@ -1201,8 +1228,8 @@ export default class Application<T extends Node> implements squared.base.Applica
         if (rightSub) {
             layerIndex.push(rightSub);
         }
-        layout.itemCount = layerIndex.length;
         layout.setType(outerVertical.containerType, outerVertical.alignmentType);
+        layout.itemCount = layerIndex.length;
         if (layout.hasAlign(NODE_ALIGNMENT.RIGHT)) {
             layout.add(NODE_ALIGNMENT.BLOCK);
         }
@@ -1831,7 +1858,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         [styleMap.backgroundImage, styleMap.listStyleImage, styleMap.content].forEach(image => {
                             if (image) {
-                                const pattern = new RegExp(`url\\("(${STRING_DATAURI})"\\),?\\s*`, 'g');
+                                const pattern = new RegExp(`url\\("(${$regex.STRING.DATAURI})"\\),?\\s*`, 'g');
                                 let match: RegExpExecArray | null;
                                 while ((match = pattern.exec(image)) !== null) {
                                     if (match[2] && match[3]) {

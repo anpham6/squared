@@ -116,7 +116,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             }
                             let textIndent = 0;
                             if (node.blockDimension || node.display === 'table-cell') {
-                                textIndent = node.toFloat('textIndent');
+                                textIndent = node.parseUnit(node.css('textIndent'));
                                 if (textIndent + node.bounds.width < 0) {
                                     value = '';
                                 }
@@ -124,7 +124,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             if (textIndent === 0) {
                                 const actualParent = node.actualParent;
                                 if (actualParent && (actualParent.blockDimension || actualParent.display === 'table-cell') && node === actualParent.firstChild) {
-                                    textIndent = actualParent.toFloat('textIndent');
+                                    textIndent = actualParent.parseUnit(actualParent.css('textIndent'));
                                 }
                             }
                             if (textIndent > 0) {

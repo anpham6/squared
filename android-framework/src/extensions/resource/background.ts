@@ -705,7 +705,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (!valid) {
                                 const match = $regex.CSS.URL.exec(value);
                                 if (match) {
-                                    if (match[1].startsWith('data:image/')) {
+                                    if (match[1].startsWith('data:image')) {
                                         const rawData = this.application.resourceHandler.getRawData(match[1]);
                                         if (rawData && rawData.base64) {
                                             backgroundImage[j] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));

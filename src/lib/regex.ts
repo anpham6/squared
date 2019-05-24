@@ -6,6 +6,7 @@ export const STRING = {
     PERCENT: '-?\\d+(?:\\.\\d+)?%',
     LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
+    DATAURI: '(?:data:([^;]+);([^,]+),)?(.*?)',
     CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_CALC: 'calc(\\(.+\\))',

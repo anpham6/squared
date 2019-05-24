@@ -40,12 +40,12 @@ export default abstract class NodeGroup extends Node {
         }
     }
 
-    public previousSiblings(options: SiblingOptions = {}) {
+    public previousSiblings(options?: SiblingOptions) {
         const node = this.item(0);
         return node ? node.previousSiblings(options) : [];
     }
 
-    public nextSiblings(options: SiblingOptions = {}) {
+    public nextSiblings(options?: SiblingOptions) {
         const node = this.item();
         return node ? node.nextSiblings(options) : [];
     }

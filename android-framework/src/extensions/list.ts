@@ -8,6 +8,7 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
 import $Layout = squared.base.Layout;
+import $NodeList = squared.base.NodeList;
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
@@ -92,6 +93,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     ordinal.android('minWidth', $css.formatPX(minWidth));
                 }
                 ordinal.modifyBox($e.BOX_STANDARD.MARGIN_LEFT);
+                ordinal.positioned = true;
                 this.application.addLayoutTemplate(
                     parent,
                     ordinal,
@@ -222,33 +224,35 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (columnCount > 0) {
                 container.setLayoutWidth($const.CSS.PX_0);
                 container.android('layout_columnWeight', '1');
-                if (node !== container) {
+                if (container !== node) {
                     if (node.baseline) {
                         container.android('baselineAlignedChildIndex', '0');
                     }
                 }
-                else {
+                else if (node.filter(item => item.visible).length > 1 && $NodeList.linearData(node.children).linearY) {
                     node.alignmentType |= $e.NODE_ALIGNMENT.TOP;
                 }
             }
-            if (container !== node && node.marginTop !== 0) {
-                container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.marginTop);
-                node.modifyBox($e.BOX_STANDARD.MARGIN_TOP);
-                node.outerWrapper = container;
-                container.innerWrapped = node;
+            if (container !== node) {
+                if (node.marginTop !== 0) {
+                    container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.marginTop);
+                    node.modifyBox($e.BOX_STANDARD.MARGIN_TOP);
+                    node.outerWrapper = container;
+                    container.innerWrapped = node;
+                }
+                const layout = new $Layout(
+                    parent,
+                    container,
+                    CONTAINER_NODE.LINEAR,
+                    $e.NODE_ALIGNMENT.VERTICAL | $e.NODE_ALIGNMENT.UNKNOWN,
+                    container.children as T[]
+                );
+                return {
+                    parent: container,
+                    renderAs: container,
+                    outputAs: this.application.renderNode(layout)
+                };
             }
-            const layout = new $Layout(
-                parent,
-                container,
-                CONTAINER_NODE.LINEAR,
-                $e.NODE_ALIGNMENT.VERTICAL | $e.NODE_ALIGNMENT.UNKNOWN,
-                container.children as T[]
-            );
-            return {
-                parent: container,
-                renderAs: container,
-                outputAs: this.application.renderNode(layout)
-            };
         }
         return undefined;
     }

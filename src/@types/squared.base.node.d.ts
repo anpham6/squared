@@ -42,6 +42,8 @@ declare global {
             renderParent?: Node;
             renderExtension?: Extension<Node>[];
             renderTemplates?: (NodeTemplate<Node> | null)[];
+            siblingsLeading: Node[];
+            siblingsTrailing: Node[];
             outerWrapper?: Node;
             innerWrapped?: Node;
             innerBefore?: Node;
@@ -175,7 +177,7 @@ declare global {
             ascend(generated?: boolean, condition?: (item: Node) => boolean, parent?: Node): Node[];
             ascendOuter(condition?: (item: Node) => boolean, parent?: Node): Node[];
             inherit(node: Node, ...modules: string[]): void;
-            alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
+            alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
             intersectX(rect: BoxRectDimension, dimension?: string): boolean;
             intersectY(rect: BoxRectDimension, dimension?: string): boolean;
             withinX(rect: BoxRectDimension, dimension?: string): boolean;

@@ -336,7 +336,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                         if (absoluteParent) {
                             parent = absoluteParent;
                             if (node.positionAuto) {
-                                if (!node.previousSiblings().some(item => item.multiline || item.excluded && !item.blockStatic)) {
+                                if (!node.siblingsLeading.some(item => item.multiline || item.excluded && !item.blockStatic)) {
                                     node.cssApply({ display: 'inline-block', verticalAlign: $const.CSS.TOP }, true);
                                 }
                                 else {

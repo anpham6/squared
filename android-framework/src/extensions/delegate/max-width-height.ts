@@ -17,17 +17,19 @@ export interface MaxWidthHeightData {
 
 export default class MaxWidthHeight<T extends View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {
-        let width = false;
-        let height = false;
-        if (!node.support.maxWidth && !isNaN(node.width) && node.has('maxWidth') && !parent.hasAlign($e.NODE_ALIGNMENT.COLUMN)) {
-            width = true;
-        }
-        if (!node.support.maxHeight && !isNaN(node.height) && node.has('maxHeight') && parent.hasHeight) {
-            height = true;
-        }
-        if (width || height) {
-            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, $c.STRING_BASE.EXT_DATA, <MaxWidthHeightData> { width, height });
-            return true;
+        if (!node.inputElement) {
+            let width = false;
+            let height = false;
+            if (!node.support.maxWidth && !isNaN(node.width) && node.has('maxWidth') && !parent.hasAlign($e.NODE_ALIGNMENT.COLUMN)) {
+                width = true;
+            }
+            if (!node.support.maxHeight && !isNaN(node.height) && node.has('maxHeight') && parent.hasHeight) {
+                height = true;
+            }
+            if (width || height) {
+                node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, $c.STRING_BASE.EXT_DATA, <MaxWidthHeightData> { width, height });
+                return true;
+            }
         }
         return false;
     }

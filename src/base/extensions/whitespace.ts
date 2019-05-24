@@ -458,6 +458,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                     if (horizontal.includes(item as T)) {
                                         break;
                                     }
+                                    else if (item.lineBreak) {
+                                        maxBottom = Number.NEGATIVE_INFINITY;
+                                    }
                                     else if (item.blockDimension && !item.floating && item.linear.bottom > maxBottom) {
                                         maxBottom = item.linear.bottom;
                                     }
@@ -471,9 +474,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     if (!node.alignParent($const.CSS.LEFT)) {
                         let current = node;
                         while (true) {
-                            const previous = current.previousSiblings() as T[];
-                            if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
-                                const previousSibling = previous.pop() as T;
+                            const siblingsLeading = current.siblingsLeading;
+                            if (siblingsLeading.length && !siblingsLeading.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
+                                const previousSibling = siblingsLeading[0] as T;
                                 if (previousSibling.inlineVertical) {
                                     setSpacingOffset(BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect($const.CSS.RIGHT));
                                 }

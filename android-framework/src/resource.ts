@@ -198,7 +198,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         if (typeof element === 'string') {
             const match = $regex.CSS.URL.exec(element);
             if (match) {
-                if (match[1].startsWith('data:image/')) {
+                if (match[1].startsWith('data:image')) {
                     result.mdpi = match[1];
                 }
                 else {

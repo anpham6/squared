@@ -4,20 +4,6 @@ const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
-function isButton(node: Node) {
-    switch (node.tagName) {
-        case 'BUTTON':
-        case 'INPUT_BUTTON':
-        case 'INPUT_FILE':
-        case 'INPUT_IMAGE':
-        case 'INPUT_SUBMIT':
-        case 'INPUT_RESET':
-            return true;
-        default:
-            return false;
-    }
-}
-
 export interface LinearData<T> {
     linearX: boolean;
     linearY: boolean;
@@ -110,7 +96,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                     list.splice(i--, 1);
                 }
             }
-            $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !isButton(item) && item.bounds.height < boundsHeight);
+            $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !item.inputElement && item.bounds.height < boundsHeight);
             list.sort((a, b) => {
                 if (a.groupParent || a.length || !a.baseline && b.baseline) {
                     return 1;
@@ -132,10 +118,10 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 }
                 else if (a.inputElement && b.inputElement) {
                     if (a.fontSize === b.fontSize) {
-                        if (isButton(a)) {
+                        if (a.contentBoxHeight > b.contentBoxHeight) {
                             return -1;
                         }
-                        else if (isButton(b)) {
+                        else if (a.contentBoxHeight < b.contentBoxHeight) {
                             return 1;
                         }
                         else if (a.containerType !== b.containerType) {
@@ -220,7 +206,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                     let x = 1;
                     let y = 1;
                     for (let i = 1; i < nodes.length; i++) {
-                        if (nodes[i].alignedVertically(nodes[i].previousSiblings() as T[], siblings, cleared)) {
+                        if (nodes[i].alignedVertically(siblings, cleared)) {
                             y++;
                         }
                         else {
@@ -331,15 +317,14 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             if (next) {
                 continue;
             }
-            const previousSiblings = node.previousSiblings() as T[];
-            if (i === 0 || previousSiblings.length === 0) {
+            if (i === 0 || node.siblingsLeading.length === 0) {
                 node = includes(node);
                 if (node) {
                     row.push(node);
                 }
             }
             else {
-                if (node.alignedVertically(previousSiblings, row, cleared)) {
+                if (node.alignedVertically(row, cleared)) {
                     if (row.length) {
                         result.push(row);
                     }

@@ -19,9 +19,7 @@ const enum LAYOUT_TABLE {
     VARIABLE = 3,
     COMPRESS = 4
 }
-const REGEXP_BORDER = /none|\s0px|rgba\(0, 0, 0, 0\)|transparent/;
 const REGEXP_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
-const REGEXP_BORDERSTYLE = /^([\d.]+[a-z]+) ([a-z]+) (.+)$/;
 
 export default abstract class Table<T extends Node> extends Extension<T> {
     public static createDataAttribute(node: Node): TableData {
@@ -144,18 +142,16 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 switch (td.tagName) {
                     case 'TH': {
                         function setBorderStyle(attr: string) {
-                            const value = $css.getInheritedStyle(element, attr, REGEXP_BORDER, 'TABLE');
-                            if (value !== '') {
-                                const match = REGEXP_BORDERSTYLE.exec(value);
-                                if (match) {
-                                    td.css(`${attr}Style`, match[2]);
-                                    td.css(`${attr}Color`, match[3]);
-                                    td.css(`${attr}Width`, match[1], true);
-                                    if (!td.has('border')) {
-                                        td.css('border', 'inherit');
-                                    }
+                            td.ascend(false, undefined, node).some(item => {
+                                if (item.has(`${attr}Style`)) {
+                                    td.css(`${attr}Style`, item.css(`${attr}Style`));
+                                    td.css(`${attr}Color`, item.css(`${attr}Color`));
+                                    td.css(`${attr}Width`, item.css(`${attr}Width`), true);
+                                    td.css('border', 'inherit');
+                                    return true;
                                 }
-                            }
+                                return false;
+                            });
                         }
                         if (!td.cssInitial('textAlign')) {
                             td.css('textAlign', td.css('textAlign'));

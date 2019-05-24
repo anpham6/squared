@@ -394,7 +394,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public addImage(element: HTMLImageElement | undefined) {
         if (element && element.complete) {
-            const uri = element.src.trim();
+            if (element.src.startsWith('data:image/')) {
+                const match = new RegExp(`^${$regex.STRING.DATAURI}$`).exec(element.src);
+                if (match && match[1] && match[2]) {
+                    this.addRawData(element.src, match[1], match[2], match[3], element.naturalWidth, element.naturalHeight);
+                }
+            }
+            const uri = element.src;
             if (uri !== '') {
                 Resource.ASSETS.images.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
             }
@@ -504,7 +510,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         color = 'rgb(0, 0, 0)';
                         break;
                     case 'inherit':
-                    case 'currentColor':
+                    case 'currentcolor':
                         color = $css.getInheritedStyle(node.element, CSS_BORDER[index][2]);
                         break;
                 }
@@ -908,7 +914,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 }
                 if (value !== '') {
                     if (trimming) {
-                        const previousSibling = node.previousSiblings().pop();
+                        const previousSibling = node.siblingsLeading[0];
                         let previousSpaceEnd = false;
                         if (value.length > 1) {
                             if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $regex.CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
@@ -925,7 +931,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 value = STRING_SPACE + value;
                             }
                             if (!node.lineBreakTrailing && $regex.CHAR.TRAILINGSPACE.test(original)) {
-                                const nextSibling = node.nextSiblings().pop();
+                                const nextSibling = node.siblingsTrailing[0];
                                 if (nextSibling && !nextSibling.blockStatic) {
                                     value += STRING_SPACE;
                                 }

@@ -72,6 +72,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private _inlineText = false;
     private _parent?: T;
     private _renderAs?: T;
+    private _siblingsLeading?: T[];
+    private _siblingsTrailing?: T[];
     private readonly _element: Element | null = null;
 
     protected constructor(
@@ -444,7 +446,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public alignedVertically(previousSiblings: T[], siblings?: T[], cleared?: Map<T, string>, horizontal?: boolean) {
+    public alignedVertically(siblings?: T[], cleared?: Map<T, string>, horizontal?: boolean) {
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;
         }
@@ -481,7 +483,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 if (siblings.length > 1 && siblings[0].float === $const.CSS.RIGHT) {
                                     let minTop = Number.POSITIVE_INFINITY;
                                     let maxBottom = Number.NEGATIVE_INFINITY;
-                                    let actualBottom: number;
+                                    let actualBottom = top;
                                     for (const item of siblings) {
                                         if (item.float === $const.CSS.RIGHT) {
                                             if (item.linear.top < minTop) {
@@ -501,9 +503,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             }
                                         }
                                     }
-                                    else {
-                                        actualBottom = top;
-                                    }
                                     return $util.belowRange(actualBottom, maxBottom) ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
                                 }
                             }
@@ -522,7 +521,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             const parent = this.actualParent || this.documentParent;
             const blockStatic = this.blockStatic || this.display === 'table';
-            for (const previous of previousSiblings) {
+            for (const previous of this.siblingsLeading) {
                 if (previous.lineBreak) {
                     return NODE_TRAVERSE.LINEBREAK;
                 }
@@ -1247,8 +1246,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let value = 0;
         if (!this.positionStatic) {
             const unit = this.cssInitial(attr, true);
-            if ($css.isLength(unit) || $css.isPercent(unit)) {
+            if ($css.isLength(unit)) {
                 value = $util.convertFloat(this.convertPX(unit, attr === $const.CSS.LEFT || attr === $const.CSS.RIGHT ? $const.CSS.WIDTH : $const.CSS.HEIGHT));
+            }
+            else if ($css.isPercent(unit) && this.styleElement) {
+                value = $util.convertFloat(this.style[attr]);
             }
         }
         return value;
@@ -1413,7 +1415,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get naturalElement() {
-        return this._element !== null && this._element.className !== '__squared.placeholder';
+        if (this._cached.naturalElement === undefined) {
+            this._cached.naturalElement = this._element !== null && this._element.className !== '__squared.placeholder';
+        }
+        return this._cached.naturalElement;
     }
 
     get pseudoElement() {
@@ -2343,6 +2348,26 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return { width: this.actualWidth, height: this.actualHeight };
     }
 
+    set siblingsLeading(value) {
+        this._siblingsLeading = value;
+    }
+    get siblingsLeading() {
+        if (this._siblingsLeading === undefined) {
+            this._siblingsLeading = this.previousSiblings();
+        }
+        return this._siblingsLeading;
+    }
+
+    set siblingsTrailing(value) {
+        this._siblingsTrailing = value;
+    }
+    get siblingsTrailing() {
+        if (this._siblingsTrailing === undefined) {
+            this._siblingsTrailing = this.nextSiblings();
+        }
+        return this._siblingsTrailing;
+    }
+
     get firstChild() {
         for (const node of this.actualChildren) {
             if (node.naturalElement) {
@@ -2410,9 +2435,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get fontSize() {
         if (this._fontSize === 0) {
-            this._fontSize = (this.styleElement ? parseFloat(this.style.getPropertyValue('font-size')) : $css.parseUnit(this.css('fontSize'))) || 16;
+            this._fontSize = this.styleElement && !this.pseudoElement ? parseFloat(this.style.getPropertyValue('font-size')) : $css.parseUnit(this.css('fontSize'));
         }
-        return this._fontSize;
+        return this._fontSize || parseFloat($css.getStyle(document.body).getPropertyValue('font-size'));
     }
 
     set dir(value) {

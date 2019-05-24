@@ -10,6 +10,7 @@ export interface InitialData<T> {
 export interface CachedValue<T> {
     htmlElement?: boolean;
     inputElement?: boolean;
+    naturalElement?: boolean;
     pageFlow?: boolean;
     inlineFlow?: boolean;
     positionStatic?: boolean;
