@@ -61,7 +61,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
         }
         if (node[borderWidth] === 0) {
             if (node[padding] === 0) {
-                while (DOCTYPE_HTML && child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0) {
+                while (DOCTYPE_HTML && child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0 && !child.layoutElement && !child.tableElement) {
                     const endChild = (direction ? child.firstChild : child.lastChild) as Node;
                     if (isBlockElement(endChild)) {
                         child = endChild;
@@ -109,7 +109,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
                     }
                 }
             }
-            else if (child[margin] === 0 && child[borderWidth] === 0) {
+            else if (child[margin] === 0 && child[borderWidth] === 0 && !child.layoutElement && !child.tableElement) {
                 let blockAll = true;
                 do {
                     const endChild = (direction ? child.firstChild : child.lastChild) as Node;
@@ -142,7 +142,9 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
 
 export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
     public afterBaseLayout() {
-        const processed = new Set<T>();
+        const processed = new Set<number>();
+        const inheritTop = new Set<number>();
+        const inheritBottom = new Set<number>();
         for (const node of this.application.processing.cache) {
             if (node.naturalElement && !node.layoutElement && node.actualChildren.length) {
                 const children = node.actualChildren;
@@ -173,18 +175,8 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                             const previous = previousSiblings.find(item => !item.floating) as T;
                             if (previous) {
                                 if (isBlockElement(previous)) {
-                                    let inheritedBottom = false;
-                                    let inheritedTop = false;
-                                    let marginBottom = $util.convertFloat(previous.cssInitial('marginBottom', false, true));
-                                    if (marginBottom === 0 && previous.marginBottom > 0) {
-                                        marginBottom = previous.marginBottom;
-                                        inheritedBottom = true;
-                                    }
-                                    let marginTop = $util.convertFloat(current.cssInitial('marginTop', false, true));
-                                    if (marginTop === 0 && current.marginTop > 0) {
-                                        marginTop = previous.marginTop;
-                                        inheritedTop = true;
-                                    }
+                                    let marginBottom = previous.marginBottom;
+                                    let marginTop = current.marginTop;
                                     if (previous.excluded && !current.excluded) {
                                         const offset = Math.min(marginBottom, previous.marginTop);
                                         if (offset < 0) {
@@ -193,25 +185,25 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                             if (current.companion) {
                                                 current.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
                                             }
-                                            processed.add(previous);
+                                            processed.add(previous.id);
                                         }
                                     }
                                     else if (!previous.excluded && current.excluded) {
-                                        const offset = Math.min(marginTop, $util.convertFloat(current.cssInitial('marginBottom', false, true)));
+                                        const offset = Math.min(marginTop, current.marginBottom);
                                         if (offset < 0) {
                                             previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) >= marginBottom ? undefined : offset);
-                                            processed.add(current);
+                                            processed.add(current.id);
                                         }
                                     }
                                     else {
                                         if (previous.paddingBottom === 0 && previous.borderBottomWidth === 0) {
                                             const bottomChild = previous.lastChild as T;
                                             if (isBlockElement(bottomChild) && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
-                                                const childMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
-                                                if (childMarginBottom > marginBottom) {
-                                                    marginBottom = childMarginBottom;
-                                                    previous.css('marginBottom', $css.formatPX(childMarginBottom), true);
-                                                    inheritedBottom = true;
+                                                const childBottom = bottomChild.marginBottom;
+                                                if (childBottom > marginBottom) {
+                                                    marginBottom = childBottom;
+                                                    previous.css('marginBottom', $css.formatPX(marginBottom), true);
+                                                    inheritBottom.add(previous.id);
                                                 }
                                                 resetMargin(bottomChild, BOX_STANDARD.MARGIN_BOTTOM);
                                             }
@@ -219,20 +211,20 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                         if (current.borderTopWidth === 0 && current.paddingTop === 0) {
                                             const topChild = current.firstChild as T;
                                             if (isBlockElement(topChild) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
-                                                const childMarginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
-                                                if (childMarginTop > marginTop) {
-                                                    marginTop = childMarginTop;
-                                                    current.css('marginTop', $css.formatPX(childMarginTop), true);
-                                                    inheritedTop = true;
+                                                const childTop = topChild.marginTop;
+                                                if (childTop > marginTop) {
+                                                    marginTop = childTop;
+                                                    current.css('marginTop', $css.formatPX(marginTop), true);
+                                                    inheritTop.add(current.id);
                                                 }
                                                 resetMargin(topChild, BOX_STANDARD.MARGIN_TOP);
                                             }
                                         }
                                         if (marginBottom > 0) {
                                             if (marginTop > 0) {
-                                                if (!inheritedTop || !inheritedBottom || !$util.hasBit(current.overflow, NODE_ALIGNMENT.BLOCK) && !$util.hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
+                                                if (!inheritTop.has(current.id) || !inheritBottom.has(previous.id) || !$util.hasBit(current.overflow, NODE_ALIGNMENT.BLOCK) && !$util.hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
                                                     if (marginTop <= marginBottom) {
-                                                        if (inheritedTop) {
+                                                        if (inheritTop.has(current.id)) {
                                                             current.css('marginTop', $const.CSS.PX_0, true);
                                                         }
                                                         else {
@@ -240,7 +232,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                         }
                                                     }
                                                     else {
-                                                        if (inheritedBottom) {
+                                                        if (inheritBottom.has(previous.id)) {
                                                             current.css('marginBottom', $const.CSS.PX_0, true);
                                                         }
                                                         else {
@@ -282,7 +274,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
             }
         }
         for (const node of this.application.processing.excluded) {
-            if (!processed.has(node) && node.lineBreak && !node.lineBreakTrailing) {
+            if (!processed.has(node.id) && node.lineBreak && !node.lineBreakTrailing) {
                 const previousSiblings = node.previousSiblings({ floating: false }) as T[];
                 const nextSiblings = node.nextSiblings({ floating: false }) as T[];
                 let valid = false;
@@ -291,7 +283,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     const below = nextSiblings.pop() as T;
                     if (above.inlineStatic && below.inlineStatic) {
                         if (previousSiblings.length === 0) {
-                            processed.add(node);
+                            processed.add(node.id);
                             continue;
                         }
                         else {
@@ -386,10 +378,10 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                 }
                 if (valid) {
                     for (const item of previousSiblings) {
-                        processed.add(item);
+                        processed.add(item.id);
                     }
                     for (const item of nextSiblings) {
-                        processed.add(item);
+                        processed.add(item.id);
                     }
                 }
             }

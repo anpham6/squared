@@ -20,26 +20,10 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         let width = false;
         let height = false;
         if (!node.support.maxWidth && !isNaN(node.width) && node.has('maxWidth') && !parent.hasAlign($e.NODE_ALIGNMENT.COLUMN)) {
-            const blockWidth = node.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100;
-            if (node.width === 0 || blockWidth) {
-                if (node.blockStatic && !node.autoMargin.horizontal || blockWidth) {
-                    node.css($const.CSS.WIDTH, node.css('maxWidth'));
-                }
-                else {
-                    width = true;
-                }
-            }
-            else {
-                width = true;
-            }
+            width = true;
         }
         if (!node.support.maxHeight && !isNaN(node.height) && node.has('maxHeight') && parent.hasHeight) {
-            if (node.hasHeight && node.css($const.CSS.HEIGHT) === $const.CSS.PERCENT_100) {
-                node.css($const.CSS.HEIGHT, node.css('maxHeight'));
-            }
-            else {
-                height = true;
-            }
+            height = true;
         }
         if (width || height) {
             node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, $c.STRING_BASE.EXT_DATA, <MaxWidthHeightData> { width, height });

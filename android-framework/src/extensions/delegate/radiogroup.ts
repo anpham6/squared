@@ -101,7 +101,6 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                 container.inherit(node, 'alignment');
                 container.css('verticalAlign', $const.CSS.MIDDLE);
                 container.baseline = false;
-                container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, -4);
                 container.exclude($e.NODE_RESOURCE.ASSET);
                 container.each(item => {
                     if (item !== node) {

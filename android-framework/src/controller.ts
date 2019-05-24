@@ -721,7 +721,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             let inputTotal = 0;
             let textTotal = 0;
             for (const node of layout) {
-                if (node.naturalElement && node.length === 0 && !node.positionRelative && !node.blockVertical && !node.positionAuto && node.lineHeight === lineHeight && (node.baseline || node.cssAny('verticalAlign', $const.CSS.TOP, $const.CSS.MIDDLE, $const.CSS.BOTTOM))) {
+                if (node.naturalElement && node.length === 0 && !node.inputElement && !node.positionRelative && !node.blockVertical && !node.positionAuto && node.lineHeight === lineHeight && (node.baseline || node.cssAny('verticalAlign', $const.CSS.TOP, $const.CSS.MIDDLE, $const.CSS.BOTTOM))) {
                     if (node.inputElement) {
                         inputTotal++;
                     }
@@ -1635,40 +1635,21 @@ export default class Controller<T extends View> extends squared.base.Controller<
             const boxWidth = (() => {
                 const renderParent = node.renderParent;
                 if (renderParent) {
-                    if (renderParent.overflowX) {
+                    if (renderParent.overflowY) {
                         return renderParent.box.width;
                     }
                     else {
                         const actualParent = node.actualParent;
-                        if (actualParent === renderParent && actualParent.blockStatic && node.naturalElement && node.inlineStatic) {
-                            return actualParent.box.width - (node.linear.left - actualParent.box.left);
-                        }
-                        else if (actualParent && children.length !== actualParent.actualChildren.length) {
-                            let floatStart = Number.NEGATIVE_INFINITY;
-                            let floatEnd = Number.POSITIVE_INFINITY;
-                            for (const item of actualParent.actualChildren) {
-                                if (item.floating && !children.includes(item as T)) {
-                                    if (item.float === $const.CSS.LEFT && item.linear.right > floatStart) {
-                                        floatStart = item.linear.right;
-                                    }
-                                    if (item.float === $const.CSS.RIGHT && item.linear.left < floatEnd) {
-                                        floatEnd = item.linear.left;
-                                    }
+                        if (actualParent) {
+                            if (actualParent === renderParent && actualParent.blockStatic && node.naturalElement && node.inlineStatic) {
+                                return actualParent.box.width - (node.linear.left - actualParent.box.left);
+                            }
+                            else {
+                                const { containerType, alignmentType } = this.containerTypeVerticalMargin;
+                                if (node.ascend(true, item => item.of(containerType, alignmentType), actualParent).length) {
+                                    return node.box.width - node.getBox($e.BOX_STANDARD.PADDING_LEFT)[1] - node.getBox($e.BOX_STANDARD.PADDING_RIGHT)[1];
                                 }
                             }
-                            let floatOffset = 0;
-                            if (floatStart !== Number.NEGATIVE_INFINITY) {
-                                for (const child of actualParent.actualChildren) {
-                                    if (child.linear.right === floatStart && children.some(item => $util.belowRange(item.linear.left, floatStart) && item.intersectY(child.linear))) {
-                                        floatOffset += floatStart - actualParent.box.left;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (floatEnd !== Number.POSITIVE_INFINITY) {
-                                floatOffset += actualParent.box.right - floatEnd;
-                            }
-                            return node.box.width - floatOffset;
                         }
                     }
                 }
@@ -1780,7 +1761,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 maxWidth -= rows.length === 1 ? textIndent : 0;
                             }
                             if (item.styleElement && item.inlineStatic) {
-                                baseWidth -= item.paddingLeft + item.paddingRight;
+                                baseWidth -= item.contentBoxWidth;
                             }
                             return true;
                         };
@@ -2279,8 +2260,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (items.length === 0) {
             rows.pop();
         }
-        const columnGap = node.toFloat('columnGap') || $css.getFontSize(document.body) || 16;
-        const columnWidth = node.toFloat('columnWidth');
+        const columnGap = node.toFloat('columnGap') || node.fontSize;
+        const columnWidth = node.parseUnit(node.css('columnWidth'), $const.CSS.WIDTH);
         const columnCount = node.toInt('columnCount');
         let columnSized = 0;
         if (columnWidth > 0) {
@@ -2371,14 +2352,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     previousRow.anchor($c.STRING_BASE.BOTTOM_TOP, rowStart.documentId);
                     rowStart.anchor($c.STRING_BASE.TOP_BOTTOM, typeof previousRow === 'string' ? previousRow : previousRow.documentId);
                 }
-                if (node.rightAligned) {
-                    node.anchor($const.CSS.RIGHT, STRING_ANDROID.PARENT);
+                if (rowStart.rightAligned) {
+                    rowStart.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed', 1);
                 }
-                else if (node.centerAligned) {
-                    node.anchorParent(STRING_ANDROID.HORIZONTAL);
+                else if (rowStart.centerAligned) {
+                    rowStart.anchorParent(STRING_ANDROID.HORIZONTAL);
                 }
                 else {
-                    node.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
+                    rowStart.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed');
                 }
                 if (i === rows.length - 1) {
                     rowStart.anchor($const.CSS.BOTTOM, STRING_ANDROID.PARENT);

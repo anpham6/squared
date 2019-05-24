@@ -34,7 +34,7 @@ function removeExcluded(node: Node, element: Element, attr: string) {
         if (!item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
             if (item.htmlElement && attr === 'innerHTML') {
                 if (item.lineBreak) {
-                    value = value.replace((<Element> item.element).outerHTML, '\\n');
+                    value = value.replace(new RegExp(`\\s*${(<Element> item.element).outerHTML}\\s*`), '\\n');
                 }
                 else {
                     value = value.replace((<Element> item.element).outerHTML, item.pageFlow && item.textContent ? STRING_SPACE : '');
@@ -497,7 +497,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             const opacity = node.css('opacity');
             function setBorderStyle(attr: string, index: number) {
                 const style = node.css(CSS_BORDER[index][0]) || $const.CSS.NONE;
-                let width = $css.convertPX(node.css(CSS_BORDER[index][1]), node.fontSize) || $const.CSS.PX_0;
+                let width = $css.formatPX(attr === 'outline' ? $util.convertFloat(node.style[CSS_BORDER[index][1]]) : node[CSS_BORDER[index][1]]);
                 let color = node.css(CSS_BORDER[index][2]) || 'initial';
                 switch (color) {
                     case 'initial':
@@ -775,33 +775,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public setFontStyle(node: T) {
         if (!(node.element === null || node.renderChildren.length || node.imageElement || node.svgElement || node.tagName === 'HR' || node.textEmpty && !node.visibleStyle.background)) {
             const color = $color.parseColor(node.css('color'), node.css('opacity'));
-            let fontSize = node.css('fontSize');
             let fontWeight = node.css('fontWeight');
-            if ($util.convertInt(fontSize) === 0) {
-                switch (fontSize) {
-                    case 'xx-small':
-                        fontSize = '8px';
-                        break;
-                    case 'x-small':
-                        fontSize = '10px';
-                        break;
-                    case 'small':
-                        fontSize = '13px';
-                        break;
-                    case 'medium':
-                        fontSize = '16px';
-                        break;
-                    case 'large':
-                        fontSize = '18px';
-                        break;
-                    case 'x-large':
-                        fontSize = '24px';
-                        break;
-                    case 'xx-large':
-                        fontSize = '32px';
-                        break;
-                }
-            }
             if (!$util.isNumber(fontWeight)) {
                 switch (fontWeight) {
                     case 'lighter':
@@ -821,7 +795,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             node.data(Resource.KEY_NAME, 'fontStyle', <FontAttribute> {
                 fontFamily: node.css('fontFamily').trim(),
                 fontStyle: node.css('fontStyle'),
-                fontSize,
+                fontSize: $css.formatPX(node.fontSize),
                 fontWeight,
                 color: color ? color.valueAsRGBA : ''
             });

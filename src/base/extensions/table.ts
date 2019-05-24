@@ -79,7 +79,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             section.hide();
         }
         inheritStyles(tfoot);
-        const [horizontal, vertical] = mainData.borderCollapse ? [0, 0] : $util.replaceMap<string, number>(node.css('borderSpacing').split(' '), value => parseFloat(value));
+        const [horizontal, vertical] = mainData.borderCollapse ? [0, 0] : $util.replaceMap<string, number>(node.css('borderSpacing').split(' '), (value, index) => node.parseUnit(value, index === 0 ? $const.CSS.WIDTH : $const.CSS.HEIGHT));
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const colgroup = (<Element> node.element).querySelector('COLGROUP');

@@ -4,7 +4,7 @@ import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { CSS as CSS_RX, STRING, UNIT, XML } from './regex';
 
 import { getElementCache, setElementCache } from './session';
-import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isNumber, isString, replaceMap, resolvePath } from './util';
+import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isString, replaceMap, resolvePath } from './util';
 
 const REGEXP_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 
@@ -118,70 +118,22 @@ export function getSpecificity(value: string) {
     return result;
 }
 
-export function checkStyleValue(element: Element, attr: string, value: string, style: CSSStyleDeclaration, specificity = 0, fontSize?: number) {
-    if (value && value !== 'initial') {
-        if (value === 'inherit') {
-            value = getInheritedStyle(element, attr);
+export function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration, specificity = 0) {
+    if (value) {
+        if (specificity > 0) {
+            setElementCache(element, attr, specificity.toString(), value);
         }
-        const computed = style[attr];
-        if (value !== computed && value !== CSS.AUTO) {
-            const numeric = isNumber(value);
-            if (computed) {
-                let valid = false;
-                switch (attr) {
-                    case 'color':
-                    case 'fontSize':
-                    case 'fontWeight':
-                    case 'backgroundColor':
-                    case 'borderTopColor':
-                    case 'borderRightColor':
-                    case 'borderBottomColor':
-                    case 'borderLeftColor':
-                        valid = true;
-                        break;
-                    case 'borderTopWidth':
-                    case 'borderRightWidth':
-                    case 'borderBottomWidth':
-                    case 'borderLeftWidth':
-                        switch (value) {
-                            case 'thin':
-                            case 'medium':
-                            case 'thick':
-                                valid = true;
-                                break;
-                        }
-                        break;
-                    default:
-                        if (isPercent(value)) {
-                            switch (attr) {
-                                case 'width':
-                                case 'height':
-                                case 'minWidth':
-                                case 'minHeight':
-                                case 'maxWidth':
-                                case 'maxHeight':
-                                case 'columnWidth':
-                                case 'offsetDistance':
-                                    break;
-                                default:
-                                    valid = true;
-                                    break;
-                            }
-                        }
-                        break;
-                }
-                if (valid || numeric || isCustomProperty(value)) {
-                    setElementCache(element, attr, specificity.toString(), value);
-                    return computed;
-                }
-            }
-            if (numeric) {
-                setElementCache(element, attr, specificity.toString(), value);
-            }
-            else if (isLength(value)) {
-                setElementCache(element, attr, specificity.toString(), value);
-                return convertPX(value, fontSize);
-            }
+        switch (value) {
+            case 'initial':
+                return '';
+            case 'auto':
+                return value;
+            case 'inherit':
+                value = getInheritedStyle(element, attr);
+                break;
+        }
+        if (isCustomProperty(value)) {
+            return style && style[attr] || calculateVar(element, value, attr);
         }
         return value;
     }
@@ -853,6 +805,7 @@ export function parseUnit(value: string, fontSize?: number) {
             switch (match[2]) {
                 case 'px':
                     return result;
+                case undefined:
                 case 'em':
                 case 'ch':
                     result *= fontSize || 16;

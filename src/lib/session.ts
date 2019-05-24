@@ -32,8 +32,7 @@ export function getRangeClientRect(element: Element, sessionId: string, cache = 
             domRect.push(item);
         }
     }
-    let bounds: BoxRectDimension = newBoxRectDimension();
-    let numberOfLines = 0;
+    let bounds: BoxRectDimension;
     let maxTop = Number.NEGATIVE_INFINITY;
     if (domRect.length) {
         bounds = assignRect(domRect[0]);
@@ -58,10 +57,12 @@ export function getRangeClientRect(element: Element, sessionId: string, cache = 
         }
         bounds.height = bounds.bottom - bounds.top;
         if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-            numberOfLines = domRect.length - 1;
+            bounds.numberOfLines = domRect.length - 1;
         }
     }
-    bounds.numberOfLines = numberOfLines;
+    else {
+        bounds = newBoxRectDimension();
+    }
     setElementCache(element, 'rangeClientRect', sessionId, bounds);
     return <BoxRectDimension> bounds;
 }

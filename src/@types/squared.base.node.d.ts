@@ -187,7 +187,7 @@ declare global {
             cssInitial(attr: string, modified?: boolean, computed?: boolean): string;
             cssAny(attr: string, ...values: string[]): boolean;
             cssInitialAny(attr: string, ...values: string[]): boolean;
-            cssAscend(attr: string, startChild?: boolean, visible?: boolean): string;
+            cssAscend(attr: string, startChild?: boolean, dimension?: string): string;
             cssSort(attr: string, ascending?: boolean, duplicate?: boolean): Node[];
             cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
             cssSpecificity(attr: string): number;

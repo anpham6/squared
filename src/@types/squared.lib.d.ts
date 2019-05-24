@@ -38,7 +38,7 @@ declare global {
             export import CSSFontFaceData = $css.CSSFontFaceData;
             function getStyle(element: Element | null, target?: string, cache?: boolean): CSSStyleDeclaration;
             function hasComputedStyle(element: Element | null): element is HTMLElement;
-            function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, specificity?: number, fontSize?: number): string;
+            function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration, specificity?: number): string;
             function getSpecificity(value: string): number;
             function getKeyframeRules(): ObjectMap<CSSKeyframesData>;
             function parseKeyframeRule(rules: CSSRuleList): CSSKeyframesData;

@@ -208,7 +208,6 @@ export default (Base: Constructor<squared.base.Node>) => {
         protected _namespaces = [STRING_ANDROID.ANDROID, STRING_ANDROID.APP];
         protected _cached: CachedValue<T> = {};
         protected _controlName = '';
-        protected _fontSize = 0;
         protected _documentParent?: T;
         protected readonly _boxAdjustment: BoxModel = $dom.newBoxModel();
         protected readonly _boxReset: BoxModel = $dom.newBoxModel();
@@ -1419,13 +1418,6 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
         get flexibleHeight(): boolean {
             return isFlexibleDimension(this, this.layoutHeight);
-        }
-
-        get fontSize() {
-            if (this._fontSize === 0) {
-                this._fontSize = $css.parseUnit(this.css('fontSize')) || 16;
-            }
-            return this._fontSize;
         }
 
         set localSettings(value) {

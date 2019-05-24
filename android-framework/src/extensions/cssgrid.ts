@@ -40,10 +40,10 @@ function getRowData(mainData: CssGridData<View>, direction: string) {
 
 function getGridSize(mainData: CssGridData<View>, direction: string, node: View) {
     const horizontal = direction === 'column';
-    const dimension = horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT;
     const data = mainData[direction];
     let value = 0;
     if (data.unit.length) {
+        const dimension = horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT;
         for (let i = 0; i < data.unit.length; i++) {
             const unit = data.unit[i];
             if (unit.endsWith('px')) {
@@ -67,13 +67,14 @@ function getGridSize(mainData: CssGridData<View>, direction: string, node: View)
         }
     }
     value += data.gap * (data.count - 1);
-    if (node.contentBox) {
-        value += horizontal ? node.borderLeftWidth + node.borderRightWidth : node.borderTopWidth + node.borderBottomWidth;
+    if (horizontal) {
+        value += node.contentBox ? node.borderLeftWidth + node.borderRightWidth : node.contentBoxWidth;
+        return node.actualWidth - value;
     }
     else {
-        value += horizontal ? node.contentBoxWidth : node.contentBoxHeight;
+        value += node.contentBox ? node.borderTopWidth + node.borderBottomWidth : node.contentBoxHeight;
+        return node.actualHeight - value;
     }
-    return (horizontal ? node.actualWidth : node.actualHeight) - value;
 }
 
 function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: string, direction: string) {

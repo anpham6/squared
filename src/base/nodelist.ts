@@ -130,7 +130,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                     }
                     return a.fontSize > b.fontSize ? -1 : 1;
                 }
-                else if (a.inputElement && b.inputElement && !a.hasHeight && !b.hasHeight) {
+                else if (a.inputElement && b.inputElement) {
                     if (a.fontSize === b.fontSize) {
                         if (isButton(a)) {
                             return -1;
@@ -138,9 +138,9 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                         else if (isButton(b)) {
                             return 1;
                         }
-                    }
-                    else {
-                        return a.fontSize > b.fontSize ? -1 : 1;
+                        else if (a.containerType !== b.containerType) {
+                            return a.containerType > b.containerType ? -1 : 1;
+                        }
                     }
                 }
                 const heightA = Math.max(a.actualHeight, a.lineHeight);

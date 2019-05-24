@@ -1822,10 +1822,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                     const targetElt = target ? '::' + target : '';
                     document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
                         const style = $css.getStyle(element, targetElt);
-                        const fontSize = $css.parseUnit(style.getPropertyValue('font-size'));
                         const styleMap: StringMap = {};
                         for (const attr of fromRule) {
-                            const value = $css.checkStyleValue(element, attr, item.style[attr], style, specificity, fontSize);
+                            const value = $css.checkStyleValue(element, attr, item.style[attr], style, specificity);
                             if (value) {
                                 styleMap[attr] = value;
                             }
@@ -1853,7 +1852,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (styleData) {
                             const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, this.processing.sessionId) || {};
                             for (const attr in styleMap) {
-                                if (styleData[attr] === undefined || specificityData[attr] === undefined || specificity >= specificityData[attr]) {
+                                if (specificityData[attr] === undefined || specificity >= specificityData[attr]) {
                                     styleData[attr] = styleMap[attr];
                                     specificityData[attr] = specificity;
                                 }

@@ -58,8 +58,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     }
                 });
                 if (requireWidth) {
-                    const above = node.ascend(false, item => item.hasWidth);
-                    if (above.length && node.actualWidth >= above[0].actualWidth) {
+                    if (parent.has($const.CSS.WIDTH) && $util.aboveRange(node.actualWidth, parent.actualWidth)) {
                         node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
                     }
                     else {
