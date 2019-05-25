@@ -169,7 +169,7 @@ function setSingleLine(node: T) {
 
 const isFlexibleDimension = (node: T, value: string) => !!node.renderParent && value === $const.CSS.PX_0 && ((node.renderParent as T).layoutConstraint || node.renderParent.is(CONTAINER_NODE.GRID));
 
-const validateString = (value: string) => value ? value.trim().replace(REGEXP_VALIDSTRING, '_') : '';
+const validateString = (value: string) => value ? value.trim().replace(REGEXP_VALIDSTRING, '_').toLowerCase() : '';
 
 export default (Base: Constructor<squared.base.Node>) => {
     return class View extends Base implements android.base.View {
@@ -600,7 +600,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 }
                 if (this.layoutWidth === '') {
                     let layoutWidth = '';
-                    if (!this.inlineStatic && this.has($const.CSS.WIDTH) || this.toInt($const.CSS.WIDTH) > 0 && this.cssInitial($const.CSS.WIDTH) === '') {
+                    if (this.has($const.CSS.WIDTH) && (!this.inlineStatic || this.cssInitial($const.CSS.WIDTH) === '')) {
                         const width = this.css($const.CSS.WIDTH);
                         let value = -1;
                         if ($css.isLength(width)) {
@@ -699,7 +699,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 }
                 if (this.layoutHeight === '') {
                     let layoutHeight = '';
-                    if (!this.inlineStatic && this.has($const.CSS.HEIGHT) || this.toInt($const.CSS.HEIGHT) > 0 && this.cssInitial($const.CSS.HEIGHT) === '') {
+                    if (this.has($const.CSS.HEIGHT) && (!this.inlineStatic || this.cssInitial($const.CSS.HEIGHT) === '')) {
                         const height = this.css($const.CSS.HEIGHT);
                         let value = -1;
                         if ($css.isLength(height)) {
@@ -1198,7 +1198,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (this.dir === 'rtl' && !this.imageOrSvgElement) {
                 this.android(this.length ? 'layoutDirection' : 'textDirection', 'rtl');
             }
-            if (this.styleElement) {
+            if (this.styleElement && this.naturalElement) {
                 const dataset = $css.getDataSet(<HTMLElement> this.element, STRING_ANDROID.ANDROID);
                 for (const name in dataset) {
                     const obj = name === 'attr' ? STRING_ANDROID.ANDROID
@@ -1365,6 +1365,16 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
         get layoutConstraint() {
             return this.is(CONTAINER_NODE.CONSTRAINT);
+        }
+
+        set renderExclude(value) {
+            this._cached.renderExclude = value;
+        }
+        get renderExclude() {
+            if (this._cached.renderExclude === undefined) {
+                this._cached.renderExclude = this.bounds.height === 0 && (this.marginTop < 0 || this.marginBottom < 0 || this.textEmpty && this.css('clear') !== 'none');
+            }
+            return this._cached.renderExclude;
         }
 
         get support() {

@@ -2,6 +2,8 @@ import { ResourceStringsOptions } from '../../@types/extension';
 
 import Resource from '../../resource';
 
+import { CONTAINER_ANDROID } from '../../lib/constant';
+
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
@@ -21,29 +23,9 @@ export default class ResourceStrings<T extends android.base.View> extends square
             if (node.hasResource($e.NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
                     case 'SELECT': {
-                        const element = <HTMLSelectElement> node.element;
-                        const stringArray = Resource.getOptionArray(element);
-                        let result: string[] | undefined;
-                        if (!this.options.numberResourceValue && stringArray[1]) {
-                            result = stringArray[1];
-                        }
-                        else {
-                            const resourceArray = stringArray[0] || stringArray[1];
-                            if (resourceArray) {
-                                result = [];
-                                for (let value of resourceArray) {
-                                    value = Resource.addString($xml.replaceCharacterData(value), '', this.options.numberResourceValue);
-                                    if (value !== '') {
-                                        result.push(`@string/${value}`);
-                                    }
-                                }
-                            }
-                        }
-                        if (result && result.length) {
-                            const arrayName = Resource.insertStoredAsset('arrays', `${node.controlId}_array`, result);
-                            if (arrayName !== '') {
-                                node.android('entries', `@array/${arrayName}`);
-                            }
+                        const arrayName = this.createOptionArray(<HTMLSelectElement> node.element, node.controlId);
+                        if (arrayName !== '') {
+                            node.android('entries', `@array/${arrayName}`);
                         }
                         break;
                     }
@@ -134,6 +116,15 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             setTextValue('text', name, value);
                         }
                         if (node.inputElement) {
+                            if (node.controlName === CONTAINER_ANDROID.EDIT_LIST) {
+                                const element = <HTMLInputElement> node.element;
+                                if (element.list) {
+                                    this.createOptionArray(<HTMLSelectElement> element.list, node.controlId);
+                                    if (!node.has('width')) {
+                                        node.css('width', $css.formatPX(Math.max(node.bounds.width, node.width)), true);
+                                    }
+                                }
+                            }
                             const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
                             if (hintString) {
                                 setTextValue('hint', `${node.tagName.toLowerCase()}_hint`, hintString);
@@ -143,5 +134,29 @@ export default class ResourceStrings<T extends android.base.View> extends square
                 }
             }
         }
+    }
+
+    public createOptionArray(element: HTMLSelectElement, controlId: string) {
+        const stringArray = Resource.getOptionArray(element);
+        let result: string[] | undefined;
+        if (!this.options.numberResourceValue && stringArray[1]) {
+            result = stringArray[1];
+        }
+        else {
+            const resourceArray = stringArray[0] || stringArray[1];
+            if (resourceArray) {
+                result = [];
+                for (let value of resourceArray) {
+                    value = Resource.addString($xml.replaceCharacterData(value), '', this.options.numberResourceValue);
+                    if (value !== '') {
+                        result.push(`@string/${value}`);
+                    }
+                }
+            }
+        }
+        if (result && result.length) {
+            return Resource.insertStoredAsset('arrays', `${controlId}_array`, result);
+        }
+        return '';
     }
 }

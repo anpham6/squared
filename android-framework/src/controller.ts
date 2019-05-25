@@ -190,7 +190,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
                 }
             }
             if (!node.blockWidth && !documentParent.flexElement) {
-                const minWH = node.cssInitial(`min${dimension}`, true);
+                const minWH = node.cssInitial(horizontal ? 'minWidth' : 'minHeight', true);
                 if ($css.isLength(minWH, true) && minWH !== $const.CSS.PX_0) {
                     let valid = false;
                     if (horizontal) {
@@ -205,12 +205,12 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
                         valid = node.flexibleHeight;
                     }
                     if (valid) {
-                        node.app(`layout_constraint${dimension}_min`, $css.formatPX(node.parseUnit(minWH, dimension.toLowerCase())));
-                        node.css(`min${dimension}`, $const.CSS.AUTO);
+                        node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', $css.formatPX(node.parseUnit(minWH, dimension.toLowerCase())));
+                        node.css(horizontal ? 'minWidth' : 'minHeight', $const.CSS.AUTO);
                     }
                 }
             }
-            const maxWH = node.cssInitial(`max${dimension}`, true);
+            const maxWH = node.cssInitial(horizontal ? 'maxWidth' : 'maxHeight', true);
             let contentBox = 0;
             if ($css.isLength(maxWH, true)) {
                 let valid = false;
@@ -233,7 +233,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
                 }
                 if (valid) {
                     const maxDimension = node.parseUnit(maxWH, dimension.toLowerCase());
-                    node.app(`layout_constraint${dimension}_max`, $css.formatPX(maxDimension + contentBox));
+                    node.app(horizontal ? 'layout_constraintWidth_max' : 'layout_constraintHeight_max', $css.formatPX(maxDimension + contentBox));
                     if (horizontal && node.layoutVertical) {
                         node.each(item => {
                             if (item.textElement && !item.has('maxWidth')) {
@@ -247,8 +247,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
     }
 }
 
-function constraintPercentValue(node: View, dimension: string, opposing: boolean) {
-    const horizontal = dimension === $const.CSS.WIDTH;
+function constraintPercentValue(node: View, dimension: string, horizontal: boolean, opposing: boolean) {
     const value = node.cssInitial(dimension, true);
     let unit: string | undefined;
     if (opposing) {
@@ -270,7 +269,7 @@ function constraintPercentValue(node: View, dimension: string, opposing: boolean
     }
     else if ($css.isPercent(value) && value !== $const.CSS.PERCENT_100) {
         const percent = parseFloat(value) / 100;
-        node.app(`layout_constraint${$util.capitalize(dimension)}_percent`, $math.truncate(percent, node.localSettings.floatPrecision));
+        node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', $math.truncate(percent, node.localSettings.floatPrecision));
         unit = $const.CSS.PX_0;
     }
     if (unit) {
@@ -293,7 +292,7 @@ function constraintPercentWidth(node: View, opposing = false) {
         }
     }
     else {
-        constraintPercentValue(node, $const.CSS.WIDTH, opposing);
+        constraintPercentValue(node, $const.CSS.WIDTH, true, opposing);
     }
 }
 
@@ -306,7 +305,7 @@ function constraintPercentHeight(node: View, opposing = false) {
             }
         }
         else {
-            constraintPercentValue(node, $const.CSS.HEIGHT, opposing);
+            constraintPercentValue(node, $const.CSS.HEIGHT, false, opposing);
         }
     }
     else if ($css.isLength(node.cssInitial($const.CSS.HEIGHT), true)) {
@@ -362,24 +361,23 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public static setFlexDimension<T extends View>(node: T, dimension: string) {
         const horizontal = dimension === $const.CSS.WIDTH;
-        const dimensionA = $util.capitalize(dimension);
         const flexbox = node.flexbox;
         const basis = flexbox.basis;
         function setFlexGrow(value: string, grow: number) {
-            node.android(`layout_${dimension}`, $const.CSS.PX_0);
+            node.android(horizontal ? 'layout_width' : 'layout_height', $const.CSS.PX_0);
             if (grow > 0) {
-                node.app(`layout_constraint${horizontal ? 'Horizontal' : 'Vertical'}_weight`, $math.truncate(grow, node.localSettings.floatPrecision));
+                node.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', $math.truncate(grow, node.localSettings.floatPrecision));
                 if (value !== '') {
-                    node.css(`min${dimensionA}`, value, true);
+                    node.css(horizontal ? 'minWidth' : 'minHeight', value, true);
                 }
             }
             else if (value !== '') {
                 if (flexbox.shrink < 1) {
-                    node.app(`layout_constraint${dimensionA}_min`, $css.formatPX((1 - flexbox.shrink) * parseFloat(value)));
-                    node.app(`layout_constraint${dimensionA}_max`, value);
+                    node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', $css.formatPX((1 - flexbox.shrink) * parseFloat(value)));
+                    node.app(horizontal ? 'layout_constraintWidth_max' : 'layout_constraintHeight_max', value);
                 }
                 else {
-                    node.app(`layout_constraint${dimensionA}_min`, value);
+                    node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', value);
                 }
             }
         }
@@ -387,11 +385,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
             setFlexGrow(node.convertPX(basis), node.flexbox.grow);
         }
         else if (basis !== $const.CSS.PERCENT_0 && $css.isPercent(basis)) {
-            node.app(`layout_constraint${dimensionA}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
+            node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
             setFlexGrow('', node.flexbox.grow);
         }
         else if (flexbox.grow > 0) {
-            setFlexGrow(node.has(dimension, $e.CSS_STANDARD.LENGTH) ? $css.formatPX(node[`actual${dimensionA}`]) : '', node.flexbox.grow);
+            setFlexGrow(node.has(dimension, $e.CSS_STANDARD.LENGTH) ? $css.formatPX(node[horizontal ? 'actualWidth' : 'actualHeight']) : '', node.flexbox.grow);
         }
         else {
             if (horizontal) {
@@ -402,7 +400,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
         }
         if (flexbox.shrink > 1) {
-            node.app(`layout_constrained${dimensionA}`, 'true');
+            node.app(horizontal ? 'layout_constrainedWidth' : 'layout_constrainedHeight', 'true');
         }
         constraintMinMax(node, 'Width', true);
         if (horizontal) {
@@ -438,7 +436,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         },
         unsupported: {
             excluded: new Set(['BR']),
-            tagName: new Set(['SCRIPT', 'STYLE', 'OPTION', 'INPUT:hidden', 'MAP', 'AREA', 'SOURCE'])
+            tagName: new Set(['SCRIPT', 'STYLE', 'OPTION', 'INPUT:hidden', 'MAP', 'AREA', 'SOURCE', 'TEMPLATE', 'DATALIST', 'WBR'])
         },
         precision: {
             standardFloat: 4
@@ -939,7 +937,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public renderNode(layout: $Layout<T>) {
         const node = layout.node;
-        const controlName = View.getControlName(layout.containerType);
+        let controlName = View.getControlName(layout.containerType);
         node.setControlType(controlName, layout.containerType);
         node.alignmentType |= layout.alignmentType;
         let parent = layout.parent;
@@ -1223,7 +1221,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 node.mergeGravity(STRING_ANDROID.GRAVITY, STRING_ANDROID.CENTER_VERTICAL);
                 break;
-            case CONTAINER_ANDROID.EDIT:
+            case CONTAINER_ANDROID.EDIT: {
+                const element = <HTMLInputElement> node.element;
+                if (element.list && element.list.children.length) {
+                    controlName = CONTAINER_ANDROID.EDIT_LIST;
+                    node.controlName = controlName;
+                }
+                break;
+            }
             case CONTAINER_ANDROID.RANGE:
                 if (!node.hasWidth) {
                     node.css($const.CSS.WIDTH, $css.formatPX(node.bounds.width), true);

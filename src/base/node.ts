@@ -105,6 +105,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract get containerType(): number;
     public abstract get documentId(): string;
     public abstract get support(): Support;
+    public abstract set renderExclude(value: boolean);
+    public abstract get renderExclude(): boolean;
 
     public cloneBase(node: T) {
         Object.assign(node.localSettings, this.localSettings);
@@ -2139,19 +2141,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.leftTopAxis = value === 'absolute' && this.absoluteParent === this.documentParent || value === 'fixed';
         }
         return this._cached.leftTopAxis;
-    }
-
-    set renderExclude(value) {
-        this._cached.renderExclude = value;
-    }
-    get renderExclude() {
-        if (this._cached.renderExclude === undefined) {
-            this._cached.renderExclude = (
-                this.pseudoElement && this.css('content') === '""' && this.contentBoxWidth === 0 && this.contentBoxHeight === 0 ||
-                this.bounds.height === 0 && (this.marginTop < 0 || this.marginBottom < 0)
-            );
-        }
-        return this._cached.renderExclude;
     }
 
     get backgroundColor() {

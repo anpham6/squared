@@ -274,12 +274,15 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return '';
     }
 
-    public static getOptionArray(element: HTMLSelectElement) {
+    public static getOptionArray(element: HTMLSelectElement, showDisabled = false) {
         const stringArray: string[] = [];
         let numberArray = true;
         for (let i = 0; i < element.children.length; i++) {
             const item = <HTMLOptionElement> element.children[i];
-            const value = item.text.trim();
+            if (!showDisabled && item.disabled) {
+                continue;
+            }
+            const value = item.text.trim() || item.value.trim();
             if (value !== '') {
                 if (numberArray && !$util.isNumber(value)) {
                     numberArray = false;
@@ -931,7 +934,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 value = STRING_SPACE + value;
                             }
                             if (!node.lineBreakTrailing && $regex.CHAR.TRAILINGSPACE.test(original)) {
-                                const nextSibling = node.siblingsTrailing[0];
+                                const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
                                 if (nextSibling && !nextSibling.blockStatic) {
                                     value += STRING_SPACE;
                                 }

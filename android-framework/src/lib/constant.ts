@@ -23,6 +23,7 @@ export const CONTAINER_ANDROID = {
     CHECKBOX: 'CheckBox',
     RADIO: 'RadioButton',
     EDIT: 'EditText',
+    EDIT_LIST: 'AutoCompleteTextView',
     SELECT: 'Spinner',
     RANGE: 'SeekBar',
     SVG: 'ImageView',

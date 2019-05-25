@@ -31,7 +31,7 @@ declare global {
             public static STORED: ResourceStoredMap;
             public static generateId(section: string, name: string, start?: number): string;
             public static insertStoredAsset(asset: string, name: string, value: any): string;
-            public static getOptionArray(element: HTMLSelectElement): (string[] | undefined)[];
+            public static getOptionArray(element: HTMLSelectElement, showDisabled?: boolean): (string[] | undefined)[];
             public static isBackgroundVisible(object: BoxStyle | undefined): boolean;
             public static getBackgroundSize<T extends Node>(node: T, value: string): Dimension | undefined;
             public static isInheritedStyle(node: Node, attr: string): boolean;
