@@ -8,7 +8,6 @@ import NodeList from './nodelist';
 import { CSS_BORDER } from './lib/constant';
 import { NODE_TEMPLATE } from './lib/enumeration';
 
-const $color = squared.lib.color;
 const $const = squared.lib.constant;
 const $client = squared.lib.client;
 const $css = squared.lib.css;
@@ -73,7 +72,7 @@ export default abstract class Controller<T extends Node> implements squared.base
         else {
             styleMap = $session.getElementCache(element, 'styleMap', this.application.processing.sessionId) || {};
             const setBorderStyle = () => {
-                if (!styleMap.border) {
+                if (styleMap.border === undefined) {
                     let valid = true;
                     for (let i = 0; i < 4; i++) {
                         if (styleMap[CSS_BORDER[i][0]]) {
@@ -88,6 +87,32 @@ export default abstract class Controller<T extends Node> implements squared.base
                             styleMap[CSS_BORDER[i][1]] = '1px';
                             styleMap[CSS_BORDER[i][2]] = this.localSettings.style.inputBorderColor;
                         }
+                        return true;
+                    }
+                }
+                return false;
+            };
+            const setButtonStyle = (appliedBorder: boolean) => {
+                if (appliedBorder && styleMap.backgroundColor === undefined) {
+                    styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
+                }
+                if (styleMap.textAlign === undefined) {
+                    styleMap.textAlign = $const.CSS.CENTER;
+                }
+                if (styleMap.padding === undefined) {
+                    let valid = true;
+                    for (let i = 0; i < 4; i++) {
+                        if (styleMap[CSS_BORDER[i][3]]) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    if (valid) {
+                        styleMap.padding = '2px 6px 3px 6px';
+                        styleMap.paddingTop = '2px';
+                        styleMap.paddingRight = '6px';
+                        styleMap.paddingBottom = '3px';
+                        styleMap.paddingLeft = '6px';
                     }
                 }
             };
@@ -110,32 +135,32 @@ export default abstract class Controller<T extends Node> implements squared.base
             }
             switch (element.tagName) {
                 case 'INPUT': {
-                    switch ((<HTMLInputElement> element).type) {
+                    const type = (<HTMLInputElement> element).type;
+                    switch (type) {
                         case 'radio':
                         case 'checkbox':
                             break;
-                        case 'file':
-                        case 'reset':
-                        case 'submit':
-                        case 'button':
-                            const color = $color.parseColor($css.getStyle(element).getPropertyValue('background-color'));
-                            if (color === undefined) {
-                                styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
+                        case 'image':
+                            if (styleMap.verticalAlign === undefined) {
+                                styleMap.verticalAlign = 'text-bottom';
                             }
-                            if (styleMap.textAlign === undefined) {
-                                styleMap.textAlign = $const.CSS.CENTER;
-                            }
+                            break;
                         default:
-                            setBorderStyle();
+                            const result = setBorderStyle();
+                            switch (type) {
+                                case 'file':
+                                case 'reset':
+                                case 'submit':
+                                case 'button':
+                                    setButtonStyle(result);
+                                    break;
+                            }
                             break;
                     }
                     break;
                 }
                 case 'BUTTON':
-                    if (styleMap.textAlign === undefined) {
-                        styleMap.textAlign = $const.CSS.CENTER;
-                    }
-                    setBorderStyle();
+                    setButtonStyle(setBorderStyle());
                     break;
                 case 'TEXTAREA':
                 case 'SELECT':

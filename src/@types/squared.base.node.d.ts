@@ -19,6 +19,7 @@ declare global {
             baselineAltered: boolean;
             lineBreakLeading: boolean;
             lineBreakTrailing: boolean;
+            floatContainer: boolean;
             positioned: boolean;
             visible: boolean;
             excluded: boolean;

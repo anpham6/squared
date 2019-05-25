@@ -25,7 +25,9 @@ declare global {
         }
 
         namespace client {
+            export import PLATFORM = $client.PLATFORM;
             export import USER_AGENT = $client.USER_AGENT;
+            function isPlatform(value: string | number): boolean;
             function isUserAgent(value: string | number): boolean;
             function getDeviceDPI(): number;
         }

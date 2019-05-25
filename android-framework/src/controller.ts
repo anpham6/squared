@@ -13,6 +13,7 @@ import { createViewAttribute, getRootNs, getDocumentId } from './lib/util';
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;
 
+const $client = squared.lib.client;
 const $color = squared.lib.color;
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
@@ -322,7 +323,7 @@ function isTargeted(parent: View, node: View) {
 }
 
 function getTextBottom<T extends View>(nodes: T[]): T | undefined {
-    return $util.filterArray(nodes, node => node.verticalAlign === 'text-bottom' || node.blockVertical).sort((a, b) => {
+    return $util.filterArray(nodes, node => node.verticalAlign === 'text-bottom' && node.tagName !== 'INPUT_IMAGE' && !node.imageElement || node.blockVertical).sort((a, b) => {
         if (a.bounds.height === b.bounds.height) {
             return a.is(CONTAINER_NODE.SELECT) ? 1 : 0;
         }
@@ -427,8 +428,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
             enabled: false
         },
         style: {
-            inputBorderColor: 'rgb(221, 221, 221)',
-            inputBackgroundColor: 'rgb(221, 221, 221)'
+            inputBorderColor: 'rgb(0, 0, 0)',
+            inputBackgroundColor: $client.isPlatform($client.PLATFORM.MAC) ? 'rgb(255, 255, 255)' : 'rgb(221, 221, 221)'
         },
         supported: {
             fontFormat: ['truetype', 'opentype'],
@@ -1159,7 +1160,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (element.maxLength > 0) {
                         node.android('maxLength', element.maxLength.toString());
                     }
-                    if (!node.hasWidth && element.cols > 0) {
+                    if (!node.has($const.CSS.WIDTH) && element.cols > 0) {
                         node.css($const.CSS.WIDTH, $css.formatPX(element.cols * 8), true);
                     }
                     node.android('hint', element.placeholder);
@@ -1227,10 +1228,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     controlName = CONTAINER_ANDROID.EDIT_LIST;
                     node.controlName = controlName;
                 }
-                break;
             }
             case CONTAINER_ANDROID.RANGE:
-                if (!node.hasWidth) {
+                if (!node.has($const.CSS.WIDTH)) {
                     node.css($const.CSS.WIDTH, $css.formatPX(node.bounds.width), true);
                 }
                 break;
@@ -1668,12 +1668,28 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             if (actualParent === renderParent && actualParent.blockStatic && node.naturalElement && node.inlineStatic) {
                                 return actualParent.box.width - (node.linear.left - actualParent.box.left);
                             }
-                            else {
+                            else if (actualParent.floatContainer) {
                                 const { containerType, alignmentType } = this.containerTypeVerticalMargin;
                                 const container = node.ascend(true, item => item.of(containerType, alignmentType), actualParent);
                                 if (container.length) {
-                                    const removePaddingOffset = (item: T) => item.getBox($e.BOX_STANDARD.PADDING_LEFT)[1] + item.getBox($e.BOX_STANDARD.PADDING_RIGHT)[1];
-                                    return node.box.width - removePaddingOffset(node) - removePaddingOffset(renderParent);
+                                    let leftPadding = false;
+                                    let rightPadding = false;
+                                    for (const item of actualParent.actualChildren as T[]) {
+                                        if (item.floating && !children.includes(item)) {
+                                            if (item.float === $const.CSS.LEFT) {
+                                                if (Math.floor(item.linear.right) > node.box.left) {
+                                                    leftPadding = true;
+                                                }
+                                            }
+                                            else if (item.float === $const.CSS.RIGHT && node.box.right > Math.ceil(item.linear.left)) {
+                                                rightPadding = true;
+                                            }
+                                        }
+                                    }
+                                    if (leftPadding || rightPadding) {
+                                        const removePaddingOffset = (item: T) => (leftPadding ? item.getBox($e.BOX_STANDARD.PADDING_LEFT)[1] : 0) + (rightPadding ? item.getBox($e.BOX_STANDARD.PADDING_RIGHT)[1] : 0);
+                                        return node.box.width - removePaddingOffset(node) - (!container.includes(renderParent) ? removePaddingOffset(renderParent) : 0);
+                                    }
                                 }
                             }
                         }
@@ -2044,14 +2060,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         textBottom = getTextBottom(items);
                         if (textBottom) {
                             for (const item of baselineAlign) {
-                                if (item.baseline && !item.multiline) {
+                                if (item.baseline && !item.multiline && textBottom.bounds.height > item.bounds.height) {
                                     item.anchor($const.CSS.BOTTOM, textBottom.documentId);
                                 }
                             }
                         }
                     }
                     const lastItem = items[items.length - 1];
-                    if (!checkSingleLine(lastItem)) {
+                    if (lastItem.textElement && !lastItem.multiline && !checkSingleLine(lastItem)) {
                         lastItem.android('maxLines', '1');
                     }
                 }
@@ -2295,7 +2311,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
         const columnCount = node.toInt('columnCount');
         let columnSized = 0;
         if (columnWidth > 0) {
-            let boxWidth = node.box.width;
+            let boxWidth: number;
+            if ($client.isUserAgent($client.USER_AGENT.SAFARI)) {
+                boxWidth = Math.min(node.width > 0 ? node.width - node.contentBoxWidth : Number.POSITIVE_INFINITY, node.box.width * (columnCount || 1), node.documentParent.box.width - node.contentBoxWidth);
+            }
+            else {
+                boxWidth = node.box.width;
+            }
             while (boxWidth - columnWidth >= 0) {
                 columnSized++;
                 boxWidth -= columnWidth + columnGap;

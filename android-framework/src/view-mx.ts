@@ -1372,7 +1372,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
         get renderExclude() {
             if (this._cached.renderExclude === undefined) {
-                this._cached.renderExclude = this.bounds.height === 0 && (this.marginTop < 0 || this.marginBottom < 0 || this.textEmpty && this.css('clear') !== 'none');
+                this._cached.renderExclude = (this.bounds.width === 0 || this.bounds.height === 0) && (this.marginTop <= 0 && this.marginBottom <= 0 || this.textEmpty);
             }
             return this._cached.renderExclude;
         }

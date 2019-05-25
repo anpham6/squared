@@ -20,10 +20,10 @@ export const CSS_SPACING = new Map<number, string>([
 ]);
 
 export const CSS_BORDER = [
-    ['borderTopStyle', 'borderTopWidth', 'borderTopColor'],
-    ['borderRightStyle', 'borderRightWidth', 'borderRightColor'],
-    ['borderBottomStyle', 'borderBottomWidth', 'borderBottomColor'],
-    ['borderLeftStyle', 'borderLeftWidth', 'borderLeftColor'],
+    ['borderTopStyle', 'borderTopWidth', 'borderTopColor', 'paddingTop'],
+    ['borderRightStyle', 'borderRightWidth', 'borderRightColor', 'paddingRight'],
+    ['borderBottomStyle', 'borderBottomWidth', 'borderBottomColor', 'paddingBottom'],
+    ['borderLeftStyle', 'borderLeftWidth', 'borderLeftColor', 'paddingLeft'],
     ['outlineStyle', 'outlineWidth', 'outlineColor']
 ];
 

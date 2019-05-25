@@ -56,11 +56,9 @@ const $e = squared.base.lib.enumeration;
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeStrokeData {
     const style = border.style;
     const width = roundFloat(border.width);
-    let lighten = false;
     switch (style) {
         case 'inset':
         case 'outset':
-            lighten = true;
         case 'groove':
         case 'ridge':
             if (style === 'outset' || style === 'groove') {
@@ -82,13 +80,11 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
             switch (direction) {
                 case 0:
                 case 3:
-                    if (lighten) {
-                        percent = width === 1 ? -0.5 : -0.25;
-                    }
+                    percent = 0.8;
                     break;
                 case 1:
                 case 2:
-                    percent = lighten ? -0.5 : -0.75;
+                    percent = 0.5;
                     break;
             }
             if (percent !== 1) {
@@ -113,27 +109,26 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
     return result;
 }
 
-function getBorderStroke(border: BorderAttribute, direction = -1, offset = 0, hasInset = false, isInset = false): ExternalData | undefined {
+function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false): ExternalData | undefined {
     if (border) {
-        const style = border.style;
-        if (isAlternatingBorder(style)) {
+        if (isAlternatingBorder(border.style)) {
             const width = parseFloat(border.width);
             if (isInset) {
                 return {
-                    width: $css.formatPX(Math.ceil(width / 2) * 2 + offset),
+                    width: $css.formatPX(Math.ceil(width / 2) * 2),
                     ...getBorderStyle(border, direction)
                 };
             }
             else {
                 return {
-                    width: hasInset ? $css.formatPX(Math.ceil(width / 2) + offset) : $css.formatPX(roundFloat(border.width) + offset),
+                    width: hasInset ? $css.formatPX(Math.ceil(width / 2)) : $css.formatPX(roundFloat(border.width)),
                     ...getBorderStyle(border, direction, true)
                 };
             }
         }
         else {
             return {
-                width: $css.formatPX(roundFloat(border.width) + offset),
+                width: $css.formatPX(roundFloat(border.width)),
                 ...getBorderStyle(border)
             };
         }
@@ -195,7 +190,7 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
     const width = roundFloat(border.width);
     const borderWidth = Math.max(1, Math.floor(width / 3));
     const indentOffset = indentWidth > 0 ? $css.formatPX(indentWidth) : '';
-    let hideOffset = '-' + $css.formatPX(borderWidth + indentWidth);
+    let hideOffset = '-' + $css.formatPX(borderWidth + indentWidth + 1);
     items.push({
         top: top ? indentOffset : hideOffset,
         right: right ? indentOffset : hideOffset,
@@ -212,7 +207,7 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
     });
     const insetWidth = width - borderWidth + indentWidth;
     const drawOffset = $css.formatPX(insetWidth);
-    hideOffset = '-' + drawOffset;
+    hideOffset = '-' + $css.formatPX(insetWidth + 1);
     items.push({
         top: top ? drawOffset : hideOffset,
         right: right ? drawOffset : hideOffset,
@@ -430,7 +425,7 @@ const roundFloat = (value: string) => Math.round(parseFloat(value));
 
 const getStrokeColor = (value: string): ShapeStrokeData => ({ color: `@color/${value}`, dashWidth: '', dashGap: '' });
 
-const isInsetBorder = (border: BorderAttribute) => isAlternatingBorder(border.style) || border.style === 'double' && roundFloat(border.width) > 1;
+const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     const result: GradientColorStop[] = [];
@@ -558,7 +553,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 borderVisible[i] = false;
             }
         }
-        if (border && !isInsetBorder(border) || borderData === undefined && (corners || images && images.length)) {
+        if (border && !isAlternatingBorder(border.style) && !(border.style === 'double' && parseInt(border.width) > 1) || borderData === undefined && (corners || images && images.length)) {
             const stroke = border ? getBorderStroke(border) : false;
             if (images && images.length || indentWidth > 0) {
                 layerListData = createLayerList(data, images, borderOnly);
@@ -597,7 +592,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     );
                 }
                 else {
-                    const hideOffset = '-' + $css.formatPX(width + indentWidth);
+                    const hideOffset = '-' + $css.formatPX(width + indentWidth + 1);
                     layerListData[0].item.push({
                         top: borderVisible[0] ? indentOffset : hideOffset,
                         right: borderVisible[1] ? indentOffset : hideOffset,
@@ -612,7 +607,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             else {
-                function setBorderStyle(layerList: ObjectMap<any>, index: number, offset = 0) {
+                function setBorderStyle(layerList: ObjectMap<any>, index: number) {
                     const item = borders[index];
                     if (item) {
                         const width = roundFloat(item.width);
@@ -629,9 +624,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             );
                         }
                         else {
-                            const inset = width > 1 && isAlternatingBorder(item.style);
+                            const inset = width > 1 && isInsetBorder(item);
                             if (inset) {
-                                const hideInsetOffset = '-' + $css.formatPX(width + indentWidth);
+                                const hideInsetOffset = '-' + $css.formatPX(width + indentWidth + 1);
                                 layerList.item.push({
                                     top:  index === 0 ? '' : hideInsetOffset,
                                     right: index === 1 ? '' : hideInsetOffset,
@@ -639,11 +634,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     left: index === 3 ? '' : hideInsetOffset,
                                     shape: {
                                         'android:shape': 'rectangle',
-                                        stroke: getBorderStroke(item, index, offset, inset, true)
+                                        stroke: getBorderStroke(item, index, inset, true)
                                     }
                                 });
                             }
-                            const hideOffset = '-' + $css.formatPX((inset ? Math.ceil(width / 2) : width) + indentWidth);
+                            const hideOffset = '-' + $css.formatPX((inset ? Math.ceil(width / 2) : width) + indentWidth + 1);
                             layerList.item.push({
                                 top:  index === 0 ? indentOffset : hideOffset,
                                 right: index === 1 ? indentOffset : hideOffset,
@@ -652,7 +647,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 shape: {
                                     'android:shape': 'rectangle',
                                     corners,
-                                    stroke: getBorderStroke(item, index, offset, inset)
+                                    stroke: getBorderStroke(item, index, inset)
                                 }
                             });
                         }
@@ -762,7 +757,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         backgroundRepeat[j] = 'no-repeat';
                         backgroundSize[j] = `${image.actualWidth}px ${image.actualHeight}px`;
                         backgroundPosition[j] = $css.getBackgroundPosition(
-                            image.tagName === 'INPUT_IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left}px ${image.bounds.top - node.bounds.top}px`,
+                            image.tagName === 'INPUT_IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left + node.borderLeftWidth}px ${image.bounds.top - node.bounds.top + node.borderTopWidth}px`,
                             node.actualDimension,
                             node.fontSize
                         );

@@ -30,6 +30,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public baselineAltered = false;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
+    public floatContainer = false;
     public positioned = false;
     public controlId = '';
     public style!: CSSStyleDeclaration;

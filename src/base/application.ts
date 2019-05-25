@@ -682,6 +682,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 let siblingsTrailing: T[] = [];
                 if (length > 1) {
                     let trailing = children[0];
+                    let floating = false;
                     for (let i = 0; i < length; i++) {
                         const child = children[i];
                         if (child.excluded) {
@@ -692,6 +693,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                             this.processing.cache.append(child);
                         }
                         if (child.pageFlow) {
+                            if (child.floating) {
+                                floating = true;
+                            }
                             if (i > 0) {
                                 siblingsTrailing.push(child);
                                 if (child.lineBreak) {
@@ -715,6 +719,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         child.siblingIndex = i;
                     }
                     trailing.siblingsTrailing = siblingsTrailing;
+                    node.floatContainer = floating;
                 }
                 else {
                     const child = children[0];
@@ -782,13 +787,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 const axisY = parent.duplicate() as T[];
                 const length = axisY.length;
-                let hasFloat = false;
+                const hasFloat = parent.floatContainer;
                 let cleared!: Map<T, string>;
-                if (length > 1) {
-                    hasFloat = parent.some(node => node.floating);
-                    if (hasFloat) {
-                        cleared = <Map<T, string>> NodeList.linearData(parent.actualChildren, true).cleared;
-                    }
+                if (hasFloat) {
+                    cleared = <Map<T, string>> NodeList.linearData(parent.actualChildren, true).cleared;
                 }
                 for (let k = 0; k < length; k++) {
                     let nodeY = axisY[k];

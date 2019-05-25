@@ -1,10 +1,31 @@
 import { hasBit } from './util';
 
+export const enum PLATFORM {
+    WINDOWS = 2,
+    MAC = 4
+}
+
 export const enum USER_AGENT {
     CHROME = 2,
     SAFARI = 4,
     FIREFOX = 8,
     EDGE = 16
+}
+
+export function isPlatform(value: string | number) {
+    const platform = navigator.platform.toLowerCase();
+    if (typeof value === 'string') {
+        return platform.indexOf(value.toLowerCase()) !== -1;
+    }
+    else {
+        if (hasBit(value, PLATFORM.MAC) && /mac|iphone|ipad/.test(platform)) {
+            return true;
+        }
+        else if (hasBit(value, PLATFORM.WINDOWS) && /windows/.test(platform)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 export function isUserAgent(value: string | number) {
