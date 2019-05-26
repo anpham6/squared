@@ -140,6 +140,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 const options = createViewAttribute(undefined, { layout_columnWeight: columnWeight });
                 const element = $dom.createElement(node.actualParent && node.actualParent.element, image ? 'img' : 'span');
                 ordinal = this.application.createNode(element);
+                ordinal.tagName = `${node.tagName}_ORDINAL`;
                 if (inside) {
                     controller.addBeforeOutsideTemplate(ordinal.id, controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, createViewAttribute(undefined, { minWidth: $css.formatPX(minWidth), layout_columnWeight: columnWeight })));
                     minWidth = MINWIDTH_INSIDE;
@@ -151,7 +152,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     container.android('layout_columnSpan', columnCount.toString());
                 }
                 else {
-                    ordinal.tagName = `${node.tagName}_ORDINAL`;
                     if (image) {
                         Object.assign(options.android, {
                             src: `@drawable/${image}`,
@@ -172,6 +172,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     else {
                         ordinal.setControlType(CONTAINER_ANDROID.SPACE, CONTAINER_NODE.SPACE);
+                        ordinal.renderExclude = false;
                         node.modifyBox($e.BOX_STANDARD.PADDING_LEFT);
                     }
                     ordinal.inherit(node, 'textStyle');
@@ -233,6 +234,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     node.alignmentType |= $e.NODE_ALIGNMENT.TOP;
                 }
             }
+            if (node.blockStatic && !node.has($const.CSS.WIDTH)) {
+                node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
+            }
             if (container !== node) {
                 if (node.marginTop !== 0) {
                     container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.marginTop);
@@ -255,11 +259,5 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             }
         }
         return undefined;
-    }
-
-    public postOptimize(node: T) {
-        if (node.blockStatic && node.inlineWidth) {
-            node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
-        }
     }
 }

@@ -61,7 +61,9 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
         case 'outset':
         case 'groove':
         case 'ridge':
-            if (style === 'outset' || style === 'groove') {
+            const rgba = border.color.rgba;
+            const grayScale = rgba.r === rgba.g && rgba.g === rgba.b;
+            if (style === 'outset' || grayScale && style === 'groove' || !grayScale && style === 'ridge') {
                 halfSize = !halfSize;
             }
             if (halfSize) {
@@ -80,15 +82,17 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
             switch (direction) {
                 case 0:
                 case 3:
-                    percent = 0.8;
+                    if (grayScale) {
+                        percent = 0.8;
+                    }
                     break;
                 case 1:
                 case 2:
-                    percent = 0.5;
+                    percent = grayScale ? 0.5 : -0.75;
                     break;
             }
             if (percent !== 1) {
-                const reduced = $color.reduceRGBA(border.color.rgba, percent, border.color.valueAsARGB);
+                const reduced = $color.reduceRGBA(rgba, percent, border.color.valueAsARGB);
                 if (reduced) {
                     const colorName = Resource.addColor(reduced, true);
                     if (colorName !== '') {

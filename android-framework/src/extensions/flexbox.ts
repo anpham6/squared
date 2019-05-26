@@ -452,7 +452,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'baseline':
                                     if (horizontal) {
                                         if (baseline === undefined) {
-                                            baseline = $NodeList.baseline(seg)[0];
+                                            baseline = $NodeList.baseline(seg);
                                         }
                                         if (baseline && chain !== baseline) {
                                             chain.anchor('baseline', baseline.documentId);

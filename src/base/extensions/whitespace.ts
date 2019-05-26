@@ -313,23 +313,30 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     }
                     valid = true;
                     if (offset !== 0) {
-                        const aboveParent = above.visible && above.renderParent;
-                        const belowParent = below.visible && below.renderParent;
-                        if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
-                            belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
-                        }
-                        else if (aboveParent && aboveParent.groupParent && aboveParent.lastChild === above) {
-                            aboveParent.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                        }
-                        else if (belowParent && belowParent.layoutVertical && below.visible) {
-                            below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
-                        }
-                        else if (aboveParent && aboveParent.layoutVertical && above.visible) {
-                            above.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                        const aboveParent = above.renderParent;
+                        const belowParent = below.renderParent;
+                        if (aboveParent && belowParent) {
+                            const aboveGroup = aboveParent.groupParent && aboveParent.lastChild === above;
+                            const belowGroup = belowParent.groupParent && belowParent.firstChild === below;
+                            if (aboveGroup && belowGroup) {
+                                belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, belowParent.linear.top - aboveParent.linear.bottom);
+                            }
+                            else if (belowGroup) {
+                                belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                            }
+                            else if (aboveGroup) {
+                                aboveParent.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                            }
+                            else if (belowParent.layoutVertical && below.visible) {
+                                below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                            }
+                            else if (aboveParent.layoutVertical && above.visible) {
+                                above.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                            }
                         }
                         else {
                             const actualParent = node.actualParent;
-                            if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
+                            if (actualParent) {
                                 if (below.lineBreak || below.excluded) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                                 }

@@ -14,7 +14,7 @@ declare global {
         class NodeList<T extends Node> implements NodeList<T> {
             public static outerRegion<T extends Node>(node: T): BoxRect;
             public static actualParent<T>(list: T[]): T | null;
-            public static baseline<T>(list: T[], text?: boolean): T[];
+            public static baseline<T>(list: T[], text?: boolean): T | undefined;
             public static linearData<T>(list: T[], clearOnly?: boolean): LinearData<T>;
             public static partitionRows<T>(list: T[], parent?: T): T[][];
             public static siblingIndex(): number;

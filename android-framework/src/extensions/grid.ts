@@ -61,7 +61,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         const mainData: GridData = parent.data($c.EXT_NAME.GRID, $c.STRING_BASE.EXT_DATA);
         const cellData: GridCellData<T> = node.data($c.EXT_NAME.GRID, 'cellData');
         if (mainData && cellData) {
-            const siblings = cellData.siblings ? cellData.siblings.slice(0) : undefined;
+            const siblings = cellData.siblings && cellData.siblings.slice(0);
             let layout: $Layout<T> | undefined;
             if (siblings) {
                 siblings.unshift(node);
@@ -73,7 +73,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                         cellData.block ? $e.NODE_ALIGNMENT.BLOCK : 0,
                         siblings
                     )
-                ).layout;
+                );
                 node = layout.node;
                 if (cellData.block) {
                     node.css('display', 'block');

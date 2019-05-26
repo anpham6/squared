@@ -932,13 +932,13 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                 }
                 if (!this.layoutConstraint && !this.layoutFrame && !this.is(CONTAINER_NODE.GRID) && !this.layoutElement) {
-                    let fromParent = false;
-                    if (textAlign === '' && !this.inputElement) {
-                        textAlign = textAlignParent;
-                        fromParent = true;
+                    if (textAlign !== '') {
+                        if (!this.imageOrSvgElement) {
+                            this.mergeGravity(STRING_ANDROID.GRAVITY, textAlign);
+                        }
                     }
-                    if (textAlign !== '')  {
-                        this.mergeGravity(STRING_ANDROID.GRAVITY, textAlign, !fromParent);
+                    else if (textAlignParent !== '' && !this.inputElement) {
+                        this.mergeGravity(this.imageOrSvgElement ? STRING_ANDROID.LAYOUT_GRAVITY : STRING_ANDROID.GRAVITY, textAlignParent, true);
                     }
                 }
             }
@@ -1196,7 +1196,12 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         public extractAttributes(depth: number) {
             if (this.dir === 'rtl' && !this.imageOrSvgElement) {
-                this.android(this.length ? 'layoutDirection' : 'textDirection', 'rtl');
+                if (this.textElement) {
+                    this.android('textDirection', 'rtl');
+                }
+                else if (this.renderChildren.length) {
+                    this.android('layoutDirection', 'rtl');
+                }
             }
             if (this.styleElement && this.naturalElement) {
                 const dataset = $css.getDataSet(<HTMLElement> this.element, STRING_ANDROID.ANDROID);
@@ -1250,7 +1255,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         this.android('baselineAligned', 'false');
                     }
                     else {
-                        const baseline = $NodeList.baseline(renderChildren, true)[0];
+                        const baseline = $NodeList.baseline(renderChildren, true);
                         if (baseline && (baseline.textElement || baseline.inputElement)) {
                             this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
                         }
@@ -1372,9 +1377,53 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
         get renderExclude() {
             if (this._cached.renderExclude === undefined) {
-                this._cached.renderExclude = (this.bounds.width === 0 || this.bounds.height === 0) && (this.marginTop <= 0 && this.marginBottom <= 0 || this.textEmpty);
+                if (this.naturalElement && this.length === 0) {
+                    if (this.blockStatic || this.layoutVertical) {
+                        return this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0;
+                    }
+                    else {
+                        return this.bounds.width === 0 && this.textEmpty && this.marginLeft <= 0 && this.marginRight <= 0;
+                    }
+                }
+                else {
+                    this._cached.renderExclude = false;
+                }
             }
             return this._cached.renderExclude;
+        }
+
+        get baselineHeight() {
+            if (this._cached.baselineHeight === undefined) {
+                let height = 0;
+                if (!(this.plainText && this.multiline)) {
+                    if (this.multiline && this.cssTry('whiteSpace', 'nowrap')) {
+                        height = (<Element> this.element).getBoundingClientRect().height;
+                        this.cssFinally('whiteSpace');
+                    }
+                    else if (this.hasHeight) {
+                        height = this.actualHeight;
+                    }
+                    else {
+                        height = this.bounds.height;
+                    }
+                    if (this.has('lineHeight') && this.lineHeight > height) {
+                        height = this.lineHeight;
+                    }
+                    else if (this.inputElement) {
+                        switch (this.controlName) {
+                            case CONTAINER_ANDROID.RADIO:
+                            case CONTAINER_ANDROID.CHECKBOX:
+                                height += 8;
+                                break;
+                            case CONTAINER_ANDROID.SELECT:
+                                height += 4;
+                                break;
+                        }
+                    }
+                }
+                this._cached.baselineHeight = height;
+            }
+            return this._cached.baselineHeight;
         }
 
         get support() {

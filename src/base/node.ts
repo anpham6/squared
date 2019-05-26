@@ -105,6 +105,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract set containerType(value: number);
     public abstract get containerType(): number;
     public abstract get documentId(): string;
+    public abstract get baselineHeight(): number;
     public abstract get support(): Support;
     public abstract set renderExclude(value: boolean);
     public abstract get renderExclude(): boolean;
@@ -1622,25 +1623,25 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.lineHeight === undefined) {
             if (!this.imageElement && !this.svgElement) {
                 let hasOwnStyle = this.has('lineHeight');
-                let lineHeight = 0;
+                let value = 0;
                 if (hasOwnStyle) {
-                    lineHeight = $css.parseUnit(this.css('lineHeight'), this.fontSize);
+                    value = $css.parseUnit(this.css('lineHeight'), this.fontSize);
                 }
                 else if (this.naturalElement) {
-                    lineHeight = $util.convertFloat(this.cssAscend('lineHeight', false, $const.CSS.HEIGHT));
+                    value = $util.convertFloat(this.cssAscend('lineHeight', false, $const.CSS.HEIGHT));
                     if (this.styleElement) {
                         const fontSize = this.cssInitial('fontSize');
                         if (fontSize.endsWith('em')) {
                             const emSize = parseFloat(fontSize);
                             if (emSize < 1) {
-                                lineHeight *= emSize;
-                                this.css('lineHeight', $css.formatPX(lineHeight));
+                                value *= emSize;
+                                this.css('lineHeight', $css.formatPX(value));
                                 hasOwnStyle = true;
                             }
                         }
                     }
                 }
-                this._cached.lineHeight = hasOwnStyle || lineHeight > this.actualHeight || this.multiline || this.block && this.actualChildren.some(node => node.textElement) ? lineHeight : 0;
+                this._cached.lineHeight = hasOwnStyle || value > this.actualHeight || this.multiline || this.block && this.actualChildren.some(node => node.textElement) ? value : 0;
             }
             else {
                 this._cached.lineHeight = 0;
@@ -1886,8 +1887,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get inlineVertical() {
         if (this._cached.inlineVertical === undefined) {
-            const display = this.display;
-            this._cached.inlineVertical = (display.startsWith('inline') || display === 'table-cell') && !this.floating && !this.plainText;
+            const value = this.display;
+            this._cached.inlineVertical = (value.startsWith('inline') || value === 'table-cell') && !this.floating && !this.plainText;
         }
         return this._cached.inlineVertical;
     }
@@ -2075,11 +2076,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const overflowY = this.css('overflowY');
             let value = 0;
             if (!this.documentBody) {
-                const element = this.htmlElement && this._element;
-                if ((this.has($const.CSS.WIDTH) || this.has('maxWidth')) && (overflowX === 'scroll' || overflowX === $const.CSS.AUTO && element && element.clientWidth !== element.scrollWidth)) {
+                if ((this.has($const.CSS.WIDTH) || this.has('maxWidth')) && (overflowX === 'scroll' || overflowX === $const.CSS.AUTO)) {
                     value |= NODE_ALIGNMENT.HORIZONTAL;
                 }
-                if (this.hasHeight && (this.has($const.CSS.HEIGHT) || this.has('maxHeight')) && (overflowY === 'scroll' || overflowY === $const.CSS.AUTO && element && element.clientHeight !== element.scrollHeight)) {
+                if (this.hasHeight && (this.has($const.CSS.HEIGHT) || this.has('maxHeight')) && (overflowY === 'scroll' || overflowY === $const.CSS.AUTO)) {
                     value |= NODE_ALIGNMENT.VERTICAL;
                 }
             }

@@ -37,7 +37,7 @@ function removeExcluded(node: Node, element: Element, attr: string) {
                     value = value.replace(new RegExp(`\\s*${(<Element> item.element).outerHTML}\\s*`), '\\n');
                 }
                 else {
-                    value = value.replace((<Element> item.element).outerHTML, item.pageFlow && item.textContent ? STRING_SPACE : '');
+                    value = value.replace((<Element> item.element).outerHTML, item.pageFlow && item.textContent && item.renderParent === node ? STRING_SPACE : '');
                 }
             }
             else if ($util.isString(item[attr])) {
@@ -930,7 +930,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         if (inlined) {
                             const original = value;
                             value = value.trim();
-                            if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $regex.CHAR.LEADINGSPACE.test(original)) {
+                            if (previousSibling && $regex.CHAR.LEADINGSPACE.test(original) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
                                 value = STRING_SPACE + value;
                             }
                             if (!node.lineBreakTrailing && $regex.CHAR.TRAILINGSPACE.test(original)) {

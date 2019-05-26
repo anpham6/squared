@@ -89,6 +89,7 @@ declare global {
             readonly hasWidth: boolean;
             readonly hasHeight: boolean;
             readonly lineHeight: number;
+            readonly baselineHeight: number;
             readonly display: string;
             readonly positionRelative: boolean;
             readonly top: number;

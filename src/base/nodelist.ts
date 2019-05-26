@@ -65,85 +65,51 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
-        const baseline = $util.filterArray(list, item => (item.baseline || $css.isLength(item.verticalAlign)) && !item.floating && !item.baselineAltered && (item.naturalElement && item.length === 0 || item.every(child => child.baseline && !child.multiline)));
-        if (baseline.length) {
-            list = baseline;
-        }
-        else {
-            return baseline;
-        }
-        if (text) {
-            $util.spliceArray(list, item => !(item.textElement && item.naturalElement));
-        }
-        if (list.length > 1) {
-            let boundsHeight = 0;
-            let lineHeight = 0;
-            for (let i = 0; i < list.length; i++) {
-                const item = list[i];
-                if (!(item.layoutVertical && item.length > 1 || item.plainText && item.multiline)) {
-                    let height: number;
-                    if (item.htmlElement && item.multiline && item.cssTry('whiteSpace', 'nowrap')) {
-                        height = (<Element> item.element).getBoundingClientRect().height;
-                        item.cssFinally('whiteSpace');
-                    }
-                    else {
-                        height = item.bounds.height;
-                    }
-                    boundsHeight = Math.max(boundsHeight, height);
-                    lineHeight = Math.max(lineHeight, item.lineHeight);
-                }
-                else {
-                    list.splice(i--, 1);
-                }
+        list = $util.filterArray(list, item => {
+            if ((item.baseline || $css.isLength(item.verticalAlign)) && (!text || item.textElement && item.naturalElement)) {
+                return !item.floating && !item.baselineAltered && (item.naturalElement && item.length === 0 || item.every(child => child.inlineFlow && child.baseline && !child.multiline));
             }
-            $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !item.inputElement && item.bounds.height < boundsHeight);
+            return false;
+        });
+        if (list.length > 1) {
             list.sort((a, b) => {
-                if (a.groupParent || a.length || !a.baseline && b.baseline) {
+                if (a.length && b.length === 0 || b.textElement && !a.textElement) {
                     return 1;
                 }
-                else if (b.groupParent || b.length || a.baseline && !b.baseline) {
+                else if (b.length && a.length === 0 || a.textElement && !b.textElement) {
                     return -1;
                 }
-                else if (a.textElement && b.textElement) {
-                    if (a.fontSize === b.fontSize) {
-                        if (a.htmlElement && !b.htmlElement) {
-                            return -1;
-                        }
-                        else if (!a.htmlElement && b.htmlElement) {
-                            return 1;
-                        }
-                        return a.siblingIndex < b.siblingIndex ? -1 : 1;
+                let heightA = a.baselineHeight;
+                let heightB = b.baselineHeight;
+                if (a.marginTop !== 0) {
+                    if (a.imageElement || heightA >= heightB || a.marginTop < 0) {
+                        heightA += a.marginTop;
                     }
-                    return a.fontSize > b.fontSize ? -1 : 1;
-                }
-                else if (a.inputElement && b.inputElement) {
-                    if (a.fontSize === b.fontSize) {
-                        if (a.contentBoxHeight > b.contentBoxHeight) {
-                            return -1;
-                        }
-                        else if (a.contentBoxHeight < b.contentBoxHeight) {
-                            return 1;
-                        }
-                        else if (a.containerType !== b.containerType) {
-                            return a.containerType > b.containerType ? -1 : 1;
-                        }
+                    else {
+                        return a.marginTop > ((heightB - heightA) / 2) ? -1 : 1;
                     }
                 }
-                const heightA = Math.max(a.actualHeight, a.lineHeight);
-                const heightB = Math.max(b.actualHeight, b.lineHeight);
+                if (b.marginTop !== 0) {
+                    if (b.imageElement || heightB >= heightA || b.marginTop < 0) {
+                        heightB += b.marginTop;
+                    }
+                    else {
+                        return b.marginTop > ((heightA - heightB) / 2) ? 1 : -1;
+                    }
+                }
                 if (heightA !== heightB) {
                     return heightA > heightB ? -1 : 1;
                 }
-                else if (a.linear.bottom > b.linear.bottom) {
+                else if (a.bounds.bottom > b.bounds.bottom) {
                     return -1;
                 }
-                else if (a.linear.bottom < b.linear.bottom) {
+                else if (a.bounds.bottom < b.bounds.bottom) {
                     return 1;
                 }
                 return 0;
             });
         }
-        return list;
+        return list.shift();
     }
 
     public static linearData<T extends Node>(list: T[], clearOnly = false): LinearData<T> {

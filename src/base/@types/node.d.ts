@@ -57,6 +57,7 @@ export interface CachedValue<T> {
     height?: number;
     overflow?: number;
     lineHeight?: number;
+    baselineHeight?: number;
     dir?: string;
     tagName?: string;
     textContent?: string;

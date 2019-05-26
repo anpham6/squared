@@ -20,9 +20,9 @@ declare global {
             evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
             processUnknownParent(layout: Layout<T>): LayoutResult<T>;
             processUnknownChild(layout: Layout<T>): LayoutResult<T>;
-            processTraverseHorizontal(layout: Layout<T>, siblings: T[]): LayoutResult<T>;
-            processTraverseVertical(layout: Layout<T>, siblings: T[]): LayoutResult<T>;
-            processLayoutHorizontal(layout: Layout<T>): LayoutResult<T>;
+            processTraverseHorizontal(layout: Layout<T>, siblings: T[]): Layout<T>;
+            processTraverseVertical(layout: Layout<T>, siblings: T[]): Layout<T>;
+            processLayoutHorizontal(layout: Layout<T>): Layout<T>;
             setConstraints(): void;
             renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
             renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;
