@@ -62,34 +62,41 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
         case 'groove':
         case 'ridge':
             const rgba = border.color.rgba;
-            const grayScale = rgba.r === rgba.g && rgba.g === rgba.b;
-            if (style === 'outset' || grayScale && style === 'groove' || !grayScale && style === 'ridge') {
-                halfSize = !halfSize;
+            let percent = 1;
+            if (width === 1) {
+                if (style === 'inset' || style === 'outset') {
+                    percent = 0.5;
+                }
             }
-            if (halfSize) {
+            else {
+                const grayScale = rgba.r !== 0 && rgba.r === rgba.g && rgba.g === rgba.b;
+                if (style === 'inset' || grayScale && style === 'groove' || !grayScale && style === 'ridge') {
+                    halfSize = !halfSize;
+                }
+                if (halfSize) {
+                    switch (direction) {
+                        case 0:
+                        case 3:
+                            direction = 1;
+                            break;
+                        case 1:
+                        case 2:
+                            direction = 0;
+                            break;
+                    }
+                }
                 switch (direction) {
                     case 0:
                     case 3:
-                        direction = 1;
+                        if (grayScale) {
+                            percent = 0.5;
+                        }
                         break;
                     case 1:
                     case 2:
-                        direction = 0;
+                        percent = grayScale ? 0.8 : -0.75;
                         break;
                 }
-            }
-            let percent = 1;
-            switch (direction) {
-                case 0:
-                case 3:
-                    if (grayScale) {
-                        percent = 0.8;
-                    }
-                    break;
-                case 1:
-                case 2:
-                    percent = grayScale ? 0.5 : -0.75;
-                    break;
             }
             if (percent !== 1) {
                 const reduced = $color.reduceRGBA(rgba, percent, border.color.valueAsARGB);
@@ -658,9 +665,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 setBorderStyle(layerListData[0], 0);
-                setBorderStyle(layerListData[0], 1);
                 setBorderStyle(layerListData[0], 3);
                 setBorderStyle(layerListData[0], 2);
+                setBorderStyle(layerListData[0], 1);
             }
         }
         return [shapeData, layerListData];

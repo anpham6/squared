@@ -144,7 +144,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         const mainData: FlexboxData<T> = node.data($c.EXT_NAME.FLEXBOX, $c.STRING_BASE.EXT_DATA);
         if (mainData.directionRow && mainData.rowCount === 1 || mainData.directionColumn && mainData.columnCount === 1) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;
-            node.alignmentType |= $e.NODE_ALIGNMENT.AUTO_LAYOUT;
+            node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
             mainData.wrap = false;
             return { include: true };
         }

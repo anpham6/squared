@@ -5,7 +5,7 @@ import { getRootNs } from '../../lib/util';
 
 type NodeRenderIndex = {
     item: View;
-    name: string;
+    name?: string;
     index: number;
     merge: boolean;
 };
@@ -17,11 +17,11 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
 
     public beforeCascade() {
         for (const node of this.application.session.cache) {
-            if (node.renderParent && node.renderTemplates) {
+            if (node.renderTemplates) {
                 let open: NodeRenderIndex[] | undefined;
                 let close: NodeRenderIndex[] | undefined;
                 node.renderEach((item: T, index) => {
-                    const name = item.dataset.androidInclude || '';
+                    const name = item.dataset.androidInclude;
                     const closing = item.dataset.androidIncludeEnd === 'true';
                     if (name || closing) {
                         const data: NodeRenderIndex = {
@@ -75,7 +75,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 if (merge) {
                                     content = controller.getEnclosingXmlTag('merge', getRootNs(content), content);
                                 }
-                                this.application.saveDocument(openData.name, content, '', Number.POSITIVE_INFINITY);
+                                this.application.saveDocument(openData.name as string, content, '', Number.POSITIVE_INFINITY);
                                 close.splice(j, 1);
                                 break;
                             }

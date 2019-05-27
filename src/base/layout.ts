@@ -93,7 +93,7 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     public setType(containerType: number, alignmentType?: number) {
         this.containerType = containerType;
         if (alignmentType) {
-            this.alignmentType = alignmentType;
+            this.add(alignmentType);
         }
     }
 

@@ -25,6 +25,13 @@ export interface CSSFontFaceData {
 
 export const BOX_POSITION = [CSS.TOP, CSS.RIGHT, CSS.BOTTOM, CSS.LEFT];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
+export const BOX_BORDER = [
+    ['borderTopStyle', 'borderTopWidth', 'borderTopColor'],
+    ['borderRightStyle', 'borderRightWidth', 'borderRightColor'],
+    ['borderBottomStyle', 'borderBottomWidth', 'borderBottomColor'],
+    ['borderLeftStyle', 'borderLeftWidth', 'borderLeftColor'],
+    ['outlineStyle', 'outlineWidth', 'outlineColor']
+];
 export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
 
 export function getStyle(element: Element | null, target = '', cache = true): CSSStyleDeclaration {
@@ -46,8 +53,15 @@ export function getStyle(element: Element | null, target = '', cache = true): CS
     return <CSSStyleDeclaration> { display: CSS.NONE };
 }
 
-export function hasComputedStyle(element: Element | null): element is HTMLElement {
-    return !!element && typeof element['style'] === 'object' && typeof element['style']['display'] === 'string';
+export function getFontSize(element: Element | null) {
+    return parseFloat(getStyle(element).getPropertyValue('font-size')) || undefined;
+}
+
+export function hasComputedStyle(element: Element): element is HTMLElement {
+    if (element.nodeName.charAt(0) !== '#') {
+        return element instanceof HTMLElement || element instanceof SVGElement;
+    }
+    return false;
 }
 
 export function getSpecificity(value: string) {
@@ -118,36 +132,28 @@ export function getSpecificity(value: string) {
     return result;
 }
 
-export function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration, specificity = 0) {
-    if (value) {
-        if (specificity > 0) {
-            setElementCache(element, attr, specificity.toString(), value);
-        }
-        switch (value) {
-            case 'initial':
-                return '';
-            case 'auto':
-                return value;
-            case 'inherit':
-                value = getInheritedStyle(element, attr);
-                break;
-        }
-        if (isCustomProperty(value)) {
-            return style && style[attr] || calculateVar(element, value, attr);
-        }
-        return value;
+export function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration) {
+    if (value === 'inherit') {
+        value = getInheritedStyle(element, attr);
     }
-    return '';
+    else if (isCustomProperty(value)) {
+        if (style) {
+            return style[attr];
+        }
+        else {
+            const result = calculateVar(element, value, attr);
+            return result !== undefined ? result.toString() : '';
+        }
+    }
+    return value || '';
 }
 
-export function getDataSet(element: HTMLElement | null, prefix: string) {
+export function getDataSet(element: HTMLElement | SVGElement, prefix: string) {
     const result: StringMap = {};
-    if (element) {
-        prefix = convertCamelCase(prefix, '.');
-        for (const attr in element.dataset) {
-            if (attr.startsWith(prefix)) {
-                result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr] as string;
-            }
+    prefix = convertCamelCase(prefix, '.');
+    for (const attr in element.dataset) {
+        if (attr.startsWith(prefix)) {
+            result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr] as string;
         }
     }
     return result;
@@ -231,9 +237,6 @@ export function validMediaRule(value: string, fontSize?: number) {
                     default:
                         return unit === range;
                 }
-            }
-            if (!fontSize) {
-                fontSize = getFontSize(document.body);
             }
             const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
             let match: RegExpExecArray | null;
@@ -324,31 +327,22 @@ export function validMediaRule(value: string, fontSize?: number) {
     return false;
 }
 
-export function getFontSize(element: Element | null) {
-    return parseFloat(getStyle(element).getPropertyValue('font-size')) || undefined;
+export function isParentStyle(element: Element, attr: string, ...styles: string[]) {
+    return element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr]) || element.parentElement && styles.includes(getStyle(element.parentElement)[attr]);
 }
 
-export function isParentStyle(element: Element | null, attr: string, ...styles: string[]) {
-    if (element) {
-        return element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr]) || element.parentElement && styles.includes(getStyle(element.parentElement)[attr]);
-    }
-    return false;
-}
-
-export function getInheritedStyle(element: Element | null, attr: string, exclude?: RegExp, ...tagNames: string[]) {
+export function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]) {
     let value = '';
-    if (element) {
-        let current = element.parentElement;
-        while (current && !tagNames.includes(current.tagName)) {
-            value = getStyle(current)[attr];
-            if (value === 'inherit' || exclude && exclude.test(value)) {
-                value = '';
-            }
-            if (value || current === document.body) {
-                break;
-            }
-            current = current.parentElement;
+    let current = element.parentElement;
+    while (current && !tagNames.includes(current.tagName)) {
+        value = getStyle(current)[attr];
+        if (value === 'inherit' || exclude && exclude.test(value)) {
+            value = '';
         }
+        if (value || current === document.body) {
+            break;
+        }
+        current = current.parentElement;
     }
     return value;
 }
@@ -375,14 +369,13 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
     const result = parseVar(element, value);
     if (result) {
         if (attr && !dimension) {
-            const vertical = /(top|bottom|height)/.test(attr.toLowerCase());
-            if (element instanceof SVGElement) {
-                const rect = element.getBoundingClientRect();
-                dimension = vertical || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
+            const rect = (element instanceof SVGElement ? element : (element.parentElement || element)).getBoundingClientRect();
+            attr = attr.toLowerCase();
+            if (/^margin|padding|border/.test(attr)) {
+                dimension = Math.max(rect.width, rect.height);
             }
             else {
-                const rect = (element.parentElement || element).getBoundingClientRect();
-                dimension = vertical ? rect.height : rect.width;
+                dimension = /top|bottom|height|vertical/.test(attr) || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
             }
         }
         return calculate(result, dimension, getFontSize(element));
@@ -557,12 +550,11 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     }
     else if (result.length > 1 && isString(sizes)) {
         const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH}\\))?\\s*(.+)`);
-        const fontSize = getFontSize(document.body);
         let width = 0;
         for (const value of sizes.split(XML.SEPARATOR)) {
             const match = pattern.exec(value.trim());
             if (match) {
-                if (match[1] && !validMediaRule(match[1], fontSize)) {
+                if (match[1] && !validMediaRule(match[1])) {
                     continue;
                 }
                 if (match[4]) {
@@ -571,7 +563,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                         width = calculate(calcMatch[1]) || 0;
                     }
                     else {
-                        width = parseUnit(match[4], fontSize);
+                        width = parseUnit(match[4]);
                     }
                 }
                 if (width > 0) {
@@ -653,21 +645,18 @@ export function insertStyleSheetRule(value: string, index = 0) {
 }
 
 export function convertAngle(value: string, unit = 'deg') {
-    let angle = parseFloat(value);
-    if (!isNaN(angle)) {
-        switch (unit) {
-            case 'rad':
-                angle *= 180 / Math.PI;
-                break;
-            case 'grad':
-                angle /= 400;
-            case 'turn':
-                angle *= 360;
-                break;
-        }
-        return angle;
+    let angle = convertFloat(value);
+    switch (unit) {
+        case 'rad':
+            angle *= 180 / Math.PI;
+            break;
+        case 'grad':
+            angle /= 400;
+        case 'turn':
+            angle *= 360;
+            break;
     }
-    return 0;
+    return angle;
 }
 
 export function convertPX(value: string, fontSize?: number) {
@@ -808,7 +797,7 @@ export function parseUnit(value: string, fontSize?: number) {
                 case undefined:
                 case 'em':
                 case 'ch':
-                    result *= fontSize || 16;
+                    result *= fontSize || getFontSize(document.body) || 16;
                     break;
                 case 'rem':
                     result *= getFontSize(document.body) || 16;
@@ -854,11 +843,8 @@ export function parseAngle(value: string) {
     return 0;
 }
 
-export function formatPX(value: string | number) {
-    if (typeof value === 'string') {
-        value = parseFloat(value);
-    }
-    return isNaN(value) ? CSS.PX_0 : `${Math.round(value)}px`;
+export function formatPX(value: number) {
+    return `${Math.round(value) || 0}px`;
 }
 
 export function formatPercent(value: string | number, round = true) {

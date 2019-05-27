@@ -19,14 +19,6 @@ export const CSS_SPACING = new Map<number, string>([
     [BOX_STANDARD.PADDING_LEFT, 'paddingLeft']
 ]);
 
-export const CSS_BORDER = [
-    ['borderTopStyle', 'borderTopWidth', 'borderTopColor', 'paddingTop'],
-    ['borderRightStyle', 'borderRightWidth', 'borderRightColor', 'paddingRight'],
-    ['borderBottomStyle', 'borderBottomWidth', 'borderBottomColor', 'paddingBottom'],
-    ['borderLeftStyle', 'borderLeftWidth', 'borderLeftColor', 'paddingLeft'],
-    ['outlineStyle', 'outlineWidth', 'outlineColor']
-];
-
 export const EXT_NAME = {
     ACCESSIBILITY: 'squared.accessibility',
     CSS_GRID: 'squared.css-grid',

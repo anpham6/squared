@@ -26,7 +26,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                 if (item.renderAs) {
                     item = item.renderAs;
                 }
-                if (item.containerType === CONTAINER_NODE.RADIO) {
+                if (item.is(CONTAINER_NODE.RADIO)) {
                     const name = getInputName(<HTMLInputElement> item.element);
                     if (name !== '') {
                         inputName.add(name);
@@ -34,16 +34,14 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                     }
                 }
             }
-            if (valid && inputName.size === 1 && i > 1) {
+            if (valid && i > 1 && inputName.size === 1) {
                 const linearData = $NodeList.linearData(node.children);
-                if (linearData.linearX && !linearData.floated.has($const.CSS.RIGHT)) {
-                    return true;
-                }
+                return linearData.linearX && !linearData.floated.has($const.CSS.RIGHT);
             }
             return false;
         }
         else {
-            return node.containerType === CONTAINER_NODE.RADIO && getInputName(<HTMLInputElement> node.element) !== '' && !node.positioned;
+            return node.is(CONTAINER_NODE.RADIO) && getInputName(<HTMLInputElement> node.element) !== '' && !node.positioned;
         }
     }
 
@@ -51,10 +49,10 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
         const controlName = CONTAINER_ANDROID.RADIOGROUP;
         if (node.length) {
             node.setControlType(controlName, CONTAINER_NODE.LINEAR);
-            node.alignmentType |= $e.NODE_ALIGNMENT.HORIZONTAL;
+            node.addAlign($e.NODE_ALIGNMENT.HORIZONTAL);
             node.android('orientation', STRING_ANDROID.HORIZONTAL);
             if (node.baseline) {
-                node.css('verticalAlign', $const.CSS.MIDDLE, true);
+                node.css('verticalAlign', 'text-bottom', true);
                 node.baseline = false;
             }
             node.render(parent);
@@ -72,34 +70,28 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
             const inputName = getInputName(element);
             const children: T[] = [];
             const removeable: T[] = [];
-            let replacement: T | undefined;
-            for (let item of parent.children as T[]) {
+            parent.each((item: T) => {
                 let remove: T | undefined;
                 if (item.renderAs) {
-                    if (item.renderAs === node) {
-                        replacement = item;
-                    }
-                    else {
-                        remove = item;
-                    }
+                    remove = item;
                     item = item.renderAs as T;
                 }
-                if (node.containerType === CONTAINER_NODE.RADIO && getInputName(<HTMLInputElement> item.element) === inputName && !item.rendered) {
+                if (node.is(CONTAINER_NODE.RADIO) && getInputName(<HTMLInputElement> item.element) === inputName && !item.rendered) {
                     children.push(item);
                     if (remove) {
                         removeable.push(remove);
                     }
                 }
-            }
+            });
             if (children.length > 1) {
-                const container = this.application.controllerHandler.createNodeGroup(node, children, parent, replacement);
-                container.alignmentType |= $e.NODE_ALIGNMENT.HORIZONTAL | (parent.length !== children.length ? $e.NODE_ALIGNMENT.SEGMENTED : 0);
+                const container = this.application.controllerHandler.createNodeGroup(node, children, parent);
+                container.addAlign($e.NODE_ALIGNMENT.HORIZONTAL | (parent.length !== children.length ? $e.NODE_ALIGNMENT.SEGMENTED : 0));
                 if (parent.layoutConstraint) {
-                    container.companion = replacement || node;
+                    container.companion = node;
                 }
                 container.setControlType(controlName, CONTAINER_NODE.LINEAR);
                 container.inherit(node, 'alignment');
-                container.css('verticalAlign', $const.CSS.MIDDLE);
+                container.css('verticalAlign', 'text-bottom');
                 container.baseline = false;
                 container.exclude($e.NODE_RESOURCE.ASSET);
                 container.each(item => {

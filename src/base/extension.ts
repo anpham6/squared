@@ -8,7 +8,7 @@ const $util = squared.lib.util;
 
 export default abstract class Extension<T extends Node> implements squared.base.Extension<T> {
     public static findNestedElement(element: Element | null, name: string) {
-        if ($css.hasComputedStyle(element)) {
+        if (element && $css.hasComputedStyle(element)) {
             for (let i = 0; i < element.children.length; i++) {
                 const item = <HTMLElement> element.children[i];
                 if ($util.includes(item.dataset.use, name)) {
@@ -85,8 +85,8 @@ export default abstract class Extension<T extends Node> implements squared.base.
     }
 
     public condition(node: T, parent?: T) {
-        if ($css.hasComputedStyle(node.element)) {
-            return node.dataset.use ? this.included(node.element) : this.tagNames.length > 0;
+        if (node.styleElement) {
+            return node.dataset.use ? this.included(<HTMLElement> node.element) : this.tagNames.length > 0;
         }
         return false;
     }

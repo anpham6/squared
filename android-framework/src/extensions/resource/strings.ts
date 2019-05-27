@@ -20,7 +20,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
 
     public afterResources() {
         for (const node of this.application.processing.cache) {
-            if (node.hasResource($e.NODE_RESOURCE.VALUE_STRING)) {
+            if (node.naturalElement && node.hasResource($e.NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
                     case 'SELECT': {
                         const arrayName = this.createOptionArray(<HTMLSelectElement> node.element, node.controlId);
@@ -49,7 +49,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             const name = valueString.key || valueString.value;
                             let value = valueString.value;
                             if (renderParent && renderParent.layoutRelative) {
-                                if (node.alignParent($const.CSS.LEFT) && !$css.isParentStyle(node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                                if (node.alignParent($const.CSS.LEFT) && !$css.isParentStyle(<Element> node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
                                     const textContent = node.textContent;
                                     let leadingSpace = 0;
                                     for (let i = 0; i < textContent.length; i++) {

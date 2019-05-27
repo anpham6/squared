@@ -116,7 +116,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             }
             if (valid) {
                 element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
-                    if ($css.getStyle(element).display === $const.CSS.NONE) {
+                    if ($css.getStyle(item).display === $const.CSS.NONE) {
                         $session.setElementCache(item, 'squaredExternalDisplay', this.application.processing.sessionId, $const.CSS.NONE);
                         item.style.setProperty('display', 'block');
                     }
@@ -134,7 +134,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
     public processNode(node: T) {
         const parentAs = this.application.createNode($dom.createElement(), false);
         node.documentRoot = true;
-        node.alignmentType |= $e.NODE_ALIGNMENT.AUTO_LAYOUT;
+        node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
         node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
         node.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
         for (const item of node.cascade()) {
@@ -190,10 +190,10 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         }
         switch (controlName) {
             case NAVIGATION.MENU:
-                node.alignmentType |= $e.NODE_ALIGNMENT.AUTO_LAYOUT;
+                node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
                 break;
             case NAVIGATION.GROUP:
-                node.alignmentType |= $e.NODE_ALIGNMENT.AUTO_LAYOUT;
+                node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
                 parseDataSet(REGEXP_GROUP, element, options);
                 break;
             case NAVIGATION.ITEM:

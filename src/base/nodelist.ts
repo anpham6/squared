@@ -67,16 +67,16 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     public static baseline<T extends Node>(list: T[], text = false) {
         list = $util.filterArray(list, item => {
             if ((item.baseline || $css.isLength(item.verticalAlign)) && (!text || item.textElement && item.naturalElement)) {
-                return !item.floating && !item.baselineAltered && (item.naturalElement && item.length === 0 || item.every(child => child.inlineFlow && child.baseline && !child.multiline));
+                return !item.floating && !item.baselineAltered && (item.naturalElement && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline));
             }
             return false;
         });
         if (list.length > 1) {
             list.sort((a, b) => {
-                if (a.length && b.length === 0 || b.textElement && !a.textElement) {
+                if (a.length && b.length === 0) {
                     return 1;
                 }
-                else if (b.length && a.length === 0 || a.textElement && !b.textElement) {
+                else if (b.length && a.length === 0) {
                     return -1;
                 }
                 let heightA = a.baselineHeight;

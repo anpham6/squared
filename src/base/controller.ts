@@ -5,7 +5,6 @@ import Layout from './layout';
 import Node from './node';
 import NodeList from './nodelist';
 
-import { CSS_BORDER } from './lib/constant';
 import { NODE_TEMPLATE } from './lib/enumeration';
 
 const $const = squared.lib.constant;
@@ -43,7 +42,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract setConstraints(): void;
     public abstract optimize(nodes: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
-    public abstract createNodeGroup(node: T, children: T[], parent: T): T;
+    public abstract createNodeGroup(node: T, children: T[], parent?: T, traverse?: boolean): T;
     public abstract get userSettings(): UserSettings;
     public abstract get containerTypeHorizontal(): LayoutType;
     public abstract get containerTypeVertical(): LayoutType;
@@ -71,21 +70,22 @@ export default abstract class Controller<T extends Node> implements squared.base
         }
         else {
             styleMap = $session.getElementCache(element, 'styleMap', this.application.processing.sessionId) || {};
+            function checkBorderAttribute(index: number) {
+                for (let i = 0; i < 4; i++) {
+                    if (styleMap[$css.BOX_BORDER[i][index]]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
             const setBorderStyle = () => {
                 if (styleMap.border === undefined) {
-                    let valid = true;
-                    for (let i = 0; i < 4; i++) {
-                        if (styleMap[CSS_BORDER[i][0]]) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    if (valid) {
+                    if (checkBorderAttribute(0)) {
                         styleMap.border = `outset 1px ${this.localSettings.style.inputBorderColor}`;
                         for (let i = 0; i < 4; i++) {
-                            styleMap[CSS_BORDER[i][0]] = 'outset';
-                            styleMap[CSS_BORDER[i][1]] = '1px';
-                            styleMap[CSS_BORDER[i][2]] = this.localSettings.style.inputBorderColor;
+                            styleMap[$css.BOX_BORDER[i][0]] = 'outset';
+                            styleMap[$css.BOX_BORDER[i][1]] = '1px';
+                            styleMap[$css.BOX_BORDER[i][2]] = this.localSettings.style.inputBorderColor;
                         }
                         return true;
                     }
@@ -99,21 +99,11 @@ export default abstract class Controller<T extends Node> implements squared.base
                 if (styleMap.textAlign === undefined) {
                     styleMap.textAlign = $const.CSS.CENTER;
                 }
-                if (styleMap.padding === undefined) {
-                    let valid = true;
-                    for (let i = 0; i < 4; i++) {
-                        if (styleMap[CSS_BORDER[i][3]]) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    if (valid) {
-                        styleMap.padding = '2px 6px 3px 6px';
-                        styleMap.paddingTop = '2px';
-                        styleMap.paddingRight = '6px';
-                        styleMap.paddingBottom = '3px';
-                        styleMap.paddingLeft = '6px';
-                    }
+                if (styleMap.padding === undefined && !$css.BOX_PADDING.some(attr => !!styleMap[attr])) {
+                    styleMap.paddingTop = '2px';
+                    styleMap.paddingRight = '6px';
+                    styleMap.paddingBottom = '3px';
+                    styleMap.paddingLeft = '6px';
                 }
             };
             if ($client.isUserAgent($client.USER_AGENT.FIREFOX)) {
@@ -140,6 +130,16 @@ export default abstract class Controller<T extends Node> implements squared.base
                         case 'radio':
                         case 'checkbox':
                             break;
+                        case 'week':
+                        case 'month':
+                        case 'time':
+                        case 'date':
+                        case 'datetime-local':
+                            styleMap.paddingTop = $css.formatPX($util.convertFloat(styleMap.paddingTop) + 1);
+                            styleMap.paddingRight = $css.formatPX($util.convertFloat(styleMap.paddingRight) + 1);
+                            styleMap.paddingBottom = $css.formatPX($util.convertFloat(styleMap.paddingBottom) + 1);
+                            styleMap.paddingLeft = $css.formatPX($util.convertFloat(styleMap.paddingLeft) + 1);
+                            break;
                         case 'image':
                             if (styleMap.verticalAlign === undefined) {
                                 styleMap.verticalAlign = 'text-bottom';
@@ -164,9 +164,6 @@ export default abstract class Controller<T extends Node> implements squared.base
                     break;
                 case 'TEXTAREA':
                 case 'SELECT':
-                    if (styleMap.verticalAlign === undefined && (element.tagName === 'TEXTAREA' || (<HTMLSelectElement> element).size > 1)) {
-                        styleMap.verticalAlign = 'text-bottom';
-                    }
                     setBorderStyle();
                     break;
                 case 'FORM':
@@ -190,7 +187,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                             if (match) {
                                 if ($css.isLength(match[1])) {
-                                    styleMap[attr] = $css.formatPX(match[1]);
+                                    styleMap[attr] = `${match[1]}px`;
                                 }
                                 else if ($css.isPercent(match[1])) {
                                     styleMap[attr] = match[1];
@@ -308,7 +305,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                 return true;
             }
             const style = $css.getStyle(element);
-            return rect.width > 0 && style.getPropertyValue('float') !== $const.CSS.NONE || style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) || style.getPropertyValue('clear') !== $const.CSS.NONE;
+            return element.tagName === 'IMG' && style.getPropertyValue('display') !== $const.CSS.NONE || rect.width > 0 && style.getPropertyValue('float') !== $const.CSS.NONE || style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) || style.getPropertyValue('clear') !== $const.CSS.NONE;
         }
         return false;
     }

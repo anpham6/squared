@@ -5,7 +5,6 @@ import File from './file';
 import Node from './node';
 import NodeList from './nodelist';
 
-import { CSS_BORDER } from './lib/constant';
 import { NODE_RESOURCE } from './lib/enumeration';
 
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
@@ -37,7 +36,7 @@ function removeExcluded(node: Node, element: Element, attr: string) {
                     value = value.replace(new RegExp(`\\s*${(<Element> item.element).outerHTML}\\s*`), '\\n');
                 }
                 else {
-                    value = value.replace((<Element> item.element).outerHTML, item.pageFlow && item.textContent && item.renderParent === node ? STRING_SPACE : '');
+                    value = value.replace((<Element> item.element).outerHTML, item.pageFlow && item.textContent ? STRING_SPACE : '');
                 }
             }
             else if ($util.isString(item[attr])) {
@@ -333,7 +332,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public static isInheritedStyle(node: Node, attr: string) {
         if (node.styleElement) {
             const actualParent = node.actualParent;
-            if (actualParent && !node.cssInitial(attr)) {
+            if (actualParent && node.cssInitial(attr) === '') {
                 return node.style[attr] === actualParent.style[attr];
             }
         }
@@ -489,32 +488,24 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public setBoxStyle(node: T) {
         if (node.visible && node.styleElement) {
             const boxStyle: BoxStyle = {
-                backgroundSize: '',
-                backgroundRepeat: '',
-                backgroundPositionX: '',
-                backgroundPositionY: '',
-                borderRadius: undefined,
-                outline: undefined,
-                backgroundClip: undefined
+                backgroundSize: node.css('backgroundSize'),
+                backgroundRepeat: node.css('backgroundRepeat'),
+                backgroundPositionX: node.css('backgroundPositionX'),
+                backgroundPositionY: node.css('backgroundPositionY')
             };
-            if (!node.css('border').startsWith('0px none')) {
-                boxStyle.borderTop = undefined;
-                boxStyle.borderRight = undefined;
-                boxStyle.borderBottom = undefined;
-                boxStyle.borderLeft = undefined;
-            }
+            const element = <HTMLElement> node.element;
             const opacity = node.css('opacity');
-            function setBorderStyle(attr: string, index: number) {
-                const style = node.css(CSS_BORDER[index][0]) || $const.CSS.NONE;
-                let width = $css.formatPX(attr === 'outline' ? $util.convertFloat(node.style[CSS_BORDER[index][1]]) : node[CSS_BORDER[index][1]]);
-                let color = node.css(CSS_BORDER[index][2]) || 'initial';
+            function setBorderStyle(attr: string, border: string[]) {
+                const style = node.css(border[0]) || $const.CSS.NONE;
+                let width = $css.formatPX(attr !== 'outline' ? node[border[1]] : $util.convertFloat(node.style[border[1]]));
+                let color = node.css(border[2]) || 'initial';
                 switch (color) {
                     case 'initial':
                         color = 'rgb(0, 0, 0)';
                         break;
                     case 'inherit':
                     case 'currentcolor':
-                        color = $css.getInheritedStyle(node.element, CSS_BORDER[index][2]);
+                        color = $css.getInheritedStyle(element, border[2]);
                         break;
                 }
                 if (style !== $const.CSS.NONE && width !== $const.CSS.PX_0) {
@@ -531,71 +522,52 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     }
                 }
             }
-            for (const attr in boxStyle) {
-                const value = node.css(attr);
-                switch (attr) {
-                    case 'backgroundSize':
-                    case 'backgroundRepeat':
-                    case 'backgroundPositionX':
-                    case 'backgroundPositionY':
-                        boxStyle[attr] = value;
-                        break;
-                    case 'backgroundClip':
-                        switch (value) {
-                            case 'content-box':
-                                boxStyle.backgroundClip = {
-                                    top: node.borderTopWidth + node.paddingTop,
-                                    right: node.borderRightWidth + node.paddingRight,
-                                    bottom: node.borderBottomWidth + node.paddingBottom,
-                                    left: node.borderLeftWidth + node.paddingLeft
-                                };
-                                break;
-                            case 'padding-box':
-                                boxStyle.backgroundClip = {
-                                    top: node.borderTopWidth,
-                                    right: node.borderRightWidth,
-                                    bottom: node.borderBottomWidth,
-                                    left: node.borderLeftWidth
-                                };
-                                break;
-                        }
-                        break;
-                    case 'borderTop':
-                        setBorderStyle(attr, 0);
-                        break;
-                    case 'borderRight':
-                        setBorderStyle(attr, 1);
-                        break;
-                    case 'borderBottom':
-                        setBorderStyle(attr, 2);
-                        break;
-                    case 'borderLeft':
-                        setBorderStyle(attr, 3);
-                        break;
-                    case 'outline':
-                        setBorderStyle(attr, 4);
-                        break;
-                    case 'borderRadius':
-                        if (value !== $const.CSS.PX_0) {
-                            const [A, B] = node.css('borderTopLeftRadius').split(' ');
-                            const [C, D] = node.css('borderTopRightRadius').split(' ');
-                            const [E, F] = node.css('borderBottomRightRadius').split(' ');
-                            const [G, H] = node.css('borderBottomLeftRadius').split(' ');
-                            const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
-                            const horizontal = node.actualWidth >= node.actualHeight;
-                            if (borderRadius.every(radius => radius === borderRadius[0])) {
-                                if (borderRadius[0] === $const.CSS.PX_0 || borderRadius[0] === '') {
-                                    continue;
-                                }
-                                borderRadius.length = 1;
-                            }
-                            for (let i = 0; i < borderRadius.length; i++) {
-                                borderRadius[i] = node.convertPX(borderRadius[i], horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT, false);
-                            }
-                            boxStyle.borderRadius = borderRadius;
-                        }
-                        break;
+            switch (node.css('backgroundClip')) {
+                case 'padding-box':
+                    boxStyle.backgroundClip = {
+                        top: node.borderTopWidth,
+                        right: node.borderRightWidth,
+                        bottom: node.borderBottomWidth,
+                        left: node.borderLeftWidth
+                    };
+                    break;
+                case 'content-box':
+                    boxStyle.backgroundClip = {
+                        top: node.borderTopWidth + node.paddingTop,
+                        right: node.borderRightWidth + node.paddingRight,
+                        bottom: node.borderBottomWidth + node.paddingBottom,
+                        left: node.borderLeftWidth + node.paddingLeft
+                    };
+                    break;
+            }
+            if (node.css('borderRadius') !== $const.CSS.PX_0) {
+                const [A, B] = node.css('borderTopLeftRadius').split(' ');
+                const [C, D] = node.css('borderTopRightRadius').split(' ');
+                const [E, F] = node.css('borderBottomRightRadius').split(' ');
+                const [G, H] = node.css('borderBottomLeftRadius').split(' ');
+                const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
+                const horizontal = node.actualWidth >= node.actualHeight;
+                if (borderRadius.every(radius => radius === borderRadius[0])) {
+                    if (borderRadius[0] === $const.CSS.PX_0 || borderRadius[0] === '') {
+                        borderRadius.length = 0;
+                    }
+                    else {
+                        borderRadius.length = 1;
+                    }
                 }
+                if (borderRadius.length) {
+                    for (let i = 0; i < borderRadius.length; i++) {
+                        borderRadius[i] = node.convertPX(borderRadius[i], horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT, false);
+                    }
+                    boxStyle.borderRadius = borderRadius;
+                }
+            }
+            if (!node.css('border').startsWith('0px none')) {
+                setBorderStyle('borderTop', $css.BOX_BORDER[0]);
+                setBorderStyle('borderRight', $css.BOX_BORDER[1]);
+                setBorderStyle('borderBottom', $css.BOX_BORDER[2]);
+                setBorderStyle('borderLeft', $css.BOX_BORDER[3]);
+                setBorderStyle('outline', $css.BOX_BORDER[4]);
             }
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                 const images: (string | Gradient)[] = [];
@@ -757,12 +729,10 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     boxStyle.backgroundImage = images;
                 }
             }
-            {
-                const backgroundColor = node.documentParent.visible ? node.backgroundColor : node.css('backgroundColor');
-                if (backgroundColor !== '') {
-                    const color = $color.parseColor(backgroundColor, opacity);
-                    boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
-                }
+            const backgroundColor = node.documentParent.visible ? node.backgroundColor : node.css('backgroundColor');
+            if (backgroundColor !== '') {
+                const color = $color.parseColor(backgroundColor, opacity);
+                boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
             }
             if (boxStyle.borderTop && boxStyle.borderRight && boxStyle.borderBottom && boxStyle.borderLeft) {
                 let valid = true;

@@ -100,22 +100,22 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         columnIndex[col] += element.colSpan;
                     }
                 }
-                if (!td.hasWidth) {
+                if (!td.has($const.CSS.WIDTH)) {
                     const width = $dom.getNamedItem(element, $const.CSS.WIDTH);
                     if ($css.isPercent(width)) {
-                        td.css($const.CSS.WIDTH, node.convertPX(width, $const.CSS.WIDTH, false));
+                        td.css($const.CSS.WIDTH, width);
                     }
                     else if ($util.isNumber(width)) {
-                        td.css($const.CSS.WIDTH, $css.formatPX(width));
+                        td.css($const.CSS.WIDTH, $css.formatPX(parseFloat(width)));
                     }
                 }
-                if (!td.hasHeight) {
+                if (!td.has($const.CSS.HEIGHT)) {
                     const height = $dom.getNamedItem(element, $const.CSS.HEIGHT);
                     if ($css.isPercent(height)) {
-                        td.css($const.CSS.HEIGHT, node.convertPX(height, $const.CSS.HEIGHT, false));
+                        td.css($const.CSS.HEIGHT, height);
                     }
                     else if ($util.isNumber(height)) {
-                        td.css($const.CSS.HEIGHT, $css.formatPX(height));
+                        td.css($const.CSS.HEIGHT, $css.formatPX(parseFloat(height)));
                     }
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {

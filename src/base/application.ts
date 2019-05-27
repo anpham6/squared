@@ -10,6 +10,8 @@ import Resource from './resource';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
+type PreloadImage = HTMLImageElement | string;
+
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
@@ -222,7 +224,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         for (const value of elements) {
             const element = typeof value === 'string' ? document.getElementById(value) : value;
-            if ($css.hasComputedStyle(element)) {
+            if (element && $css.hasComputedStyle(element)) {
                 this.rootElements.add(element);
             }
         }
@@ -261,7 +263,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 __THEN.call(this);
             }
         };
-        const images: (HTMLImageElement | string)[] = [];
+        const images: PreloadImage[] = [];
         if (this.userSettings.preloadImages) {
             for (const element of this.rootElements) {
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
@@ -331,22 +333,18 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         if (images.length) {
             this.initialized = true;
-            Promise.all($util.objectMap<HTMLImageElement | string, {}>(images, image => {
+            Promise.all($util.objectMap<PreloadImage, Promise<PreloadImage>>(images, image => {
                 return new Promise((resolve, reject) => {
                     if (typeof image === 'string') {
                         resolve(getImageSvgAsync(image));
                     }
                     else {
-                        image.onload = () => {
-                            resolve(image);
-                        };
-                        image.onerror = () => {
-                            reject(image);
-                        };
+                        image.onload = () => resolve(image);
+                        image.onerror = () => reject(image);
                     }
                 });
             }))
-            .then((result: (HTMLImageElement | string)[]) => {
+            .then((result: PreloadImage[]) => {
                 for (let i = 0; i < result.length; i++) {
                     const value = result[i];
                     if (typeof value === 'string') {
@@ -355,6 +353,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     else {
+                        value.onload = null;
+                        value.onerror = null;
                         this.resourceHandler.addImage(value);
                     }
                 }
@@ -510,7 +510,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 preAlignment[id] = {};
             }
             preAlignment[id][attr] = restoreValue;
-            element.style[attr] = value;
+            element.style.setProperty(attr, value);
         }
         let resetBounds = false;
         const CACHE = this.processing.cache;
@@ -523,7 +523,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         case $const.CSS.CENTER:
                         case $const.CSS.RIGHT:
                         case $const.CSS.END:
-                            saveAlignment(element, node.id, 'textAlign', $const.CSS.LEFT, textAlign);
+                            saveAlignment(element, node.id, 'text-align', $const.CSS.LEFT, textAlign);
                             break;
                     }
                 }
@@ -584,7 +584,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const reset = preAlignment[node.id];
                 if (reset) {
                     for (const attr in reset) {
-                        element.style[attr] = reset[attr];
+                        element.style.setProperty(attr, reset[attr]);
                     }
                 }
                 if (direction.has(element)) {
@@ -786,15 +786,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                     continue;
                 }
                 const axisY = parent.duplicate() as T[];
-                const length = axisY.length;
                 const hasFloat = parent.floatContainer;
+                const length = axisY.length;
                 let cleared!: Map<T, string>;
                 if (hasFloat) {
                     cleared = <Map<T, string>> NodeList.linearData(parent.actualChildren, true).cleared;
                 }
                 for (let k = 0; k < length; k++) {
                     let nodeY = axisY[k];
-                    if (!nodeY.visible || nodeY.rendered || nodeY.naturalElement && !nodeY.documentRoot && this.rootElements.has(<HTMLElement> nodeY.element)) {
+                    if (nodeY.rendered || !nodeY.visible || nodeY.naturalElement && !nodeY.documentRoot && this.rootElements.has(<HTMLElement> nodeY.element)) {
                         continue;
                     }
                     let parentY = nodeY.parent as T;
@@ -824,11 +824,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                             m++;
                         }
                         traverse: {
-                            let floated!: Set<string>;
                             let floatActive!: Set<string>;
                             let floatCleared!: Map<T, string>;
                             if (hasFloat) {
-                                floated = new Set<string>();
                                 floatActive = new Set<string>();
                                 floatCleared = new Map<T, string>();
                             }
@@ -849,7 +847,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             }
                                         }
                                         if (item.floating) {
-                                            floated.add(item.float);
                                             floatActive.add(item.float);
                                         }
                                     }
@@ -875,7 +872,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                          if (!item.floating || previous.floating && !$util.aboveRange(item.linear.top, previous.linear.bottom)) {
                                                             if (floatCleared.has(item)) {
                                                                 if (!item.floating) {
-                                                                    item.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
+                                                                    item.addAlign(NODE_ALIGNMENT.EXTENDABLE);
                                                                     horizontal.push(item);
                                                                     extended = true;
                                                                     continue;
@@ -945,27 +942,25 @@ export default class Application<T extends Node> implements squared.base.Applica
                         let segEnd: T | undefined;
                         if (horizontal.length > 1) {
                             layout = this.controllerHandler.processTraverseHorizontal(new Layout(parentY, nodeY, 0, 0, horizontal), axisY);
-                            segEnd = horizontal.pop();
+                            segEnd = horizontal[horizontal.length - 1];
                         }
                         else if (vertical.length > 1) {
                             layout = this.controllerHandler.processTraverseVertical(new Layout(parentY, nodeY, 0, 0, vertical), axisY);
-                            segEnd = vertical.pop() as T;
+                            segEnd = vertical[vertical.length - 1];
                             if (segEnd.horizontalAligned && segEnd !== axisY[length - 1]) {
-                                segEnd.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
+                                segEnd.addAlign(NODE_ALIGNMENT.EXTENDABLE);
                             }
                         }
-                        if (parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) && segEnd === axisY[length - 1]) {
-                            parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
-                        }
                         if (layout && this.addLayout(layout)) {
+                            if (segEnd === axisY[length - 1]) {
+                                parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
+                            }
                             parentY = nodeY.parent as T;
                         }
                     }
-                    if (nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
-                        nodeY.alignmentType ^= NODE_ALIGNMENT.EXTENDABLE;
-                    }
-                    if (k === length - 1 && parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN)) {
-                        parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
+                    nodeY.removeAlign(NODE_ALIGNMENT.EXTENDABLE);
+                    if (k === length - 1) {
+                        parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                     }
                     if (nodeY.renderAs && parentY.appendTry(nodeY, nodeY.renderAs, false)) {
                         nodeY.hide();
@@ -1113,7 +1108,6 @@ export default class Application<T extends Node> implements squared.base.Applica
         const inlineBelow: T[] = [];
         const leftAbove: T[] = [];
         const rightAbove: T[] = [];
-        const requirePadding = (node: T) => node.textElement && (node.blockStatic || node.multiline);
         let leftBelow: T[] | undefined;
         let rightBelow: T[] | undefined;
         let leftSub: T[] | T[][] | undefined;
@@ -1207,25 +1201,26 @@ export default class Application<T extends Node> implements squared.base.Applica
         else if (rightAbove.length) {
             rightSub = rightAbove;
         }
-        const vertical = controller.containerTypeVertical;
-        const outerVertical = controller.containerTypeVerticalMargin;
-        const alignmentType = rightAbove.length + (rightBelow ? rightBelow.length : 0) === layout.length ? NODE_ALIGNMENT.RIGHT : 0;
+        const { containerType, alignmentType } = controller.containerTypeVertical;
+        const verticalMargin = controller.containerTypeVerticalMargin;
+        if (rightAbove.length + (rightBelow ? rightBelow.length : 0) === layout.length) {
+            layout.add(NODE_ALIGNMENT.RIGHT);
+        }
         if (inlineBelow.length) {
             if (inlineBelow.length > 1) {
-                inlineBelow[0].alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
+                inlineBelow[0].addAlign(NODE_ALIGNMENT.EXTENDABLE);
             }
             inlineBelow.unshift(layout.node);
             const parent = this.createNode($dom.createElement(layout.node.actualParent && layout.node.actualParent.element), true, layout.parent, inlineBelow);
             this.addLayout(new Layout(
                 layout.parent,
                 parent,
-                vertical.containerType,
-                vertical.alignmentType | (layout.parent.blockStatic ? NODE_ALIGNMENT.BLOCK : 0),
+                containerType,
+                alignmentType | (layout.parent.blockStatic ? NODE_ALIGNMENT.BLOCK : 0),
                 inlineBelow
             ));
-            layout.reset(parent);
+            layout.parent = parent;
         }
-        layout.add(alignmentType);
         if (inlineAbove.length) {
             layerIndex.push(inlineAbove);
         }
@@ -1235,14 +1230,12 @@ export default class Application<T extends Node> implements squared.base.Applica
         if (rightSub) {
             layerIndex.push(rightSub);
         }
-        layout.setType(outerVertical.containerType, outerVertical.alignmentType);
+        layout.setType(verticalMargin.containerType, verticalMargin.alignmentType);
         layout.itemCount = layerIndex.length;
-        if (layout.hasAlign(NODE_ALIGNMENT.RIGHT)) {
-            layout.add(NODE_ALIGNMENT.BLOCK);
-        }
-        let floatgroup: T | undefined;
+        layout.add(NODE_ALIGNMENT.BLOCK);
         for (const item of layerIndex) {
             let segments: T[][];
+            let floatgroup: T | undefined;
             if (Array.isArray(item[0])) {
                 segments = item as T[][];
                 const grouping: T[] = [];
@@ -1258,8 +1251,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                     const group = new Layout(
                         layout.node,
                         floatgroup,
-                        vertical.containerType,
-                        vertical.alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
+                        containerType,
+                        alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
                     );
                     group.itemCount = segments.length;
                     this.addLayout(group);
@@ -1267,86 +1260,37 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             else {
                 segments = [item as T[]];
-                floatgroup = undefined;
             }
             for (const seg of segments) {
-                const basegroup = floatgroup && (seg === inlineAbove || seg === leftAbove || seg === leftBelow || seg === rightAbove || seg === rightBelow) ? floatgroup : layout.node;
-                const target = controller.createNodeGroup(seg[0], seg, basegroup);
+                const node = floatgroup || layout.node;
+                const target = controller.createNodeGroup(seg[0], seg, node, true);
                 const group = new Layout(
-                    basegroup,
+                    node,
                     target,
                     0,
-                    NODE_ALIGNMENT.SEGMENTED,
+                    NODE_ALIGNMENT.SEGMENTED | (seg === inlineAbove ? NODE_ALIGNMENT.COLUMN : 0),
                     seg
                 );
-                if (seg.some(child => child.blockStatic || child.multiline && basegroup.blockStatic || child.percentWidth)) {
-                    group.add(NODE_ALIGNMENT.BLOCK);
-                }
                 if (seg.length === 1) {
-                    target.innerWrapped = seg[0];
-                    seg[0].outerWrapper = target;
+                    group.node.innerWrapped = seg[0];
+                    seg[0].outerWrapper = group.node;
                     if (seg[0].percentWidth) {
                         const percent = this.controllerHandler.containerTypePercent;
                         group.setType(percent.containerType, percent.alignmentType);
                     }
                     else {
-                        group.setType(vertical.containerType, vertical.alignmentType);
+                        group.setType(containerType, alignmentType);
                     }
                 }
                 else if (group.linearY) {
-                    group.setType(vertical.containerType, vertical.alignmentType);
+                    group.setType(containerType, alignmentType);
                 }
                 else {
                     controller.processLayoutHorizontal(group);
                 }
                 this.addLayout(group);
-                if (seg === inlineAbove && (inlineAbove.some(child => requirePadding(child) || child.blockStatic && child.cascadeSome((nested: T) => requirePadding(nested))))) {
-                    if (leftAbove.length) {
-                        let floatPosition = Number.NEGATIVE_INFINITY;
-                        let invalid = 0;
-                        let hasSpacing = false;
-                        for (const child of leftAbove) {
-                            const right = child.linear.right + (child.marginLeft < 0 ? child.marginLeft : 0);
-                            if (right > floatPosition) {
-                                floatPosition = right;
-                                hasSpacing = child.marginRight > 0;
-                            }
-                        }
-                        for (const child of inlineAbove) {
-                            if (child.blockStatic && child.bounds.left > floatPosition) {
-                                invalid++;
-                            }
-                        }
-                        if (invalid < inlineAbove.length) {
-                            const offset = floatPosition - basegroup.box.left;
-                            if (offset > 0) {
-                                target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? controller.localSettings.deviations.textMarginBoundarySize : 0));
-                            }
-                        }
-                    }
-                    if (rightAbove.length) {
-                        let floatPosition = Number.POSITIVE_INFINITY;
-                        let invalid = 0;
-                        let hasSpacing = false;
-                        for (const child of rightAbove) {
-                            const left = child.linear.left + (child.marginRight < 0 ? child.marginRight : 0);
-                            if (left < floatPosition) {
-                                floatPosition = left;
-                                hasSpacing = child.marginLeft > 0;
-                            }
-                        }
-                        for (const child of inlineAbove) {
-                            if (child.blockStatic && child.bounds.right < floatPosition) {
-                                invalid++;
-                            }
-                        }
-                        if (invalid < inlineAbove.length) {
-                            const offset = basegroup.box.right - floatPosition;
-                            if (offset > 0) {
-                                target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? controller.localSettings.deviations.textMarginBoundarySize : 0));
-                            }
-                        }
-                    }
+                if (seg === inlineAbove) {
+                    this.setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
                 }
             }
         }
@@ -1355,21 +1299,21 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     protected processFloatVertical(layout: Layout<T>) {
         const controller = this.controllerHandler;
-        const vertical = controller.containerTypeVertical;
+        const { containerType, alignmentType } = controller.containerTypeVertical;
         if (layout.containerType !== 0) {
             const parent = controller.createNodeGroup(layout.node, [layout.node], layout.parent);
             this.addLayout(new Layout(
                 parent,
                 layout.node,
-                vertical.containerType,
-                vertical.alignmentType,
+                containerType,
+                alignmentType,
                 parent.children as T[]
             ));
             layout.node = parent;
         }
         else {
-            layout.containerType = vertical.containerType;
-            layout.add(vertical.alignmentType);
+            layout.containerType = containerType;
+            layout.add(alignmentType);
         }
         const staticRows: T[][] = [];
         const floatedRows: Null<T[]>[] = [];
@@ -1437,8 +1381,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                 else {
                     const floating = floatedRows[i] || [];
                     if (pageFlow.length || floating.length) {
-                        const basegroup = controller.createNodeGroup(floating[0] || pageFlow[0], [], layout.node);
                         const verticalMargin = controller.containerTypeVerticalMargin;
+                        const basegroup = controller.createNodeGroup(floating[0] || pageFlow[0], [], layout.node);
                         const layoutGroup = new Layout(
                             layout.node,
                             basegroup,
@@ -1447,29 +1391,16 @@ export default class Application<T extends Node> implements squared.base.Applica
                         );
                         const children: T[] = [];
                         let subgroup: T | undefined;
-                        if (floating.length > 1) {
-                            subgroup = controller.createNodeGroup(floating[0], floating, basegroup);
+                        if (floating.length) {
+                            const floatgroup = controller.createNodeGroup(floating[0], floating, basegroup);
                             layoutGroup.add(NODE_ALIGNMENT.FLOAT);
                             if (pageFlow.length === 0 && floating.every(item => item.float === $const.CSS.RIGHT)) {
                                 layoutGroup.add(NODE_ALIGNMENT.RIGHT);
                             }
+                            children.push(floatgroup);
                         }
-                        else if (floating.length) {
-                            subgroup = floating[0];
-                            subgroup.parent = basegroup;
-                        }
-                        if (subgroup) {
-                            children.push(subgroup);
-                            subgroup = undefined;
-                        }
-                        if (pageFlow.length > 1) {
+                        if (pageFlow.length) {
                             subgroup = controller.createNodeGroup(pageFlow[0], pageFlow, basegroup);
-                        }
-                        else if (pageFlow.length) {
-                            subgroup = pageFlow[0];
-                            subgroup.parent = basegroup;
-                        }
-                        if (subgroup) {
                             children.push(subgroup);
                         }
                         basegroup.init();
@@ -1477,15 +1408,19 @@ export default class Application<T extends Node> implements squared.base.Applica
                         this.addLayout(layoutGroup);
                         for (let node of children) {
                             if (!node.groupParent) {
-                                node = controller.createNodeGroup(node, [node], basegroup);
+                                node = controller.createNodeGroup(node, [node], basegroup, true);
                             }
                             this.addLayout(new Layout(
                                 basegroup,
                                 node,
-                                vertical.containerType,
-                                vertical.alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
+                                containerType,
+                                alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
                                 node.children as T[]
                             ));
+                        }
+                        if (pageFlow.length && floating.length) {
+                            const [leftAbove, rightAbove] = $util.partitionArray(floating, item => item.float !== 'right');
+                            this.setFloatPadding(layout.node, subgroup as T, pageFlow, leftAbove, rightAbove);
                         }
                     }
                 }
@@ -1584,7 +1519,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 styleMap.fontFamily = style.getPropertyValue('font-family');
             }
             if (styleMap.fontSize) {
-                styleMap.fontSize = $css.convertPX(styleMap.fontSize, $css.getFontSize(document.body));
+                styleMap.fontSize = $css.convertPX(styleMap.fontSize);
             }
             else {
                 styleMap.fontSize = style.getPropertyValue('font-size');
@@ -1677,7 +1612,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 let counter = initalValue;
                                 let ascending = false;
                                 let lastResetElement: Element | undefined;
-                                function incrementCounter(increment: number, pseudo = false) {
+                                function incrementCounter(increment: number, pseudo: boolean) {
                                     if (subcounter.length === 0) {
                                         counter += increment;
                                     }
@@ -1697,7 +1632,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 const childStyle = $css.getStyle(child);
                                                 increment = getCounterValue(childStyle.getPropertyValue('counter-increment'));
                                                 if (increment) {
-                                                    incrementCounter(increment);
+                                                    incrementCounter(increment, false);
                                                 }
                                                 increment = getCounterValue(childStyle.getPropertyValue('counter-reset'));
                                                 if (increment !== undefined) {
@@ -1729,7 +1664,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         const currentStyle = $css.getStyle(current);
                                         const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment')) || 0;
                                         if (counterIncrement) {
-                                            incrementCounter(counterIncrement);
+                                            incrementCounter(counterIncrement, false);
                                         }
                                         const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'));
                                         if (counterReset !== undefined) {
@@ -1844,6 +1779,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     private applyStyleRule(item: CSSStyleRule) {
+        const sessionId = this.processing.sessionId;
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
                 const fromRule: string[] = [];
@@ -1858,7 +1794,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         const style = $css.getStyle(element, targetElt);
                         const styleMap: StringMap = {};
                         for (const attr of fromRule) {
-                            const value = $css.checkStyleValue(element, attr, item.style[attr], style, specificity);
+                            const value = $css.checkStyleValue(element, attr, item.style[attr], style);
                             if (value) {
                                 styleMap[attr] = value;
                             }
@@ -1882,9 +1818,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                         });
                         const attrStyle = `styleMap${targetElt}`;
                         const attrSpecificity = `styleSpecificity${targetElt}`;
-                        const styleData: StringMap = $session.getElementCache(element, attrStyle, this.processing.sessionId);
+                        const styleData: StringMap = $session.getElementCache(element, attrStyle, sessionId);
                         if (styleData) {
-                            const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, this.processing.sessionId) || {};
+                            const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, sessionId) || {};
                             for (const attr in styleMap) {
                                 if (specificityData[attr] === undefined || specificity >= specificityData[attr]) {
                                     styleData[attr] = styleMap[attr];
@@ -1898,9 +1834,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 specificityData[attr] = specificity;
                             }
                             $session.setElementCache(element, `style${targetElt}`, '0', style);
-                            $session.setElementCache(element, 'sessionId', '0', this.processing.sessionId);
-                            $session.setElementCache(element, attrStyle, this.processing.sessionId, styleMap);
-                            $session.setElementCache(element, attrSpecificity, this.processing.sessionId, specificityData);
+                            $session.setElementCache(element, 'sessionId', '0', sessionId);
+                            $session.setElementCache(element, attrStyle, sessionId, styleMap);
+                            $session.setElementCache(element, attrSpecificity, sessionId, specificityData);
                         }
                     });
                 }
@@ -1949,6 +1885,58 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
                 break;
+            }
+        }
+    }
+
+    private setFloatPadding<T extends Node>(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
+        const requirePadding = (node: T) => node.textElement && (node.blockStatic || node.multiline);
+        if (inlineAbove.some(child => requirePadding(child) || child.blockStatic && child.cascadeSome((nested: T) => requirePadding(nested)))) {
+            if (leftAbove.length) {
+                let floatPosition = Number.NEGATIVE_INFINITY;
+                let invalid = 0;
+                let hasSpacing = false;
+                for (const child of leftAbove) {
+                    const right = child.linear.right + (child.marginLeft < 0 ? child.marginLeft : 0);
+                    if (right > floatPosition) {
+                        floatPosition = right;
+                        hasSpacing = child.marginRight > 0;
+                    }
+                }
+                for (const child of inlineAbove) {
+                    if (child.blockStatic && child.bounds.left > floatPosition) {
+                        invalid++;
+                    }
+                }
+                if (invalid < inlineAbove.length) {
+                    const offset = floatPosition - parent.box.left;
+                    if (offset > 0) {
+                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
+                    }
+                }
+            }
+            if (rightAbove.length) {
+                let floatPosition = Number.POSITIVE_INFINITY;
+                let invalid = 0;
+                let hasSpacing = false;
+                for (const child of rightAbove) {
+                    const left = child.linear.left + (child.marginRight < 0 ? child.marginRight : 0);
+                    if (left < floatPosition) {
+                        floatPosition = left;
+                        hasSpacing = child.marginLeft > 0;
+                    }
+                }
+                for (const child of inlineAbove) {
+                    if (child.blockStatic && child.bounds.right < floatPosition) {
+                        invalid++;
+                    }
+                }
+                if (invalid < inlineAbove.length) {
+                    const offset = parent.box.right - floatPosition;
+                    if (offset > 0) {
+                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
+                    }
+                }
             }
         }
     }

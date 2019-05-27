@@ -202,6 +202,8 @@ declare global {
             toFloat(attr: string, initial?: boolean, fallback?: number): number;
             parseUnit(value: string, dimension?: string, parent?: boolean): number;
             convertPX(value: string, dimension?: string, parent?: boolean): string;
+            addAlign(value: number): void;
+            removeAlign(value: number): void;
             has(attr: string, checkType?: number, options?: {}): boolean;
             hasAlign(value: number): boolean;
             hasProcedure(value: number): boolean;

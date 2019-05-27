@@ -42,29 +42,29 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             return item.pageFlow;
         }) as T[];
         const mainData = Flexbox.createDataAttribute(node, children);
-        if (node.cssTry('alignItems', $const.CSS.START)) {
-            if (node.cssTry('justifyItems', $const.CSS.START)) {
+        if (node.cssTry('align-items', $const.CSS.START)) {
+            if (node.cssTry('justify-items', $const.CSS.START)) {
                 for (const item of children) {
                     const bounds = item.initial.bounds;
-                    if (bounds && item.cssTry('alignSelf', $const.CSS.START)) {
-                        if (item.cssTry('justifySelf', $const.CSS.START)) {
-                            if (item.cssTry('flexGrow', '0')) {
-                                if (item.cssTry('flexShrink', '1')) {
+                    if (bounds && item.cssTry('align-self', $const.CSS.START)) {
+                        if (item.cssTry('justify-self', $const.CSS.START)) {
+                            if (item.cssTry('flex-grow', '0')) {
+                                if (item.cssTry('flex-shrink', '1')) {
                                     const rect = (<Element> item.element).getBoundingClientRect();
                                     bounds.width = rect.width;
                                     bounds.height = rect.height;
-                                    item.cssFinally('flexShrink');
+                                    item.cssFinally('flex-shrink');
                                 }
-                                item.cssFinally('flexGrow');
+                                item.cssFinally('flex-grow');
                             }
-                            item.cssFinally('justifySelf');
+                            item.cssFinally('justify-self');
                         }
-                        item.cssFinally('alignSelf');
+                        item.cssFinally('align-self');
                     }
                 }
-                node.cssFinally('justifyItems');
+                node.cssFinally('justify-items');
             }
-            node.cssFinally('alignItems');
+            node.cssFinally('align-items');
         }
         if (mainData.wrap) {
             let align: string;
@@ -111,14 +111,14 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             if (rows.length > 1) {
                 for (let i = 0; i < rows.length; i++) {
                     const seg = rows[i];
-                    const group = controller.createNodeGroup(seg[0], seg, node);
+                    const group = controller.createNodeGroup(seg[0], seg, node, true);
                     group.siblingIndex = i;
                     node.sort(NodeList.siblingIndex);
                     const box = group.unsafe('box');
                     if (box) {
                         box[size] = node.box[size];
                     }
-                    group.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
+                    group.addAlign(NODE_ALIGNMENT.SEGMENTED);
                     maxCount = Math.max(seg.length, maxCount);
                 }
             }

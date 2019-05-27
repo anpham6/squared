@@ -68,7 +68,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 layout = this.application.controllerHandler.processLayoutHorizontal(
                     new $Layout(
                         parent,
-                        this.application.controllerHandler.createNodeGroup(node, siblings, parent),
+                        this.application.controllerHandler.createNodeGroup(node, siblings, parent, true),
                         0,
                         cellData.block ? $e.NODE_ALIGNMENT.BLOCK : 0,
                         siblings

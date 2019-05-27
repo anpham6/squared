@@ -231,11 +231,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                 }
                 else if (node.filter(item => item.visible).length > 1 && $NodeList.linearData(node.children).linearY) {
-                    node.alignmentType |= $e.NODE_ALIGNMENT.TOP;
+                    node.addAlign($e.NODE_ALIGNMENT.TOP);
                 }
-            }
-            if (node.blockStatic && !node.has($const.CSS.WIDTH)) {
-                node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
             }
             if (container !== node) {
                 if (node.marginTop !== 0) {
@@ -244,17 +241,16 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     node.outerWrapper = container;
                     container.innerWrapped = node;
                 }
-                const layout = new $Layout(
-                    parent,
-                    container,
-                    CONTAINER_NODE.LINEAR,
-                    $e.NODE_ALIGNMENT.VERTICAL | $e.NODE_ALIGNMENT.UNKNOWN,
-                    container.children as T[]
-                );
                 return {
                     parent: container,
                     renderAs: container,
-                    outputAs: this.application.renderNode(layout)
+                    outputAs: this.application.renderNode(new $Layout(
+                        parent,
+                        container,
+                        CONTAINER_NODE.LINEAR,
+                        $e.NODE_ALIGNMENT.VERTICAL | $e.NODE_ALIGNMENT.UNKNOWN,
+                        container.children as T[]
+                    ))
                 };
             }
         }

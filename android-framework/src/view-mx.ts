@@ -98,8 +98,8 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
             node.android('lineSpacingExtra', $css.formatPX(offset), overwrite);
         }
     }
-    if (node.styleElement && !node.has($const.CSS.HEIGHT) && node.cssTry('lineHeight', 'normal')) {
-        if (node.cssTry('whiteSpace', 'nowrap')) {
+    if (node.styleElement && !node.has($const.CSS.HEIGHT) && node.cssTry('line-height', 'normal')) {
+        if (node.cssTry('white-space', 'nowrap')) {
             const offset = (lineHeight - (<Element> node.element).getBoundingClientRect().height) / 2;
             if (Math.floor(offset) > 0) {
                 node.modifyBox($e.BOX_STANDARD.PADDING_TOP, Math.round(offset));
@@ -107,9 +107,9 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
                     node.modifyBox($e.BOX_STANDARD.PADDING_BOTTOM, Math.floor(offset));
                 }
             }
-            node.cssFinally('whiteSpace');
+            node.cssFinally('white-space');
         }
-        node.cssFinally('lineHeight');
+        node.cssFinally('line-height');
     }
 }
 
@@ -123,13 +123,13 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
     else if (node.length === 0 && (node.pageFlow || node.textContent.length)) {
         let offset = 0;
         let usePadding = true;
-        if (node.styleElement && !inlineStyle && !node.has($const.CSS.HEIGHT) && node.cssTry('lineHeight', 'normal')) {
-            if (node.cssTry('whiteSpace', 'nowrap')) {
+        if (node.styleElement && !inlineStyle && !node.has($const.CSS.HEIGHT) && node.cssTry('line-height', 'normal')) {
+            if (node.cssTry('white-space', 'nowrap')) {
                 offset = (lineHeight - ((<Element> node.element).getBoundingClientRect().height || node.actualHeight)) / 2;
-                node.cssFinally('whiteSpace');
                 usePadding = false;
+                node.cssFinally('white-space');
             }
-            node.cssFinally('lineHeight');
+            node.cssFinally('line-height');
         }
         else if (inlineStyle && node.inlineText && !node.inline) {
             adjustMinHeight(node, lineHeight);
@@ -209,8 +209,8 @@ export default (Base: Constructor<squared.base.Node>) => {
         protected _cached: CachedValue<T> = {};
         protected _controlName = '';
         protected _documentParent?: T;
-        protected readonly _boxAdjustment: BoxModel = $dom.newBoxModel();
-        protected readonly _boxReset: BoxModel = $dom.newBoxModel();
+        protected _boxAdjustment?: BoxModel;
+        protected _boxReset?: BoxModel;
 
         private _containerType = 0;
         private _localSettings: LocalSettings = {
@@ -228,6 +228,9 @@ export default (Base: Constructor<squared.base.Node>) => {
             afterInit?: BindGeneric<T, void>)
         {
             super(id, sessionId, element);
+            if (element) {
+                this.init();
+            }
             if (afterInit) {
                 afterInit(this);
             }
@@ -294,8 +297,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         const attr: string = LAYOUT_ANDROID.constraint[position];
                         if (attr) {
-                            node.app(this.localizeString(attr), documentId, overwrite);
                             let horizontal = false;
+                            node.app(this.localizeString(attr), documentId, overwrite);
                             switch (position) {
                                 case $const.CSS.LEFT:
                                 case $const.CSS.RIGHT:
@@ -341,7 +344,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         node.anchor(horizontal ? $const.CSS.LEFT : $const.CSS.TOP, STRING_ANDROID.PARENT, overwrite);
                         node.anchor(horizontal ? $const.CSS.RIGHT : $const.CSS.BOTTOM, STRING_ANDROID.PARENT, overwrite);
                         node.constraint[orientation] = true;
-                        if (style !== undefined) {
+                        if (style) {
                             node.anchorStyle(orientation, style, bias, overwrite);
                         }
                         return true;
@@ -358,8 +361,9 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         public anchorStyle(orientation: string, value = 'packed', bias = 0, overwrite = true) {
             const node = this.anchorTarget;
-            node.app(orientation === STRING_ANDROID.HORIZONTAL ? 'layout_constraintHorizontal_chainStyle' : 'layout_constraintVertical_chainStyle', value, overwrite);
-            node.app(orientation === STRING_ANDROID.HORIZONTAL ? 'layout_constraintHorizontal_bias' : 'layout_constraintVertical_bias', bias.toString(), overwrite);
+            const horizontal = orientation === STRING_ANDROID.HORIZONTAL;
+            node.app(horizontal ? 'layout_constraintHorizontal_chainStyle' : 'layout_constraintVertical_chainStyle', value, overwrite);
+            node.app(horizontal ? 'layout_constraintHorizontal_bias' : 'layout_constraintVertical_bias', bias.toString(), overwrite);
         }
 
         public anchorDelete(...position: string[]) {
@@ -530,8 +534,12 @@ export default (Base: Constructor<squared.base.Node>) => {
             }
             this.cloneBase(node);
             if (attributes) {
-                Object.assign(node.unsafe('boxReset'), this._boxReset);
-                Object.assign(node.unsafe('boxAdjustment'), this._boxAdjustment);
+                if (this._boxReset) {
+                    Object.assign(node.unsafe('boxReset'), this._boxReset);
+                }
+                if (this._boxAdjustment) {
+                    Object.assign(node.unsafe('boxAdjustment'), this._boxAdjustment);
+                }
                 for (const name of this._namespaces) {
                     const obj: StringMap = this[`__${name}`];
                     for (const attr in obj) {
@@ -938,7 +946,14 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                     else if (textAlignParent !== '' && !this.inputElement) {
-                        this.mergeGravity(this.imageOrSvgElement ? STRING_ANDROID.LAYOUT_GRAVITY : STRING_ANDROID.GRAVITY, textAlignParent, true);
+                        if (this.imageOrSvgElement) {
+                            if (this.pageFlow) {
+                                this.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, textAlignParent);
+                            }
+                        }
+                        else {
+                            this.mergeGravity(STRING_ANDROID.GRAVITY, textAlignParent);
+                        }
                     }
                 }
             }
@@ -1085,7 +1100,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 let left = 0;
                 for (let i = 0 ; i < attrs.length; i++) {
                     const attr = attrs[i];
-                    let value = this._boxReset[attr] === 0 ? this[attr] : 0;
+                    let value = this._boxReset === undefined || this._boxReset[attr] === 0 ? this[attr] : 0;
                     if (value !== 0 && attr === 'marginRight') {
                         if (value < 0) {
                             if (this.float === $const.CSS.RIGHT) {
@@ -1105,7 +1120,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                             }
                         }
                     }
-                    value += this._boxAdjustment[attr];
+                    if (this._boxAdjustment) {
+                        value += this._boxAdjustment[attr];
+                    }
                     switch (i) {
                         case 0:
                             top = value;
@@ -1347,12 +1364,12 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
         get containerType() {
             if (this._containerType === 0) {
-                const value = ELEMENT_ANDROID[this.tagName] || 0;
-                if (value !== 0) {
+                const value: number = ELEMENT_ANDROID[this.tagName];
+                if (value) {
                     this._containerType = value;
                 }
             }
-            return this._containerType || 0;
+            return this._containerType;
         }
 
         get imageOrSvgElement() {
@@ -1396,9 +1413,9 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (this._cached.baselineHeight === undefined) {
                 let height = 0;
                 if (!(this.plainText && this.multiline)) {
-                    if (this.multiline && this.cssTry('whiteSpace', 'nowrap')) {
+                    if (this.multiline && this.cssTry('white-space', 'nowrap')) {
                         height = (<Element> this.element).getBoundingClientRect().height;
-                        this.cssFinally('whiteSpace');
+                        this.cssFinally('white-space');
                     }
                     else if (this.hasHeight) {
                         height = this.actualHeight;

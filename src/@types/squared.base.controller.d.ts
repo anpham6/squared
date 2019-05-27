@@ -27,7 +27,7 @@ declare global {
             renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
             renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;
             renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
-            createNodeGroup(node: T, children: T[], parent?: T, replacement?: T): T;
+            createNodeGroup(node: T, children: T[], parent?: T, traverse?: boolean): T;
             sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
             addBeforeOutsideTemplate(id: number, value: string, index?: number): void;
             addBeforeInsideTemplate(id: number, value: string, index?: number): void;

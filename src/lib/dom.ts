@@ -160,7 +160,7 @@ export function createElement(parent?: Element | null, tagName = 'span', placeho
 export function createStyleElement(parent: HTMLElement, tagName: string, attrs: StringMap) {
     const element = document.createElement(tagName);
     for (const attr in attrs) {
-        element.style[attr] = attrs[attr];
+        element.style.setProperty(attr, attrs[attr]);
     }
     parent.appendChild(element);
     return element;

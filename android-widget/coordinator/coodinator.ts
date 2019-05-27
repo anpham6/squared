@@ -26,6 +26,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
         }
         node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude($e.NODE_RESOURCE.ASSET);
+        node.renderExclude = false;
         node.render(parent);
         return {
             output: <NodeXmlTemplate<T>> {
