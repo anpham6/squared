@@ -1,6 +1,6 @@
 import { FileAsset, LayoutType, NodeTemplate, NodeXmlTemplate } from '../../src/base/@types/application';
 import { ControllerSettingsAndroid, UserSettingsAndroid } from './@types/application';
-import { ViewAttribute } from './@types/node';
+import { LocalSettings, ViewAttribute } from './@types/node';
 
 import Resource from './resource';
 import View from './view';
@@ -26,8 +26,11 @@ const $xml = squared.lib.xml;
 const $c = squared.base.lib.constant;
 const $e = squared.base.lib.enumeration;
 
+let DEFAULT_VIEWSETTINGS!: LocalSettings;
+
 const GUIDELINE_AXIS = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
 const CACHE_PATTERN: ObjectMap<RegExp> = {};
+const FUNC_AFTERINSERTNODE = (target: View) => target.localSettings = DEFAULT_VIEWSETTINGS;
 
 function sortHorizontalFloat(list: View[]) {
     if (list.some(node => node.floating)) {
@@ -459,6 +462,15 @@ export default class Controller<T extends View> extends squared.base.Controller<
             legendBottomOffset: 0.25
         }
     };
+
+    public init() {
+        const settings = this.userSettings;
+        DEFAULT_VIEWSETTINGS = {
+            targetAPI: settings.targetAPI || BUILD_ANDROID.LATEST,
+            supportRTL: typeof settings.supportRTL === 'boolean' ? settings.supportRTL : true,
+            floatPrecision: this.localSettings.precision.standardFloat
+        };
+    }
 
     public optimize(nodes: T[]) {
         for (const node of nodes) {
@@ -2699,7 +2711,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     get userSettings() {
-        return this.application.userSettings as UserSettingsAndroid;
+        return <UserSettingsAndroid> this.application.userSettings;
     }
 
     get containerTypeHorizontal(): LayoutType {
@@ -2735,13 +2747,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     get afterInsertNode(): BindGeneric<T, void> {
-        const settings = this.userSettings;
-        return (target: T) => {
-            target.localSettings = {
-                targetAPI: settings.targetAPI !== undefined ? settings.targetAPI : BUILD_ANDROID.LATEST,
-                supportRTL: settings.supportRTL !== undefined ? settings.supportRTL : true,
-                floatPrecision: this.localSettings.precision.standardFloat
-            };
-        };
+        return FUNC_AFTERINSERTNODE;
     }
 }

@@ -11,8 +11,9 @@ declare global {
             readonly containerTypeVertical: LayoutType;
             readonly containerTypeVerticalMargin: LayoutType;
             readonly containerTypePercent: LayoutType;
-            readonly afterInsertNode: BindGeneric<T, void>;
+            readonly afterInsertNode: BindGeneric<T, void> | undefined;
             readonly generateSessionId: string;
+            init(): void;
             optimize(nodes: T[]): void;
             finalize(layouts: FileAsset[]): void;
             reset(): void;
@@ -45,7 +46,7 @@ declare global {
         }
 
         class Controller<T extends Node> implements Controller<T> {
-            constructor(application: Application<T>);
+            constructor(application: Application<T>, cache: NodeList<T>);
         }
     }
 }

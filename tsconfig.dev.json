@@ -18,6 +18,7 @@
   "include": [
     "android-framework/**/*",
     "android-widget/**/*",
+    "chrome-framework/**/*",
     "src/**/*"
   ],
   "exclude": [

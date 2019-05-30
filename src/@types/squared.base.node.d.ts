@@ -226,7 +226,9 @@ declare global {
             getLastChildElement(options?: SiblingOptions): Element | null;
         }
 
-        class Node implements Node {}
+        class Node implements Node {
+            constructor(id: number, sessionId?: string, element?: Element);
+        }
 
         class NodeGroup extends Node {}
     }

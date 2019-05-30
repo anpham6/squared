@@ -31,6 +31,7 @@ declare global {
             createNode(element: Element, append?: boolean, parent?: T, children?: T[]): T;
             resolveTarget(target: string): T | undefined;
             toString(): string;
+            createCache(documentRoot: HTMLElement): boolean;
         }
 
         class Application<T extends Node> implements Application<T> {

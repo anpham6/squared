@@ -40,6 +40,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;
     public abstract renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
     public abstract setConstraints(): void;
+    public abstract init(): void;
     public abstract optimize(nodes: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
     public abstract createNodeGroup(node: T, children: T[], parent?: T, traverse?: boolean): T;
@@ -48,7 +49,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract get containerTypeVertical(): LayoutType;
     public abstract get containerTypeVerticalMargin(): LayoutType;
     public abstract get containerTypePercent(): LayoutType;
-    public abstract get afterInsertNode(): BindGeneric<T, void>;
+    public abstract get afterInsertNode(): BindGeneric<T, void> | undefined;
 
     public reset() {
         this._beforeOutside = {};
@@ -81,11 +82,12 @@ export default abstract class Controller<T extends Node> implements squared.base
             const setBorderStyle = () => {
                 if (styleMap.border === undefined) {
                     if (checkBorderAttribute(0)) {
-                        styleMap.border = `outset 1px ${this.localSettings.style.inputBorderColor}`;
+                        const inputBorderColor = this.localSettings.style.inputBorderColor;
+                        styleMap.border = `outset 1px ${inputBorderColor}`;
                         for (let i = 0; i < 4; i++) {
                             styleMap[$css.BOX_BORDER[i][0]] = 'outset';
                             styleMap[$css.BOX_BORDER[i][1]] = '1px';
-                            styleMap[$css.BOX_BORDER[i][2]] = this.localSettings.style.inputBorderColor;
+                            styleMap[$css.BOX_BORDER[i][2]] = inputBorderColor;
                         }
                         return true;
                     }

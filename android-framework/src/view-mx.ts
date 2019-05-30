@@ -236,10 +236,6 @@ export default (Base: Constructor<squared.base.Node>) => {
             }
         }
 
-        public attr(obj: string, attr: string, value?: string, overwrite = true) {
-            return super.attr(obj, attr, value, overwrite);
-        }
-
         public android(attr: string, value?: string, overwrite = true) {
             if (value) {
                 if (this.localSettings.targetAPI < BUILD_ANDROID.LATEST) {

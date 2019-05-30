@@ -1,6 +1,7 @@
 export const enum APP_FRAMEWORK {
     UNIVERSAL = 0,
-    ANDROID = 2
+    ANDROID = 2,
+    CHROME = 4
 }
 
 export const enum NODE_ALIGNMENT {

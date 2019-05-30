@@ -213,11 +213,13 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public parseDocument(...elements: any[]): FunctionMap<void> {
+        const controller = this.controllerHandler;
         let __THEN: Undefined<() => void>;
         this.rootElements.clear();
         this.initialized = false;
-        this.processing.sessionId = this.controllerHandler.generateSessionId;
+        this.processing.sessionId = controller.generateSessionId;
         this.session.active.push(this.processing.sessionId);
+        controller.init();
         this.setStyleMap();
         if (elements.length === 0) {
             elements.push(document.body);
@@ -243,10 +245,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                 ext.beforeParseDocument();
             }
             for (const element of this.rootElements) {
-                const iteration = (element.dataset.iteration ? $util.convertInt(element.dataset.iteration) : -1) + 1;
-                element.dataset.iteration = iteration.toString();
                 if (this.createCache(element)) {
-                    const filename = element.dataset.filename && element.dataset.filename.replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
+                    const iteration = (element.dataset.iteration ? $util.convertInt(element.dataset.iteration) : -1) + 1;
+                    element.dataset.iteration = iteration.toString();
+                    const filename = element.dataset.filename && element.dataset.filename.replace(new RegExp(`\.${controller.localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
                     element.dataset.layoutName = $util.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
                     this.setBaseLayout(element.dataset.layoutName);
                     this.setConstraints();
@@ -484,7 +486,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         return this._layouts.length ? this._layouts[0].content : '';
     }
 
-    protected createCache(documentRoot: HTMLElement) {
+    public createCache(documentRoot: HTMLElement) {
         this.processing.node = undefined;
         this.processing.cache.afterAppend = undefined;
         this.processing.cache.clear();
