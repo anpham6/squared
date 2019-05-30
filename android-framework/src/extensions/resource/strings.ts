@@ -20,7 +20,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
 
     public afterResources() {
         for (const node of this.application.processing.cache) {
-            if (node.naturalElement && node.hasResource($e.NODE_RESOURCE.VALUE_STRING)) {
+            if (node.hasResource($e.NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
                     case 'SELECT': {
                         const arrayName = this.createOptionArray(<HTMLSelectElement> node.element, node.controlId);
@@ -45,25 +45,27 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             }
                         };
                         if (valueString) {
-                            const renderParent = node.renderParent as T;
                             const name = valueString.key || valueString.value;
                             let value = valueString.value;
-                            if (renderParent && renderParent.layoutRelative) {
-                                if (node.alignParent($const.CSS.LEFT) && !$css.isParentStyle(<Element> node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
-                                    const textContent = node.textContent;
-                                    let leadingSpace = 0;
-                                    for (let i = 0; i < textContent.length; i++) {
-                                        switch (textContent.charCodeAt(i)) {
-                                            case 160:
-                                                leadingSpace++;
-                                            case 32:
-                                                continue;
-                                            default:
-                                                break;
+                            if (node.naturalElement) {
+                                const renderParent = node.renderParent as T;
+                                if (renderParent && renderParent.layoutRelative) {
+                                    if (node.alignParent($const.CSS.LEFT) && !$css.isParentStyle(<Element> node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                                        const textContent = node.textContent;
+                                        let leadingSpace = 0;
+                                        for (let i = 0; i < textContent.length; i++) {
+                                            switch (textContent.charCodeAt(i)) {
+                                                case 160:
+                                                    leadingSpace++;
+                                                case 32:
+                                                    continue;
+                                                default:
+                                                    break;
+                                            }
                                         }
-                                    }
-                                    if (leadingSpace === 0) {
-                                        value = value.replace(/^(\s|&#160;)+/, '');
+                                        if (leadingSpace === 0) {
+                                            value = value.replace(/^(\s|&#160;)+/, '');
+                                        }
                                     }
                                 }
                             }

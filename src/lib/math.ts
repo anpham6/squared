@@ -18,15 +18,16 @@ export function maxArray(list: number[]): number {
     return Number.NEGATIVE_INFINITY;
 }
 
-export function isEqual(valueA: number, valueB: number, precision = 8) {
-    return valueA.toPrecision(precision) === valueB.toPrecision(precision);
+export function isEqual(valueA: number, valueB: number, precision = 5) {
+    const length = Math.floor(valueA).toString().length;
+    return valueA.toPrecision(length + precision) === valueB.toPrecision(length + precision);
 }
 
-export function moreEqual(valueA: number, valueB: number, precision = 8) {
+export function moreEqual(valueA: number, valueB: number, precision = 5) {
     return valueA > valueB || isEqual(valueA, valueB, precision);
 }
 
-export function lessEqual(valueA: number, valueB: number, precision = 8) {
+export function lessEqual(valueA: number, valueB: number, precision = 5) {
     return valueA < valueB || isEqual(valueA, valueB, precision);
 }
 

@@ -49,7 +49,7 @@ function parseAttribute(element: SVGElement, attr: string) {
     }
 }
 
-function isVisible(element: Element) {
+function isVisible(element: SVGElement) {
     const value = getAttribute(element, 'visibility');
     return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display') !== $const.CSS.NONE;
 }

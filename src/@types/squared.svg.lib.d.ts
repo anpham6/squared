@@ -13,8 +13,8 @@ declare global {
             export import MATRIX = $util.MATRIX;
             export import SVG = $util.SVG;
             export import TRANSFORM = $util.TRANSFORM;
-            function getAttribute(element: Element, attr: string, computed?: boolean): string;
-            function getParentAttribute(element: Element, attr: string, computed?: boolean): string;
+            function getAttribute(element: SVGElement, attr: string, computed?: boolean): string;
+            function getParentAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getAttributeURL(value: string): string;
             function getDOMRect(element: SVGElement): DOMRect;
             function getTargetElement(element: SVGElement, rootElement?: HTMLElement | SVGElement | null): SVGElement | null;

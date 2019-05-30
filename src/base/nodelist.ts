@@ -2,6 +2,7 @@ import Node from './node';
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 
 export interface LinearData<T> {
@@ -97,8 +98,11 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                         return b.marginTop > ((heightA - heightB) / 2) ? 1 : -1;
                     }
                 }
-                if (heightA !== heightB) {
+                if (!$math.isEqual(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
+                }
+                else if (a.inputElement && b.inputElement && a.containerType !== b.containerType) {
+                    return a.containerType > b.containerType ? -1 : 1;
                 }
                 else if (a.bounds.bottom > b.bounds.bottom) {
                     return -1;

@@ -40,6 +40,7 @@ export interface ControllerSettings {
         imageFormat: string[];
     };
     unsupported: {
+        cascade: Set<string>;
         excluded: Set<string>;
         tagName: Set<string>;
     };

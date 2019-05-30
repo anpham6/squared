@@ -228,11 +228,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         }
 
         public convertLength(value: string, dimension?: string | number) {
-            if ($css.isLength(value)) {
-                return $css.parseUnit(value, $css.getFontSize(this.element));
-            }
-            else if ($css.isPercent(value)) {
-                return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || $const.CSS.WIDTH]) * $util.convertFloat(value) / 100);
+            if (!$util.isNumber(value)) {
+                if ($css.isLength(value)) {
+                    return $css.parseUnit(value, $css.getFontSize(this.element));
+                }
+                else if ($css.isPercent(value)) {
+                    return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || $const.CSS.WIDTH]) * $util.convertFloat(value) / 100);
+                }
             }
             return $util.convertFloat(value);
         }

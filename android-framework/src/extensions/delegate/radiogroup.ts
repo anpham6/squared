@@ -52,7 +52,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
             node.addAlign($e.NODE_ALIGNMENT.HORIZONTAL);
             node.android('orientation', STRING_ANDROID.HORIZONTAL);
             if (node.baseline) {
-                node.css('verticalAlign', 'text-bottom', true);
+                node.css('verticalAlign', 'middle', true);
                 node.baseline = false;
             }
             node.render(parent);
@@ -73,7 +73,9 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
             parent.each((item: T) => {
                 let remove: T | undefined;
                 if (item.renderAs) {
-                    remove = item;
+                    if (item.renderAs !== node) {
+                        remove = item;
+                    }
                     item = item.renderAs as T;
                 }
                 if (node.is(CONTAINER_NODE.RADIO) && getInputName(<HTMLInputElement> item.element) === inputName && !item.rendered) {
@@ -84,15 +86,17 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                 }
             });
             if (children.length > 1) {
-                const container = this.application.controllerHandler.createNodeGroup(node, children, parent);
+                const container = this.application.controllerHandler.createNodeGroup(node, children, parent, true);
                 container.addAlign($e.NODE_ALIGNMENT.HORIZONTAL | (parent.length !== children.length ? $e.NODE_ALIGNMENT.SEGMENTED : 0));
                 if (parent.layoutConstraint) {
                     container.companion = node;
                 }
                 container.setControlType(controlName, CONTAINER_NODE.LINEAR);
                 container.inherit(node, 'alignment');
-                container.css('verticalAlign', 'text-bottom');
-                container.baseline = false;
+                if (container.baseline) {
+                    container.css('verticalAlign', 'middle');
+                    container.baseline = false;
+                }
                 container.exclude($e.NODE_RESOURCE.ASSET);
                 container.each(item => {
                     if (item !== node) {

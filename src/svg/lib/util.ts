@@ -382,25 +382,25 @@ export function getDOMRect(element: SVGElement) {
     return <DOMRect> result;
 }
 
-export function getAttribute(element: Element, attr: string, computed = true) {
+export function getAttribute(element: SVGElement, attr: string, computed = true) {
     let value = $dom.getNamedItem(element, attr);
     if (value === '') {
-        const styleMap = $session.getElementCache(element, 'styleMap');
+        const styleMap: StringMap = $session.getElementCache(element, 'styleMap');
         if (styleMap) {
             value = styleMap[$util.convertCamelCase(attr)] || '';
         }
-        if (value === '' && computed) {
+        if (value === '' && (computed || Array.from(element.style).includes(attr))) {
             value = $css.getStyle(element).getPropertyValue(attr);
         }
     }
     return value.trim();
 }
 
-export function getParentAttribute(element: Element, attr: string, computed = true) {
-    let current: HTMLElement | Element | null = element;
+export function getParentAttribute(element: SVGElement, attr: string, computed = true) {
+    let current: HTMLElement | SVGElement | null = element;
     let value = '';
-    while (current) {
-        value = getAttribute(current, attr, computed);
+    while (current && !(current instanceof HTMLElement)) {
+        value = getAttribute(<SVGElement> current, attr, computed);
         if (value !== '' && value !== 'inherit') {
             break;
         }

@@ -616,17 +616,16 @@ export default class Application<T extends Node> implements squared.base.Applica
             if (depth === 0) {
                 this.processing.cache.append(node);
             }
-            switch (node.tagName) {
-                case 'SELECT':
-                case 'SVG':
-                    return node;
+            const controller = this.controllerHandler;
+            if (controller.localSettings.unsupported.cascade.has(element.tagName)) {
+                return node;
             }
             const beforeElement = this.createPseduoElement(element, 'before');
             const afterElement = this.createPseduoElement(element, 'after');
             const children: T[] = [];
             let includeText = false;
             for (let i = 0; i < element.childNodes.length; i++) {
-                const childElement = <HTMLInputElement> element.childNodes[i];
+                const childElement = <HTMLElement> element.childNodes[i];
                 if (childElement === beforeElement) {
                     const child = this.insertNode(<HTMLElement> beforeElement);
                     if (child) {
@@ -653,7 +652,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                 }
-                else if (this.controllerHandler.includeElement(childElement)) {
+                else if (controller.includeElement(childElement)) {
                     prioritizeExtensions(childElement, this.extensions).some(item => item.init(childElement));
                     if (!this.rootElements.has(childElement)) {
                         const child = this.cascadeParentNode(childElement, depth + 1);

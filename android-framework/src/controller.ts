@@ -27,6 +27,7 @@ const $c = squared.base.lib.constant;
 const $e = squared.base.lib.enumeration;
 
 const GUIDELINE_AXIS = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
+const CACHE_PATTERN: ObjectMap<RegExp> = {};
 
 function sortHorizontalFloat(list: View[]) {
     if (list.some(node => node.floating)) {
@@ -444,8 +445,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
             imageFormat: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'cur']
         },
         unsupported: {
-            excluded: new Set(['BR']),
-            tagName: new Set(['SCRIPT', 'STYLE', 'OPTION', 'INPUT:hidden', 'MAP', 'AREA', 'SOURCE', 'TEMPLATE', 'DATALIST', 'WBR'])
+            cascade: new Set(['SELECT', 'svg']),
+            tagName: new Set(['SCRIPT', 'STYLE', 'OPTION', 'INPUT:hidden', 'MAP', 'AREA', 'SOURCE', 'TEMPLATE', 'DATALIST', 'WBR']),
+            excluded: new Set(['BR'])
         },
         precision: {
             standardFloat: 4
@@ -1217,7 +1219,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     node.android('justificationMode', 'inter_word');
                 }
                 if (node.has('textShadow')) {
-                    const match = /^(rgba?\(\d+, \d+, \d+(?:, [\d.]+)?\)) (-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?$/.exec(node.css('textShadow'));
+                    if (CACHE_PATTERN.TEXT_SHADOW === undefined) {
+                        CACHE_PATTERN.TEXT_SHADOW = /^(rgba?\(\d+, \d+, \d+(?:, [\d.]+)?\)) (-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?$/;
+                    }
+                    const match = CACHE_PATTERN.TEXT_SHADOW.exec(node.css('textShadow'));
                     if (match) {
                         const color = Resource.addColor($color.parseColor(match[1]));
                         if (color !== '') {
@@ -2054,17 +2059,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         if (baselineAlign.length) {
                             adjustBaseline(baseline, baselineAlign);
                         }
-                        else if (baseline.textElement) {
-                            if (maxCenterHeight > baseline.actualHeight) {
-                                baseline.anchor('centerVertical', 'true');
-                                baseline = undefined;
-                            }
-                            else {
-                                const input = items.find(item => item.inputElement || item.controlName === CONTAINER_ANDROID.RADIOGROUP);
-                                if (input) {
-                                    baseline.anchor('baseline', input.documentId);
-                                }
-                            }
+                        else if (baseline.textElement && maxCenterHeight > baseline.actualHeight) {
+                            baseline.anchor('centerVertical', 'true');
+                            baseline = undefined;
                         }
                     }
                     else if (baselineAlign.length && baselineAlign.length < items.length) {
