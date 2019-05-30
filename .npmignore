@@ -11,5 +11,5 @@ temp/
 *.code-workspace
 package-lock.json
 rollup.config.*
-tsconfig.json
+tsconfig.*
 tslint.json

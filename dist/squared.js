@@ -1,4 +1,4 @@
-/* squared 0.9.9
+/* squared 1.0.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -14,6 +14,7 @@
         PERCENT: '-?\\d+(?:\\.\\d+)?%',
         LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
         LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
+        DATAURI: '(?:data:([^;]+);([^,]+),)?(.*?)',
         CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
         CSS_CALC: 'calc(\\(.+\\))',
@@ -870,7 +871,6 @@
     }
 
     const STRING_HEX = '0123456789ABCDEF';
-    const CACHE_COLORDATA = {};
     const COLOR_CSS3 = [
         {
             value: '#000000',
@@ -2931,6 +2931,7 @@
             }
         }
     ];
+    const CACHE_COLORDATA = {};
     const parseOpacity = (value) => parseFloat(value.trim() || '1') * 255;
     function findColorName(value) {
         for (const color of COLOR_CSS3) {
@@ -3200,6 +3201,21 @@
         CSS: CSS$1
     });
 
+    function isPlatform(value) {
+        const platform = navigator.platform.toLowerCase();
+        if (typeof value === 'string') {
+            return platform.indexOf(value.toLowerCase()) !== -1;
+        }
+        else {
+            if (hasBit(value, 4 /* MAC */) && /mac|iphone|ipad/.test(platform)) {
+                return true;
+            }
+            else if (hasBit(value, 2 /* WINDOWS */) && /windows/.test(platform)) {
+                return true;
+            }
+        }
+        return false;
+    }
     function isUserAgent(value) {
         if (typeof value === 'string') {
             const name = value.toUpperCase();
@@ -3235,6 +3251,7 @@
     }
 
     var client = /*#__PURE__*/Object.freeze({
+        isPlatform: isPlatform,
         isUserAgent: isUserAgent,
         getDeviceDPI: getDeviceDPI
     });
@@ -3390,7 +3407,7 @@
     function createStyleElement(parent, tagName, attrs) {
         const element = document.createElement(tagName);
         for (const attr in attrs) {
-            element.style[attr] = attrs[attr];
+            element.style.setProperty(attr, attrs[attr]);
         }
         parent.appendChild(element);
         return element;
@@ -3458,8 +3475,7 @@
                 domRect.push(item);
             }
         }
-        let bounds = newBoxRectDimension();
-        let numberOfLines = 0;
+        let bounds;
         let maxTop = Number.NEGATIVE_INFINITY;
         if (domRect.length) {
             bounds = assignRect(domRect[0]);
@@ -3484,10 +3500,12 @@
             }
             bounds.height = bounds.bottom - bounds.top;
             if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-                numberOfLines = domRect.length - 1;
+                bounds.numberOfLines = domRect.length - 1;
             }
         }
-        bounds.numberOfLines = numberOfLines;
+        else {
+            bounds = newBoxRectDimension();
+        }
         setElementCache(element, 'rangeClientRect', sessionId, bounds);
         return bounds;
     }
@@ -3535,6 +3553,13 @@
     const convertPercent = (value, dimension, fontSize) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
     const BOX_POSITION = [CSS$1.TOP, CSS$1.RIGHT, CSS$1.BOTTOM, CSS$1.LEFT];
     const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
+    const BOX_BORDER = [
+        ['borderTopStyle', 'borderTopWidth', 'borderTopColor'],
+        ['borderRightStyle', 'borderRightWidth', 'borderRightColor'],
+        ['borderBottomStyle', 'borderBottomWidth', 'borderBottomColor'],
+        ['borderLeftStyle', 'borderLeftWidth', 'borderLeftColor'],
+        ['outlineStyle', 'outlineWidth', 'outlineColor']
+    ];
     const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
     function getStyle(element, target = '', cache = true) {
         if (element) {
@@ -3554,8 +3579,14 @@
         }
         return { display: CSS$1.NONE };
     }
+    function getFontSize(element) {
+        return parseFloat(getStyle(element).getPropertyValue('font-size')) || undefined;
+    }
     function hasComputedStyle(element) {
-        return !!element && typeof element['style'] === 'object' && typeof element['style']['display'] === 'string';
+        if (element.nodeName.charAt(0) !== '#') {
+            return element instanceof HTMLElement || element instanceof SVGElement;
+        }
+        return false;
     }
     function getSpecificity(value) {
         const pattern = new RegExp(STRING.CSS_SELECTOR, 'g');
@@ -3624,83 +3655,27 @@
         }
         return result;
     }
-    function checkStyleValue(element, attr, value, style, specificity = 0, fontSize) {
-        if (value && value !== 'initial') {
-            if (value === 'inherit') {
-                value = getInheritedStyle(element, attr);
-            }
-            const computed = style[attr];
-            if (value !== computed && value !== CSS$1.AUTO) {
-                const numeric = isNumber(value);
-                if (computed) {
-                    let valid = false;
-                    switch (attr) {
-                        case 'color':
-                        case 'fontSize':
-                        case 'fontWeight':
-                        case 'backgroundColor':
-                        case 'borderTopColor':
-                        case 'borderRightColor':
-                        case 'borderBottomColor':
-                        case 'borderLeftColor':
-                            valid = true;
-                            break;
-                        case 'borderTopWidth':
-                        case 'borderRightWidth':
-                        case 'borderBottomWidth':
-                        case 'borderLeftWidth':
-                            switch (value) {
-                                case 'thin':
-                                case 'medium':
-                                case 'thick':
-                                    valid = true;
-                                    break;
-                            }
-                            break;
-                        default:
-                            if (isPercent(value)) {
-                                switch (attr) {
-                                    case 'width':
-                                    case 'height':
-                                    case 'minWidth':
-                                    case 'minHeight':
-                                    case 'maxWidth':
-                                    case 'maxHeight':
-                                    case 'columnWidth':
-                                    case 'offsetDistance':
-                                        break;
-                                    default:
-                                        valid = true;
-                                        break;
-                                }
-                            }
-                            break;
-                    }
-                    if (valid || numeric || isCustomProperty(value)) {
-                        setElementCache(element, attr, specificity.toString(), value);
-                        return computed;
-                    }
-                }
-                if (numeric) {
-                    setElementCache(element, attr, specificity.toString(), value);
-                }
-                else if (isLength(value)) {
-                    setElementCache(element, attr, specificity.toString(), value);
-                    return convertPX(value, fontSize);
-                }
-            }
-            return value;
+    function checkStyleValue(element, attr, value, style) {
+        if (value === 'inherit') {
+            value = getInheritedStyle(element, attr);
         }
-        return '';
+        else if (isCustomProperty(value)) {
+            if (style) {
+                return style[attr];
+            }
+            else {
+                const result = calculateVar(element, value, attr);
+                return result !== undefined ? result.toString() : '';
+            }
+        }
+        return value || '';
     }
     function getDataSet(element, prefix) {
         const result = {};
-        if (element) {
-            prefix = convertCamelCase(prefix, '.');
-            for (const attr in element.dataset) {
-                if (attr.startsWith(prefix)) {
-                    result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr];
-                }
+        prefix = convertCamelCase(prefix, '.');
+        for (const attr in element.dataset) {
+            if (attr.startsWith(prefix)) {
+                result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr];
             }
         }
         return result;
@@ -3781,9 +3756,6 @@
                         default:
                             return unit === range;
                     }
-                }
-                if (!fontSize) {
-                    fontSize = getFontSize(document.body);
                 }
                 const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
                 let match;
@@ -3873,29 +3845,21 @@
         }
         return false;
     }
-    function getFontSize(element) {
-        return parseFloat(getStyle(element).getPropertyValue('font-size')) || undefined;
-    }
     function isParentStyle(element, attr, ...styles) {
-        if (element) {
-            return element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr]) || element.parentElement && styles.includes(getStyle(element.parentElement)[attr]);
-        }
-        return false;
+        return element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr]) || element.parentElement && styles.includes(getStyle(element.parentElement)[attr]);
     }
     function getInheritedStyle(element, attr, exclude, ...tagNames) {
         let value = '';
-        if (element) {
-            let current = element.parentElement;
-            while (current && !tagNames.includes(current.tagName)) {
-                value = getStyle(current)[attr];
-                if (value === 'inherit' || exclude && exclude.test(value)) {
-                    value = '';
-                }
-                if (value || current === document.body) {
-                    break;
-                }
-                current = current.parentElement;
+        let current = element.parentElement;
+        while (current && !tagNames.includes(current.tagName)) {
+            value = getStyle(current)[attr];
+            if (value === 'inherit' || exclude && exclude.test(value)) {
+                value = '';
             }
+            if (value || current === document.body) {
+                break;
+            }
+            current = current.parentElement;
         }
         return value;
     }
@@ -3920,14 +3884,13 @@
         const result = parseVar(element, value);
         if (result) {
             if (attr && !dimension) {
-                const vertical = /(top|bottom|height)/.test(attr.toLowerCase());
-                if (element instanceof SVGElement) {
-                    const rect = element.getBoundingClientRect();
-                    dimension = vertical || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
+                const rect = (element instanceof SVGElement ? element : (element.parentElement || element)).getBoundingClientRect();
+                attr = attr.toLowerCase();
+                if (/^margin|padding|border/.test(attr)) {
+                    dimension = Math.max(rect.width, rect.height);
                 }
                 else {
-                    const rect = (element.parentElement || element).getBoundingClientRect();
-                    dimension = vertical ? rect.height : rect.width;
+                    dimension = /top|bottom|height|vertical/.test(attr) || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
                 }
             }
             return calculate(result, dimension, getFontSize(element));
@@ -4100,12 +4063,11 @@
         }
         else if (result.length > 1 && isString(sizes)) {
             const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH}\\))?\\s*(.+)`);
-            const fontSize = getFontSize(document.body);
             let width = 0;
             for (const value of sizes.split(XML.SEPARATOR)) {
                 const match = pattern.exec(value.trim());
                 if (match) {
-                    if (match[1] && !validMediaRule(match[1], fontSize)) {
+                    if (match[1] && !validMediaRule(match[1])) {
                         continue;
                     }
                     if (match[4]) {
@@ -4114,7 +4076,7 @@
                             width = calculate(calcMatch[1]) || 0;
                         }
                         else {
-                            width = parseUnit(match[4], fontSize);
+                            width = parseUnit(match[4]);
                         }
                     }
                     if (width > 0) {
@@ -4192,21 +4154,18 @@
         return style;
     }
     function convertAngle(value, unit = 'deg') {
-        let angle = parseFloat(value);
-        if (!isNaN(angle)) {
-            switch (unit) {
-                case 'rad':
-                    angle *= 180 / Math.PI;
-                    break;
-                case 'grad':
-                    angle /= 400;
-                case 'turn':
-                    angle *= 360;
-                    break;
-            }
-            return angle;
+        let angle = convertFloat(value);
+        switch (unit) {
+            case 'rad':
+                angle *= 180 / Math.PI;
+                break;
+            case 'grad':
+                angle /= 400;
+            case 'turn':
+                angle *= 360;
+                break;
         }
-        return 0;
+        return angle;
     }
     function convertPX(value, fontSize) {
         if (value) {
@@ -4341,9 +4300,10 @@
                 switch (match[2]) {
                     case 'px':
                         return result;
+                    case undefined:
                     case 'em':
                     case 'ch':
-                        result *= fontSize || 16;
+                        result *= fontSize || getFontSize(document.body) || 16;
                         break;
                     case 'rem':
                         result *= getFontSize(document.body) || 16;
@@ -4388,10 +4348,7 @@
         return 0;
     }
     function formatPX(value) {
-        if (typeof value === 'string') {
-            value = parseFloat(value);
-        }
-        return isNaN(value) ? CSS$1.PX_0 : `${Math.round(value)}px`;
+        return `${Math.round(value) || 0}px`;
     }
     function formatPercent(value, round = true) {
         if (typeof value === 'string') {
@@ -4422,8 +4379,10 @@
     var css = /*#__PURE__*/Object.freeze({
         BOX_POSITION: BOX_POSITION,
         BOX_MARGIN: BOX_MARGIN,
+        BOX_BORDER: BOX_BORDER,
         BOX_PADDING: BOX_PADDING,
         getStyle: getStyle,
+        getFontSize: getFontSize,
         hasComputedStyle: hasComputedStyle,
         getSpecificity: getSpecificity,
         checkStyleValue: checkStyleValue,
@@ -4431,7 +4390,6 @@
         getKeyframeRules: getKeyframeRules,
         parseKeyframeRule: parseKeyframeRule,
         validMediaRule: validMediaRule,
-        getFontSize: getFontSize,
         isParentStyle: isParentStyle,
         getInheritedStyle: getInheritedStyle,
         parseVar: parseVar,
@@ -4470,13 +4428,14 @@
         }
         return Number.NEGATIVE_INFINITY;
     }
-    function isEqual$1(valueA, valueB, precision = 8) {
-        return valueA.toPrecision(precision) === valueB.toPrecision(precision);
+    function isEqual$1(valueA, valueB, precision = 5) {
+        const length = Math.floor(valueA).toString().length;
+        return valueA.toPrecision(length + precision) === valueB.toPrecision(length + precision);
     }
-    function moreEqual(valueA, valueB, precision = 8) {
+    function moreEqual(valueA, valueB, precision = 5) {
         return valueA > valueB || isEqual$1(valueA, valueB, precision);
     }
-    function lessEqual(valueA, valueB, precision = 8) {
+    function lessEqual(valueA, valueB, precision = 5) {
         return valueA < valueB || isEqual$1(valueA, valueB, precision);
     }
     function convertDecimalNotation(value) {
@@ -4932,12 +4891,12 @@
         replaceCharacterData: replaceCharacterData
     });
 
+    const extensionsAsync = new Set();
+    const optionsAsync = new Map();
     let main;
     let framework;
     exports.settings = {};
     exports.system = {};
-    const extensionsAsync = new Set();
-    const optionsAsync = new Map();
     function setFramework(value, cached = false) {
         if (framework !== value) {
             const appBase = cached ? value.cached() : value.create();

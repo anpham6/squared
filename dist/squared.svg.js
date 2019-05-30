@@ -1,4 +1,4 @@
-/* squared.svg 0.9.9
+/* squared.svg 1.0.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -390,7 +390,7 @@
             if (styleMap) {
                 value = styleMap[$util.convertCamelCase(attr)] || '';
             }
-            if (value === '' && computed) {
+            if (value === '' && (computed || Array.from(element.style).includes(attr))) {
                 value = $css.getStyle(element).getPropertyValue(attr);
             }
         }
@@ -399,7 +399,7 @@
     function getParentAttribute(element, attr, computed = true) {
         let current = element;
         let value = '';
-        while (current) {
+        while (current && !(current instanceof HTMLElement)) {
             value = getAttribute(current, attr, computed);
             if (value !== '' && value !== 'inherit') {
                 break;
@@ -6069,11 +6069,13 @@
                 return value;
             }
             convertLength(value, dimension) {
-                if ($css$6.isLength(value)) {
-                    return $css$6.parseUnit(value, $css$6.getFontSize(this.element));
-                }
-                else if ($css$6.isPercent(value)) {
-                    return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || $const$6.CSS.WIDTH]) * $util$b.convertFloat(value) / 100);
+                if (!$util$b.isNumber(value)) {
+                    if ($css$6.isLength(value)) {
+                        return $css$6.parseUnit(value, $css$6.getFontSize(this.element));
+                    }
+                    else if ($css$6.isPercent(value)) {
+                        return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || $const$6.CSS.WIDTH]) * $util$b.convertFloat(value) / 100);
+                    }
                 }
                 return $util$b.convertFloat(value);
             }

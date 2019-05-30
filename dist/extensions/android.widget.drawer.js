@@ -1,4 +1,4 @@
-/* android.widget 0.9.9
+/* android.widget 1.0.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -51,6 +51,7 @@ this.android.widget.drawer = (function () {
                 navView.positioned = true;
             }
             node.documentRoot = true;
+            node.renderExclude = false;
             node.setControlType($constA.SUPPORT_ANDROID.DRAWER, $enumA.CONTAINER_NODE.BLOCK);
             node.exclude($e.NODE_RESOURCE.FONT_STYLE);
             node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));

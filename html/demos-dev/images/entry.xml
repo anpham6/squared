@@ -78,7 +78,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol88619"
+                    android:text="@string/__symbol26437"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -243,7 +243,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol88619"
+                    android:text="@string/__symbol26437"
                     style="@style/Plaintext" />
             </LinearLayout>
             <RelativeLayout
@@ -701,7 +701,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol88619"
+                    android:text="@string/__symbol26437"
                     style="@style/Plaintext" />
             </LinearLayout>
             <RelativeLayout
@@ -838,7 +838,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol88619">):</string>
+    <string name="__symbol26437">):</string>
     <string name="active">Active:</string>
     <string name="add"><u>Add</u></string>
     <string name="all">All</string>
@@ -1018,7 +1018,6 @@
     <color name="black">#000000</color>
     <color name="darkblue">#00008B</color>
     <color name="blue">#0000FF</color>
-    <color name="dimgray_1">#404040</color>
     <color name="gray">#808080</color>
     <color name="yellowgreen">#9ACD32</color>
     <color name="lightgray_1">#CCCCCC</color>
@@ -1167,22 +1166,22 @@
     </item>
     <item android:left="-2dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/dimgray_1" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
     <item android:top="-2dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/dimgray_1" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
     <item android:left="-2dp" android:top="-2dp" android:right="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/black" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
     <item android:left="-2dp" android:top="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/black" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
 </layer-list>
@@ -1197,22 +1196,22 @@
     </item>
     <item android:left="-2dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/dimgray_1" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
     <item android:top="-2dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/dimgray_1" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
     <item android:left="-2dp" android:top="-2dp" android:right="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/black" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
     <item android:left="-2dp" android:top="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
-            <stroke android:width="1dp" android:color="@color/black" />
+            <stroke android:width="1dp" android:color="@color/gray" />
         </shape>
     </item>
 </layer-list>

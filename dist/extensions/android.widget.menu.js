@@ -1,4 +1,4 @@
-/* android.widget 0.9.9
+/* android.widget 1.0.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -107,7 +107,7 @@ this.android.widget.menu = (function () {
                 }
                 if (valid) {
                     element.querySelectorAll('NAV').forEach((item) => {
-                        if ($css.getStyle(element).display === $const.CSS.NONE) {
+                        if ($css.getStyle(item).display === $const.CSS.NONE) {
                             $session.setElementCache(item, 'squaredExternalDisplay', this.application.processing.sessionId, $const.CSS.NONE);
                             item.style.setProperty('display', 'block');
                         }
@@ -123,7 +123,7 @@ this.android.widget.menu = (function () {
         processNode(node) {
             const parentAs = this.application.createNode($dom.createElement(), false);
             node.documentRoot = true;
-            node.alignmentType |= 4 /* AUTO_LAYOUT */;
+            node.addAlign(4 /* AUTO_LAYOUT */);
             node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
             node.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
             for (const item of node.cascade()) {
@@ -178,10 +178,10 @@ this.android.widget.menu = (function () {
             }
             switch (controlName) {
                 case NAVIGATION.MENU:
-                    node.alignmentType |= 4 /* AUTO_LAYOUT */;
+                    node.addAlign(4 /* AUTO_LAYOUT */);
                     break;
                 case NAVIGATION.GROUP:
-                    node.alignmentType |= 4 /* AUTO_LAYOUT */;
+                    node.addAlign(4 /* AUTO_LAYOUT */);
                     parseDataSet(REGEXP_GROUP, element, options);
                     break;
                 case NAVIGATION.ITEM:

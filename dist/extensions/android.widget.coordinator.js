@@ -1,4 +1,4 @@
-/* android.widget 0.9.9
+/* android.widget 1.0.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -28,6 +28,7 @@ this.android.widget.coordinator = (function () {
             }
             node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
             node.exclude($e.NODE_RESOURCE.ASSET);
+            node.renderExclude = false;
             node.render(parent);
             return {
                 output: {

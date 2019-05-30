@@ -893,8 +893,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $regex.CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
                                 value = value.replace($regex.CHAR.LEADINGSPACE, '');
                             }
-                            else if (previousSibling.element) {
-                                previousSpaceEnd = $regex.CHAR.TRAILINGSPACE.test(previousSibling.textContent);
+                            else if (previousSibling.naturalElement) {
+                                const textContent = previousSibling.textContent;
+                                if (textContent.length) {
+                                    previousSpaceEnd = textContent.charCodeAt(textContent.length - 1) === 32;
+                                }
                             }
                         }
                         if (inlined) {
