@@ -1,7 +1,7 @@
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../@types/extension';
 
-import Extension from '../extension';
-import Node from '../node';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
@@ -64,7 +64,7 @@ function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
     return result;
 }
 
-function getColumnTotal(rows: (Node[] | undefined)[]) {
+function getColumnTotal(rows: (NodeUI[] | undefined)[]) {
     let value = 0;
     for (const row of rows) {
         if (row) {
@@ -74,10 +74,10 @@ function getColumnTotal(rows: (Node[] | undefined)[]) {
     return value;
 }
 
-const convertLength = (node: Node, value: string) => $css.isLength(value) ? node.convertPX(value) : value;
+const convertLength = (node: NodeUI, value: string) => $css.isLength(value) ? node.convertPX(value) : value;
 
-export default class CssGrid<T extends Node> extends Extension<T> {
-    public static createDataAttribute<T extends Node>(): CssGridData<T> {
+export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
+    public static createDataAttribute<T extends NodeUI>(): CssGridData<T> {
         return {
             children: new Set(),
             rowData: [],
@@ -794,7 +794,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 for (let i = 0; i < mainData.rowHeight.length; i++) {
                     mainData.rowWeight[i] = mainData.rowHeight[i] / node.actualHeight;
                 }
-                node.retain(Array.from(mainData.children));
+                node.retain(Array.from(mainData.children) as T[]);
                 node.cssSort('zIndex');
                 if (node.cssTry('display', 'block')) {
                     node.each((item: T) => {

@@ -1,13 +1,13 @@
 import { ImageAsset } from '../@types/application';
 
-import Extension from '../extension';
-import Node from '../node';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 
 const $css = squared.lib.css;
 
-export default abstract class Sprite<T extends Node> extends Extension<T> {
+export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {
         let valid = false;
         if (node.hasWidth && node.hasHeight && node.length === 0 && node.backgroundImage !== '' && (this.included(<HTMLElement> node.element) || !node.dataset.use)) {

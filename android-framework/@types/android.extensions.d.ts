@@ -16,27 +16,27 @@ declare global {
         class WhiteSpace<T extends View> extends squared.base.extensions.WhiteSpace<T> {}
 
         namespace constraint {
-            class Guideline<T extends View> extends squared.base.Extension<T> {}
+            class Guideline<T extends View> extends squared.base.ExtensionUI<T> {}
         }
 
         namespace delegate {
-            class Fixed<T extends View> extends squared.base.Extension<T> {}
-            class MaxWidthHeight<T extends View> extends squared.base.Extension<T> {}
-            class NegativeViewport<T extends View> extends squared.base.Extension<T> {}
-            class NegativeX<T extends View> extends squared.base.Extension<T> {}
-            class Percent<T extends View> extends squared.base.Extension<T> {}
-            class RadioGroup<T extends View> extends squared.base.Extension<T> {}
-            class ScrollBar<T extends View> extends squared.base.Extension<T> {}
+            class Fixed<T extends View> extends squared.base.ExtensionUI<T> {}
+            class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {}
+            class NegativeViewport<T extends View> extends squared.base.ExtensionUI<T> {}
+            class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {}
+            class Percent<T extends View> extends squared.base.ExtensionUI<T> {}
+            class RadioGroup<T extends View> extends squared.base.ExtensionUI<T> {}
+            class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {}
         }
 
         namespace resource {
-            class Background<T extends View> extends squared.base.Extension<T> {}
-            class Dimens<T extends View> extends squared.base.Extension<T> {}
-            class Fonts<T extends View> extends squared.base.Extension<T> {}
-            class Includes<T extends View> extends squared.base.Extension<T> {}
-            class Strings<T extends View> extends squared.base.Extension<T> {}
-            class Styles<T extends View> extends squared.base.Extension<T> {}
-            class Svg<T extends View> extends squared.base.Extension<T> {}
+            class Background<T extends View> extends squared.base.ExtensionUI<T> {}
+            class Dimens<T extends View> extends squared.base.ExtensionUI<T> {}
+            class Fonts<T extends View> extends squared.base.ExtensionUI<T> {}
+            class Includes<T extends View> extends squared.base.ExtensionUI<T> {}
+            class Strings<T extends View> extends squared.base.ExtensionUI<T> {}
+            class Styles<T extends View> extends squared.base.ExtensionUI<T> {}
+            class Svg<T extends View> extends squared.base.ExtensionUI<T> {}
         }
     }
 }

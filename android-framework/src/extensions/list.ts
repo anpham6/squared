@@ -7,7 +7,7 @@ import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
-import $Layout = squared.base.Layout;
+import $LayoutUI = squared.base.LayoutUI;
 import $NodeList = squared.base.NodeList;
 
 const $const = squared.lib.constant;
@@ -23,7 +23,7 @@ const PADDINGRIGHT_DFN = 8;
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const layout = new $Layout(parent, node, 0, 0, node.children as T[]);
+        const layout = new $LayoutUI(parent, node, 0, 0, node.children as T[]);
         if (layout.linearY && !layout.linearX) {
             layout.rowCount = node.length;
             layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
@@ -46,7 +46,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     public processChild(node: T, parent: T) {
         const mainData: ListData = node.data($c.EXT_NAME.LIST, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const controller = <android.base.Controller<T>> this.application.controllerHandler;
+            const application = this.application;
+            const controller = application.controllerHandler;
             let minWidth = node.marginLeft;
             let columnCount = 0;
             let adjustPadding = false;
@@ -67,10 +68,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     minWidth += parent.marginLeft;
                 }
             }
-            const container = node.length === 0 ? this.application.controllerHandler.createNodeGroup(node, [node], parent) : node;
+            const container = node.length === 0 ? controller.createNodeGroup(node, [node], parent) : node;
             let ordinal = !mainData.ordinal ? node.find(item => item.float === $const.CSS.LEFT && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
             if (ordinal) {
-                const layoutOrdinal = new $Layout(parent, ordinal);
+                const layoutOrdinal = new $LayoutUI(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
                     layoutOrdinal.containerType = CONTAINER_NODE.TEXT;
                 }
@@ -94,10 +95,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 ordinal.modifyBox($e.BOX_STANDARD.MARGIN_LEFT);
                 ordinal.positioned = true;
-                this.application.addLayoutTemplate(
+                application.addLayoutTemplate(
                     parent,
                     ordinal,
-                    this.application.renderNode(layoutOrdinal)
+                    application.renderNode(layoutOrdinal)
                 );
             }
             else {
@@ -202,7 +203,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     ordinal.positioned = true;
                     ordinal.render(parent);
-                    this.application.addLayoutTemplate(
+                    application.addLayoutTemplate(
                         parent,
                         ordinal,
                         <NodeXmlTemplate<T>> {
@@ -244,7 +245,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 return {
                     parent: container,
                     renderAs: container,
-                    outputAs: this.application.renderNode(new $Layout(
+                    outputAs: application.renderNode(new $LayoutUI(
                         parent,
                         container,
                         CONTAINER_NODE.LINEAR,

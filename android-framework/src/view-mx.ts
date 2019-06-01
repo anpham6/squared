@@ -8,8 +8,8 @@ import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { localizeString } from './lib/util';
 
-import $NodeList = squared.base.NodeList;
-import $Resource = squared.base.Resource;
+import $NodeUI = squared.base.NodeUI;
+import $ResourceUI = squared.base.ResourceUI;
 
 type T = android.base.View;
 
@@ -167,11 +167,11 @@ function setSingleLine(node: T) {
     node.android('ellipsize', $const.CSS.END);
 }
 
-const isFlexibleDimension = (node: T, value: string) => !!node.renderParent && value === $const.CSS.PX_0 && ((node.renderParent as T).layoutConstraint || node.renderParent.is(CONTAINER_NODE.GRID));
+const isFlexibleDimension = (node: T, value: string) => !!node.renderParent && value === $const.CSS.PX_0 && ((node.renderParent as T).layoutConstraint || (node.renderParent as T).is(CONTAINER_NODE.GRID));
 
 const validateString = (value: string) => value ? value.trim().replace(REGEXP_VALIDSTRING, '_').toLowerCase() : '';
 
-export default (Base: Constructor<squared.base.Node>) => {
+export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
         public static documentBody() {
             if (View._documentBody === undefined) {
@@ -205,6 +205,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             current: {}
         };
 
+        protected _localSettings: LocalSettings = {} as any;
         protected _namespaces = [STRING_ANDROID.ANDROID, STRING_ANDROID.APP];
         protected _cached: CachedValue<T> = {};
         protected _controlName = '';
@@ -213,11 +214,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         protected _boxReset?: BoxModel;
 
         private _containerType = 0;
-        private _localSettings: LocalSettings = {
-            targetAPI: BUILD_ANDROID.LATEST,
-            supportRTL: false,
-            floatPrecision: 3
-        };
+
         private __android: StringMap = {};
         private __app: StringMap = {};
 
@@ -573,7 +570,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         name = `_${name}`;
                     }
                 }
-                this.controlId = $util.convertWord($Resource.generateId(STRING_ANDROID.ANDROID, name || $util.fromLastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
+                this.controlId = $util.convertWord($ResourceUI.generateId(STRING_ANDROID.ANDROID, name || $util.fromLastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
                 this.android('id', this.documentId);
             }
         }
@@ -844,7 +841,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
                 if (this.groupParent && !alignFloat && textAlign === '') {
-                    const actualParent = $NodeList.actualParent(this.renderChildren);
+                    const actualParent = $NodeUI.actualParent(this.renderChildren);
                     if (actualParent) {
                         textAlign = checkTextAlign(actualParent.cssInitial('textAlign', true));
                     }
@@ -1268,7 +1265,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         this.android('baselineAligned', 'false');
                     }
                     else {
-                        const baseline = $NodeList.baseline(renderChildren, true);
+                        const baseline = $NodeUI.baseline(renderChildren, true);
                         if (baseline && (baseline.textElement || baseline.inputElement)) {
                             this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
                         }

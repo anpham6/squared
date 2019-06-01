@@ -1,29 +1,24 @@
 import { CachedValue } from '../../src/base/@types/node';
 
-type T = chrome.base.View;
+type T = View;
 
 export default class View extends squared.base.Node implements chrome.base.View {
     protected _cached: CachedValue<T> = {};
-
-    private _localSettings: { floatPrecision: number } = { floatPrecision: 3 };
+    protected _localSettings: { floatPrecision?: number } = {};
 
     constructor(
-        id = 0,
-        sessionId = '0',
+        id: number,
+        sessionId: string,
         element: Element,
         afterInit?: BindGeneric<T, void>)
     {
         super(id, sessionId, element);
-        this.init();
+        if (element) {
+            this.init();
+        }
         if (afterInit) {
             afterInit(this);
         }
-    }
-
-    public clone(id?: number) {
-        const node = new View(id || this.id, this.sessionId, <Element> this.element);
-        this.cloneBase(node);
-        return node;
     }
 
     set localSettings(value) {

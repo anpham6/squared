@@ -56,13 +56,13 @@
   },
   "devDependencies": {
     "rimraf": "^2.6.3",
-    "rollup": "^1.12.4",
+    "rollup": "^1.13.1",
     "rollup-plugin-async": "^1.2.0",
     "rollup-plugin-terser": "^5.0.0",
     "systemjs": "^0.21.6",
     "systemjs-plugin-babel": "0.0.25",
     "terser": "^4.0.0",
-    "tslint": "^5.16.0",
+    "tslint": "^5.17.0",
     "typescript": "^3.5.1"
   }
 }

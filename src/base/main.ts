@@ -1,13 +1,18 @@
 import Application from './application';
+import ApplicationUI from './application-ui';
 import Controller from './controller';
+import ControllerUI from './controller-ui';
 import Extension from './extension';
+import ExtensionUI from './extension-ui';
 import ExtensionManager from './extensionmanager';
-import File from './file';
-import Layout from './layout';
+import FileUI from './file-ui';
+import LayoutUI from './layout-ui';
 import Node from './node';
+import NodeUI from './node-ui';
 import NodeGroup from './nodegroup';
 import NodeList from './nodelist';
-import Resource from './resource';
+import Resource from './resource-ui';
+import ResourceUI from './resource-ui';
 
 import Accessibility from './extensions/accessibility';
 import CssGrid from './extensions/cssgrid';
@@ -47,15 +52,20 @@ const lib = {
 
 export {
     Application,
+    ApplicationUI,
     Controller,
+    ControllerUI,
     Extension,
+    ExtensionUI,
     ExtensionManager,
-    File,
-    Layout,
+    FileUI,
+    LayoutUI,
     Node,
+    NodeUI,
     NodeGroup,
     NodeList,
     Resource,
+    ResourceUI,
     extensions,
     lib
 };

@@ -11,7 +11,7 @@ const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 const $e = squared.base.lib.enumeration;
 
-export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
+export default class ResourceStrings<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false,
         fontVariantSmallCapsReduction: 0.7

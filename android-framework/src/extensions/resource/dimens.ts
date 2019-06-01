@@ -23,7 +23,7 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
 
 const getDisplayName = (value: string) => $util.fromLastIndexOf(value, '.');
 
-export default class ResourceDimens<T extends android.base.View> extends squared.base.Extension<T> {
+export default class ResourceDimens<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
     public beforeCascade() {
@@ -65,8 +65,9 @@ export default class ResourceDimens<T extends android.base.View> extends squared
     }
 
     public afterFinalize() {
-        if (this.application.controllerHandler.hasAppendProcessing()) {
-            for (const layout of this.application.layouts) {
+        const application = this.application;
+        if (application.controllerHandler.hasAppendProcessing()) {
+            for (const layout of application.layouts) {
                 let content = layout.content;
                 let match: RegExpExecArray | null;
                 while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {

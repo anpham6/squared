@@ -3,7 +3,7 @@ import { ResourceStoredMapAndroid } from '../src/@types/application';
 
 declare global {
     namespace android.base {
-        interface File<T extends View> extends squared.base.File<T> {
+        interface File<T extends View> extends squared.base.FileUI<T> {
             readonly stored: ResourceStoredMapAndroid;
             saveAllToDisk(layouts: FileAsset[]): void;
             layoutAllToXml(layouts: FileAsset[], saveToDisk?: boolean): {};

@@ -3,12 +3,12 @@ import { ViewAttribute } from '../src/@types/node';
 
 declare global {
     namespace android.base {
-        interface Controller<T extends View> extends squared.base.Controller<T> {
+        interface Controller<T extends View> extends squared.base.ControllerUI<T> {
             readonly userSettings: UserSettingsAndroid;
-            checkFrameHorizontal(data: squared.base.Layout<T>): boolean;
-            checkConstraintFloat(data: squared.base.Layout<T>, horizontal?: boolean): boolean;
-            checkConstraintHorizontal(data: squared.base.Layout<T>): boolean;
-            checkLinearHorizontal(data: squared.base.Layout<T>): boolean;
+            checkFrameHorizontal(data: squared.base.LayoutUI<T>): boolean;
+            checkConstraintFloat(data: squared.base.LayoutUI<T>, horizontal?: boolean): boolean;
+            checkConstraintHorizontal(data: squared.base.LayoutUI<T>): boolean;
+            checkLinearHorizontal(data: squared.base.LayoutUI<T>): boolean;
             addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposite?: boolean): void;
             addBarrier(nodes: T[], barrierDirection: string): string | undefined;
             evaluateAnchors(nodes: T[]): void;

@@ -3,7 +3,7 @@ import { GridCellData, GridData } from '../../../src/base/@types/extension';
 import { STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $Layout = squared.base.Layout;
+import $LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
@@ -41,7 +41,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         super.processNode(node, parent);
         const mainData: GridData = node.data($c.EXT_NAME.GRID, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const layout = new $Layout(
+            const layout = new $LayoutUI(
                 parent,
                 node,
                 CONTAINER_NODE.GRID,
@@ -62,13 +62,14 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         const cellData: GridCellData<T> = node.data($c.EXT_NAME.GRID, 'cellData');
         if (mainData && cellData) {
             const siblings = cellData.siblings && cellData.siblings.slice(0);
-            let layout: $Layout<T> | undefined;
+            let layout: $LayoutUI<T> | undefined;
             if (siblings) {
+                const controller = <android.base.Controller<T>> this.application.controllerHandler;
                 siblings.unshift(node);
-                layout = this.application.controllerHandler.processLayoutHorizontal(
-                    new $Layout(
+                layout = controller.processLayoutHorizontal(
+                    new $LayoutUI(
                         parent,
-                        this.application.controllerHandler.createNodeGroup(node, siblings, parent, true),
+                        controller.createNodeGroup(node, siblings, parent, true),
                         0,
                         cellData.block ? $e.NODE_ALIGNMENT.BLOCK : 0,
                         siblings

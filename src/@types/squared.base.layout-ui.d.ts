@@ -4,7 +4,7 @@ import Container = squared.lib.base.Container;
 
 declare global {
     namespace squared.base {
-        interface Layout<T extends Node> extends Container<T>, LayoutType {
+        interface LayoutUI<T extends NodeUI> extends Container<T>, LayoutType {
             parent: T;
             node: T;
             itemCount: number;
@@ -25,10 +25,10 @@ declare global {
             delete(value: number): number;
         }
 
-        class Layout<T extends Node> implements Layout<T> {
+        class LayoutUI<T extends NodeUI> implements LayoutUI<T> {
             constructor(parent: T, node: T, containerType?: number, alignmentType?: number, children?: T[]);
         }
     }
 }
 
-export = squared.base.Layout;
+export = squared.base.LayoutUI;

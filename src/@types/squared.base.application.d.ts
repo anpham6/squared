@@ -1,4 +1,4 @@
-import { AppProcessing, AppSession, FileAsset, NodeTemplate, UserSettings } from '../base/@types/application';
+import { AppProcessing, AppSession, UserSettings } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
@@ -11,27 +11,21 @@ declare global {
             initialized: boolean;
             closed: boolean;
             readonly builtInExtensions: ObjectMap<Extension<T>>;
-            readonly session: AppSession<T, NodeList<T>>;
-            readonly rootElements: Set<Element>;
-            readonly processing: AppProcessing<T, NodeList<T>>;
+            readonly session: AppSession<T>;
+            readonly processing: AppProcessing<T>;
             readonly extensions: Extension<T>[];
-            readonly layouts: FileAsset[];
             readonly nextId: number;
             readonly length: number;
-            registerController(handler: Controller<T>): void;
-            registerResource(handler: Resource<T>): void;
             reset(): void;
+            parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
+            createCache(element: HTMLElement): boolean;
+            createNode(element: Element, append?: boolean, parent?: T, children?: T[]): T;
+            conditionElement(element: HTMLElement): boolean;
+            insertNode(element: Element, parent?: T): T | undefined;
+            afterCreateCache(element: HTMLElement): void;
             finalize(): void;
             saveAllToDisk(): void;
-            parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
-            renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
-            addLayout(layout: Layout<T>): boolean;
-            addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): boolean;
-            saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
-            createNode(element: Element, append?: boolean, parent?: T, children?: T[]): T;
-            resolveTarget(target: string): T | undefined;
             toString(): string;
-            createCache(documentRoot: HTMLElement): boolean;
         }
 
         class Application<T extends Node> implements Application<T> {

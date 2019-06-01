@@ -3,7 +3,7 @@ import Controller from '../../controller';
 import { CONTAINER_ANDROID, EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $Layout = squared.base.Layout;
+import $LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 type NegativeXData = {
@@ -26,7 +26,7 @@ function outsideX(node: View, parent: View) {
     }
 }
 
-export default class NegativeX<T extends View> extends squared.base.Extension<T> {
+export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T) {
         return this.application.userSettings.supportNegativeLeftTop && !node.documentRoot && node.css('overflowX') !== 'hidden' && node.some((item: T) => outsideX(item, node));
     }
@@ -119,7 +119,7 @@ export default class NegativeX<T extends View> extends squared.base.Extension<T>
             parent: container,
             renderAs: container,
             outputAs: this.application.renderNode(
-                new $Layout(
+                new $LayoutUI(
                     parent,
                     container,
                     container.containerType,

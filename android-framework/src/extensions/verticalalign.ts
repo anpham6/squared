@@ -1,6 +1,6 @@
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $Layout = squared.base.Layout;
+import $LayoutUI = squared.base.LayoutUI;
 
 const $e = squared.base.lib.enumeration;
 
@@ -9,7 +9,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
         super.processNode(node, parent);
         return {
             output: this.application.renderNode(
-                new $Layout(
+                new $LayoutUI(
                     parent,
                     node,
                     CONTAINER_NODE.RELATIVE,

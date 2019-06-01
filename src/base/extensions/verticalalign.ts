@@ -1,6 +1,6 @@
-import Extension from '../extension';
-import Node from '../node';
 import NodeList from '../nodelist';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
@@ -8,7 +8,7 @@ const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
-export default class VerticalAlign<T extends Node> extends Extension<T> {
+export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {
         let valid = false;
         let alignable = 0;
@@ -88,7 +88,7 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
             }
         }
         else {
-            node.each(item => item.baselineAltered = false);
+            node.each((item: T) => item.baselineAltered = false);
         }
     }
 }

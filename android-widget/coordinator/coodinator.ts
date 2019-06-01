@@ -10,7 +10,7 @@ const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
 const $e = squared.base.lib.enumeration;
 
-export default class Coordinator<T extends android.base.View> extends squared.base.Extension<T> {
+export default class Coordinator<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {
         const options = $utilA.createViewAttribute(this.options[node.elementId]);
         $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));

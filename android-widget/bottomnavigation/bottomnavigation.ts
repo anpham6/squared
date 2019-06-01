@@ -12,7 +12,7 @@ const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
 const $e = squared.base.lib.enumeration;
 
-export default class BottomNavigation<T extends android.base.View> extends squared.base.Extension<T> {
+export default class BottomNavigation<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     constructor(
         name: string,
         framework: number,
@@ -29,7 +29,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         for (let i = 5; i < node.length; i++) {
             const item = node.item(i) as T;
             item.hide();
-            for (const child of item.cascade()) {
+            for (const child of item.cascade() as T[]) {
                 child.hide();
             }
         }

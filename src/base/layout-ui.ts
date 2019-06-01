@@ -1,11 +1,11 @@
-import Node from './node';
+import NodeUI from './node-ui';
 import NodeList from './nodelist';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
 const $util = squared.lib.util;
 
-export default class Layout<T extends Node> extends squared.lib.base.Container<T> implements squared.base.Layout<T> {
+export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements squared.base.LayoutUI<T> {
     public rowCount = 0;
     public columnCount = 0;
     public renderType = 0;

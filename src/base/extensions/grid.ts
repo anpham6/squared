@@ -1,8 +1,8 @@
 import { GridCellData, GridData } from '../@types/extension';
 
-import Extension from '../extension';
-import Node from '../node';
 import NodeList from '../nodelist';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
@@ -11,7 +11,7 @@ const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
-function getRowIndex(columns: Node[][], target: Node) {
+function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     for (const column of columns) {
         const index = column.findIndex(item => $util.withinRange(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
         if (index !== -1) {
@@ -21,7 +21,7 @@ function getRowIndex(columns: Node[][], target: Node) {
     return -1;
 }
 
-export default abstract class Grid<T extends Node> extends Extension<T> {
+export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute(): GridData {
         return {
             paddingTop: 0,
@@ -32,7 +32,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
         };
     }
 
-    public static createDataCellAttribute<T extends Node>(): GridCellData<T> {
+    public static createDataCellAttribute<T extends NodeUI>(): GridCellData<T> {
         return {
             rowSpan: 0,
             columnSpan: 0,
@@ -258,9 +258,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                     }
                 }
             }
-            for (const item of node) {
-                item.hide();
-            }
+            node.each((item: T) => item.hide());
             node.clear();
             for (const group of children) {
                 let hasLength = true;

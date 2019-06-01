@@ -1,7 +1,7 @@
 import { CONTAINER_ANDROID, EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $Layout = squared.base.Layout;
+import $LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
@@ -15,7 +15,7 @@ export interface MaxWidthHeightData {
     container?: View;
 }
 
-export default class MaxWidthHeight<T extends View> extends squared.base.Extension<T> {
+export default class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T, parent: T) {
         if (!node.inputElement) {
             let width = false;
@@ -64,7 +64,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                     parent: container,
                     renderAs: container,
                     outputAs: this.application.renderNode(
-                        new $Layout(
+                        new $LayoutUI(
                             parent,
                             container,
                             container.containerType,

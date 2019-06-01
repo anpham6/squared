@@ -1,7 +1,7 @@
 import { TableData } from '../@types/extension';
 
-import Extension from '../extension';
-import Node from '../node';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
@@ -21,8 +21,8 @@ const enum LAYOUT_TABLE {
 }
 const REGEXP_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
 
-export default abstract class Table<T extends Node> extends Extension<T> {
-    public static createDataAttribute(node: Node): TableData {
+export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
+    public static createDataAttribute(node: NodeUI): TableData {
         return {
             layoutType: 0,
             rowCount: 0,

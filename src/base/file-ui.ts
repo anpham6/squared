@@ -1,7 +1,7 @@
-import { FileAsset, RawAsset, UserSettings } from './@types/application';
+import { ControllerUISettings, FileAsset, RawAsset, UserUISettings } from './@types/application';
 
-import Node from './node';
-import Resource from './resource';
+import NodeUI from './node-ui';
+import ResourceUI from './resource-ui';
 
 const $const = squared.lib.constant;
 const $util = squared.lib.util;
@@ -12,7 +12,7 @@ export interface ExpressResult {
     system: string;
 }
 
-export default abstract class File<T extends Node> implements squared.base.File<T> {
+export default abstract class FileUI<T extends NodeUI> implements squared.base.FileUI<T> {
     public static downloadToDisk(data: Blob, filename: string, mime?: string) {
         const blob = new Blob([data], { type: mime || 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
@@ -32,12 +32,12 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public appName = '';
     public readonly assets: RawAsset[] = [];
 
-    protected constructor(public resource: Resource<T>) {
+    protected constructor(public resource: ResourceUI<T>) {
         resource.fileHandler = this;
     }
 
     public abstract saveAllToDisk(layouts: FileAsset[]): void;
-    public abstract get userSettings(): UserSettings;
+    public abstract get userSettings(): UserUISettings;
 
     public addAsset(data: Optional<RawAsset>) {
         if (data.content || data.uri || data.base64) {
@@ -77,7 +77,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         if (result.zipname) {
                             fetch(`/api/downloadtobrowser?filename=${encodeURIComponent(result.zipname)}`)
                                 .then((response: Response) => response.blob())
-                                .then((blob: Blob) => File.downloadToDisk(blob, $util.fromLastIndexOf(result.zipname, '/')));
+                                .then((blob: Blob) => FileUI.downloadToDisk(blob, $util.fromLastIndexOf(result.zipname, '/')));
                         }
                         else if (result.system && this.userSettings.showErrorMessages) {
                             alert(`${result.application}\n\n${result.system}`);
@@ -101,6 +101,6 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     get directory() {
-        return this.resource.application.controllerHandler.localSettings.directory;
+        return (<ControllerUISettings> this.resource.application.controllerHandler.localSettings).directory;
     }
 }

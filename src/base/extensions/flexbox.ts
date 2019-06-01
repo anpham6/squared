@@ -1,8 +1,8 @@
 import { FlexboxData } from '../@types/extension';
 
-import Extension from '../extension';
-import Node from '../node';
 import NodeList from '../nodelist';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
@@ -10,8 +10,8 @@ import { NODE_ALIGNMENT } from '../lib/enumeration';
 const $const = squared.lib.constant;
 const $util = squared.lib.util;
 
-export default abstract class Flexbox<T extends Node> extends Extension<T> {
-    public static createDataAttribute<T extends Node>(node: T, children: T[]): FlexboxData<T> {
+export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
+    public static createDataAttribute<T extends NodeUI>(node: T, children: T[]): FlexboxData<T> {
         const wrap = node.css('flexWrap');
         const direction = node.css('flexDirection');
         return {
@@ -34,7 +34,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
 
     public processNode(node: T) {
         const controller = this.application.controllerHandler;
-        const children = node.filter(item => {
+        const children = node.filter((item: T) => {
             if (item.pageFlow && item.pseudoElement && item.contentBoxWidth === 0 && item.css('content') === '""') {
                 item.hide();
                 return false;

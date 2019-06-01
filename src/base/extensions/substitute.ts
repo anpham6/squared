@@ -1,14 +1,14 @@
 import { NodeXmlTemplate } from '../@types/application';
 
-import Extension from '../extension';
-import Node from '../node';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 import { EXT_NAME } from '../lib/constant';
 import { NODE_ALIGNMENT, NODE_TEMPLATE } from '../lib/enumeration';
 
 const $css = squared.lib.css;
 
-export default class Substitute<T extends Node> extends Extension<T> {
+export default class Substitute<T extends NodeUI> extends ExtensionUI<T> {
     constructor(
         name: string,
         framework: number,

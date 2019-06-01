@@ -14,7 +14,7 @@ const $utilA = android.lib.util;
 const $c = squared.base.lib.constant;
 const $e = squared.base.lib.enumeration;
 
-export default class Drawer<T extends android.base.View> extends squared.base.Extension<T> {
+export default class Drawer<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     constructor(
         name: string,
         framework: number,
@@ -85,12 +85,13 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             $util.assignEmptyValue(options, $constA.STRING_ANDROID.APP, 'headerLayout', `@layout/${headerLayout}`);
         }
         if (menu !== '' || headerLayout !== '') {
+            const controller = <android.base.Controller<T>> this.application.controllerHandler;
             $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'id', `${node.documentId}_navigation`);
             $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'fitsSystemWindows', 'true');
             $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, $constA.STRING_ANDROID.LAYOUT_GRAVITY, node.localizeString($const.CSS.LEFT));
-            this.application.controllerHandler.addAfterInsideTemplate(
+            controller.addAfterInsideTemplate(
                 node.id,
-                this.application.controllerHandler.renderNodeStatic(
+                controller.renderNodeStatic(
                     $constA.SUPPORT_ANDROID.NAVIGATION_VIEW,
                     $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
                     $constA.STRING_ANDROID.WRAP_CONTENT,
@@ -104,7 +105,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         const element = Drawer.findNestedElement(node.element, WIDGET_NAME.COORDINATOR);
         if (element) {
             const coordinator = $session.getElementAsNode<T>(element, node.sessionId);
-            if (coordinator && coordinator.inlineHeight && coordinator.some(item => item.positioned)) {
+            if (coordinator && coordinator.inlineHeight && coordinator.some((item: T) => item.positioned)) {
                 coordinator.setLayoutHeight($constA.STRING_ANDROID.MATCH_PARENT);
             }
         }

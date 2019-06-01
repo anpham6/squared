@@ -1,16 +1,20 @@
 type Node = squared.base.Node;
+type NodeUI = squared.base.NodeUI;
 
 export interface UserSettings {
     builtInExtensions: string[];
     preloadImages: boolean;
+    handleExtensionsAsync: boolean;
+    showErrorMessages: boolean;
+}
+
+export interface UserUISettings extends UserSettings {
     framesPerSecond: number;
     supportNegativeLeftTop: boolean;
     exclusionsDisabled: boolean;
     showAttributes: boolean;
     insertSpaces: number;
-    handleExtensionsAsync: boolean;
     autoCloseOnWrite: boolean;
-    showErrorMessages: boolean;
     outputDirectory: string;
     outputMainFileName: string;
     outputArchiveFormat: string;
@@ -18,22 +22,8 @@ export interface UserSettings {
 }
 
 export interface ControllerSettings {
-    layout: {
-        pathName: string;
-        fileExtension: string;
-        baseTemplate: string;
-    };
-    directory: {
-        string: string;
-        font: string;
-        image: string;
-    };
     svg: {
         enabled: boolean;
-    };
-    style: {
-        inputBorderColor: string;
-        inputBackgroundColor: string;
     };
     supported: {
         fontFormat: string[];
@@ -46,6 +36,23 @@ export interface ControllerSettings {
     };
     precision: {
         standardFloat: number;
+    };
+}
+
+export interface ControllerUISettings extends ControllerSettings {
+    layout: {
+        pathName: string;
+        fileExtension: string;
+        baseTemplate: string;
+    };
+    directory: {
+        string: string;
+        font: string;
+        image: string;
+    };
+    style: {
+        inputBorderColor: string;
+        inputBackgroundColor: string;
     };
     deviations: {
         textMarginBoundarySize: number;
@@ -73,20 +80,23 @@ export interface AppHandler<T extends Node> {
     readonly userSettings: UserSettings;
 }
 
-export interface AppSession<T extends Node, U> {
-    cache: U;
-    documentRoot: { node: T, layoutName: string }[];
+export interface AppSession<T extends Node> {
+    cache: squared.base.NodeList<T>;
     excluded: squared.base.NodeList<T>;
-    targetQueue: Map<T, NodeTemplate<T>>;
     active: string[];
     extensionMap: Map<number, squared.base.Extension<T>[]>;
 }
 
-export interface AppProcessing<T extends Node, U> {
-    cache: U;
-    sessionId: string;
-    node: T | undefined;
+export interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
+    documentRoot: { node: T, layoutName: string }[];
+    targetQueue: Map<T, NodeTemplate<T>>;
+}
+
+export interface AppProcessing<T extends Node> {
+    cache: squared.base.NodeList<T>;
     excluded: squared.base.NodeList<T>;
+    sessionId: string;
+    node?: T;
 }
 
 export interface ExtensionDependency {
@@ -94,7 +104,7 @@ export interface ExtensionDependency {
     preload: boolean;
 }
 
-export interface ExtensionResult<T extends Node> {
+export interface ExtensionResult<T extends NodeUI> {
     parentAs?: T;
     output?: NodeTemplate<T>;
     renderAs?: T;
@@ -111,8 +121,8 @@ export interface LayoutType {
     renderType: number;
 }
 
-export interface LayoutResult<T extends Node> {
-    layout: squared.base.Layout<T>;
+export interface LayoutResult<T extends NodeUI> {
+    layout: squared.base.LayoutUI<T>;
     next?: boolean;
     renderAs?: T;
 }
@@ -153,17 +163,17 @@ export interface RawAsset extends FileAsset, ImageAsset {
     base64?: string;
 }
 
-export interface NodeTemplate<T extends Node> {
+export interface NodeTemplate<T extends NodeUI> {
     type: number;
     node: T;
     parent?: T;
 }
 
-export interface NodeXmlTemplate<T extends Node> extends NodeTemplate<T> {
+export interface NodeXmlTemplate<T extends NodeUI> extends NodeTemplate<T> {
     controlName?: string;
     attributes?: string;
 }
 
-export interface NodeIncludeTemplate<T extends Node> extends NodeTemplate<T> {
+export interface NodeIncludeTemplate<T extends NodeUI> extends NodeTemplate<T> {
     content: string;
 }

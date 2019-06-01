@@ -5,7 +5,7 @@ import View from '../../view';
 import { EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $Layout = squared.base.Layout;
+import $LayoutUI = squared.base.LayoutUI;
 
 const $const = squared.lib.constant;
 const $util = squared.lib.util;
@@ -18,7 +18,7 @@ export interface FixedData {
     bottom: boolean;
 }
 
-export default class Fixed<T extends View> extends squared.base.Extension<T> {
+export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T) {
         if (node.naturalElement && (node.documentBody || node.contentBoxWidth > 0 || node.contentBoxHeight > 0)) {
             const absolute = node.filter(item => !item.pageFlow && item.leftTopAxis && item.left >= 0 && item.right >= 0) as T[];
@@ -125,7 +125,7 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                 parent: container,
                 renderAs: container,
                 outputAs: this.application.renderNode(
-                    new $Layout(
+                    new $LayoutUI(
                         parent,
                         container,
                         CONTAINER_NODE.CONSTRAINT,

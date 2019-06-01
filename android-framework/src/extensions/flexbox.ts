@@ -6,8 +6,8 @@ import View from '../view';
 import { STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $Layout = squared.base.Layout;
-import $NodeList = squared.base.NodeList;
+import $LayoutUI = squared.base.LayoutUI;
+import $NodeUI = squared.base.NodeUI;
 
 type FlexBasis = {
     item: View;
@@ -149,7 +149,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             return { include: true };
         }
         else {
-            const layout = new $Layout(
+            const layout = new $LayoutUI(
                 parent,
                 node,
                 0,
@@ -175,7 +175,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         if (node.hasAlign($e.NODE_ALIGNMENT.SEGMENTED)) {
             return {
                 output: this.application.renderNode(
-                    new $Layout(
+                    new $LayoutUI(
                         parent,
                         node,
                         CONTAINER_NODE.CONSTRAINT,
@@ -209,7 +209,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         parent: container,
                         renderAs: container,
                         outputAs: this.application.renderNode(
-                            new $Layout(
+                            new $LayoutUI(
                                 parent,
                                 container,
                                 CONTAINER_NODE.FRAME,
@@ -452,7 +452,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'baseline':
                                     if (horizontal) {
                                         if (baseline === undefined) {
-                                            baseline = $NodeList.baseline(seg);
+                                            baseline = $NodeUI.baseline(seg);
                                         }
                                         if (baseline && chain !== baseline) {
                                             chain.anchor('baseline', baseline.documentId);

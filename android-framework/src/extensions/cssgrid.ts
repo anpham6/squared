@@ -7,7 +7,7 @@ import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
-import $Layout = squared.base.Layout;
+import $LayoutUI = squared.base.LayoutUI;
 
 const $css = squared.lib.css;
 const $const = squared.lib.constant;
@@ -199,7 +199,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         super.processNode(node, parent);
         const mainData: CssGridData<T> = node.data($c.EXT_NAME.CSS_GRID, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const layout = new $Layout(
+            const layout = new $LayoutUI(
                 parent,
                 node,
                 CONTAINER_NODE.GRID,
@@ -399,7 +399,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 node.outerWrapper = renderAs;
                 node.parent = renderAs;
                 outputAs = this.application.renderNode(
-                    new $Layout(
+                    new $LayoutUI(
                         parent,
                         renderAs,
                         CONTAINER_NODE.FRAME,

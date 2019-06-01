@@ -3,14 +3,14 @@ import { ConstraintGuidelineOptions } from '../../@types/extension';
 import { STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $Layout = squared.base.Layout;
+import $LayoutUI = squared.base.LayoutUI;
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 const $e = squared.base.lib.enumeration;
 
-export default class Guideline<T extends android.base.View> extends squared.base.Extension<T> {
+export default class Guideline<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     public readonly options: ConstraintGuidelineOptions = {
         circlePosition: false
     };
@@ -23,7 +23,7 @@ export default class Guideline<T extends android.base.View> extends squared.base
         node.exclude(0, $e.NODE_PROCEDURE.CONSTRAINT);
         return {
             output: this.application.renderNode(
-                new $Layout(
+                new $LayoutUI(
                     parent,
                     node,
                     CONTAINER_NODE.CONSTRAINT,

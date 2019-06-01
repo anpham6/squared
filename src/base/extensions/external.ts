@@ -1,10 +1,10 @@
-import Extension from '../extension';
-import Node from '../node';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 const $css = squared.lib.css;
 const $session = squared.lib.session;
 
-export default abstract class External<T extends Node> extends Extension<T> {
+export default abstract class External<T extends NodeUI> extends ExtensionUI<T> {
     public beforeInit(element: HTMLElement, internal = false) {
         if (internal || this.included(element)) {
             if (!$session.getElementCache(element, 'squaredExternalDisplay', this.application.processing.sessionId)) {

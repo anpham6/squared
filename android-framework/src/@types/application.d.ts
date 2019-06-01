@@ -1,6 +1,6 @@
-import { ControllerSettings, ResourceStoredMap, UserSettings } from '../../../src/base/@types/application';
+import { ControllerUISettings, ResourceStoredMap, UserUISettings } from '../../../src/base/@types/application';
 
-export interface UserSettingsAndroid extends UserSettings {
+export interface UserSettingsAndroid extends UserUISettings {
     targetAPI: number;
     resolutionDPI: number;
     supportRTL: boolean;
@@ -11,7 +11,7 @@ export interface UserSettingsAndroid extends UserSettings {
     manifestParentThemeName: string;
 }
 
-export interface ControllerSettingsAndroid extends ControllerSettings {
+export interface ControllerSettingsAndroid extends ControllerUISettings {
     deviations: {
         textMarginBoundarySize: number;
         subscriptBottomOffset: number;

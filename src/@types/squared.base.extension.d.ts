@@ -1,4 +1,4 @@
-import { ExtensionDependency, ExtensionResult } from '../base/@types/application';
+import { ExtensionDependency } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
@@ -20,26 +20,13 @@ declare global {
             beforeInit(element: HTMLElement, recursive?: boolean): void;
             init(element: HTMLElement): boolean;
             afterInit(element: HTMLElement, recursive?: boolean): void;
-            condition(node: T, parent?: T): boolean;
-            processNode(node: T, parent: T): ExtensionResult<T> | undefined;
-            processChild(node: T, parent: T): ExtensionResult<T> | undefined;
             addDescendant(node: T): void;
-            postBaseLayout(node: T): void;
-            postConstraints(node: T): void;
             postParseDocument(node: T): void;
-            postOptimize(node: T): void;
-            postBoxSpacing(node: T): void;
             beforeParseDocument(): void;
-            afterBaseLayout(): void;
-            afterConstraints(): void;
-            afterResources(): void;
             afterParseDocument(): void;
-            beforeCascade(): void;
-            afterFinalize(): void;
         }
 
         class Extension<T extends Node> implements Extension<T> {
-            public static findNestedElement(element: Element | null, name: string): HTMLElement | null;
             constructor(name: string, framework: number, tagNames?: string[], options?: ExternalData);
         }
     }

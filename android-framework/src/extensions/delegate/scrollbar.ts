@@ -10,7 +10,7 @@ const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $e = squared.base.lib.enumeration;
 
-export default class ScrollBar<T extends View> extends squared.base.Extension<T> {
+export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T) {
         return node.length > 0 && (node.overflowX && node.has($const.CSS.WIDTH) || node.overflowY && node.hasHeight && node.has($const.CSS.HEIGHT) || this.included(<HTMLElement> node.element));
     }

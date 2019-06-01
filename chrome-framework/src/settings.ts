@@ -5,6 +5,6 @@ const settings: UserSettings = {
     preloadImages: true,
     handleExtensionsAsync: true,
     showErrorMessages: true
-} as any;
+};
 
 export default settings;

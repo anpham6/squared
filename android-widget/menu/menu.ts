@@ -80,7 +80,7 @@ function getTitle(node: View, element: HTMLElement) {
 
 const hasInputType = (node: View, value: string) => node.some(item => (<HTMLInputElement> item.element).type === value);
 
-export default class Menu<T extends View> extends squared.base.Extension<T> {
+export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(
         name: string,
         framework: number,
@@ -93,6 +93,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
 
     public init(element: HTMLElement) {
         if (this.included(element)) {
+            const application = this.application;
             let valid = false;
             if (element.children.length) {
                 valid = true;
@@ -106,7 +107,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                 if (valid) {
                     let current = element.parentElement;
                     while (current) {
-                        if (current.tagName === 'NAV' && this.application.rootElements.has(current)) {
+                        if (current.tagName === 'NAV' && application.rootElements.has(current)) {
                             valid = false;
                             break;
                         }
@@ -117,11 +118,11 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             if (valid) {
                 element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
                     if ($css.getStyle(item).display === $const.CSS.NONE) {
-                        $session.setElementCache(item, 'squaredExternalDisplay', this.application.processing.sessionId, $const.CSS.NONE);
+                        $session.setElementCache(item, 'squaredExternalDisplay', application.processing.sessionId, $const.CSS.NONE);
                         item.style.setProperty('display', 'block');
                     }
                 });
-                this.application.rootElements.add(<HTMLElement> element);
+                application.rootElements.add(<HTMLElement> element);
             }
         }
         return false;
@@ -214,7 +215,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                         }
                     }
                 }
-                node.each(item => item.tagName !== 'NAV' && item.hide());
+                node.each((item: T) => item.tagName !== 'NAV' && item.hide());
                 break;
         }
         if (title !== '') {

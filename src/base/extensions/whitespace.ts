@@ -1,5 +1,5 @@
-import Extension from '../extension';
-import Node from '../node';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 import { CSS_SPACING } from '../lib/constant';
 import { BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
@@ -11,16 +11,16 @@ const $util = squared.lib.util;
 
 const DOCTYPE_HTML = document.doctype !== null && document.doctype.name === 'html';
 
-function setMinHeight(node: Node, offset: number) {
+function setMinHeight(node: NodeUI, offset: number) {
     const minHeight = node.has('minHeight', CSS_STANDARD.LENGTH) ? node.toFloat('minHeight') : 0;
     node.css('minHeight', $css.formatPX(Math.max(offset, minHeight)));
 }
 
-function isBlockElement(node: Node | null) {
+function isBlockElement(node: NodeUI | null) {
     return node ? (node.blockStatic || node.display === 'table') && !node.lineBreak : false;
 }
 
-function resetMargin(node: Node, value: number) {
+function resetMargin(node: NodeUI, value: number) {
     const offset = node[CSS_SPACING.get(value) as string];
     let valid = false;
     if (node.getBox(value)[0] === 0) {
@@ -41,7 +41,7 @@ function resetMargin(node: Node, value: number) {
     }
 }
 
-function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
+function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
     if (isBlockElement(child)) {
         let margin: string;
         let borderWidth: string;
@@ -62,7 +62,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
         if (node[borderWidth] === 0) {
             if (node[padding] === 0) {
                 while (DOCTYPE_HTML && child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0 && !child.layoutElement && !child.tableElement) {
-                    const endChild = (direction ? child.firstChild : child.lastChild) as Node;
+                    const endChild = (direction ? child.firstChild : child.lastChild) as NodeUI;
                     if (isBlockElement(endChild)) {
                         child = endChild;
                     }
@@ -112,7 +112,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
             else if (child[margin] === 0 && child[borderWidth] === 0 && !child.layoutElement && !child.tableElement) {
                 let blockAll = true;
                 do {
-                    const endChild = (direction ? child.firstChild : child.lastChild) as Node;
+                    const endChild = (direction ? child.firstChild : child.lastChild) as NodeUI;
                     if (endChild && endChild[margin] === 0 && endChild[borderWidth] === 0) {
                         if (endChild[padding] > 0) {
                             if (endChild[padding] >= node[padding]) {
@@ -140,7 +140,7 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
     }
 }
 
-export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
+export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public afterBaseLayout() {
         const processed = new Set<number>();
         const inheritTop = new Set<number>();
@@ -339,7 +339,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         }
                     }
                     else {
-                        const actualParent = node.actualParent;
+                        const actualParent = node.actualParent as NodeUI;
                         if (actualParent) {
                             const offset = getMarginOffset();
                             if (offset !== 0) {
@@ -360,7 +360,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     }
                 }
                 else {
-                    const actualParent = node.actualParent;
+                    const actualParent = node.actualParent as NodeUI;
                     if (actualParent && actualParent.visible) {
                         if (!actualParent.documentRoot && actualParent.ascendOuter(item => item.documentRoot).length === 0 && previousSiblings.length) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];

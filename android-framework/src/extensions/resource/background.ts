@@ -463,7 +463,7 @@ export function drawRect(width: number, height: number, x = 0, y = 0, precision?
     return `M${x},${y} ${width},${y} ${width},${height} ${x},${height} Z`;
 }
 
-export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {
+export default class ResourceBackground<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceBackgroundOptions = {
         autoSizeBackgroundImage: true,
         drawOutlineAsInsetBorder: true
@@ -716,7 +716,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         if (rawData && rawData.base64) {
                                             backgroundImage[j] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));
                                             imageDimensions[j] = { width: rawData.width, height: rawData.height };
-                                            this.application.resourceHandler.writeRawImage(rawData.filename, rawData.base64);
+                                            (<android.base.Resource<T>> this.application.resourceHandler).writeRawImage(rawData.filename, rawData.base64);
                                             valid = true;
                                         }
                                     }

@@ -2,12 +2,12 @@ import { Constraint, LocalSettings, SupportAndroid } from '../src/@types/node';
 
 declare global {
     namespace android.base {
-        interface View extends squared.base.Node {
+        interface View extends squared.base.NodeUI {
             anchored: boolean;
+            localSettings: LocalSettings;
             readonly layoutWidth: string;
             readonly layoutHeight: string;
             readonly constraint: Constraint;
-            readonly localSettings: LocalSettings;
             readonly documentId: string;
             readonly imageOrSvgElement: boolean;
             readonly layoutFrame: boolean;

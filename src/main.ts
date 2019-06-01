@@ -184,6 +184,12 @@ export function retrieve(value: string) {
     return main && main.extensionManager.retrieve(value);
 }
 
+export function reset() {
+    if (main) {
+        main.reset();
+    }
+}
+
 export function ready() {
     return !!main && !main.initialized && !main.closed;
 }
@@ -191,12 +197,6 @@ export function ready() {
 export function close() {
     if (main && !main.initialized && main.length) {
         main.finalize();
-    }
-}
-
-export function reset() {
-    if (main) {
-        main.reset();
     }
 }
 

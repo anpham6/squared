@@ -1,6 +1,6 @@
-import Extension from '../extension';
-import Layout from '../layout';
-import Node from '../node';
+import ExtensionUI from '../extension-ui';
+import LayoutUI from '../layout-ui';
+import NodeUI from '../node-ui';
 
 import { STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
@@ -9,7 +9,7 @@ const $const = squared.lib.constant;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-export default abstract class Relative<T extends Node> extends Extension<T> {
+export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {
         return node.positionRelative || node.toFloat('verticalAlign', true) !== 0;
     }
@@ -28,11 +28,12 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
             let bottom = node.bottom;
             let left = node.left;
             if (renderParent.support.container.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
+                const application = this.application;
                 target = node.clone(this.application.nextId, true, true) as T;
                 target.baselineAltered = true;
                 node.hide(true);
-                this.application.session.cache.append(target, false);
-                const layout = new Layout(
+                application.session.cache.append(target, false);
+                const layout = new LayoutUI(
                     renderParent,
                     target,
                     target.containerType,
@@ -42,7 +43,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                 if (index !== -1) {
                     layout.renderIndex = index + 1;
                 }
-                this.application.addLayout(layout);
+                application.addLayout(layout);
                 if (renderParent.layoutHorizontal && node.documentParent.toInt('textIndent') < 0) {
                     renderParent.renderEach(item => {
                         if (item.alignSibling(STRING_BASE.TOP_BOTTOM) === node.documentId) {
@@ -85,7 +86,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                 if (actualParent) {
                     let preceding = false;
                     let previous: T | undefined;
-                    for (const item of actualParent.actualChildren) {
+                    for (const item of actualParent.actualChildren as T[]) {
                         if (item === node) {
                             if (preceding) {
                                 if (renderParent.layoutVertical && (node.top !== 0 || node.bottom !== 0)) {

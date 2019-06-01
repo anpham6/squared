@@ -2,7 +2,7 @@ import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '.
 
 declare global {
     namespace android.base {
-        interface Resource<T extends View> extends squared.base.Resource<T> {
+        interface Resource<T extends View> extends squared.base.ResourceUI<T> {
             readonly userSettings: UserSettingsAndroid;
             addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         }

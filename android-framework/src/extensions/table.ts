@@ -5,7 +5,7 @@ import View from '../view';
 import { STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $Layout = squared.base.Layout;
+import $LayoutUI = squared.base.LayoutUI;
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
@@ -83,7 +83,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 }
                 node.css($const.CSS.HEIGHT, $const.CSS.AUTO, true);
             }
-            const layout = new $Layout(
+            const layout = new $LayoutUI(
                 parent,
                 node,
                 CONTAINER_NODE.GRID,

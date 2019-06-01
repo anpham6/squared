@@ -1,24 +1,11 @@
-import { ExtensionDependency, ExtensionResult } from './@types/application';
+import { ExtensionDependency } from './@types/application';
 
 import Application from './application';
 import Node from './node';
 
-const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 export default abstract class Extension<T extends Node> implements squared.base.Extension<T> {
-    public static findNestedElement(element: Element | null, name: string) {
-        if (element && $css.hasComputedStyle(element)) {
-            for (let i = 0; i < element.children.length; i++) {
-                const item = <HTMLElement> element.children[i];
-                if ($util.includes(item.dataset.use, name)) {
-                    return item;
-                }
-            }
-        }
-        return null;
-    }
-
     public tagNames: string[];
     public eventOnly = false;
     public preloaded = false;
@@ -84,21 +71,6 @@ export default abstract class Extension<T extends Node> implements squared.base.
         }
     }
 
-    public condition(node: T, parent?: T) {
-        if (node.styleElement) {
-            return node.dataset.use ? this.included(<HTMLElement> node.element) : this.tagNames.length > 0;
-        }
-        return false;
-    }
-
-    public processNode(node: T, parent: T): ExtensionResult<T> | undefined {
-        return undefined;
-    }
-
-    public processChild(node: T, parent: T): ExtensionResult<T> | undefined {
-        return undefined;
-    }
-
     public addDescendant(node: T) {
         const extensions = this.application.session.extensionMap.get(node.id) || [];
         if (!extensions.includes(this)) {
@@ -107,19 +79,9 @@ export default abstract class Extension<T extends Node> implements squared.base.
         this.application.session.extensionMap.set(node.id, extensions);
     }
 
-    public postBaseLayout(node: T) {}
-    public postConstraints(node: T) {}
     public postParseDocument(node: T) {}
-    public postOptimize(node: T) {}
-    public postBoxSpacing(node: T) {}
-
     public beforeParseDocument() {}
-    public afterBaseLayout() {}
-    public afterConstraints() {}
-    public afterResources() {}
     public afterParseDocument() {}
-    public beforeCascade() {}
-    public afterFinalize() {}
 
     get installed() {
         return !!this.application && this.application.extensions.includes(this);

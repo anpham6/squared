@@ -1,5 +1,4 @@
-import { NodeTemplate } from '../base/@types/application';
-import { AutoMargin, InitialData, SiblingOptions, Support, VisibleStyle } from '../base/@types/node';
+import { AutoMargin, InitialData, SiblingOptions, VisibleStyle } from '../base/@types/node';
 
 import Container = squared.lib.base.Container;
 
@@ -7,29 +6,25 @@ declare global {
     namespace squared.base {
         interface Node extends Container<Node>, BoxModel {
             id: number;
+            localSettings: {};
             style: CSSStyleDeclaration;
-            containerType: number;
             alignmentType: number;
             depth: number;
             siblingIndex: number;
             documentRoot: boolean;
-            positionStatic: boolean;
-            positionAuto: boolean;
-            baselineActive: boolean;
-            baselineAltered: boolean;
             lineBreakLeading: boolean;
             lineBreakTrailing: boolean;
+            siblingsLeading: Node[];
+            siblingsTrailing: Node[];
             floatContainer: boolean;
-            positioned: boolean;
             visible: boolean;
-            excluded: boolean;
             rendered: boolean;
-            controlId: string;
+            excluded: boolean;
             tagName: string;
-            controlName: string;
             baseline: boolean;
             textContent: string;
             multiline: boolean;
+            positionAuto: boolean;
             overflow: number;
             contentBoxWidth: number;
             contentBoxHeight: number;
@@ -37,27 +32,13 @@ declare global {
             dir: string;
             documentParent: Node;
             actualChildren: Node[];
-            renderExclude: boolean;
-            renderAs?: Node;
             parent?: Node;
             renderParent?: Node;
-            renderExtension?: Extension<Node>[];
-            renderTemplates?: (NodeTemplate<Node> | null)[];
-            siblingsLeading: Node[];
-            siblingsTrailing: Node[];
             outerWrapper?: Node;
             innerWrapped?: Node;
             innerBefore?: Node;
             innerAfter?: Node;
-            companion?: Node;
-            extracted?: Node[];
-            horizontalRows?: Node[][];
             readonly sessionId: string;
-            readonly localSettings: {};
-            readonly excludeSection: number;
-            readonly excludeProcedure: number;
-            readonly excludeResource: number;
-            readonly renderChildren: Node[];
             readonly initial: InitialData<Node>;
             readonly box: BoxRectDimension;
             readonly bounds: BoxRectDimension;
@@ -76,7 +57,6 @@ declare global {
             readonly inputElement: boolean;
             readonly layoutElement: boolean;
             readonly pseudoElement: boolean;
-            readonly groupParent: boolean;
             readonly documentBody: boolean;
             readonly dataset: DOMStringMap;
             readonly extensions: string[];
@@ -89,7 +69,6 @@ declare global {
             readonly hasWidth: boolean;
             readonly hasHeight: boolean;
             readonly lineHeight: number;
-            readonly baselineHeight: number;
             readonly display: string;
             readonly positionRelative: boolean;
             readonly top: number;
@@ -115,6 +94,7 @@ declare global {
             readonly plainText: boolean;
             readonly inlineText: boolean;
             readonly lineBreak: boolean;
+            readonly positionStatic: boolean;
             readonly block: boolean;
             readonly blockStatic: boolean;
             readonly blockDimension: boolean;
@@ -138,9 +118,6 @@ declare global {
             readonly verticalAlign: string;
             readonly textEmpty: boolean;
             readonly preserveWhiteSpace: boolean;
-            readonly layoutHorizontal: boolean;
-            readonly layoutVertical: boolean;
-            readonly support: Support;
             readonly absoluteParent: Node | null;
             readonly actualParent: Node | null;
             readonly actualWidth: number;
@@ -151,35 +128,18 @@ declare global {
             readonly previousSibling: Node | null;
             readonly nextSibling: Node | null;
             readonly singleChild: boolean;
-            readonly documentId: string;
             readonly center: Point;
-            setControlType(controlName: string, containerType?: number): void;
-            setLayout(): void;
-            setAlignment(): void;
-            alignParent(position: string): boolean;
-            alignSibling(position: string, documentId?: string): string;
-            localizeString(value: string): string;
-            clone(id?: number, attributes?: boolean, position?: boolean): Node;
-            cloneBase(node: Node): void;
             init(): void;
             saveAsInitial(overwrite?: boolean): void;
-            is(containerType: number): boolean;
-            of(containerType: number, ...alignmentType: number[]): boolean;
+            addAlign(value: number): void;
+            removeAlign(value: number): void;
+            hasAlign(value: number): boolean;
             unsafe(name: string, unset?: boolean): any;
-            attr(name: string, attr: string, value?: string, overwrite?: boolean): string;
-            namespace(name: string): StringMap;
-            delete(name: string, ...attrs: string[]): void;
-            apply(options: {}): void;
-            render(parent?: Node): void;
-            renderEach(predicate: IteratorPredicate<Node, void>): this;
-            renderFilter(predicate: IteratorPredicate<Node, boolean>): Node[];
-            hide(invisible?: boolean): void;
             data(name: string, attr: string, value?: any, overwrite?: boolean): any;
             unsetCache(...attrs: string[]): void;
             ascend(generated?: boolean, condition?: (item: Node) => boolean, parent?: Node): Node[];
-            ascendOuter(condition?: (item: Node) => boolean, parent?: Node): Node[];
-            inherit(node: Node, ...modules: string[]): void;
             alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
+            inherit(node: Node, ...modules: string[]): void;
             intersectX(rect: BoxRectDimension, dimension?: string): boolean;
             intersectY(rect: BoxRectDimension, dimension?: string): boolean;
             withinX(rect: BoxRectDimension, dimension?: string): boolean;
@@ -197,29 +157,13 @@ declare global {
             cssSpecificity(attr: string): number;
             cssTry(attr: string, value: string): boolean;
             cssFinally(attr: string): boolean;
-            appendTry(node: Node, replacement: Node, append?: boolean): boolean;
             toInt(attr: string, initial?: boolean, fallback?: number): number;
             toFloat(attr: string, initial?: boolean, fallback?: number): number;
             parseUnit(value: string, dimension?: string, parent?: boolean): number;
             convertPX(value: string, dimension?: string, parent?: boolean): string;
-            addAlign(value: number): void;
-            removeAlign(value: number): void;
             has(attr: string, checkType?: number, options?: {}): boolean;
-            hasAlign(value: number): boolean;
-            hasProcedure(value: number): boolean;
-            hasResource(value: number): boolean;
-            hasSection(value: number): boolean;
-            exclude(resource?: number, procedure?: number, section?: number): void;
-            setExclusions(): void;
             setBounds(cache?: boolean): void;
             setInlineText(value: boolean, overwrite?: boolean): void;
-            setBoxSpacing(): void;
-            extractAttributes(depth: number): string;
-            modifyBox(region: number, offset?: number, negative?: boolean): void;
-            getBox(region: number): [number, number];
-            resetBox(region: number, node?: Node, fromParent?: boolean): void;
-            transferBox(region: number, node: Node): void;
-            actualRect(direction: string, dimension?: string): number;
             previousSiblings(options?: SiblingOptions): Node[];
             nextSiblings(options?: SiblingOptions): Node[];
             getFirstChildElement(options?: SiblingOptions): Element | null;
@@ -229,8 +173,6 @@ declare global {
         class Node implements Node {
             constructor(id: number, sessionId?: string, element?: Element);
         }
-
-        class NodeGroup extends Node {}
     }
 }
 

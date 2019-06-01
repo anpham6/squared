@@ -12,19 +12,19 @@ const $e = squared.base.lib.enumeration;
 
 const getInputName = (element: HTMLInputElement) => element.name ? element.name.trim() : '';
 
-export default class RadioGroup<T extends View> extends squared.base.Extension<T> {
+export default class RadioGroup<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T) {
         if (node.length > 1) {
             const inputName = new Set<string>();
             let i = 0;
             let valid = true;
-            for (let item of node) {
+            for (let item of node.children as T[]) {
                 if (!item.baseline) {
                     valid = false;
                     break;
                 }
                 if (item.renderAs) {
-                    item = item.renderAs;
+                    item = item.renderAs as T;
                 }
                 if (item.is(CONTAINER_NODE.RADIO)) {
                     const name = getInputName(<HTMLInputElement> item.element);
@@ -98,7 +98,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                     container.baseline = false;
                 }
                 container.exclude($e.NODE_RESOURCE.ASSET);
-                container.each(item => {
+                container.each((item: T) => {
                     if (item !== node) {
                         item.setControlType(CONTAINER_ANDROID.RADIO, CONTAINER_NODE.RADIO);
                     }

@@ -1,17 +1,18 @@
 import { AccessibilityOptions } from '../@types/extension';
 
-import Extension from '../extension';
-import Node from '../node';
+import NodeList from '../nodelist';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 import { NODE_PROCEDURE } from '../lib/enumeration';
 
-export default abstract class Accessibility<T extends Node> extends Extension<T> {
+export default abstract class Accessibility<T extends NodeUI> extends ExtensionUI<T> {
     public readonly options: AccessibilityOptions = {
         showLabel: false
     };
 
     public afterInit() {
-        for (const node of this.application.processing.cache) {
+        for (const node of this.application.processing.cache as NodeList<T>) {
             if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (node.tagName) {
                     case 'INPUT_IMAGE':
@@ -20,10 +21,10 @@ export default abstract class Accessibility<T extends Node> extends Extension<T>
                     case 'INPUT_RADIO':
                     case 'INPUT_CHECKBOX':
                         const element = <HTMLInputElement> node.element;
-                        [node.nextSibling, node.previousSibling].some(sibling => {
+                        [node.nextSibling, node.previousSibling].some((sibling: T) => {
                             if (sibling && sibling.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
                                 const labelElement = <HTMLLabelElement> sibling.element;
-                                const labelParent = sibling.documentParent.tagName === 'LABEL' ? sibling.documentParent : undefined;
+                                const labelParent = sibling.documentParent.tagName === 'LABEL' ? sibling.documentParent as T : undefined;
                                 if (element.id && element.id === labelElement.htmlFor) {
                                     node.companion = sibling;
                                 }
@@ -46,7 +47,7 @@ export default abstract class Accessibility<T extends Node> extends Extension<T>
                         break;
                     case 'BUTTON':
                         if (node.length) {
-                            const extracted = node.filter(item => !item.textElement);
+                            const extracted = node.filter((item: T) => !item.textElement) as T[];
                             if (extracted.length) {
                                 node.extracted = extracted;
                             }

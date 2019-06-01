@@ -3,7 +3,7 @@ import { RawAsset } from '../../../src/base/@types/application';
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $Layout = squared.base.Layout;
+import $LayoutUI = squared.base.LayoutUI;
 
 type SpriteData = {
     image: Required<RawAsset>,
@@ -62,7 +62,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 return {
                     renderAs: container,
                     outputAs: this.application.renderNode(
-                        new $Layout(
+                        new $LayoutUI(
                             parent,
                             container,
                             CONTAINER_NODE.FRAME,

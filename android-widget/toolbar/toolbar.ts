@@ -23,7 +23,7 @@ const $e = squared.base.lib.enumeration;
 
 const PREFIX_MENU = 'ic_menu_';
 
-export default class Toolbar<T extends android.base.View> extends squared.base.Extension<T> {
+export default class Toolbar<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     constructor(
         name: string,
         framework: number,
@@ -46,7 +46,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             if (element.dataset.target) {
                 const target = document.getElementById(element.dataset.target);
                 if (target && element.parentElement !== target && !$util.includes(target.dataset.use, WIDGET_NAME.COORDINATOR)) {
-                    this.application.rootElements.add(element);
+                    (<squared.base.ApplicationUI<T>> this.application).rootElements.add(element);
                 }
             }
         }
@@ -55,7 +55,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
 
     public processNode(node: T, parent: T) {
         const application = this.application;
-        const controller = application.controllerHandler;
+        const controller = <android.base.Controller<T>> application.controllerHandler;
         const resource = <android.base.Resource<T>> this.application.resourceHandler;
         const settings = <UserSettingsAndroid> application.userSettings;
         const element = <HTMLElement> node.element;
@@ -206,7 +206,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 node.parent = appBarNode;
             }
             node.data(WIDGET_NAME.TOOLBAR, 'outerParent', appBarNode.android('id') || appBarNode.documentId);
-            node.render(node.parent);
+            node.render(node.parent as T);
         }
         else {
             node.render(target ? application.resolveTarget(target) : parent);

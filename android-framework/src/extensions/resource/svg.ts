@@ -598,7 +598,7 @@ const getDrawableSrc = (name: string) => `@drawable/${name}`;
 
 const getFillData = (ordering = ''): FillData => ({ ordering, objectAnimator: [] });
 
-export default class ResourceSvg<T extends View> extends squared.base.Extension<T> {
+export default class ResourceSvg<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceSvgOptions = {
         transformExclude: {
             path: [],

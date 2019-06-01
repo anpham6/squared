@@ -6,8 +6,6 @@ import $NodeList = squared.base.NodeList;
 
 let DEFAULT_VIEWSETTINGS!: { floatPrecision: number };
 
-const FUNC_AFTERINSERTNODE = (target: View) => target.localSettings = DEFAULT_VIEWSETTINGS;
-
 export default class Controller<T extends View> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
     public readonly localSettings: ControllerSettings = {
         svg: {
@@ -25,7 +23,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         precision: {
             standardFloat: 4
         }
-    } as any;
+    };
 
     private _elementMap = new Map<Element, T>();
 
@@ -68,11 +66,19 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public applyDefaultStyles() {}
 
+    public includeElement() {
+        return true;
+    }
+
+    public visibleElement() {
+        return true;
+    }
+
     get elementMap() {
         return this._elementMap;
     }
 
     get afterInsertNode(): BindGeneric<T, void> {
-        return FUNC_AFTERINSERTNODE;
+        return (target: View) => target.localSettings = DEFAULT_VIEWSETTINGS;
     }
 }

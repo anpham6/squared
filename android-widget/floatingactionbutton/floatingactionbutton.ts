@@ -14,7 +14,7 @@ const $e = squared.base.lib.enumeration;
 
 const PREFIX_DIALOG = 'ic_dialog_';
 
-export default class FloatingActionButton<T extends android.base.View> extends squared.base.Extension<T> {
+export default class FloatingActionButton<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
         const element = <HTMLInputElement> node.element;
         return super.is(node) && (element.tagName !== 'INPUT' || ['button', 'file', 'image', 'reset', 'search', 'submit'].includes(element.type));

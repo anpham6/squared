@@ -1,7 +1,7 @@
 import { ListData } from '../@types/extension';
 
-import Extension from '../extension';
-import Node from '../node';
+import ExtensionUI from '../extension-ui';
+import NodeUI from '../node-ui';
 
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { NODE_RESOURCE } from '../lib/enumeration';
@@ -9,9 +9,9 @@ import { NODE_RESOURCE } from '../lib/enumeration';
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
 
-const hasSingleImage = (node: Node) => node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
+const hasSingleImage = (node: NodeUI) => node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
 
-export default abstract class List<T extends Node> extends Extension<T> {
+export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute(): ListData {
         return {
             ordinal: '',
@@ -64,7 +64,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
 
     public processNode(node: T) {
         let i = 1;
-        node.each(item => {
+        node.each((item: T) => {
             const mainData = List.createDataAttribute();
             const value = item.css('listStyleType');
             if (item.display === 'list-item' || value && value !== $const.CSS.NONE || hasSingleImage(item)) {

@@ -1,13 +1,13 @@
 import { SiblingOptions } from './@types/node';
 
-import Node from './node';
+import NodeUI from './node-ui';
 import NodeList from './nodelist';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
 const $const = squared.lib.constant;
 
-export default abstract class NodeGroup extends Node {
+export default abstract class NodeGroup extends NodeUI {
     public init() {
         if (this.length) {
             let siblingIndex = Number.POSITIVE_INFINITY;
@@ -31,7 +31,7 @@ export default abstract class NodeGroup extends Node {
 
     public setBounds() {
         if (this.length) {
-            const bounds = NodeList.outerRegion(this);
+            const bounds = NodeUI.outerRegion(this);
             this._bounds = {
                 ...bounds,
                 width: bounds.right - bounds.left,
@@ -151,7 +151,7 @@ export default abstract class NodeGroup extends Node {
 
     get actualParent() {
         if (this._cached.actualParent === undefined) {
-            this._cached.actualParent = NodeList.actualParent(this._initial.children);
+            this._cached.actualParent = NodeUI.actualParent(this._initial.children as NodeUI[]);
         }
         return this._cached.actualParent;
     }

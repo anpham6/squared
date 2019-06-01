@@ -1,6 +1,7 @@
 import { AppFramework } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from './@types/application';
 
+import Application from './application';
 import Controller from './controller';
 import ExtensionManager from './extensionmanager';
 import File from './file';
@@ -46,11 +47,10 @@ import * as customization from './lib/customization';
 import SETTINGS from './settings';
 
 type T = View;
-type Application = squared.base.Application<T>;
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
 let initialized = false;
-let application: Application;
+let application: Application<T>;
 let fileHandler: File<T>;
 let userSettings: UserSettingsAndroid;
 
@@ -62,7 +62,7 @@ function autoClose() {
     return false;
 }
 
-const checkApplication = (main?: Application): main is Application => initialized && !!main && (main.closed || autoClose());
+const checkApplication = (main?: Application<T>): main is Application<T> => initialized && !!main && (main.closed || autoClose());
 
 const lib = {
     constant,
@@ -201,7 +201,7 @@ const appBase: AppFramework<T> = {
     create() {
         const EN = squared.base.lib.constant.EXT_NAME;
         const EA = constant.EXT_ANDROID;
-        application = new squared.base.Application(framework, View, Controller, Resource, ExtensionManager);
+        application = new Application(framework, View, Controller, Resource, ExtensionManager);
         fileHandler = new File(application.resourceHandler);
         userSettings = { ...SETTINGS };
         Object.assign(application.builtInExtensions, {

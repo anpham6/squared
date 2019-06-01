@@ -1,10 +1,10 @@
-import { FileAsset, RawAsset, ResourceStoredMap, UserSettings } from '../base/@types/application';
+import { FileAsset, RawAsset, ResourceStoredMap, UserUISettings } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
-        interface File<T extends Node> {
-            resource: Resource<T>;
-            userSettings: UserSettings;
+        interface FileUI<T extends NodeUI> {
+            resource: ResourceUI<T>;
+            userSettings: UserUISettings;
             appName: string;
             readonly assets: FileAsset[];
             readonly stored: ResourceStoredMap;
@@ -15,11 +15,11 @@ declare global {
             saveToDisk(files: FileAsset[], appName?: string): void;
         }
 
-        class File<T extends Node> implements File<T> {
+        class FileUI<T extends NodeUI> implements FileUI<T> {
             public static downloadToDisk(data: Blob, filename: string, mime?: string): void;
-            constructor(resource: Resource<T>);
+            constructor(resource: ResourceUI<T>);
         }
     }
 }
 
-export = squared.base.File;
+export = squared.base.FileUI;

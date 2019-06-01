@@ -80,7 +80,7 @@ const createFileAsset = (pathname: string, filename: string, content: string): F
 
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
-export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
+export default class File<T extends View> extends squared.base.FileUI<T> implements android.base.File<T> {
     public saveAllToDisk(layouts: FileAsset[]) {
         const files: FileAsset[] = [];
         for (let i = 0; i < layouts.length; i++) {

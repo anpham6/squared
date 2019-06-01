@@ -12,7 +12,7 @@ type NodeRenderIndex = {
 
 const $e = squared.base.lib.enumeration;
 
-export default class ResourceIncludes<T extends View> extends squared.base.Extension<T> {
+export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
     public beforeCascade() {
@@ -45,7 +45,8 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                     }
                 });
                 if (open && close) {
-                    const controller = this.application.controllerHandler;
+                    const application = this.application;
+                    const controller = application.controllerHandler;
                     open.length = Math.min(open.length, close.length);
                     for (let i = open.length; i < close.length; i++) {
                         close.shift();
@@ -75,7 +76,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 if (merge) {
                                     content = controller.getEnclosingXmlTag('merge', getRootNs(content), content);
                                 }
-                                this.application.saveDocument(openData.name as string, content, '', Number.POSITIVE_INFINITY);
+                                application.saveDocument(openData.name as string, content, '', Number.POSITIVE_INFINITY);
                                 close.splice(j, 1);
                                 break;
                             }
