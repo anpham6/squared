@@ -1,10 +1,11 @@
-import { UserSettings } from '../../src/base/@types/application';
+import { UserSettingsChrome } from './@types/application';
 
-const settings: UserSettings = {
+const settings: UserSettingsChrome = {
     builtInExtensions: [],
     preloadImages: true,
     handleExtensionsAsync: true,
-    showErrorMessages: true
+    showErrorMessages: false,
+    excludeNonRenderedElements: false
 };
 
 export default settings;

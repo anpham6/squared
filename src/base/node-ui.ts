@@ -219,6 +219,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _excludeSection = 0;
     private _excludeProcedure = 0;
     private _excludeResource = 0;
+    private _visible = true;
     private _renderAs?: T;
 
     public abstract setControlType(viewName: string, containerType?: number): void;
@@ -596,5 +597,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get controlName() {
         return this._controlName || '';
+    }
+
+    set visible(value) {
+        this._visible = value;
+    }
+    get visible() {
+        return this._visible;
     }
 }

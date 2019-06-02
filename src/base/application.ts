@@ -61,9 +61,9 @@ export default abstract class Application<T extends Node> implements squared.bas
     public controllerHandler: Controller<T>;
     public resourceHandler: Resource<T>;
     public extensionManager: ExtensionManager<T>;
-    public userSettings: UserSettings = {} as any;
     public initialized = false;
     public closed = false;
+    public userSettings!: UserSettings;
     public readonly builtInExtensions: ObjectMap<Extension<T>> = {};
     public readonly extensions: Extension<T>[] = [];
     public readonly rootElements = new Set<HTMLElement>();
@@ -78,8 +78,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         excluded: new NodeList<T>(),
         sessionId: ''
     };
-
-    protected _userSettings?: UserSettings;
 
     constructor(
         public framework: number,

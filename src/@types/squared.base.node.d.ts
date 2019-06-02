@@ -17,14 +17,14 @@ declare global {
             siblingsLeading: Node[];
             siblingsTrailing: Node[];
             floatContainer: boolean;
-            visible: boolean;
-            rendered: boolean;
-            excluded: boolean;
             tagName: string;
             baseline: boolean;
             textContent: string;
             multiline: boolean;
             positionAuto: boolean;
+            visible: boolean;
+            rendered: boolean;
+            excluded: boolean;
             overflow: number;
             contentBoxWidth: number;
             contentBoxHeight: number;
@@ -147,6 +147,7 @@ declare global {
             outsideX(rect: BoxRectDimension, dimension?: string): boolean;
             outsideY(rect: BoxRectDimension, dimension?: string): boolean;
             css(attr: string, value?: string, cache?: boolean): string;
+            cssSet(attr: string, value: string, cache?: boolean): this;
             cssApply(values: StringMap, cache?: boolean): this;
             cssInitial(attr: string, modified?: boolean, computed?: boolean): string;
             cssAny(attr: string, ...values: string[]): boolean;

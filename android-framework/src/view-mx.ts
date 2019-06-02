@@ -205,10 +205,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             current: {}
         };
 
-        protected _localSettings: LocalSettings = {} as any;
         protected _namespaces = [STRING_ANDROID.ANDROID, STRING_ANDROID.APP];
         protected _cached: CachedValue<T> = {};
         protected _controlName = '';
+        protected _localSettings!: LocalSettings;
         protected _documentParent?: T;
         protected _boxAdjustment?: BoxModel;
         protected _boxReset?: BoxModel;
@@ -1484,7 +1484,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         set localSettings(value) {
-            Object.assign(this._localSettings, value);
+            if (this._localSettings) {
+                Object.assign(this._localSettings, value);
+            }
+            else {
+                this._localSettings = { ...value };
+            }
         }
         get localSettings() {
             return this._localSettings;

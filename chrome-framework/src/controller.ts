@@ -1,4 +1,5 @@
 import { ControllerSettings } from '../../src/base/@types/application';
+import { UserSettingsChrome } from './@types/application';
 
 import View from './view';
 
@@ -28,6 +29,22 @@ export default class Controller<T extends View> extends squared.base.Controller<
     private _elementMap = new Map<Element, T>();
 
     public init() {
+        if (this.userSettings.excludeNonRenderedElements) {
+            this.localSettings.unsupported.tagName = new Set([
+                'SCRIPT',
+                'STYLE',
+                'INPUT:hidden',
+                'MAP',
+                'AREA',
+                'SOURCE',
+                'TEMPLATE',
+                'DATALIST',
+                'WBR'
+            ]);
+        }
+        else {
+            this.localSettings.unsupported.tagName.clear();
+        }
         DEFAULT_VIEWSETTINGS = {
             floatPrecision: this.localSettings.precision.standardFloat
         };
@@ -76,6 +93,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     get elementMap() {
         return this._elementMap;
+    }
+
+    get userSettings() {
+        return <UserSettingsChrome> this.application.userSettings;
     }
 
     get afterInsertNode(): BindGeneric<T, void> {

@@ -13,7 +13,17 @@ type T = View;
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 let initialized = false;
 let application: Application<T>;
+let controller: Controller<T>;
 let userSettings: UserSettings;
+
+function findElement(element: HTMLElement) {
+    const result = controller.elementMap.get(element);
+    if (result) {
+        return result;
+    }
+    application.parseDocument(element);
+    return controller.elementMap.get(element) || null;
+}
 
 const appBase: AppFramework<T> = {
     base: {
@@ -24,30 +34,52 @@ const appBase: AppFramework<T> = {
     lib: {},
     extensions: {},
     system: {
-        getElement(element: HTMLElement | string) {
-            if (typeof element === 'string') {
-                element = <HTMLElement> document.getElementById(element);
+        getElement(element: HTMLElement): View | null {
+            if (application && element) {
+                return findElement(element);
             }
-            if (element && application) {
-                const controller = <chrome.base.Controller<T>> application.controllerHandler;
-                let result = controller.elementMap.get(element);
-                if (result === undefined) {
-                    application.parseDocument(element);
-                    result = controller.elementMap.get(element);
+            return null;
+        },
+        getElementById(value: string): View | null {
+            if (application) {
+                const element = document.getElementById(value);
+                if (element) {
+                    return findElement(element);
                 }
-                return result;
             }
-            return undefined;
+            return null;
+        },
+        querySelector(value: string): View | null {
+            if (application) {
+                const element = document.querySelector(value);
+                if (element) {
+                    return findElement(<HTMLElement> element);
+                }
+            }
+            return null;
+        },
+        querySelectorAll(value: string) {
+            const result: View[] = [];
+            if (application) {
+                document.querySelectorAll(value).forEach(element => {
+                    const item = findElement(<HTMLElement> element);
+                    if (item) {
+                        result.push(item);
+                    }
+                });
+            }
+            return result;
         },
         getElementMap() {
             if (application) {
-                return (<chrome.base.Controller<T>> application.controllerHandler).elementMap;
+                return (<Controller<T>> application.controllerHandler).elementMap;
             }
-            return undefined;
+            return new Map<Element, View>();
         }
     },
     create() {
         application = new Application(framework, View, Controller, Resource, ExtensionManager);
+        controller = <Controller<T>> application.controllerHandler;
         userSettings = { ...SETTINGS };
         initialized = true;
         return {

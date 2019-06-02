@@ -14,16 +14,15 @@ const REGEXP_BACKGROUND = /\s*(url\(.+?\))\s*/;
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public alignmentType = 0;
+    public documentRoot = false;
     public depth = -1;
     public siblingIndex = Number.POSITIVE_INFINITY;
-    public documentRoot = false;
-    public visible = true;
-    public excluded = false;
-    public rendered = false;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
     public floatContainer = false;
+    public excluded = false;
+    public rendered = false;
+    public alignmentType = 0;
     public style!: CSSStyleDeclaration;
 
     public abstract localSettings: {};
@@ -389,6 +388,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
         }
         return this._styleMap[attr] || this.style[attr] || '';
+    }
+
+    public cssSet(attr: string, value: string, cache = true) {
+        let valid = true;
+        if (this.styleElement) {
+            this.style[attr] = value;
+            valid = this.style[attr] === value;
+        }
+        if (valid) {
+            this.css(attr, value, cache);
+        }
+        return this;
     }
 
     public cssApply(values: StringMap, cache = false) {
@@ -2109,5 +2120,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             x: (this.bounds.left + this.bounds.right) / 2,
             y: (this.bounds.top + this.bounds.bottom) / 2
         };
+    }
+
+    set visible(value) {
+        if (this.styleElement) {
+            this.cssSet('visibility', value ? 'visible' : 'hidden');
+        }
+    }
+    get visible() {
+        return !this.cssAny('visibility', 'hidden', 'collapse');
     }
 }

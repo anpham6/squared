@@ -31,18 +31,17 @@ async function getImageSvgAsync(value: string)  {
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public controllerHandler!: ControllerUI<T>;
     public resourceHandler!: ResourceUI<T>;
-
+    public userSettings!: UserUISettings;
     public readonly builtInExtensions: ObjectMap<ExtensionUI<T>> = {};
     public readonly extensions: ExtensionUI<T>[] = [];
     public readonly session: AppSessionUI<T> = {
         cache: new NodeList<T>(),
-        documentRoot: [],
-        targetQueue: new Map<T, NodeTemplate<T>>(),
         excluded: new NodeList<T>(),
         active: [],
-        extensionMap: new Map<number, ExtensionUI<T>[]>()
+        extensionMap: new Map<number, ExtensionUI<T>[]>(),
+        documentRoot: [],
+        targetQueue: new Map<T, NodeTemplate<T>>()
     };
-    public userSettings: UserUISettings = {} as any;
 
     private readonly _layouts: FileAsset[] = [];
 

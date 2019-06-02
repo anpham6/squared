@@ -8,7 +8,7 @@ import ViewGroup from './viewgroup';
 
 import { CONTAINER_ANDROID, STRING_ANDROID } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { createViewAttribute, getRootNs, getDocumentId } from './lib/util';
+import { createViewAttribute, getDocumentId, getRootNs } from './lib/util';
 
 import $LayoutUI = squared.base.LayoutUI;
 import $NodeUI = squared.base.NodeUI;
@@ -27,10 +27,9 @@ const $xml = squared.lib.xml;
 const $c = squared.base.lib.constant;
 const $e = squared.base.lib.enumeration;
 
-let DEFAULT_VIEWSETTINGS!: LocalSettings;
-
 const GUIDELINE_AXIS = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
 const CACHE_PATTERN: ObjectMap<RegExp> = {};
+let DEFAULT_VIEWSETTINGS!: LocalSettings;
 
 function sortHorizontalFloat(list: View[]) {
     if (list.some(node => node.floating)) {
@@ -713,14 +712,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 return true;
             }
             else if (floated.has($const.CSS.LEFT) && !layout.linearX) {
-                for (const node of layout) {
-                    if (node.pageFlow && node.floating) {
-                        return true;
-                    }
-                    else {
-                        return false;
-                    }
-                }
+                const node = layout.item(0) as T;
+                return node.pageFlow && node.floating;
             }
         }
         return false;
@@ -1883,7 +1876,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             previous.autoMargin.horizontal ||
                             cleared.has(item) ||
                             !item.textElement && !checkFloatWrap() && checkWrapWidth() && Math.floor(baseWidth) > maxWidth ||
-                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => $session.causesLineBreak(element, node.sessionId))))
+                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded === true && sibling.blockStatic) || !!siblings && siblings.some(element => $session.causesLineBreak(element, node.sessionId))))
                         {
                             if (leftForward) {
                                 if (previousRowLeft && item.linear.bottom <= previousRowLeft.bounds.bottom) {
@@ -2124,7 +2117,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if (sortPositionAuto) {
             const renderChildren = node.renderChildren;
-            const renderTemplates = node.renderTemplates as NodeTemplate<T>[];
+            const renderTemplates = <NodeTemplate<T>[]> node.renderTemplates;
             const positionAuto: NodeTemplate<T>[] = [];
             for (let i = 0; i < renderChildren.length; i++) {
                 if (!renderChildren[i].pageFlow) {

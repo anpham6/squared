@@ -101,8 +101,8 @@
                 System.import('/build/chrome-framework/src/main.js').then(result => {
                     chrome = result.default;
                     squared.setFramework(chrome);
-                    console.log(squared.system.getElement('squared_ui'));
-                    console.log(squared.system.getElement(document.getElementById('squared_ui')));
+                    console.log(squared.system.getElementById('squared_ui'));
+                    console.log(squared.system.querySelectorAll('*'));
                 });
             });
         });
