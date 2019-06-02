@@ -173,21 +173,9 @@ const validateString = (value: string) => value ? value.trim().replace(REGEXP_VA
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
-        public static documentBody() {
-            if (View._documentBody === undefined) {
-                const body = new View(0, '0', document.body);
-                body.hide();
-                body.setBounds();
-                View._documentBody = body;
-            }
-            return View._documentBody;
-        }
-
         public static getControlName(containerType: number): string {
             return CONTAINER_ANDROID[CONTAINER_NODE[containerType]];
         }
-
-        private static _documentBody: T;
 
         public renderParent?: T;
         public renderTemplates?: (NodeTemplate<T> | null)[];

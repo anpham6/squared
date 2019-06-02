@@ -55,35 +55,37 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
     reset();
 }
 
-export function parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void> {
-    if (main && !main.closed) {
-        if (settings.handleExtensionsAsync) {
-            for (const item of extensionsAsync) {
-                main.extensionManager.include(item);
-            }
-            for (const [name, options] of optionsAsync.entries()) {
-                configure(name, options);
-            }
-            extensionsAsync.clear();
-            optionsAsync.clear();
+export function parseDocument(...elements: (string | HTMLElement)[]): squared.PromiseResult {
+    if (!main) {
+        if (settings.showErrorMessages) {
+            alert('ERROR: Framework not installed.');
         }
-        return main.parseDocument(...elements);
     }
-    return {
-        then: (callback: () => void) => {
-            if (!main) {
-                if (settings.showErrorMessages) {
-                    alert('ERROR: Framework not installed.');
+    else {
+        if (!main.closed) {
+            if (settings.handleExtensionsAsync) {
+                for (const item of extensionsAsync) {
+                    main.extensionManager.include(item);
                 }
+                for (const [name, options] of optionsAsync.entries()) {
+                    configure(name, options);
+                }
+                extensionsAsync.clear();
+                optionsAsync.clear();
             }
-            else if (main.closed) {
-                if (!settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
-                    main.reset();
-                    parseDocument.call(null, ...elements).then(callback);
-                }
+            return main.parseDocument(...elements);
+        }
+        else {
+            if (!settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
+                main.reset();
+                return main.parseDocument(...elements);
             }
         }
+    }
+    const PromiseResult = class {
+        public then(resolve: () => void) {}
     };
+    return new PromiseResult();
 }
 
 export function include(value: any) {

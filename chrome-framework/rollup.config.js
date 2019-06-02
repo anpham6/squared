@@ -1,18 +1,7 @@
 import { terser } from 'rollup-plugin-terser';
-
-import { version } from './package.json';
+import async from 'rollup-plugin-async';
 
 export default [
-    {
-        input: '../build/chrome-framework/src/main.js',
-        treeshake: false,
-        output: {
-            file: '../dist/chrome.framework.js',
-            name: 'chrome',
-            format: 'iife',
-            banner: `/* chrome-framework ${version}\n   https://github.com/anpham6/squared */\n`
-        }
-    },
     {
         input: '../build/chrome-framework/src/main.js',
         treeshake: false,
@@ -22,6 +11,7 @@ export default [
             format: 'iife'
         },
         plugins: [
+            async(),
             terser({
                 compress: {
                     pure_getters: true,

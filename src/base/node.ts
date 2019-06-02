@@ -38,6 +38,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected _linear?: BoxRectDimension;
     protected _documentParent?: T;
 
+    protected readonly _element: Element | null = null;
     protected readonly _initial: InitialData<T> = {
         iteration: -1,
         children: [],
@@ -52,7 +53,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private _parent?: T;
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
-    private readonly _element: Element | null = null;
 
     protected constructor(
         public readonly id: number,
@@ -1059,36 +1059,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._parent;
     }
 
-    set tagName(value) {
-        this._cached.tagName = value.toUpperCase();
-    }
+    set tagName(value) {}
     get tagName() {
-        if (this._cached.tagName === undefined) {
-            const element = <HTMLInputElement> this._element;
-            let value = '';
-            if (element) {
-                if (element.nodeName === '#text') {
-                    value = 'PLAINTEXT';
-                }
-                else if (element.tagName === 'INPUT') {
-                    value = `INPUT_${element.type}`;
-                }
-                else {
-                    value = element.tagName;
-                }
-            }
-            this._cached.tagName = value.toUpperCase();
+        const element = <HTMLElement> this._element;
+        if (element) {
+            return element.nodeName.charAt(0) === '#' ? element.nodeName : element.tagName;
         }
-        return this._cached.tagName;
+        return '';
     }
 
     get element() {
-        if (!this.naturalElement && this.innerWrapped) {
-            const element: Element | null = this.innerWrapped.unsafe('element');
-            if (element) {
-                return element;
-            }
-        }
         return this._element;
     }
 
@@ -1112,10 +1092,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get naturalElement() {
-        if (this._cached.naturalElement === undefined) {
-            this._cached.naturalElement = this._element !== null && this._element.className !== '__squared.placeholder';
-        }
-        return this._cached.naturalElement;
+        return true;
     }
 
     get pseudoElement() {

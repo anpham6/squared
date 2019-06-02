@@ -1,5 +1,5 @@
 import { NodeTemplate } from './@types/application';
-import { CachedValue, Support } from './@types/node';
+import { Support } from './@types/node';
 
 import Node from './node';
 import NodeList from './nodelist';
@@ -212,7 +212,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     protected _controlName?: string;
     protected abstract _namespaces: string[];
-    protected abstract _cached: CachedValue<T>;
     protected abstract _boxAdjustment?: BoxModel;
     protected abstract _boxReset?: BoxModel;
 
@@ -558,8 +557,48 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return node[dimension][direction] as number;
     }
 
+    get element() {
+        if (!this.naturalElement && this.innerWrapped) {
+            const element: Element | null = this.innerWrapped.unsafe('element');
+            if (element) {
+                return element;
+            }
+        }
+        return this._element;
+    }
+
+    get naturalElement() {
+        if (this._cached.naturalElement === undefined) {
+            this._cached.naturalElement = this._element !== null && this._element.className !== '__squared.placeholder';
+        }
+        return this._cached.naturalElement;
+    }
+
     get groupParent() {
         return false;
+    }
+
+    set tagName(value) {
+        this._cached.tagName = value.toUpperCase();
+    }
+    get tagName() {
+        if (this._cached.tagName === undefined) {
+            const element = <HTMLInputElement> this._element;
+            let value = '';
+            if (element) {
+                if (element.nodeName === '#text') {
+                    value = 'PLAINTEXT';
+                }
+                else if (element.tagName === 'INPUT') {
+                    value = `INPUT_${element.type}`;
+                }
+                else {
+                    value = element.tagName;
+                }
+            }
+            this._cached.tagName = value.toUpperCase();
+        }
+        return this._cached.tagName;
     }
 
     set renderAs(value) {

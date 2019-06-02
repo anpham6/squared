@@ -98,11 +98,11 @@
             squared = result;
             System.import('/build/src/base/main.js').then(result => {
                 squared.base = result;
-                System.import('/build/chrome-framework/src/main.js').then(result => {
+                System.import('/build/chrome-framework/src/main.js').then(async result => {
                     chrome = result.default;
                     squared.setFramework(chrome);
                     console.log(squared.system.getElementById('squared_ui'));
-                    console.log(squared.system.querySelectorAll('*'));
+                    console.log(await chrome.querySelectorAll('*'));
                 });
             });
         });

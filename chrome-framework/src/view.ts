@@ -1,10 +1,11 @@
 import { CachedValue } from '../../src/base/@types/node';
+import { LocalSettings } from './@types/node';
 
 type T = View;
 
 export default class View extends squared.base.Node implements chrome.base.View {
     protected _cached: CachedValue<T> = {};
-    protected _localSettings: { floatPrecision?: number } = {};
+    protected _localSettings: LocalSettings = {};
 
     constructor(
         id: number,

@@ -121,7 +121,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.closed = false;
     }
 
-    public parseDocument(...elements: any[]): FunctionMap<void> {
+    public parseDocument(...elements: any[]): squared.PromiseResult {
         const controller = this.controllerHandler;
         let __THEN: Undefined<() => void>;
         this.rootElements.clear();
@@ -275,9 +275,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         else {
             parseResume();
         }
-        return {
-            then: (resolve: () => void) => {
-                if (this.initialized) {
+        const PromiseResult = class {
+            public then(resolve: () => void) {
+                if (images.length) {
                     __THEN = resolve;
                 }
                 else {
@@ -285,6 +285,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         };
+        return new PromiseResult();
     }
 
     public createCache(documentRoot: HTMLElement) {

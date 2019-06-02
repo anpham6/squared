@@ -1,4 +1,5 @@
-import { AppFramework, UserSettings } from '../../src/base/@types/application';
+import { UserSettings } from '../../src/base/@types/application';
+import { ChromeFramework } from './@types/application';
 
 import Application from './application';
 import Controller from './controller';
@@ -21,11 +22,23 @@ function findElement(element: HTMLElement) {
     if (result) {
         return result;
     }
+    const preloadImages = application.userSettings.preloadImages;
+    application.userSettings.preloadImages = false;
     application.parseDocument(element);
+    application.userSettings.preloadImages = preloadImages;
     return controller.elementMap.get(element) || null;
 }
 
-const appBase: AppFramework<T> = {
+async function findElementAsync(element: HTMLElement) {
+    const result = controller.elementMap.get(element);
+    if (result) {
+        return result;
+    }
+    await application.parseDocument(element);
+    return controller.elementMap.get(element) || null;
+}
+
+const appBase: ChromeFramework<T> = {
     base: {
         Controller,
         Resource,
@@ -34,13 +47,13 @@ const appBase: AppFramework<T> = {
     lib: {},
     extensions: {},
     system: {
-        getElement(element: HTMLElement): View | null {
+        getElement(element: HTMLElement) {
             if (application && element) {
                 return findElement(element);
             }
             return null;
         },
-        getElementById(value: string): View | null {
+        getElementById(value: string) {
             if (application) {
                 const element = document.getElementById(value);
                 if (element) {
@@ -49,7 +62,7 @@ const appBase: AppFramework<T> = {
             }
             return null;
         },
-        querySelector(value: string): View | null {
+        querySelector(value: string) {
             if (application) {
                 const element = document.querySelector(value);
                 if (element) {
@@ -97,6 +110,42 @@ const appBase: AppFramework<T> = {
             };
         }
         return appBase.create();
+    },
+    getElement: async (element: HTMLElement) => {
+        if (application && element) {
+            return findElementAsync(element);
+        }
+        return null;
+    },
+    getElementById: async (value: string) => {
+        if (application) {
+            const element = document.getElementById(value);
+            if (element) {
+                return findElementAsync(element);
+            }
+        }
+        return null;
+    },
+    querySelector: async (value: string) => {
+        if (application) {
+            const element = document.querySelector(value);
+            if (element) {
+                return findElementAsync(<HTMLElement> element);
+            }
+        }
+        return null;
+    },
+    querySelectorAll: async (value: string) => {
+        const result: View[] = [];
+        if (application) {
+            document.querySelectorAll(value).forEach(async element => {
+                const item = await findElementAsync(<HTMLElement> element);
+                if (item) {
+                    result.push(item);
+                }
+            });
+        }
+        return result;
     }
 };
 

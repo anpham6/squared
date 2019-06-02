@@ -10,8 +10,6 @@ import ResourceUI from './resource-ui';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
-type PreloadImage = HTMLImageElement | string;
-
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
@@ -19,14 +17,6 @@ const $session = squared.lib.session;
 const $util = squared.lib.util;
 
 let NodeConstructor!: Constructor<NodeUI>;
-
-async function getImageSvgAsync(value: string)  {
-    const response = await fetch(value, {
-        method: 'GET',
-        headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' })
-    });
-    return await response.text();
-}
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public controllerHandler!: ControllerUI<T>;
@@ -154,178 +144,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             ext.subscribers.clear();
         }
         this.closed = false;
-    }
-
-    public parseDocument(...elements: any[]): FunctionMap<void> {
-        const controller = this.controllerHandler;
-        let __THEN: Undefined<() => void>;
-        this.rootElements.clear();
-        this.initialized = false;
-        this.processing.sessionId = controller.generateSessionId;
-        this.session.active.push(this.processing.sessionId);
-        controller.init();
-        this.setStyleMap();
-        if (elements.length === 0) {
-            elements.push(document.body);
-        }
-        for (const value of elements) {
-            const element = typeof value === 'string' ? document.getElementById(value) : value;
-            if (element && $css.hasComputedStyle(element)) {
-                this.rootElements.add(element);
-            }
-        }
-        const ASSETS = this.resourceHandler.assets;
-        const documentRoot = this.rootElements.values().next().value;
-        const preloadImages: HTMLImageElement[] = [];
-        const parseResume = () => {
-            this.initialized = false;
-            for (const image of preloadImages) {
-                if (image.parentElement) {
-                    documentRoot.removeChild(image);
-                }
-            }
-            preloadImages.length = 0;
-            for (const ext of this.extensions) {
-                ext.beforeParseDocument();
-            }
-            for (const element of this.rootElements) {
-                if (this.createCache(element)) {
-                    const iteration = (element.dataset.iteration ? $util.convertInt(element.dataset.iteration) : -1) + 1;
-                    element.dataset.iteration = iteration.toString();
-                    const filename = element.dataset.filename && element.dataset.filename.replace(new RegExp(`\.${controller.localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
-                    element.dataset.layoutName = $util.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
-                    this.setBaseLayout(element.dataset.layoutName);
-                    this.setConstraints();
-                    this.setResources();
-                }
-            }
-            for (const ext of this.extensions) {
-                for (const node of ext.subscribers) {
-                    ext.postParseDocument(node);
-                }
-                ext.afterParseDocument();
-            }
-            if (typeof __THEN === 'function') {
-                __THEN.call(this);
-            }
-        };
-        const images: PreloadImage[] = [];
-        if (this.userSettings.preloadImages) {
-            for (const element of this.rootElements) {
-                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
-                    const uri = image.src;
-                    if (uri !== '') {
-                        ASSETS.images.set(uri, { width: image.width, height: image.height, uri });
-                    }
-                });
-                element.querySelectorAll('svg image').forEach((image: SVGImageElement) => {
-                    const uri = $util.resolvePath(image.href.baseVal);
-                    if (uri !== '') {
-                        ASSETS.images.set(uri, { width: image.width.baseVal.value, height: image.height.baseVal.value, uri });
-                    }
-                });
-            }
-            for (const image of ASSETS.images.values()) {
-                if (image.uri) {
-                    if (image.uri.toLowerCase().endsWith('.svg')) {
-                        images.push(image.uri);
-                    }
-                    else if (image.width === 0 && image.height === 0) {
-                        const element = document.createElement('img');
-                        element.src = image.uri;
-                        if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
-                            image.width = element.naturalWidth;
-                            image.height = element.naturalHeight;
-                        }
-                        else {
-                            documentRoot.appendChild(element);
-                            preloadImages.push(element);
-                        }
-                    }
-                }
-            }
-        }
-        for (const [uri, data] of ASSETS.rawData.entries()) {
-            if (data.mimeType && data.mimeType.startsWith('image/') && !data.mimeType.endsWith('svg+xml')) {
-                const element = document.createElement('img');
-                element.src = `data:${data.mimeType};` + (data.base64 ? `base64,${data.base64}` : data.content);
-                if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
-                    data.width = element.naturalWidth;
-                    data.height = element.naturalHeight;
-                    ASSETS.images.set(uri, { width: data.width, height: data.height, uri: data.filename });
-                }
-                else {
-                    document.body.appendChild(element);
-                    preloadImages.push(element);
-                }
-            }
-        }
-        for (const element of this.rootElements) {
-            element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                if (image.tagName === 'IMG') {
-                    if (image.src.toLowerCase().endsWith('.svg')) {
-                        if (this.userSettings.preloadImages) {
-                            images.push(image.src);
-                        }
-                    }
-                    else if (image.complete) {
-                        this.resourceHandler.addImage(image);
-                    }
-                    else if (this.userSettings.preloadImages) {
-                        images.push(image);
-                    }
-                }
-            });
-        }
-        if (images.length) {
-            this.initialized = true;
-            Promise.all($util.objectMap<PreloadImage, Promise<PreloadImage>>(images, image => {
-                return new Promise((resolve, reject) => {
-                    if (typeof image === 'string') {
-                        resolve(getImageSvgAsync(image));
-                    }
-                    else {
-                        image.onload = () => resolve(image);
-                        image.onerror = () => reject(image);
-                    }
-                });
-            }))
-            .then((result: PreloadImage[]) => {
-                for (let i = 0; i < result.length; i++) {
-                    const value = result[i];
-                    if (typeof value === 'string') {
-                        if (typeof images[i] === 'string') {
-                            this.resourceHandler.addRawData(images[i] as string, 'image/svg+xml', 'utf8', value);
-                        }
-                    }
-                    else {
-                        value.onload = null;
-                        value.onerror = null;
-                        this.resourceHandler.addImage(value);
-                    }
-                }
-                parseResume();
-            })
-            .catch((error: Event) => {
-                const message = error.target ? (<HTMLImageElement> error.target).src : error['message'];
-                if (!this.userSettings.showErrorMessages || !$util.isString(message) || confirm(`FAIL: ${message}`)) {
-                    parseResume();
-                }
-            });
-        }
-        else {
-            parseResume();
-        }
-        return {
-            then: (resolve: () => void) => {
-                if (this.initialized) {
-                    __THEN = resolve;
-                }
-                else {
-                    resolve();
-                }
-            }
-        };
     }
 
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {

@@ -17,7 +17,7 @@ declare global {
             readonly nextId: number;
             readonly length: number;
             reset(): void;
-            parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
+            parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
             createCache(element: HTMLElement): boolean;
             createNode(element: Element, append?: boolean, parent?: T, children?: T[]): T;
             conditionElement(element: HTMLElement): boolean;

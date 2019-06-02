@@ -2,7 +2,7 @@ import { UserSettingsChrome } from './@types/application';
 
 const settings: UserSettingsChrome = {
     builtInExtensions: [],
-    preloadImages: true,
+    preloadImages: false,
     handleExtensionsAsync: true,
     showErrorMessages: false,
     excludeNonRenderedElements: false

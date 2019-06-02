@@ -5,7 +5,7 @@ declare global {
         const settings: UserSettings;
         const system: FunctionMap<any>;
         function setFramework(value: {}, cached?: boolean): void;
-        function parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
+        function parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
         function include(value: {} | string): boolean;
         function includeAsync(value: {} | string): boolean;
         function exclude(value: {} | string): boolean;
@@ -17,6 +17,11 @@ declare global {
         function reset(): void;
         function saveAllToDisk(): void;
         function toString(): string;
+
+        class PromiseResult {
+            constructor();
+            public then(resolve: () => void): void;
+        }
     }
 }
 

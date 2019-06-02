@@ -40,7 +40,6 @@ declare global {
         }
 
         class View implements View {
-            public static documentBody(): View;
             public static getControlName(containerType: number): string;
             constructor(id: number, sessionId?: string, element?: Element, afterInit?: BindGeneric<View, void>);
         }
