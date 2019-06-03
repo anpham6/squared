@@ -11,31 +11,35 @@ import SETTINGS from './settings';
 
 type T = View;
 
+const $util = squared.lib.util;
+
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 let initialized = false;
 let application: Application<T>;
 let controller: Controller<T>;
 let userSettings: UserSettings;
+let elementMap: Map<Element, View>;
 
 function findElement(element: HTMLElement) {
-    const result = controller.elementMap.get(element);
+    const result = elementMap.get(element);
     if (result) {
         return result;
     }
-    const preloadImages = application.userSettings.preloadImages;
-    application.userSettings.preloadImages = false;
+    const settings = application.userSettings;
+    const preloadImages = settings.preloadImages;
+    settings.preloadImages = false;
     application.parseDocument(element);
-    application.userSettings.preloadImages = preloadImages;
-    return controller.elementMap.get(element) || null;
+    settings.preloadImages = preloadImages;
+    return elementMap.get(element) || null;
 }
 
 async function findElementAsync(element: HTMLElement) {
-    const result = controller.elementMap.get(element);
+    const result = elementMap.get(element);
     if (result) {
         return result;
     }
     await application.parseDocument(element);
-    return controller.elementMap.get(element) || null;
+    return elementMap.get(element) || null;
 }
 
 const appBase: ChromeFramework<T> = {
@@ -48,7 +52,7 @@ const appBase: ChromeFramework<T> = {
     extensions: {},
     system: {
         getElement(element: HTMLElement) {
-            if (application && element) {
+            if (application) {
                 return findElement(element);
             }
             return null;
@@ -93,6 +97,7 @@ const appBase: ChromeFramework<T> = {
     create() {
         application = new Application(framework, View, Controller, Resource, ExtensionManager);
         controller = <Controller<T>> application.controllerHandler;
+        elementMap = controller.elementMap;
         userSettings = { ...SETTINGS };
         initialized = true;
         return {
@@ -112,7 +117,7 @@ const appBase: ChromeFramework<T> = {
         return appBase.create();
     },
     getElement: async (element: HTMLElement) => {
-        if (application && element) {
+        if (application) {
             return findElementAsync(element);
         }
         return null;
@@ -136,16 +141,22 @@ const appBase: ChromeFramework<T> = {
         return null;
     },
     querySelectorAll: async (value: string) => {
-        const result: View[] = [];
         if (application) {
-            document.querySelectorAll(value).forEach(async element => {
+            const query = document.querySelectorAll(value);
+            const result: View[] = new Array(query.length);
+            let incomplete = false;
+            query.forEach(async (element, index) => {
                 const item = await findElementAsync(<HTMLElement> element);
                 if (item) {
-                    result.push(item);
+                    result[index] = item;
+                }
+                else {
+                    incomplete = true;
                 }
             });
+            return incomplete ? $util.flatArray(result) : result;
         }
-        return result;
+        return [];
     }
 };
 

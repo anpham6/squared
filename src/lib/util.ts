@@ -489,6 +489,16 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
 }
 
 export function flatArray<T>(list: any[]): T[] {
+    for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (item === undefined || item === null) {
+            list.splice(i--, 1);
+        }
+    }
+    return list;
+}
+
+export function flatMultiArray<T>(list: any[]): T[] {
     const result: T[] = [];
     for (let i = 0; i < list.length; i++) {
         const item = list[i];

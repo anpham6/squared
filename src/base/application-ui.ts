@@ -11,7 +11,6 @@ import ResourceUI from './resource-ui';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 const $const = squared.lib.constant;
-const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
@@ -36,7 +35,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private readonly _layouts: FileAsset[] = [];
 
     constructor(
-        public framework: number,
+        framework: number,
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<T>,
         ResourceConstructor: Constructor<T>,
@@ -248,131 +247,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this._layouts.length ? this._layouts[0].content : '';
     }
 
-    public createCache(documentRoot: HTMLElement) {
-        this.processing.node = undefined;
-        this.processing.cache.afterAppend = undefined;
-        this.processing.cache.clear();
-        this.processing.excluded.clear();
-        for (const ext of this.extensions) {
-            ext.beforeInit(documentRoot);
-        }
-        const rootNode = this.cascadeParentNode(documentRoot);
-        if (rootNode) {
-            rootNode.parent = new NodeConstructor(0, this.processing.sessionId, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
-            rootNode.siblingIndex = 0;
-            rootNode.documentRoot = true;
-            rootNode.documentParent = rootNode.parent;
-            this.processing.node = rootNode;
-        }
-        else {
-            return false;
-        }
-        const preAlignment: ObjectIndex<StringMap> = {};
-        const direction = new Set<HTMLElement>();
-        function saveAlignment(element: HTMLElement, id: number, attr: string, value: string, restoreValue: string) {
-            if (preAlignment[id] === undefined) {
-                preAlignment[id] = {};
-            }
-            preAlignment[id][attr] = restoreValue;
-            element.style.setProperty(attr, value);
-        }
-        let resetBounds = false;
-        const CACHE = this.processing.cache as NodeList<T>;
-        for (const node of CACHE) {
-            if (node.styleElement) {
-                const element = <HTMLElement> node.element;
-                if (node.length) {
-                    const textAlign = node.cssInitial('textAlign');
-                    switch (textAlign) {
-                        case $const.CSS.CENTER:
-                        case $const.CSS.RIGHT:
-                        case $const.CSS.END:
-                            saveAlignment(element, node.id, 'text-align', $const.CSS.LEFT, textAlign);
-                            break;
-                    }
-                }
-                if (node.positionRelative) {
-                    for (const attr of $css.BOX_POSITION) {
-                        if (node.has(attr)) {
-                            saveAlignment(element, node.id, attr, $const.CSS.AUTO, node.css(attr));
-                            resetBounds = true;
-                        }
-                    }
-                }
-                if (node.dir === 'rtl') {
-                    element.dir = 'ltr';
-                    direction.add(element);
-                }
-            }
-        }
-        const pseudoElement = new Set<T>();
-        rootNode.parent.setBounds();
-        for (const node of CACHE) {
-            if (!node.pseudoElement) {
-                node.setBounds(!resetBounds && preAlignment[node.id] === undefined && direction.size === 0);
-            }
-            else {
-                pseudoElement.add(node.parent as T);
-            }
-        }
-        for (const node of pseudoElement) {
-            [node.innerBefore, node.innerAfter].forEach((item, index) => {
-                if (item) {
-                    const element = <HTMLElement> node.element;
-                    const id = element.id;
-                    let styleElement: HTMLElement | undefined;
-                    if (item.pageFlow) {
-                        element.id = `id_${Math.round(Math.random() * new Date().getTime())}`;
-                        styleElement = $css.insertStyleSheetRule(`#${element.id}::${index === 0 ? 'before' : 'after'} { display: none !important; }`);
-                    }
-                    if (item.cssTry('display', item.display)) {
-                        item.setBounds(false);
-                        item.cssFinally('display');
-                    }
-                    if (styleElement) {
-                        document.head.removeChild(styleElement);
-                    }
-                    element.id = id;
-                }
-            });
-        }
-        for (const node of this.processing.excluded) {
-            if (!node.lineBreak) {
-                node.setBounds();
-                node.saveAsInitial();
-            }
-        }
-        for (const node of CACHE) {
-            if (node.styleElement) {
-                const element = <HTMLElement> node.element;
-                const reset = preAlignment[node.id];
-                if (reset) {
-                    for (const attr in reset) {
-                        element.style.setProperty(attr, reset[attr]);
-                    }
-                }
-                if (direction.has(element)) {
-                    element.dir = 'rtl';
-                }
-            }
-            node.saveAsInitial();
-        }
-        this.controllerHandler.evaluateNonStatic(rootNode, CACHE);
-        CACHE.sort((a, b) => {
-            if (a.depth !== b.depth) {
-                return a.depth < b.depth ? -1 : 1;
-            }
-            else if (a.documentParent !== b.documentParent) {
-                return a.documentParent.siblingIndex < b.documentParent.siblingIndex ? -1 : 1;
-            }
-            return a.siblingIndex < b.siblingIndex ? -1 : 1;
-        });
-        for (const ext of this.extensions) {
-            ext.afterInit(documentRoot);
-        }
-        return true;
-    }
-
     public afterCreateCache(element: HTMLElement) {
         const iteration = (element.dataset.iteration ? $util.convertInt(element.dataset.iteration) : -1) + 1;
         element.dataset.iteration = iteration.toString();
@@ -381,138 +255,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.setBaseLayout(element.dataset.layoutName);
         this.setConstraints();
         this.setResources();
-    }
-
-    protected cascadeParentNode(element: HTMLElement, depth = 0) {
-        const node = this.insertNode(element);
-        if (node) {
-            node.depth = depth;
-            if (depth === 0) {
-                this.processing.cache.append(node);
-            }
-            const controller = this.controllerHandler;
-            if (controller.localSettings.unsupported.cascade.has(element.tagName)) {
-                return node;
-            }
-            const beforeElement = this.createPseduoElement(element, 'before');
-            const afterElement = this.createPseduoElement(element, 'after');
-            const children: T[] = [];
-            let includeText = false;
-            for (let i = 0; i < element.childNodes.length; i++) {
-                const childElement = <HTMLElement> element.childNodes[i];
-                if (childElement === beforeElement) {
-                    const child = this.insertNode(<HTMLElement> beforeElement);
-                    if (child) {
-                        node.innerBefore = child;
-                        child.setInlineText(true);
-                        children.push(child);
-                        includeText = true;
-                    }
-                }
-                else if (childElement === afterElement) {
-                    const child = this.insertNode(<HTMLElement> afterElement);
-                    if (child) {
-                        node.innerAfter = child;
-                        child.setInlineText(true);
-                        children.push(child);
-                        includeText = true;
-                    }
-                }
-                else if (childElement.nodeName.charAt(0) === '#') {
-                    if (childElement.nodeName === '#text') {
-                        const child = this.insertNode(childElement, node);
-                        if (child) {
-                            children.push(child);
-                        }
-                    }
-                }
-                else if (controller.includeElement(childElement)) {
-                    Application.prioritizeExtensions(childElement, this.extensions).some(item => item.init(childElement));
-                    if (!this.rootElements.has(childElement)) {
-                        const child = this.cascadeParentNode(childElement, depth + 1);
-                        if (child) {
-                            children.push(child);
-                            if (!child.excluded) {
-                                includeText = true;
-                            }
-                        }
-                    }
-                    else {
-                        const child = this.insertNode(childElement);
-                        if (child) {
-                            child.documentRoot = true;
-                            child.visible = false;
-                            child.excluded = true;
-                            children.push(child);
-                        }
-                        includeText = true;
-                    }
-                }
-            }
-            const length = children.length;
-            if (length) {
-                let siblingsLeading: T[] = [];
-                let siblingsTrailing: T[] = [];
-                if (length > 1) {
-                    let trailing = children[0];
-                    let floating = false;
-                    for (let i = 0; i < length; i++) {
-                        const child = children[i];
-                        if (child.excluded) {
-                            this.processing.excluded.append(child);
-                        }
-                        else if (includeText || !child.plainText) {
-                            child.parent = node;
-                            this.processing.cache.append(child);
-                        }
-                        if (child.pageFlow) {
-                            if (child.floating) {
-                                floating = true;
-                            }
-                            if (i > 0) {
-                                siblingsTrailing.push(child);
-                                if (child.lineBreak) {
-                                    children[i - 1].lineBreakTrailing = true;
-                                }
-                            }
-                            if (!child.excluded) {
-                                child.siblingsLeading = siblingsLeading;
-                                trailing.siblingsTrailing = siblingsTrailing;
-                                siblingsLeading = [];
-                                siblingsTrailing = [];
-                                trailing = child;
-                            }
-                            if (i < length - 1) {
-                                siblingsLeading.push(child);
-                                if (child.lineBreak) {
-                                    children[i + 1].lineBreakLeading = true;
-                                }
-                            }
-                        }
-                        child.siblingIndex = i;
-                    }
-                    trailing.siblingsTrailing = siblingsTrailing;
-                    node.floatContainer = floating;
-                }
-                else {
-                    const child = children[0];
-                    if (child.excluded) {
-                        this.processing.excluded.append(child);
-                    }
-                    else {
-                        child.siblingsLeading = siblingsLeading;
-                        child.siblingsTrailing = siblingsTrailing;
-                        if (includeText || !child.plainText) {
-                            child.parent = node;
-                            this.processing.cache.append(child);
-                        }
-                    }
-                }
-            }
-            node.setInlineText(!includeText);
-            node.actualChildren = children;
-        }
-        return node;
     }
 
     protected setBaseLayout(layoutName: string) {

@@ -296,13 +296,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (const ext of this.extensions) {
             ext.beforeInit(documentRoot);
         }
-        const rootNode = this.cascadeParentNode(documentRoot);
-        if (rootNode) {
-            rootNode.parent = new NodeConstructor(0, this.processing.sessionId, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
-            rootNode.siblingIndex = 0;
-            rootNode.documentRoot = true;
-            rootNode.documentParent = rootNode.parent;
-            this.processing.node = rootNode;
+        const nodeRoot = this.cascadeParentNode(documentRoot);
+        if (nodeRoot) {
+            nodeRoot.parent = new NodeConstructor(0, this.processing.sessionId, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
+            nodeRoot.siblingIndex = 0;
+            nodeRoot.documentRoot = true;
+            nodeRoot.documentParent = nodeRoot.parent;
+            this.processing.node = nodeRoot;
         }
         else {
             return false;
@@ -346,7 +346,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         const pseudoElement = new Set<T>();
-        rootNode.parent.setBounds();
+        nodeRoot.parent.setBounds();
         for (const node of CACHE) {
             if (!node.pseudoElement) {
                 node.setBounds(!resetBounds && preAlignment[node.id] === undefined && direction.size === 0);
@@ -397,7 +397,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             node.saveAsInitial();
         }
-        this.controllerHandler.evaluateNonStatic(rootNode, CACHE);
+        this.controllerHandler.evaluateNonStatic(nodeRoot, CACHE);
         CACHE.sort((a, b) => {
             if (a.depth !== b.depth) {
                 return a.depth < b.depth ? -1 : 1;
@@ -435,10 +435,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode(element, false);
                 if (parent) {
-                    node.inherit(parent, 'textStyle');
-                    if (!node.pageFlow) {
-                        node.css('backgroundColor', parent.css('backgroundColor'));
-                    }
+                    Node.copyTextStyle(node, parent);
                 }
                 return node;
             }
@@ -509,7 +506,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const child = this.insertNode(<HTMLElement> beforeElement);
                     if (child) {
                         node.innerBefore = child;
-                        child.setInlineText(true);
+                        child.inlineText = true;
                         children.push(child);
                         includeText = true;
                     }
@@ -518,7 +515,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const child = this.insertNode(<HTMLElement> afterElement);
                     if (child) {
                         node.innerAfter = child;
-                        child.setInlineText(true);
+                        child.inlineText = true;
                         children.push(child);
                         includeText = true;
                     }
@@ -614,7 +611,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
             }
-            node.setInlineText(!includeText);
+            node.inlineText = !includeText;
             node.actualChildren = children;
         }
         return node;
@@ -650,10 +647,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (styleMap.fontFamily === undefined) {
                 styleMap.fontFamily = style.getPropertyValue('font-family');
             }
-            if (styleMap.fontSize) {
-                styleMap.fontSize = $css.convertPX(styleMap.fontSize);
-            }
-            else {
+            if (styleMap.fontSize === undefined) {
                 styleMap.fontSize = style.getPropertyValue('font-size');
             }
             if (styleMap.fontWeight === undefined) {

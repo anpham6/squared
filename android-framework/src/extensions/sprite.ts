@@ -1,5 +1,7 @@
 import { RawAsset } from '../../../src/base/@types/application';
 
+import View from '../view';
+
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
@@ -15,7 +17,7 @@ const $css = squared.lib.css;
 const $c = squared.base.lib.constant;
 const $e = squared.base.lib.enumeration;
 
-export default class <T extends android.base.View> extends squared.base.extensions.Sprite<T> {
+export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {
         const mainData = <SpriteData> node.data($c.EXT_NAME.SPRITE, $c.STRING_BASE.EXT_DATA);
         if (mainData) {

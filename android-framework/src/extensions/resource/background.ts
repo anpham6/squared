@@ -479,7 +479,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     public afterResources() {
         const settings = <UserSettingsAndroid> this.application.userSettings;
         function setDrawableBackground(node: T, value: string) {
-            let drawable = Resource.insertStoredAsset('drawables', `${node.tagName.toLowerCase()}_${node.controlId}`, value);
+            let drawable = Resource.insertStoredAsset('drawables', `${node.containerName.toLowerCase()}_${node.controlId}`, value);
             if (drawable !== '') {
                 drawable = `@drawable/${drawable}`;
                 if (node.documentBody) {
@@ -758,7 +758,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundRepeat.length = 0;
                     backgroundSize.length = 0;
                 }
-                const extracted = node.extracted.filter(item => item.visible && (item.imageElement || item.tagName === 'INPUT_IMAGE'));
+                const extracted = node.extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'));
                 for (let i = 0, j = imageLength; i < extracted.length; i++) {
                     const image = extracted[i];
                     const element = <HTMLImageElement> image.element;
@@ -768,7 +768,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         backgroundRepeat[j] = 'no-repeat';
                         backgroundSize[j] = `${image.actualWidth}px ${image.actualHeight}px`;
                         backgroundPosition[j] = $css.getBackgroundPosition(
-                            image.tagName === 'INPUT_IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left + node.borderLeftWidth}px ${image.bounds.top - node.bounds.top + node.borderTopWidth}px`,
+                            image.containerName === 'INPUT_IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left + node.borderLeftWidth}px ${image.bounds.top - node.bounds.top + node.borderTopWidth}px`,
                             node.actualDimension,
                             node.fontSize
                         );
@@ -1163,7 +1163,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 const src = Resource.insertStoredAsset(
                     'drawables',
-                    `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i + 1}`,
+                    `${node.containerName.toLowerCase()}_${node.controlId}_gradient_${i + 1}`,
                     $xml.applyTemplate('vector', VECTOR_TMPL, [{
                         'xmlns:android': XMLNS_ANDROID.android,
                         'xmlns:aapt': XMLNS_ANDROID.aapt,

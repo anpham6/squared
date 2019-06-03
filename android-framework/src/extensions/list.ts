@@ -127,7 +127,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         }
                         minWidth = 0;
                     }
-                    image = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(mainData.imageSrc);
+                    image = (<android.base.Resource<T>> application.resourceHandler).addImageSrc(mainData.imageSrc);
                 }
                 let paddingRight = 0;
                 if (gravity === $const.CSS.LEFT) {
@@ -140,8 +140,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 const options = createViewAttribute(undefined, { layout_columnWeight: columnWeight });
                 const element = $dom.createElement(node.actualParent && node.actualParent.element, image ? 'img' : 'span');
-                ordinal = this.application.createNode(element);
-                ordinal.tagName = `${node.tagName}_ORDINAL`;
+                ordinal = application.createNode(element);
+                ordinal.containerName = `${node.containerName}_ORDINAL`;
                 if (inside) {
                     controller.addBeforeOutsideTemplate(ordinal.id, controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, createViewAttribute(undefined, { minWidth: $css.formatPX(minWidth), layout_columnWeight: columnWeight })));
                     minWidth = MINWIDTH_INSIDE;
@@ -164,7 +164,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     else if (mainData.ordinal) {
                         element.textContent = mainData.ordinal;
-                        ordinal.setInlineText(true);
+                        ordinal.inlineText = true;
                         ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
                         if (node.tagName === 'DFN') {
                             minWidth += PADDINGRIGHT_DFN;

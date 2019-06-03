@@ -1,4 +1,4 @@
-import { CachedValue, InitialData, SiblingOptions } from './@types/node';
+import { CachedValue, InitialData } from './@types/node';
 
 import { CSS_STANDARD, NODE_ALIGNMENT, NODE_TRAVERSE } from './lib/enumeration';
 
@@ -11,9 +11,23 @@ const $session = squared.lib.session;
 const $util = squared.lib.util;
 
 const REGEXP_BACKGROUND = /\s*(url\(.+?\))\s*/;
-const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
+    public static copyTextStyle(dest: T, source: T) {
+        dest.cssApply({
+            fontFamily: source.css('fontFamily'),
+            fontSize: $css.formatPX(source.fontSize),
+            fontWeight: source.css('fontWeight'),
+            fontStyle: source.css('fontStyle'),
+            color: source.css('color'),
+            whiteSpace: source.css('whiteSpace'),
+            textDecoration: source.css('textDecoration'),
+            textTransform: source.css('textTransform'),
+            wordSpacing: source.css('wordSpacing'),
+            opacity: source.css('opacity')
+        });
+    }
+
     public documentRoot = false;
     public depth = -1;
     public siblingIndex = Number.POSITIVE_INFINITY;
@@ -27,8 +41,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public abstract localSettings: {};
     public abstract renderParent?: T;
-    public abstract outerWrapper?: T;
-    public abstract innerWrapped?: T;
     public abstract innerBefore?: T;
     public abstract innerAfter?: T;
 
@@ -36,7 +48,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected _box?: BoxRectDimension;
     protected _bounds?: BoxRectDimension;
     protected _linear?: BoxRectDimension;
-    protected _documentParent?: T;
 
     protected readonly _element: Element | null = null;
     protected readonly _initial: InitialData<T> = {
@@ -45,6 +56,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         styleMap: {}
     };
 
+    protected abstract _documentParent?: T;
     protected abstract _cached: CachedValue<T>;
 
     private _data = {};
@@ -89,22 +101,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
             }
         }
-    }
-
-    public addAlign(value: number) {
-        if (!this.hasAlign(value)) {
-            this.alignmentType |= value;
-        }
-    }
-
-    public removeAlign(value: number) {
-        if (this.hasAlign(value)) {
-            this.alignmentType ^= value;
-        }
-    }
-
-    public hasAlign(value: number) {
-        return $util.hasBit(this.alignmentType, value);
     }
 
     public saveAsInitial(overwrite = false) {
@@ -209,10 +205,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public ascend(generated = false, condition?: (item: T) => boolean, parent?: T) {
+    public ascend(condition?: (item: T) => boolean, parent?: T, attr = 'actualParent') {
         const result: T[] = [];
-        const attr = !generated ? 'actualParent'
-                                : this.renderParent ? 'renderParent' : 'parent';
         let current = this[attr];
         while (current && current.id !== 0) {
             if (condition) {
@@ -394,7 +388,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let valid = true;
         if (this.styleElement) {
             this.style[attr] = value;
-            valid = this.style[attr] === value;
+            valid = this.style[attr] === value || $css.isLength(value, true) && this.style[attr].endsWith('px');
         }
         if (valid) {
             this.css(attr, value, cache);
@@ -661,194 +655,50 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public setInlineText(value: boolean, overwrite = false) {
-        if (overwrite) {
-            this._inlineText = value;
-        }
-        else if (this.htmlElement) {
-            const element = <Element> this._element;
-            switch (element.tagName) {
-                case 'INPUT':
-                case 'IMG':
-                case 'SELECT':
-                case 'TEXTAREA':
-                case 'HR':
-                case 'SVG':
-                    break;
-                case 'BUTTON':
-                    this._inlineText = true;
-                    break;
-                default:
-                    this._inlineText = value;
-                    break;
-            }
-        }
-    }
-
-    public inherit(node: T, ...modules: string[]) {
-        const initial = <InitialData<T>> node.unsafe('initial');
-        for (const name of modules) {
-            switch (name) {
-                case 'initial':
-                    $util.cloneObject(initial, this.initial);
-                    break;
-                case 'base':
-                    this._documentParent = node.documentParent;
-                    this._bounds = $dom.assignRect(node.bounds);
-                    this._linear = $dom.assignRect(node.linear);
-                    this._box = $dom.assignRect(node.box);
-                    if (node.actualParent) {
-                        this.dir = node.actualParent.dir;
-                    }
-                    break;
-                case 'alignment':
-                    this.positionAuto = node.positionAuto;
-                    for (const attr of INHERIT_ALIGNMENT) {
-                        this._styleMap[attr] = node.css(attr);
-                        this._initial.styleMap[attr] = initial.styleMap[attr];
-                    }
-                    if (!this.positionStatic) {
-                        for (const attr of $css.BOX_POSITION) {
-                            if (node.has(attr)) {
-                                this._styleMap[attr] = node.css(attr);
-                            }
-                            this._initial.styleMap[attr] = initial.styleMap[attr];
-                        }
-                    }
-                    if (node.autoMargin.horizontal || node.autoMargin.vertical) {
-                        for (const attr of $css.BOX_MARGIN) {
-                            if (node.cssInitial(attr) === $const.CSS.AUTO) {
-                                this._styleMap[attr] = $const.CSS.AUTO;
-                                this._initial.styleMap[attr] = $const.CSS.AUTO;
-                            }
-                        }
-                    }
-                    break;
-                case 'styleMap':
-                    $util.assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
-                    break;
-                case 'textStyle':
-                    this.cssApply({
-                        fontFamily: node.css('fontFamily'),
-                        fontSize: $css.formatPX(node.fontSize),
-                        fontWeight: node.css('fontWeight'),
-                        fontStyle: node.css('fontStyle'),
-                        color: node.css('color'),
-                        whiteSpace: node.css('whiteSpace'),
-                        textDecoration: node.css('textDecoration'),
-                        textTransform: node.css('textTransform'),
-                        wordSpacing: node.css('wordSpacing'),
-                        opacity: node.css('opacity')
-                    });
-                    break;
-            }
-        }
-    }
-
-    public previousSiblings(options: SiblingOptions = {}) {
-        const floating = options.floating;
-        const pageFlow = options.pageFlow;
-        const lineBreak = options.lineBreak;
-        const excluded = options.excluded;
+    public previousSiblings() {
         const result: T[] = [];
-        let element: Element | null = null;
         if (this._element) {
-            if (this.naturalElement) {
-                element = <Element> this._element.previousSibling;
-            }
-            else {
-                let current = this.innerWrapped;
-                while (current) {
-                    if (current.naturalElement) {
-                        element = <Element> (current.element as Element).previousSibling;
-                        break;
-                    }
-                    current = current.innerWrapped;
-                }
-            }
-        }
-        else {
-            const node = this.firstChild;
-            if (node) {
-                element = (<Element> node.element).previousSibling as Element;
-            }
-        }
-        while (element) {
-            const node = $session.getElementAsNode<T>(element, this.sessionId);
-            if (node) {
-                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded) {
-                    result.push(node);
-                }
-                else if (node.pageFlow && !node.excluded) {
-                    if (pageFlow === false) {
-                        break;
-                    }
-                    result.push(node);
-                    if (floating !== false || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
-                        break;
+            let element = <Element> this._element.previousSibling;
+            while (element) {
+                const node = $session.getElementAsNode<T>(element, this.sessionId);
+                if (node) {
+                    if (node.pageFlow) {
+                        result.push(node);
+                        if (node.styleElement && !node.lineBreak && !node.excluded) {
+                            break;
+                        }
                     }
                 }
+                element = <Element> element.previousSibling;
             }
-            element = <Element> element.previousSibling;
         }
         return result;
     }
 
-    public nextSiblings(options: SiblingOptions = {}) {
-        const floating = options.floating;
-        const pageFlow = options.pageFlow;
-        const lineBreak = options.lineBreak;
-        const excluded = options.excluded;
+    public nextSiblings() {
         const result: T[] = [];
-        let element: Element | null = null;
         if (this._element) {
-            if (this.naturalElement) {
-                element = <Element> this._element.nextSibling;
-            }
-            else {
-                let current = this.innerWrapped;
-                while (current) {
-                    if (current.naturalElement) {
-                        element = <Element> (current.element as Element).nextSibling;
-                        break;
-                    }
-                    current = current.innerWrapped;
-                }
-            }
-        }
-        else {
-            const node = this.lastChild;
-            if (node) {
-                element = (<Element> node.element).nextSibling as Element;
-            }
-        }
-        while (element) {
-            const node = $session.getElementAsNode<T>(element, this.sessionId);
-            if (node) {
-                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded) {
-                    result.push(node);
-                }
-                else if (node.pageFlow && !node.excluded) {
-                    if (pageFlow === false) {
-                        break;
-                    }
-                    result.push(node);
-                    if (floating !== false || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
-                        break;
+            let element = <Element> this._element.nextSibling;
+            while (element) {
+                const node = $session.getElementAsNode<T>(element, this.sessionId);
+                if (node) {
+                    if (node.pageFlow) {
+                        result.push(node);
+                        if (node.styleElement && !node.lineBreak && !node.excluded) {
+                            break;
+                        }
                     }
                 }
+                element = <Element> element.nextSibling;
             }
-            element = <Element> element.nextSibling;
         }
         return result;
     }
 
-    public getFirstChildElement(options: SiblingOptions = {}) {
-        const lineBreak = options.lineBreak;
-        const excluded = options.excluded;
-        if (this.htmlElement) {
+    public getFirstChildElement() {
+        if (this.styleElement) {
             for (const node of this.actualChildren) {
-                if (!node.pseudoElement && (!node.excluded || lineBreak !== false && node.lineBreak || excluded !== false && node.excluded)) {
+                if (node.styleElement) {
                     return node.element;
                 }
             }
@@ -856,14 +706,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return null;
     }
 
-    public getLastChildElement(options: SiblingOptions = {}) {
-        const lineBreak = options.lineBreak;
-        const excluded = options.excluded;
-        if (this.htmlElement) {
+    public getLastChildElement() {
+        if (this.styleElement) {
             const children = this.actualChildren;
             for (let i = children.length - 1; i >= 0; i--) {
                 const node = children[i];
-                if (!node.pseudoElement && (!node.excluded || lineBreak !== false && node.lineBreak || excluded !== false && node.excluded)) {
+                if (node.styleElement && !node.pseudoElement) {
                     return node.element;
                 }
             }
@@ -875,9 +723,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const baseValue = this.parseUnit(this._styleMap[attr], attr);
         let value = Math.max(baseValue, this.parseUnit(this._styleMap[attrMin], attr));
         if (value === 0 && this.naturalElement && this.styleElement) {
-            switch (this.tagName) {
+            const element = <HTMLInputElement> this._element;
+            switch (element.tagName) {
                 case 'IMG':
-                case 'INPUT_IMAGE':
+                case 'INPUT':
+                    if (element.type !== 'image') {
+                        break;
+                    }
                 case 'TD':
                 case 'TH':
                 case 'SVG':
@@ -886,7 +738,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'CANVAS':
                 case 'OBJECT':
                 case 'EMBED':
-                    const size = $dom.getNamedItem(this._element, attr);
+                    const size = $dom.getNamedItem(element, attr);
                     if (size !== '') {
                         value = this.parseUnit(size, attr);
                         if (value > 0) {
@@ -1059,13 +911,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._parent;
     }
 
-    set tagName(value) {}
     get tagName() {
-        const element = <HTMLElement> this._element;
-        if (element) {
-            return element.nodeName.charAt(0) === '#' ? element.nodeName : element.tagName;
+        if (this._cached.tagName === undefined) {
+            const element = <HTMLElement> this._element;
+            let value = '';
+            if (element) {
+                value = element.nodeName.charAt(0) === '#' ? element.nodeName : element.tagName;
+            }
+            this._cached.tagName = value;
         }
-        return '';
+        return this._cached.tagName;
     }
 
     get element() {
@@ -1084,7 +939,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get svgElement() {
-        return this._element !== null && this._element.tagName === 'svg';
+        return this.tagName === 'svg';
     }
 
     get styleElement() {
@@ -1104,11 +959,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get flexElement() {
-        return this.display === 'flex' || this.display === 'inline-flex';
+        const value = this.display;
+        return value === 'flex' || value === 'inline-flex';
     }
 
     get gridElement() {
-        return this.display === 'grid' || this.display === 'inline-grid';
+        const value = this.display;
+        return value === 'grid' || value === 'inline-grid';
     }
 
     get textElement() {
@@ -1121,8 +978,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get inputElement() {
         if (this._cached.inputElement === undefined) {
-            const value = this.tagName;
-            this._cached.inputElement = this._element !== null && this._element.tagName === 'INPUT' || value === 'BUTTON' || value === 'SELECT' || value === 'TEXTAREA';
+            switch (this.tagName) {
+                case 'INPUT':
+                case 'BUTTON':
+                case 'SELECT':
+                case 'TEXTAREA':
+                    this._cached.inputElement = true;
+                    break;
+                default:
+                    this._cached.inputElement = false;
+                    break;
+            }
         }
         return this._cached.inputElement;
     }
@@ -1132,7 +998,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get plainText() {
-        return this.tagName === 'PLAINTEXT';
+        return this.tagName === '#text';
     }
 
     get lineBreak() {
@@ -1204,9 +1070,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.extensions;
     }
 
-    set flexbox(value) {
-        this._cached.flexbox = value;
-    }
     get flexbox() {
         if (this._cached.flexbox === undefined) {
             const actualParent = this.actualParent;
@@ -1333,9 +1196,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.positionRelative;
     }
 
-    set positionAuto(value) {
-        this._cached.positionAuto = value;
-    }
     get positionAuto() {
         if (this._cached.positionAuto === undefined) {
             const styleMap = this._initial.iteration === -1 ? this._styleMap : this._initial.styleMap;
@@ -1491,9 +1351,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.css('boxSizing') !== 'border-box';
     }
 
-    set contentBoxWidth(value) {
-        this._cached.contentBoxWidth = value;
-    }
     get contentBoxWidth() {
         if (this._cached.contentBoxWidth === undefined) {
             this._cached.contentBoxWidth = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth;
@@ -1501,9 +1358,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.contentBoxWidth;
     }
 
-    set contentBoxHeight(value) {
-        this._cached.contentBoxHeight = value;
-    }
     get contentBoxHeight() {
         if (this._cached.contentBoxHeight === undefined) {
             this._cached.contentBoxHeight = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth;
@@ -1534,6 +1388,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.inlineVertical;
     }
 
+    set inlineText(value) {
+        switch (this.tagName) {
+            case '':
+            case 'INPUT':
+            case 'IMG':
+            case 'SELECT':
+            case 'SVG':
+            case 'HR':
+            case 'TEXTAREA':
+                break;
+            case 'BUTTON':
+                this._inlineText = true;
+                break;
+            default:
+                this._inlineText = value;
+                break;
+        }
+    }
     get inlineText() {
         return this._inlineText;
     }
@@ -1564,7 +1436,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get blockStatic() {
         if (this._cached.blockStatic === undefined) {
-            this._cached.blockStatic = this.pageFlow && (this.block && !this.floating || this.blockDimension && this.cssInitial($const.CSS.WIDTH) === $const.CSS.PERCENT_100 && !this.has('maxWidth')) || this.hasAlign(NODE_ALIGNMENT.BLOCK);
+            this._cached.blockStatic = this.pageFlow && (this.block && !this.floating || this.blockDimension && this.cssInitial($const.CSS.WIDTH) === $const.CSS.PERCENT_100 && !this.has('maxWidth'));
         }
         return this._cached.blockStatic;
     }
@@ -1610,7 +1482,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.rightAligned === undefined) {
             this._cached.rightAligned = this.float === $const.CSS.RIGHT || this.autoMargin.left || !this.pageFlow && this.has($const.CSS.RIGHT) || this.textElement && this.blockStatic && this.cssInitial('textAlign') === $const.CSS.RIGHT;
         }
-        return this._cached.rightAligned || this.hasAlign(NODE_ALIGNMENT.RIGHT);
+        return this._cached.rightAligned;
     }
 
     get bottomAligned() {
@@ -1676,7 +1548,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get float() {
         if (this._cached.float === undefined) {
-            this._cached.float = this.floating ? this.css('float') : $const.CSS.NONE;
+            this._cached.float = this.css('float') ||  $const.CSS.NONE;
         }
         return this._cached.float;
     }
@@ -1685,12 +1557,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.toInt('zIndex');
     }
 
-    set textContent(value) {
-        this._cached.textContent = value;
-    }
     get textContent() {
         if (this._cached.textContent === undefined) {
-            this._cached.textContent = (this.htmlElement || this.plainText) && (<HTMLElement> this._element).textContent || '';
+            this._cached.textContent = this.htmlElement || this.plainText ? (<Element> this._element).textContent as string : '';
         }
         return this._cached.textContent;
     }
@@ -1700,17 +1569,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get src() {
-        return this.imageElement || this.tagName === 'INPUT_IMAGE' ? (<HTMLInputElement> this._element).src : '';
+        return this.htmlElement && (<HTMLImageElement> this._element).src || '';
     }
 
-    set overflow(value) {
-        if (value === 0 || value === NODE_ALIGNMENT.VERTICAL || value === NODE_ALIGNMENT.HORIZONTAL || value === (NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.VERTICAL)) {
-            if ($util.hasBit(this.overflow, NODE_ALIGNMENT.BLOCK)) {
-                value |= NODE_ALIGNMENT.BLOCK;
-            }
-            this._cached.overflow = value;
-        }
-    }
     get overflow() {
         if (this._cached.overflow === undefined) {
             let value = 0;
@@ -1740,12 +1601,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return $util.hasBit(this.overflow, NODE_ALIGNMENT.VERTICAL);
     }
 
-    set baseline(value) {
-        this._cached.baseline = value;
-    }
     get baseline() {
         if (this._cached.baseline === undefined) {
-            this._cached.baseline = this.pageFlow && !this.floating && this.cssAny('verticalAlign', 'baseline', 'initial', $const.CSS.PX_0, $const.CSS.PERCENT_0);
+            this._cached.baseline = this.pageFlow && !this.floating && this.cssAny('verticalAlign', 'baseline', 'initial', $const.CSS.PX_0, $const.CSS.PERCENT_0, 'unset');
         }
         return this._cached.baseline;
     }
@@ -1761,9 +1619,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.verticalAlign;
     }
 
-    set multiline(value) {
-        this._cached.multiline = value;
-    }
     get multiline() {
         if (this._cached.multiline === undefined) {
             this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? ($session.getRangeClientRect(<Element> this._element, this.sessionId).numberOfLines as number) > 0 : false;

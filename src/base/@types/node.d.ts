@@ -60,6 +60,7 @@ export interface CachedValue<T> {
     baselineHeight?: number;
     dir?: string;
     tagName?: string;
+    containerName?: string;
     textContent?: string;
     src?: string;
     float?: string;

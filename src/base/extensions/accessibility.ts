@@ -14,7 +14,7 @@ export default abstract class Accessibility<T extends NodeUI> extends ExtensionU
     public afterInit() {
         for (const node of this.application.processing.cache as NodeList<T>) {
             if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
-                switch (node.tagName) {
+                switch (node.containerName) {
                     case 'INPUT_IMAGE':
                         node.extracted = [node];
                         break;

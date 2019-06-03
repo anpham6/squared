@@ -1,6 +1,7 @@
 import { NodeTemplate, NodeIncludeTemplate } from '../../../../src/base/@types/application';
 
 import View from '../../view';
+
 import { getRootNs } from '../../lib/util';
 
 type NodeRenderIndex = {

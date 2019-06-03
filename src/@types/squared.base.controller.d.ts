@@ -7,8 +7,8 @@ declare global {
             cache: NodeList<T>;
             readonly userSettings: UserSettings;
             readonly localSettings: ControllerSettings;
-            readonly afterInsertNode: BindGeneric<Node, void> | undefined;
             readonly generateSessionId: string;
+            readonly afterInsertNode: BindGeneric<Node, void> | undefined;
             init(): void;
             reset(): void;
             evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;

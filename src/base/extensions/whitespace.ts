@@ -28,7 +28,7 @@ function resetMargin(node: NodeUI, value: number) {
         valid = true;
     }
     else {
-        for (const outerWrapper of node.ascendOuter()) {
+        for (const outerWrapper of node.ascend(undefined, undefined, 'outerWrapper')) {
             if (outerWrapper.getBox(value)[1] >= offset) {
                 outerWrapper.modifyBox(value, -offset);
                 valid = true;
@@ -249,7 +249,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                                 else if (previous.blockDimension && !previous.block && current.length === 0) {
                                     const offset = current.linear.top - previous.linear.bottom;
-                                    if (Math.floor(offset) > 0 && current.ascend(false, item => item.has($const.CSS.HEIGHT)).length === 0) {
+                                    if (Math.floor(offset) > 0 && current.ascend(item => item.has($const.CSS.HEIGHT)).length === 0) {
                                         current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                     }
                                 }
@@ -362,7 +362,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 else {
                     const actualParent = node.actualParent as NodeUI;
                     if (actualParent && actualParent.visible) {
-                        if (!actualParent.documentRoot && actualParent.ascendOuter(item => item.documentRoot).length === 0 && previousSiblings.length) {
+                        if (!actualParent.documentRoot && actualParent.ascend(item => item.documentRoot, undefined, 'outerWrapper').length === 0 && previousSiblings.length) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
                             const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? $const.CSS.TOP : $const.CSS.BOTTOM];
                             if (offset !== 0) {

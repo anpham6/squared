@@ -9,7 +9,7 @@ import FileUI from './file-ui';
 import LayoutUI from './layout-ui';
 import Node from './node';
 import NodeUI from './node-ui';
-import NodeGroup from './nodegroup';
+import NodeGroupUI from './nodegroup-ui';
 import NodeList from './nodelist';
 import Resource from './resource-ui';
 import ResourceUI from './resource-ui';
@@ -62,7 +62,7 @@ export {
     LayoutUI,
     Node,
     NodeUI,
-    NodeGroup,
+    NodeGroupUI,
     NodeList,
     Resource,
     ResourceUI,

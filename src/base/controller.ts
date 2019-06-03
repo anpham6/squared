@@ -20,7 +20,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract visibleElement(element: Element): boolean;
     public abstract evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
     public abstract get userSettings(): UserSettings;
-    public abstract get afterInsertNode(): BindGeneric<T, void> | undefined;
+    public abstract get afterInsertNode(): BindGeneric<T, void>;
 
     get generateSessionId() {
         return new Date().getTime().toString();

@@ -115,10 +115,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const groupMap: ObjectMap<StyleList[]> = {};
         for (const node of this.application.session.cache) {
             if (node.visible && node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource($e.NODE_RESOURCE.FONT_STYLE)) {
-                if (nameMap[node.tagName] === undefined) {
-                    nameMap[node.tagName] = [];
+                if (nameMap[node.containerName] === undefined) {
+                    nameMap[node.containerName] = [];
                 }
-                nameMap[node.tagName].push(node);
+                nameMap[node.containerName].push(node);
             }
         }
         const styleKeys = Object.keys(FONT_STYLE);

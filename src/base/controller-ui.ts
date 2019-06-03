@@ -42,7 +42,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract get containerTypeVertical(): LayoutType;
     public abstract get containerTypeVerticalMargin(): LayoutType;
     public abstract get containerTypePercent(): LayoutType;
-    public abstract get afterInsertNode(): BindGeneric<T, void> | undefined;
 
     public reset() {
         this._beforeOutside = {};
@@ -455,7 +454,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             let valid = adjacent.actualChildren.includes(item);
                             if (!valid) {
                                 const nested = adjacent.cascade();
-                                valid = item.ascend(false, child => nested.includes(child)).length > 0;
+                                valid = item.ascend(child => nested.includes(child)).length > 0;
                             }
                             if (valid) {
                                 const index = adjacent.siblingIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0);

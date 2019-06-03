@@ -1,11 +1,11 @@
 import { NodeXmlTemplate } from '../../../../src/base/@types/application';
 
+import View from '../../view';
+
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $NodeList = squared.base.NodeList;
-
-type View = android.base.View;
 
 const $const = squared.lib.constant;
 const $e = squared.base.lib.enumeration;

@@ -671,7 +671,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     layoutWidth = STRING_ANDROID.MATCH_PARENT;
                                 }
                                 else if (!documentParent.flexElement && renderParent.layoutConstraint && this.alignParent($const.CSS.LEFT) && this.alignParent($const.CSS.RIGHT)) {
-                                    layoutWidth = this.autoMargin.horizontal || this.ascend(false, item => item.has($const.CSS.WIDTH) || item.blockStatic).length ? $const.CSS.PX_0 : STRING_ANDROID.MATCH_PARENT;
+                                    layoutWidth = this.autoMargin.horizontal || this.ascend(item => item.has($const.CSS.WIDTH) || item.blockStatic).length ? $const.CSS.PX_0 : STRING_ANDROID.MATCH_PARENT;
                                 }
                             }
                             if (layoutWidth === '' && (

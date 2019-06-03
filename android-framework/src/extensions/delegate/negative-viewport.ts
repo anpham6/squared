@@ -1,3 +1,5 @@
+import View from '../../view';
+
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
@@ -5,7 +7,7 @@ import $LayoutUI = squared.base.LayoutUI;
 const $const = squared.lib.constant;
 const $e = squared.base.lib.enumeration;
 
-export default class NegativeViewport<T extends android.base.View> extends squared.base.ExtensionUI<T> {
+export default class NegativeViewport<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T, parent: T) {
         return !node.pageFlow && parent.naturalElement && parent.documentRoot && (
             Math.ceil(node.linear.left) < Math.floor(parent.box.left) && (node.left < 0 || node.marginLeft < 0 || !node.has($const.CSS.LEFT) && node.right > 0) ||

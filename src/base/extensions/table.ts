@@ -42,7 +42,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         }
         function inheritStyles(section: T[]) {
             if (section.length) {
-                for (const item of section[0].cascade()) {
+                for (const item of section[0].cascade() as T[]) {
                     if (item.tagName === 'TH' || item.tagName === 'TD') {
                         item.inherit(section[0], 'styleMap');
                         item.unsetCache('visibleStyle');
@@ -142,7 +142,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 switch (td.tagName) {
                     case 'TH': {
                         function setBorderStyle(attr: string) {
-                            td.ascend(false, undefined, node).some(item => {
+                            td.ascend(undefined, node).some(item => {
                                 if (item.has(`${attr}Style`)) {
                                     td.css(`${attr}Style`, item.css(`${attr}Style`));
                                     td.css(`${attr}Color`, item.css(`${attr}Color`));

@@ -1,6 +1,7 @@
 import { ResourceStringsOptions } from '../../@types/extension';
 
 import Resource from '../../resource';
+import View from '../../view';
 
 import { CONTAINER_ANDROID } from '../../lib/constant';
 
@@ -11,7 +12,7 @@ const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 const $e = squared.base.lib.enumeration;
 
-export default class ResourceStrings<T extends android.base.View> extends squared.base.ExtensionUI<T> {
+export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false,
         fontVariantSmallCapsReduction: 0.7
@@ -129,7 +130,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             }
                             const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
                             if (hintString) {
-                                setTextValue('hint', `${node.tagName.toLowerCase()}_hint`, hintString);
+                                setTextValue('hint', `${node.containerName.toLowerCase()}_hint`, hintString);
                             }
                         }
                     }

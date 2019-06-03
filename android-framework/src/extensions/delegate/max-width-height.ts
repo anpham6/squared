@@ -1,9 +1,9 @@
+import View from '../../view';
+
 import { CONTAINER_ANDROID, EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
-
-type View = android.base.View;
 
 const $const = squared.lib.constant;
 const $c = squared.base.lib.constant;

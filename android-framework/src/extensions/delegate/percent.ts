@@ -1,16 +1,16 @@
 import { STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import View from '../../view';
 
-type View = android.base.View;
+import $LayoutUI = squared.base.LayoutUI;
 
 const $const = squared.lib.constant;
 const $e = squared.base.lib.enumeration;
 
 const isFlexible = (node: View) => !node.documentParent.layoutElement && !node.display.startsWith('table');
 
-export default class Percent<T extends android.base.View> extends squared.base.ExtensionUI<T> {
+export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T, parent: T) {
         if (node.pageFlow) {
             if (node.has($const.CSS.WIDTH, $e.CSS_STANDARD.PERCENT, { not: $const.CSS.PERCENT_100 }) && !parent.layoutConstraint && (

@@ -7,7 +7,7 @@ import { NODE_ALIGNMENT } from './lib/enumeration';
 
 const $const = squared.lib.constant;
 
-export default abstract class NodeGroup extends NodeUI {
+export default abstract class NodeGroupUI extends NodeUI {
     public init() {
         if (this.length) {
             let siblingIndex = Number.POSITIVE_INFINITY;
@@ -41,12 +41,12 @@ export default abstract class NodeGroup extends NodeUI {
     }
 
     public previousSiblings(options?: SiblingOptions) {
-        const node = this.item(0);
+        const node = this.item(0) as NodeUI;
         return node ? node.previousSiblings(options) : [];
     }
 
     public nextSiblings(options?: SiblingOptions) {
-        const node = this.item();
+        const node = this.item() as NodeUI;
         return node ? node.nextSiblings(options) : [];
     }
 
@@ -158,6 +158,14 @@ export default abstract class NodeGroup extends NodeUI {
 
     get groupParent() {
         return true;
+    }
+
+    get tagName() {
+        return '';
+    }
+
+    get plainText() {
+        return false;
     }
 
     get multiline() {

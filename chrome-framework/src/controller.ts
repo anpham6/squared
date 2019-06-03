@@ -1,11 +1,15 @@
 import { ControllerSettings } from '../../src/base/@types/application';
 import { UserSettingsChrome } from './@types/application';
+import { LocalSettings } from './@types/node';
 
 import View from './view';
 
 import $NodeList = squared.base.NodeList;
 
-let DEFAULT_VIEWSETTINGS!: { floatPrecision: number };
+const $const = squared.lib.constant;
+const $session = squared.lib.session;
+
+let DEFAULT_VIEWSETTINGS!: LocalSettings;
 
 export default class Controller<T extends View> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
     public readonly localSettings: ControllerSettings = {
@@ -54,18 +58,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
         this._elementMap.clear();
     }
 
-    public addElement(node: T) {
-        node.rendered = !this.localSettings.unsupported.tagName.has(node.tagName);
-        this._elementMap.set(<Element> node.element, node);
-    }
-
-    public addElementList(list: squared.base.NodeList<T>) {
-        for (const node of list) {
-            node.rendered = !this.localSettings.unsupported.tagName.has(node.tagName);
-            this._elementMap.set(<Element> node.element, node);
-        }
-    }
-
     public evaluateNonStatic(documentRoot: T, cache: $NodeList<T>) {
         for (const node of cache) {
             if (!node.documentRoot) {
@@ -83,7 +75,17 @@ export default class Controller<T extends View> extends squared.base.Controller<
         }
     }
 
-    public applyDefaultStyles() {}
+    public applyDefaultStyles(element: Element) {
+        if (element.nodeName === '#text') {
+            $session.setElementCache(element, 'styleMap', this.application.processing.sessionId, {
+                position: 'static',
+                display: 'inline',
+                verticalAlign: 'baseline',
+                float: $const.CSS.NONE,
+                clear: $const.CSS.NONE
+            });
+        }
+    }
 
     public includeElement() {
         return true;
@@ -91,6 +93,18 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public visibleElement() {
         return true;
+    }
+
+    public addElement(node: T) {
+        node.rendered = !this.localSettings.unsupported.tagName.has(node.tagName);
+        this._elementMap.set(<Element> node.element, node);
+    }
+
+    public addElementList(list: squared.base.NodeList<T>) {
+        for (const node of list) {
+            node.rendered = !this.localSettings.unsupported.tagName.has(node.tagName);
+            this._elementMap.set(<Element> node.element, node);
+        }
     }
 
     get elementMap() {
@@ -101,7 +115,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         return <UserSettingsChrome> this.application.userSettings;
     }
 
-    get afterInsertNode(): BindGeneric<T, void> {
+    get afterInsertNode() {
         return (target: View) => target.localSettings = DEFAULT_VIEWSETTINGS;
     }
 }

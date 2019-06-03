@@ -3,11 +3,11 @@ import { ExtensionDependency } from '../base/@types/application';
 declare global {
     namespace squared.base {
         interface Extension<T extends Node> {
+            application: Application<T>;
             tagNames: string[];
             documentBase: boolean;
             eventOnly: boolean;
             preloaded: boolean;
-            application: Application<T>;
             readonly framework: number;
             readonly name: string;
             readonly options: ExternalData;

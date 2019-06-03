@@ -171,6 +171,7 @@ declare global {
             function sortNumber(values: number[], ascending?: boolean): number[];
             function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
             function flatArray<T>(list: any[]): T[];
+            function flatMultiArray<T>(list: any[]): T[];
             function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>): T[];
             function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): T[];

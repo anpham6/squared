@@ -106,7 +106,7 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                 case 'space-around': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount * 2);
                     for (let i = 0; i < itemCount; i++) {
-                        for (const item of new Set($util.flatArray<View>(rowData[i]))) {
+                        for (const item of new Set($util.flatMultiArray<View>(rowData[i]))) {
                             const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
                             if (!adjusted.has(item)) {
                                 item.modifyBox(MARGIN_START, marginStart);
@@ -125,7 +125,7 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                     if (itemCount > 1) {
                         const [marginSize, marginExcess] = getMarginSize(itemCount - 1);
                         for (let i = 0; i < itemCount; i++) {
-                            for (const item of new Set($util.flatArray<View>(rowData[i]))) {
+                            for (const item of new Set($util.flatMultiArray<View>(rowData[i]))) {
                                 const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
                                 if (i < itemCount - 1) {
                                     if (!adjusted.has(item)) {
@@ -151,7 +151,7 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                 case 'space-evenly': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount + 1);
                     for (let i = 0; i < itemCount; i++) {
-                        for (const item of new Set($util.flatArray<View>(rowData[i]))) {
+                        for (const item of new Set($util.flatMultiArray<View>(rowData[i]))) {
                             const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
                             if (!adjusted.has(item)) {
                                 if (i === 0) {
@@ -358,7 +358,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const { alignSelf, justifySelf } = node.flexbox;
             if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf)) {
                 renderAs = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
-                renderAs.tagName = node.tagName;
+                renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'initial', 'base');
                 renderAs.resetBox($e.BOX_STANDARD.MARGIN | $e.BOX_STANDARD.PADDING);

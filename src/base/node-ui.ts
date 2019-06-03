@@ -1,5 +1,5 @@
 import { NodeTemplate } from './@types/application';
-import { Support } from './@types/node';
+import { InitialData, SiblingOptions, Support } from './@types/node';
 
 import Node from './node';
 import NodeList from './nodelist';
@@ -14,9 +14,11 @@ const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
+const $session = squared.lib.session;
 const $util = squared.lib.util;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
+const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static outerRegion(node: T): BoxRect {
@@ -206,8 +208,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract companion?: T;
     public abstract extracted?: T[];
     public abstract horizontalRows?: T[][];
-    public abstract innerBefore?: T;
-    public abstract innerAfter?: T;
     public abstract readonly renderChildren: T[];
 
     protected _controlName?: string;
@@ -240,16 +240,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public cloneBase(node: T) {
         Object.assign(node.localSettings, this.localSettings);
-        node.tagName = this.tagName;
         node.alignmentType = this.alignmentType;
+        node.containerName = this.containerName;
         node.depth = this.depth;
         node.visible = this.visible;
         node.excluded = this.excluded;
         node.rendered = this.rendered;
         node.siblingIndex = this.siblingIndex;
-        if (this.inlineText) {
-            node.setInlineText(true, true);
-        }
+        node.inlineText = this.inlineText;
         node.lineBreakLeading = this.lineBreakLeading;
         node.lineBreakTrailing = this.lineBreakTrailing;
         node.renderParent = this.renderParent;
@@ -357,28 +355,70 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public inherit(node: T, ...modules: string[]) {
-        if (name === 'base') {
-            this._boxReset = $dom.newBoxModel();
-            this._boxAdjustment = $dom.newBoxModel();
+        const initial = <InitialData<T>> node.unsafe('initial');
+        for (const name of modules) {
+            switch (name) {
+                case 'initial':
+                    $util.cloneObject(initial, this.initial);
+                    break;
+                case 'base':
+                    this._documentParent = node.documentParent;
+                    this._bounds = $dom.assignRect(node.bounds);
+                    this._linear = $dom.assignRect(node.linear);
+                    this._box = $dom.assignRect(node.box);
+                    this._boxReset = $dom.newBoxModel();
+                    this._boxAdjustment = $dom.newBoxModel();
+                    if (node.actualParent) {
+                        this.dir = node.actualParent.dir;
+                    }
+                    break;
+                case 'alignment':
+                    this.positionAuto = node.positionAuto;
+                    for (const attr of INHERIT_ALIGNMENT) {
+                        this._styleMap[attr] = node.css(attr);
+                        this._initial.styleMap[attr] = initial.styleMap[attr];
+                    }
+                    if (!this.positionStatic) {
+                        for (const attr of $css.BOX_POSITION) {
+                            if (node.has(attr)) {
+                                this._styleMap[attr] = node.css(attr);
+                            }
+                            this._initial.styleMap[attr] = initial.styleMap[attr];
+                        }
+                    }
+                    if (node.autoMargin.horizontal || node.autoMargin.vertical) {
+                        for (const attr of $css.BOX_MARGIN) {
+                            if (node.cssInitial(attr) === $const.CSS.AUTO) {
+                                this._styleMap[attr] = $const.CSS.AUTO;
+                                this._initial.styleMap[attr] = $const.CSS.AUTO;
+                            }
+                        }
+                    }
+                    break;
+                case 'styleMap':
+                    $util.assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
+                    break;
+                case 'textStyle':
+                    Node.copyTextStyle(this, node);
+                    break;
+            }
         }
-        super.inherit(node, ...modules);
     }
 
-    public ascendOuter(condition?: (item: T) => boolean, parent?: T) {
-        const result: T[] = [];
-        let current = this.outerWrapper;
-        while (current && current !== parent) {
-            if (condition) {
-                if (condition(current)) {
-                    return [current];
-                }
-            }
-            else {
-                result.push(current);
-            }
-            current = current.outerWrapper;
+    public addAlign(value: number) {
+        if (!this.hasAlign(value)) {
+            this.alignmentType |= value;
         }
-        return result;
+    }
+
+    public removeAlign(value: number) {
+        if (this.hasAlign(value)) {
+            this.alignmentType ^= value;
+        }
+    }
+
+    public hasAlign(value: number) {
+        return $util.hasBit(this.alignmentType, value);
     }
 
     public hasResource(value: number) {
@@ -448,6 +488,132 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             valid = true;
         }
         return valid;
+    }
+
+    public previousSiblings(options: SiblingOptions = {}) {
+        const floating = options.floating;
+        const pageFlow = options.pageFlow;
+        const lineBreak = options.lineBreak;
+        const excluded = options.excluded;
+        const result: T[] = [];
+        let element: Element | null = null;
+        if (this._element) {
+            if (this.naturalElement) {
+                element = <Element> this._element.previousSibling;
+            }
+            else {
+                let current = this.innerWrapped;
+                while (current) {
+                    if (current.naturalElement) {
+                        element = <Element> (current.element as Element).previousSibling;
+                        break;
+                    }
+                    current = current.innerWrapped;
+                }
+            }
+        }
+        else {
+            const node = this.firstChild;
+            if (node) {
+                element = (<Element> node.element).previousSibling as Element;
+            }
+        }
+        while (element) {
+            const node = $session.getElementAsNode<T>(element, this.sessionId);
+            if (node) {
+                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded) {
+                    result.push(node);
+                }
+                else if (node.pageFlow && !node.excluded) {
+                    if (pageFlow === false) {
+                        break;
+                    }
+                    result.push(node);
+                    if (floating !== false || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
+                        break;
+                    }
+                }
+            }
+            element = <Element> element.previousSibling;
+        }
+        return result;
+    }
+
+    public nextSiblings(options: SiblingOptions = {}) {
+        const floating = options.floating;
+        const pageFlow = options.pageFlow;
+        const lineBreak = options.lineBreak;
+        const excluded = options.excluded;
+        const result: T[] = [];
+        let element: Element | null = null;
+        if (this._element) {
+            if (this.naturalElement) {
+                element = <Element> this._element.nextSibling;
+            }
+            else {
+                let current = this.innerWrapped;
+                while (current) {
+                    if (current.naturalElement) {
+                        element = <Element> (current.element as Element).nextSibling;
+                        break;
+                    }
+                    current = current.innerWrapped;
+                }
+            }
+        }
+        else {
+            const node = this.lastChild;
+            if (node) {
+                element = (<Element> node.element).nextSibling as Element;
+            }
+        }
+        while (element) {
+            const node = $session.getElementAsNode<T>(element, this.sessionId);
+            if (node) {
+                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded) {
+                    result.push(node);
+                }
+                else if (node.pageFlow && !node.excluded) {
+                    if (pageFlow === false) {
+                        break;
+                    }
+                    result.push(node);
+                    if (floating !== false || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
+                        break;
+                    }
+                }
+            }
+            element = <Element> element.nextSibling;
+        }
+        return result;
+    }
+
+    public getFirstChildElement(options: SiblingOptions = {}) {
+        const lineBreak = options.lineBreak;
+        const excluded = options.excluded;
+        if (this.htmlElement) {
+            for (const node of this.actualChildren) {
+                if (!node.pseudoElement && (!node.excluded || lineBreak !== false && node.lineBreak || excluded !== false && node.excluded)) {
+                    return node.element;
+                }
+            }
+        }
+        return null;
+    }
+
+    public getLastChildElement(options: SiblingOptions = {}) {
+        const lineBreak = options.lineBreak;
+        const excluded = options.excluded;
+        if (this.htmlElement) {
+            const children = this.actualChildren;
+            for (let i = children.length - 1; i >= 0; i--) {
+                const node = children[i];
+                if (!node.pseudoElement && (!node.excluded || lineBreak !== false && node.lineBreak || excluded !== false && node.excluded)) {
+                    return node.element;
+                }
+            }
+        }
+        return null;
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {
@@ -574,16 +740,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._cached.naturalElement;
     }
 
-    get groupParent() {
-        return false;
+    set containerName(value) {
+        this._cached.containerName = value.toUpperCase();
     }
-
-    set tagName(value) {
-        this._cached.tagName = value.toUpperCase();
-    }
-    get tagName() {
-        if (this._cached.tagName === undefined) {
-            const element = <HTMLInputElement> this._element;
+    get containerName() {
+        if (this._cached.containerName === undefined) {
+            const element = <HTMLInputElement> this.element;
             let value = '';
             if (element) {
                 if (element.nodeName === '#text') {
@@ -595,19 +757,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else {
                     value = element.tagName;
                 }
+                value = value.toUpperCase();
             }
-            this._cached.tagName = value.toUpperCase();
+            this._cached.containerName = value;
         }
-        return this._cached.tagName;
-    }
-
-    set renderAs(value) {
-        if (!this.rendered && value && !value.rendered) {
-            this._renderAs = value;
-        }
-    }
-    get renderAs() {
-        return this._renderAs;
+        return this._cached.containerName;
     }
 
     get excludeSection() {
@@ -629,13 +783,86 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this.hasAlign(NODE_ALIGNMENT.VERTICAL);
     }
 
-    set controlName(value) {
-        if (!this.rendered || this._controlName === undefined) {
-            this._controlName = value;
+    get groupParent() {
+        return false;
+    }
+
+    set renderAs(value) {
+        if (!this.rendered && value && !value.rendered) {
+            this._renderAs = value;
         }
     }
-    get controlName() {
-        return this._controlName || '';
+    get renderAs() {
+        return this._renderAs;
+    }
+
+    get blockStatic() {
+        return super.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK);
+    }
+
+    get rightAligned() {
+        return super.rightAligned || this.hasAlign(NODE_ALIGNMENT.RIGHT);
+    }
+
+    set positionAuto(value: boolean) {
+        this._cached.positionAuto = value;
+    }
+    get positionAuto() {
+        return super.positionAuto;
+    }
+
+    set flexbox(value: Flexbox) {
+        this._cached.flexbox = value;
+    }
+    get flexbox() {
+        return super.flexbox;
+    }
+
+    set contentBoxWidth(value: number) {
+        this._cached.contentBoxWidth = value;
+    }
+    get contentBoxWidth() {
+        return super.contentBoxWidth;
+    }
+
+    set contentBoxHeight(value: number) {
+        this._cached.contentBoxHeight = value;
+    }
+    get contentBoxHeight() {
+        return super.contentBoxHeight;
+    }
+
+    set textContent(value: string) {
+        this._cached.textContent = value;
+    }
+    get textContent() {
+        return super.textContent;
+    }
+
+    set overflow(value: number) {
+        if (value === 0 || value === NODE_ALIGNMENT.VERTICAL || value === NODE_ALIGNMENT.HORIZONTAL || value === (NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.VERTICAL)) {
+            if ($util.hasBit(this.overflow, NODE_ALIGNMENT.BLOCK)) {
+                value |= NODE_ALIGNMENT.BLOCK;
+            }
+            this._cached.overflow = value;
+        }
+    }
+    get overflow() {
+        return super.overflow;
+    }
+
+    set baseline(value: boolean) {
+        this._cached.baseline = value;
+    }
+    get baseline() {
+        return super.baseline;
+    }
+
+    set multiline(value: boolean) {
+        this._cached.multiline = value;
+    }
+    get multiline() {
+        return super.multiline;
     }
 
     set visible(value) {
@@ -643,5 +870,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get visible() {
         return this._visible;
+    }
+
+    set controlName(value) {
+        if (!this.rendered || this._controlName === undefined) {
+            this._controlName = value;
+        }
+    }
+    get controlName() {
+        return this._controlName || '';
     }
 }

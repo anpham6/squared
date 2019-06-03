@@ -1,10 +1,12 @@
+import View from '../view';
+
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
 const $e = squared.base.lib.enumeration;
 
-export default class <T extends android.base.View> extends squared.base.extensions.VerticalAlign<T> {
+export default class <T extends View> extends squared.base.extensions.VerticalAlign<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         return {

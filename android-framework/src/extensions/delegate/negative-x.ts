@@ -1,11 +1,11 @@
 import Controller from '../../controller';
+import View from '../../view';
 
 import { CONTAINER_ANDROID, EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-type View = android.base.View;
 type NegativeXData = {
     offsetLeft: number;
     nextSibling: View;
@@ -135,17 +135,17 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         if (mainData) {
             let firstChild = mainData.firstChild;
             if (firstChild) {
-                firstChild = <T> firstChild.ascendOuter(undefined, node).pop() || firstChild;
+                firstChild = <T> firstChild.ascend(item => item !== node, node, 'outerWrapper').pop() || firstChild;
                 firstChild.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed');
                 firstChild.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
                 firstChild.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
-                Controller.setConstraintDimension(firstChild as any);
+                Controller.setConstraintDimension(firstChild);
                 firstChild.positioned = true;
             }
-            const nextSibling = <T> mainData.nextSibling.ascendOuter(undefined, node).pop() || mainData.nextSibling;
+            const nextSibling = <T> mainData.nextSibling.ascend(item => item !== node, node, 'outerWrapper').pop() || mainData.nextSibling;
             nextSibling.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed');
             nextSibling.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
-            Controller.setConstraintDimension(nextSibling as any);
+            Controller.setConstraintDimension(nextSibling);
             nextSibling.positioned = true;
         }
     }

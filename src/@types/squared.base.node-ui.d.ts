@@ -1,19 +1,30 @@
 import { NodeTemplate } from '../base/@types/application';
-import { Support } from '../base/@types/node';
+import { SiblingOptions, Support } from '../base/@types/node';
 
 declare global {
     namespace squared.base {
         interface NodeUI extends Node {
             containerType: number;
+            containerName: string;
             baselineActive: boolean;
             baselineAltered: boolean;
             positioned: boolean;
             controlId: string;
             controlName: string;
             renderExclude: boolean;
+            textContent: string;
+            positionAuto: boolean;
+            baseline: boolean;
+            multiline: boolean;
+            overflow: number;
+            contentBoxWidth: number;
+            contentBoxHeight: number;
+            flexbox: Flexbox;
             renderAs?: NodeUI;
             renderExtension?: Extension<Node>[];
             renderTemplates?: (NodeTemplate<NodeUI> | null)[];
+            outerWrapper?: NodeUI;
+            innerWrapped?: NodeUI;
             companion?: NodeUI;
             extracted?: NodeUI[];
             horizontalRows?: NodeUI[][];
@@ -28,37 +39,44 @@ declare global {
             readonly support: Support;
             readonly documentId: string;
             setControlType(controlName: string, containerType?: number): void;
+            setExclusions(): void;
             setLayout(): void;
             setAlignment(): void;
+            setBoxSpacing(): void;
             attr(name: string, attr: string, value?: string, overwrite?: boolean): string;
-            hide(invisible?: boolean): void;
             alignParent(position: string): boolean;
             alignSibling(position: string, documentId?: string): string;
             localizeString(value: string): string;
+            inherit(node: Node, ...modules: string[]): void;
             clone(id?: number, attributes?: boolean, position?: boolean): NodeUI;
             cloneBase(node: NodeUI): void;
-            renderFilter(predicate: IteratorPredicate<NodeUI, boolean>): NodeUI[];
             is(containerType: number): boolean;
             of(containerType: number, ...alignmentType: number[]): boolean;
             namespace(name: string): StringMap;
             delete(name: string, ...attrs: string[]): void;
             apply(options: {}): void;
-            render(parent?: NodeUI): void;
-            renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
-            ascendOuter(condition?: (item: NodeUI) => boolean, parent?: NodeUI): NodeUI[];
-            actualRect(direction: string, dimension?: string): number;
-            appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
+            addAlign(value: number): void;
+            removeAlign(value: number): void;
+            hasAlign(value: number): boolean;
             hasProcedure(value: number): boolean;
             hasResource(value: number): boolean;
             hasSection(value: number): boolean;
             exclude(resource?: number, procedure?: number, section?: number): void;
-            setExclusions(): void;
-            setBoxSpacing(): void;
-            extractAttributes(depth: number): string;
+            hide(invisible?: boolean): void;
+            appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
+            render(parent?: NodeUI): void;
+            renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
+            renderFilter(predicate: IteratorPredicate<NodeUI, boolean>): NodeUI[];
+            actualRect(direction: string, dimension?: string): number;
+            previousSiblings(options?: SiblingOptions): NodeUI[];
+            nextSiblings(options?: SiblingOptions): NodeUI[];
+            getFirstChildElement(options?: SiblingOptions): Element | null;
+            getLastChildElement(options?: SiblingOptions): Element | null;
             modifyBox(region: number, offset?: number, negative?: boolean): void;
             getBox(region: number): [number, number];
             resetBox(region: number, node?: NodeUI, fromParent?: boolean): void;
             transferBox(region: number, node: NodeUI): void;
+            extractAttributes(depth: number): string;
         }
 
         class NodeUI implements NodeUI {
@@ -69,7 +87,7 @@ declare global {
             constructor(id: number, sessionId?: string, element?: Element);
         }
 
-        class NodeGroup extends NodeUI {}
+        class NodeGroupUI extends NodeUI {}
     }
 }
 

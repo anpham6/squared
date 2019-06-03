@@ -198,7 +198,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
                 if ($css.isLength(minWH, true) && minWH !== $const.CSS.PX_0) {
                     let valid = false;
                     if (horizontal) {
-                        if (node.ascend(false, item => item.has($const.CSS.WIDTH) || item.blockStatic).length) {
+                        if (node.ascend(item => item.has($const.CSS.WIDTH) || item.blockStatic).length) {
                             node.setLayoutWidth($const.CSS.PX_0, false);
                             valid = node.flexibleWidth;
                             setAlignmentBlock();
@@ -219,7 +219,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
             if ($css.isLength(maxWH, true)) {
                 let valid = false;
                 if (horizontal) {
-                    if (node.outerWrapper || node.ascend(false, item => item.has($const.CSS.WIDTH) || item.blockStatic).length) {
+                    if (node.outerWrapper || node.ascend(item => item.has($const.CSS.WIDTH) || item.blockStatic).length) {
                         node.setLayoutWidth(renderParent.flexibleWidth ? STRING_ANDROID.MATCH_PARENT : $const.CSS.PX_0, node.innerWrapped && node.innerWrapped.naturalElement);
                         valid = node.flexibleWidth;
                         setAlignmentBlock();
@@ -327,7 +327,7 @@ function isTargeted(parent: View, node: View) {
 
 function getTextBottom<T extends View>(nodes: T[]): T | undefined {
     return $util.filterArray(nodes, node => {
-        if ((node.baseline || $css.isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && (<HTMLSelectElement> node.element).size > 1) || node.verticalAlign === 'text-bottom' && node.tagName !== 'INPUT_IMAGE') {
+        if ((node.baseline || $css.isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && (<HTMLSelectElement> node.element).size > 1) || node.verticalAlign === 'text-bottom' && node.containerName !== 'INPUT_IMAGE') {
             return true;
         }
         return false;
@@ -503,7 +503,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else if (node.naturalElement && child.plainText) {
                     node.clear();
-                    node.setInlineText(true);
+                    node.inlineText = true;
                     node.textContent = child.textContent;
                     child.hide();
                     layout.setType(CONTAINER_NODE.TEXT);
@@ -963,247 +963,245 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         node.addAlign(layout.alignmentType);
         let parent = layout.parent;
         let target = !node.dataset.use ? node.dataset.target : undefined;
-        if (node.element) {
-            switch (node.element.tagName) {
-                case 'IMG': {
-                    const element = <HTMLImageElement> node.element;
-                    const absoluteParent = node.absoluteParent || node.documentParent;
-                    let width = node.toFloat($const.CSS.WIDTH);
-                    let height = node.toFloat($const.CSS.HEIGHT);
-                    let percentWidth = node.percentWidth ? width : -1;
-                    const percentHeight = node.percentHeight ? height : -1;
-                    let scaleType = 'fitXY';
-                    let imageSet: ImageSrcSet[] | undefined;
-                    if (element.srcset) {
-                        imageSet = $css.getSrcSet(element, this.localSettings.supported.imageFormat);
-                        if (imageSet.length) {
-                            if (imageSet[0].actualWidth) {
-                                if (percentWidth === -1) {
-                                    width = imageSet[0].actualWidth;
-                                    node.css($const.CSS.WIDTH, $css.formatPX(width), true);
-                                    const image = this.application.resourceHandler.getImage(element.src);
-                                    if (image && image.width > 0 && image.height > 0) {
-                                        height = image.height * (width / image.width);
-                                        node.css($const.CSS.HEIGHT, $css.formatPX(height), true);
-                                    }
-                                    else {
-                                        node.android('adjustViewBounds', 'true');
-                                    }
+        switch (node.tagName) {
+            case 'IMG': {
+                const element = <HTMLImageElement> node.element;
+                const absoluteParent = node.absoluteParent || node.documentParent;
+                let width = node.toFloat($const.CSS.WIDTH);
+                let height = node.toFloat($const.CSS.HEIGHT);
+                let percentWidth = node.percentWidth ? width : -1;
+                const percentHeight = node.percentHeight ? height : -1;
+                let scaleType = 'fitXY';
+                let imageSet: ImageSrcSet[] | undefined;
+                if (element.srcset) {
+                    imageSet = $css.getSrcSet(element, this.localSettings.supported.imageFormat);
+                    if (imageSet.length) {
+                        if (imageSet[0].actualWidth) {
+                            if (percentWidth === -1) {
+                                width = imageSet[0].actualWidth;
+                                node.css($const.CSS.WIDTH, $css.formatPX(width), true);
+                                const image = this.application.resourceHandler.getImage(element.src);
+                                if (image && image.width > 0 && image.height > 0) {
+                                    height = image.height * (width / image.width);
+                                    node.css($const.CSS.HEIGHT, $css.formatPX(height), true);
                                 }
                                 else {
-                                    width = parent.box.width;
                                     node.android('adjustViewBounds', 'true');
                                 }
-                                percentWidth = -1;
                             }
-                        }
-                        else {
-                            imageSet = undefined;
-                        }
-                    }
-                    if (node.hasResource($e.NODE_RESOURCE.IMAGE_SOURCE)) {
-                        const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(element, '', imageSet);
-                        if (src !== '') {
-                            node.android('src', `@drawable/${src}`);
-                        }
-                    }
-                    if (percentWidth !== -1 || percentHeight !== -1) {
-                        if (percentWidth >= 0) {
-                            width *= absoluteParent.box.width / 100;
-                            if (percentWidth < 100 && !parent.layoutConstraint) {
-                                node.css($const.CSS.WIDTH, $css.formatPX(width));
+                            else {
+                                width = parent.box.width;
                                 node.android('adjustViewBounds', 'true');
                             }
-                        }
-                        if (percentHeight >= 0) {
-                            height *= absoluteParent.box.height / 100;
-                            if (percentHeight < 100 && !(parent.layoutConstraint && absoluteParent.hasHeight)) {
-                                node.css($const.CSS.HEIGHT, $css.formatPX(height));
-                                node.android('adjustViewBounds', 'true');
-                            }
+                            percentWidth = -1;
                         }
                     }
                     else {
-                        switch (node.css('objectFit')) {
-                            case 'contain':
-                                scaleType = 'centerInside';
-                                break;
-                            case 'cover':
-                                scaleType = 'centerCrop';
-                                break;
-                            case 'scale-down':
-                                scaleType = 'fitCenter';
-                                break;
-                            case 'none':
-                                scaleType = $const.CSS.CENTER;
-                                break;
-                        }
-                        if (width === 0 && height > 0 || height === 0 && width > 0) {
+                        imageSet = undefined;
+                    }
+                }
+                if (node.hasResource($e.NODE_RESOURCE.IMAGE_SOURCE)) {
+                    const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(element, '', imageSet);
+                    if (src !== '') {
+                        node.android('src', `@drawable/${src}`);
+                    }
+                }
+                if (percentWidth !== -1 || percentHeight !== -1) {
+                    if (percentWidth >= 0) {
+                        width *= absoluteParent.box.width / 100;
+                        if (percentWidth < 100 && !parent.layoutConstraint) {
+                            node.css($const.CSS.WIDTH, $css.formatPX(width));
                             node.android('adjustViewBounds', 'true');
                         }
                     }
-                    node.android('scaleType', scaleType);
-                    if (node.baseline) {
-                        node.android('baselineAlignBottom', 'true');
-                        if (node.marginBottom > 0 && parent.layoutLinear && parent.layoutHorizontal) {
-                            node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, $const.CSS.BOTTOM);
+                    if (percentHeight >= 0) {
+                        height *= absoluteParent.box.height / 100;
+                        if (percentHeight < 100 && !(parent.layoutConstraint && absoluteParent.hasHeight)) {
+                            node.css($const.CSS.HEIGHT, $css.formatPX(height));
+                            node.android('adjustViewBounds', 'true');
                         }
                     }
-                    if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
-                        const application = <squared.base.ApplicationUI<T>> this.application;
-                        const container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
-                        container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                        container.inherit(node, 'base');
-                        container.positionAuto = false;
-                        container.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
-                        container.cssApply({
-                            position: node.css('position'),
-                            zIndex: node.zIndex.toString()
-                        });
-                        parent.appendTry(node, container);
-                        node.parent = container;
-                        if (width > 0) {
-                            container.setLayoutWidth(width < absoluteParent.box.width ? $css.formatPX(width) : STRING_ANDROID.MATCH_PARENT);
-                        }
-                        else {
-                            container.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
-                        }
-                        if (height > 0) {
-                            container.setLayoutHeight(height < absoluteParent.box.height ? $css.formatPX(height) : STRING_ANDROID.MATCH_PARENT);
-                        }
-                        else {
-                            container.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
-                        }
-                        container.render(target ? application.resolveTarget(target) : parent);
-                        container.saveAsInitial();
-                        container.innerWrapped = node;
-                        node.outerWrapper = container;
-                        if (!parent.layoutConstraint) {
-                            node.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.top);
-                            node.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, node.left);
-                        }
-                        application.addLayoutTemplate(
-                            parent,
-                            container,
-                            <NodeXmlTemplate<T>> {
-                                type: $e.NODE_TEMPLATE.XML,
-                                node: container,
-                                controlName: CONTAINER_ANDROID.FRAME
-                            }
-                        );
-                        parent = container;
-                        layout.parent = container;
-                        target = undefined;
-                    }
-                    break;
                 }
-                case 'INPUT': {
-                    const element = <HTMLInputElement> node.element;
-                    switch (element.type) {
-                        case 'checkbox':
-                            if (element.checked) {
-                                node.android('checked', 'true');
-                            }
+                else {
+                    switch (node.css('objectFit')) {
+                        case 'contain':
+                            scaleType = 'centerInside';
                             break;
-                        case 'text':
-                            node.android('inputType', 'text');
+                        case 'cover':
+                            scaleType = 'centerCrop';
                             break;
-                        case 'password':
-                            node.android('inputType', 'textPassword');
+                        case 'scale-down':
+                            scaleType = 'fitCenter';
                             break;
-                        case 'range':
-                        case 'time':
-                        case 'number':
-                        case 'date':
-                        case 'datetime-local':
-                            switch (element.type) {
-                                case 'number':
-                                case 'range':
-                                    node.android('inputType', 'number');
-                                    break;
-                                case 'date':
-                                    node.android('inputType', 'date');
-                                    break;
-                                case 'time':
-                                    node.android('inputType', 'time');
-                                    break;
-                                case 'datetime-local':
-                                    node.android('inputType', 'datetime');
-                                    break;
-                            }
-                            if ($util.isString(element.min)) {
-                                node.android('min', element.min);
-                            }
-                            if ($util.isString(element.max)) {
-                                node.android('max', element.max);
-                            }
-                            break;
-                        case 'email':
-                        case 'tel':
-                        case 'url':
-                        case 'week':
-                        case 'month':
-                        case 'search':
-                            switch (element.type) {
-                                case 'email':
-                                    node.android('inputType', 'textEmailAddress');
-                                    break;
-                                case 'tel':
-                                    node.android('inputType', 'phone');
-                                    break;
-                                case 'url':
-                                    node.android('inputType', 'textUri');
-                                    break;
-                                default:
-                                    node.android('inputType', 'text');
-                                    break;
-                            }
-                            if (element.minLength !== -1) {
-                                node.android('minLength', element.minLength.toString());
-                            }
-                            if (element.maxLength > 0) {
-                                node.android('maxLength', element.maxLength.toString());
-                            }
+                        case 'none':
+                            scaleType = $const.CSS.CENTER;
                             break;
                     }
-                    break;
+                    if (width === 0 && height > 0 || height === 0 && width > 0) {
+                        node.android('adjustViewBounds', 'true');
+                    }
                 }
-                case 'TEXTAREA': {
-                    const element = <HTMLTextAreaElement> node.element;
-                    node.android('minLines', element.rows ? element.rows.toString() : '2');
-                    switch (node.css('verticalAlign')) {
-                        case $const.CSS.MIDDLE:
-                            node.mergeGravity(STRING_ANDROID.GRAVITY, STRING_ANDROID.CENTER_VERTICAL);
-                            break;
-                        case $const.CSS.BOTTOM:
-                            node.mergeGravity(STRING_ANDROID.GRAVITY, $const.CSS.BOTTOM);
-                            break;
-                        default:
-                            node.mergeGravity(STRING_ANDROID.GRAVITY, $const.CSS.TOP);
-                            break;
+                node.android('scaleType', scaleType);
+                if (node.baseline) {
+                    node.android('baselineAlignBottom', 'true');
+                    if (node.marginBottom > 0 && parent.layoutLinear && parent.layoutHorizontal) {
+                        node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, $const.CSS.BOTTOM);
                     }
-                    if (element.maxLength > 0) {
-                        node.android('maxLength', element.maxLength.toString());
-                    }
-                    if (!node.has($const.CSS.WIDTH) && element.cols > 0) {
-                        node.css($const.CSS.WIDTH, $css.formatPX(element.cols * 8), true);
-                    }
-                    node.android('hint', element.placeholder);
-                    node.android('scrollbars', STRING_ANDROID.VERTICAL);
-                    node.android('inputType', 'textMultiLine');
-                    if (node.overflowX) {
-                        node.android('scrollHorizontally', 'true');
-                    }
-                    break;
                 }
-                case 'LEGEND': {
-                    if (!node.hasWidth) {
-                        node.css('minWidth', $css.formatPX(node.actualWidth), true);
-                        node.css('display', 'inline-block', true);
+                if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
+                    const application = <squared.base.ApplicationUI<T>> this.application;
+                    const container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
+                    container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
+                    container.inherit(node, 'base');
+                    container.positionAuto = false;
+                    container.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
+                    container.cssApply({
+                        position: node.css('position'),
+                        zIndex: node.zIndex.toString()
+                    });
+                    parent.appendTry(node, container);
+                    node.parent = container;
+                    if (width > 0) {
+                        container.setLayoutWidth(width < absoluteParent.box.width ? $css.formatPX(width) : STRING_ANDROID.MATCH_PARENT);
                     }
-                    node.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, node.actualHeight * this.localSettings.deviations.legendBottomOffset);
-                    break;
+                    else {
+                        container.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
+                    }
+                    if (height > 0) {
+                        container.setLayoutHeight(height < absoluteParent.box.height ? $css.formatPX(height) : STRING_ANDROID.MATCH_PARENT);
+                    }
+                    else {
+                        container.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
+                    }
+                    container.render(target ? application.resolveTarget(target) : parent);
+                    container.saveAsInitial();
+                    container.innerWrapped = node;
+                    node.outerWrapper = container;
+                    if (!parent.layoutConstraint) {
+                        node.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.top);
+                        node.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, node.left);
+                    }
+                    application.addLayoutTemplate(
+                        parent,
+                        container,
+                        <NodeXmlTemplate<T>> {
+                            type: $e.NODE_TEMPLATE.XML,
+                            node: container,
+                            controlName: CONTAINER_ANDROID.FRAME
+                        }
+                    );
+                    parent = container;
+                    layout.parent = container;
+                    target = undefined;
                 }
+                break;
+            }
+            case 'INPUT': {
+                const element = <HTMLInputElement> node.element;
+                switch (element.type) {
+                    case 'checkbox':
+                        if (element.checked) {
+                            node.android('checked', 'true');
+                        }
+                        break;
+                    case 'text':
+                        node.android('inputType', 'text');
+                        break;
+                    case 'password':
+                        node.android('inputType', 'textPassword');
+                        break;
+                    case 'range':
+                    case 'time':
+                    case 'number':
+                    case 'date':
+                    case 'datetime-local':
+                        switch (element.type) {
+                            case 'number':
+                            case 'range':
+                                node.android('inputType', 'number');
+                                break;
+                            case 'date':
+                                node.android('inputType', 'date');
+                                break;
+                            case 'time':
+                                node.android('inputType', 'time');
+                                break;
+                            case 'datetime-local':
+                                node.android('inputType', 'datetime');
+                                break;
+                        }
+                        if ($util.isString(element.min)) {
+                            node.android('min', element.min);
+                        }
+                        if ($util.isString(element.max)) {
+                            node.android('max', element.max);
+                        }
+                        break;
+                    case 'email':
+                    case 'tel':
+                    case 'url':
+                    case 'week':
+                    case 'month':
+                    case 'search':
+                        switch (element.type) {
+                            case 'email':
+                                node.android('inputType', 'textEmailAddress');
+                                break;
+                            case 'tel':
+                                node.android('inputType', 'phone');
+                                break;
+                            case 'url':
+                                node.android('inputType', 'textUri');
+                                break;
+                            default:
+                                node.android('inputType', 'text');
+                                break;
+                        }
+                        if (element.minLength !== -1) {
+                            node.android('minLength', element.minLength.toString());
+                        }
+                        if (element.maxLength > 0) {
+                            node.android('maxLength', element.maxLength.toString());
+                        }
+                        break;
+                }
+                break;
+            }
+            case 'TEXTAREA': {
+                const element = <HTMLTextAreaElement> node.element;
+                node.android('minLines', element.rows ? element.rows.toString() : '2');
+                switch (node.css('verticalAlign')) {
+                    case $const.CSS.MIDDLE:
+                        node.mergeGravity(STRING_ANDROID.GRAVITY, STRING_ANDROID.CENTER_VERTICAL);
+                        break;
+                    case $const.CSS.BOTTOM:
+                        node.mergeGravity(STRING_ANDROID.GRAVITY, $const.CSS.BOTTOM);
+                        break;
+                    default:
+                        node.mergeGravity(STRING_ANDROID.GRAVITY, $const.CSS.TOP);
+                        break;
+                }
+                if (element.maxLength > 0) {
+                    node.android('maxLength', element.maxLength.toString());
+                }
+                if (!node.has($const.CSS.WIDTH) && element.cols > 0) {
+                    node.css($const.CSS.WIDTH, $css.formatPX(element.cols * 8), true);
+                }
+                node.android('hint', element.placeholder);
+                node.android('scrollbars', STRING_ANDROID.VERTICAL);
+                node.android('inputType', 'textMultiLine');
+                if (node.overflowX) {
+                    node.android('scrollHorizontally', 'true');
+                }
+                break;
+            }
+            case 'LEGEND': {
+                if (!node.hasWidth) {
+                    node.css('minWidth', $css.formatPX(node.actualWidth), true);
+                    node.css('display', 'inline-block', true);
+                }
+                node.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, node.actualHeight * this.localSettings.deviations.legendBottomOffset);
+                break;
             }
         }
         switch (controlName) {
@@ -1315,7 +1313,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public addGuideline(node: T, parent: T, orientation?: string, percent = false, opposite = false) {
-        const boxParent = parent.groupParent && !node.documentParent.hasAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
+        const boxParent = parent.groupParent && !(node.documentParent as T).hasAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
         const absoluteParent = node.absoluteParent as T;
         GUIDELINE_AXIS.forEach(value => {
             if (!node.constraint[value] && (!orientation || value === orientation)) {
@@ -1698,7 +1696,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             else if (actualParent.floatContainer) {
                                 const { containerType, alignmentType } = this.containerTypeVerticalMargin;
-                                const container = node.ascend(true, (item: T) => item.of(containerType, alignmentType), actualParent);
+                                const container = node.ascend((item: T) => item.of(containerType, alignmentType), actualParent, 'renderParent');
                                 if (container.length) {
                                     let leftOffset = 0;
                                     let rightOffset = 0;
@@ -2740,7 +2738,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         };
     }
 
-    get afterInsertNode(): BindGeneric<T, void> {
+    get afterInsertNode() {
         return (node: View) => {
             if (!this.userSettings.exclusionsDisabled) {
                 node.setExclusions();

@@ -17,25 +17,15 @@ declare global {
             siblingsLeading: Node[];
             siblingsTrailing: Node[];
             floatContainer: boolean;
-            tagName: string;
-            baseline: boolean;
-            textContent: string;
-            multiline: boolean;
-            positionAuto: boolean;
             visible: boolean;
             rendered: boolean;
             excluded: boolean;
-            overflow: number;
-            contentBoxWidth: number;
-            contentBoxHeight: number;
-            flexbox: Flexbox;
+            inlineText: boolean;
             dir: string;
             documentParent: Node;
             actualChildren: Node[];
             parent?: Node;
             renderParent?: Node;
-            outerWrapper?: Node;
-            innerWrapped?: Node;
             innerBefore?: Node;
             innerAfter?: Node;
             readonly sessionId: string;
@@ -45,6 +35,7 @@ declare global {
             readonly linear: BoxRectDimension;
             readonly element: Element | null;
             readonly elementId: string;
+            readonly tagName: string;
             readonly htmlElement: boolean;
             readonly styleElement: boolean;
             readonly naturalElement: boolean;
@@ -92,7 +83,7 @@ declare global {
             readonly inlineStatic: boolean;
             readonly inlineVertical: boolean;
             readonly plainText: boolean;
-            readonly inlineText: boolean;
+            readonly textContent: string;
             readonly lineBreak: boolean;
             readonly positionStatic: boolean;
             readonly block: boolean;
@@ -104,6 +95,13 @@ declare global {
             readonly pageFlow: boolean;
             readonly floating: boolean;
             readonly float: string;
+            readonly positionAuto: boolean;
+            readonly baseline: boolean;
+            readonly multiline: boolean;
+            readonly overflow: number;
+            readonly contentBoxWidth: number;
+            readonly contentBoxHeight: number;
+            readonly flexbox: Flexbox;
             readonly zIndex: number;
             readonly positiveAxis: boolean;
             readonly leftTopAxis: boolean;
@@ -131,15 +129,11 @@ declare global {
             readonly center: Point;
             init(): void;
             saveAsInitial(overwrite?: boolean): void;
-            addAlign(value: number): void;
-            removeAlign(value: number): void;
-            hasAlign(value: number): boolean;
             unsafe(name: string, unset?: boolean): any;
             data(name: string, attr: string, value?: any, overwrite?: boolean): any;
             unsetCache(...attrs: string[]): void;
-            ascend(generated?: boolean, condition?: (item: Node) => boolean, parent?: Node): Node[];
+            ascend(condition?: (item: Node) => boolean, parent?: Node, attr?: string): Node[];
             alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
-            inherit(node: Node, ...modules: string[]): void;
             intersectX(rect: BoxRectDimension, dimension?: string): boolean;
             intersectY(rect: BoxRectDimension, dimension?: string): boolean;
             withinX(rect: BoxRectDimension, dimension?: string): boolean;
@@ -164,14 +158,14 @@ declare global {
             convertPX(value: string, dimension?: string, parent?: boolean): string;
             has(attr: string, checkType?: number, options?: {}): boolean;
             setBounds(cache?: boolean): void;
-            setInlineText(value: boolean, overwrite?: boolean): void;
-            previousSiblings(options?: SiblingOptions): Node[];
-            nextSiblings(options?: SiblingOptions): Node[];
-            getFirstChildElement(options?: SiblingOptions): Element | null;
-            getLastChildElement(options?: SiblingOptions): Element | null;
+            previousSiblings(): Node[];
+            nextSiblings(): Node[];
+            getFirstChildElement(): Element | null;
+            getLastChildElement(): Element | null;
         }
 
         class Node implements Node {
+            public static copyTextStyle(dest: Node, source: Node): void;
             constructor(id: number, sessionId?: string, element?: Element);
         }
     }

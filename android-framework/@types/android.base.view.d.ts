@@ -3,6 +3,7 @@ import { Constraint, LocalSettings, SupportAndroid } from '../src/@types/node';
 declare global {
     namespace android.base {
         interface View extends squared.base.NodeUI {
+            tagName: string;
             anchored: boolean;
             localSettings: LocalSettings;
             readonly layoutWidth: string;
