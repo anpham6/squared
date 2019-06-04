@@ -1,5 +1,4 @@
 import NodeUI from './node-ui';
-import NodeList from './nodelist';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
@@ -35,7 +34,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         const length = this.children.length;
         if (length) {
             if (length > 1) {
-                const linearData = NodeList.linearData(this.children);
+                const linearData = NodeUI.linearData(this.children);
                 this._floated = linearData.floated;
                 this._cleared = linearData.cleared;
                 this._linearX = linearData.linearX;

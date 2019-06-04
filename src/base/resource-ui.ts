@@ -1,8 +1,8 @@
 import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } from './@types/application';
 
+import Resource from './resource';
 import FileUI from './file-ui';
 import NodeUI from './node-ui';
-import Resource from './resource';
 
 import { NODE_RESOURCE } from './lib/enumeration';
 

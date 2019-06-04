@@ -1,9 +1,9 @@
 import { ControllerUISettings, FileAsset, LayoutResult, LayoutType, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserUISettings } from './@types/application';
 
 import Controller from './controller';
+import NodeList from './nodelist';
 import LayoutUI from './layout-ui';
 import NodeUI from './node-ui';
-import NodeList from './nodelist';
 
 import { NODE_TEMPLATE } from './lib/enumeration';
 

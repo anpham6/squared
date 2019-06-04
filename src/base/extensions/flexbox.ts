@@ -1,6 +1,5 @@
 import { FlexboxData } from '../@types/extension';
 
-import NodeList from '../nodelist';
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
@@ -113,7 +112,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     const seg = rows[i];
                     const group = controller.createNodeGroup(seg[0], seg, node, true);
                     group.siblingIndex = i;
-                    node.sort(NodeList.siblingIndex);
+                    node.sort(NodeUI.siblingIndex);
                     const box = group.unsafe('box');
                     if (box) {
                         box[size] = node.box[size];

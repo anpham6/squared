@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../base/@types/application';
-import { SiblingOptions, Support } from '../base/@types/node';
+import { LinearData, SiblingOptions, Support } from '../base/@types/node';
 
 declare global {
     namespace squared.base {
@@ -80,10 +80,12 @@ declare global {
         }
 
         class NodeUI implements NodeUI {
+            public static linearData<T>(list: T[], clearOnly?: boolean): LinearData<T>;
             public static outerRegion<T>(node: T): BoxRect;
             public static actualParent<T>(list: T[]): T | null;
             public static baseline<T>(list: T[], text?: boolean): T | undefined;
             public static partitionRows<T>(list: T[], parent?: T): T[][];
+            public static siblingIndex(): number;
             constructor(id: number, sessionId?: string, element?: Element);
         }
 

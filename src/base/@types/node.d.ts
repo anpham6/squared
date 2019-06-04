@@ -113,3 +113,10 @@ export interface SiblingOptions {
     lineBreak?: boolean;
     excluded?: boolean;
 }
+
+export interface LinearData<T> {
+    linearX: boolean;
+    linearY: boolean;
+    floated: Set<string>;
+    cleared: Map<T, string>;
+}

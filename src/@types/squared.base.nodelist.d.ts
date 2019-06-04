@@ -1,5 +1,3 @@
-import { LinearData } from '../base/nodelist';
-
 import Container = squared.lib.base.Container;
 
 declare global {
@@ -12,8 +10,6 @@ declare global {
         }
 
         class NodeList<T extends Node> implements NodeList<T> {
-            public static linearData<T>(list: T[], clearOnly?: boolean): LinearData<T>;
-            public static siblingIndex(): number;
             constructor(children?: T[]);
         }
     }

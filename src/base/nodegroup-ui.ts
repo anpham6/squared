@@ -1,7 +1,6 @@
 import { SiblingOptions } from './@types/node';
 
 import NodeUI from './node-ui';
-import NodeList from './nodelist';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
@@ -19,7 +18,7 @@ export default abstract class NodeGroupUI extends NodeUI {
                 this.siblingIndex = siblingIndex;
             }
             if (this.parent) {
-                this.parent.sort(NodeList.siblingIndex);
+                this.parent.sort(NodeUI.siblingIndex);
             }
             this.setBounds();
             this.saveAsInitial();

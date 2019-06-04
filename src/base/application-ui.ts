@@ -305,7 +305,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const length = axisY.length;
                 let cleared!: Map<T, string>;
                 if (hasFloat) {
-                    cleared = <Map<T, string>> NodeList.linearData(parent.actualChildren, true).cleared;
+                    cleared = <Map<T, string>> NodeUI.linearData(parent.actualChildren, true).cleared;
                 }
                 for (let k = 0; k < length; k++) {
                     let nodeY = axisY[k];
@@ -757,7 +757,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 for (const seg of segments) {
                     $util.concatArray(grouping, seg);
                 }
-                grouping.sort(NodeList.siblingIndex);
+                grouping.sort(NodeUI.siblingIndex);
                 if (layout.node.layoutVertical) {
                     floatgroup = layout.node;
                 }

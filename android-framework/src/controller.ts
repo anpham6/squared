@@ -1721,7 +1721,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 return node.box.width;
             })();
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
-            const cleared = $NodeList.linearData(children, true).cleared;
+            const cleared = $NodeUI.linearData(children, true).cleared;
             const textIndent = node.blockDimension ? node.parseUnit(node.css('textIndent')) : 0;
             let rowWidth = 0;
             let previousRowLeft: T | undefined;

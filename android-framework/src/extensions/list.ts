@@ -8,7 +8,7 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
 import $LayoutUI = squared.base.LayoutUI;
-import $NodeList = squared.base.NodeList;
+import $NodeUI = squared.base.NodeUI;
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
@@ -231,7 +231,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         container.android('baselineAlignedChildIndex', '0');
                     }
                 }
-                else if (node.filter(item => item.visible).length > 1 && $NodeList.linearData(node.children).linearY) {
+                else if (node.filter(item => item.visible).length > 1 && $NodeUI.linearData(node.children).linearY) {
                     node.addAlign($e.NODE_ALIGNMENT.TOP);
                 }
             }

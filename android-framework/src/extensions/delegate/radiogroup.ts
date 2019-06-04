@@ -5,7 +5,7 @@ import View from '../../view';
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $NodeList = squared.base.NodeList;
+import $NodeUI = squared.base.NodeUI;
 
 const $const = squared.lib.constant;
 const $e = squared.base.lib.enumeration;
@@ -35,7 +35,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 }
             }
             if (valid && i > 1 && inputName.size === 1) {
-                const linearData = $NodeList.linearData(node.children);
+                const linearData = $NodeUI.linearData(node.children);
                 return linearData.linearX && !linearData.floated.has($const.CSS.RIGHT);
             }
             return false;
@@ -105,7 +105,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                     item.positioned = true;
                 });
                 container.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);
-                container.android('orientation', $NodeList.linearData(children).linearX ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL);
+                container.android('orientation', $NodeUI.linearData(children).linearX ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL);
                 for (const item of removeable) {
                     item.hide();
                 }

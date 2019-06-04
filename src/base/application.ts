@@ -244,8 +244,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                         resolve(getImageSvgAsync(image));
                     }
                     else {
-                        image.onload = () => resolve(image);
-                        image.onerror = () => reject(image);
+                        image.addEventListener('load', () => resolve(image));
+                        image.addEventListener('error', () => reject(image));
                     }
                 });
             }))
@@ -258,8 +258,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                     }
                     else {
-                        value.onload = null;
-                        value.onerror = null;
                         this.resourceHandler.addImage(value);
                     }
                 }

@@ -1,4 +1,3 @@
-import NodeList from '../nodelist';
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
@@ -24,7 +23,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                 alignable++;
             }
         }
-        return valid && inlineVertical > 1 && alignable === node.length && NodeList.linearData(node.children).linearX;
+        return valid && inlineVertical > 1 && alignable === node.length && NodeUI.linearData(node.children).linearX;
     }
 
     public processNode(node: T) {
