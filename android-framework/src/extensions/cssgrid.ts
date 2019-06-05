@@ -23,15 +23,15 @@ const REGEXP_JUSTIFYSELF = /(start|end|center|baseline|left|right)/;
 function getRowData(mainData: CssGridData<View>, direction: string) {
     const result: Undefined<View[]>[][] = [];
     if (direction === 'column') {
-        for (let i = 0; i < mainData.column.count; i++) {
+        for (let i = 0; i < mainData.column.length; i++) {
             result[i] = [];
-            for (let j = 0; j < mainData.row.count; j++) {
+            for (let j = 0; j < mainData.row.length; j++) {
                 result[i].push(mainData.rowData[j][i]);
             }
         }
     }
     else {
-        for (let i = 0; i < mainData.row.count; i++) {
+        for (let i = 0; i < mainData.row.length; i++) {
             result.push(mainData.rowData[i]);
         }
     }
@@ -41,10 +41,11 @@ function getRowData(mainData: CssGridData<View>, direction: string) {
 function getGridSize(mainData: CssGridData<View>, direction: string, node: View) {
     const horizontal = direction === 'column';
     const data = mainData[direction];
+    const length = data.unit.length;
     let value = 0;
-    if (data.unit.length) {
+    if (length) {
         const dimension = horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT;
-        for (let i = 0; i < data.unit.length; i++) {
+        for (let i = 0; i < length; i++) {
             const unit = data.unit[i];
             if (unit.endsWith('px')) {
                 value += parseFloat(unit);
@@ -206,8 +207,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 $e.NODE_ALIGNMENT.AUTO_LAYOUT,
                 node.children as T[]
             );
-            layout.rowCount = mainData.row.count;
-            layout.columnCount = mainData.column.count;
+            layout.rowCount = mainData.row.length;
+            layout.columnCount = mainData.column.length;
             return {
                 output: this.application.renderNode(layout),
                 complete: true
@@ -319,7 +320,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
                 if (minUnitSize > 0) {
-                    if (data.autoFill && size === 0 && mainData[direction === 'column' ? 'row' : 'column'].count === 1) {
+                    if (data.autoFill && size === 0 && mainData[direction === 'column' ? 'row' : 'column'].length === 1) {
                         size = Math.max(node.actualWidth, minUnitSize);
                         sizeWeight = 0;
                     }
@@ -417,7 +418,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (mainData.alignContent === 'normal' && !parent.has($const.CSS.HEIGHT) && rowSpan === 1 && mainData.rowSpanMultiple[rowStart] === true && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === $const.CSS.AUTO) && node.initial.bounds && node.bounds.height > node.initial.bounds.height) {
                 target.css('minHeight', $css.formatPX(node.actualHeight), true);
             }
-            else if (!target.has($const.CSS.HEIGHT) && !(mainData.row.count === 1 && mainData.alignContent === 'space-between')) {
+            else if (!target.has($const.CSS.HEIGHT) && !(mainData.row.length === 1 && mainData.alignContent === 'space-between')) {
                 target.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill_vertical');
                 if (mainData.alignContent === 'normal' && parent.hasHeight && mainData.rowSpanMultiple.length === 0) {
                     target.mergeGravity('layout_rowWeight', '1');
@@ -440,11 +441,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (node.hasHeight && mainData.alignContent !== 'normal') {
                 setContentSpacing(mainData, node, mainData.alignContent, 'row');
                 if (mainData.rowWeight.length > 1) {
-                    for (let i = 0; i < mainData.row.count; i++) {
+                    const precision = this.application.controllerHandler.localSettings.precision.standardFloat;
+                    for (let i = 0; i < mainData.row.length; i++) {
                         if (mainData.rowWeight[i] > 0) {
-                            const precision = this.application.controllerHandler.localSettings.precision.standardFloat;
-                            for (let j = 0; j < mainData.rowData[i].length; j++) {
-                                const item = mainData.rowData[i][j];
+                            const rowData = mainData.rowData[i];
+                            const length = rowData.length;
+                            for (let j = 0; j < length; j++) {
+                                const item = rowData[j];
                                 if (item) {
                                     for (let column of item) {
                                         if (column.outerWrapper) {
@@ -460,7 +463,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
             }
             if (mainData.column.normal && !mainData.column.unit.includes($const.CSS.AUTO)) {
-                const columnGap =  mainData.column.gap * (mainData.column.count - 1);
+                const columnGap =  mainData.column.gap * (mainData.column.length - 1);
                 if (columnGap > 0) {
                     if (node.renderParent && !node.renderParent.hasAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT)) {
                         node.cssPX('minWidth', columnGap);
@@ -480,10 +483,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             const lastChild = Array.from(mainData.children)[mainData.children.size - 1];
             if (mainData.column.unit.length && mainData.column.unit.every(value => $css.isPercent(value))) {
-                const percentTotal = mainData.column.unit.reduce((a, b) => a + parseFloat(b), 0) + (mainData.column.gap * mainData.column.count * 100) / node.actualWidth;
+                const percentTotal = mainData.column.unit.reduce((a, b) => a + parseFloat(b), 0) + (mainData.column.gap * mainData.column.length * 100) / node.actualWidth;
                 if (percentTotal < 100) {
-                    node.android('columnCount', (mainData.column.count + 1).toString());
-                    for (let i = 0; i < mainData.row.count; i++) {
+                    node.android('columnCount', (mainData.column.length + 1).toString());
+                    for (let i = 0; i < mainData.row.length; i++) {
                         controller.addAfterOutsideTemplate(
                             lastChild.id,
                             controller.renderSpace(
@@ -494,17 +497,20 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 createViewAttribute(undefined, {
                                     [node.localizeString(STRING_ANDROID.MARGIN_LEFT)]: $css.formatPX(mainData.column.gap),
                                     layout_row: i.toString(),
-                                    layout_column: mainData.column.count.toString()
+                                    layout_column: mainData.column.length.toString()
                                 })
                             )
                         );
                     }
                 }
             }
-            for (let i = 0; i < mainData.emptyRows.length; i++) {
-                const item = mainData.emptyRows[i];
+            const emptyRows = mainData.emptyRows;
+            const lengthA = emptyRows.length;
+            for (let i = 0; i < lengthA; i++) {
+                const item = emptyRows[i];
                 if (item) {
-                    for (let j = 0; j < item.length; j++) {
+                    const lengthB = item.length;
+                    for (let j = 0; j < lengthB; j++) {
                         if (item[j] === 1) {
                             controller.addAfterOutsideTemplate(
                                 lastChild.id,

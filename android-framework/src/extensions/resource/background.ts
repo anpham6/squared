@@ -149,14 +149,15 @@ function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = fal
 
 function getBorderRadius(radius?: string[]): StringMap | undefined {
     if (radius) {
-        if (radius.length === 1) {
+        const lengthA = radius.length;
+        if (lengthA === 1) {
             return { radius: radius[0] };
         }
         else {
             let corners: string[];
-            if (radius.length === 8) {
+            if (lengthA === 8) {
                 corners = [];
-                for (let i = 0; i < radius.length; i += 2) {
+                for (let i = 0; i < lengthA; i += 2) {
                     corners.push($css.formatPX((parseFloat(radius[i]) + parseFloat(radius[i + 1])) / 2));
                 }
             }
@@ -166,7 +167,8 @@ function getBorderRadius(radius?: string[]): StringMap | undefined {
             const boxModel = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
             const result = {};
             let valid = false;
-            for (let i = 0; i < corners.length; i++) {
+            const lengthB = corners.length;
+            for (let i = 0; i < lengthB; i++) {
                 if (corners[i] !== $const.CSS.PX_0) {
                     result[`${boxModel[i]}Radius`] = corners[i];
                     valid = true;
@@ -551,7 +553,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         let borderData: BorderAttribute | undefined;
         let shapeData: ExternalData[] | undefined;
         let layerListData: ExternalData[] | undefined;
-        for (let i = 0; i < borders.length; i++) {
+        for (let i = 0; i < 4; i++) {
             const item = borders[i];
             if (item) {
                 if (borderStyle && borderData) {
@@ -682,17 +684,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         const backgroundPosition: BoxRectPosition[] = [];
         const imageDimensions: Undefined<Dimension>[] = [];
         const result: BackgroundImageData[] = [];
-        let imageLength = 0;
+        let lengthImage = 0;
         let resizable = true;
         if (node.hasResource($e.NODE_RESOURCE.IMAGE_SOURCE)) {
-            if (data.backgroundImage)  {
-                imageLength = data.backgroundImage.length;
-                while (backgroundSize.length < imageLength) {
+            const bgImage = data.backgroundImage;
+            if (bgImage)  {
+                lengthImage = bgImage.length;
+                while (backgroundSize.length < lengthImage) {
                     $util.concatArray(backgroundSize, backgroundSize.slice(0));
                 }
-                backgroundSize.length = imageLength;
-                for (let i = 0, j = 0; i < imageLength; i++) {
-                    let value = data.backgroundImage[i];
+                backgroundSize.length = lengthImage;
+                for (let i = 0, j = 0; i < lengthImage; i++) {
+                    let value = bgImage[i];
                     let valid = false;
                     if (typeof value === 'string') {
                         if (value !== 'initial') {
@@ -749,17 +752,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     else {
                         backgroundRepeat.splice(i, 1);
                         backgroundSize.splice(i, 1);
-                        imageLength--;
+                        lengthImage--;
                     }
                 }
             }
             if (node.extracted) {
-                if (imageLength === 0) {
+                if (lengthImage === 0) {
                     backgroundRepeat.length = 0;
                     backgroundSize.length = 0;
                 }
                 const extracted = node.extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'));
-                for (let i = 0, j = imageLength; i < extracted.length; i++) {
+                for (let i = 0, j = lengthImage; i < extracted.length; i++) {
                     const image = extracted[i];
                     const element = <HTMLImageElement> image.element;
                     const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(element);
@@ -777,11 +780,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
             }
-            imageLength = backgroundImage.length;
+            lengthImage = backgroundImage.length;
         }
         let centerHorizontally = false;
         let overflowVertically = false;
-        for (let i = imageLength - 1; i >= 0; i--) {
+        for (let i = lengthImage - 1; i >= 0; i--) {
             const value = backgroundImage[i];
             if (!$util.hasValue(value)) {
                 continue;

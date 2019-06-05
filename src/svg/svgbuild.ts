@@ -524,10 +524,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 default:
                     continue;
             }
-            if (coordinates.length >= 2) {
+            const length = coordinates.length;
+            if (length >= 2) {
                 const relative = match[1] === match[1].toLowerCase();
                 const points: SvgPoint[] = [];
-                for (let i = 0; i < coordinates.length; i += 2) {
+                for (let i = 0; i < length; i += 2) {
                     let x = coordinates[i];
                     let y = coordinates[i + 1];
                     if (relative && previousPoint) {
@@ -558,23 +559,24 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const result: SvgPoint[] = [];
         let x = 0;
         let y = 0;
-        for (let i = 0; i < values.length; i++) {
-            const item = values[i];
-            for (let j = 0; j < item.coordinates.length; j += 2) {
+        for (const item of values) {
+            const coordinates = item.coordinates;
+            const length = coordinates.length;
+            for (let i = 0; i < length; i += 2) {
                 if (item.relative) {
-                    x += item.coordinates[j];
-                    y += item.coordinates[j + 1];
+                    x += coordinates[i];
+                    y += coordinates[i + 1];
                 }
                 else {
-                    x = item.coordinates[j];
-                    y = item.coordinates[j + 1];
+                    x = coordinates[i];
+                    y = coordinates[i + 1];
                 }
                 const pt: SvgPoint = { x, y };
                 if (item.key.toUpperCase() === 'A') {
                     pt.rx = item.radiusX;
                     pt.ry = item.radiusY;
                     if (radius) {
-                        if (item.coordinates[j] >= 0) {
+                        if (coordinates[i] >= 0) {
                             pt.y -= item.radiusY as number;
                         }
                         else {
@@ -592,16 +594,17 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed = false) {
-        let location: Point | undefined;
         invalid: {
+            let location: Point | undefined;
             for (const item of values) {
+                const coordinates = item.coordinates;
                 if (item.relative) {
                     if (location) {
                         if (transformed && (item.key === 'H' || item.key === 'V')) {
                             const pt = points.shift();
                             if (pt) {
-                                item.coordinates[0] = pt.x;
-                                item.coordinates[1] = pt.y;
+                                coordinates[0] = pt.x;
+                                coordinates[1] = pt.y;
                                 item.value[0] = pt;
                                 item.start = pt;
                                 item.end = pt;
@@ -613,11 +616,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                             }
                         }
                         else {
-                            for (let i = 0, j = 0; i < item.coordinates.length; i += 2, j++) {
+                            const length = coordinates.length;
+                            for (let i = 0, j = 0; i < length; i += 2, j++) {
                                 const pt = points.shift();
                                 if (pt) {
-                                    item.coordinates[i] = pt.x - location.x;
-                                    item.coordinates[i + 1] = pt.y - location.y;
+                                    coordinates[i] = pt.x - location.x;
+                                    coordinates[i + 1] = pt.y - location.y;
                                     if (item.key === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
                                         item.radiusX = pt.rx;
                                         item.radiusY = pt.ry;
@@ -647,11 +651,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         case 'Q':
                         case 'T':
                         case 'Z': {
-                            for (let i = 0, j = 0; i < item.coordinates.length; i += 2, j++) {
+                            const length = coordinates.length;
+                            for (let i = 0, j = 0; i < length; i += 2, j++) {
                                 const pt = points.shift();
                                 if (pt) {
-                                    item.coordinates[i] = pt.x;
-                                    item.coordinates[i + 1] = pt.y;
+                                    coordinates[i] = pt.x;
+                                    coordinates[i + 1] = pt.y;
                                     item.value[j] = pt;
                                 }
                                 else {
@@ -664,8 +669,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         case 'A': {
                             const pt = points.shift();
                             if (pt && pt.rx !== undefined && pt.ry !== undefined) {
-                                item.coordinates[0] = pt.x;
-                                item.coordinates[1] = pt.y;
+                                coordinates[0] = pt.x;
+                                coordinates[1] = pt.y;
                                 item.radiusX = pt.rx;
                                 item.radiusY = pt.ry;
                                 item.value[0] = pt;
@@ -802,10 +807,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static minMaxPoints(values: Point[]) {
         let minX = values[0].x;
-        let maxX = values[0].x;
+        let maxX = minX;
         let minY = values[0].y;
-        let maxY = values[0].y;
-        for (let i = 1; i < values.length; i++) {
+        let maxY = minY;
+        const length = values.length;
+        for (let i = 1; i < length; i++) {
             const pt = values[i];
             if (pt.x < minX) {
                 minX = pt.x;
@@ -833,8 +839,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static convertPoints(values: number[]) {
         const result: Point[] = [];
-        if (values.length % 2 === 0) {
-            for (let i = 0; i < values.length; i += 2) {
+        const length = values.length;
+        if (length % 2 === 0) {
+            for (let i = 0; i < length; i += 2) {
                 result.push({
                     x: values[i],
                     y: values[i + 1]

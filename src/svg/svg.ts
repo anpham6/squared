@@ -16,12 +16,14 @@ const $util = squared.lib.util;
 function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];
     const stops = element.getElementsByTagName('stop');
-    for (let i = 0; i < stops.length; i++) {
-        const color = $color.parseColor($dom.getNamedItem(stops[i], 'stop-color'), $dom.getNamedItem(stops[i], 'stop-opacity'));
+    const length = stops.length;
+    for (let i = 0; i < length; i++) {
+        const item = stops[i];
+        const color = $color.parseColor($dom.getNamedItem(item, 'stop-color'), $dom.getNamedItem(item, 'stop-opacity'));
         if (color) {
             result.push({
                 color,
-                offset: parseFloat($dom.getNamedItem(stops[i], 'offset')) / 100
+                offset: parseFloat($dom.getNamedItem(item, 'offset')) / 100
             });
         }
     }

@@ -84,8 +84,10 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         this.clear();
         const viewport = this.getViewport();
         let requireClip = false;
-        for (let i = 0; i < element.children.length; i++) {
-            const item = element.children[i];
+        const children = element.children;
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
+            const item = children[i];
             let svg: SvgView | undefined;
             if (SVG.svg(item)) {
                 svg = new squared.svg.Svg(item, false);

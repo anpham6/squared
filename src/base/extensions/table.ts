@@ -184,7 +184,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             mapWidth[m] = columnWidth || $const.CSS.PX_0;
                             mapBounds[m] = 0;
                         }
-                        else if (i === table.length - 1) {
+                        else if (i === rowCount - 1) {
                             if (reevaluate && mapBounds[m] === 0) {
                                 mapBounds[m] = td.bounds.width;
                             }
@@ -210,7 +210,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (spacingHeight > 0) {
                     td.modifyBox(BOX_STANDARD.MARGIN_TOP, i === 0 ? vertical : spacingHeight);
-                    td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, i + element.rowSpan < table.length ? spacingHeight : vertical);
+                    td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, i + element.rowSpan < rowCount ? spacingHeight : vertical);
                 }
                 columnIndex[i] += element.colSpan;
             });
@@ -313,13 +313,12 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             caption.data(EXT_NAME.TABLE, 'colSpan', columnCount);
             caption.parent = node;
         }
-        columnIndex = new Array(table.length).fill(0);
         const hasWidth = node.hasWidth;
-        for (let i = 0; i < table.length; i++) {
+        columnIndex = new Array(rowCount).fill(0);
+        for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
-            const children = tr.duplicate();
-            for (let j = 0; j < children.length; j++) {
-                const td = children[j] as T;
+            const children = tr.duplicate() as T[];
+            for (const td of children) {
                 const element = <HTMLTableCellElement> td.element;
                 const rowSpan = element.rowSpan;
                 const colSpan = element.colSpan;

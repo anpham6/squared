@@ -94,7 +94,8 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             let row: T[] = [children[0]];
             let rowStart = children[0];
             const rows: T[][] = [row];
-            for (let i = 1; i < children.length; i++) {
+            let length = children.length;
+            for (let i = 1; i < length; i++) {
                 const item = children[i];
                 if (rowStart[method](item.bounds, 'bounds')) {
                     row.push(item);
@@ -107,8 +108,9 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             }
             node.clear();
             let maxCount = 0;
-            if (rows.length > 1) {
-                for (let i = 0; i < rows.length; i++) {
+            length = rows.length;
+            if (length > 1) {
+                for (let i = 0; i < length; i++) {
                     const seg = rows[i];
                     const group = controller.createNodeGroup(seg[0], seg, node, true);
                     group.siblingIndex = i;
@@ -126,12 +128,12 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 node.retain(rows[0]);
             }
             if (mainData.directionRow) {
-                mainData.rowCount = rows.length;
+                mainData.rowCount = length;
                 mainData.columnCount = maxCount;
             }
             else {
                 mainData.rowCount = maxCount;
-                mainData.columnCount = rows.length;
+                mainData.columnCount = length;
             }
         }
         else {

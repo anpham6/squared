@@ -32,7 +32,8 @@ const REGEXP_FILENAME = /^(.+)\/(.+?\.\w+)$/;
 
 function getFileAssets(items: string[]) {
     const result: FileAsset[] = [];
-    for (let i = 0; i < items.length; i += 3) {
+    const length = items.length;
+    for (let i = 0; i < length; i += 3) {
         result.push({
             pathname: items[i + 1],
             filename: items[i + 2],
@@ -44,7 +45,8 @@ function getFileAssets(items: string[]) {
 
 function getImageAssets(items: string[]) {
     const result: FileAsset[] = [];
-    for (let i = 0; i < items.length; i += 3) {
+    const length = items.length;
+    for (let i = 0; i < length; i += 3) {
         result.push({
             pathname: items[i + 1],
             filename: items[i + 2],
@@ -83,7 +85,8 @@ const caseInsensitive = (a: string | string[], b: string | string[]) => a.toStri
 export default class File<T extends View> extends squared.base.FileUI<T> implements android.base.File<T> {
     public saveAllToDisk(layouts: FileAsset[]) {
         const files: FileAsset[] = [];
-        for (let i = 0; i < layouts.length; i++) {
+        const length = layouts.length;
+        for (let i = 0; i < length; i++) {
             files.push(createFileAsset(layouts[i].pathname, i === 0 ? this.userSettings.outputMainFileName : `${layouts[i].filename}.xml`, layouts[i].content));
         }
         this.saveToDisk(
@@ -106,7 +109,8 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     public layoutAllToXml(layouts: FileAsset[], saveToDisk = false) {
         const result = {};
         const files: FileAsset[] = [];
-        for (let i = 0; i < layouts.length; i++) {
+        const length = layouts.length;
+        for (let i = 0; i < length; i++) {
             const layout = layouts[i];
             result[layout.filename] = [layout.content];
             if (saveToDisk) {

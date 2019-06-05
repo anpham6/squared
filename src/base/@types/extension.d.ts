@@ -19,7 +19,7 @@ export interface CssGridData<T> {
 }
 
 export interface CssGridDirectionData {
-    count: number;
+    length: number;
     gap: number;
     unit: string[];
     unitMin: string[];

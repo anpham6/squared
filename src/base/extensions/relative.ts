@@ -58,14 +58,15 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                     for (const children of (renderParent.horizontalRows || [renderParent.renderChildren])) {
                         if (children.includes(node)) {
                             const unaligned = $util.filterArray(children, item => item.positionRelative && item.length > 0 && $util.convertFloat(node.verticalAlign) !== 0);
-                            if (unaligned.length) {
+                            const length = unaligned.length;
+                            if (length) {
                                 unaligned.sort((a, b) => {
                                     if ($util.withinRange(a.linear.top, b.linear.top)) {
                                         return 0;
                                     }
                                     return a.linear.top < b.linear.top ? -1 : 1;
                                 });
-                                for (let i = 0; i < unaligned.length; i++) {
+                                for (let i = 0; i < length; i++) {
                                     const item = unaligned[i];
                                     if (i === 0) {
                                         node.modifyBox(BOX_STANDARD.MARGIN_TOP, $util.convertFloat(item.verticalAlign));

@@ -12,11 +12,13 @@ declare global {
             depth: number;
             siblingIndex: number;
             documentRoot: boolean;
+            actualParent: Node | null;
             lineBreakLeading: boolean;
             lineBreakTrailing: boolean;
             siblingsLeading: Node[];
             siblingsTrailing: Node[];
             floatContainer: boolean;
+            inputContainer: boolean;
             visible: boolean;
             rendered: boolean;
             excluded: boolean;
@@ -28,6 +30,7 @@ declare global {
             renderParent?: Node;
             innerBefore?: Node;
             innerAfter?: Node;
+            queryMap?: Node[][];
             readonly sessionId: string;
             readonly initial: InitialData<Node>;
             readonly box: BoxRectDimension;
@@ -117,7 +120,6 @@ declare global {
             readonly textEmpty: boolean;
             readonly preserveWhiteSpace: boolean;
             readonly absoluteParent: Node | null;
-            readonly actualParent: Node | null;
             readonly actualWidth: number;
             readonly actualHeight: number;
             readonly actualDimension: Dimension;
@@ -126,6 +128,7 @@ declare global {
             readonly previousSibling: Node | null;
             readonly nextSibling: Node | null;
             readonly singleChild: boolean;
+            readonly attributes: StringMap;
             readonly center: Point;
             init(): void;
             saveAsInitial(overwrite?: boolean): void;
@@ -162,6 +165,8 @@ declare global {
             nextSiblings(): Node[];
             getFirstChildElement(): Element | null;
             getLastChildElement(): Element | null;
+            querySelector(value: string): Node | null;
+            querySelectorAll(value: string, resultCount?: number): Node[];
         }
 
         class Node implements Node {

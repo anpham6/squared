@@ -11,7 +11,9 @@ import ResourceUI from './resource-ui';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 const $const = squared.lib.constant;
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
@@ -143,6 +145,36 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             ext.subscribers.clear();
         }
         this.closed = false;
+    }
+
+    public conditionElement(element: HTMLElement) {
+        if (super.conditionElement(element)) {
+            if (this.controllerHandler.visibleElement(element) || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
+                return true;
+            }
+            else {
+                let current = element.parentElement;
+                let valid = true;
+                while (current) {
+                    if ($css.getStyle(current).display === $const.CSS.NONE) {
+                        valid = false;
+                        break;
+                    }
+                    current = current.parentElement;
+                }
+                if (valid) {
+                    const children = element.children;
+                    const length = children.length;
+                    for (let i = 0; i < length; i++) {
+                        if (this.controllerHandler.visibleElement(<Element> children[i])) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+        return false;
     }
 
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
@@ -790,15 +822,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     group.node.innerWrapped = seg[0];
                     seg[0].outerWrapper = group.node;
                     if (seg[0].percentWidth) {
-                        const percent = this.controllerHandler.containerTypePercent;
+                        const percent = controller.containerTypePercent;
                         group.setType(percent.containerType, percent.alignmentType);
                     }
                     else {
                         group.setType(containerType, alignmentType);
                     }
                 }
-                else if (group.linearY) {
-                    group.setType(containerType, alignmentType);
+                else if (group.linearY || group.unknownAligned) {
+                    group.setType(containerType, alignmentType | (group.unknownAligned ? NODE_ALIGNMENT.UNKNOWN : 0));
                 }
                 else {
                     controller.processLayoutHorizontal(group);

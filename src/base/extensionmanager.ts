@@ -30,9 +30,10 @@ export default abstract class ExtensionManager<T extends Node> implements square
     }
 
     public exclude(ext: Extension<T>) {
-        for (let i = 0; i < this.application.extensions.length; i++) {
-            if (this.application.extensions[i] === ext) {
-                this.application.extensions.splice(i, 1);
+        const extensions = this.application.extensions;
+        for (let i = 0; i < extensions.length; i++) {
+            if (extensions[i] === ext) {
+                extensions.splice(i, 1);
                 return true;
             }
         }

@@ -120,42 +120,44 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 const values: string[] = [];
                 const keySplines: string[] = [];
                 let previousValues: number[] | undefined;
+                const length = keyTimesBase.length;
                 for (let i = 0; i < this.iterationCount; i++) {
                     if (i > 0 && this.keySplines) {
                         keySplines.push('');
                     }
-                    for (let j = 0; j < keyTimesBase.length; j++) {
+                    for (let j = 0; j < length; j++) {
                         const coordinates = SvgBuild.parseCoordinates(this.values[j]);
-                        if (coordinates.length) {
+                        const lengthA = coordinates.length;
+                        if (lengthA) {
                             let currentValues: number[] | undefined;
                             switch (this.type) {
                                 case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                                    if (coordinates.length === 1) {
+                                    if (lengthA === 1) {
                                         currentValues = [coordinates[0], 0];
                                     }
-                                    else if (coordinates.length === 2) {
+                                    else if (lengthA === 2) {
                                         currentValues = coordinates;
                                     }
                                     break;
                                 case SVGTransform.SVG_TRANSFORM_SCALE:
-                                    if (coordinates.length === 1) {
+                                    if (lengthA === 1) {
                                         currentValues = [coordinates[0], coordinates[0]];
                                     }
-                                    else if (coordinates.length === 2) {
+                                    else if (lengthA === 2) {
                                         currentValues = coordinates;
                                     }
                                     break;
                                 case SVGTransform.SVG_TRANSFORM_ROTATE:
-                                    if (coordinates.length === 1) {
+                                    if (lengthA === 1) {
                                         currentValues = [coordinates[0], 0, 0];
                                     }
-                                    else if (coordinates.length === 3) {
+                                    else if (lengthA === 3) {
                                         currentValues = coordinates;
                                     }
                                     break;
                                 case SVGTransform.SVG_TRANSFORM_SKEWX:
                                 case SVGTransform.SVG_TRANSFORM_SKEWY:
-                                    if (coordinates.length === 1) {
+                                    if (lengthA === 1) {
                                         currentValues = coordinates;
                                     }
                                     break;
@@ -163,11 +165,12 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                             if (currentValues) {
                                 let time = (keyTimesBase[j] + i) * this.duration;
                                 if (previousValues) {
-                                    for (let k = 0; k < currentValues.length; k++) {
+                                    const lengthB = currentValues.length;
+                                    for (let k = 0; k < lengthB; k++) {
                                         currentValues[k] += previousValues[k];
                                     }
                                 }
-                                if (i < this.iterationCount - 1 && j === keyTimesBase.length - 1) {
+                                if (i < this.iterationCount - 1 && j === length - 1) {
                                     if (this.accumulateSum) {
                                         previousValues = currentValues;
                                     }
@@ -175,7 +178,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                                 }
                                 keyTimes.push(time / durationTotal);
                                 values.push(currentValues.join(' '));
-                                if (this.keySplines && j < keyTimesBase.length - 1) {
+                                if (this.keySplines && j < length - 1) {
                                     keySplines.push(this.keySplines[j]);
                                 }
                             }

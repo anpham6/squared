@@ -10,8 +10,10 @@ const $util = squared.lib.util;
 export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
     public static findNestedElement(element: Element | null, name: string) {
         if (element && $css.hasComputedStyle(element)) {
-            for (let i = 0; i < element.children.length; i++) {
-                const item = <HTMLElement> element.children[i];
+            const children = element.children;
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                const item = <HTMLElement> children[i];
                 if ($util.includes(item.dataset.use, name)) {
                     return item;
                 }

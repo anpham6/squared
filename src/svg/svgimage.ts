@@ -39,8 +39,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         let height = this.height;
         if (transforms.length) {
             transforms.reverse();
-            for (let i = 0; i < transforms.length; i++) {
-                const item = transforms[i];
+            for (const item of transforms) {
                 const m = item.matrix;
                 const localX = x;
                 x = MATRIX.applyX(m, localX, y);

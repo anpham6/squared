@@ -39,6 +39,7 @@ const settings: UserSettingsAndroid = {
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
     showAttributes: true,
+    createQuerySelectorMap: false,
     convertPixels: 'dp',
     insertSpaces: 4,
     handleExtensionsAsync: true,

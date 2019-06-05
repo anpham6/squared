@@ -6,6 +6,7 @@ export interface UserSettings {
     preloadImages: boolean;
     handleExtensionsAsync: boolean;
     showErrorMessages: boolean;
+    createQuerySelectorMap: boolean;
 }
 
 export interface UserUISettings extends UserSettings {

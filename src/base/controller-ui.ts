@@ -470,9 +470,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         maxIndex = item.siblingIndex;
                     }
                 });
-                if (layers.length) {
+                const length = layers.length;
+                if (length) {
                     const children = node.children as T[];
-                    for (let j = 0, k = 0, l = 1; j < layers.length; j++, k++) {
+                    for (let j = 0, k = 0, l = 1; j < length; j++, k++) {
                         const order = layers[j];
                         if (order) {
                             order.sort((a, b) => {
@@ -500,6 +501,28 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
             }
         }
+    }
+
+    public sortInitialCache(cache: NodeList<T>) {
+        cache.sort((a, b) => {
+            if (a.depth !== b.depth) {
+                return a.depth < b.depth ? -1 : 1;
+            }
+            else {
+                const parentA = a.documentParent;
+                const parentB = b.documentParent;
+                if (parentA !== parentB) {
+                    if (parentA.depth !== parentA.depth) {
+                        return parentA.depth < parentA.depth ? -1 : 1;
+                    }
+                    else if (parentA.actualParent === parentB.actualParent) {
+                        return parentA.siblingIndex < parentB.siblingIndex ? -1 : 1;
+                    }
+                    return parentA.id < parentB.id ? -1 : 1;
+                }
+            }
+            return 0;
+        });
     }
 
     public cascadeDocument(templates: NodeTemplate<T>[], depth: number) {

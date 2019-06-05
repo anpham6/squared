@@ -16,6 +16,7 @@ declare global {
             readonly floated: Set<string>;
             readonly cleared: Map<T, string>;
             readonly singleRowAligned: boolean;
+            readonly unknownAligned: boolean;
             readonly visible: T[];
             init(): void;
             setType(containerType: number, alignmentType?: number): void;

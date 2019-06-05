@@ -186,6 +186,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public horizontalRows?: T[][];
         public innerBefore?: T;
         public innerAfter?: T;
+        public queryMap?: T[][];
         public readonly renderChildren: T[] = [];
         public readonly constraint: Constraint = {
             horizontal: false,
@@ -1058,8 +1059,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 const assign = build.assign[tagName];
                 if (assign) {
                     for (const obj in assign) {
-                        for (const attr in assign[obj]) {
-                            this.attr(obj, attr, assign[obj][attr], overwrite);
+                        const data = assign[obj];
+                        for (const attr in data) {
+                            this.attr(obj, attr, data[attr], overwrite);
                         }
                     }
                 }
@@ -1079,7 +1081,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let right = 0;
                 let bottom = 0;
                 let left = 0;
-                for (let i = 0 ; i < attrs.length; i++) {
+                for (let i = 0 ; i < 4; i++) {
                     const attr = attrs[i];
                     let value = this._boxReset === undefined || this._boxReset[attr] === 0 ? this[attr] : 0;
                     if (value !== 0 && attr === 'marginRight') {
@@ -1281,8 +1283,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else if (this.renderChildren.length) {
                         const horizontalRows = this.horizontalRows || [this.renderChildren];
-                        const length = horizontalRows.length;
                         let previousMultiline = false;
+                        const length = horizontalRows.length;
                         for (let i = 0; i < length; i++) {
                             const row = horizontalRows[i] as T[];
                             const nextRow = horizontalRows[i + 1];
@@ -1306,8 +1308,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                             }
                             else {
-                                for (let j = 0; j < row.length; j++) {
-                                    const node = row[j];
+                                for (const node of row) {
                                     if (node.length === 0 && !node.has('lineHeight') && !node.multiline && !node.baselineAltered) {
                                         setMarginOffset(node, lineHeight, false, top, bottom);
                                     }
@@ -1345,7 +1346,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get containerType() {
             if (this._containerType === 0) {
-                const value: number = ELEMENT_ANDROID[this.tagName];
+                const value: number = ELEMENT_ANDROID[this.containerName];
                 if (value) {
                     this._containerType = value;
                 }

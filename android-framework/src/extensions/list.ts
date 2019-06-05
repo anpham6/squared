@@ -22,23 +22,25 @@ const PADDINGRIGHT_DFN = 8;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
-        super.processNode(node, parent);
         const layout = new $LayoutUI(parent, node, 0, 0, node.children as T[]);
-        if (layout.linearY && !layout.linearX) {
-            layout.rowCount = node.length;
-            layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
-            layout.setType(CONTAINER_NODE.GRID, $e.NODE_ALIGNMENT.AUTO_LAYOUT);
-        }
-        else if (layout.linearX || layout.singleRowAligned) {
-            layout.rowCount = 1;
-            layout.columnCount = layout.length;
-            layout.setType(CONTAINER_NODE.RELATIVE, $e.NODE_ALIGNMENT.HORIZONTAL);
-        }
-        if (layout.containerType !== 0) {
-            return {
-                output: this.application.renderNode(layout),
-                complete: true
-            };
+        if (!layout.unknownAligned || layout.singleRowAligned) {
+            super.processNode(node, parent);
+            if (layout.linearY) {
+                layout.rowCount = node.length;
+                layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
+                layout.setType(CONTAINER_NODE.GRID, $e.NODE_ALIGNMENT.AUTO_LAYOUT);
+            }
+            else if (layout.linearX || layout.singleRowAligned) {
+                layout.rowCount = 1;
+                layout.columnCount = layout.length;
+                layout.setType(CONTAINER_NODE.RELATIVE, $e.NODE_ALIGNMENT.HORIZONTAL);
+            }
+            if (layout.containerType !== 0) {
+                return {
+                    output: this.application.renderNode(layout),
+                    complete: true
+                };
+            }
         }
         return undefined;
     }

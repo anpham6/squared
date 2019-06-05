@@ -94,12 +94,14 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     public init(element: HTMLElement) {
         if (this.included(element)) {
             const application = this.application;
+            const children = element.children;
+            const length = children.length;
             let valid = false;
-            if (element.children.length) {
+            if (length) {
                 valid = true;
-                const tagName = element.children[0].tagName;
-                for (let i = 1; i < element.children.length; i++) {
-                    if (element.children[i].tagName !== tagName) {
+                const tagName = children[0].tagName;
+                for (let i = 1; i < length; i++) {
+                    if (children[i].tagName !== tagName) {
                         valid = false;
                         break;
                     }

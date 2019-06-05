@@ -20,7 +20,8 @@ const REGEXP_FORMAT = {
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
 
 export function isPlainText(value: string) {
-    for (let i = 0; i < value.length; i++) {
+    const length = value.length;
+    for (let i = 0; i < length; i++) {
         switch (value.charCodeAt(i)) {
             case 9:
             case 10:
@@ -47,7 +48,8 @@ export function pushIndent(value: string, depth: number, char = '\t', indent?: s
 export function pushIndentArray(values: string[], depth: number, char = '\t', separator = '') {
     if (depth > 0) {
         const indent = char.repeat(depth);
-        for (let i = 0; i < values.length; i++) {
+        const length = values.length;
+        for (let i = 0; i < length; i++) {
             values[i] = pushIndent(values[i], depth, char, indent);
         }
     }
@@ -91,7 +93,7 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
 }
 
 export function applyTemplate(tagName: string, template: ExternalData, children: ExternalData[], depth?: number) {
-    const tag = template[tagName];
+    const tag: ObjectMap<any> = template[tagName];
     const nested = tag['>>'] === true;
     let output = '';
     let indent = '';
@@ -102,28 +104,31 @@ export function applyTemplate(tagName: string, template: ExternalData, children:
     else {
         indent += '\t'.repeat(depth);
     }
-    for (let i = 0; i < children.length; i++) {
+    const length = children.length;
+    for (let i = 0; i < length; i++) {
         const item = children[i];
         const include: string | undefined = tag['#'] && item[tag['#']];
         const closed = !nested && !include;
         let valid = false;
         output += indent + '<' + tagName;
-        if (tag['@']) {
-            for (const attr of tag['@']) {
+        const attrs = tag['@'];
+        const descend = tag['>'];
+        if (attrs) {
+            for (const attr of attrs) {
                 if (item[attr]) {
                     output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${item[attr]}"`;
                 }
             }
         }
-        if (tag['>']) {
+        if (descend) {
             let innerText = '';
             const childDepth = depth + (nested ? i : 0) + 1;
-            for (const name in tag['>']) {
+            for (const name in descend) {
                 if (Array.isArray(item[name])) {
-                    innerText += applyTemplate(name, tag['>'], item[name], childDepth);
+                    innerText += applyTemplate(name, descend, item[name], childDepth);
                 }
                 else if (typeof item[name] === 'object') {
-                    innerText += applyTemplate(name, tag['>'], [item[name]], childDepth);
+                    innerText += applyTemplate(name, descend, [item[name]], childDepth);
                 }
             }
             if (innerText !== '') {
@@ -162,7 +167,7 @@ export function applyTemplate(tagName: string, template: ExternalData, children:
         }
     }
     if (nested) {
-        for (let i = 0; i < children.length; i++) {
+        for (let i = 0; i < length; i++) {
             indent = indent.substring(1);
             output += indent + `</${tagName}>\n`;
         }
@@ -183,7 +188,8 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
     }
     let output = '';
     let indent = startIndent;
-    for (let i = 0; i < lines.length; i++) {
+    const length = lines.length;
+    for (let i = 0; i < length; i++) {
         const line = lines[i];
         let previous = indent;
         if (i > 0) {

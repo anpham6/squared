@@ -764,22 +764,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public checkLinearHorizontal(layout: $LayoutUI<T>) {
         const floated = layout.floated;
         if ((floated.size === 0 || floated.size === 1 && floated.has($const.CSS.LEFT)) && layout.singleRowAligned) {
-            const { lineHeight } = layout.children[0];
-            let inputTotal = 0;
-            let textTotal = 0;
+            const lineHeight = layout.children[0].lineHeight;
             for (const node of layout) {
-                if (node.naturalElement && node.length === 0 && !node.inputElement && !node.positionRelative && !node.blockVertical && !node.positionAuto && node.lineHeight === lineHeight && (node.baseline || node.cssAny('verticalAlign', $const.CSS.TOP, $const.CSS.MIDDLE, $const.CSS.BOTTOM))) {
-                    if (node.inputElement) {
-                        inputTotal++;
-                    }
-                    if (node.textElement) {
-                        textTotal++;
-                    }
-                    if (inputTotal > 0 && textTotal > 0) {
-                        return false;
-                    }
-                }
-                else {
+                if (!(node.naturalElement && node.length === 0 && !node.inputElement && !node.positionRelative && !node.blockVertical && !node.positionAuto && node.lineHeight === lineHeight && (node.baseline || node.cssAny('verticalAlign', $const.CSS.TOP, $const.CSS.MIDDLE, $const.CSS.BOTTOM)))) {
                     return false;
                 }
             }
@@ -1596,6 +1583,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public createNodeWrapper(node: T, parent: T, children?: T[], controlName?: string, containerType?: number) {
         const container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element, node.block ? 'div' : 'span'), true, parent, children);
+        container.addAlign($e.NODE_ALIGNMENT.WRAPPER);
         if (node.documentRoot) {
             container.documentRoot = true;
             node.documentRoot = false;
@@ -1607,14 +1595,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         container.exclude($e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET, $e.NODE_PROCEDURE.CUSTOMIZATION, $e.APP_SECTION.ALL);
         parent.appendTry(node, container);
         node.parent = container;
-        if (node.outerWrapper) {
-            container.outerWrapper = node.outerWrapper;
-            node.outerWrapper.innerWrapped = container;
+        const outerWrapper = node.outerWrapper;
+        if (outerWrapper) {
+            container.outerWrapper = outerWrapper;
+            outerWrapper.innerWrapped = container;
         }
         if (node.renderParent) {
             const renderTemplates = node.renderParent.renderTemplates;
             if (renderTemplates) {
-                for (let i = 0; i < renderTemplates.length; i++) {
+                const length = renderTemplates.length;
+                for (let i = 0; i < length; i++) {
                     const template = renderTemplates[i];
                     if (template && template.node === node) {
                         node.renderChildren.splice(i, 1);
@@ -1664,8 +1654,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let sortPositionAuto = false;
         if (node.hasAlign($e.NODE_ALIGNMENT.VERTICAL)) {
             let previous: T | undefined;
-            for (let i = 0; i < children.length; i++) {
-                const item = children[i];
+            for (const item of children) {
                 if (previous === undefined) {
                     item.anchor($const.CSS.TOP, 'true');
                 }
@@ -1726,7 +1715,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             let rowWidth = 0;
             let previousRowLeft: T | undefined;
             $util.partitionArray(children, item => item.float !== $const.CSS.RIGHT).forEach((seg, index) => {
-                if (seg.length === 0) {
+                const length = seg.length;
+                if (length === 0) {
                     return;
                 }
                 const leftAlign = index === 0;
@@ -1738,7 +1728,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (actualParent && actualParent.cssInitialAny('textAlign', $const.CSS.RIGHT, $const.CSS.END)) {
                         alignParent = $const.CSS.RIGHT;
                         leftForward = false;
-                        seg[seg.length - 1].anchor(alignParent, 'true');
+                        seg[length - 1].anchor(alignParent, 'true');
                     }
                     else {
                         alignParent = $const.CSS.LEFT;
@@ -1752,7 +1742,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 let previousMultiline = false;
                 let previous!: T;
-                for (let i = 0; i < seg.length; i++) {
+                for (let i = 0; i < length; i++) {
                     const item = seg[i];
                     let alignSibling = leftAlign && leftForward ? $c.STRING_BASE.LEFT_RIGHT : $c.STRING_BASE.RIGHT_LEFT;
                     if (!item.pageFlow) {
@@ -1952,7 +1942,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         [rowsLeft, rowsRight].forEach(rows => {
             let previousBaseline: T | undefined;
-            for (let i = 0; i < rows.length; i++) {
+            const length = rows.length;
+            for (let i = 0; i < length; i++) {
                 const items = rows[i];
                 let baseline: T | undefined;
                 if (items.length > 1) {
@@ -2156,7 +2147,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         sortHorizontalFloat(children);
         let previous: T | undefined;
-        for (let i = 0; i < children.length; i++) {
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
             const item = children[i];
             if (previous === undefined) {
                 item.anchor(anchorStart, STRING_ANDROID.PARENT);
@@ -2166,7 +2158,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (item.pageFlow) {
                     previous.anchor(chainEnd, item.documentId);
                     item.anchor(chainStart, previous.documentId);
-                    if (i === children.length - 1) {
+                    if (i === length - 1) {
                         item.anchor(anchorEnd, STRING_ANDROID.PARENT);
                     }
                 }
@@ -2210,8 +2202,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             case $const.CSS.BOTTOM:
                                 if (bottom === undefined) {
-                                    for (let j = 0; j < children.length; j++) {
-                                        const child = children[j];
+                                    for (const child of children) {
                                         if (!child.baseline && (bottom === undefined || child.linear.bottom > bottom.linear.bottom)) {
                                             bottom = child;
                                         }
@@ -2299,8 +2290,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     protected processConstraintColumn(node: T, children: T[]) {
         let items: T[] = [];
         const rows: T[][] = [items];
-        for (let i = 0; i < children.length; i++) {
-            const item = children[i];
+        for (const item of children) {
             if (item.css('columnSpan') === 'all') {
                 if (items.length) {
                     rows.push([item]);
@@ -2340,27 +2330,30 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         let previousRow: T | string | undefined;
         function setColumnHorizontal(seg: T[]) {
-            const rowStart = seg[0];
-            const rowEnd = seg[seg.length - 1];
-            for (let i = 0; i < seg.length; i++) {
+            const lengthA = seg.length;
+            for (let i = 0; i < lengthA; i++) {
                 const item = seg[i];
                 if (i > 0) {
                     item.anchor($c.STRING_BASE.LEFT_RIGHT, seg[i - 1].documentId);
                 }
-                if (i < seg.length - 1) {
+                if (i < lengthA - 1) {
                     item.anchor($c.STRING_BASE.RIGHT_LEFT, seg[i + 1].documentId);
                 }
                 item.anchored = true;
             }
+            const rowStart = seg[0];
+            const rowEnd = seg[lengthA - 1];
             rowStart.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
             rowEnd.anchor($const.CSS.RIGHT, STRING_ANDROID.PARENT);
             rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread_inside');
         }
         function setColumnVertical(partition: T[][], lastRow: boolean) {
             const rowStart = partition[0][0];
-            for (let i = 0; i < partition.length; i++) {
+            const lengthA = partition.length;
+            for (let i = 0; i < lengthA; i++) {
                 const seg = partition[i];
-                for (let j = 0; j < seg.length; j++) {
+                const lengthB = partition.length;
+                for (let j = 0; j < lengthB; j++) {
                     const item = seg[j];
                     if (j === 0) {
                         if (i === 0) {
@@ -2386,7 +2379,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (j > 0) {
                         item.anchor($const.CSS.LEFT, seg[0].documentId);
                     }
-                    if (j === seg.length - 1) {
+                    if (j === lengthB - 1) {
                         if (lastRow) {
                             item.anchor($const.CSS.BOTTOM, STRING_ANDROID.PARENT);
                         }
@@ -2404,7 +2397,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
         }
-        for (let i = 0; i < rows.length; i++) {
+        const length = rows.length;
+        for (let i = 0; i < length; i++) {
             const row = rows[i];
             const rowStart = row[0];
             if (row.length === 1) {
@@ -2434,14 +2428,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             else {
                 const columns: T[][] = [];
-                let columnMin = Math.min(row.length, columnSized, columnCount || Number.POSITIVE_INFINITY);
+                const lengthA = row.length;
+                let columnMin = Math.min(lengthA, columnSized, columnCount || Number.POSITIVE_INFINITY);
                 let percentGap = 0;
                 if (columnMin > 1) {
-                    let perRowCount = row.length >= columnMin ? Math.ceil(row.length / columnMin) : 1;
+                    let perRowCount = lengthA >= columnMin ? Math.ceil(lengthA / columnMin) : 1;
                     const maxHeight = Math.floor(row.reduce((a, b) => a + b.bounds.height, 0) / columnMin);
-                    let excessCount = perRowCount > 1 && row.length % columnMin !== 0 ? row.length - columnMin : Number.POSITIVE_INFINITY;
+                    let excessCount = perRowCount > 1 && lengthA % columnMin !== 0 ? lengthA - columnMin : Number.POSITIVE_INFINITY;
                     let totalGap = 0;
-                    for (let j = 0, k = 0, l = 0; j < row.length; j++, l++) {
+                    for (let j = 0, k = 0, l = 0; j < lengthA; j++, l++) {
                         const column = row[j];
                         const rowIteration = l % perRowCount === 0;
                         if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && (row.length - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
@@ -2483,19 +2478,22 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     columns.push(row);
                 }
                 const horizontal: T[] = [];
-                for (let j = 0; j < columns.length; j++) {
-                    for (const item of columns[j]) {
+                const lengthB = columns.length;
+                for (let j = 0; j < lengthB; j++) {
+                    const data = columns[j];
+                    for (const item of data) {
                         item.setLayoutWidth($const.CSS.PX_0);
                         item.app('layout_constraintWidth_percent', $math.truncate((1 / columnMin) - percentGap, this.localSettings.precision.standardFloat));
                     }
-                    horizontal.push(columns[j][0]);
+                    horizontal.push(data[0]);
                 }
-                const columnHeight: number[] = new Array(columns.length).fill(0);
+                const columnHeight: number[] = new Array(lengthB).fill(0);
                 const barrier: T[] = [];
-                for (let j = 0; j < columns.length; j++) {
+                for (let j = 0; j < lengthB; j++) {
                     const item = columns[j];
-                    if (j < columns.length - 1 && item.length > 1) {
-                        const columnEnd = item[item.length - 1];
+                    const lengthC = item.length;
+                    if (j < lengthB - 1 && lengthC > 1) {
+                        const columnEnd = item[lengthC - 1];
                         if (/H\d/.test(columnEnd.tagName)) {
                             item.pop();
                             horizontal[j + 1] = columnEnd;
@@ -2503,7 +2501,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     const elements: Element[] = [];
-                    for (let k = 0; k < item.length; k++) {
+                    for (let k = 0; k < lengthC; k++) {
                         const column = item[k];
                         if (column.naturalElement) {
                             elements.push(<Element> (<Element> column.element).cloneNode(true));
@@ -2524,14 +2522,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         document.body.removeChild(container);
                     }
                 }
-                for (let j = 0; j < horizontal.length; j++) {
-                    const item = horizontal[j];
-                    if (j > 0) {
-                        item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, columnGap);
-                    }
+                const lengthD = horizontal.length;
+                for (let j = 1; j < lengthD; j++) {
+                    horizontal[j].modifyBox($e.BOX_STANDARD.MARGIN_LEFT, columnGap);
                 }
                 setColumnHorizontal(horizontal);
-                setColumnVertical(columns, i === rows.length - 1);
+                setColumnVertical(columns, i === length - 1);
                 if (columns.every(item => item.length === 1)) {
                     for (const item of columns) {
                         barrier.push(item[item.length - 1]);
@@ -2540,7 +2536,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     let maxColumnHeight = 0;
-                    for (let j = 0; j < columnHeight.length; j++) {
+                    const lengthC = columnHeight.length;
+                    for (let j = 0; j < lengthC; j++) {
                         if (columnHeight[j] >= maxColumnHeight) {
                             previousRow = columns[j].pop() as T;
                             maxColumnHeight = columnHeight[j];
@@ -2555,7 +2552,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const documentParent = $NodeUI.actualParent(children) || node;
         const horizontal = $NodeUI.partitionRows(children);
         const floating = node.hasAlign($e.NODE_ALIGNMENT.FLOAT);
-        if (horizontal.length > 1) {
+        const length = horizontal.length;
+        if (length > 1) {
             node.horizontalRows = horizontal;
         }
         if (!node.hasWidth && children.some(item => item.percentWidth)) {
@@ -2563,25 +2561,26 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         const previousSiblings: T[] = [];
         let bottomFloating = false;
-        for (let i = 0; i < horizontal.length; i++) {
+        for (let i = 0; i < length; i++) {
             const partition = horizontal[i];
             const previousRow = horizontal[i - 1];
             const [floatingRight, floatingLeft] = $util.partitionArray(partition, item => item.float === $const.CSS.RIGHT || item.autoMargin.left);
             let aboveRowEnd: T | undefined;
             let currentRowBottom: T | undefined;
             [floatingLeft, floatingRight].forEach(seg => {
-                if (seg.length === 0) {
+                const lengthA = seg.length;
+                if (lengthA === 0) {
                     return;
                 }
                 const reverse = seg === floatingRight;
                 const { anchorStart, anchorEnd, chainStart, chainEnd } = getAnchorDirection(reverse);
                 const rowStart = seg[0];
-                const rowEnd = seg[seg.length - 1];
+                const rowEnd = seg[lengthA - 1];
                 rowStart.anchor(anchorStart, STRING_ANDROID.PARENT);
                 if (!floating && documentParent.css('textAlign') === $const.CSS.CENTER) {
                     rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread');
                 }
-                else if (seg.length > 1) {
+                else if (lengthA > 1) {
                     if (reverse) {
                         rowEnd.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', 1);
                     }
@@ -2589,15 +2588,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL);
                     }
                 }
-                if (seg.length > 1 || rowEnd.autoMargin.leftRight) {
+                if (lengthA > 1 || rowEnd.autoMargin.leftRight) {
                     rowEnd.anchor(anchorEnd, STRING_ANDROID.PARENT);
                 }
-                for (let j = 0; j < seg.length; j++) {
+                for (let j = 0; j < lengthA; j++) {
                     const chain = seg[j];
                     const previous = seg[j - 1];
                     const next = seg[j + 1];
                     if (i === 0) {
-                        if (horizontal.length === 1) {
+                        if (length === 1) {
                             chain.anchorParent(STRING_ANDROID.VERTICAL);
                             if (!chain.autoMargin.topBottom) {
                                 chain.anchorStyle(STRING_ANDROID.VERTICAL, 'packed', chain.autoMargin.top ? 1 : 0);
@@ -2607,7 +2606,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             chain.anchor($const.CSS.TOP, STRING_ANDROID.PARENT);
                         }
                     }
-                    else if (!bottomFloating && i === horizontal.length - 1) {
+                    else if (!bottomFloating && i === length - 1) {
                         chain.anchor($const.CSS.BOTTOM, STRING_ANDROID.PARENT);
                     }
                     if (chain.autoMargin.leftRight) {
@@ -2668,7 +2667,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (i > 0) {
                 if (aboveRowEnd === undefined) {
                     aboveRowEnd = previousRow[0];
-                    for (let k = 1; k < previousRow.length; k++) {
+                    const lengthB = previousRow.length;
+                    for (let k = 1; k < lengthB; k++) {
                         if (previousRow[k].linear.bottom >= aboveRowEnd.linear.bottom) {
                             aboveRowEnd = previousRow[k];
                         }
@@ -2676,7 +2676,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 if (currentRowBottom === undefined) {
                     currentRowBottom = partition[0];
-                    for (let k = 1; k < partition.length; k++) {
+                    const lengthB = partition.length;
+                    for (let k = 1; k < lengthB; k++) {
                         if (partition[k].linear.bottom >= currentRowBottom.linear.bottom) {
                             currentRowBottom = partition[k];
                         }

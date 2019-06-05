@@ -14,29 +14,31 @@ const getInputName = (element: HTMLInputElement) => element.name ? element.name.
 
 export default class RadioGroup<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T) {
-        if (node.length > 1) {
-            const inputName = new Set<string>();
-            let i = 0;
-            let valid = true;
-            for (let item of node.children as T[]) {
-                if (!item.baseline) {
-                    valid = false;
-                    break;
-                }
-                if (item.renderAs) {
-                    item = item.renderAs as T;
-                }
-                if (item.is(CONTAINER_NODE.RADIO)) {
-                    const name = getInputName(<HTMLInputElement> item.element);
-                    if (name !== '') {
-                        inputName.add(name);
-                        i++;
+        if (node.length) {
+            if (node.inputContainer && node.length > 1) {
+                const inputName = new Set<string>();
+                let i = 0;
+                let valid = true;
+                for (let item of node.children as T[]) {
+                    if (!item.baseline || item.multiline) {
+                        valid = false;
+                        break;
+                    }
+                    if (item.renderAs) {
+                        item = item.renderAs as T;
+                    }
+                    if (item.is(CONTAINER_NODE.RADIO)) {
+                        const name = getInputName(<HTMLInputElement> item.element);
+                        if (name !== '') {
+                            inputName.add(name);
+                            i++;
+                        }
                     }
                 }
-            }
-            if (valid && i > 1 && inputName.size === 1) {
-                const linearData = $NodeUI.linearData(node.children);
-                return linearData.linearX && !linearData.floated.has($const.CSS.RIGHT);
+                if (valid && i > 1 && inputName.size === 1) {
+                    const linearData = $NodeUI.linearData(node.children);
+                    return linearData.linearX && !linearData.floated.has($const.CSS.RIGHT);
+                }
             }
             return false;
         }
@@ -47,7 +49,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
 
     public processNode(node: T, parent: T) {
         const controlName = CONTAINER_ANDROID.RADIOGROUP;
-        if (node.length) {
+        if (node.inputContainer) {
             node.setControlType(controlName, CONTAINER_NODE.LINEAR);
             node.addAlign($e.NODE_ALIGNMENT.HORIZONTAL);
             node.android('orientation', STRING_ANDROID.HORIZONTAL);
@@ -126,12 +128,10 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
     }
 
     public postBaseLayout(node: T) {
-        node.some((item: T) => {
-            if (item.element && (<HTMLInputElement> item.element).checked) {
+        node.renderEach((item: T) => {
+            if (item.naturalElement && (<HTMLInputElement> item.element).checked) {
                 node.android('checkedButton', item.documentId);
-                return true;
             }
-            return false;
         });
     }
 }

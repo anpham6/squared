@@ -128,3 +128,14 @@ interface ImageSrcSet {
     pixelRatio: number;
     actualWidth?: number;
 }
+
+interface QueryData {
+    type: number;
+    name?: string;
+    adjacent?: string;
+    classList?: string[];
+    attrs?: QueryAttribute[];
+}
+interface QueryAttribute extends StringValue {
+    symbol?: string;
+}

@@ -101,7 +101,19 @@ export function getSpecificity(value: string) {
                 }
             }
             if (match[2]) {
-                if (match[2].startsWith(':not(')) {
+                if (match[2].charAt(0) === '[') {
+                    const attrPattern = new RegExp(STRING.CSS_SELECTOR_ATTR, 'g');
+                    let attrMatch: RegExpExecArray | null;
+                    while ((attrMatch = attrPattern.exec(match[2])) !== null) {
+                        if (attrMatch[1]) {
+                            result += 1;
+                        }
+                        if (attrMatch[3] || attrMatch[4] || attrMatch[5]) {
+                            result += 10;
+                        }
+                    }
+                }
+                else if (match[2].startsWith(':not(')) {
                     if (match[3]) {
                         result += getSpecificity(match[3]);
                     }
@@ -117,12 +129,6 @@ export function getSpecificity(value: string) {
                             break;
                     }
                 }
-            }
-            if (match[4]) {
-                result += 1;
-            }
-            if (match[5]) {
-                result += 10;
             }
         }
         else {
@@ -162,12 +168,16 @@ export function getDataSet(element: HTMLElement | SVGElement, prefix: string) {
 export function getKeyframeRules(): ObjectMap<CSSKeyframesData> {
     const result: ObjectMap<CSSKeyframesData> = {};
     violation: {
-        for (let i = 0; i < document.styleSheets.length; i++) {
-            const styleSheet = <CSSStyleSheet> document.styleSheets[i];
-            if (styleSheet.cssRules) {
-                for (let j = 0; j < styleSheet.cssRules.length; j++) {
+        const styleSheets = document.styleSheets;
+        const lengthA = styleSheets.length;
+        for (let i = 0; i < lengthA; i++) {
+            const styleSheet = <CSSStyleSheet> styleSheets[i];
+            const cssRules = styleSheet.cssRules;
+            if (cssRules) {
+                const lengthB = cssRules.length;
+                for (let j = 0; j < lengthB; j++) {
                     try {
-                        const item = <CSSKeyframesRule> styleSheet.cssRules[j];
+                        const item = <CSSKeyframesRule> cssRules[j];
                         if (item.type === CSSRule.KEYFRAMES_RULE) {
                             const value = parseKeyframeRule(item.cssRules);
                             if (Object.keys(value).length) {
@@ -192,10 +202,12 @@ export function getKeyframeRules(): ObjectMap<CSSKeyframesData> {
 
 export function parseKeyframeRule(rules: CSSRuleList) {
     const result: CSSKeyframesData = {};
-    for (let k = 0; k < rules.length; k++) {
-        const match = REGEXP_KEYFRAME.exec(rules[k].cssText);
+    const length = rules.length;
+    for (let i = 0; i < length; i++) {
+        const item = rules[i];
+        const match = REGEXP_KEYFRAME.exec(item.cssText);
         if (match) {
-            for (let percent of (rules[k]['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
+            for (let percent of (item['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
                 percent = percent.trim();
                 switch (percent) {
                     case 'from':
@@ -400,7 +412,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
         orientation
     };
     if (orientation.length === 2) {
-        for (let i = 0; i < orientation.length; i++) {
+        for (let i = 0; i < 2; i++) {
             const position = orientation[i];
             let direction: string;
             let offsetParent: number;
@@ -438,7 +450,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
         }
     }
     else if (orientation.length === 4) {
-        for (let i = 0; i < orientation.length; i++) {
+        for (let i = 0; i < 4; i++) {
             const position = orientation[i];
             switch (i) {
                 case 0:
@@ -496,8 +508,10 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     let srcset = element.srcset;
     let sizes = element.sizes;
     if (parentElement && parentElement.tagName === 'PICTURE') {
-        for (let i = 0; i < parentElement.children.length; i++) {
-            const source = <HTMLSourceElement> parentElement.children[i];
+        const children = parentElement.children;
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
+            const source = <HTMLSourceElement> children[i];
             if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || isString(source.type) && mimeType && mimeType.includes((source.type.split('/').pop() as string).toLowerCase()))) {
                 srcset = source.srcset;
                 sizes = source.sizes;
@@ -574,7 +588,8 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         if (width > 0) {
             const resolution = width * window.devicePixelRatio;
             let index = -1;
-            for (let i = 0; i < result.length; i++) {
+            const length = result.length;
+            for (let i = 0; i < length; i++) {
                 const imageWidth = result[i].width;
                 if (imageWidth > 0 && imageWidth <= resolution && (index === -1 || result[index].width < imageWidth)) {
                     index = i;
@@ -678,7 +693,8 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
     const opening: boolean[] = [];
     const closing: number[] = [];
     let opened = 0;
-    for (let i = 0; i < value.length; i++) {
+    const length = value.length;
+    for (let i = 0; i < length; i++) {
         switch (value.charAt(i)) {
             case '(':
                 opened++;

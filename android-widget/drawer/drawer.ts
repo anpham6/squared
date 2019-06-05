@@ -29,15 +29,18 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     }
 
     public init(element: HTMLElement) {
-        if (this.included(element) && element.children.length) {
-            for (let i = 0; i < element.children.length; i++) {
-                const item = <HTMLElement> element.children[i];
-                if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
-                    item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
+        if (this.included(element)) {
+            const length = element.children.length;
+            if (length) {
+                for (let i = 0; i < length; i++) {
+                    const item = <HTMLElement> element.children[i];
+                    if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
+                        item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
+                    }
                 }
+                this.application.rootElements.add(element);
+                return true;
             }
-            this.application.rootElements.add(element);
-            return true;
         }
         return false;
     }

@@ -38,7 +38,7 @@ async function getImageSvgAsync(value: string)  {
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[]) {
-        if (element.dataset.use) {
+        if (element.dataset.use && extensions.length) {
             const included = element.dataset.use.split($regex.XML.SEPARATOR);
             const result: Extension<T>[] = [];
             const untagged: Extension<T>[] = [];
@@ -250,7 +250,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 });
             }))
             .then((result: PreloadImage[]) => {
-                for (let i = 0; i < result.length; i++) {
+                const length = result.length;
+                for (let i = 0; i < length; i++) {
                     const value = result[i];
                     if (typeof value === 'string') {
                         if (typeof images[i] === 'string') {
@@ -287,6 +288,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public createCache(documentRoot: HTMLElement) {
+        const controller = this.controllerHandler;
         this.processing.node = undefined;
         this.processing.cache.afterAppend = undefined;
         this.processing.cache.clear();
@@ -296,7 +298,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         const nodeRoot = this.cascadeParentNode(documentRoot);
         if (nodeRoot) {
-            nodeRoot.parent = new NodeConstructor(0, this.processing.sessionId, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
+            nodeRoot.parent = new NodeConstructor(0, this.processing.sessionId, documentRoot.parentElement || document.body, controller.afterInsertNode);
             nodeRoot.siblingIndex = 0;
             nodeRoot.documentRoot = true;
             nodeRoot.documentParent = nodeRoot.parent;
@@ -315,7 +317,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             element.style.setProperty(attr, value);
         }
         let resetBounds = false;
-        const CACHE = this.processing.cache as NodeList<T>;
+        const CACHE = <NodeList<T>> this.processing.cache;
         for (const node of CACHE) {
             if (node.styleElement) {
                 const element = <HTMLElement> node.element;
@@ -395,16 +397,8 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             node.saveAsInitial();
         }
-        this.controllerHandler.evaluateNonStatic(nodeRoot, CACHE);
-        CACHE.sort((a, b) => {
-            if (a.depth !== b.depth) {
-                return a.depth < b.depth ? -1 : 1;
-            }
-            else if (a.documentParent !== b.documentParent) {
-                return a.documentParent.siblingIndex < b.documentParent.siblingIndex ? -1 : 1;
-            }
-            return a.siblingIndex < b.siblingIndex ? -1 : 1;
-        });
+        controller.evaluateNonStatic(nodeRoot, CACHE);
+        controller.sortInitialCache(CACHE);
         for (const ext of this.extensions) {
             ext.afterInit(documentRoot);
         }
@@ -452,31 +446,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public conditionElement(element: HTMLElement) {
-        if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName)) {
-            if (this.controllerHandler.visibleElement(element) || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
-                return true;
-            }
-            else {
-                let current = element.parentElement;
-                let valid = true;
-                while (current) {
-                    if ($css.getStyle(current).display === $const.CSS.NONE) {
-                        valid = false;
-                        break;
-                    }
-                    current = current.parentElement;
-                }
-                if (valid) {
-                    for (let i = 0; i < element.children.length; i++) {
-                        if (this.controllerHandler.visibleElement(<Element> element.children[i])) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
-        }
-        return false;
+        return !this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName);
     }
 
     public toString() {
@@ -498,8 +468,10 @@ export default abstract class Application<T extends Node> implements squared.bas
             const afterElement = this.createPseduoElement(element, 'after');
             const children: T[] = [];
             let includeText = false;
-            for (let i = 0; i < element.childNodes.length; i++) {
-                const childElement = <HTMLElement> element.childNodes[i];
+            const childNodes = element.childNodes;
+            const lengthA = childNodes.length;
+            for (let i = 0; i < lengthA; i++) {
+                const childElement = <HTMLElement> childNodes[i];
                 if (childElement === beforeElement) {
                     const child = this.insertNode(<HTMLElement> beforeElement);
                     if (child) {
@@ -549,14 +521,36 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
             }
-            const length = children.length;
-            if (length) {
+            const lengthB = children.length;
+            if (lengthB) {
+                let queryMap!: T[][];
+                if (this.userSettings.createQuerySelectorMap) {
+                    queryMap = [];
+                }
                 let siblingsLeading: T[] = [];
                 let siblingsTrailing: T[] = [];
-                if (length > 1) {
+                function appendMap(item: T) {
+                    const childMap = item.queryMap;
+                    if (childMap) {
+                        const offset = item.depth - depth;
+                        const lengthC = childMap.length;
+                        for (let i = 0; i < lengthC; i++) {
+                            const key = i + offset;
+                            if (queryMap[key] === undefined) {
+                                queryMap[key] = [];
+                            }
+                            $util.concatArray(queryMap[key], childMap[i]);
+                        }
+                    }
+                }
+                if (queryMap) {
+                    queryMap[0] = children;
+                }
+                if (lengthB > 1) {
                     let trailing = children[0];
                     let floating = false;
-                    for (let i = 0; i < length; i++) {
+                    let input = false;
+                    for (let i = 0; i < lengthB; i++) {
                         const child = children[i];
                         if (child.excluded) {
                             this.processing.excluded.append(child);
@@ -568,6 +562,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                         if (child.pageFlow) {
                             if (child.floating) {
                                 floating = true;
+                            }
+                            if (child.inputElement) {
+                                input = true;
                             }
                             if (i > 0) {
                                 siblingsTrailing.push(child);
@@ -582,7 +579,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 siblingsTrailing = [];
                                 trailing = child;
                             }
-                            if (i < length - 1) {
+                            if (i < lengthB - 1) {
                                 siblingsLeading.push(child);
                                 if (child.lineBreak) {
                                     children[i + 1].lineBreakLeading = true;
@@ -590,9 +587,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                             }
                         }
                         child.siblingIndex = i;
+                        child.actualParent = node;
+                        if (queryMap) {
+                            appendMap(child);
+                        }
                     }
                     trailing.siblingsTrailing = siblingsTrailing;
                     node.floatContainer = floating;
+                    node.inputContainer = input;
                 }
                 else {
                     const child = children[0];
@@ -607,7 +609,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                             this.processing.cache.append(child);
                         }
                     }
+                    child.actualParent = node;
+                    if (queryMap) {
+                        appendMap(child);
+                    }
                 }
+                node.queryMap = queryMap;
             }
             node.inlineText = !includeText;
             node.actualChildren = children;
@@ -746,8 +753,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 }
                                 function cascadeSibling(sibling: Element) {
                                     if (getCounterValue($css.getStyle(sibling).getPropertyValue('counter-reset')) === undefined) {
-                                        for (let i = 0; i < sibling.children.length; i++) {
-                                            const child = sibling.children[i];
+                                        const children = sibling.children;
+                                        const length = children.length;
+                                        for (let i = 0; i < length; i++) {
+                                            const child = children[i];
                                             if (child.className !== '__squared.pseudo') {
                                                 let increment = getIncrementValue(child);
                                                 if (increment) {
@@ -856,9 +865,11 @@ export default abstract class Application<T extends Node> implements squared.bas
         let warning = false;
         const applyStyleSheet = (item: CSSStyleSheet) => {
             try {
-                if (item.cssRules) {
-                    for (let j = 0; j < item.cssRules.length; j++) {
-                        const rule = item.cssRules[j];
+                const cssRules = item.cssRules;
+                if (cssRules) {
+                    const lengthA = cssRules.length;
+                    for (let j = 0; j < lengthA; j++) {
+                        const rule = cssRules[j];
                         switch (rule.type) {
                             case CSSRule.STYLE_RULE:
                             case CSSRule.FONT_FACE_RULE:
@@ -891,13 +902,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         };
-        for (let i = 0; i < document.styleSheets.length; i++) {
-            applyStyleSheet(<CSSStyleSheet> document.styleSheets[i]);
+        const styleSheets = document.styleSheets;
+        const length = styleSheets.length;
+        for (let i = 0; i < length; i++) {
+            applyStyleSheet(<CSSStyleSheet> styleSheets[i]);
         }
     }
 
     protected applyCSSRuleList(rules: CSSRuleList) {
-        for (let i = 0; i < rules.length; i++) {
+        const length = rules.length;
+        for (let i = 0; i < length; i++) {
             this.applyStyleRule(<CSSStyleRule> rules[i]);
         }
     }

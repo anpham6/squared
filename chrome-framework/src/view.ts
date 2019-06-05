@@ -4,6 +4,8 @@ import { LocalSettings } from './@types/node';
 type T = View;
 
 export default class View extends squared.base.Node implements chrome.base.View {
+    public queryMap?: T[][];
+
     protected _cached: CachedValue<T> = {};
     protected _localSettings: LocalSettings = {};
     protected _documentParent?: T;

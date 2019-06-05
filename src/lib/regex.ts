@@ -7,7 +7,9 @@ export const STRING = {
     LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
     DATAURI: '(?:data:([^;]+);([^,]+),)?(.*?)',
-    CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
+    BREAKWORD: '([A-Za-z\\d]+|&#?[A-Za-z\\d]+;)',
+    CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|::[\\w\\-.]+|(?:\\[[\\w\\-]+(?:[~^$*|]?=[^\\]]+)?\\])+)?\\s*',
+    CSS_SELECTOR_ATTR: '\\[([\\w\\-]+)(?:([~^$*|])?=(?:"([^"])+"|\'([^\'])+\'|([^\\]]+)))?\\]',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_CALC: 'calc(\\(.+\\))',
     CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)'
@@ -32,7 +34,6 @@ export const XML = {
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
     ENTITY: /&#?[A-Za-z\d]+;/,
     SEPARATOR: /\s*,\s*/,
-    BREAKWORD_G: /([A-Za-z\\d]+|&#?[A-Za-z\\d]+;)/g,
     NONWORD_G: /[^A-Za-z\d]+/g,
     TAGNAME_G: /(<([^>]+)>)/g
 };

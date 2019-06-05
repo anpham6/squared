@@ -41,7 +41,8 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             }
             node.overflow = overflowType;
         }
-        for (let i = 0; i < overflow.length; i++) {
+        const lengthA = overflow.length;
+        for (let i = 0; i < lengthA; i++) {
             const container = this.application.createNode(i === 0 ? <Element> node.element : $dom.createElement(node.actualParent && node.actualParent.element, node.block ? 'div' : 'span'));
             container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
             if (i === 0) {
@@ -56,7 +57,8 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             container.resetBox($e.BOX_STANDARD.PADDING);
             scrollView.push(container);
         }
-        for (let i = 0; i < scrollView.length; i++) {
+        const lengthB = scrollView.length;
+        for (let i = 0; i < lengthB; i++) {
             const item = scrollView[i];
             const previous = scrollView[i - 1];
             switch (item.controlName) {
@@ -100,7 +102,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 }
             );
         }
-        if (scrollView.length === 2) {
+        if (lengthB === 2) {
             node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
             node.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
         }

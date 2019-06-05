@@ -34,14 +34,15 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
         main = appBase.application;
         main.userSettings = settings;
         const register = new Set<Extension>();
+        const builtInExtensions = main.builtInExtensions;
         for (const namespace of settings.builtInExtensions) {
-            if (main.builtInExtensions[namespace]) {
-                register.add(main.builtInExtensions[namespace]);
+            if (builtInExtensions[namespace]) {
+                register.add(builtInExtensions[namespace]);
             }
             else {
-                for (const extension in main.builtInExtensions) {
+                for (const extension in builtInExtensions) {
                     if (extension.startsWith(`${namespace}.`)) {
-                        register.add(main.builtInExtensions[extension]);
+                        register.add(builtInExtensions[extension]);
                     }
                 }
             }

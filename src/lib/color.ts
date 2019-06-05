@@ -2094,14 +2094,15 @@ export function findColorShade(value: string) {
                 baseline = color.hsl.h;
             }
         }
-        if (result.length === 1) {
+        const length = result.length;
+        if (length === 1) {
             return result[0];
         }
-        else if (result.length > 1) {
+        else if (length > 1) {
             const total = hsl.l + hsl.s;
             let nearest = Number.POSITIVE_INFINITY;
             let index = -1;
-            for (let i = 0; i < result.length; i++) {
+            for (let i = 0; i < length; i++) {
                 const offset = Math.abs(total - (result[i].hsl.l + result[i].hsl.s));
                 if (offset < nearest) {
                     nearest = offset;

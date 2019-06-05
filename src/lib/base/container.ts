@@ -8,12 +8,13 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public [Symbol.iterator]() {
-        const list = this._children;
         const data: IteratorResult<T> = { done: false, value: undefined as any };
+        const list = this._children;
+        const length = list.length;
         let i = 0;
         return {
             next(): IteratorResult<T> {
-                if (i < list.length) {
+                if (i < length) {
                     data.value = list[i++];
                 }
                 else {
@@ -44,9 +45,11 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public remove(item: T) {
-        for (let i = 0; i < this._children.length; i++) {
-            if (this._children[i] === item) {
-                return this._children.splice(i, 1);
+        const children = this._children;
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
+            if (children[i] === item) {
+                return children.splice(i, 1);
             }
         }
         return [];
@@ -71,24 +74,28 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public each(predicate: IteratorPredicate<T, void>) {
-        for (let i = 0; i < this._children.length; i++) {
-            predicate(this._children[i], i, this._children);
+        const children = this._children;
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
+            predicate(children[i], i, children);
         }
         return this;
     }
 
     public find(predicate: IteratorPredicate<T, boolean> | string, value?: any) {
+        const children = this._children;
+        const length = children.length;
         if (typeof predicate === 'string') {
-            for (let i = 0; i < this._children.length; i++) {
-                if (this._children[i][predicate] === value) {
-                    return this._children[i];
+            for (let i = 0; i < length; i++) {
+                if (children[i][predicate] === value) {
+                    return children[i];
                 }
             }
         }
         else {
-            for (let i = 0; i < this._children.length; i++) {
-                if (predicate(this._children[i], i, this._children)) {
-                    return this._children[i];
+            for (let i = 0; i < length; i++) {
+                if (predicate(children[i], i, children)) {
+                    return children[i];
                 }
             }
         }
@@ -106,9 +113,11 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public every(predicate: IteratorPredicate<T, boolean>) {
-        if (this.length) {
-            for (let i = 0; i < this._children.length; i++) {
-                if (!predicate(this._children[i], i, this._children)) {
+        const children = this._children;
+        const length = children.length;
+        if (length) {
+            for (let i = 0; i < length; i++) {
+                if (!predicate(children[i], i, children)) {
                     return false;
                 }
             }
@@ -118,8 +127,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public some(predicate: IteratorPredicate<T, boolean>) {
-        for (let i = 0; i < this._children.length; i++) {
-            if (predicate(this._children[i], i, this._children)) {
+        const children = this._children;
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
+            if (predicate(children[i], i, children)) {
                 return true;
             }
         }
@@ -152,9 +163,11 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public cascadeSome(predicate: IteratorPredicate<T, boolean>) {
         function cascade(container: Container<T>) {
-            for (let i = 0; i < container.length; i++) {
-                const item = container.item(i) as T;
-                if (predicate(item, i, container.children)) {
+            const children = container.children;
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                const item = children[i] as T;
+                if (predicate(item, i, children)) {
                     return true;
                 }
                 if (item instanceof Container && item.length && cascade(item)) {

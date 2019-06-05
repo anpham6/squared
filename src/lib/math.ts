@@ -152,9 +152,10 @@ export function clampRange(value: number, min = 0, max = 1) {
 }
 
 export function nextMultiple(values: number[], minimum = 0, offset?: number[]) {
-    if (values.length > 1) {
+    const length = values.length;
+    if (length > 1) {
         const increment = minArray(values);
-        if (offset && offset.length === values.length) {
+        if (offset && offset.length === length) {
             for (let i = 0; i < offset.length; i++) {
                 minimum = Math.max(minimum, offset[i] + values[i]);
             }
@@ -171,7 +172,7 @@ export function nextMultiple(values: number[], minimum = 0, offset?: number[]) {
         let valid = false;
         while (!valid) {
             const total = start + value;
-            for (let i = 1; i < values.length; i++) {
+            for (let i = 1; i < length; i++) {
                 const multiple = values[i] + (offset ? offset[i] : 0);
                 if (total % multiple === 0) {
                     valid = true;

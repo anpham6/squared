@@ -19,6 +19,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract includeElement(element: Element): boolean;
     public abstract visibleElement(element: Element): boolean;
     public abstract evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
+    public abstract sortInitialCache(cache: NodeList<T>): void;
     public abstract get userSettings(): UserSettings;
     public abstract get afterInsertNode(): BindGeneric<T, void>;
 

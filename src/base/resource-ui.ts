@@ -24,9 +24,10 @@ const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)
 
 function removeExcluded(node: NodeUI, element: Element, attr: string) {
     let value: string = element[attr];
-    const length = node.actualChildren.length;
+    const children = node.actualChildren;
+    const length = children.length;
     for (let i = 0; i < length; i++) {
-        const item = node.actualChildren[i] as NodeUI;
+        const item = children[i] as NodeUI;
         if (!item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
             if (item.htmlElement && attr === 'innerHTML') {
                 if (item.lineBreak) {
@@ -103,26 +104,27 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string, opacit
             result.push({ color, offset });
         }
     }
-    const lastStop = result[result.length - 1];
+    const length = result.length;
+    const lastStop = result[length - 1];
     if (lastStop.offset === -1) {
         lastStop.offset = 1;
     }
     let percent = 0;
-    for (let i = 0; i < result.length; i++) {
+    for (let i = 0; i < length; i++) {
         const item = result[i];
         if (item.offset === -1) {
             if (i === 0) {
                 item.offset = 0;
             }
             else {
-                for (let j = i + 1, k = 2; j < result.length - 1; j++, k++) {
+                for (let j = i + 1, k = 2; j < length - 1; j++, k++) {
                     if (result[j].offset !== -1) {
                         item.offset = (percent + result[j].offset) / k;
                         break;
                     }
                 }
                 if (item.offset === -1) {
-                    item.offset = percent + lastStop.offset / (result.length - 1);
+                    item.offset = percent + lastStop.offset / (length - 1);
                 }
             }
         }
@@ -130,11 +132,11 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string, opacit
     }
     if (repeating) {
         if (percent < 100) {
-            const original = result.slice(0);
             complete: {
+                const original = result.slice(0);
                 let basePercent = percent;
                 while (percent < 100) {
-                    for (let i = 0; i < original.length; i++) {
+                    for (let i = 0; i < length; i++) {
                         percent = Math.min(basePercent + original[i].offset, 1);
                         result.push({ ...original[i], offset: percent });
                         if (percent === 1) {
@@ -147,7 +149,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string, opacit
         }
     }
     else if (percent < 1) {
-        result.push({ ...result[result.length - 1], offset: 1 });
+        result.push({ ...result[length - 1], offset: 1 });
     }
     return result;
 }
@@ -266,8 +268,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static getOptionArray(element: HTMLSelectElement, showDisabled = false) {
         const stringArray: string[] = [];
         let numberArray = true;
-        for (let i = 0; i < element.children.length; i++) {
-            const item = <HTMLOptionElement> element.children[i];
+        const children = element.children;
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
+            const item = <HTMLOptionElement> children[i];
             if (!showDisabled && item.disabled) {
                 continue;
             }
@@ -300,10 +304,11 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 return undefined;
             default:
                 const dimensions = value.split(' ');
-                if (dimensions.length === 1) {
+                const length = dimensions.length;
+                if (length === 1) {
                     dimensions[1] = dimensions[0];
                 }
-                for (let i = 0; i < dimensions.length; i++) {
+                for (let i = 0; i < length; i++) {
                     if (dimensions[i] === $const.CSS.AUTO) {
                         dimensions[i] = $const.CSS.PERCENT_100;
                     }
@@ -456,8 +461,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         borderRadius.length = 1;
                     }
                 }
-                if (borderRadius.length) {
-                    for (let i = 0; i < borderRadius.length; i++) {
+                const length = borderRadius.length;
+                if (length) {
+                    for (let i = 0; i < length; i++) {
                         borderRadius[i] = node.convertPX(borderRadius[i], horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT, false);
                     }
                     boxStyle.borderRadius = borderRadius;

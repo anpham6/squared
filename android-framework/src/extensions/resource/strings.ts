@@ -51,10 +51,11 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             if (node.naturalElement) {
                                 const renderParent = node.renderParent as T;
                                 if (renderParent && renderParent.layoutRelative) {
-                                    if (node.alignParent($const.CSS.LEFT) && !$css.isParentStyle(<Element> node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                                    if (node.alignParent($const.CSS.LEFT) && !(node.actualParent as T).preserveWhiteSpace) {
                                         const textContent = node.textContent;
                                         let leadingSpace = 0;
-                                        for (let i = 0; i < textContent.length; i++) {
+                                        const length = textContent.length;
+                                        for (let i = 0; i < length; i++) {
                                             switch (textContent.charCodeAt(i)) {
                                                 case 160:
                                                     leadingSpace++;

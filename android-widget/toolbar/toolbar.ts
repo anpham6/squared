@@ -36,8 +36,10 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
 
     public init(element: HTMLElement) {
         if (this.included(element)) {
-            for (let i = 0; i < element.children.length; i++) {
-                const item = <HTMLElement> element.children[i];
+            const children = element.children;
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                const item = <HTMLElement> children[i];
                 if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
                     item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
                     break;
@@ -69,8 +71,10 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         const backgroundImage = node.has('backgroundImage');
         const appBarChildren: T[] = [];
         const collapsingToolbarChildren: T[] = [];
-        for (let i = 0; i < element.children.length; i++) {
-            const item = <HTMLElement> element.children[i];
+        const children = element.children;
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
+            const item = <HTMLElement> children[i];
             if (item.tagName === 'IMG') {
                 if (item.dataset.navigationIcon) {
                     const src = resource.addImageSrc(<HTMLImageElement> item, PREFIX_MENU);

@@ -71,6 +71,7 @@ export interface CachedValue<T> {
     actualHeight?: number;
     previousSibling?: T | null;
     nextSibling?: T | null;
+    attributes?: StringMap;
     flexbox?: Flexbox;
     autoMargin?: AutoMargin;
     backgroundColor?: string;

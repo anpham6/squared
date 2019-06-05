@@ -18,7 +18,7 @@ let initialized = false;
 let application: Application<T>;
 let controller: Controller<T>;
 let userSettings: UserSettings;
-let elementMap: Map<Element, View>;
+let elementMap: Map<Element, T>;
 
 function findElement(element: HTMLElement) {
     const result = elementMap.get(element);
@@ -76,7 +76,7 @@ const appBase: ChromeFramework<T> = {
             return null;
         },
         querySelectorAll(value: string) {
-            const result: View[] = [];
+            const result: T[] = [];
             if (application) {
                 document.querySelectorAll(value).forEach(element => {
                     const item = findElement(<HTMLElement> element);
@@ -91,7 +91,7 @@ const appBase: ChromeFramework<T> = {
             if (application) {
                 return (<Controller<T>> application.controllerHandler).elementMap;
             }
-            return new Map<Element, View>();
+            return new Map<Element, T>();
         }
     },
     create() {
@@ -118,7 +118,7 @@ const appBase: ChromeFramework<T> = {
     },
     getElement: async (element: HTMLElement) => {
         if (application) {
-            return findElementAsync(element);
+            return await findElementAsync(element);
         }
         return null;
     },
@@ -126,7 +126,7 @@ const appBase: ChromeFramework<T> = {
         if (application) {
             const element = document.getElementById(value);
             if (element) {
-                return findElementAsync(element);
+                return await findElementAsync(element);
             }
         }
         return null;
@@ -135,7 +135,7 @@ const appBase: ChromeFramework<T> = {
         if (application) {
             const element = document.querySelector(value);
             if (element) {
-                return findElementAsync(<HTMLElement> element);
+                return await findElementAsync(<HTMLElement> element);
             }
         }
         return null;
@@ -145,15 +145,17 @@ const appBase: ChromeFramework<T> = {
             const query = document.querySelectorAll(value);
             const result: View[] = new Array(query.length);
             let incomplete = false;
-            query.forEach(async (element, index) => {
-                const item = await findElementAsync(<HTMLElement> element);
-                if (item) {
-                    result[index] = item;
-                }
-                else {
-                    incomplete = true;
-                }
-            });
+            await (async () => {
+                query.forEach(async (element, index) => {
+                    const item = await findElementAsync(<HTMLElement> element);
+                    if (item) {
+                        result[index] = item;
+                    }
+                    else {
+                        incomplete = true;
+                    }
+                });
+            })();
             return incomplete ? $util.flatArray(result) : result;
         }
         return [];

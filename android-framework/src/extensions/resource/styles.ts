@@ -21,11 +21,12 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
         for (const node of this.application.session.cache) {
             if (node.visible && node.controlId) {
                 const renderChildren = node.renderChildren;
-                if (renderChildren.length > 1) {
+                const length = renderChildren.length;
+                if (length > 1) {
                     const attrMap = new Map<string, number>();
                     let valid = true;
                     let style = '';
-                    for (let i = 0; i < renderChildren.length; i++) {
+                    for (let i = 0; i < length; i++) {
                         const item = renderChildren[i] as T;
                         let found = false;
                         for (const value of item.combine('_', STRING_ANDROID.ANDROID)) {
@@ -50,7 +51,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     }
                     if (valid) {
                         for (const [attr, value] of attrMap.entries()) {
-                            if (value !== renderChildren.length) {
+                            if (value !== length) {
                                 attrMap.delete(attr);
                             }
                         }
@@ -92,8 +93,9 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
         }
         for (const name in styles) {
             const items: StringValue[] = [];
-            for (const attr in styles[name]) {
-                const match = $regex.XML.ATTRIBUTE.exec(styles[name][attr]);
+            const data = styles[name];
+            for (const attr in data) {
+                const match = $regex.XML.ATTRIBUTE.exec(data[attr]);
                 if (match) {
                     items.push({ key: match[1], value: match[2] });
                 }

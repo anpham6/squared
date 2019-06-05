@@ -92,20 +92,24 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             result.push(`#${rgb + (a !== 'FF' ? a : '')}`);
                             break;
                         }
-                        case 'points':
-                            for (let j = 0; j < currentValue.length; j++) {
+                        case 'points': {
+                            const length = currentValue.length;
+                            for (let j = 0; j < length; j++) {
                                 const current = <Point> currentValue[j];
                                 const next = <Point> nextValue[j];
                                 result.push(`${SvgAnimate.getSplitValue(current.x, next.x, percent)},${SvgAnimate.getSplitValue(current.y, next.y, percent)}`);
                             }
                             break;
-                        default:
-                            for (let j = 0; j < currentValue.length; j++) {
+                        }
+                        default: {
+                            const length = currentValue.length;
+                            for (let j = 0; j < length; j++) {
                                 const current = currentValue[j] as number;
                                 const next = nextValue[j] as number;
                                 result.push(SvgAnimate.getSplitValue(current, next, percent).toString());
                             }
                             break;
+                        }
                     }
                     if (result.length) {
                         splitTimes.push(time);
@@ -183,9 +187,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             this.evaluateStart = true;
                         }
                         const fromCoords = SvgBuild.parseCoordinates(this.from);
-                        if (byCoords.length === fromCoords.length) {
+                        const length = fromCoords.length;
+                        if (byCoords.length === length) {
                             const to: number[] = [];
-                            for (let i = 0; i < fromCoords.length; i++) {
+                            for (let i = 0; i < length; i++) {
                                 to.push(fromCoords[i] + byCoords[i]);
                             }
                             this.to = to.join(',');

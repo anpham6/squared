@@ -1,4 +1,4 @@
-import { CHAR, PREFIX, UNIT, XML } from './regex';
+import { CHAR, PREFIX, STRING, UNIT, XML } from './regex';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
@@ -15,8 +15,9 @@ export function capitalize(value: string, upper = true) {
 
 export function capitalizeString(value: string) {
     const result = value.split('');
+    const pattern = new RegExp(STRING.BREAKWORD, 'g');
     let match: RegExpMatchArray | null;
-    while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
+    while ((match = pattern.exec(value)) !== null) {
         if (match.index !== undefined) {
             result[match.index] = match[1].charAt(0).toUpperCase();
         }
@@ -26,8 +27,9 @@ export function capitalizeString(value: string) {
 
 export function lowerCaseString(value: string) {
     let result = value;
+    const pattern = new RegExp(STRING.BREAKWORD, 'g');
     let match: RegExpMatchArray | null;
-    while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
+    while ((match = pattern.exec(value)) !== null) {
         if (match.index !== undefined && !XML.ENTITY.test(match[1])) {
             result = (match.index > 0 ? result.substring(0, match.index) : '') + value.substring(match.index, match.index + match[1].length).toLowerCase() + result.substring(match.index + match[1].length);
         }
@@ -39,9 +41,10 @@ export function convertUnderscore(value: string) {
     if (CACHE_UNDERSCORE[value]) {
         return CACHE_UNDERSCORE[value];
     }
+    const length = value.length;
     let result = value[0].toLowerCase();
     let lower = true;
-    for (let i = 1; i < value.length; i++) {
+    for (let i = 1; i < length; i++) {
         const char = value[i];
         const upper = char === char.toUpperCase();
         if (char !== '_' && lower && upper) {
@@ -60,9 +63,10 @@ export function convertCamelCase(value: string, char = '-') {
     if (CACHE_CAMELCASE[value]) {
         return CACHE_CAMELCASE[value];
     }
+    const length = value.length;
     let result = '';
     let previous = '';
-    for (let i = 0; i < value.length; i++) {
+    for (let i = 0; i < length; i++) {
         if (value[i] !== char) {
             if (previous === char) {
                 result += value[i].toUpperCase();
@@ -78,9 +82,10 @@ export function convertCamelCase(value: string, char = '-') {
 }
 
 export function convertWord(value: string, dash = false) {
+    const length = value.length;
     let result = '';
     if (dash) {
-        for (let i = 0; i < value.length; i++) {
+        for (let i = 0; i < length; i++) {
             if (CHAR.WORDDASH.test(value[i])) {
                 result += value[i];
             }
@@ -90,7 +95,7 @@ export function convertWord(value: string, dash = false) {
         }
     }
     else {
-        for (let i = 0; i < value.length; i++) {
+        for (let i = 0; i < length; i++) {
             if (CHAR.WORD.test(value[i])) {
                 result += value[i];
             }
@@ -112,22 +117,23 @@ export function convertFloat(value: string) {
 
 export function convertAlpha(value: number) {
     if (value >= 0) {
+        const length = ALPHABET.length;
         let result = '';
-        while (value >= ALPHABET.length) {
-            const base = Math.floor(value / ALPHABET.length);
-            if (base > 1 && base <= ALPHABET.length) {
+        while (value >= length) {
+            const base = Math.floor(value / length);
+            if (base > 1 && base <= length) {
                 result += ALPHABET.charAt(base - 1);
-                value -= base * ALPHABET.length;
+                value -= base * length;
             }
             else if (base > 0) {
                 result += 'Z';
-                value -= Math.pow(ALPHABET.length, 2);
+                value -= Math.pow(length, 2);
                 result += convertAlpha(value);
                 return result;
             }
-            const index = value % ALPHABET.length;
+            const index = value % length;
             result += ALPHABET.charAt(index);
-            value -= index + ALPHABET.length;
+            value -= index + length;
         }
         return ALPHABET.charAt(value) + result;
     }
@@ -162,7 +168,8 @@ export function buildAlphaString(length: number) {
 }
 
 export function formatString(value: string, ...params: string[]) {
-    for (let i = 0; i < params.length; i++) {
+    const length = params.length;
+    for (let i = 0; i < length; i++) {
         value = value.replace(`{${i}}`, params[i]);
     }
     return value;
@@ -193,8 +200,9 @@ export function isEqual(source: any, values: any) {
         return true;
     }
     else if (Array.isArray(source) && Array.isArray(values)) {
-        if (source.length === values.length) {
-            for (let i = 0; i < source.length; i++) {
+        const length = source.length;
+        if (length === values.length) {
+            for (let i = 0; i < length; i++) {
                 if (source[i] !== values[i]) {
                     return false;
                 }
@@ -499,8 +507,9 @@ export function flatArray<T>(list: any[]): T[] {
 }
 
 export function flatMultiArray<T>(list: any[]): T[] {
+    const length = list.length;
     const result: T[] = [];
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < length; i++) {
         const item = list[i];
         if (Array.isArray(item)) {
             if (item.length) {
@@ -515,9 +524,10 @@ export function flatMultiArray<T>(list: any[]): T[] {
 }
 
 export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
+    const length = list.length;
     const valid: T[] = [];
     const invalid: T[] = [];
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < length; i++) {
         const item = list[i];
         if (predicate(item, i, list)) {
             valid.push(item);
@@ -542,8 +552,9 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
 }
 
 export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>) {
+    const length = list.length;
     const result: T[] = [];
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < length; i++) {
         if (predicate(list[i], i, list)) {
             result.push(list[i]);
         }
@@ -568,9 +579,10 @@ export function concatMultiArray<T>(dest: T[], ...source: T[][]) {
 }
 
 export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
-    if (list.length) {
+    const length = list.length;
+    if (length) {
         let baseValue!: any;
-        for (let i = 0; i < list.length; i++) {
+        for (let i = 0; i < length; i++) {
             const value = predicate(list[i], i, list);
             if (i === 0) {
                 baseValue = value;
@@ -585,8 +597,9 @@ export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
 }
 
 export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
+    const length = list.length;
     const result: U[] = [];
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < length; i++) {
         const item = predicate(list[i], i, list);
         if (hasValue(item)) {
             result.push(item);
@@ -596,8 +609,9 @@ export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[
 }
 
 export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[] {
+    const length = list.length;
     const result: U[] = [];
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < length; i++) {
         if (predicate(list[i], i, list)) {
             result.push(callback(list[i], i, list));
         }
@@ -606,23 +620,25 @@ export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boole
 }
 
 export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[] {
-    for (let i = 0; i < list.length; i++) {
+    const length = list.length;
+    for (let i = 0; i < length; i++) {
         list[i] = predicate(list[i], i, list);
     }
     return list;
 }
 
 export function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
-    const result: U[] = new Array(list.length);
-    for (let i = 0; i < list.length; i++) {
+    const length = list.length;
+    const result: U[] = new Array(length);
+    for (let i = 0; i < length; i++) {
         result[i] = predicate(list[i], i, list);
     }
     return result;
 }
 
 export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char = '\n'): string {
-    let result = '';
     const length = list.length;
+    let result = '';
     for (let i = 0; i < length; i++) {
         const value = predicate(list[i], i, list);
         if (value !== '') {
@@ -636,7 +652,8 @@ export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, c
 }
 
 export function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
-    for (let i = 0; i < list.length; i++) {
+    const length = list.length;
+    for (let i = 0; i < length; i++) {
         if (predicate(list[i], i, list)) {
             const value = callback(list[i], i, list);
             if (value === false) {

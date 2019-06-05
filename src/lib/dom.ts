@@ -107,7 +107,8 @@ export function getElementsBetweenSiblings(elementStart: Element | null, element
             let startIndex = elementStart ? -1 : 0;
             let endIndex = -1;
             const elements = <Element[]> Array.from(parent.childNodes);
-            for (let i = 0; i < elements.length; i++) {
+            const length = elements.length;
+            for (let i = 0; i < length; i++) {
                 if (elements[i] === elementStart) {
                     startIndex = i;
                 }

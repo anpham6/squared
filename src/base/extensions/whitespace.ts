@@ -150,7 +150,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 const children = node.actualChildren;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;
-                for (let i = 0; i < children.length; i++) {
+                const length = children.length;
+                for (let i = 0; i < length; i++) {
                     const current = children[i] as T;
                     if (!current.pageFlow) {
                         continue;
@@ -435,10 +436,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                         else if (renderParent.horizontalRows) {
                             found: {
+                                const horizontalRows = renderParent.horizontalRows;
                                 let maxBottom = Number.NEGATIVE_INFINITY;
-                                for (let i = 0; i < renderParent.horizontalRows.length; i++) {
-                                    const row = renderParent.horizontalRows[i] as T[];
-                                    for (let j = 0; j < row.length; j++) {
+                                const lengthA = horizontalRows.length;
+                                for (let i = 0; i < lengthA; i++) {
+                                    const row = horizontalRows[i] as T[];
+                                    const lengthB = row.length;
+                                    for (let j = 0; j < lengthB; j++) {
                                         if (node === row[j]) {
                                             if (i > 0) {
                                                 setSpacingOffset(BOX_STANDARD.MARGIN_TOP, maxBottom);

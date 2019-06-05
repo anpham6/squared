@@ -108,8 +108,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 item.parent = this;
                 result.push(item);
             };
-            for (let i = 0; i < element.children.length; i++) {
-                const item = element.children[i];
+            const children = element.children;
+            let length = children.length;
+            for (let i = 0; i < length; i++) {
+                const item = children[i];
                 if (item instanceof SVGAnimationElement) {
                     const begin = $dom.getNamedItem(item, 'begin');
                     if (begin !== '' && /^[a-zA-Z]+$/.test(begin)) {
@@ -151,7 +153,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 }
             }
             const animationName = parseAttribute(element, 'animation-name');
-            if (animationName.length) {
+            length = animationName.length;
+            if (length) {
                 const cssData: ObjectMap<string[]> = {};
                 const groupName: SvgAnimate[] = [];
                 const groupOrdering: SvgAnimationAttribute[] = [];
@@ -160,13 +163,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     if (values.length === 0) {
                         values.push(ANIMATION_DEFAULT[name]);
                     }
-                    while (values.length < animationName.length) {
+                    while (values.length < length) {
                         $util.concatArray(values, values.slice(0));
                     }
-                    values.length = animationName.length;
+                    values.length = length;
                     cssData[name] = values;
                 }
-                for (let i = 0; i < animationName.length; i++) {
+                for (let i = 0; i < length; i++) {
                     const keyframes = KEYFRAME_MAP[animationName[i]];
                     const duration = SvgAnimation.convertClockTime(cssData['animation-duration'][i]);
                     if (keyframes && duration > 0) {
@@ -191,12 +194,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         });
                         for (const percent in keyframes) {
                             const key = parseFloat(percent) / 100;
-                            for (const name in keyframes[percent]) {
+                            const data = keyframes[percent];
+                            for (const name in data) {
                                 const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
                                 if (map[name] === undefined) {
                                     map[name] = [];
                                 }
-                                let value: any = keyframes[percent][name];
+                                let value: any = data[name];
                                 if (value) {
                                     if ($css.isCalc(value)) {
                                         value = $css.calculateVar(element, value, name);
@@ -395,10 +399,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const keyTimes: number[] = [];
                                 const values: string[] = [];
                                 const keySplines: string[] = [];
-                                for (let j = 0; j < animation.length; j++) {
+                                const lengthA = animation.length;
+                                for (let j = 0; j < lengthA; j++) {
                                     keyTimes.push(animation[j].key);
                                     values.push(animation[j].value);
-                                    if (includeKeySplines && j < animation.length - 1) {
+                                    if (includeKeySplines && j < lengthA - 1) {
                                         const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.key === animation[j].key);
                                         keySplines.push(spline ? spline.value : timingFunction);
                                     }
@@ -422,8 +427,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     const keyTimesData: number[] = [];
                                     const valuesData: string[] = [];
                                     const keySplinesData: string[] = [];
-                                    for (let j = 0; j < keyTimes.length; j++) {
-                                        if (j < keyTimes.length - 1) {
+                                    const lengthB = keyTimes.length;
+                                    for (let j = 0; j < lengthB; j++) {
+                                        if (j < lengthB - 1) {
                                             const segDuration = (keyTimes[j + 1] - keyTimes[j]) * duration;
                                             if (KEYSPLINE_NAME[keySplines[j]]) {
                                                 keySplines[j] = KEYSPLINE_NAME[keySplines[j]];
