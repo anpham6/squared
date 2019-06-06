@@ -430,16 +430,16 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             const { keyTimes, keyPoints } = this.reverseKeyPoints();
             if (keyTimes && keyPoints) {
                 const duration = this.duration;
-                const keyTimesBase = super.keyTimes;
-                const keyPointsBase = this.keyPoints;
+                let keyTimesBase = super.keyTimes;
+                let keyPointsBase = this.keyPoints;
                 const length = keyTimesBase.length;
                 if (iterationCount === -1) {
                     for (let i = 0; i < length; i++) {
                         keyTimesBase[i] /= 2;
                         keyTimes[i] = 0.5 + keyTimes[i] / 2;
                     }
-                    $util.concatArray(keyTimesBase, keyTimes);
-                    $util.concatArray(keyPointsBase, keyPoints);
+                    keyTimesBase = keyTimesBase.concat(keyTimes);
+                    keyPointsBase = keyPointsBase.concat(keyPoints);
                     this.duration = duration * 2;
                 }
                 else {
@@ -457,13 +457,15 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                             for (let j = 0; j < length; j++) {
                                 keyTimesAppend[j] = $math.truncateFraction(baseTime + keyTimesAppend[j] / iterationCount);
                             }
-                            $util.concatArray(keyTimesBase, keyTimesAppend);
-                            $util.concatArray(keyPointsBase, i % 2 === 0 ? keyPointsStatic : keyPoints);
+                            keyTimesBase = keyTimesBase.concat(keyTimesAppend);
+                            keyPointsBase = keyPointsBase.concat(i % 2 === 0 ? keyPointsStatic : keyPoints);
                         }
                     }
                     this.duration = duration * iterationCount;
                     this.iterationCount = 1;
                 }
+                this._keyTimes = keyTimesBase;
+                this._keyPoints = keyPointsBase;
                 super.alternate = value;
             }
         }

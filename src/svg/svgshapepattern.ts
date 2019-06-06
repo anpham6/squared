@@ -14,7 +14,6 @@ import { TRANSFORM } from './lib/util';
 
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
-const $util = squared.lib.util;
 
 const getPercent = (value: string) => $css.isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
 
@@ -190,7 +189,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                             break;
                     }
                 }
-                $util.concatArray(super.transforms, SvgBuild.filterTransforms(transforms));
+                this._transforms = super.transforms.concat(SvgBuild.filterTransforms(transforms));
             }
             this.__get_transforms = true;
         }

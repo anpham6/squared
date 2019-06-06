@@ -336,7 +336,7 @@ export function resolvePath(value: string) {
                         segments.push(dir);
                     }
                 }
-                pathname = concatArray(pathname.slice(0, Math.max(pathname.length - levels, 0)), segments);
+                pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
                 value = location.origin + pathname.join('/');
             }
             else {
@@ -560,22 +560,6 @@ export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
         }
     }
     return result;
-}
-
-export function concatArray<T>(dest: T[], source: T[]) {
-    for (const item of source) {
-        dest.push(item);
-    }
-    return dest;
-}
-
-export function concatMultiArray<T>(dest: T[], ...source: T[][]) {
-    for (const list of source) {
-        for (const item of list) {
-            dest.push(item);
-        }
-    }
-    return dest;
 }
 
 export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {

@@ -1,4 +1,4 @@
-import { concatArray, filterArray, flatMap, objectMap, partitionArray, sameArray, spliceArray } from '../util';
+import { filterArray, flatMap, objectMap, partitionArray, sameArray, spliceArray } from '../util';
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[];
@@ -108,7 +108,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public concat(list: T[]) {
-        concatArray(this._children, list);
+        this._children = this._children.concat(list);
         return this;
     }
 
@@ -181,13 +181,13 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public cascade(predicate?: (item: T) => boolean) {
         function cascade(container: Container<T>) {
-            const result: T[] = [];
+            let result: T[] = [];
             for (const item of container.children) {
                 if (predicate === undefined || predicate(item)) {
                     result.push(item);
                 }
                 if (item instanceof Container && item.length) {
-                    concatArray(result, cascade(item));
+                    result = result.concat(cascade(item));
                 }
             }
             return result;

@@ -59,7 +59,7 @@ export default abstract class FileUI<T extends NodeUI> implements squared.base.F
         if (location.protocol.startsWith('http')) {
             if (files.length) {
                 const settings = this.userSettings;
-                $util.concatArray(files, this.assets);
+                files = files.concat(this.assets);
                 fetch(
                     `/api/savetodisk` +
                     `?directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +

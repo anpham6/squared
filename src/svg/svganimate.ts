@@ -147,14 +147,15 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public end?: number;
     public synchronized?: NumberValue;
 
+    protected _values?: string[];
+    protected _keyTimes?: number[];
+    protected _keySplines?: string[];
+
     private _iterationCount = 1;
     private _reverse = false;
     private _alternate = false;
     private _setterType = false;
     private _repeatDuration = -1;
-    private _values?: string[];
-    private _keyTimes?: number[];
-    private _keySplines?: string[];
     private _timingFunction?: string;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement) {
@@ -222,19 +223,19 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             switch (mode) {
                 case 'discrete':
                     if (this.keyTimes.length === 2 && this.keyTimes[0] === 0) {
-                        const keyTimes: number[] = [];
-                        const values: string[] = [];
+                        let keyTimes: number[] = [];
+                        let values: string[] = [];
                         for (let i = 0; i < this.keyTimes.length - 1; i++) {
                             const result = SvgAnimate.convertStepTimingFunction(attributeName || this.attributeName, 'step-end', this.keyTimes, this.values, i, $css.getFontSize(this.animationElement));
                             if (result) {
-                                $util.concatArray(keyTimes, result[0]);
-                                $util.concatArray(values, result[1]);
+                                keyTimes = keyTimes.concat(result[0]);
+                                values = values.concat(result[1]);
                             }
                         }
                         keyTimes.push(this.keyTimes.pop() as number);
                         values.push(this.values.pop() as string);
-                        this.values = values;
-                        this.keyTimes = keyTimes;
+                        this._values = values;
+                        this._keyTimes = keyTimes;
                         this._keySplines = [KEYSPLINE_NAME['step-end']];
                     }
                     break;

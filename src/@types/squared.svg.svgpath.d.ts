@@ -12,7 +12,7 @@ declare global {
             draw(transforms?: SvgTransform[], options?: SvgBuildOptions): string;
             extendLength(data: SvgPathExtendData, precision?: number): SvgPathExtendData | undefined;
             flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number): SvgPathExtendData;
-            extractStrokeDash(animations?: SvgAnimation[], precision?: number): [SvgStrokeDash[] | undefined, string, string];
+            extractStrokeDash(animations?: SvgAnimation[], precision?: number): [SvgAnimation[] | undefined, SvgStrokeDash[] | undefined, string, string];
         }
 
         class SvgPath implements SvgPath {

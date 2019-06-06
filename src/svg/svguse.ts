@@ -1,5 +1,6 @@
 import { SvgBuildOptions, SvgSynchronizeOptions } from './@types/object';
 
+import SvgAnimation from './svganimation';
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
@@ -7,8 +8,6 @@ import SvgPath from './svgpath';
 import SvgShape from './svgshape';
 
 import { INSTANCE_TYPE } from './lib/constant';
-
-const $util = squared.lib.util;
 
 export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUse {
     private __get_transforms = false;
@@ -45,18 +44,20 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     }
 
     get transforms() {
-        const transforms = super.transforms;
+        let transforms = super.transforms;
         if (!this.__get_transforms) {
-            $util.concatArray(transforms, this.getTransforms(this.shapeElement));
+            transforms = transforms.concat(this.getTransforms(this.shapeElement));
+            this._transforms = transforms;
             this.__get_transforms = true;
         }
         return transforms;
     }
 
     get animations() {
-        const animations = super.animations;
+        let animations = <SvgAnimation[]> super.animations;
         if (!this.__get_animations) {
-            $util.concatArray(animations, this.getAnimations(this.shapeElement));
+            animations = animations.concat(<SvgAnimation[]> this.getAnimations(this.shapeElement));
+            this._animations = animations;
             this.__get_animations = true;
         }
         return animations;

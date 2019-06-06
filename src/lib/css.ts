@@ -101,32 +101,34 @@ export function getSpecificity(value: string) {
                 }
             }
             if (match[2]) {
-                if (match[2].charAt(0) === '[') {
-                    const attrPattern = new RegExp(STRING.CSS_SELECTOR_ATTR, 'g');
-                    let attrMatch: RegExpExecArray | null;
-                    while ((attrMatch = attrPattern.exec(match[2])) !== null) {
-                        if (attrMatch[1]) {
-                            result += 1;
+                let subPattern = new RegExp(STRING.CSS_SELECTOR_PSEUDO, 'g');
+                let subMatch: RegExpExecArray | null;
+                while ((subMatch = subPattern.exec(match[2])) !== null) {
+                    if (match[2].startsWith(':not(')) {
+                        if (match[3]) {
+                            result += getSpecificity(match[3]);
                         }
-                        if (attrMatch[3] || attrMatch[4] || attrMatch[5]) {
-                            result += 10;
+                    }
+                    else {
+                        switch (match[2]) {
+                            case ':root':
+                            case ':global':
+                            case ':local':
+                            case ':scope':
+                                break;
+                            default:
+                                result += 10;
+                                break;
                         }
                     }
                 }
-                else if (match[2].startsWith(':not(')) {
-                    if (match[3]) {
-                        result += getSpecificity(match[3]);
+                subPattern = new RegExp(STRING.CSS_SELECTOR_ATTR, 'g');
+                while ((subMatch = subPattern.exec(match[2])) !== null) {
+                    if (subMatch[1]) {
+                        result += 1;
                     }
-                }
-                else {
-                    switch (match[2]) {
-                        case ':root':
-                        case ':global':
-                        case ':local':
-                            break;
-                        default:
-                            result += 10;
-                            break;
+                    if (subMatch[3] || subMatch[4] || subMatch[5]) {
+                        result += 10;
                     }
                 }
             }

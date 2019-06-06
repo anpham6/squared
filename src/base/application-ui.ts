@@ -292,10 +292,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected cacheNodeChildren(node: T, children: T[], depth: number, includeText: boolean) {
         const length = children.length;
         if (length) {
-            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap ? [] : undefined;
-            if (queryMap) {
-                queryMap[0] = children;
-            }
             let siblingsLeading: T[] = [];
             let siblingsTrailing: T[] = [];
             if (length > 1) {
@@ -340,7 +336,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     child.siblingIndex = i;
                     child.actualParent = node;
-                    this.appendQueryMap(queryMap, depth, child);
                 }
                 trailing.siblingsTrailing = siblingsTrailing;
                 node.floatContainer = floating;
@@ -360,9 +355,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 child.actualParent = node;
-                this.appendQueryMap(queryMap, depth, child);
             }
-            node.queryMap = queryMap;
         }
     }
 
@@ -594,14 +587,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
-                        const descendant = this.session.extensionMap.get(nodeY.id);
+                        const descendant = <ExtensionUI<T>[]> this.session.extensionMap.get(nodeY.id);
                         let combined = parent.renderExtension && <ExtensionUI<T>[]> parent.renderExtension.slice(0);
                         if (descendant) {
                             if (combined) {
-                                $util.concatArray(combined, <ExtensionUI<T>[]> descendant);
+                                combined = combined.concat(descendant);
                             }
                             else {
-                                combined = <ExtensionUI<T>[]> descendant.slice(0);
+                                combined = descendant.slice(0);
                             }
                         }
                         if (combined) {
@@ -862,9 +855,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let floatgroup: T | undefined;
             if (Array.isArray(item[0])) {
                 segments = item as T[][];
-                const grouping: T[] = [];
-                for (const seg of segments) {
-                    $util.concatArray(grouping, seg);
+                let grouping: T[] = segments[0];
+                for (let i = 1; i < segments.length; i++) {
+                    grouping = grouping.concat(segments[i]);
                 }
                 grouping.sort(NodeUI.siblingIndex);
                 if (layout.node.layoutVertical) {

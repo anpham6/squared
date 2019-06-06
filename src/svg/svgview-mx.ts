@@ -82,9 +82,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         public transformed?: SvgTransform[];
         public translationOffset?: Point;
 
+        protected _transforms?: SvgTransform[];
+        protected _animations?: SvgAnimation[];
+
         private _name?: string;
-        private _transforms?: SvgTransform[];
-        private _animations?: SvgAnimation[];
 
         public getTransforms(element?: SVGGraphicsElement) {
             if (element === undefined) {
@@ -159,12 +160,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 const groupName: SvgAnimate[] = [];
                 const groupOrdering: SvgAnimationAttribute[] = [];
                 for (const name in ANIMATION_DEFAULT) {
-                    const values = parseAttribute(element, name);
+                    let values = parseAttribute(element, name);
                     if (values.length === 0) {
                         values.push(ANIMATION_DEFAULT[name]);
                     }
                     while (values.length < length) {
-                        $util.concatArray(values, values.slice(0));
+                        values = values.concat(values.slice(0));
                     }
                     values.length = length;
                     cssData[name] = values;

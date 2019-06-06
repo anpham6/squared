@@ -134,8 +134,10 @@ interface QueryData {
     name?: string;
     adjacent?: string;
     classList?: string[];
-    attrs?: QueryAttribute[];
+    attrList?: QueryAttribute[];
+    pseudoList?: string[];
 }
 interface QueryAttribute extends StringValue {
     symbol?: string;
+    caseInsensitive: boolean;
 }

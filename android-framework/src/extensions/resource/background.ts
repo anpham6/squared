@@ -514,7 +514,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         layerListData = outlineLayerListData;
                     }
                     else if (layerListData && outlineLayerListData) {
-                        $util.concatArray(layerListData[0].item, outlineLayerListData[0].item);
+                        layerListData[0].item = layerListData[0].item.concat(outlineLayerListData[0].item);
                     }
                 }
                 if (shapeData) {
@@ -677,13 +677,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public getDrawableImages(node: T, data: BoxStyle) {
         const backgroundRepeat = data.backgroundRepeat.split($regex.XML.SEPARATOR);
-        const backgroundSize = data.backgroundSize.split($regex.XML.SEPARATOR);
         const backgroundPositionX = data.backgroundPositionX.split($regex.XML.SEPARATOR);
         const backgroundPositionY = data.backgroundPositionY.split($regex.XML.SEPARATOR);
         const backgroundImage: (string | GradientTemplate)[] = [];
         const backgroundPosition: BoxRectPosition[] = [];
         const imageDimensions: Undefined<Dimension>[] = [];
         const result: BackgroundImageData[] = [];
+        let backgroundSize = data.backgroundSize.split($regex.XML.SEPARATOR);
         let lengthImage = 0;
         let resizable = true;
         if (node.hasResource($e.NODE_RESOURCE.IMAGE_SOURCE)) {
@@ -691,7 +691,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             if (bgImage)  {
                 lengthImage = bgImage.length;
                 while (backgroundSize.length < lengthImage) {
-                    $util.concatArray(backgroundSize, backgroundSize.slice(0));
+                    backgroundSize = backgroundSize.concat(backgroundSize.slice(0));
                 }
                 backgroundSize.length = lengthImage;
                 for (let i = 0, j = 0; i < lengthImage; i++) {

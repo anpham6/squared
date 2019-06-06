@@ -35,7 +35,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         const mainData = Table.createDataAttribute(node);
-        const table: T[] = [];
+        let table: T[] = [];
         function setAutoWidth(td: T) {
             td.data(EXT_NAME.TABLE, 'percent', `${Math.round((td.bounds.width / node.box.width) * 100)}%`);
             td.data(EXT_NAME.TABLE, 'expand', true);
@@ -48,7 +48,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         item.unsetCache('visibleStyle');
                     }
                 }
-                $util.concatArray(table, section[0].children as T[]);
+                table = table.concat(section[0].children as T[]);
                 for (const item of section) {
                     item.hide();
                 }
@@ -73,7 +73,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         });
         inheritStyles(thead);
         for (const section of tbody) {
-            $util.concatArray(table, section.children as T[]);
+            table = table.concat(section.children as T[]);
             section.hide();
         }
         inheritStyles(tfoot);

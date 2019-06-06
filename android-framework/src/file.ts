@@ -90,8 +90,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             files.push(createFileAsset(layouts[i].pathname, i === 0 ? this.userSettings.outputMainFileName : `${layouts[i].filename}.xml`, layouts[i].content));
         }
         this.saveToDisk(
-            $util.concatMultiArray(
-                files,
+            files.concat(
                 getFileAssets(this.resourceStringToXml()),
                 getFileAssets(this.resourceStringArrayToXml()),
                 getFileAssets(this.resourceFontToXml()),
@@ -141,13 +140,13 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             }
         }
         if (saveToDisk) {
-            const files: FileAsset[] = [];
+            let files: FileAsset[] = [];
             for (const name in result) {
                 if (name === 'image') {
-                    $util.concatArray(files, getImageAssets(result[name]));
+                    files = files.concat(getImageAssets(result[name]));
                 }
                 else {
-                    $util.concatArray(files, getFileAssets(result[name]));
+                    files = files.concat(getFileAssets(result[name]));
                 }
             }
             this.saveToDisk(files, this.userSettings.manifestLabelAppName);

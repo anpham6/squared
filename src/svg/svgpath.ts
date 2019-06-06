@@ -631,7 +631,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return data;
     }
 
-    public extractStrokeDash(animations?: SvgAnimation[], precision?: number): [SvgStrokeDash[] | undefined, string, string] {
+    public extractStrokeDash(animations?: SvgAnimation[], precision?: number): [SvgAnimation[] | undefined, SvgStrokeDash[] | undefined, string, string] {
         const strokeWidth = $util.convertInt(this.strokeWidth);
         let result: SvgStrokeDash[] | undefined;
         let path = '';
@@ -709,7 +709,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             }
                         }
                     };
-                    const extracted: SvgAnimation[] = [];
+                    let extracted: SvgAnimation[] = [];
                     let modified = false;
                     for (let i = 0; i < sorted.length; i++) {
                         const item = sorted[i];
@@ -779,7 +779,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             group[j].replaceValue = getFromToValue(replaceValue[j]);
                                         }
                                     }
-                                    $util.concatArray(extracted, group);
+                                    extracted = extracted.concat(group);
                                     modified = true;
                                     continue;
                                 }
@@ -1001,13 +1001,12 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 }
                             }
                         }
-                        animations.length = 0;
-                        $util.concatArray(animations, extracted);
+                        animations = extracted;
                     }
                 }
             }
         }
-        return [result, path, clipPath];
+        return [animations, result, path, clipPath];
     }
 
     private init() {

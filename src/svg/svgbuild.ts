@@ -873,9 +873,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static getBoxRect(values: string[]): BoxRect {
-        const points: SvgPoint[] = [];
+        let points: SvgPoint[] = [];
         for (const value of values) {
-            $util.concatArray(points, SvgBuild.getPathPoints(SvgBuild.getPathCommands(value), true));
+            points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(value), true));
         }
         const result = this.minMaxPoints(points);
         return { top: result[1], right: result[2], bottom: result[3], left: result[0] };

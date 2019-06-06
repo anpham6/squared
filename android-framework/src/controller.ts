@@ -697,7 +697,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             sortConstraintAbsolute(below);
             sortConstraintAbsolute(above);
-            return $util.concatMultiArray(below, middle, above);
+            return below.concat(middle, above);
         }
         return templates;
     }
@@ -2102,7 +2102,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         });
         if (alignmentMultiLine) {
-            node.horizontalRows = $util.concatArray(rowsLeft, rowsRight);
+            node.horizontalRows = rowsLeft.concat(rowsRight);
         }
         if (sortPositionAuto) {
             const renderChildren = node.renderChildren;
@@ -2559,7 +2559,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (!node.hasWidth && children.some(item => item.percentWidth)) {
             node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
         }
-        const previousSiblings: T[] = [];
+        let previousSiblings: T[] = [];
         let bottomFloating = false;
         for (let i = 0; i < length; i++) {
             const partition = horizontal[i];
@@ -2662,7 +2662,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             });
             if (floating) {
-                $util.concatMultiArray(previousSiblings, floatingLeft, floatingRight);
+                previousSiblings = previousSiblings.concat(floatingLeft, floatingRight);
             }
             if (i > 0) {
                 if (aboveRowEnd === undefined) {

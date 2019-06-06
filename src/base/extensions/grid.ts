@@ -281,7 +281,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 if (hasLength && hasPercent && group.length > 1) {
                     const cellData: GridCellData<T> = group[0].data(EXT_NAME.GRID, 'cellData');
                     if (cellData && cellData.rowSpan === 1) {
-                        const siblings: T[] = cellData.siblings ? cellData.siblings.slice(0) : [];
+                        let siblings: T[] = cellData.siblings ? cellData.siblings.slice(0) : [];
                         const length = group.length;
                         for (let i = 1; i < length; i++) {
                             const item = group[i];
@@ -289,7 +289,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             if (siblingData && siblingData.rowSpan === 1) {
                                 siblings.push(group[i]);
                                 if (siblingData.sibling) {
-                                    $util.concatArray(siblings, siblingData.sibling);
+                                    siblings = siblings.concat(siblingData.sibling);
                                 }
                             }
                             else {

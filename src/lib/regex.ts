@@ -8,12 +8,15 @@ export const STRING = {
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
     DATAURI: '(?:data:([^;]+);([^,]+),)?(.*?)',
     BREAKWORD: '([A-Za-z\\d]+|&#?[A-Za-z\\d]+;)',
-    CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|::[\\w\\-.]+|(?:\\[[\\w\\-]+(?:[~^$*|]?=[^\\]]+)?\\])+)?\\s*',
-    CSS_SELECTOR_ATTR: '\\[([\\w\\-]+)(?:([~^$*|])?=(?:"([^"])+"|\'([^\'])+\'|([^\\]]+)))?\\]',
+    CSS_SELECTOR: '',
+    CSS_SELECTOR_PSEUDO: ':[\\w\\-]+(?:\\(\\s*(.+(?!\\)[:\\[\\s]))\\s*\\))?',
+    CSS_SELECTOR_ATTR: '\\[([\\w\\-]+)(?:([~^$*|])?=(?:"([^"]+)"|\'([^\']+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_CALC: 'calc(\\(.+\\))',
     CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)'
 };
+
+STRING.CSS_SELECTOR = `\\s*([^\\s:\\[]+)?((?:${STRING.CSS_SELECTOR_PSEUDO}|${STRING.CSS_SELECTOR_ATTR}|::[\\w\\-]+)*)?\\s*`;
 
 export const UNIT = {
     DECIMAL: new RegExp(`^${STRING.DECIMAL}$`),

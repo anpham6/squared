@@ -52,7 +52,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
             if (result.length) {
-                return $util.concatArray($util.spliceArray(result, item => item === undefined), untagged);
+                return $util.spliceArray(result, item => item === undefined).concat(untagged);
             }
         }
         return extensions;
@@ -479,59 +479,60 @@ export default abstract class Application<T extends Node> implements squared.bas
             let includeText = false;
             const childNodes = element.childNodes;
             const length = childNodes.length;
+            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap ? [[]] : undefined;
             for (let i = 0; i < length; i++) {
                 const childElement = <HTMLElement> childNodes[i];
+                let child: T | undefined;
                 if (childElement === beforeElement) {
-                    const child = this.insertNode(<HTMLElement> beforeElement);
+                    child = this.insertNode(<HTMLElement> beforeElement);
                     if (child) {
                         node.innerBefore = child;
                         child.inlineText = true;
-                        children.push(child);
                         includeText = true;
                     }
                 }
                 else if (childElement === afterElement) {
-                    const child = this.insertNode(<HTMLElement> afterElement);
+                    child = this.insertNode(<HTMLElement> afterElement);
                     if (child) {
                         node.innerAfter = child;
                         child.inlineText = true;
-                        children.push(child);
                         includeText = true;
                     }
                 }
                 else if (childElement.nodeName.charAt(0) === '#') {
                     if (childElement.nodeName === '#text') {
-                        const child = this.insertNode(childElement, node);
-                        if (child) {
-                            children.push(child);
-                        }
+                        child = this.insertNode(childElement, node);
                     }
                 }
                 else if (controller.includeElement(childElement)) {
                     Application.prioritizeExtensions(childElement, this.extensions).some(item => item.init(childElement));
                     if (!this.rootElements.has(childElement)) {
-                        const child = this.cascadeParentNode(childElement, depth + 1);
-                        if (child) {
-                            children.push(child);
-                            if (!child.excluded) {
-                                includeText = true;
-                            }
+                        child = this.cascadeParentNode(childElement, depth + 1);
+                        if (child && !child.excluded) {
+                            includeText = true;
                         }
                     }
                     else {
-                        const child = this.insertNode(childElement);
+                        child = this.insertNode(childElement);
                         if (child) {
                             child.documentRoot = true;
                             child.visible = false;
                             child.excluded = true;
-                            children.push(child);
                         }
                         includeText = true;
+                    }
+                }
+                if (child) {
+                    children.push(child);
+                    if (queryMap && child.styleElement) {
+                        queryMap[0].push(child);
+                        this.appendQueryMap(queryMap, depth, child);
                     }
                 }
             }
             this.cacheNodeChildren(node, children, depth, includeText);
             node.inlineText = !includeText;
+            node.queryMap = queryMap;
             node.actualChildren = children;
         }
         return node;
@@ -540,10 +541,6 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected cacheNodeChildren(node: T, children: T[], depth: number, includeText: boolean) {
         const length = children.length;
         if (length) {
-            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap ? [] : undefined;
-            if (queryMap) {
-                queryMap[0] = children;
-            }
             if (length > 1) {
                 for (let i = 0; i < length; i++) {
                     const child = children[i];
@@ -556,7 +553,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     child.siblingIndex = i;
                     child.actualParent = node;
-                    this.appendQueryMap(queryMap, depth, child);
                 }
             }
             else {
@@ -571,25 +567,21 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 child.actualParent = node;
-                this.appendQueryMap(queryMap, depth, child);
             }
-            node.queryMap = queryMap;
         }
     }
 
-    protected appendQueryMap(queryMap: T[][] | undefined, depth: number, item: T) {
-        if (queryMap) {
-            const childMap = item.queryMap;
-            if (childMap) {
-                const offset = item.depth - depth;
-                const lengthC = childMap.length;
-                for (let i = 0; i < lengthC; i++) {
-                    const key = i + offset;
-                    if (queryMap[key] === undefined) {
-                        queryMap[key] = [];
-                    }
-                    $util.concatArray(queryMap[key], childMap[i]);
+    protected appendQueryMap(queryMap: T[][], depth: number, item: T) {
+        const childMap = item.queryMap as T[][];
+        if (childMap) {
+            const offset = item.depth - depth;
+            const lengthC = childMap.length;
+            for (let i = 0; i < lengthC; i++) {
+                const key = i + offset;
+                if (queryMap[key] === undefined) {
+                    queryMap[key] = [];
                 }
+                queryMap[key] = queryMap[key].concat(childMap[i]);
             }
         }
     }

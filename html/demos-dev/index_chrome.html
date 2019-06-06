@@ -101,15 +101,11 @@
                 System.import('/build/chrome-framework/src/main.js').then(async result => {
                     chrome = result.default;
                     squared.setFramework(chrome);
-                    const item = squared.system.getElementById('squared_ui');
-                    let time = new Date().getTime();
-                    let input = item.querySelectorAll('form > ul li div label > input[type=radio]');
+                    const time = new Date().getTime();
+                    const input = squared.system.getElementById('squared_ui').querySelectorAll('form > ul li div label > input[type=Radio i], input[type=checkbox]');
                     console.log(new Date().getTime() - time);
                     console.log(input);
-                    time = new Date().getTime();
-                    input = document.getElementById('squared_ui').querySelectorAll('form > ul li div label > input[type=radio]');
-                    console.log(new Date().getTime() - time);
-                    console.log(input);
+                    console.log(document.getElementById('squared_ui').querySelectorAll('form > ul li div label > input[type=Radio i], input[type=checkbox]'));
                 });
             });
         });
