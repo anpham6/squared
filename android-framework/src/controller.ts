@@ -56,8 +56,8 @@ function sortHorizontalFloat(list: View[]) {
 function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
     if (templates.length > 1) {
         templates.sort((a, b) => {
-            const above = (a.node.innerWrapped as View) || a.node;
-            const below = (b.node.innerWrapped as View) || b.node;
+            const above = <View> a.node.innerWrapped || a.node;
+            const below = <View> b.node.innerWrapped || b.node;
             if (above.absoluteParent === below.absoluteParent) {
                 if (above.zIndex === below.zIndex) {
                     return above.siblingIndex < below.siblingIndex ? -1 : 1;
@@ -185,7 +185,7 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
 function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
     if (!node.inputElement && !node.imageOrSvgElement) {
         const documentParent = node.documentParent;
-        const renderParent = node.renderParent as View;
+        const renderParent = <View> node.renderParent;
         if (renderParent) {
             function setAlignmentBlock() {
                 if (renderParent.groupParent) {

@@ -217,7 +217,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get parentContainer() {
-        let result = this._parent as squared.svg.SvgContainer | undefined;
+        let result = <squared.svg.SvgContainer | undefined> this._parent;
         while (result && !SvgBuild.isContainer(result)) {
             result = result.parent;
         }

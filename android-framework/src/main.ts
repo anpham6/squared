@@ -46,12 +46,10 @@ import * as customization from './lib/customization';
 
 import SETTINGS from './settings';
 
-type T = View;
-
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
 let initialized = false;
-let application: Application<T>;
-let fileHandler: File<T>;
+let application: Application<View>;
+let fileHandler: File<View>;
 let userSettings: UserSettingsAndroid;
 
 function autoClose() {
@@ -62,7 +60,7 @@ function autoClose() {
     return false;
 }
 
-const checkApplication = (main?: Application<T>): main is Application<T> => initialized && !!main && (main.closed || autoClose());
+const checkApplication = (main?: Application<View>): main is Application<View> => initialized && !!main && (main.closed || autoClose());
 
 const lib = {
     constant,
@@ -71,7 +69,7 @@ const lib = {
     util
 };
 
-const appBase: AppFramework<T> = {
+const appBase: AppFramework<View> = {
     base: {
         Controller,
         File,

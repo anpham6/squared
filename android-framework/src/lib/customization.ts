@@ -5,7 +5,6 @@ import { BUILD_ANDROID } from './enumeration';
 
 import View from '../view';
 
-type T = View;
 type Customizations = {
     [index: number]: {
         android: ObjectMap<boolean | CustomizationResult>;
@@ -329,7 +328,7 @@ export const API_ANDROID: Customizations = {
             'slideEdge': false,
             'splitTrack': false,
             'spotShadowAlpha': false,
-            'src': (result: {}, api: number, node: T) => {
+            'src': (result: {}, api: number, node: View) => {
                 if (node.svgElement) {
                     result['obj'] = 'app';
                     result['attr'] = 'srcCompat';

@@ -27,7 +27,7 @@ function removeExcluded(node: NodeUI, element: Element, attr: string) {
     const children = node.actualChildren;
     const length = children.length;
     for (let i = 0; i < length; i++) {
-        const item = children[i] as NodeUI;
+        const item = <NodeUI> children[i];
         if (!item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
             if (item.htmlElement && attr === 'innerHTML') {
                 if (item.lineBreak) {

@@ -53,7 +53,7 @@ function getGridSize(mainData: CssGridData<View>, direction: string, node: View)
             else {
                 let size = 0;
                 $util.captureMap(
-                    mainData.rowData[i] as View[][],
+                    <View[][]> mainData.rowData[i],
                     item => item && item.length > 0,
                     item => size = Math.min(size, ...$util.objectMap(item, child => child.bounds[dimension]))
                 );

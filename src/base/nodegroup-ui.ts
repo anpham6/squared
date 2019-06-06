@@ -40,12 +40,12 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     public previousSiblings(options?: SiblingOptions) {
-        const node = this.item(0) as NodeUI;
+        const node = <NodeUI> this.item(0);
         return node ? node.previousSiblings(options) : [];
     }
 
     public nextSiblings(options?: SiblingOptions) {
-        const node = this.item() as NodeUI;
+        const node = <NodeUI> this.item();
         return node ? node.nextSiblings(options) : [];
     }
 
@@ -150,7 +150,7 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get actualParent() {
         if (this._cached.actualParent === undefined) {
-            this._cached.actualParent = NodeUI.actualParent(this._initial.children as NodeUI[]);
+            this._cached.actualParent = NodeUI.actualParent(<NodeUI[]> this._initial.children);
         }
         return this._cached.actualParent;
     }

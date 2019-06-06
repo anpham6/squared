@@ -62,7 +62,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
         if (node[borderWidth] === 0) {
             if (node[padding] === 0) {
                 while (DOCTYPE_HTML && child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0 && !child.layoutElement && !child.tableElement) {
-                    const endChild = (direction ? child.firstChild : child.lastChild) as NodeUI;
+                    const endChild = <NodeUI> (direction ? child.firstChild : child.lastChild);
                     if (isBlockElement(endChild)) {
                         child = endChild;
                     }
@@ -112,7 +112,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
             else if (child[margin] === 0 && child[borderWidth] === 0 && !child.layoutElement && !child.tableElement) {
                 let blockAll = true;
                 do {
-                    const endChild = (direction ? child.firstChild : child.lastChild) as NodeUI;
+                    const endChild = <NodeUI> (direction ? child.firstChild : child.lastChild);
                     if (endChild && endChild[margin] === 0 && endChild[borderWidth] === 0) {
                         if (endChild[padding] > 0) {
                             if (endChild[padding] >= node[padding]) {
@@ -340,7 +340,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                     else {
-                        const actualParent = node.actualParent as NodeUI;
+                        const actualParent = <NodeUI> node.actualParent;
                         if (actualParent) {
                             const offset = getMarginOffset();
                             if (offset !== 0) {
@@ -361,7 +361,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                 }
                 else {
-                    const actualParent = node.actualParent as NodeUI;
+                    const actualParent = <NodeUI> node.actualParent;
                     if (actualParent && actualParent.visible) {
                         if (!actualParent.documentRoot && actualParent.ascend(item => item.documentRoot, undefined, 'outerWrapper').length === 0 && previousSiblings.length) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];

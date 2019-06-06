@@ -9,16 +9,14 @@ import View from './view';
 
 import SETTINGS from './settings';
 
-type T = View;
-
 const $util = squared.lib.util;
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 let initialized = false;
-let application: Application<T>;
-let controller: Controller<T>;
+let application: Application<View>;
+let controller: Controller<View>;
 let userSettings: UserSettings;
-let elementMap: Map<Element, T>;
+let elementMap: Map<Element, View>;
 
 function findElement(element: HTMLElement) {
     const result = elementMap.get(element);
@@ -42,7 +40,7 @@ async function findElementAsync(element: HTMLElement) {
     return elementMap.get(element) || null;
 }
 
-const appBase: ChromeFramework<T> = {
+const appBase: ChromeFramework<View> = {
     base: {
         Controller,
         Resource,
@@ -76,7 +74,7 @@ const appBase: ChromeFramework<T> = {
             return null;
         },
         querySelectorAll(value: string) {
-            const result: T[] = [];
+            const result: View[] = [];
             if (application) {
                 document.querySelectorAll(value).forEach(element => {
                     const item = findElement(<HTMLElement> element);
@@ -89,14 +87,14 @@ const appBase: ChromeFramework<T> = {
         },
         getElementMap() {
             if (application) {
-                return (<Controller<T>> application.controllerHandler).elementMap;
+                return (<Controller<View>> application.controllerHandler).elementMap;
             }
-            return new Map<Element, T>();
+            return new Map<Element, View>();
         }
     },
     create() {
         application = new Application(framework, View, Controller, Resource, ExtensionManager);
-        controller = <Controller<T>> application.controllerHandler;
+        controller = <Controller<View>> application.controllerHandler;
         elementMap = controller.elementMap;
         userSettings = { ...SETTINGS };
         initialized = true;
