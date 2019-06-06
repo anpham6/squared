@@ -5,7 +5,7 @@ import Node from './node';
 import Extension from './extension';
 
 import { CSS_SPACING } from './lib/constant';
-import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';
+import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 type T = NodeUI;
 
@@ -147,7 +147,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return list.shift();
     }
 
-    public static linearData<T extends Node>(list: T[], clearOnly = false): LinearData<T> {
+    public static linearData<T extends NodeUI>(list: T[], clearOnly = false): LinearData<T> {
         const floated = new Set<string>();
         const cleared = new Map<T, string>();
         let linearX = false;
@@ -357,6 +357,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public baselineAltered = false;
     public positioned = false;
     public controlId = '';
+    public floatContainer = false;
+    public inputContainer = false;
+    public lineBreakLeading = false;
+    public lineBreakTrailing = false;
     public abstract renderParent?: T;
     public abstract renderExtension?: Extension<Node>[];
     public abstract renderTemplates?: (NodeTemplate<T> | null)[];
@@ -376,6 +380,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _excludeProcedure = 0;
     private _excludeResource = 0;
     private _visible = true;
+    private _siblingsLeading?: T[];
+    private _siblingsTrailing?: T[];
     private _renderAs?: T;
 
     public abstract setControlType(viewName: string, containerType?: number): void;
@@ -701,6 +707,110 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
+    public alignedVertically(siblings?: T[], cleared?: Map<T, string>, horizontal?: boolean) {
+        if (this.lineBreak) {
+            return NODE_TRAVERSE.LINEBREAK;
+        }
+        else if (this.pageFlow || this.positionAuto) {
+            const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth;
+            const checkBlockDimension = (previous: T) => $util.aboveRange(this.linear.top, previous.linear.bottom) && (isBlockWrap(this) || isBlockWrap(previous) || this.float !== previous.float);
+            if ($util.isArray(siblings)) {
+                if (cleared && cleared.has(this)) {
+                    return NODE_TRAVERSE.FLOAT_CLEAR;
+                }
+                else {
+                    const lastSibling = siblings[siblings.length - 1];
+                    if (this.floating && lastSibling.floating) {
+                        if (horizontal && this.float === lastSibling.float) {
+                            return NODE_TRAVERSE.HORIZONTAL;
+                        }
+                        else if ($util.aboveRange(this.linear.top, lastSibling.linear.bottom)) {
+                            return NODE_TRAVERSE.FLOAT_WRAP;
+                        }
+                        else if (horizontal && cleared && !siblings.some((item, index) => index > 0 && cleared.get(item) === this.float)) {
+                            return NODE_TRAVERSE.HORIZONTAL;
+                        }
+                    }
+                    else if (horizontal === false && this.floating && lastSibling.blockStatic) {
+                        return NODE_TRAVERSE.HORIZONTAL;
+                    }
+                    else if (horizontal !== undefined) {
+                        if (!this.display.startsWith('inline-')) {
+                            const { top, bottom } = this.linear;
+                            if (this.textElement && cleared && cleared.size && siblings.some((item, index) => index > 0 && cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
+                                return NODE_TRAVERSE.FLOAT_INTERSECT;
+                            }
+                            else if (siblings[0].float === $const.CSS.RIGHT) {
+                                if (siblings.length > 1) {
+                                    let minTop = Number.POSITIVE_INFINITY;
+                                    let maxBottom = Number.NEGATIVE_INFINITY;
+                                    let actualBottom = top;
+                                    for (const item of siblings) {
+                                        if (item.float === $const.CSS.RIGHT) {
+                                            if (item.linear.top < minTop) {
+                                                minTop = item.linear.top;
+                                            }
+                                            if (item.linear.bottom > maxBottom) {
+                                                maxBottom = item.linear.bottom;
+                                            }
+                                        }
+                                    }
+                                    if (this.multiline) {
+                                        actualBottom = bottom;
+                                        if (this.textElement && !this.plainText) {
+                                            const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
+                                            if (rect.bottom > bottom) {
+                                                actualBottom = rect.bottom;
+                                            }
+                                        }
+                                    }
+                                    if ($util.belowRange(actualBottom, maxBottom)) {
+                                        return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
+                                    }
+                                    else {
+                                        return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
+                                    }
+                                }
+                                else if (!horizontal) {
+                                    return NODE_TRAVERSE.FLOAT_BLOCK;
+                                }
+                            }
+                        }
+                    }
+                    if (this.blockDimension && checkBlockDimension(lastSibling)) {
+                        return NODE_TRAVERSE.INLINE_WRAP;
+                    }
+                }
+            }
+            if (this.blockDimension && this.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100 && !this.has('maxWidth')) {
+                return NODE_TRAVERSE.VERTICAL;
+            }
+            const parent = this.actualParent || this.documentParent;
+            const blockStatic = this.blockStatic || this.display === 'table';
+            for (const previous of this.siblingsLeading) {
+                if (previous.lineBreak) {
+                    return NODE_TRAVERSE.LINEBREAK;
+                }
+                else if (cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous)) {
+                    return NODE_TRAVERSE.FLOAT_CLEAR;
+                }
+                else if (
+                    blockStatic && (!previous.floating || !previous.rightAligned && $util.withinRange(previous.linear.right, parent.box.right) || cleared && cleared.has(previous)) ||
+                    previous.blockStatic ||
+                    previous.autoMargin.leftRight ||
+                    previous.float === $const.CSS.LEFT && this.autoMargin.right ||
+                    previous.float === $const.CSS.RIGHT && this.autoMargin.left)
+                {
+                    return NODE_TRAVERSE.VERTICAL;
+                }
+                else if (this.blockDimension && checkBlockDimension(previous)) {
+                    return NODE_TRAVERSE.INLINE_WRAP;
+                }
+            }
+        }
+        return NODE_TRAVERSE.HORIZONTAL;
+    }
+
     public nextSiblings(options: SiblingOptions = {}) {
         const floating = options.floating;
         const pageFlow = options.pageFlow;
@@ -748,34 +858,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             element = <Element> element.nextSibling;
         }
         return result;
-    }
-
-    public getFirstChildElement(options: SiblingOptions = {}) {
-        const lineBreak = options.lineBreak;
-        const excluded = options.excluded;
-        if (this.htmlElement) {
-            for (const node of this.actualChildren) {
-                if (!node.pseudoElement && (!node.excluded || lineBreak !== false && node.lineBreak || excluded !== false && node.excluded)) {
-                    return node.element;
-                }
-            }
-        }
-        return null;
-    }
-
-    public getLastChildElement(options: SiblingOptions = {}) {
-        const lineBreak = options.lineBreak;
-        const excluded = options.excluded;
-        if (this.htmlElement) {
-            const children = this.actualChildren;
-            for (let i = children.length - 1; i >= 0; i--) {
-                const node = children[i];
-                if (!node.pseudoElement && (!node.excluded || lineBreak !== false && node.lineBreak || excluded !== false && node.excluded)) {
-                    return node.element;
-                }
-            }
-        }
-        return null;
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {
@@ -1041,5 +1123,61 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get controlName() {
         return this._controlName || '';
+    }
+
+    set siblingsLeading(value) {
+        this._siblingsLeading = value;
+    }
+    get siblingsLeading() {
+        if (this._siblingsLeading === undefined) {
+            this._siblingsLeading = this.previousSiblings();
+        }
+        return this._siblingsLeading;
+    }
+
+    set siblingsTrailing(value) {
+        this._siblingsTrailing = value;
+    }
+    get siblingsTrailing() {
+        if (this._siblingsTrailing === undefined) {
+            this._siblingsTrailing = this.nextSiblings();
+        }
+        return this._siblingsTrailing;
+    }
+
+    get previousSibling() {
+        if (this._cached.previousSibling === undefined) {
+            if (this.naturalElement) {
+                let element = <Element> (this._element as Element).previousSibling;
+                while (element) {
+                    const node = $session.getElementAsNode<Node>(element, this.sessionId);
+                    if (node && (!node.excluded || node.lineBreak)) {
+                        this._cached.previousSibling = node;
+                        return node;
+                    }
+                    element = <Element> element.previousSibling;
+                }
+            }
+            this._cached.previousSibling = null;
+        }
+        return this._cached.previousSibling;
+    }
+
+    get nextSibling() {
+        if (this._cached.nextSibling === undefined) {
+            if (this.naturalElement) {
+                let element = <Element> (this._element as Element).nextSibling;
+                while (element) {
+                    const node =  $session.getElementAsNode<Node>(element, this.sessionId);
+                    if (node && (!node.excluded || node.lineBreak)) {
+                        this._cached.nextSibling = node;
+                        return node;
+                    }
+                    element = <Element> element.nextSibling;
+                }
+            }
+            this._cached.nextSibling = null;
+        }
+        return this._cached.nextSibling;
     }
 }

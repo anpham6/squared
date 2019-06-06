@@ -19,6 +19,12 @@ declare global {
             overflow: number;
             contentBoxWidth: number;
             contentBoxHeight: number;
+            lineBreakLeading: boolean;
+            lineBreakTrailing: boolean;
+            siblingsLeading: Node[];
+            siblingsTrailing: Node[];
+            floatContainer: boolean;
+            inputContainer: boolean;
             flexbox: Flexbox;
             renderAs?: NodeUI;
             renderExtension?: Extension<Node>[];
@@ -68,10 +74,9 @@ declare global {
             renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
             renderFilter(predicate: IteratorPredicate<NodeUI, boolean>): NodeUI[];
             actualRect(direction: string, dimension?: string): number;
+            alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
             previousSiblings(options?: SiblingOptions): NodeUI[];
             nextSiblings(options?: SiblingOptions): NodeUI[];
-            getFirstChildElement(options?: SiblingOptions): Element | null;
-            getLastChildElement(options?: SiblingOptions): Element | null;
             modifyBox(region: number, offset?: number, negative?: boolean): void;
             getBox(region: number): [number, number];
             resetBox(region: number, node?: NodeUI, fromParent?: boolean): void;

@@ -13,12 +13,6 @@ declare global {
             siblingIndex: number;
             documentRoot: boolean;
             actualParent: Node | null;
-            lineBreakLeading: boolean;
-            lineBreakTrailing: boolean;
-            siblingsLeading: Node[];
-            siblingsTrailing: Node[];
-            floatContainer: boolean;
-            inputContainer: boolean;
             visible: boolean;
             rendered: boolean;
             excluded: boolean;
@@ -127,6 +121,8 @@ declare global {
             readonly lastChild: Node | null;
             readonly previousSibling: Node | null;
             readonly nextSibling: Node | null;
+            readonly previousElementSibling: Node | null;
+            readonly nextElementSibling: Node | null;
             readonly singleChild: boolean;
             readonly attributes: StringMap;
             readonly center: Point;
@@ -136,7 +132,6 @@ declare global {
             data(name: string, attr: string, value?: any, overwrite?: boolean): any;
             unsetCache(...attrs: string[]): void;
             ascend(condition?: (item: Node) => boolean, parent?: Node, attr?: string): Node[];
-            alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
             intersectX(rect: BoxRectDimension, dimension?: string): boolean;
             intersectY(rect: BoxRectDimension, dimension?: string): boolean;
             withinX(rect: BoxRectDimension, dimension?: string): boolean;
@@ -161,10 +156,6 @@ declare global {
             convertPX(value: string, dimension?: string, parent?: boolean): string;
             has(attr: string, checkType?: number, options?: {}): boolean;
             setBounds(cache?: boolean): void;
-            previousSiblings(): Node[];
-            nextSiblings(): Node[];
-            getFirstChildElement(): Element | null;
-            getLastChildElement(): Element | null;
             querySelector(value: string): Node | null;
             querySelectorAll(value: string, resultCount?: number): Node[];
         }

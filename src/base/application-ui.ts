@@ -289,6 +289,83 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.setResources();
     }
 
+    protected cacheNodeChildren(node: T, children: T[], depth: number, includeText: boolean) {
+        const length = children.length;
+        if (length) {
+            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap ? [] : undefined;
+            if (queryMap) {
+                queryMap[0] = children;
+            }
+            let siblingsLeading: T[] = [];
+            let siblingsTrailing: T[] = [];
+            if (length > 1) {
+                let trailing = children[0];
+                let floating = false;
+                let input = false;
+                for (let i = 0; i < length; i++) {
+                    const child = children[i];
+                    if (child.excluded) {
+                        this.processing.excluded.append(child);
+                    }
+                    else if (includeText || !child.plainText) {
+                        child.parent = node;
+                        this.processing.cache.append(child);
+                    }
+                    if (child.pageFlow) {
+                        if (child.floating) {
+                            floating = true;
+                        }
+                        if (child.inputElement) {
+                            input = true;
+                        }
+                        if (i > 0) {
+                            siblingsTrailing.push(child);
+                            if (child.lineBreak) {
+                                children[i - 1].lineBreakTrailing = true;
+                            }
+                        }
+                        if (!child.excluded) {
+                            child.siblingsLeading = siblingsLeading;
+                            trailing.siblingsTrailing = siblingsTrailing;
+                            siblingsLeading = [];
+                            siblingsTrailing = [];
+                            trailing = child;
+                        }
+                        if (i < length - 1) {
+                            siblingsLeading.push(child);
+                            if (child.lineBreak) {
+                                children[i + 1].lineBreakLeading = true;
+                            }
+                        }
+                    }
+                    child.siblingIndex = i;
+                    child.actualParent = node;
+                    this.appendQueryMap(queryMap, depth, child);
+                }
+                trailing.siblingsTrailing = siblingsTrailing;
+                node.floatContainer = floating;
+                node.inputContainer = input;
+            }
+            else {
+                const child = children[0];
+                if (child.excluded) {
+                    this.processing.excluded.append(child);
+                }
+                else {
+                    child.siblingsLeading = siblingsLeading;
+                    child.siblingsTrailing = siblingsTrailing;
+                    if (includeText || !child.plainText) {
+                        child.parent = node;
+                        this.processing.cache.append(child);
+                    }
+                }
+                child.actualParent = node;
+                this.appendQueryMap(queryMap, depth, child);
+            }
+            node.queryMap = queryMap;
+        }
+    }
+
     protected setBaseLayout(layoutName: string) {
         const CACHE = this.processing.cache;
         const documentRoot = this.processing.node as T;
@@ -337,7 +414,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const length = axisY.length;
                 let cleared!: Map<T, string>;
                 if (hasFloat) {
-                    cleared = <Map<T, string>> NodeUI.linearData(parent.actualChildren, true).cleared;
+                    cleared = <Map<T, string>> NodeUI.linearData(parent.actualChildren as T[], true).cleared;
                 }
                 for (let k = 0; k < length; k++) {
                     let nodeY = axisY[k];

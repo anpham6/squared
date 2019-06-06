@@ -23,7 +23,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                 alignable++;
             }
         }
-        return valid && inlineVertical > 1 && alignable === node.length && NodeUI.linearData(node.children).linearX;
+        return valid && inlineVertical > 1 && alignable === node.length && NodeUI.linearData(node.children as T[]).linearX;
     }
 
     public processNode(node: T) {

@@ -1678,7 +1678,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         return renderParent.box.width;
                     }
                     else {
-                        const actualParent = node.actualParent;
+                        const actualParent = node.actualParent as T;
                         if (actualParent) {
                             if (actualParent === renderParent && actualParent.blockStatic && node.naturalElement && node.inlineStatic) {
                                 return actualParent.box.width - (node.linear.left - actualParent.box.left);
