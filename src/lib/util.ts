@@ -1,4 +1,4 @@
-import { CHAR, PREFIX, STRING, UNIT, XML } from './regex';
+import { CHAR, PREFIX, UNIT, XML } from './regex';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
@@ -14,10 +14,10 @@ export function capitalize(value: string, upper = true) {
 }
 
 export function capitalizeString(value: string) {
+    XML.BREAKWORD_G.lastIndex = 0;
     const result = value.split('');
-    const pattern = new RegExp(STRING.BREAKWORD, 'g');
     let match: RegExpMatchArray | null;
-    while ((match = pattern.exec(value)) !== null) {
+    while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
         if (match.index !== undefined) {
             result[match.index] = match[1].charAt(0).toUpperCase();
         }
@@ -26,10 +26,10 @@ export function capitalizeString(value: string) {
 }
 
 export function lowerCaseString(value: string) {
+    XML.BREAKWORD_G.lastIndex = 0;
     let result = value;
-    const pattern = new RegExp(STRING.BREAKWORD, 'g');
     let match: RegExpMatchArray | null;
-    while ((match = pattern.exec(value)) !== null) {
+    while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
         if (match.index !== undefined && !XML.ENTITY.test(match[1])) {
             result = (match.index > 0 ? result.substring(0, match.index) : '') + value.substring(match.index, match.index + match[1].length).toLowerCase() + result.substring(match.index + match[1].length);
         }

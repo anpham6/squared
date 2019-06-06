@@ -12,12 +12,8 @@ const $css = squared.lib.css;
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
-const REGEXP_CLIPPATH = {
-    url: $regex.CSS.URL,
-    polygon: /polygon\(([^)]+)\)/,
-    inset: new RegExp(`inset\\(${$regex.STRING.LENGTH_PERCENTAGE}\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\)`),
-    circle: new RegExp(`circle\\(${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`),
-    ellipse: new RegExp(`ellipse\\(${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`)
+const REGEXP_CLIPPATH: ObjectMap<RegExp> = {
+    url: $regex.CSS.URL
 };
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
@@ -58,7 +54,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this.setAttribute('stroke-dashoffset');
             this.setAttribute('clip-rule');
             const clipPath = this.getAttribute('clip-path', true, false);
-            if (clipPath !== '') {
+            if (clipPath !== '' && clipPath !== 'none') {
+                if (REGEXP_CLIPPATH.polygon === undefined) {
+                    REGEXP_CLIPPATH.polygon = /polygon\(([^)]+)\)/;
+                    REGEXP_CLIPPATH.inset = new RegExp(`inset\\(${$regex.STRING.LENGTH_PERCENTAGE}\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\)`);
+                    REGEXP_CLIPPATH.circle = new RegExp(`circle\\(${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`);
+                    REGEXP_CLIPPATH.ellipse = new RegExp(`ellipse\\(${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`);
+                }
                 for (const name in REGEXP_CLIPPATH) {
                     const match = REGEXP_CLIPPATH[name].exec(clipPath);
                     if (match) {

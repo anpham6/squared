@@ -35,22 +35,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
     public sortInitialCache() {}
 
     public init() {
-        if (this.userSettings.excludeNonRenderedElements) {
-            this.localSettings.unsupported.tagName = new Set([
-                'SCRIPT',
-                'STYLE',
-                'INPUT:hidden',
-                'MAP',
-                'AREA',
-                'SOURCE',
-                'TEMPLATE',
-                'DATALIST',
-                'WBR'
-            ]);
-        }
-        else {
-            this.localSettings.unsupported.tagName.clear();
-        }
         DEFAULT_VIEWSETTINGS = {
             floatPrecision: this.localSettings.precision.standardFloat
         };

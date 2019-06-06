@@ -25,6 +25,7 @@ const SHAPES = {
     polyline: 6,
     polygon: 7
 };
+let REGEXP_ROTATEORIGIN: RegExp | undefined;
 
 export const MATRIX = {
     applyX(matrix: SvgMatrix | DOMMatrix, x: number, y: number) {
@@ -102,6 +103,7 @@ export const TRANSFORM = {
         if (transform !== '') {
             const ordered: SvgTransform[] = [];
             for (const name in REGEXP_TRANSFORM) {
+                REGEXP_TRANSFORM[name].lastIndex = 0;
                 let match: RegExpExecArray | null;
                 while ((match = REGEXP_TRANSFORM[name].exec(transform)) !== null) {
                     const isX = match[1].endsWith('X');
@@ -171,7 +173,8 @@ export const TRANSFORM = {
         return undefined;
     },
     matrix(element: SVGElement, value?: string): SvgMatrix | undefined {
-        const match = new RegExp(REGEXP_TRANSFORM.MATRIX).exec(value || $css.getStyle(element).transform || '');
+        REGEXP_TRANSFORM.MATRIX.lastIndex = 0;
+        const match = REGEXP_TRANSFORM.MATRIX.exec(value || $css.getStyle(element).transform || '');
         if (match) {
             switch (match[1]) {
                 case 'matrix':
@@ -268,9 +271,14 @@ export const TRANSFORM = {
         const value = $dom.getNamedItem(element, attr);
         const result: SvgPoint[] = [];
         if (value !== '') {
-            const pattern = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
+            if (REGEXP_ROTATEORIGIN === undefined) {
+                REGEXP_ROTATEORIGIN = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
+            }
+            else {
+                REGEXP_ROTATEORIGIN.lastIndex = 0;
+            }
             let match: RegExpExecArray | null;
-            while ((match = pattern.exec(value)) !== null) {
+            while ((match = REGEXP_ROTATEORIGIN.exec(value)) !== null) {
                 const angle = parseFloat(match[1]);
                 if (angle !== 0) {
                     result.push({

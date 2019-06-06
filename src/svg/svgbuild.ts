@@ -408,6 +408,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static getPathCommands(value: string) {
+        REGEXP_COMMAND.lastIndex = 0;
         const result: SvgPathCommand[] = [];
         let match: RegExpExecArray | null;
         value = value.trim();
@@ -861,6 +862,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static parseCoordinates(value: string) {
+        REGEXP_DECIMAL.lastIndex = 0;
         const result: number[] = [];
         let match: RegExpExecArray | null;
         while ((match = REGEXP_DECIMAL.exec(value)) !== null) {

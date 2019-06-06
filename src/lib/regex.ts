@@ -7,16 +7,11 @@ export const STRING = {
     LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
     DATAURI: '(?:data:([^;]+);([^,]+),)?(.*?)',
-    BREAKWORD: '([A-Za-z\\d]+|&#?[A-Za-z\\d]+;)',
-    CSS_SELECTOR: '',
     CSS_SELECTOR_PSEUDO: ':[\\w\\-]+(?:\\(\\s*(.+(?!\\)[:\\[\\s]))\\s*\\))?',
     CSS_SELECTOR_ATTR: '\\[([\\w\\-]+)(?:([~^$*|])?=(?:"([^"]+)"|\'([^\']+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
-    CSS_CALC: 'calc(\\(.+\\))',
-    CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)'
+    CSS_CALC: 'calc(\\(.+\\))'
 };
-
-STRING.CSS_SELECTOR = `\\s*([^\\s:\\[]+)?((?:${STRING.CSS_SELECTOR_PSEUDO}|${STRING.CSS_SELECTOR_ATTR}|::[\\w\\-]+)*)?\\s*`;
 
 export const UNIT = {
     DECIMAL: new RegExp(`^${STRING.DECIMAL}$`),
@@ -27,16 +22,21 @@ export const UNIT = {
 export const CSS = {
     ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
     CALC: new RegExp(`^${STRING.CSS_CALC}$`),
+    VAR: /var\((--[A-Za-z\d\-]+)(?!,\s*var\()(?:,\s*([a-z\-]+\([^)]+\)|[^)]+))?\)/,
     URL: /^url\("?(.+?)"?\)$/,
     CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
     HEX: /[A-Za-z\d]{3,8}/,
-    RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/
+    RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/,
+    SELECTOR_G: new RegExp(`\\s*([^\\s:\\[]+)?((?:${STRING.CSS_SELECTOR_PSEUDO}|${STRING.CSS_SELECTOR_ATTR}|::[\\w\\-]+)*)?\\s*`, 'g'),
+    SELECTOR_PSEUDO_G: new RegExp(STRING.CSS_SELECTOR_PSEUDO, 'g'),
+    SELECTOR_ATTR_G: new RegExp(STRING.CSS_SELECTOR_ATTR, 'g')
 };
 
 export const XML = {
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
     ENTITY: /&#?[A-Za-z\d]+;/,
     SEPARATOR: /\s*,\s*/,
+    BREAKWORD_G: /([A-Za-z\d]+|&#?[A-Za-z\d]+;)/g,
     NONWORD_G: /[^A-Za-z\d]+/g,
     TAGNAME_G: /(<([^>]+)>)/g
 };

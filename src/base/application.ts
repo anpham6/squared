@@ -473,13 +473,13 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (controller.localSettings.unsupported.cascade.has(element.tagName)) {
                 return node;
             }
+            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap ? [[]] : undefined;
             const beforeElement = this.createPseduoElement(element, 'before');
             const afterElement = this.createPseduoElement(element, 'after');
             const children: T[] = [];
             let includeText = false;
             const childNodes = element.childNodes;
             const length = childNodes.length;
-            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap ? [[]] : undefined;
             for (let i = 0; i < length; i++) {
                 const childElement = <HTMLElement> childNodes[i];
                 let child: T | undefined;
@@ -575,8 +575,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         const childMap = item.queryMap as T[][];
         if (childMap) {
             const offset = item.depth - depth;
-            const lengthC = childMap.length;
-            for (let i = 0; i < lengthC; i++) {
+            const length = childMap.length;
+            for (let i = 0; i < length; i++) {
                 const key = i + offset;
                 if (queryMap[key] === undefined) {
                     queryMap[key] = [];
@@ -661,12 +661,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                     }
                     else {
-                        if (CACHE_PATTERN.COUNTERS === undefined) {
-                            CACHE_PATTERN.COUNTERS = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
+                        if (CACHE_PATTERN.COUNTER === undefined) {
+                            CACHE_PATTERN.COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
+                            CACHE_PATTERN.COUNTER_VALUE = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
+                        }
+                        else {
+                            CACHE_PATTERN.COUNTER.lastIndex = 0;
                         }
                         let found = false;
                         let match: RegExpExecArray | null;
-                        while ((match = CACHE_PATTERN.COUNTERS.exec(value)) !== null) {
+                        while ((match = CACHE_PATTERN.COUNTER.exec(value)) !== null) {
                             if (match[1]) {
                                 content += $dom.getNamedItem(element, match[1].trim());
                             }
@@ -684,9 +688,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 }
                                 function getCounterValue(name: string) {
                                     if (name !== $const.CSS.NONE) {
-                                        const counterPattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
+                                        CACHE_PATTERN.COUNTER_VALUE.lastIndex = 0;
                                         let counterMatch: RegExpExecArray | null;
-                                        while ((counterMatch = counterPattern.exec(name)) !== null) {
+                                        while ((counterMatch = CACHE_PATTERN.COUNTER_VALUE.exec(name)) !== null) {
                                             if (counterMatch[1] === counterName) {
                                                 return parseInt(counterMatch[2]);
                                             }
@@ -903,9 +907,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                         [styleMap.backgroundImage, styleMap.listStyleImage, styleMap.content].forEach(image => {
                             if (image) {
-                                const pattern = new RegExp(`url\\("(${$regex.STRING.DATAURI})"\\),?\\s*`, 'g');
+                                if (CACHE_PATTERN.DATAURI === undefined) {
+                                    CACHE_PATTERN.DATAURI = new RegExp(`url\\("(${$regex.STRING.DATAURI})"\\),?\\s*`, 'g');
+                                }
+                                else {
+                                    CACHE_PATTERN.DATAURI.lastIndex = 0;
+                                }
                                 let match: RegExpExecArray | null;
-                                while ((match = pattern.exec(image)) !== null) {
+                                while ((match = CACHE_PATTERN.DATAURI.exec(image)) !== null) {
                                     if (match[2] && match[3]) {
                                         this.resourceHandler.addRawData(match[1], match[2], match[3], match[4]);
                                     }

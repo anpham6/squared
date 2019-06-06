@@ -576,11 +576,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     const query = queries[i];
                     const selectors: QueryData[] = [];
                     let offset = -1;
-                    const pattern = new RegExp($regex.STRING.CSS_SELECTOR, 'g');
+                    $regex.CSS.SELECTOR_G.lastIndex = 0;
                     let match: RegExpExecArray | null;
                     invalid: {
                         let adjacent: string | undefined;
-                        while ((match = pattern.exec(query)) !== null) {
+                        while ((match = $regex.CSS.SELECTOR_G.exec(query)) !== null) {
                             if (match[0]) {
                                 let type = QUERY_TYPE.TAGNAME;
                                 let name: string | undefined;
@@ -643,9 +643,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         selectors.length = 0;
                                         break invalid;
                                     }
-                                    let subPattern = new RegExp($regex.STRING.CSS_SELECTOR_PSEUDO, 'g');
+                                    $regex.CSS.SELECTOR_PSEUDO_G.lastIndex = 0;
                                     let subMatch: RegExpExecArray | null;
-                                    while ((subMatch = subPattern.exec(match[2])) !== null) {
+                                    while ((subMatch = $regex.CSS.SELECTOR_PSEUDO_G.exec(match[2])) !== null) {
                                         if (match[2].startsWith(':not(')) {
                                             if (match[3]) {
                                                 if (pseudoList === undefined) {
@@ -668,8 +668,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             }
                                         }
                                     }
-                                    subPattern = new RegExp($regex.STRING.CSS_SELECTOR_ATTR, 'g');
-                                    while ((subMatch = subPattern.exec(match[2])) !== null) {
+                                    $regex.CSS.SELECTOR_ATTR_G.lastIndex = 0;
+                                    while ((subMatch = $regex.CSS.SELECTOR_ATTR_G.exec(match[2])) !== null) {
                                         if (attrList === undefined) {
                                             attrList = [];
                                         }
@@ -1065,12 +1065,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const element = <HTMLElement> this._element;
             let value = '';
             if (element) {
-                if (this.pseudoElement) {
-                    value = `::${$session.getElementCache(element, 'pseudoType', this.sessionId)}`;
-                }
-                else {
-                    value = element.nodeName.charAt(0) === '#' ? element.nodeName : element.tagName;
-                }
+                value = element.nodeName.charAt(0) === '#' ? element.nodeName : element.tagName;
             }
             this._cached.tagName = value;
         }
@@ -1854,10 +1849,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get preserveWhiteSpace() {
-        if (this._cached.preserveWhiteSpace === undefined) {
-            this._cached.preserveWhiteSpace = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
+        if (this._cached.whiteSpace === undefined) {
+            this._cached.whiteSpace = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
         }
-        return this._cached.preserveWhiteSpace;
+        return this._cached.whiteSpace;
     }
 
     get percentWidth() {
@@ -1985,7 +1980,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get firstChild() {
         for (const node of this.actualChildren) {
-            if (node.naturalElement && !(node.pseudoElement && !node.pageFlow)) {
+            if (node.naturalElement && !node.pseudoElement) {
                 return node;
             }
         }
@@ -1995,7 +1990,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get lastChild() {
         for (let i = this.actualChildren.length - 1; i >= 0; i--) {
             const node = this.actualChildren[i];
-            if (node.naturalElement && !(node.pseudoElement && !node.pageFlow)) {
+            if (node.naturalElement && !node.pseudoElement) {
                 return node;
             }
         }
@@ -2034,7 +2029,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const children = parent.actualChildren;
             for (let i = this.siblingIndex - 1; i >= 0; i--) {
                 const node = children[i];
-                if (node.styleElement) {
+                if (node.styleElement && !node.pseudoElement) {
                     return node;
                 }
             }
@@ -2049,7 +2044,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const length = children.length;
             for (let i = this.siblingIndex + 1; i < length; i++) {
                 const node = children[i];
-                if (node.styleElement) {
+                if (node.styleElement && !node.pseudoElement) {
                     return node;
                 }
             }

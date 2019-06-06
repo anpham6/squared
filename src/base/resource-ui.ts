@@ -21,6 +21,7 @@ const REGEXP_U00A0  = /\u00A0/g;
 const REGEXP_NEWLINE = /\n/g;
 const REGEXP_AMPERSAND = /&/g;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
+let REGEXP_COLORSTOP: RegExp | undefined;
 
 function removeExcluded(node: NodeUI, element: Element, attr: string) {
     let value: string = element[attr];
@@ -55,15 +56,20 @@ function removeExcluded(node: NodeUI, element: Element, attr: string) {
 }
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string, opacity: string) {
+    if (REGEXP_COLORSTOP === undefined) {
+        REGEXP_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
+    }
+    else {
+        REGEXP_COLORSTOP.lastIndex = 0;
+    }
     const radial = <RadialGradient> gradient;
     const dimension = radial.horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT;
     const repeating = radial.repeating === true;
     const extent = repeating && gradient.type === 'radial' ? radial.radiusExtent / radial.radius : 1;
-    const pattern = new RegExp(STRING_COLORSTOP, 'g');
     const result: ColorStop[] = [];
     let match: RegExpExecArray | null;
     let previousOffset = 0;
-    while ((match = pattern.exec(value)) !== null) {
+    while ((match = REGEXP_COLORSTOP.exec(value)) !== null) {
         const color = $color.parseColor(match[1], opacity, true);
         if (color) {
             let offset = -1;
@@ -477,6 +483,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 setBorderStyle('outline', $css.BOX_BORDER[4]);
             }
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
                 const images: (string | Gradient)[] = [];
                 let match: RegExpExecArray | null;
                 let i = 0;

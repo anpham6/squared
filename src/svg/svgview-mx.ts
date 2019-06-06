@@ -37,6 +37,7 @@ const ANIMATION_DEFAULT = {
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
+        REGEXP_TIMINGFUNCTION.lastIndex = 0;
         const result: string[] = [];
         let match: RegExpMatchArray | null;
         while ((match = REGEXP_TIMINGFUNCTION.exec(value)) !== null) {

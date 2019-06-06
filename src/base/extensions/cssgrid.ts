@@ -27,12 +27,7 @@ const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
 const STRING_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
 const STRING_NAMED = '\\[([\\w\\-\\s]+)\\]';
-const REGEXP_GRID = {
-    UNIT: new RegExp(`^(${STRING_UNIT})$`),
-    NAMED: `\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`,
-    REPEAT: `\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`,
-    STARTEND: /^([\w\-]+)-(start|end)$/
-};
+const CACHE_PATTERN: ObjectMap<RegExp> = {};
 
 function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
     const unitPX: string[] = [];
@@ -117,6 +112,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
+        if (CACHE_PATTERN.UNIT === undefined) {
+            CACHE_PATTERN.UNIT = new RegExp(`^(${STRING_UNIT})$`);
+            CACHE_PATTERN.NAMED = new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+            CACHE_PATTERN.REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+            CACHE_PATTERN.STARTEND = /^([\w\-]+)-(start|end)$/;
+        }
         const mainData = {
             ...CssGrid.createDataAttribute(),
             alignItems: node.css('alignItems'),
@@ -156,10 +157,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
             if (value && value !== $const.CSS.NONE && value !== $const.CSS.AUTO) {
-                const pattern = new RegExp(REGEXP_GRID.NAMED, 'g');
+                CACHE_PATTERN.NAMED.lastIndex = 0;
                 let match: RegExpMatchArray | null;
                 let i = 1;
-                while ((match = pattern.exec(value)) !== null) {
+                while ((match = CACHE_PATTERN.NAMED.exec(value)) !== null) {
                     if (index < 2) {
                         const data = mainData[index === 0 ? 'row' : 'column'];
                         if (match[1].startsWith('repeat')) {
@@ -176,24 +177,32 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     break;
                             }
                             if (iterations > 0) {
+                                if (CACHE_PATTERN.CELL_UNIT === undefined) {
+                                    CACHE_PATTERN.CELL_UNIT = new RegExp('[\\d.]+[a-z%]+|auto|max-content|min-content');
+                                    CACHE_PATTERN.CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
+                                    CACHE_PATTERN.CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
+                                    CACHE_PATTERN.CELL_NAMED = new RegExp('\\[([\\w\\-\\s]+)\\]');
+                                }
+                                else {
+                                    CACHE_PATTERN.REPEAT.lastIndex = 0;
+                                }
                                 const repeating: RepeatItem[] = [];
-                                const repeatPattern = new RegExp(REGEXP_GRID.REPEAT, 'g');
-                                let repeatMatch: RegExpMatchArray | null;
-                                while ((repeatMatch = repeatPattern.exec(match[3])) !== null) {
+                                let subMatch: RegExpMatchArray | null;
+                                while ((subMatch = CACHE_PATTERN.REPEAT.exec(match[3])) !== null) {
                                     let namedMatch: RegExpMatchArray | null;
-                                    if ((namedMatch = new RegExp(STRING_NAMED).exec(repeatMatch[1])) !== null) {
+                                    if ((namedMatch = CACHE_PATTERN.CELL_NAMED.exec(subMatch[1])) !== null) {
                                         if (data.name[namedMatch[1]] === undefined) {
                                             data.name[namedMatch[1]] = [];
                                         }
                                         repeating.push({ name: namedMatch[1] });
                                     }
-                                    else if ((namedMatch = new RegExp(STRING_MINMAX).exec(repeatMatch[1])) !== null) {
+                                    else if ((namedMatch = CACHE_PATTERN.CELL_MINMAX.exec(subMatch[1])) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[2]), unitMin: convertLength(node, namedMatch[1]) });
                                     }
-                                    else if ((namedMatch = new RegExp(STRING_FIT_CONTENT).exec(repeatMatch[1])) !== null) {
+                                    else if ((namedMatch = CACHE_PATTERN.CELL_FIT_CONTENT.exec(subMatch[1])) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[1]), unitMin: $const.CSS.PX_0 });
                                     }
-                                    else if ((namedMatch = new RegExp(STRING_UNIT).exec(repeatMatch[1])) !== null) {
+                                    else if ((namedMatch = CACHE_PATTERN.CELL_UNIT.exec(subMatch[1])) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[0]) });
                                     }
                                 }
@@ -232,7 +241,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             data.repeat.push(false);
                             i++;
                         }
-                        else if (REGEXP_GRID.UNIT.test(match[1])) {
+                        else if (CACHE_PATTERN.UNIT.test(match[1])) {
                             data.unit.push(match[1] === $const.CSS.AUTO ? $const.CSS.AUTO : convertLength(node, match[1]));
                             data.unitMin.push('');
                             data.repeat.push(false);
@@ -409,7 +418,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         else {
-                            const match = REGEXP_GRID.STARTEND.exec(name);
+                            const match = CACHE_PATTERN.STARTEND.exec(name);
                             if (match) {
                                 template = mainData.templateAreas[match[1]];
                                 if (template) {

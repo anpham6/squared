@@ -17,8 +17,8 @@ const $util = squared.lib.util;
 const $e = squared.base.lib.enumeration;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-const REGEXP_DOUBLEQUOTE = /"/g;
 const REGEXP_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
+const REGEXP_DOUBLEQUOTE = /"/g;
 const FONT_ANDROID = {
     'sans-serif': BUILD_ANDROID.ICE_CREAM_SANDWICH,
     'sans-serif-thin': BUILD_ANDROID.JELLYBEAN,

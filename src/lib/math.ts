@@ -96,6 +96,9 @@ export function truncateString(value: string, precision = 3) {
     if (REGEXP_TRUNCATECACHE[precision] === undefined) {
         REGEXP_TRUNCATECACHE[precision] = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
     }
+    else {
+        REGEXP_TRUNCATECACHE[precision].lastIndex = 0;
+    }
     let match: RegExpExecArray | null;
     let output = value;
     while ((match = REGEXP_TRUNCATECACHE[precision].exec(value)) !== null) {

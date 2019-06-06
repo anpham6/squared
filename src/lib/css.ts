@@ -6,7 +6,22 @@ import { CSS as CSS_RX, STRING, UNIT, XML } from './regex';
 import { getElementCache, setElementCache } from './session';
 import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isString, replaceMap, resolvePath } from './util';
 
-const REGEXP_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+const CACHE_PATTERN: ObjectMap<RegExp> = {};
+
+function compareRange(operation: string, unit: number, range: number) {
+    switch (operation) {
+        case '<=':
+            return unit <= range;
+        case '<':
+            return unit < range;
+        case '>=':
+            return unit >= range;
+        case '>':
+            return unit > range;
+        default:
+            return unit === range;
+    }
+}
 
 const convertLength = (value: string, dimension: number, fontSize?: number) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
 
@@ -65,10 +80,10 @@ export function hasComputedStyle(element: Element): element is HTMLElement {
 }
 
 export function getSpecificity(value: string) {
-    const pattern = new RegExp(STRING.CSS_SELECTOR, 'g');
+    CSS_RX.SELECTOR_G.lastIndex = 0;
     let result = 0;
     let match: RegExpExecArray | null;
-    while ((match = pattern.exec(value.trim())) !== null) {
+    while ((match = CSS_RX.SELECTOR_G.exec(value.trim())) !== null) {
         if (match[0]) {
             if (match[1]) {
                 let check = true;
@@ -101,9 +116,10 @@ export function getSpecificity(value: string) {
                 }
             }
             if (match[2]) {
-                let subPattern = new RegExp(STRING.CSS_SELECTOR_PSEUDO, 'g');
+                CSS_RX.SELECTOR_PSEUDO_G.lastIndex = 0;
+                CSS_RX.SELECTOR_ATTR_G.lastIndex = 0;
                 let subMatch: RegExpExecArray | null;
-                while ((subMatch = subPattern.exec(match[2])) !== null) {
+                while ((subMatch = CSS_RX.SELECTOR_PSEUDO_G.exec(match[2])) !== null) {
                     if (match[2].startsWith(':not(')) {
                         if (match[3]) {
                             result += getSpecificity(match[3]);
@@ -122,8 +138,7 @@ export function getSpecificity(value: string) {
                         }
                     }
                 }
-                subPattern = new RegExp(STRING.CSS_SELECTOR_ATTR, 'g');
-                while ((subMatch = subPattern.exec(match[2])) !== null) {
+                while ((subMatch = CSS_RX.SELECTOR_ATTR_G.exec(match[2])) !== null) {
                     if (subMatch[1]) {
                         result += 1;
                     }
@@ -203,11 +218,14 @@ export function getKeyframeRules(): ObjectMap<CSSKeyframesData> {
 }
 
 export function parseKeyframeRule(rules: CSSRuleList) {
+    if (CACHE_PATTERN.KEYFRAME === undefined) {
+        CACHE_PATTERN.KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+    }
     const result: CSSKeyframesData = {};
     const length = rules.length;
     for (let i = 0; i < length; i++) {
         const item = rules[i];
-        const match = REGEXP_KEYFRAME.exec(item.cssText);
+        const match = CACHE_PATTERN.KEYFRAME.exec(item.cssText);
         if (match) {
             for (let percent of (item['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
                 percent = percent.trim();
@@ -238,40 +256,32 @@ export function validMediaRule(value: string, fontSize?: number) {
         case 'only screen':
             return true;
         default: {
-            function compareRange(operation: string, unit: number, range: number) {
-                switch (operation) {
-                    case '<=':
-                        return unit <= range;
-                    case '<':
-                        return unit < range;
-                    case '>=':
-                        return unit >= range;
-                    case '>':
-                        return unit > range;
-                    default:
-                        return unit === range;
-                }
+            if (CACHE_PATTERN.MEDIA_RULE === undefined) {
+                CACHE_PATTERN.MEDIA_RULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+                CACHE_PATTERN.MEDIA_CONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
             }
-            const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+            else {
+                CACHE_PATTERN.MEDIA_RULE.lastIndex = 0;
+            }
             let match: RegExpExecArray | null;
-            while ((match = pattern.exec(value)) !== null) {
+            while ((match = CACHE_PATTERN.MEDIA_RULE.exec(value)) !== null) {
+                CACHE_PATTERN.MEDIA_CONDITION.lastIndex = 0;
                 const negate = match[1] === 'not';
-                const conditionPattern = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-                let conditionMatch: RegExpExecArray | null;
+                let subMatch: RegExpExecArray | null;
                 let valid = false;
-                while ((conditionMatch = conditionPattern.exec(match[2])) !== null) {
-                    const attr = conditionMatch[1];
+                while ((subMatch = CACHE_PATTERN.MEDIA_CONDITION.exec(match[2])) !== null) {
+                    const attr = subMatch[1];
                     let operation: string;
-                    if (conditionMatch[1].startsWith('min')) {
+                    if (subMatch[1].startsWith('min')) {
                         operation = '>=';
                     }
-                    else if (conditionMatch[1].startsWith('max')) {
+                    else if (subMatch[1].startsWith('max')) {
                         operation = '<=';
                     }
                     else {
                         operation = match[2];
                     }
-                    const rule = conditionMatch[3];
+                    const rule = subMatch[3];
                     switch (attr) {
                         case 'aspect-ratio':
                         case 'min-aspect-ratio':
@@ -364,7 +374,7 @@ export function getInheritedStyle(element: Element, attr: string, exclude?: RegE
 export function parseVar(element: HTMLElement | SVGElement, value: string) {
     const style = getStyle(element);
     let match: RegExpMatchArray | null;
-    while ((match = new RegExp(STRING.CSS_VAR).exec(value)) !== null) {
+    while ((match = CSS_RX.VAR.exec(value)) !== null) {
         let propertyValue = style.getPropertyValue(match[1]).trim();
         if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) !== undefined && parseColor(propertyValue) === undefined)) {
             propertyValue = match[2];
