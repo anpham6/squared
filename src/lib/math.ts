@@ -4,6 +4,14 @@ const REGEXP_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
 const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
 const REGEXP_TRUNCATECACHE = {};
 
+function convertDecimalNotation(value: number) {
+    const match = REGEXP_DECIMALNOTATION.exec(value.toString());
+    if (match) {
+        return parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0';
+    }
+    return value.toString();
+}
+
 export function minArray(list: number[]): number {
     if (list.length) {
         return Math.min.apply(null, list);
@@ -29,15 +37,6 @@ export function moreEqual(valueA: number, valueB: number, precision = 5) {
 
 export function lessEqual(valueA: number, valueB: number, precision = 5) {
     return valueA < valueB || isEqual(valueA, valueB, precision);
-}
-
-export function convertDecimalNotation(value: number) {
-    const match = REGEXP_DECIMALNOTATION.exec(value.toString());
-    if (match) {
-        const multiplier = parseInt(match[2]);
-        return value.toFixed(multiplier > 0 ? multiplier + 1 : Math.abs(multiplier));
-    }
-    return value.toString();
 }
 
 export function truncate(value: number | string, precision = 3) {
@@ -114,7 +113,7 @@ export function convertRadian(value: number) {
     return value * Math.PI / 180;
 }
 
-export function triangulateASA(a: number, b: number, clen: number) {
+export function triangulate(a: number, b: number, clen: number) {
     const c = 180 - a - b;
     return [
         (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(a)),

@@ -1,9 +1,6 @@
-import { LocalSettings } from '../src/@types/node';
-
 declare global {
     namespace chrome.base {
         interface View extends squared.base.Node {
-            localSettings: LocalSettings;
         }
 
         class View implements View {

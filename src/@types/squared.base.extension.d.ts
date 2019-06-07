@@ -20,7 +20,6 @@ declare global {
             beforeInit(element: HTMLElement, recursive?: boolean): void;
             init(element: HTMLElement): boolean;
             afterInit(element: HTMLElement, recursive?: boolean): void;
-            addDescendant(node: T): void;
             postParseDocument(node: T): void;
             beforeParseDocument(): void;
             afterParseDocument(): void;

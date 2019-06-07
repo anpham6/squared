@@ -8,7 +8,7 @@ declare global {
             readonly userSettings: UserSettings;
             readonly localSettings: ControllerSettings;
             readonly generateSessionId: string;
-            readonly afterInsertNode: BindGeneric<Node, void> | undefined;
+            readonly afterInsertNode?: BindGeneric<Node, void>;
             init(): void;
             reset(): void;
             evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;

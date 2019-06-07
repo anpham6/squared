@@ -7,6 +7,7 @@ declare global {
             condition(node: T, parent?: T): boolean;
             processNode(node: T, parent: T): ExtensionResult<T> | undefined;
             processChild(node: T, parent: T): ExtensionResult<T> | undefined;
+            addDescendant(node: T): void;
             postBaseLayout(node: T): void;
             postConstraints(node: T): void;
             postOptimize(node: T): void;

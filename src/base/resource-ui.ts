@@ -1,6 +1,7 @@
 import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } from './@types/application';
 
 import Resource from './resource';
+import ControllerUI from './controller-ui';
 import FileUI from './file-ui';
 import NodeUI from './node-ui';
 
@@ -12,7 +13,6 @@ const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $math = squared.lib.math;
 const $regex = squared.lib.regex;
-const $session = squared.lib.session;
 const $util = squared.lib.util;
 
 const STRING_SPACE = '&#160;';
@@ -192,10 +192,10 @@ function replaceWhiteSpace(parent: NodeUI, node: NodeUI, element: Element, value
                 .replace(/\s+/g, ' ');
             break;
         default:
-            if (element.previousSibling && $session.causesLineBreak(<Element> element.previousSibling, node.sessionId) || node.singleChild && node.htmlElement) {
+            if (element.previousSibling && ControllerUI.causesLineBreak(<Element> element.previousSibling, node.sessionId) || node.singleChild && node.htmlElement) {
                 value = value.replace($regex.CHAR.LEADINGSPACE, '');
             }
-            if (element.nextSibling && $session.causesLineBreak(<Element> element.nextSibling, node.sessionId) || node.singleChild && node.htmlElement) {
+            if (element.nextSibling && ControllerUI.causesLineBreak(<Element> element.nextSibling, node.sessionId) || node.singleChild && node.htmlElement) {
                 value = value.replace($regex.CHAR.TRAILINGSPACE, '');
             }
             return [value, false];
@@ -623,11 +623,11 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     }
                                     let a = Math.abs(oppositeAngle - angle);
                                     let b = 90 - a;
-                                    const lenX = $math.triangulateASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
+                                    const lenX = $math.triangulate(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
                                     x = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
                                     a = 90;
                                     b = 90 - angle;
-                                    const lenY = $math.triangulateASA(a, b, x);
+                                    const lenY = $math.triangulate(a, b, x);
                                     y = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
                                 }
                                 linear.angleExtent = { x, y };

@@ -20,7 +20,6 @@ declare global {
             parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
             createCache(element: HTMLElement): boolean;
             createNode(element: Element, append?: boolean, parent?: T, children?: T[]): T;
-            conditionElement(element: HTMLElement): boolean;
             insertNode(element: Element, parent?: T): T | undefined;
             afterCreateCache(element: HTMLElement): void;
             finalize(): void;

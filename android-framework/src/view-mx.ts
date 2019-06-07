@@ -830,7 +830,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
                 if (this.groupParent && !alignFloat && textAlign === '') {
-                    const actualParent = $NodeUI.actualParent(this.renderChildren);
+                    const actualParent = this.actualParent;
                     if (actualParent) {
                         textAlign = checkTextAlign(actualParent.cssInitial('textAlign', true));
                     }

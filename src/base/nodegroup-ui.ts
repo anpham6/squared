@@ -40,12 +40,12 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     public previousSiblings(options?: SiblingOptions) {
-        const node = <NodeUI> this.item(0);
+        const node = <NodeUI> this._initial.children[0];
         return node ? node.previousSiblings(options) : [];
     }
 
     public nextSiblings(options?: SiblingOptions) {
-        const node = <NodeUI> this.item();
+        const node = <NodeUI> this._initial.children[this._initial.children.length - 1];
         return node ? node.nextSiblings(options) : [];
     }
 
@@ -114,7 +114,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     set baseline(value) {
-        super.baseline = value;
+        this._cached.baseline = value;
     }
     get baseline() {
         if (this._cached.baseline === undefined) {
@@ -135,24 +135,17 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get floating() {
         if (this._cached.floating === undefined) {
-            this._cached.floating = this.every(node => node.naturalElement && node.floating);
+            this._cached.floating = this.every(node => node.floating);
         }
         return this._cached.floating;
     }
 
     get display() {
         return (
-            this.css('display') ||
+            super.display ||
             this.some(node => node.blockStatic) ? 'block'
-                                                : this.some(node => node.blockDimension || node.inlineVertical) ? 'inline-block' : 'inline'
+                                                : this.blockDimension ? 'inline-block' : 'inline'
         );
-    }
-
-    get actualParent() {
-        if (this._cached.actualParent === undefined) {
-            this._cached.actualParent = NodeUI.actualParent(<NodeUI[]> this._initial.children);
-        }
-        return this._cached.actualParent;
     }
 
     get groupParent() {
@@ -169,5 +162,30 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get multiline() {
         return false;
+    }
+
+    get firstChild() {
+        return this.children[0] || null;
+    }
+
+    get lastChild() {
+        const children = this.children;
+        return children.length ? children[children.length - 1] : null;
+    }
+
+    get previousSibling() {
+        return null;
+    }
+
+    get nextSibling() {
+        return null;
+    }
+
+    get previousElementSibling() {
+        return null;
+    }
+
+    get nextElementSibling() {
+        return null;
     }
 }

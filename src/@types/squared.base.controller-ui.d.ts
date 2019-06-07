@@ -36,6 +36,7 @@ declare global {
         }
 
         class ControllerUI<T extends NodeUI> implements Controller<T> {
+            public static causesLineBreak(element: Element, sessionId: string): boolean;
             constructor(application: Application<T>, cache: NodeList<T>);
         }
     }

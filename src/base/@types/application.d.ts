@@ -35,9 +35,6 @@ export interface ControllerSettings {
         excluded: Set<string>;
         tagName: Set<string>;
     };
-    precision: {
-        standardFloat: number;
-    };
 }
 
 export interface ControllerUISettings extends ControllerSettings {
@@ -54,6 +51,9 @@ export interface ControllerUISettings extends ControllerSettings {
     style: {
         inputBorderColor: string;
         inputBackgroundColor: string;
+    };
+    precision: {
+        standardFloat: number;
     };
     deviations: {
         textMarginBoundarySize: number;
@@ -82,13 +82,13 @@ export interface AppHandler<T extends Node> {
 }
 
 export interface AppSession<T extends Node> {
-    cache: squared.base.NodeList<T>;
-    excluded: squared.base.NodeList<T>;
     active: string[];
-    extensionMap: Map<number, squared.base.Extension<T>[]>;
 }
 
 export interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
+    cache: squared.base.NodeList<T>;
+    excluded: squared.base.NodeList<T>;
+    extensionMap: Map<number, squared.base.Extension<T>[]>;
     documentRoot: { node: T, layoutName: string }[];
     targetQueue: Map<T, NodeTemplate<T>>;
 }

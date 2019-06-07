@@ -4,12 +4,14 @@ import { LinearData, SiblingOptions, Support } from '../base/@types/node';
 declare global {
     namespace squared.base {
         interface NodeUI extends Node {
+            alignmentType: number;
             containerType: number;
             containerName: string;
             baselineActive: boolean;
             baselineAltered: boolean;
             positioned: boolean;
             rendered: boolean;
+            excluded: boolean;
             controlId: string;
             controlName: string;
             renderExclude: boolean;
@@ -27,6 +29,7 @@ declare global {
             floatContainer: boolean;
             inputContainer: boolean;
             flexbox: Flexbox;
+            localSettings: {};
             renderAs?: NodeUI;
             renderParent?: NodeUI;
             renderExtension?: Extension<Node>[];
@@ -90,7 +93,6 @@ declare global {
         class NodeUI implements NodeUI {
             public static linearData<T>(list: T[], clearOnly?: boolean): LinearData<T>;
             public static outerRegion<T>(node: T): BoxRect;
-            public static actualParent<T>(list: T[]): T | null;
             public static baseline<T>(list: T[], text?: boolean): T | undefined;
             public static partitionRows<T>(list: T[], parent?: T): T[][];
             public static siblingIndex(): number;

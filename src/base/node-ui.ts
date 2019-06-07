@@ -63,36 +63,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         };
     }
 
-    public static actualParent(list: T[]): T | null {
-        for (const node of list) {
-            if (node.naturalElement) {
-                if (node.actualParent) {
-                    return node.actualParent as T;
-                }
-            }
-            else {
-                let current = node.innerWrapped;
-                while (current) {
-                    if (!current.hasAlign(NODE_ALIGNMENT.WRAPPER)) {
-                        break;
-                    }
-                    current = current.innerWrapped;
-                }
-                if (current && current.naturalElement && current.actualParent) {
-                    return current.actualParent as T;
-                }
-                else if (node.groupParent) {
-                    const parent = NodeUI.actualParent(node.actualChildren as T[]);
-                    if (parent) {
-                        return parent as T;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    public static siblingIndex<T extends Node>(a: T, b: T) {
+    public static siblingIndex<T extends NodeUI>(a: T, b: T) {
         return a.siblingIndex < b.siblingIndex ? -1 : 1;
     }
 
@@ -281,7 +252,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static partitionRows(list: T[]) {
-        const parent = this.actualParent(list);
+        const parent = list[0].actualParent;
         const children = parent ? parent.actualChildren as T[] : list;
         const cleared = NodeUI.linearData(list as T[], true).cleared;
         const groupParent = $util.filterArray(list, node => node.groupParent);
@@ -353,17 +324,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
+    public alignmentType = 0;
     public baselineActive = false;
     public baselineAltered = false;
     public positioned = false;
     public rendered = false;
+    public excluded = false;
     public controlId = '';
     public floatContainer = false;
     public inputContainer = false;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
+    public abstract localSettings: {};
     public abstract renderParent?: T;
-    public abstract renderExtension?: Extension<Node>[];
+    public abstract renderExtension?: Extension<T>[];
     public abstract renderTemplates?: (NodeTemplate<T> | null)[];
     public abstract outerWrapper?: T;
     public abstract innerWrapped?: T;
@@ -566,7 +540,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     $util.assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
                     break;
                 case 'textStyle':
-                    Node.copyTextStyle(this, node);
+                    NodeUI.copyTextStyle(this, node);
                     break;
             }
         }
@@ -1147,39 +1121,38 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get previousSibling() {
-        if (this._cached.previousSibling === undefined) {
-            if (this.naturalElement) {
-                let element = <Element> (this._element as Element).previousSibling;
-                while (element) {
-                    const node = $session.getElementAsNode<Node>(element, this.sessionId);
+        const parent = this.actualParent;
+        if (parent) {
+            const children = <NodeUI[]> parent.actualChildren;
+            const index = children.indexOf(this);
+            if (index !== -1) {
+                for (let i = index - 1; i >= 0; i--) {
+                    const node = children[i];
                     if (node && (!node.excluded || node.lineBreak)) {
-                        this._cached.previousSibling = node;
                         return node;
                     }
-                    element = <Element> element.previousSibling;
                 }
             }
-            this._cached.previousSibling = null;
         }
-        return this._cached.previousSibling;
+        return null;
     }
 
     get nextSibling() {
-        if (this._cached.nextSibling === undefined) {
-            if (this.naturalElement) {
-                let element = <Element> (this._element as Element).nextSibling;
-                while (element) {
-                    const node =  $session.getElementAsNode<Node>(element, this.sessionId);
+        const parent = this.actualParent;
+        if (parent) {
+            const children = <NodeUI[]> parent.actualChildren;
+            const index = children.indexOf(this);
+            if (index !== -1) {
+                const length = children.length;
+                for (let i = index + 1; i < length; i++) {
+                    const node = children[i];
                     if (node && (!node.excluded || node.lineBreak)) {
-                        this._cached.nextSibling = node;
                         return node;
                     }
-                    element = <Element> element.nextSibling;
                 }
             }
-            this._cached.nextSibling = null;
         }
-        return this._cached.nextSibling;
+        return null;
     }
 
     get singleChild() {

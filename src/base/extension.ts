@@ -71,14 +71,6 @@ export default abstract class Extension<T extends Node> implements squared.base.
         }
     }
 
-    public addDescendant(node: T) {
-        const extensions = this.application.session.extensionMap.get(node.id) || [];
-        if (!extensions.includes(this)) {
-            extensions.push(this);
-        }
-        this.application.session.extensionMap.set(node.id, extensions);
-    }
-
     public postParseDocument(node: T) {}
     public beforeParseDocument() {}
     public afterParseDocument() {}

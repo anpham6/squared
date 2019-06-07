@@ -15,7 +15,6 @@ const $dom = squared.lib.dom;
 const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
-const $xml = squared.lib.xml;
 
 const CACHE_PATTERN: ObjectMap<RegExp> = {};
 let NodeConstructor!: Constructor<Node>;
@@ -37,27 +36,6 @@ async function getImageSvgAsync(value: string)  {
 }
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
-    public static prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[]) {
-        if (element.dataset.use && extensions.length) {
-            const included = element.dataset.use.split($regex.XML.SEPARATOR);
-            const result: Extension<T>[] = [];
-            const untagged: Extension<T>[] = [];
-            for (const ext of extensions) {
-                const index = included.indexOf(ext.name);
-                if (index !== -1) {
-                    result[index] = ext;
-                }
-                else {
-                    untagged.push(ext);
-                }
-            }
-            if (result.length) {
-                return $util.spliceArray(result, item => item === undefined).concat(untagged);
-            }
-        }
-        return extensions;
-    }
-
     public controllerHandler: Controller<T>;
     public resourceHandler: Resource<T>;
     public extensionManager: ExtensionManager<T>;
@@ -68,10 +46,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     public readonly extensions: Extension<T>[] = [];
     public readonly rootElements = new Set<HTMLElement>();
     public readonly session: AppSession<T> = {
-        cache: new NodeList<T>(),
-        excluded: new NodeList<T>(),
-        active: [],
-        extensionMap: new Map<number, Extension<T>[]>()
+        active: []
     };
     public readonly processing: AppProcessing<T> = {
         cache: new NodeList<T>(),
@@ -98,22 +73,11 @@ export default abstract class Application<T extends Node> implements squared.bas
     public saveAllToDisk() {}
 
     public reset() {
-        for (const id of this.session.active) {
-            this.session.cache.each(node => {
-                if (node.naturalElement && !node.pseudoElement) {
-                    const element = <Element> node.element;
-                    $session.deleteElementCache(element, 'node', id);
-                    $session.deleteElementCache(element, 'styleMap', id);
-                }
-            });
-        }
-        for (const element of this.rootElements) {
-            element.dataset.iteration = '';
-        }
-        this.session.cache.reset();
-        this.session.excluded.reset();
-        this.session.extensionMap.clear();
-        this.processing.cache.reset();
+        this.session.active.length = 0;
+        const processing = this.processing;
+        processing.cache.reset();
+        processing.excluded.clear();
+        processing.sessionId = '';
         this.controllerHandler.reset();
         for (const ext of this.extensions) {
             ext.subscribers.clear();
@@ -151,7 +115,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const ASSETS = this.resourceHandler.assets;
         const documentRoot = this.rootElements.values().next().value;
         const preloadImages: HTMLImageElement[] = [];
-        const parseResume = () => {
+        const resume = () => {
             this.initialized = false;
             for (const image of preloadImages) {
                 if (image.parentElement) {
@@ -271,17 +235,17 @@ export default abstract class Application<T extends Node> implements squared.bas
                         this.resourceHandler.addImage(value);
                     }
                 }
-                parseResume();
+                resume();
             })
             .catch((error: Event) => {
                 const message = error.target ? (<HTMLImageElement> error.target).src : error['message'];
                 if (!this.userSettings.showErrorMessages || !$util.isString(message) || confirm(`FAIL: ${message}`)) {
-                    parseResume();
+                    resume();
                 }
             });
         }
         else {
-            parseResume();
+            resume();
         }
         const PromiseResult = class {
             public then(resolve: () => void) {
@@ -316,8 +280,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         else {
             return false;
         }
+        const CACHE = <NodeList<T>> this.processing.cache;
         const preAlignment: ObjectIndex<StringMap> = {};
         const direction = new Set<HTMLElement>();
+        let resetBounds = false;
         function saveAlignment(element: HTMLElement, id: number, attr: string, value: string, restoreValue: string) {
             if (preAlignment[id] === undefined) {
                 preAlignment[id] = {};
@@ -325,8 +291,6 @@ export default abstract class Application<T extends Node> implements squared.bas
             preAlignment[id][attr] = restoreValue;
             element.style.setProperty(attr, value);
         }
-        let resetBounds = false;
-        const CACHE = <NodeList<T>> this.processing.cache;
         for (const node of CACHE) {
             if (node.styleElement) {
                 const element = <HTMLElement> node.element;
@@ -354,11 +318,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
+        if (!resetBounds && direction.size) {
+            resetBounds = true;
+        }
         const pseudoElement = new Set<T>();
         nodeRoot.parent.setBounds();
         for (const node of CACHE) {
             if (!node.pseudoElement) {
-                node.setBounds(!resetBounds && preAlignment[node.id] === undefined && direction.size === 0);
+                node.setBounds(preAlignment[node.id] === undefined && !resetBounds);
             }
             else {
                 pseudoElement.add(node.parent as T);
@@ -430,32 +397,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    public insertNode(element: Element, parent?: T) {
-        if (element.nodeName === '#text') {
-            if ($xml.isPlainText(element.textContent as string) || $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
-                this.controllerHandler.applyDefaultStyles(element);
-                const node = this.createNode(element, false);
-                if (parent) {
-                    Node.copyTextStyle(node, parent);
-                }
-                return node;
-            }
+    public insertNode(element: Element, parent?: T): T | undefined {
+        this.controllerHandler.applyDefaultStyles(element);
+        const node = this.createNode(element, false);
+        if (node.plainText) {
+            Node.copyTextStyle(node, parent as T);
         }
-        else if (this.conditionElement(<HTMLElement> element)) {
-            this.controllerHandler.applyDefaultStyles(element);
-            return this.createNode(element, false);
-        }
-        else {
-            const node = this.createNode(element, false);
-            node.visible = false;
-            node.excluded = true;
-            return node;
-        }
-        return undefined;
-    }
-
-    public conditionElement(element: HTMLElement) {
-        return !this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName);
+        return node;
     }
 
     public toString() {
@@ -477,7 +425,6 @@ export default abstract class Application<T extends Node> implements squared.bas
             const beforeElement = this.createPseduoElement(element, 'before');
             const afterElement = this.createPseduoElement(element, 'after');
             const children: T[] = [];
-            let includeText = false;
             const childNodes = element.childNodes;
             const length = childNodes.length;
             for (let i = 0; i < length; i++) {
@@ -488,7 +435,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (child) {
                         node.innerBefore = child;
                         child.inlineText = true;
-                        includeText = true;
                     }
                 }
                 else if (childElement === afterElement) {
@@ -496,7 +442,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (child) {
                         node.innerAfter = child;
                         child.inlineText = true;
-                        includeText = true;
                     }
                 }
                 else if (childElement.nodeName.charAt(0) === '#') {
@@ -506,9 +451,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 else if (controller.includeElement(childElement)) {
                     child = this.partitionNodeChildren(childElement, depth);
-                    if (child && (!child.excluded || child.documentRoot)) {
-                        includeText = true;
-                    }
                 }
                 if (child) {
                     children.push(child);
@@ -518,22 +460,28 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
             }
-            this.cacheNodeChildren(node, children, includeText);
-            node.inlineText = !includeText;
+            this.cacheNodeChildren(node, children);
             node.queryMap = queryMap;
             node.actualChildren = children;
         }
         return node;
     }
 
-    protected cacheNodeChildren(node: T, children: T[], includeText: boolean) {
+    protected cacheNodeChildren(node: T, children: T[]) {
         const length = children.length;
+        let inlineText = true;
         for (let i = 0; i < length; i++) {
             const child = children[i];
             child.parent = node;
             child.siblingIndex = i;
             child.actualParent = node;
-            this.processing.cache.append(child);
+            if (!child.plainText) {
+                inlineText = false;
+                this.processing.cache.append(child);
+            }
+        }
+        if (inlineText) {
+            node.inlineText = true;
         }
     }
 

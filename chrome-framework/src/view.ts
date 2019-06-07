@@ -1,5 +1,4 @@
 import { CachedValue } from '../../src/base/@types/node';
-import { LocalSettings } from './@types/node';
 
 type T = View;
 
@@ -7,7 +6,6 @@ export default class View extends squared.base.Node implements chrome.base.View 
     public queryMap?: T[][];
 
     protected _cached: CachedValue<T> = {};
-    protected _localSettings: LocalSettings = {};
     protected _documentParent?: T;
 
     constructor(
@@ -23,12 +21,5 @@ export default class View extends squared.base.Node implements chrome.base.View 
         if (afterInit) {
             afterInit(this);
         }
-    }
-
-    set localSettings(value) {
-        Object.assign(this._localSettings, value);
-    }
-    get localSettings() {
-        return this._localSettings;
     }
 }

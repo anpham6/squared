@@ -10,6 +10,7 @@ declare global {
             readonly session: AppSessionUI<T>;
             readonly rootElements: Set<Element>;
             readonly layouts: FileAsset[];
+            conditionElement(element: HTMLElement): boolean;
             renderNode(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
             resolveTarget(target: string): T | undefined;
             addLayout(layout: LayoutUI<T>): void;

@@ -507,8 +507,8 @@ export function flatArray<T>(list: any[]): T[] {
 }
 
 export function flatMultiArray<T>(list: any[]): T[] {
-    const length = list.length;
     const result: T[] = [];
+    const length = list.length;
     for (let i = 0; i < length; i++) {
         const item = list[i];
         if (Array.isArray(item)) {
@@ -524,9 +524,9 @@ export function flatMultiArray<T>(list: any[]): T[] {
 }
 
 export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
-    const length = list.length;
     const valid: T[] = [];
     const invalid: T[] = [];
+    const length = list.length;
     for (let i = 0; i < length; i++) {
         const item = list[i];
         if (predicate(item, i, list)) {
@@ -552,8 +552,8 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
 }
 
 export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>) {
-    const length = list.length;
     const result: T[] = [];
+    const length = list.length;
     for (let i = 0; i < length; i++) {
         if (predicate(list[i], i, list)) {
             result.push(list[i]);
@@ -581,8 +581,8 @@ export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
 }
 
 export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
-    const length = list.length;
     const result: U[] = [];
+    const length = list.length;
     for (let i = 0; i < length; i++) {
         const item = predicate(list[i], i, list);
         if (hasValue(item)) {
@@ -593,8 +593,8 @@ export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[
 }
 
 export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[] {
-    const length = list.length;
     const result: U[] = [];
+    const length = list.length;
     for (let i = 0; i < length; i++) {
         if (predicate(list[i], i, list)) {
             result.push(callback(list[i], i, list));
@@ -621,18 +621,15 @@ export function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): 
 }
 
 export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char = '\n'): string {
-    const length = list.length;
     let result = '';
+    const length = list.length;
     for (let i = 0; i < length; i++) {
         const value = predicate(list[i], i, list);
         if (value !== '') {
-            result += value;
-            if (i < length - 1) {
-                result += char;
-            }
+            result += value + char;
         }
     }
-    return result;
+    return result.substring(0, result.length - char.length);
 }
 
 export function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {

@@ -39,11 +39,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public documentRoot = false;
     public depth = -1;
     public siblingIndex = Number.POSITIVE_INFINITY;
-    public excluded = false;
-    public alignmentType = 0;
     public style!: CSSStyleDeclaration;
 
-    public abstract localSettings: {};
     public abstract innerBefore?: T;
     public abstract innerAfter?: T;
     public abstract queryMap?: T[][];
@@ -63,10 +60,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected abstract _documentParent?: T;
     protected abstract _cached: CachedValue<T>;
 
+    private _parent?: T;
     private _data = {};
     private _fontSize = 0;
     private _inlineText = false;
-    private _parent?: T;
 
     protected constructor(
         public readonly id: number,
@@ -809,14 +806,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             return true;
                         };
                         const dataEnd = <QueryData> selectors.pop();
-                        {
-                            const last = selectors.length === 0;
-                            for (let j = offset; j < length; j++) {
-                                const dataMap = queryMap[j];
-                                for (const node of dataMap) {
-                                    if (validate(node, dataEnd, last)) {
-                                        pending.push(node);
-                                    }
+                        const lastEnd = selectors.length === 0;
+                        for (let j = offset; j < length; j++) {
+                            const dataMap = queryMap[j];
+                            for (const node of dataMap) {
+                                if (validate(node, dataEnd, lastEnd)) {
+                                    pending.push(node);
                                 }
                             }
                         }
@@ -869,8 +864,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     }
                                 }
                                 if (next.length) {
-                                    index++;
-                                    if (selectors[index] === undefined) {
+                                    if (++index === length) {
                                         return true;
                                     }
                                     return ascend(index, selector.adjacent, next);
@@ -888,11 +882,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             }
                         }
                         else if (result.length === 0 && (i === queries.length - 1 || resultCount >= 0 && resultCount <= pending.length)) {
+                            if (resultCount >= 0 && pending.length > resultCount) {
+                                pending.length = resultCount;
+                            }
                             return pending;
                         }
                         else {
                             result = result.concat(pending);
-                            if (resultCount !== -1 && result.length >= resultCount) {
+                            if (resultCount >= 0 && result.length >= resultCount) {
                                 result.length = resultCount;
                                 return result;
                             }
@@ -1118,7 +1115,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get htmlElement() {
         if (this._cached.htmlElement === undefined) {
-            this._cached.htmlElement = this._element !== null && !this.plainText && !this.svgElement;
+            this._cached.htmlElement = this._element instanceof HTMLElement;
         }
         return this._cached.htmlElement;
     }
@@ -1164,7 +1161,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get textElement() {
-        return this.plainText || this.inlineText && !this.inputElement;
+        return this.plainText || this.inlineText;
     }
 
     get tableElement() {

@@ -92,12 +92,11 @@ declare global {
             function isEqual(valueA: number, valueB: number, precision?: number): boolean;
             function moreEqual(valueA: number, valueB: number, precision?: number): boolean;
             function lessEqual(valueA: number, valueB: number, precision?: number): boolean;
-            function convertDecimalNotation(value: number): string;
             function truncate(value: number | string, precision?: number): string;
             function truncateTrailingZero(value: string): string;
             function truncateFraction(value: number): number;
             function truncateString(value: string, precision?: number): string;
-            function triangulateASA(a: number, b: number, clen: number): [number, number];
+            function triangulate(a: number, b: number, clen: number): [number, number];
             function absoluteAngle(start: Point, end: Point): number;
             function relativeAngle(start: Point, end: Point, orientation?: number): number;
             function offsetAngleX(angle: number, value: number): number;
@@ -119,7 +118,6 @@ declare global {
         namespace session {
             function getClientRect(element: Element, sessionId: string, cache?: boolean): ClientRect;
             function getRangeClientRect(element: Element, sessionId: string, cache?: boolean): BoxRectDimension;
-            function causesLineBreak(element: Element, sessionId: string): boolean;
             function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
             function getElementCache(element: Element, attr: string, sessionId?: string): any;
             function deleteElementCache(element: Element, attr: string, sessionId: string): void;

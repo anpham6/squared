@@ -6,15 +6,12 @@ declare global {
     namespace squared.base {
         interface Node extends Container<Node>, BoxModel {
             id: number;
-            localSettings: {};
             style: CSSStyleDeclaration;
-            alignmentType: number;
             depth: number;
             siblingIndex: number;
             documentRoot: boolean;
             actualParent: Node | null;
             visible: boolean;
-            excluded: boolean;
             inlineText: boolean;
             dir: string;
             documentParent: Node;

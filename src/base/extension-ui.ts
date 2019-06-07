@@ -39,6 +39,14 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         return undefined;
     }
 
+    public addDescendant(node: T) {
+        const extensions = this.application.session.extensionMap.get(node.id) || [];
+        if (!extensions.includes(this)) {
+            extensions.push(this);
+        }
+        this.application.session.extensionMap.set(node.id, extensions);
+    }
+
     public postBaseLayout(node: T) {}
     public postConstraints(node: T) {}
     public postOptimize(node: T) {}

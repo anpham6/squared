@@ -1,8 +1,6 @@
 import { assignRect, newBoxRectDimension } from './dom';
 import { withinRange } from './util';
 
-type Node = squared.base.Node;
-
 export function getClientRect(element: Element, sessionId: string, cache = true) {
     if (cache) {
         const rect: ClientRect = getElementCache(element, 'boundingClientRect', sessionId);
@@ -67,19 +65,6 @@ export function getRangeClientRect(element: Element, sessionId: string, cache = 
     }
     setElementCache(element, 'rangeClientRect', sessionId, bounds);
     return <BoxRectDimension> bounds;
-}
-
-export function causesLineBreak(element: Element, sessionId: string) {
-    if (element.tagName === 'BR') {
-        return true;
-    }
-    else {
-        const node = getElementAsNode<Node>(element, sessionId);
-        if (node) {
-            return node.excluded && node.blockStatic;
-        }
-    }
-    return false;
 }
 
 export function setElementCache(element: Element, attr: string, sessionId: string, data: any) {

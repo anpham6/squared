@@ -16,10 +16,32 @@ const $dom = squared.lib.dom;
 const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 let NodeConstructor!: Constructor<NodeUI>;
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
+    public static prioritizeExtensions<T extends NodeUI>(element: HTMLElement, extensions: ExtensionUI<T>[]) {
+        if (element.dataset.use && extensions.length) {
+            const included = element.dataset.use.split($regex.XML.SEPARATOR);
+            const result: ExtensionUI<T>[] = [];
+            const untagged: ExtensionUI<T>[] = [];
+            for (const ext of extensions) {
+                const index = included.indexOf(ext.name);
+                if (index !== -1) {
+                    result[index] = ext;
+                }
+                else {
+                    untagged.push(ext);
+                }
+            }
+            if (result.length) {
+                return $util.spliceArray(result, item => item === undefined).concat(untagged);
+            }
+        }
+        return extensions;
+    }
+
     public controllerHandler!: ControllerUI<T>;
     public resourceHandler!: ResourceUI<T>;
     public userSettings!: UserUISettings;
@@ -28,8 +50,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly session: AppSessionUI<T> = {
         cache: new NodeList<T>(),
         excluded: new NodeList<T>(),
-        active: [],
         extensionMap: new Map<number, ExtensionUI<T>[]>(),
+        active: [],
         documentRoot: [],
         targetQueue: new Map<T, NodeTemplate<T>>()
     };
@@ -119,36 +141,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public reset() {
-        for (const id of this.session.active) {
-            this.session.cache.each(node => {
-                if (node.naturalElement && !node.pseudoElement) {
-                    const element = <Element> node.element;
-                    $session.deleteElementCache(element, 'node', id);
-                    $session.deleteElementCache(element, 'styleMap', id);
-                }
-            });
-        }
+        super.reset();
         for (const element of this.rootElements) {
             element.dataset.iteration = '';
         }
-        this.session.documentRoot.length = 0;
-        this.session.active.length = 0;
-        this.session.targetQueue.clear();
-        this.session.cache.reset();
-        this.session.excluded.reset();
-        this.session.extensionMap.clear();
-        this.processing.cache.reset();
-        this.controllerHandler.reset();
-        this.resourceHandler.reset();
+        const session = this.session;
+        session.cache.reset();
+        session.excluded.reset();
+        session.extensionMap.clear();
+        session.documentRoot.length = 0;
+        session.targetQueue.clear();
         this._layouts.length = 0;
-        for (const ext of this.extensions) {
-            ext.subscribers.clear();
-        }
-        this.closed = false;
     }
 
     public conditionElement(element: HTMLElement) {
-        if (super.conditionElement(element)) {
+        if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName)) {
             if (this.controllerHandler.visibleElement(element) || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
                 return true;
             }
@@ -175,6 +182,30 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         return false;
+    }
+
+    public insertNode(element: Element, parent?: T) {
+        if (element.nodeName === '#text') {
+            if ($xml.isPlainText(element.textContent as string) || $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                this.controllerHandler.applyDefaultStyles(element);
+                const node = this.createNode(element, false);
+                if (parent) {
+                    NodeUI.copyTextStyle(node, parent);
+                }
+                return node;
+            }
+        }
+        else if (this.conditionElement(<HTMLElement> element)) {
+            this.controllerHandler.applyDefaultStyles(element);
+            return this.createNode(element, false);
+        }
+        else {
+            const node = this.createNode(element, false);
+            node.visible = false;
+            node.excluded = true;
+            return node;
+        }
+        return undefined;
     }
 
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
@@ -275,10 +306,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return undefined;
     }
 
-    public toString() {
-        return this._layouts.length ? this._layouts[0].content : '';
-    }
-
     public afterCreateCache(element: HTMLElement) {
         const iteration = (element.dataset.iteration ? $util.convertInt(element.dataset.iteration) : -1) + 1;
         element.dataset.iteration = iteration.toString();
@@ -289,21 +316,44 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.setResources();
     }
 
-    protected cacheNodeChildren(node: T, children: T[], includeText: boolean) {
+    public toString() {
+        return this._layouts.length ? this._layouts[0].content : '';
+    }
+
+    protected partitionNodeChildren(element: HTMLElement, depth: number) {
+        ApplicationUI.prioritizeExtensions(element, this.extensions).some(item => item.init(element));
+        if (!this.rootElements.has(element)) {
+            return this.cascadeParentNode(element, depth + 1);
+        }
+        else {
+            const child = this.insertNode(element);
+            if (child) {
+                child.documentRoot = true;
+                child.visible = false;
+                child.excluded = true;
+            }
+            return child;
+        }
+    }
+
+    protected cacheNodeChildren(node: T, children: T[]) {
         const length = children.length;
+        let inlineText = true;
         if (length) {
             let siblingsLeading: T[] = [];
             let siblingsTrailing: T[] = [];
             if (length > 1) {
+                inlineText = !children.some(item => !item.excluded && !item.plainText || item.excluded && item.documentRoot);
                 let trailing = children[0];
                 let floating = false;
                 let input = false;
-                for (let i = 0; i < length; i++) {
+                for (let i = 0, j = 0; i < length; i++) {
                     const child = children[i];
                     if (child.excluded) {
                         this.processing.excluded.append(child);
                     }
-                    else if (includeText || !child.plainText) {
+                    else if (!child.plainText || !inlineText) {
+                        child.siblingIndex = j++;
                         child.parent = node;
                         this.processing.cache.append(child);
                     }
@@ -334,7 +384,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                     }
-                    child.siblingIndex = i;
                     child.actualParent = node;
                 }
                 trailing.siblingsTrailing = siblingsTrailing;
@@ -345,34 +394,23 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const child = children[0];
                 if (child.excluded) {
                     this.processing.excluded.append(child);
+                    if (child.documentRoot) {
+                        inlineText = false;
+                    }
                 }
-                else {
+                else if (!child.plainText) {
                     child.siblingsLeading = siblingsLeading;
                     child.siblingsTrailing = siblingsTrailing;
-                    if (includeText || !child.plainText) {
-                        child.parent = node;
-                        this.processing.cache.append(child);
-                    }
+                    child.parent = node;
+                    inlineText = false;
+                    this.processing.cache.append(child);
                 }
                 child.actualParent = node;
                 node.inputContainer = child.inputElement;
             }
         }
-    }
-
-    protected partitionNodeChildren(element: HTMLElement, depth: number) {
-        Application.prioritizeExtensions(element, this.extensions).some(item => item.init(element));
-        if (!this.rootElements.has(element)) {
-            return this.cascadeParentNode(element, depth + 1);
-        }
-        else {
-            const child = this.insertNode(element);
-            if (child) {
-                child.documentRoot = true;
-                child.visible = false;
-                child.excluded = true;
-            }
-            return child;
+        if (inlineText) {
+            node.inlineText = true;
         }
     }
 
@@ -432,7 +470,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    if (length > 1 && k < length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (length > 1 && k < length - 1 && nodeY.pageFlow && !nodeY.groupParent && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let extended = false;
@@ -640,7 +678,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         if (nodeY.styleElement) {
                             let next = false;
-                            Application.prioritizeExtensions(<HTMLElement> nodeY.element, extensions).some((item: ExtensionUI<T>) => {
+                            ApplicationUI.prioritizeExtensions(<HTMLElement> nodeY.element, extensions).some((item: ExtensionUI<T>) => {
                                 if (item.is(nodeY) && item.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(item))) {
                                     const result = item.processNode(nodeY, parentY);
                                     if (result) {
