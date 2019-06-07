@@ -83,71 +83,64 @@ export function getSpecificity(value: string) {
     CSS_RX.SELECTOR_G.lastIndex = 0;
     let result = 0;
     let match: RegExpExecArray | null;
-    while ((match = CSS_RX.SELECTOR_G.exec(value.trim())) !== null) {
-        if (match[0]) {
-            if (match[1]) {
-                let check = true;
-                switch (match[1].charAt(0)) {
-                    case '*':
-                    case '>':
-                    case '+':
-                    case '~':
-                        continue;
-                    case ':':
-                    case '[':
-                        check = false;
-                        break;
-                    case '#':
-                        result += 100;
-                        break;
-                    case '.':
-                        result += 10;
-                        match[1] = match[1].substring(1);
-                        break;
-                    default:
-                        if (match[1].indexOf('#') > 0) {
-                            result += 100;
-                        }
-                        result += 1;
-                        break;
-                }
-                if (check) {
-                    result += (match[1].split('.').length - 1) * 10;
-                }
-            }
-            if (match[2]) {
-                CSS_RX.SELECTOR_PSEUDO_G.lastIndex = 0;
-                CSS_RX.SELECTOR_ATTR_G.lastIndex = 0;
-                let subMatch: RegExpExecArray | null;
-                while ((subMatch = CSS_RX.SELECTOR_PSEUDO_G.exec(match[2])) !== null) {
-                    if (match[2].startsWith(':not(')) {
-                        if (match[3]) {
-                            result += getSpecificity(match[3]);
-                        }
-                    }
-                    else {
-                        switch (match[2]) {
-                            case ':scope':
-                            case ':root':
-                                break;
-                            default:
-                                result += 10;
-                                break;
-                        }
-                    }
-                }
-                while ((subMatch = CSS_RX.SELECTOR_ATTR_G.exec(match[2])) !== null) {
-                    if (subMatch[1]) {
-                        result += 1;
-                    }
-                    if (subMatch[3] || subMatch[4] || subMatch[5]) {
-                        result += 10;
-                    }
-                }
+    while ((match = CSS_RX.SELECTOR_G.exec(value)) !== null) {
+        let segment = match[1];
+        if (segment.length === 1) {
+            switch (segment.charAt(0)) {
+                case '+':
+                case '~':
+                case '>':
+                case '*':
+                    continue;
             }
         }
-        else {
-            break;
+        else if (segment.charAt(0) === '*') {
+            segment = segment.substring(1);
+        }
+        CSS_RX.SELECTOR_PSEUDO_G.lastIndex = 0;
+        CSS_RX.SELECTOR_ATTR_G.lastIndex = 0;
+        CSS_RX.SELECTOR_LABEL_G.lastIndex = 0;
+        let subMatch: RegExpExecArray | null;
+        let original = segment;
+        while ((subMatch = CSS_RX.SELECTOR_PSEUDO_G.exec(segment)) !== null) {
+            if (subMatch[0].startsWith(':not(')) {
+                if (subMatch[1]) {
+                    result += getSpecificity(subMatch[1]);
+                }
+            }
+            else {
+                switch (match[2]) {
+                    case ':scope':
+                    case ':root':
+                        break;
+                    default:
+                        result += 10;
+                        break;
+                }
+            }
+            original = original.replace(subMatch[0], '');
+        }
+        while ((subMatch = CSS_RX.SELECTOR_ATTR_G.exec(segment)) !== null) {
+            if (subMatch[1]) {
+                result += 1;
+            }
+            if (subMatch[3] || subMatch[4] || subMatch[5]) {
+                result += 10;
+            }
+            original = original.replace(subMatch[0], '');
+        }
+        while ((subMatch = CSS_RX.SELECTOR_LABEL_G.exec(original)) !== null) {
+            switch (subMatch[0].charAt(0)) {
+                case '#':
+                    result += 100;
+                    break;
+                case '.':
+                    result += 10;
+                    break;
+                default:
+                    result += 1;
+                    break;
+            }
         }
     }
     return result;

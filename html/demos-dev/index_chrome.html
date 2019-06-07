@@ -102,10 +102,10 @@
                     chrome = result.default;
                     squared.setFramework(chrome);
                     const time = new Date().getTime();
-                    const input = squared.system.getElementById('squared_ui').querySelectorAll('form:last-child > ul li div label > input[type=Radio i], input[type=checkbox]');
+                    const input = squared.system.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1 > ul:last-child li div label > input[type=Radio i], input[type=checkbox]');
                     console.log(new Date().getTime() - time);
                     console.log(input);
-                    console.log(document.getElementById('squared_ui').querySelectorAll('form:last-child > ul li div label > input[type=Radio i], input[type=checkbox]'));
+                    console.log(document.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1 > ul:last-child li div label > input[type=Radio i], input[type=checkbox]'));
                 });
             });
         });
@@ -115,7 +115,7 @@
     <!-- START: DEMO -->
     <div id="squared_ui">
         <h2>Entry</h2>
-        <form name="entry" autocomplete="off">
+        <form id="form1" class="form2" name="entry" autocomplete="off">
             <ul>
                 <li>
                     <label for="order" style="font-style: italic;">Order:</label>

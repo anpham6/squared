@@ -11,13 +11,6 @@ const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
-const enum QUERY_TYPE {
-    TAGNAME = 1,
-    ID = 2,
-    CLASSNAME = 3,
-    ALL = 4
-}
-
 const REGEXP_BACKGROUND = /\s*(url\(.+?\))\s*/;
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
@@ -569,151 +562,128 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const queries = value.split($regex.XML.SEPARATOR);
                 for (let i = 0; i < queries.length; i++) {
                     const query = queries[i];
+                    if (query.indexOf('::') !== -1) {
+                        continue;
+                    }
                     const selectors: QueryData[] = [];
                     let offset = -1;
-                    $regex.CSS.SELECTOR_G.lastIndex = 0;
-                    let match: RegExpExecArray | null;
                     invalid: {
+                        $regex.CSS.SELECTOR_G.lastIndex = 0;
                         let adjacent: string | undefined;
+                        let match: RegExpExecArray | null;
                         while ((match = $regex.CSS.SELECTOR_G.exec(query)) !== null) {
-                            if (match[0]) {
-                                let type = 0;
-                                let name: string | undefined;
-                                let classList: string[] | undefined;
-                                let pseudoList: string[] | undefined;
-                                let attrList: QueryAttribute[] | undefined;
-                                if (match[1]) {
-                                    let segment = match[1].trim();
-                                    let ch = segment.charAt(0);
-                                    if (ch === '*' && segment.length > 1) {
-                                        segment = segment.substring(1);
-                                        ch = segment.charAt(0);
-                                    }
-                                    switch (ch) {
-                                        case '+':
-                                        case '~':
-                                            offset--;
-                                        case '>':
-                                            if (adjacent || selectors.length === 0) {
-                                                selectors.length = 0;
-                                                break invalid;
-                                            }
-                                            adjacent = ch;
-                                            continue;
-                                        case '#':
-                                            type = QUERY_TYPE.ID;
-                                            segment = segment.substring(1);
-                                            break;
-                                        case '.':
-                                            type = QUERY_TYPE.CLASSNAME;
-                                            break;
-                                        case '*':
-                                            type = QUERY_TYPE.ALL;
-                                            break;
-                                        default:
-                                            type = QUERY_TYPE.TAGNAME;
-                                            break;
-                                    }
-                                    if (type <= QUERY_TYPE.CLASSNAME) {
-                                        if (segment.indexOf('.') > 0) {
-                                            if (segment.charAt(0) === '.') {
-                                                segment = segment.substring(1);
-                                            }
-                                            classList = segment.split('.');
-                                        }
-                                        else if (type === QUERY_TYPE.CLASSNAME) {
-                                            classList = [segment];
-                                        }
-                                        if (type !== QUERY_TYPE.CLASSNAME) {
-                                            if (classList) {
-                                                name = classList.shift() as string;
-                                            }
-                                            else {
-                                                name = segment;
-                                            }
-                                            if (type === QUERY_TYPE.TAGNAME) {
-                                                name = name.toUpperCase();
-                                            }
-                                        }
-                                    }
-                                }
-                                const attribute = match[2];
-                                if (attribute) {
-                                    if (attribute.indexOf('::') !== -1) {
-                                        selectors.length = 0;
-                                        break invalid;
-                                    }
-                                    else if (selectors.length === 0 && attribute.charAt(0) === ':') {
+                            let segment = match[1];
+                            let all = false;
+                            let tagName: string | undefined;
+                            let id: string | undefined;
+                            let classList: string[] | undefined;
+                            let pseudoList: string[] | undefined;
+                            let attrList: QueryAttribute[] | undefined;
+                            if (segment.length === 1) {
+                                const ch = segment.charAt(0);
+                                switch (ch) {
+                                    case '+':
+                                    case '~':
                                         offset--;
-                                    }
-                                    $regex.CSS.SELECTOR_PSEUDO_G.lastIndex = 0;
-                                    let subMatch: RegExpExecArray | null;
-                                    while ((subMatch = $regex.CSS.SELECTOR_PSEUDO_G.exec(attribute)) !== null) {
-                                        if (attribute.startsWith(':not(')) {
-                                            if (match[3]) {
-                                                if (pseudoList === undefined) {
-                                                    pseudoList = [];
-                                                }
-                                            }
+                                    case '>':
+                                        if (adjacent || selectors.length === 0) {
+                                            selectors.length = 0;
+                                            break invalid;
                                         }
-                                        else {
+                                        adjacent = ch;
+                                        continue;
+                                    case '*':
+                                        all = true;
+                                        break;
+                                }
+                            }
+                            else if (segment.charAt(0) === '*') {
+                                segment = segment.substring(1);
+                            }
+                            if (!all) {
+                                $regex.CSS.SELECTOR_PSEUDO_G.lastIndex = 0;
+                                $regex.CSS.SELECTOR_ATTR_G.lastIndex = 0;
+                                $regex.CSS.SELECTOR_LABEL_G.lastIndex = 0;
+                                let subMatch: RegExpExecArray | null;
+                                let original = segment;
+                                while ((subMatch = $regex.CSS.SELECTOR_PSEUDO_G.exec(segment)) !== null) {
+                                    if (subMatch[0].startsWith(':not(')) {
+                                        if (subMatch[1]) {
                                             if (pseudoList === undefined) {
                                                 pseudoList = [];
                                             }
-                                            pseudoList.push(attribute);
                                         }
                                     }
-                                    $regex.CSS.SELECTOR_ATTR_G.lastIndex = 0;
-                                    while ((subMatch = $regex.CSS.SELECTOR_ATTR_G.exec(attribute)) !== null) {
-                                        if (attrList === undefined) {
-                                            attrList = [];
+                                    else {
+                                        if (pseudoList === undefined) {
+                                            pseudoList = [];
                                         }
-                                        const caseInsensitive = subMatch[6] === 'i';
-                                        let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
-                                        if (caseInsensitive) {
-                                            attrValue = attrValue.toLowerCase();
-                                        }
-                                        attrList.push({
-                                            key: subMatch[1],
-                                            symbol: subMatch[2],
-                                            value: attrValue,
-                                            caseInsensitive
-                                        });
+                                        pseudoList.push(subMatch[0]);
+                                    }
+                                    original = original.replace(subMatch[0], '');
+                                }
+                                while ((subMatch = $regex.CSS.SELECTOR_ATTR_G.exec(segment)) !== null) {
+                                    if (attrList === undefined) {
+                                        attrList = [];
+                                    }
+                                    const caseInsensitive = subMatch[6] === 'i';
+                                    let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
+                                    if (caseInsensitive) {
+                                        attrValue = attrValue.toLowerCase();
+                                    }
+                                    attrList.push({
+                                        key: subMatch[1],
+                                        symbol: subMatch[2],
+                                        value: attrValue,
+                                        caseInsensitive
+                                    });
+                                    original = original.replace(subMatch[0], '');
+                                }
+                                while ((subMatch = $regex.CSS.SELECTOR_LABEL_G.exec(original)) !== null) {
+                                    const label = subMatch[0];
+                                    switch (label.charAt(0)) {
+                                        case '#':
+                                            id = label.substring(1);
+                                            break;
+                                        case '.':
+                                            if (classList === undefined) {
+                                                classList = [];
+                                            }
+                                            classList.push(label.substring(1));
+                                            break;
+                                        default:
+                                            tagName = label.toUpperCase();
+                                            break;
                                     }
                                 }
-                                selectors.push({
-                                    type,
-                                    name,
-                                    adjacent,
-                                    classList,
-                                    pseudoList,
-                                    attrList
-                                });
+                            }
+                            if (selectors.length > 0 || pseudoList === undefined) {
                                 offset++;
-                                adjacent = undefined;
                             }
-                            else {
-                                break;
-                            }
+                            selectors.push({
+                                all,
+                                tagName,
+                                id,
+                                adjacent,
+                                classList,
+                                pseudoList,
+                                attrList
+                            });
+                            adjacent = undefined;
                         }
                     }
                     let length = queryMap.length;
                     if (selectors.length && offset !== -1 && offset < length) {
                         const pending: T[] = [];
                         const validate = (node: T, data: QueryData, last: boolean, adjacent?: string) => {
-                            switch (data.type) {
-                                case QUERY_TYPE.ALL:
-                                    return true;
-                                case QUERY_TYPE.TAGNAME:
-                                    if (node.tagName.toUpperCase() !== data.name) {
-                                        return false;
-                                    }
-                                    break;
-                                case QUERY_TYPE.ID:
-                                    if (node.elementId !== data.name) {
-                                        return false;
-                                    }
-                                    break;
+                            if (data.all) {
+                                return true;
+                            }
+                            if (data.tagName && data.tagName !== node.tagName.toUpperCase()) {
+                                return false;
+                            }
+                            if (data.id && data.id !== node.elementId) {
+                                return false;
                             }
                             if (data.pseudoList) {
                                 const parent = node.actualParent as T;

@@ -130,13 +130,15 @@ interface ImageSrcSet {
 }
 
 interface QueryData {
-    type: number;
-    name?: string;
+    all: boolean;
+    tagName?: string;
+    id?: string;
     adjacent?: string;
     classList?: string[];
     attrList?: QueryAttribute[];
     pseudoList?: string[];
 }
+
 interface QueryAttribute extends StringValue {
     symbol?: string;
     caseInsensitive: boolean;
