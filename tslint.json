@@ -36,6 +36,7 @@
     "triple-equals": true,
     "label-position": false,
     "no-namespace": [true, "allow-declarations"],
-    "max-classes-per-file": false
+    "max-classes-per-file": false,
+    "no-empty-interface": false
   }
 }

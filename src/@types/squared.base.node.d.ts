@@ -14,14 +14,12 @@ declare global {
             documentRoot: boolean;
             actualParent: Node | null;
             visible: boolean;
-            rendered: boolean;
             excluded: boolean;
             inlineText: boolean;
             dir: string;
             documentParent: Node;
             actualChildren: Node[];
             parent?: Node;
-            renderParent?: Node;
             innerBefore?: Node;
             innerAfter?: Node;
             queryMap?: Node[][];
@@ -36,6 +34,7 @@ declare global {
             readonly htmlElement: boolean;
             readonly styleElement: boolean;
             readonly naturalElement: boolean;
+            readonly actualElement: boolean;
             readonly imageElement: boolean;
             readonly svgElement: boolean;
             readonly flexElement: boolean;
@@ -123,7 +122,7 @@ declare global {
             readonly nextSibling: Node | null;
             readonly previousElementSibling: Node | null;
             readonly nextElementSibling: Node | null;
-            readonly singleChild: boolean;
+            readonly childrenElements: Node[];
             readonly attributes: StringMap;
             readonly center: Point;
             init(): void;

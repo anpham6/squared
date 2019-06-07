@@ -5,7 +5,6 @@ const settings: UserSettingsChrome = {
     preloadImages: false,
     handleExtensionsAsync: true,
     showErrorMessages: false,
-    excludeNonRenderedElements: false,
     createQuerySelectorMap: true
 };
 

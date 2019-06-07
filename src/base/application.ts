@@ -470,7 +470,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 this.processing.cache.append(node);
             }
             const controller = this.controllerHandler;
-            if (controller.localSettings.unsupported.cascade.has(element.tagName)) {
+            if (controller.preventNodeCascade(element)) {
                 return node;
             }
             const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap ? [[]] : undefined;
@@ -505,20 +505,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 else if (controller.includeElement(childElement)) {
-                    Application.prioritizeExtensions(childElement, this.extensions).some(item => item.init(childElement));
-                    if (!this.rootElements.has(childElement)) {
-                        child = this.cascadeParentNode(childElement, depth + 1);
-                        if (child && !child.excluded) {
-                            includeText = true;
-                        }
-                    }
-                    else {
-                        child = this.insertNode(childElement);
-                        if (child) {
-                            child.documentRoot = true;
-                            child.visible = false;
-                            child.excluded = true;
-                        }
+                    child = this.partitionNodeChildren(childElement, depth);
+                    if (child && (!child.excluded || child.documentRoot)) {
                         includeText = true;
                     }
                 }
@@ -530,7 +518,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
             }
-            this.cacheNodeChildren(node, children, depth, includeText);
+            this.cacheNodeChildren(node, children, includeText);
             node.inlineText = !includeText;
             node.queryMap = queryMap;
             node.actualChildren = children;
@@ -538,37 +526,19 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    protected cacheNodeChildren(node: T, children: T[], depth: number, includeText: boolean) {
+    protected cacheNodeChildren(node: T, children: T[], includeText: boolean) {
         const length = children.length;
-        if (length) {
-            if (length > 1) {
-                for (let i = 0; i < length; i++) {
-                    const child = children[i];
-                    if (child.excluded) {
-                        this.processing.excluded.append(child);
-                    }
-                    else if (includeText || !child.plainText) {
-                        child.parent = node;
-                        this.processing.cache.append(child);
-                    }
-                    child.siblingIndex = i;
-                    child.actualParent = node;
-                }
-            }
-            else {
-                const child = children[0];
-                if (child.excluded) {
-                    this.processing.excluded.append(child);
-                }
-                else {
-                    if (includeText || !child.plainText) {
-                        child.parent = node;
-                        this.processing.cache.append(child);
-                    }
-                }
-                child.actualParent = node;
-            }
+        for (let i = 0; i < length; i++) {
+            const child = children[i];
+            child.parent = node;
+            child.siblingIndex = i;
+            child.actualParent = node;
+            this.processing.cache.append(child);
         }
+    }
+
+    protected partitionNodeChildren(element: HTMLElement, depth: number) {
+        return this.cascadeParentNode(element, depth + 1);
     }
 
     protected appendQueryMap(queryMap: T[][], depth: number, item: T) {

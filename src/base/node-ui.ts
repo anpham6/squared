@@ -356,6 +356,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public baselineActive = false;
     public baselineAltered = false;
     public positioned = false;
+    public rendered = false;
     public controlId = '';
     public floatContainer = false;
     public inputContainer = false;
@@ -1179,5 +1180,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             this._cached.nextSibling = null;
         }
         return this._cached.nextSibling;
+    }
+
+    get singleChild() {
+        if (this.renderParent) {
+            return this.renderParent.length === 1;
+        }
+        else if (this.parent && this.parent.id !== 0) {
+            return this.parent.length === 1;
+        }
+        return false;
     }
 }

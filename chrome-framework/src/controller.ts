@@ -82,13 +82,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public addElement(node: T) {
-        node.rendered = !this.localSettings.unsupported.tagName.has(node.tagName);
         this._elementMap.set(<Element> node.element, node);
     }
 
     public addElementList(list: squared.base.NodeList<T>) {
         for (const node of list) {
-            node.rendered = !this.localSettings.unsupported.tagName.has(node.tagName);
             this._elementMap.set(<Element> node.element, node);
         }
     }

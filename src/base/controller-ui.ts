@@ -50,6 +50,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         this._afterOutside = {};
     }
 
+    public preventNodeCascade(element: Element) {
+        return this.localSettings.unsupported.cascade.has(element.tagName);
+    }
+
     public applyDefaultStyles(element: Element) {
         let styleMap: StringMap;
         if (element.nodeName === '#text') {

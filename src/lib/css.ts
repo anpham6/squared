@@ -127,10 +127,8 @@ export function getSpecificity(value: string) {
                     }
                     else {
                         switch (match[2]) {
-                            case ':root':
-                            case ':global':
-                            case ':local':
                             case ':scope':
+                            case ':root':
                                 break;
                             default:
                                 result += 10;

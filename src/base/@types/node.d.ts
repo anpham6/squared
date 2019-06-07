@@ -12,6 +12,7 @@ export interface CachedValue<T> {
     svgElement?: boolean;
     inputElement?: boolean;
     naturalElement?: boolean;
+    actualElement?: boolean;
     pageFlow?: boolean;
     inlineFlow?: boolean;
     positionStatic?: boolean;
@@ -72,6 +73,7 @@ export interface CachedValue<T> {
     actualHeight?: number;
     previousSibling?: T | null;
     nextSibling?: T | null;
+    childrenElements?: T[];
     attributes?: StringMap;
     flexbox?: Flexbox;
     autoMargin?: AutoMargin;

@@ -9,6 +9,7 @@ declare global {
             baselineActive: boolean;
             baselineAltered: boolean;
             positioned: boolean;
+            rendered: boolean;
             controlId: string;
             controlName: string;
             renderExclude: boolean;
@@ -27,6 +28,7 @@ declare global {
             inputContainer: boolean;
             flexbox: Flexbox;
             renderAs?: NodeUI;
+            renderParent?: NodeUI;
             renderExtension?: Extension<Node>[];
             renderTemplates?: (NodeTemplate<NodeUI> | null)[];
             outerWrapper?: NodeUI;
@@ -42,6 +44,7 @@ declare global {
             readonly baselineHeight: number;
             readonly layoutHorizontal: boolean;
             readonly layoutVertical: boolean;
+            readonly singleChild: boolean;
             readonly support: Support;
             readonly documentId: string;
             setControlType(controlName: string, containerType?: number): void;

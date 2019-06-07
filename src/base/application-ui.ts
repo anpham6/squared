@@ -289,7 +289,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.setResources();
     }
 
-    protected cacheNodeChildren(node: T, children: T[], depth: number, includeText: boolean) {
+    protected cacheNodeChildren(node: T, children: T[], includeText: boolean) {
         const length = children.length;
         if (length) {
             let siblingsLeading: T[] = [];
@@ -355,7 +355,24 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 child.actualParent = node;
+                node.inputContainer = child.inputElement;
             }
+        }
+    }
+
+    protected partitionNodeChildren(element: HTMLElement, depth: number) {
+        Application.prioritizeExtensions(element, this.extensions).some(item => item.init(element));
+        if (!this.rootElements.has(element)) {
+            return this.cascadeParentNode(element, depth + 1);
+        }
+        else {
+            const child = this.insertNode(element);
+            if (child) {
+                child.documentRoot = true;
+                child.visible = false;
+                child.excluded = true;
+            }
+            return child;
         }
     }
 

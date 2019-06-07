@@ -23,6 +23,10 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract get userSettings(): UserSettings;
     public abstract get afterInsertNode(): BindGeneric<T, void>;
 
+    public preventNodeCascade(element: Element) {
+        return false;
+    }
+
     get generateSessionId() {
         return new Date().getTime().toString();
     }
