@@ -8,7 +8,7 @@ export const STRING = {
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
     DATAURI: '(?:data:([^;]+);([^,]+),)?(.*?)',
     CSS_SELECTOR_LABEL: '[\\.#]?[\\w\\-]+',
-    CSS_SELECTOR_PSEUDO: ':[\\w\\-]+(?:\\(\\s*(.+(?!\\)[:\\[\\s]))\\s*\\))?',
+    CSS_SELECTOR_PSEUDO: ':[\\w\\-]+(?:\\(\\s*(.+)\\s*\\))?',
     CSS_SELECTOR_ATTR: '\\[([\\w\\-]+)(?:([~^$*|])?=(?:"([^"]+)"|\'([^\']+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_CALC: 'calc(\\(.+\\))'

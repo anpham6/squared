@@ -577,8 +577,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             let tagName: string | undefined;
                             let id: string | undefined;
                             let classList: string[] | undefined;
-                            let pseudoList: string[] | undefined;
                             let attrList: QueryAttribute[] | undefined;
+                            let pseudoList: string[] | undefined;
+                            let notList: string[] | undefined;
                             if (segment.length === 1) {
                                 const ch = segment.charAt(0);
                                 switch (ch) {
@@ -609,9 +610,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 while ((subMatch = $regex.CSS.SELECTOR_PSEUDO_G.exec(segment)) !== null) {
                                     if (subMatch[0].startsWith(':not(')) {
                                         if (subMatch[1]) {
-                                            if (pseudoList === undefined) {
-                                                pseudoList = [];
+                                            if (notList === undefined) {
+                                                notList = [];
                                             }
+                                            notList.push(subMatch[1]);
                                         }
                                     }
                                     else {
@@ -667,6 +669,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 adjacent,
                                 classList,
                                 pseudoList,
+                                notList,
                                 attrList
                             });
                             adjacent = undefined;
@@ -716,6 +719,53 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             break;
                                         default:
                                             return false;
+                                    }
+                                }
+                            }
+                            if (data.notList) {
+                                for (const not of data.notList) {
+                                    const notData: QueryData = { all: false };
+                                    switch (not.charAt(0)) {
+                                        case '.':
+                                            notData.classList = [not];
+                                            break;
+                                        case '#':
+                                            notData.id = not.substring(1);
+                                            break;
+                                        case ':':
+                                            notData.pseudoList = [not];
+                                            break;
+                                        case '[': {
+                                            $regex.CSS.SELECTOR_ATTR_G.lastIndex = 0;
+                                            const match = $regex.CSS.SELECTOR_ATTR_G.exec(not);
+                                            if (match) {
+                                                const caseInsensitive = match[6] === 'i';
+                                                let attrValue = match[3] || match[4] || match[5] || '';
+                                                if (caseInsensitive) {
+                                                    attrValue = attrValue.toLowerCase();
+                                                }
+                                                notData.attrList = [{
+                                                    key: match[1],
+                                                    symbol: match[2],
+                                                    value: attrValue,
+                                                    caseInsensitive
+                                                }];
+                                            }
+                                            else {
+                                                continue;
+                                            }
+                                            break;
+                                        }
+                                        default:
+                                            if ($regex.CHAR.WORDDASH.test(not)) {
+                                                notData.tagName = not;
+                                            }
+                                            else {
+                                                return false;
+                                            }
+                                    }
+                                    if (validate(node, notData, last)) {
+                                        return false;
                                     }
                                 }
                             }
@@ -841,8 +891,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 }
                                 return false;
                             }
-                            for (let j = 0; j < pending.length; j++) {
-                                const node = pending[j];
+                            for (const node of pending) {
                                 if (ascend(0, dataEnd.adjacent, [node])) {
                                     result.push(node);
                                     if (result.length === resultCount) {

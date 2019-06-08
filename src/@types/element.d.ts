@@ -137,6 +137,7 @@ interface QueryData {
     classList?: string[];
     attrList?: QueryAttribute[];
     pseudoList?: string[];
+    notList?: string[];
 }
 
 interface QueryAttribute extends StringValue {

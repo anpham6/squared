@@ -102,10 +102,10 @@
                     chrome = result.default;
                     squared.setFramework(chrome);
                     const time = new Date().getTime();
-                    const input = squared.system.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1 > ul:last-child li div label > input[type=Radio i], input[type=checkbox]');
+                    const input = squared.system.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1 > ul:last-child:not(:first-child) li div label > input[type=Radio i], input[type=checkbox]');
                     console.log(new Date().getTime() - time);
                     console.log(input);
-                    console.log(document.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1 > ul:last-child li div label > input[type=Radio i], input[type=checkbox]'));
+                    console.log(document.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1 > ul:last-child:not(:first-child) li div label > input[type=Radio i], input[type=checkbox]'));
                 });
             });
         });
