@@ -5,7 +5,8 @@ const settings: UserSettingsChrome = {
     preloadImages: false,
     handleExtensionsAsync: true,
     showErrorMessages: false,
-    createQuerySelectorMap: true
+    createQuerySelectorMap: true,
+    excludePlainText: true
 };
 
 export default settings;

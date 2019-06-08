@@ -602,12 +602,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 segment = segment.substring(1);
                             }
                             if (!all) {
-                                $regex.CSS.SELECTOR_PSEUDO_G.lastIndex = 0;
-                                $regex.CSS.SELECTOR_ATTR_G.lastIndex = 0;
                                 $regex.CSS.SELECTOR_LABEL_G.lastIndex = 0;
                                 let subMatch: RegExpExecArray | null;
-                                let original = segment;
-                                while ((subMatch = $regex.CSS.SELECTOR_PSEUDO_G.exec(segment)) !== null) {
+                                while ((subMatch = $regex.CSS.SELECTOR_PSEUDO.exec(segment)) !== null) {
                                     if (subMatch[0].startsWith(':not(')) {
                                         if (subMatch[1]) {
                                             if (notList === undefined) {
@@ -622,9 +619,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         }
                                         pseudoList.push(subMatch[0]);
                                     }
-                                    original = original.replace(subMatch[0], '');
+                                    segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
-                                while ((subMatch = $regex.CSS.SELECTOR_ATTR_G.exec(segment)) !== null) {
+                                while ((subMatch = $regex.CSS.SELECTOR_ATTR.exec(segment)) !== null) {
                                     if (attrList === undefined) {
                                         attrList = [];
                                     }
@@ -639,9 +636,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         value: attrValue,
                                         caseInsensitive
                                     });
-                                    original = original.replace(subMatch[0], '');
+                                    segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
-                                while ((subMatch = $regex.CSS.SELECTOR_LABEL_G.exec(original)) !== null) {
+                                while ((subMatch = $regex.CSS.SELECTOR_LABEL_G.exec(segment)) !== null) {
                                     const label = subMatch[0];
                                     switch (label.charAt(0)) {
                                         case '#':
@@ -690,18 +687,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             }
                             if (data.pseudoList) {
                                 const parent = node.actualParent as T;
-                                for (const pseudoName of data.pseudoList) {
-                                    switch (pseudoName) {
-                                        case ':scope':
-                                            if (!last || adjacent === '>' && node !== this) {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':root':
-                                            if (!last || adjacent) {
-                                                return false;
-                                            }
-                                            break;
+                                for (const pseudoClass of data.pseudoList) {
+                                    switch (pseudoClass) {
                                         case ':first-child':
                                         case ':nth-child(1)':
                                             if (node !== parent.firstChild) {
@@ -718,10 +705,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 return false;
                                             }
                                             break;
+                                        case ':scope':
+                                            if (!last || adjacent === '>' && node !== this) {
+                                                return false;
+                                            }
+                                            break;
+                                        case ':root':
+                                            if (!last || adjacent) {
+                                                return false;
+                                            }
+                                            break;
                                         case ':nth-child(n)':
                                             break;
                                         default: {
-                                            const match = /^:nth-child\(\s*(.+)\s*\)$/.exec(pseudoName);
+                                            const match = /^:nth-child\(\s*(.+)\s*\)$/.exec(pseudoClass);
                                             if (match) {
                                                 const placement = match[1];
                                                 const index = parent.childrenElements.indexOf(node) + 1;
@@ -754,19 +751,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                                         const increment = parseInt(subMatch[2]);
                                                                         if (increment > 0) {
                                                                             if (index !== childOffset) {
-                                                                                let valid = false;
                                                                                 for (let j = increment; ; j += increment) {
                                                                                     const total = increment + childOffset;
                                                                                     if (total === index) {
-                                                                                        valid = true;
                                                                                         break;
                                                                                     }
                                                                                     else if (total > index) {
-                                                                                        break;
+                                                                                        return false;
                                                                                     }
-                                                                                }
-                                                                                if (!valid) {
-                                                                                    return false;
                                                                                 }
                                                                             }
                                                                         }
@@ -810,8 +802,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             notData.pseudoList = [not];
                                             break;
                                         case '[': {
-                                            $regex.CSS.SELECTOR_ATTR_G.lastIndex = 0;
-                                            const match = $regex.CSS.SELECTOR_ATTR_G.exec(not);
+                                            $regex.CSS.SELECTOR_ATTR.lastIndex = 0;
+                                            const match = $regex.CSS.SELECTOR_ATTR.exec(not);
                                             if (match) {
                                                 const caseInsensitive = match[6] === 'i';
                                                 let attrValue = match[3] || match[4] || match[5] || '';

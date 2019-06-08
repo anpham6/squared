@@ -37,6 +37,13 @@ export function lowerCaseString(value: string) {
     return result;
 }
 
+export function spliceString(value: string, index: number, length: number) {
+    if (index === 0) {
+        return value.substring(length);
+    }
+    return value.substring(0, index) + value.substring(index + length);
+}
+
 export function convertUnderscore(value: string) {
     if (CACHE_UNDERSCORE[value]) {
         return CACHE_UNDERSCORE[value];

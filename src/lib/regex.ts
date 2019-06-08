@@ -29,9 +29,9 @@ export const CSS = {
     HEX: /[A-Za-z\d]{3,8}/,
     RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/,
     SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_LABEL}|${STRING.CSS_SELECTOR_PSEUDO}|${STRING.CSS_SELECTOR_ATTR}|::[\\w\\-]+)+|[>~+])\\s*`, 'g'),
-    SELECTOR_LABEL_G: new RegExp(STRING.CSS_SELECTOR_LABEL, 'g'),
-    SELECTOR_PSEUDO_G: new RegExp(STRING.CSS_SELECTOR_PSEUDO, 'g'),
-    SELECTOR_ATTR_G: new RegExp(STRING.CSS_SELECTOR_ATTR, 'g')
+    SELECTOR_PSEUDO: new RegExp(STRING.CSS_SELECTOR_PSEUDO),
+    SELECTOR_ATTR: new RegExp(STRING.CSS_SELECTOR_ATTR),
+    SELECTOR_LABEL_G: new RegExp(STRING.CSS_SELECTOR_LABEL, 'g')
 };
 
 export const XML = {

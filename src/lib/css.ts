@@ -4,7 +4,7 @@ import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { CSS as CSS_RX, STRING, UNIT, XML } from './regex';
 
 import { getElementCache, setElementCache } from './session';
-import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isString, replaceMap, resolvePath } from './util';
+import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isString, replaceMap, resolvePath, spliceString } from './util';
 
 const CACHE_PATTERN: ObjectMap<RegExp> = {};
 
@@ -97,12 +97,11 @@ export function getSpecificity(value: string) {
         else if (segment.charAt(0) === '*') {
             segment = segment.substring(1);
         }
-        CSS_RX.SELECTOR_PSEUDO_G.lastIndex = 0;
-        CSS_RX.SELECTOR_ATTR_G.lastIndex = 0;
+        CSS_RX.SELECTOR_PSEUDO.lastIndex = 0;
+        CSS_RX.SELECTOR_ATTR.lastIndex = 0;
         CSS_RX.SELECTOR_LABEL_G.lastIndex = 0;
         let subMatch: RegExpExecArray | null;
-        let original = segment;
-        while ((subMatch = CSS_RX.SELECTOR_PSEUDO_G.exec(segment)) !== null) {
+        while ((subMatch = CSS_RX.SELECTOR_PSEUDO.exec(segment)) !== null) {
             if (subMatch[0].startsWith(':not(')) {
                 if (subMatch[1]) {
                     result += getSpecificity(subMatch[1]);
@@ -118,18 +117,18 @@ export function getSpecificity(value: string) {
                         break;
                 }
             }
-            original = original.replace(subMatch[0], '');
+            segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        while ((subMatch = CSS_RX.SELECTOR_ATTR_G.exec(segment)) !== null) {
+        while ((subMatch = CSS_RX.SELECTOR_ATTR.exec(segment)) !== null) {
             if (subMatch[1]) {
                 result += 1;
             }
             if (subMatch[3] || subMatch[4] || subMatch[5]) {
                 result += 10;
             }
-            original = original.replace(subMatch[0], '');
+            segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        while ((subMatch = CSS_RX.SELECTOR_LABEL_G.exec(original)) !== null) {
+        while ((subMatch = CSS_RX.SELECTOR_LABEL_G.exec(segment)) !== null) {
             switch (subMatch[0].charAt(0)) {
                 case '#':
                     result += 100;
