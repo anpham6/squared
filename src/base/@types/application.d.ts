@@ -27,8 +27,8 @@ export interface ControllerSettings {
         enabled: boolean;
     };
     supported: {
-        fontFormat: string[];
-        imageFormat: string[];
+        fontFormat: '*' | string[];
+        imageFormat: '*' | string[];
     };
     unsupported: {
         cascade: Set<string>;

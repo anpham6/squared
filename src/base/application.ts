@@ -571,7 +571,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (value.startsWith('url(')) {
                         content = $css.resolveURL(value);
                         const format = $util.fromLastIndexOf(content, '.').toLowerCase();
-                        if (this.controllerHandler.localSettings.supported.imageFormat.includes(format)) {
+                        const imageFormat = this.controllerHandler.localSettings.supported.imageFormat;
+                        if (imageFormat === '*' || imageFormat.includes(format)) {
                             tagName = 'img';
                         }
                         else {

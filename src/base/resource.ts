@@ -60,7 +60,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         const font = Resource.ASSETS.fonts.get(fontFamily);
         if (font) {
             const fontFormat = this.application.controllerHandler.localSettings.supported.fontFormat;
-            return font.find(item => item.fontStyle === fontStyle && (fontWeight === undefined || item.fontWeight === parseInt(fontWeight)) && fontFormat.includes(item.srcFormat));
+            return font.find(item => item.fontStyle === fontStyle && (fontWeight === undefined || item.fontWeight === parseInt(fontWeight)) && (fontFormat === '*' || fontFormat.includes(item.srcFormat)));
         }
         return undefined;
     }
@@ -78,26 +78,33 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         else {
             content = content.replace(/\\"/g, '"');
         }
-        for (const format of settings.supported.imageFormat) {
-            if (mimeType.indexOf(format) !== -1) {
-                let filename: string;
-                if (dataURI.endsWith(`.${format}`)) {
-                    filename = $util.fromLastIndexOf(dataURI, '/');
+        let filename: string | undefined;
+        if (settings.supported.imageFormat === '*') {
+            filename = '';
+        }
+        else {
+            for (const format of settings.supported.imageFormat) {
+                if (mimeType.indexOf(format) !== -1) {
+                    if (dataURI.endsWith(`.${format}`)) {
+                        filename = $util.fromLastIndexOf(dataURI, '/');
+                    }
+                    else {
+                        filename = `${$util.buildAlphaString(5).toLowerCase()}_${new Date().getTime()}.${format}`;
+                    }
                 }
-                else {
-                    filename = `${$util.buildAlphaString(5).toLowerCase()}_${new Date().getTime()}.${format}`;
-                }
-                Resource.ASSETS.rawData.set(dataURI, {
-                    pathname: '',
-                    filename,
-                    content,
-                    base64,
-                    mimeType,
-                    width,
-                    height
-                });
-                return filename;
             }
+        }
+        if (filename !== undefined) {
+            Resource.ASSETS.rawData.set(dataURI, {
+                pathname: '',
+                filename,
+                content,
+                base64,
+                mimeType,
+                width,
+                height
+            });
+            return filename;
         }
         return '';
     }

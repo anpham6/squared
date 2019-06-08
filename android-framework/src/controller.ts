@@ -961,7 +961,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let scaleType = 'fitXY';
                 let imageSet: ImageSrcSet[] | undefined;
                 if (element.srcset) {
-                    imageSet = $css.getSrcSet(element, this.localSettings.supported.imageFormat);
+                    imageSet = $css.getSrcSet(element, this.localSettings.supported.imageFormat as string[]);
                     if (imageSet.length) {
                         if (imageSet[0].actualWidth) {
                             if (percentWidth === -1) {

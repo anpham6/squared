@@ -703,6 +703,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             }
                                             break;
                                         case ':first-child':
+                                        case ':nth-child(1)':
                                             if (node !== parent.firstChild) {
                                                 return false;
                                             }
@@ -717,8 +718,81 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 return false;
                                             }
                                             break;
-                                        default:
+                                        case ':nth-child(n)':
+                                            break;
+                                        default: {
+                                            const match = /^:nth-child\(\s*(.+)\s*\)$/.exec(pseudoName);
+                                            if (match) {
+                                                const placement = match[1];
+                                                const index = parent.childrenElements.indexOf(node) + 1;
+                                                if (index > 0) {
+                                                    if ($util.isNumber(placement)) {
+                                                        if (parseInt(placement) !== index) {
+                                                            return false;
+                                                        }
+                                                    }
+                                                    else {
+                                                        switch (placement) {
+                                                            case 'even':
+                                                                if (index % 2 !== 0) {
+                                                                    return false;
+                                                                }
+                                                                break;
+                                                            case 'odd':
+                                                                if (index % 2 === 0) {
+                                                                    return false;
+                                                                }
+                                                                break;
+                                                            default:
+                                                                const subMatch = /(-)?(\d+)?n\s*(\+\d+)?/.exec(placement);
+                                                                if (subMatch) {
+                                                                    const childOffset = $util.convertInt(subMatch[3]);
+                                                                    if (subMatch[2]) {
+                                                                        if (subMatch[1]) {
+                                                                            return false;
+                                                                        }
+                                                                        const increment = parseInt(subMatch[2]);
+                                                                        if (increment > 0) {
+                                                                            if (index !== childOffset) {
+                                                                                let valid = false;
+                                                                                for (let j = increment; ; j += increment) {
+                                                                                    const total = increment + childOffset;
+                                                                                    if (total === index) {
+                                                                                        valid = true;
+                                                                                        break;
+                                                                                    }
+                                                                                    else if (total > index) {
+                                                                                        break;
+                                                                                    }
+                                                                                }
+                                                                                if (!valid) {
+                                                                                    return false;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                        else if (index !== childOffset) {
+                                                                            return false;
+                                                                        }
+                                                                    }
+                                                                    else if (subMatch[3]) {
+                                                                        if (subMatch[1]) {
+                                                                            if (index > childOffset) {
+                                                                                return false;
+                                                                            }
+                                                                        }
+                                                                        else if (index < childOffset) {
+                                                                            return false;
+                                                                        }
+                                                                    }
+                                                                }
+                                                                break;
+                                                        }
+                                                    }
+                                                    continue;
+                                                }
+                                            }
                                             return false;
+                                        }
                                     }
                                 }
                             }

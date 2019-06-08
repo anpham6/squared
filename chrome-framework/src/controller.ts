@@ -14,8 +14,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
             enabled: true
         },
         supported: {
-            fontFormat: ['truetype', 'opentype', 'woff', 'woff2', 'embedded-opentype', 'svg'],
-            imageFormat: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'cur', 'pdf']
+            fontFormat: '*',
+            imageFormat: '*'
         },
         unsupported: {
             cascade: new Set(),

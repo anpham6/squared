@@ -190,7 +190,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         STORED.dimens = new Map();
         STORED.drawables = new Map();
         STORED.animators = new Map();
-        IMAGE_FORMAT = application.controllerHandler.localSettings.supported.imageFormat;
+        IMAGE_FORMAT = application.controllerHandler.localSettings.supported.imageFormat as string[];
     }
 
     public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
