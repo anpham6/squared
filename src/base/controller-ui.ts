@@ -333,13 +333,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         if (node === actualParent.lastChild) {
                             let valid = false;
                             if (node.outsideX(actualParent.box)) {
-                                if (!actualParent.has($const.CSS.WIDTH) || actualParent.css('overflowX') === 'hidden') {
+                                if (!actualParent.hasPX($const.CSS.WIDTH) || actualParent.css('overflowX') === 'hidden') {
                                     continue;
                                 }
                                 valid = true;
                             }
                             if (node.outsideY(actualParent.box)) {
-                                if (!actualParent.hasHeight && !actualParent.has($const.CSS.HEIGHT) || actualParent.css('overflowY') === 'hidden') {
+                                if (!actualParent.hasHeight && !actualParent.hasPX($const.CSS.HEIGHT) || actualParent.css('overflowY') === 'hidden') {
                                     continue;
                                 }
                                 valid = true;
@@ -392,13 +392,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             if (!overflowY && node.linear.top < Math.floor(parent.box.top) && (node.top < 0 || node.marginTop < 0)) {
                                                 outside = true;
                                             }
-                                            else if (outsideX && !node.has($const.CSS.LEFT) && node.right > 0 || outsideY && !node.has($const.CSS.TOP) && node.bottom !== 0) {
+                                            else if (outsideX && !node.hasPX($const.CSS.LEFT) && node.right > 0 || outsideY && !node.hasPX($const.CSS.TOP) && node.bottom !== 0) {
                                                 outside = true;
                                             }
                                             else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent && parent.actualParent.documentBody) && (node.top > 0 || node.left > 0)) {
                                                 outside = true;
                                             }
-                                            else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.has($const.CSS.LEFT) && node.right < 0 && node.linear.left >= parent.linear.right)) {
+                                            else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.hasPX($const.CSS.LEFT) && node.right < 0 && node.linear.left >= parent.linear.right)) {
                                                 outside = true;
                                             }
                                             else if (!overflowX && !overflowY && !node.intersectX(parent.box) && !node.intersectY(parent.box)) {
@@ -432,7 +432,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             bounds.left += absoluteParent.left;
                             bounds.right += absoluteParent.left;
                         }
-                        else if (!absoluteParent.has($const.CSS.LEFT) && absoluteParent.right !== 0) {
+                        else if (!absoluteParent.hasPX($const.CSS.LEFT) && absoluteParent.right !== 0) {
                             bounds.left -= absoluteParent.right;
                             bounds.right -= absoluteParent.right;
                         }
@@ -440,7 +440,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             bounds.top += absoluteParent.top;
                             bounds.bottom += absoluteParent.top;
                         }
-                        else if (!absoluteParent.has($const.CSS.TOP) && absoluteParent.bottom !== 0) {
+                        else if (!absoluteParent.hasPX($const.CSS.TOP) && absoluteParent.bottom !== 0) {
                             bounds.top -= absoluteParent.bottom;
                             bounds.bottom -= absoluteParent.bottom;
                         }

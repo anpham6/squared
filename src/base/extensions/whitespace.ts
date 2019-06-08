@@ -2,7 +2,7 @@ import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
 import { CSS_SPACING } from '../lib/constant';
-import { BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
+import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
@@ -12,7 +12,7 @@ const $util = squared.lib.util;
 const DOCTYPE_HTML = document.doctype !== null && document.doctype.name === 'html';
 
 function setMinHeight(node: NodeUI, offset: number) {
-    const minHeight = node.has('minHeight', CSS_STANDARD.LENGTH) ? node.toFloat('minHeight') : 0;
+    const minHeight = node.hasPX('minHeight', false) ? node.parseUnit(node.css('minHeight')) : 0;
     node.css('minHeight', $css.formatPX(Math.max(offset, minHeight)));
 }
 
@@ -250,7 +250,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                                 else if (previous.blockDimension && !previous.block && current.length === 0) {
                                     const offset = current.linear.top - previous.linear.bottom;
-                                    if (Math.floor(offset) > 0 && current.ascend(item => item.has($const.CSS.HEIGHT)).length === 0) {
+                                    if (Math.floor(offset) > 0 && current.ascend(item => item.hasPX($const.CSS.HEIGHT)).length === 0) {
                                         current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                     }
                                 }

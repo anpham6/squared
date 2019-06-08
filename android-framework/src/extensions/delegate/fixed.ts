@@ -32,12 +32,12 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 let bottom = false;
                 for (const item of absolute) {
                     const fixed = item.css('position') === 'fixed';
-                    if (item.has($const.CSS.LEFT)) {
+                    if (item.hasPX($const.CSS.LEFT)) {
                         if (item.left >= 0 && item.left < paddingLeft) {
                             children.add(item);
                         }
                     }
-                    else if (item.has($const.CSS.RIGHT) && item.right >= 0 && (fixed || item.right < paddingRight || node.documentBody && node.has($const.CSS.WIDTH))) {
+                    else if (item.hasPX($const.CSS.RIGHT) && item.right >= 0 && (fixed || item.right < paddingRight || node.documentBody && node.hasPX($const.CSS.WIDTH))) {
                         children.add(item);
                         right = true;
                     }
@@ -49,12 +49,12 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     else if (item.marginRight < 0 && (node.documentRoot || $util.aboveRange(item.linear.right, node.bounds.right))) {
                         children.add(item);
                     }
-                    if (item.has($const.CSS.TOP)) {
+                    if (item.hasPX($const.CSS.TOP)) {
                         if (item.top >= 0 && item.top < paddingTop) {
                             children.add(item);
                         }
                     }
-                    else if (item.has($const.CSS.BOTTOM) && item.bottom >= 0 && (fixed || item.bottom < paddingBottom || node.documentBody && node.has($const.CSS.HEIGHT))) {
+                    else if (item.hasPX($const.CSS.BOTTOM) && item.bottom >= 0 && (fixed || item.bottom < paddingBottom || node.documentBody && node.hasPX($const.CSS.HEIGHT))) {
                         children.add(item);
                         bottom = true;
                     }
@@ -90,16 +90,16 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 node.resetBox($e.BOX_STANDARD.MARGIN, container);
             }
             for (const item of mainData.children) {
-                if (item.has($const.CSS.TOP)) {
+                if (item.hasPX($const.CSS.TOP)) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                 }
-                else if (item.has($const.CSS.BOTTOM)) {
+                else if (item.hasPX($const.CSS.BOTTOM)) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
                 }
-                if (item.has($const.CSS.LEFT)) {
+                if (item.hasPX($const.CSS.LEFT)) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
                 }
-                else if (item.has($const.CSS.RIGHT)) {
+                else if (item.hasPX($const.CSS.RIGHT)) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
                 }
             }

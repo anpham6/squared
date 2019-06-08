@@ -135,7 +135,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             node.exclude(0, $e.NODE_PROCEDURE.LAYOUT);
             $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'fitsSystemWindows', 'true');
         }
-        $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'layout_height', hasAppBar || !node.has($const.CSS.HEIGHT) ? '?android:attr/actionBarSize' : '');
+        $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'layout_height', hasAppBar || !node.hasPX($const.CSS.HEIGHT) ? '?android:attr/actionBarSize' : '');
         node.setControlType($constA.SUPPORT_ANDROID.TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude($e.NODE_RESOURCE.FONT_STYLE);
         let appBarNode: T | undefined;

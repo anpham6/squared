@@ -4,7 +4,7 @@ import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
-import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
+import { BOX_STANDARD } from '../lib/enumeration';
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
@@ -100,7 +100,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         columnIndex[col] += element.colSpan;
                     }
                 }
-                if (!td.has($const.CSS.WIDTH)) {
+                if (!td.hasPX($const.CSS.WIDTH)) {
                     const width = $dom.getNamedItem(element, $const.CSS.WIDTH);
                     if ($css.isPercent(width)) {
                         td.css($const.CSS.WIDTH, width);
@@ -109,7 +109,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         td.css($const.CSS.WIDTH, $css.formatPX(parseFloat(width)));
                     }
                 }
-                if (!td.has($const.CSS.HEIGHT)) {
+                if (!td.hasPX($const.CSS.HEIGHT)) {
                     const height = $dom.getNamedItem(element, $const.CSS.HEIGHT);
                     if ($css.isPercent(height)) {
                         td.css($const.CSS.HEIGHT, height);
@@ -216,7 +216,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             });
             columnCount = Math.max(columnCount, columnIndex[i]);
         }
-        if (node.has($const.CSS.WIDTH, CSS_STANDARD.LENGTH) && mapWidth.some(value => $css.isPercent(value))) {
+        if (node.hasPX($const.CSS.WIDTH, false) && mapWidth.some(value => $css.isPercent(value))) {
             $util.replaceMap<string, string>(mapWidth, (value, index) => {
                 if (value === $const.CSS.AUTO && mapBounds[index] > 0) {
                     return $css.formatPX(mapBounds[index]);
@@ -253,7 +253,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
             }
-            if (mainData.layoutFixed && !node.has($const.CSS.WIDTH)) {
+            if (mainData.layoutFixed && !node.hasPX($const.CSS.WIDTH)) {
                 node.css($const.CSS.WIDTH, $css.formatPX(node.bounds.width), true);
             }
         }
@@ -299,7 +299,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         if (caption) {
             if (!caption.hasWidth) {
                 if (caption.textElement) {
-                    if (!caption.has('maxWidth')) {
+                    if (!caption.hasPX('maxWidth')) {
                         caption.css('maxWidth', $css.formatPX(caption.bounds.width));
                     }
                 }
@@ -373,7 +373,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             else {
-                                if (!td.has($const.CSS.WIDTH) || td.percentWidth) {
+                                if (!td.hasPX($const.CSS.WIDTH) || td.percentWidth) {
                                     setBoundsWidth(td);
                                 }
                                 td.data(EXT_NAME.TABLE, 'expand', false);

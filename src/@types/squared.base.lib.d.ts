@@ -13,7 +13,7 @@ declare global {
             export import APP_FRAMEWORK = $enum.APP_FRAMEWORK;
             export import APP_SECTION = $enum.APP_SECTION;
             export import BOX_STANDARD = $enum.BOX_STANDARD;
-            export import CSS_STANDARD = $enum.CSS_STANDARD;
+            export import CSS_UNIT = $enum.CSS_UNIT;
             export import NODE_ALIGNMENT = $enum.NODE_ALIGNMENT;
             export import NODE_TEMPLATE = $enum.NODE_TEMPLATE;
             export import NODE_PROCEDURE = $enum.NODE_PROCEDURE;

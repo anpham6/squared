@@ -151,6 +151,7 @@ declare global {
             parseUnit(value: string, dimension?: string, parent?: boolean): number;
             convertPX(value: string, dimension?: string, parent?: boolean): string;
             has(attr: string, checkType?: number, options?: {}): boolean;
+            hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
             setBounds(cache?: boolean): void;
             querySelector(value: string): Node | null;
             querySelectorAll(value: string, resultCount?: number): Node[];

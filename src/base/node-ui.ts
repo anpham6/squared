@@ -521,7 +521,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     if (!this.positionStatic) {
                         for (const attr of $css.BOX_POSITION) {
-                            if (node.has(attr)) {
+                            if (node.hasPX(attr)) {
                                 this._styleMap[attr] = node.css(attr);
                             }
                             this._initial.styleMap[attr] = initial.styleMap[attr];
@@ -757,7 +757,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
             }
-            if (this.blockDimension && this.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100 && !this.has('maxWidth')) {
+            if (this.blockDimension && this.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100 && !this.hasPX('maxWidth')) {
                 return NODE_TRAVERSE.VERTICAL;
             }
             const parent = this.actualParent || this.documentParent;

@@ -306,7 +306,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 if (node.positionRelative) {
                     for (const attr of $css.BOX_POSITION) {
-                        if (node.has(attr)) {
+                        if (node.hasPX(attr)) {
                             saveAlignment(element, node.id, attr, $const.CSS.AUTO, node.css(attr));
                             resetBounds = true;
                         }

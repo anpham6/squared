@@ -37,13 +37,9 @@ export const enum NODE_TRAVERSE {
     FLOAT_INTERSECT = 7
 }
 
-export const enum CSS_STANDARD {
+export const enum CSS_UNIT {
     LENGTH = 2,
-    AUTO = 4,
-    LEFT = 8,
-    BASELINE = 16,
-    PERCENT = 32,
-    ZERO = 64
+    PERCENT = 4
 }
 
 export const enum BOX_STANDARD {

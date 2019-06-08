@@ -124,7 +124,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 const element = <HTMLInputElement> node.element;
                                 if (element.list) {
                                     this.createOptionArray(<HTMLSelectElement> element.list, node.controlId);
-                                    if (!node.has('width')) {
+                                    if (!node.hasPX($const.CSS.WIDTH)) {
                                         node.css('width', $css.formatPX(Math.max(node.bounds.width, node.width)), true);
                                     }
                                 }

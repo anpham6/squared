@@ -259,7 +259,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                     }
                     if (unit === $const.CSS.AUTO || unit === 'max-content') {
-                        if (cellSpan < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $css.isLength(value)) || unit === 'max-content')) {
+                        if (cellSpan < data.unit.length && (!parent.hasPX(dimension) || data.unit.some(value => $css.isLength(value)) || unit === 'max-content')) {
                             size = node.bounds[dimension];
                             minSize = 0;
                             sizeWeight = 0;
@@ -273,7 +273,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                     }
                     else if (unit === 'min-content') {
-                        if (!item.has(dimension)) {
+                        if (!item.hasPX(dimension)) {
                             item.android(`layout_${dimension}`, STRING_ANDROID.WRAP_CONTENT, false);
                             break;
                         }
@@ -332,11 +332,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 if (cellSpan > 1) {
                     item.android(`layout_${direction}Span`, cellSpan.toString());
                 }
-                if (minSize > 0 && !item.has(`min${dimensionA}`)) {
+                if (minSize > 0 && !item.hasPX(`min${dimensionA}`)) {
                     item.css(`min${dimensionA}`, $css.formatPX(minSize), true);
                 }
                 if (sizeWeight > 0) {
-                    if (!item.has(dimension)) {
+                    if (!item.hasPX(dimension)) {
                         item.android(`layout_${dimension}`, $const.CSS.PX_0);
                         item.android(`layout_${direction}Weight`, $math.truncate(sizeWeight, node.localSettings.floatPrecision));
                         item.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
@@ -346,11 +346,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     if (item.contentBox) {
                         size -= item[`contentBox${dimensionA}`];
                     }
-                    if (fitContent && !item.has(`max${dimensionA}`)) {
+                    if (fitContent && !item.hasPX(`max${dimensionA}`)) {
                         item.css(`max${dimensionA}`, $css.formatPX(size), true);
                         item.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
                     }
-                    else if (!item.has(dimension)) {
+                    else if (!item.hasPX(dimension)) {
                         item.css(dimension, $css.formatPX(size), true);
                     }
                 }
@@ -411,14 +411,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             const target = renderAs || node;
             applyLayout(target, 'column', $const.CSS.WIDTH);
-            if (!target.has($const.CSS.WIDTH)) {
+            if (!target.hasPX($const.CSS.WIDTH)) {
                 target.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill_horizontal');
             }
             const [rowStart, rowSpan] = applyLayout(target, 'row', $const.CSS.HEIGHT);
-            if (mainData.alignContent === 'normal' && !parent.has($const.CSS.HEIGHT) && rowSpan === 1 && mainData.rowSpanMultiple[rowStart] === true && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === $const.CSS.AUTO) && node.initial.bounds && node.bounds.height > node.initial.bounds.height) {
+            if (mainData.alignContent === 'normal' && !parent.hasPX($const.CSS.HEIGHT) && rowSpan === 1 && mainData.rowSpanMultiple[rowStart] === true && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === $const.CSS.AUTO) && node.initial.bounds && node.bounds.height > node.initial.bounds.height) {
                 target.css('minHeight', $css.formatPX(node.actualHeight), true);
             }
-            else if (!target.has($const.CSS.HEIGHT) && !(mainData.row.length === 1 && mainData.alignContent === 'space-between')) {
+            else if (!target.hasPX($const.CSS.HEIGHT) && !(mainData.row.length === 1 && mainData.alignContent === 'space-between')) {
                 target.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill_vertical');
                 if (mainData.alignContent === 'normal' && parent.hasHeight && mainData.rowSpanMultiple.length === 0) {
                     target.mergeGravity('layout_rowWeight', '1');
@@ -469,7 +469,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         node.cssPX('minWidth', columnGap);
                         node.cssPX($const.CSS.WIDTH, columnGap, false, true);
                     }
-                    if (!node.has($const.CSS.WIDTH) && node.has('maxWidth')) {
+                    if (!node.hasPX($const.CSS.WIDTH) && node.hasPX('maxWidth')) {
                         node.css($const.CSS.WIDTH, $css.formatPX(node.actualWidth + columnGap), true);
                     }
                 }

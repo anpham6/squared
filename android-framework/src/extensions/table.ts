@@ -47,7 +47,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 item.android('layout_columnWeight', '0.01');
                             }
                             else {
-                                if (item.has($const.CSS.WIDTH) && item.actualWidth < item.bounds.width) {
+                                if (item.hasPX($const.CSS.WIDTH) && item.actualWidth < item.bounds.width) {
                                     item.setLayoutWidth($css.formatPX(item.bounds.width));
                                 }
                             }
@@ -58,7 +58,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     }
                 });
                 if (requireWidth) {
-                    if (parent.has($const.CSS.WIDTH) && $util.aboveRange(node.actualWidth, parent.actualWidth)) {
+                    if (parent.hasPX($const.CSS.WIDTH) && $util.aboveRange(node.actualWidth, parent.actualWidth)) {
                         node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
                     }
                     else {
@@ -66,19 +66,19 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     }
                 }
             }
-            if (!requireWidth && node.has($const.CSS.WIDTH) && node.actualWidth < Math.floor(node.bounds.width)) {
+            if (!requireWidth && node.hasPX($const.CSS.WIDTH) && node.actualWidth < Math.floor(node.bounds.width)) {
                 if (mainData.layoutFixed) {
                     node.android($const.CSS.WIDTH, $css.formatPX(node.bounds.width), true);
                 }
                 else {
-                    if (!node.has('minWidth')) {
+                    if (!node.hasPX('minWidth')) {
                         node.android('minWidth', $css.formatPX(node.actualWidth));
                     }
                     node.css($const.CSS.WIDTH, $const.CSS.AUTO, true);
                 }
             }
-            if (node.has($const.CSS.HEIGHT) && node.actualHeight < Math.floor(node.bounds.height)) {
-                if (!node.has('minHeight')) {
+            if (node.hasPX($const.CSS.HEIGHT) && node.actualHeight < Math.floor(node.bounds.height)) {
+                if (!node.hasPX('minHeight')) {
                     node.android('minHeight', $css.formatPX(node.actualHeight));
                 }
                 node.css($const.CSS.HEIGHT, $const.CSS.AUTO, true);

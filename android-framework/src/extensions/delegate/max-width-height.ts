@@ -20,10 +20,10 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         if (!node.inputElement) {
             let width = false;
             let height = false;
-            if (!node.support.maxWidth && !isNaN(node.width) && node.has('maxWidth') && !parent.hasAlign($e.NODE_ALIGNMENT.COLUMN)) {
+            if (!node.support.maxWidth && !isNaN(node.width) && node.hasPX('maxWidth') && !parent.hasAlign($e.NODE_ALIGNMENT.COLUMN)) {
                 width = true;
             }
-            if (!node.support.maxHeight && !isNaN(node.height) && node.has('maxHeight') && parent.hasHeight) {
+            if (!node.support.maxHeight && !isNaN(node.height) && node.hasPX('maxHeight') && parent.hasHeight) {
                 height = true;
             }
             if (width || height) {

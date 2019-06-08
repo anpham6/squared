@@ -207,12 +207,12 @@ function createPathInterpolator(value: string) {
         return INTERPOLATOR_ANDROID[value];
     }
     else {
-        const interpolatorName = `path_interpolator_${$util.convertWord(value)}`;
-        if (!STORED.animators.has(interpolatorName)) {
+        const name = `path_interpolator_${$util.convertWord(value)}`;
+        if (!STORED.animators.has(name)) {
             const xml = $util.formatString(INTERPOLATOR_XML, ...value.split(' '));
-            STORED.animators.set(interpolatorName, xml);
+            STORED.animators.set(name, xml);
         }
-        return `@anim/${interpolatorName}`;
+        return `@anim/${name}`;
     }
 }
 

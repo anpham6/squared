@@ -12,7 +12,7 @@ const $e = squared.base.lib.enumeration;
 
 export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T) {
-        return node.length > 0 && (node.overflowX && node.has($const.CSS.WIDTH) || node.overflowY && node.hasHeight && node.has($const.CSS.HEIGHT) || this.included(<HTMLElement> node.element));
+        return node.length > 0 && (node.overflowX && node.hasPX($const.CSS.WIDTH) || node.overflowY && node.hasHeight && node.hasPX($const.CSS.HEIGHT) || this.included(<HTMLElement> node.element));
     }
 
     public processNode(node: T, parent: T) {
@@ -31,11 +31,11 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         }
         else {
             let overflowType = 0;
-            if (node.has($const.CSS.WIDTH)) {
+            if (node.hasPX($const.CSS.WIDTH)) {
                 overflowType |= $e.NODE_ALIGNMENT.HORIZONTAL;
                 overflow.push(horizontalScroll);
             }
-            if (node.hasHeight && node.has($const.CSS.HEIGHT)) {
+            if (node.hasHeight && node.hasPX($const.CSS.HEIGHT)) {
                 overflowType |= $e.NODE_ALIGNMENT.VERTICAL;
                 overflow.push(verticalScroll);
             }

@@ -36,8 +36,8 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                     }
                 }
                 if (valid && i > 1 && inputName.size === 1) {
-                    const linearData = $NodeUI.linearData(node.children);
-                    return linearData.linearX && !linearData.floated.has($const.CSS.RIGHT);
+                    const data = $NodeUI.linearData(node.children);
+                    return data.linearX && !data.floated.has($const.CSS.RIGHT);
                 }
             }
             return false;

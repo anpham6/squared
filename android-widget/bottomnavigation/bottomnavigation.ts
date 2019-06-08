@@ -56,10 +56,10 @@ export default class BottomNavigation<T extends android.base.View> extends squar
     public postBaseLayout(node: T) {
         const renderParent = node.renderParent as T;
         if (renderParent) {
-            if (!renderParent.has($const.CSS.WIDTH)) {
+            if (!renderParent.hasPX($const.CSS.WIDTH)) {
                 renderParent.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);
             }
-            if (!renderParent.has($const.CSS.HEIGHT)) {
+            if (!renderParent.hasPX($const.CSS.HEIGHT)) {
                 renderParent.setLayoutHeight($constA.STRING_ANDROID.MATCH_PARENT);
             }
         }
