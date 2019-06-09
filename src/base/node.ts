@@ -381,7 +381,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssSpecificity(attr: string) {
         if (this.styleElement) {
             const element = <Element> this._element;
-            const target = this.pseudoElement ? $session.getElementCache(element, 'pseudoType', this.sessionId) : '';
+            const target = this.pseudoElement ? $session.getElementCache(element, 'pseudoElement', this.sessionId) : '';
             const data: ObjectMap<number> = $session.getElementCache(element, `styleSpecificity${target ? '::' + target : ''}`, this.sessionId);
             if (data) {
                 return data[attr] || 0;
@@ -509,10 +509,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public hasPX(attr: string, percent = true, initial = false) {
         const value = (initial ? this._initial.styleMap : this._styleMap)[attr];
-        if (value) {
-            return $css.isLength(value, percent);
-        }
-        return false;
+        return value ? $css.isLength(value, percent) : false;
     }
 
     public setBounds(cache = true) {
@@ -582,7 +579,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 }
                             }
                             else if (segment.charAt(0) === '*') {
-                                if (segment === '*|*') {
+                                if (segment.endsWith('|*')) {
                                     all = true;
                                 }
                                 else {
@@ -674,8 +671,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             }
                             if (data.pseudoList) {
                                 const parent = node.actualParent as T;
-                                for (const pseudoClass of data.pseudoList) {
-                                    switch (pseudoClass) {
+                                const tagName = node.tagName;
+                                for (const pseudo of data.pseudoList) {
+                                    switch (pseudo) {
                                         case ':first-child':
                                         case ':nth-child(1)':
                                             if (node !== parent.firstChild) {
@@ -683,6 +681,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             }
                                             break;
                                         case ':last-child':
+                                        case ':nth-last-child(1)':
                                             if (node !== parent.lastChild) {
                                                 return false;
                                             }
@@ -692,6 +691,160 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 return false;
                                             }
                                             break;
+                                        case ':only-of-type': {
+                                            let j = 0;
+                                            for (const item of parent.childrenElements) {
+                                                if (item.tagName === tagName && ++j > 1) {
+                                                    return false;
+                                                }
+                                            }
+                                            break;
+                                        }
+                                        case ':first-of-type': {
+                                            for (const item of parent.childrenElements) {
+                                                if (item.tagName === tagName) {
+                                                    if (item !== node) {
+                                                        return false;
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                            break;
+                                        }
+                                        case ':nth-child(n)':
+                                        case ':nth-last-child(n)':
+                                            break;
+                                        case ':empty':
+                                            if ((<HTMLElement> node.element).childNodes.length) {
+                                                return false;
+                                            }
+                                            break;
+                                        case ':checked':
+                                            if (node.inputElement) {
+                                                if (!(<HTMLInputElement> node.element).checked) {
+                                                    return false;
+                                                }
+                                            }
+                                            else if (tagName === 'OPTION') {
+                                                if (!(<HTMLOptionElement> node.element).selected) {
+                                                    return false;
+                                                }
+                                            }
+                                            else {
+                                                return false;
+                                            }
+                                            break;
+                                        case ':enabled':
+                                            if ((<HTMLInputElement> node.element).disabled) {
+                                                return false;
+                                            }
+                                            break;
+                                        case ':disabled':
+                                            if (!(<HTMLInputElement> node.element).disabled) {
+                                                return false;
+                                            }
+                                            break;
+                                        case ':read-only':
+                                            if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' || !(<HTMLInputElement> node.element).readOnly) {
+                                                return false;
+                                            }
+                                            break;
+                                        case ':read-write':
+                                            if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' || (<HTMLInputElement> node.element).readOnly) {
+                                                return false;
+                                            }
+                                            break;
+                                        case ':required':
+                                            if (!(node.inputElement && (<HTMLInputElement> node.element).required) && tagName !== 'BUTTON') {
+                                                return false;
+                                            }
+                                            break;
+                                        case ':optional':
+                                            if (!node.inputElement || tagName === 'BUTTON' || (<HTMLInputElement> node.element).required) {
+                                                return false;
+                                            }
+                                            break;
+                                        case ':in-range':
+                                        case ':out-of-range': {
+                                            if (tagName === 'INPUT') {
+                                                const element = <HTMLInputElement> node.element;
+                                                const rangeValue = parseFloat(element.value);
+                                                if (!isNaN(rangeValue)) {
+                                                    const min = $util.convertFloat(element.min);
+                                                    const max = $util.convertFloat(element.max);
+                                                    if (rangeValue >= min && rangeValue <= max) {
+                                                        if (pseudo === ':out-of-range') {
+                                                            return false;
+                                                        }
+                                                    }
+                                                    else if (pseudo === ':in-range') {
+                                                        return false;
+                                                    }
+                                                }
+                                                else if (pseudo === ':in-range') {
+                                                    return false;
+                                                }
+                                            }
+                                            else {
+                                                return false;
+                                            }
+                                            break;
+                                        }
+                                        case ':indeterminate':
+                                            if (tagName === 'INPUT') {
+                                                const element = <HTMLInputElement> node.element;
+                                                switch (element.type) {
+                                                    case 'checkbox':
+                                                        if (!element.indeterminate) {
+                                                            return false;
+                                                        }
+                                                        break;
+                                                    case 'radio':
+                                                        if (element.checked) {
+                                                            return false;
+                                                        }
+                                                        else if (element.name) {
+                                                            let form = element.parentElement;
+                                                            while (form) {
+                                                                if (form.tagName === 'FORM') {
+                                                                    break;
+                                                                }
+                                                                form = form.parentElement;
+                                                            }
+                                                            const children = (form || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
+                                                            const lengthA = children.length;
+                                                            for (let j = 0; j < lengthA; j++) {
+                                                                if ((<HTMLInputElement> children.item(j)).checked) {
+                                                                    return false;
+                                                                }
+                                                            }
+                                                        }
+                                                        break;
+                                                    default:
+                                                        return false;
+                                                }
+                                            }
+                                            else if (tagName === 'PROGRESS') {
+                                                if ((<HTMLProgressElement> node.element).value !== -1) {
+                                                    return false;
+                                                }
+                                            }
+                                            else {
+                                                return false;
+                                            }
+                                            break;
+                                        case ':target': {
+                                            if (location.hash === '') {
+                                                return false;
+                                            }
+                                            else {
+                                                const element = <HTMLAnchorElement> node.element;
+                                                if (!(location.hash === `#${element.id}` || tagName === 'A' && location.hash === `#${element.name}`)) {
+                                                    return false;
+                                                }
+                                            }
+                                            break;
+                                        }
                                         case ':scope':
                                             if (!last || adjacent === '>' && node !== this) {
                                                 return false;
@@ -702,18 +855,41 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 return false;
                                             }
                                             break;
-                                        case ':nth-child(n)':
+                                        case ':link':
+                                        case ':visited':
+                                        case ':hover':
+                                        case ':focus':
+                                        case ':valid':
+                                        case ':invalid': {
+                                            const element = node.element;
+                                            let valid = false;
+                                            const children = (<HTMLElement> parent.element).querySelectorAll(`:scope > ${pseudo}`);
+                                            const lengthA = children.length;
+                                            for (let j = 0; j < lengthA; j++) {
+                                                if (children.item(i) === element) {
+                                                    valid = true;
+                                                    break;
+                                                }
+                                            }
+                                            if (!valid) {
+                                                return false;
+                                            }
                                             continue;
+                                        }
                                         default: {
-                                            const match = /^:nth-(child|of-type)\((.+)\)$/.exec(pseudoClass);
+                                            let match = /^:nth(-last)?-(child|of-type)\((.+)\)$/.exec(pseudo);
                                             if (match) {
-                                                const placement = match[2].trim();
+                                                const placement = match[3].trim();
+                                                const children = parent.childrenElements;
+                                                if (match[1]) {
+                                                    children.reverse();
+                                                }
                                                 let index: number;
-                                                if (match[1] === 'child') {
-                                                    index = parent.childrenElements.indexOf(node);
+                                                if (match[2] === 'child') {
+                                                    index = children.indexOf(node);
                                                 }
                                                 else {
-                                                    index = $util.filterArray(parent.childrenElements, item => item.tagName === node.tagName).indexOf(node);
+                                                    index = $util.filterArray(children, item => item.tagName === tagName).indexOf(node);
                                                 }
                                                 index++;
                                                 if (index > 0) {
@@ -775,6 +951,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                         }
                                                     }
                                                     continue;
+                                                }
+                                            }
+                                            else {
+                                                match = /^:lang\(\s*(.+)\s*\)$/.exec(pseudo);
+                                                if (match) {
+                                                    const attributes = node.attributes;
+                                                    if (attributes['lang'] && match[1].toLowerCase() === attributes['lang'].toLowerCase()) {
+                                                        continue;
+                                                    }
                                                 }
                                             }
                                             return false;
@@ -1189,11 +1374,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get tagName() {
         if (this._cached.tagName === undefined) {
             const element = <HTMLElement> this._element;
-            let value = '';
             if (element) {
-                value = element.nodeName.charAt(0) === '#' ? element.nodeName : element.tagName;
+                this._cached.tagName = element.nodeName.charAt(0) === '#' ? element.nodeName : element.tagName;
             }
-            this._cached.tagName = value;
+            else {
+                this._cached.tagName = '';
+            }
         }
         return this._cached.tagName;
     }
@@ -2012,7 +2198,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get absoluteParent() {
         if (this._cached.absoluteParent === undefined) {
             let current = this.actualParent;
-            if (!this.pageFlow) {
+            if (this.naturalElement && !this.pageFlow) {
                 while (current && current.id !== 0) {
                     const position = current.cssInitial('position', false, true);
                     if (current.documentBody || position !== 'static' && position !== 'initial' && position !== 'unset') {
@@ -2031,7 +2217,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get actualParent() {
         if (this._cached.actualParent === undefined) {
-            this._cached.actualParent = this._element && this._element.parentElement && $session.getElementAsNode<T>(this._element.parentElement, this.sessionId) || null;
+            const element = this.element;
+            this._cached.actualParent = element && element.parentElement && $session.getElementAsNode<T>(element.parentElement, this.sessionId) || null;
         }
         return this._cached.actualParent;
     }

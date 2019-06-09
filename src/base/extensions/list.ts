@@ -25,6 +25,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
             const length = node.length;
             if (length) {
                 const floated = new Set<string>();
+                const children = node.children;
                 let blockStatic = 0;
                 let inlineVertical = 0;
                 let floating = 0;
@@ -32,7 +33,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 let imageType = 0;
                 let listType = 0;
                 for (let i = 0; i < length; i++) {
-                    const item = node.item(i) as T;
+                    const item = children[i] as T;
                     const listStyleType = item.css('listStyleType') !== $const.CSS.NONE;
                     if (item.display === 'list-item') {
                         if (listStyleType || item.innerBefore || hasSingleImage(item)) {
@@ -45,15 +46,30 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     if (item.blockStatic) {
                         blockStatic++;
                     }
+                    else {
+                        blockStatic = Number.POSITIVE_INFINITY;
+                    }
                     if (item.inlineVertical) {
                         inlineVertical++;
+                    }
+                    else {
+                        blockStatic = Number.POSITIVE_INFINITY;
                     }
                     if (item.floating) {
                         floated.add(item.float);
                         floating++;
+                        blockAlternate = Number.POSITIVE_INFINITY;
                     }
-                    else if (i === 0 || i === length - 1 || item.blockStatic || (node.item(i - 1) as T).blockStatic && (node.item(i + 1) as T).blockStatic) {
+                    else if (i === 0 || i === length - 1 || item.blockStatic || (children[i - 1] as T).blockStatic && (children[i + 1] as T).blockStatic) {
                         blockAlternate++;
+                        floating = Number.POSITIVE_INFINITY;
+                    }
+                    else {
+                        floating = Number.POSITIVE_INFINITY;
+                        blockAlternate = Number.POSITIVE_INFINITY;
+                    }
+                    if (blockStatic === Number.POSITIVE_INFINITY && inlineVertical === Number.POSITIVE_INFINITY && blockAlternate === Number.POSITIVE_INFINITY && floating === Number.POSITIVE_INFINITY) {
+                        return false;
                     }
                 }
                 return (imageType > 0 || listType > 0) && (blockStatic === length || inlineVertical === length || floating === length && floated.size === 1 || blockAlternate === length);

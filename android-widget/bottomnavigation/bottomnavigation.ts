@@ -26,8 +26,10 @@ export default class BottomNavigation<T extends android.base.View> extends squar
     public processNode(node: T, parent: T) {
         const options = $utilA.createViewAttribute(this.options[node.elementId]);
         $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'background', `?android:attr/windowBackground`);
-        for (let i = 5; i < node.length; i++) {
-            const item = node.item(i) as T;
+        const children = node.children;
+        const length = children.length;
+        for (let i = 5; i < length; i++) {
+            const item = children[i] as T;
             item.hide();
             for (const child of item.cascade() as T[]) {
                 child.hide();

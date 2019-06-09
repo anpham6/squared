@@ -440,7 +440,7 @@ export function getTargetElement(element: SVGElement, rootElement?: SVGElement) 
             const elements = parent.querySelectorAll('*');
             const length = elements.length;
             for (let i = 0; i < length; i++) {
-                const target = elements[i];
+                const target = elements.item(i);
                 if (target.id === id && target instanceof SVGElement) {
                     return target;
                 }

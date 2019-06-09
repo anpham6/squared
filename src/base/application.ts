@@ -740,7 +740,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         pseudoElement.style[attr] = styleMap[attr];
                     }
                 }
-                $session.setElementCache(pseudoElement, 'pseudoType', this.processing.sessionId, target);
+                $session.setElementCache(pseudoElement, 'pseudoElement', this.processing.sessionId, target);
                 $session.setElementCache(pseudoElement, 'styleMap', this.processing.sessionId, styleMap);
                 return pseudoElement;
             }

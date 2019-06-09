@@ -31,28 +31,38 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     public init() {
-        const length = this.children.length;
+        const children = this.children;
+        const length = children.length;
         if (length) {
             if (length > 1) {
-                const linearData = NodeUI.linearData(this.children);
+                const linearData = NodeUI.linearData(children);
                 this._floated = linearData.floated;
                 this._cleared = linearData.cleared;
                 this._linearX = linearData.linearX;
                 this._linearY = linearData.linearY;
             }
             else {
-                this._linearY = (this.item(0) as T).blockStatic;
+                this._linearY = (children[0] as T).blockStatic;
                 this._linearX = !this._linearY;
             }
             let A = 0;
             let B = 0;
             for (let i = 0; i < length; i++) {
-                const item = this.item(i) as T;
+                const item = children[i] as T;
                 if (item.floating) {
                     A++;
                 }
+                else {
+                    A = Number.POSITIVE_INFINITY;
+                }
                 if (item.rightAligned) {
                     B++;
+                }
+                else {
+                    B = Number.POSITIVE_INFINITY;
+                }
+                if (A === Number.POSITIVE_INFINITY && B === Number.POSITIVE_INFINITY) {
+                    break;
                 }
             }
             if (A === length || this._floated && this._floated.size === 2) {
