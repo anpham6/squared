@@ -11,7 +11,12 @@ const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
-const REGEXP_BACKGROUND = /\s*(url\(.+?\))\s*/;
+const CACHE_PATTERN = {
+    BACKGROUND: /\s*(url\(.+?\))\s*/,
+    NTH_CHILD_OFTYPE: /^:nth(-last)?-(child|of-type)\((.+)\)$/,
+    NTH_CHILD_OFTYPE_VALUE: /(-)?(\d+)?n\s*(\+\d+)?/,
+    LANG: /^:lang\(\s*(.+)\s*\)$/
+};
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static copyTextStyle(dest: T, source: T) {
@@ -31,7 +36,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public documentRoot = false;
     public depth = -1;
-    public siblingIndex = Number.POSITIVE_INFINITY;
+    public childIndex = Number.POSITIVE_INFINITY;
     public style!: CSSStyleDeclaration;
 
     public abstract innerBefore?: T;
@@ -545,9 +550,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const queries = value.split($regex.XML.SEPARATOR);
                 for (let i = 0; i < queries.length; i++) {
                     const query = queries[i];
-                    if (query.indexOf('::') !== -1) {
-                        continue;
-                    }
                     const selectors: QueryData[] = [];
                     let offset = -1;
                     invalid: {
@@ -583,11 +585,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             }
                             else if (segment.charAt(0) === '*') {
                                 if (segment.endsWith('|*')) {
-                                    all = true;
+                                    all = segment === '*|*';
                                 }
                                 else {
                                     segment = segment.substring(1);
                                 }
+                            }
+                            else if (segment.startsWith('::')) {
+                                selectors.length = 0;
+                                break invalid;
                             }
                             if (!all) {
                                 let subMatch: RegExpExecArray | null;
@@ -865,8 +871,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         case ':valid':
                                         case ':invalid': {
                                             const element = node.element;
-                                            let valid = false;
                                             const children = (<HTMLElement> parent.element).querySelectorAll(`:scope > ${pseudo}`);
+                                            let valid = false;
                                             const lengthA = children.length;
                                             for (let j = 0; j < lengthA; j++) {
                                                 if (children.item(i) === element) {
@@ -880,7 +886,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             continue;
                                         }
                                         default: {
-                                            let match = /^:nth(-last)?-(child|of-type)\((.+)\)$/.exec(pseudo);
+                                            let match = CACHE_PATTERN.NTH_CHILD_OFTYPE.exec(pseudo);
                                             if (match) {
                                                 const placement = match[3].trim();
                                                 const children = parent.childrenElements;
@@ -914,7 +920,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                                 }
                                                                 break;
                                                             default:
-                                                                const subMatch = /(-)?(\d+)?n\s*(\+\d+)?/.exec(placement);
+                                                                const subMatch = CACHE_PATTERN.NTH_CHILD_OFTYPE_VALUE.exec(placement);
                                                                 if (subMatch) {
                                                                     const childOffset = $util.convertInt(subMatch[3]);
                                                                     if (subMatch[2]) {
@@ -957,7 +963,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 }
                                             }
                                             else {
-                                                match = /^:lang\(\s*(.+)\s*\)$/.exec(pseudo);
+                                                match = CACHE_PATTERN.LANG.exec(pseudo);
                                                 if (match) {
                                                     const attributes = node.attributes;
                                                     if (attributes['lang'] && match[1].toLowerCase() === attributes['lang'].toLowerCase()) {
@@ -2151,7 +2157,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.backgroundImage = value;
             }
             else {
-                const match = REGEXP_BACKGROUND.exec(this.css('background'));
+                const match = CACHE_PATTERN.BACKGROUND.exec(this.css('background'));
                 this._cached.backgroundImage = match ? match[1] : '';
             }
         }
@@ -2242,8 +2248,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 (<HTMLElement> this._element).childNodes.forEach((element: Element) => {
                     const node = $session.getElementAsNode<T>(element, this.sessionId);
                     if (node) {
+                        node.childIndex = i++;
                         children.push(node);
-                        node.siblingIndex = i++;
                     }
                 });
                 this._cached.actualChildren = children;
@@ -2326,7 +2332,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get previousSibling() {
         const parent = this.actualParent;
         if (parent) {
-            return parent.actualChildren[this.siblingIndex - 1] || null;
+            return parent.actualChildren[this.childIndex - 1] || null;
         }
         return null;
     }
@@ -2334,7 +2340,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get nextSibling() {
         const parent = this.actualParent;
         if (parent) {
-            return parent.actualChildren[this.siblingIndex + 1] || null;
+            return parent.actualChildren[this.childIndex + 1] || null;
         }
         return null;
     }

@@ -303,12 +303,12 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     }
 
     private createPlaceholder(node: T, children: T[], target?: string) {
-        let siblingIndex = Number.POSITIVE_INFINITY;
+        let containerIndex = Number.POSITIVE_INFINITY;
         for (const item of children) {
-            siblingIndex = Math.min(siblingIndex, item.siblingIndex);
+            containerIndex = Math.min(containerIndex, item.containerIndex);
         }
         const placeholder = this.application.createNode(undefined, true, node, children);
-        placeholder.siblingIndex = siblingIndex;
+        placeholder.containerIndex = containerIndex;
         if (target) {
             placeholder.dataset.target = target;
         }

@@ -60,7 +60,7 @@ function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
             const below = <View> b.node.innerWrapped || b.node;
             if (above.absoluteParent === below.absoluteParent) {
                 if (above.zIndex === below.zIndex) {
-                    return above.siblingIndex < below.siblingIndex ? -1 : 1;
+                    return above.childIndex < below.childIndex ? -1 : 1;
                 }
                 return above.zIndex < below.zIndex ? -1 : 1;
             }
@@ -565,7 +565,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 layout.setType(getRelativeVertical(layout), $e.NODE_ALIGNMENT.VERTICAL | $e.NODE_ALIGNMENT.UNKNOWN);
             }
         }
-        else if (layout.some(item => item.alignedVertically(item.siblingIndex > 0 ? layout.children.slice(0, item.siblingIndex) : undefined, layout.cleared) > 0)) {
+        else if (layout.some(item => item.alignedVertically(item.childIndex > 0 ? layout.children.slice(0, item.childIndex) : undefined, layout.cleared) > 0)) {
             layout.setType(getRelativeVertical(layout), $e.NODE_ALIGNMENT.VERTICAL | $e.NODE_ALIGNMENT.UNKNOWN);
         }
         else {
@@ -1590,7 +1590,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             group.init();
         }
         else {
-            group.siblingIndex = node.siblingIndex;
+            group.containerIndex = node.containerIndex;
         }
         this.cache.append(group, traverse);
         return group;

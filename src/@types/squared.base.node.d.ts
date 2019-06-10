@@ -8,7 +8,7 @@ declare global {
             id: number;
             style: CSSStyleDeclaration;
             depth: number;
-            siblingIndex: number;
+            childIndex: number;
             documentRoot: boolean;
             actualParent: Node | null;
             visible: boolean;

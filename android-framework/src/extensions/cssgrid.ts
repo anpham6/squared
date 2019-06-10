@@ -396,6 +396,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 else if (!node.hasHeight) {
                     node.setLayoutHeight(STRING_ANDROID.MATCH_PARENT, false);
                 }
+                renderAs.innerWrapped = node;
                 node.outerWrapper = renderAs;
                 node.parent = renderAs;
                 outputAs = this.application.renderNode(

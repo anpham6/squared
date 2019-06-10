@@ -47,11 +47,15 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 container = this.application.createNode(<HTMLElement> node.element);
                 container.inherit(node, 'base', 'initial', 'styleMap');
                 parent.appendTry(node, container);
+                container.innerWrapped = node;
+                node.outerWrapper = container;
             }
             else {
                 container = this.application.createNode();
                 container.inherit(node, 'base');
                 container.exclude($e.NODE_RESOURCE.BOX_STYLE);
+                scrollView[0].outerWrapper = container;
+                container.innerWrapped = scrollView[0];
             }
             container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
             container.exclude($e.NODE_RESOURCE.ASSET);

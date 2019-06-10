@@ -33,13 +33,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         const controller = this.application.controllerHandler;
-        const children = node.filter((item: T) => {
-            if (item.pageFlow && item.pseudoElement && item.contentBoxWidth === 0 && item.css('content') === '""') {
-                item.hide();
-                return false;
-            }
-            return item.pageFlow;
-        }) as T[];
+        const [children, absolute] = node.partition((item: T) => item.pageFlow && !item.renderExclude) as [T[], T[]];
         const mainData = Flexbox.createDataAttribute(node, children);
         if (node.cssTry('align-items', $const.CSS.START)) {
             if (node.cssTry('justify-items', $const.CSS.START)) {
@@ -108,13 +102,13 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             }
             node.clear();
             let maxCount = 0;
+            let offset = 0;
             length = rows.length;
             if (length > 1) {
                 for (let i = 0; i < length; i++) {
                     const seg = rows[i];
                     const group = controller.createNodeGroup(seg[0], seg, node, true);
-                    group.siblingIndex = i;
-                    node.sort(NodeUI.siblingIndex);
+                    group.containerIndex = i;
                     const box = group.unsafe('box');
                     if (box) {
                         box[size] = node.box[size];
@@ -122,11 +116,22 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     group.addAlign(NODE_ALIGNMENT.SEGMENTED);
                     maxCount = Math.max(seg.length, maxCount);
                 }
+                offset = length;
             }
             else {
-                maxCount = rows[0].length;
-                node.retain(rows[0]);
+                const item = rows[0];
+                node.retain(item);
+                for (let i = 0; i < item.length; i++) {
+                    item[i].containerIndex = i;
+                }
+                maxCount = item.length;
+                offset = maxCount;
             }
+            for (let i = 0; i < absolute.length; i++) {
+                absolute[i].containerIndex = offset + i;
+            }
+            node.concat(absolute);
+            node.sort();
             if (mainData.directionRow) {
                 mainData.rowCount = length;
                 mainData.columnCount = maxCount;

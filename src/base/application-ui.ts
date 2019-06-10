@@ -352,7 +352,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         this.processing.excluded.append(child);
                     }
                     else if (!child.plainText || !inlineText) {
-                        child.siblingIndex = j++;
+                        child.containerIndex = j++;
                         child.parent = node;
                         this.processing.cache.append(child);
                     }
@@ -402,6 +402,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     child.siblingsLeading = siblingsLeading;
                     child.siblingsTrailing = siblingsTrailing;
                     child.parent = node;
+                    child.containerIndex = 0;
                     inlineText = false;
                     this.processing.cache.append(child);
                 }
@@ -916,7 +917,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 for (let i = 1; i < segments.length; i++) {
                     grouping = grouping.concat(segments[i]);
                 }
-                grouping.sort(NodeUI.siblingIndex);
+                grouping.sort((a: T, b: T) => a.childIndex < b.childIndex ? -1 : 1);
                 if (layout.node.layoutVertical) {
                     floatgroup = layout.node;
                 }

@@ -334,10 +334,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    public static siblingIndex<T extends NodeUI>(a: T, b: T) {
-        return a.siblingIndex < b.siblingIndex ? -1 : 1;
-    }
-
     public alignmentType = 0;
     public baselineActive = false;
     public baselineAltered = false;
@@ -347,6 +343,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public controlId = '';
     public floatContainer = false;
     public inputContainer = false;
+    public containerIndex = Number.POSITIVE_INFINITY;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
     public abstract localSettings: {};
@@ -398,7 +395,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         node.visible = this.visible;
         node.excluded = this.excluded;
         node.rendered = this.rendered;
-        node.siblingIndex = this.siblingIndex;
+        node.childIndex = this.childIndex;
+        node.containerIndex = this.containerIndex;
         node.inlineText = this.inlineText;
         node.lineBreakLeading = this.lineBreakLeading;
         node.lineBreakTrailing = this.lineBreakTrailing;
@@ -640,7 +638,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (children[i] === node) {
                 children[i] = replacement;
                 replacement.parent = this;
-                replacement.innerWrapped = node;
+                replacement.containerIndex = node.containerIndex;
                 valid = true;
                 break;
             }
@@ -650,6 +648,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             valid = true;
         }
         return valid;
+    }
+
+    public sort(predicate?: (a: T, b: T) => number) {
+        if (predicate) {
+            super.sort(predicate);
+        }
+        else {
+            this.children.sort((a: T, b: T) => a.containerIndex < b.containerIndex ? -1 : 1);
+        }
+        return this;
     }
 
     public alignedVertically(siblings?: T[], cleared?: Map<T, string>, horizontal?: boolean) {

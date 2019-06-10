@@ -322,7 +322,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
-        const alteredParent = new Set<T>();
+        const altered = new Set<T>();
         for (const node of cache) {
             if (!node.documentRoot) {
                 const actualParent = node.parent as T;
@@ -455,67 +455,65 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     node.css('opacity', opacity.toString());
                     node.parent = parent;
-                    node.siblingIndex = Number.POSITIVE_INFINITY;
-                    alteredParent.add(parent as T);
+                    node.containerIndex = Number.POSITIVE_INFINITY;
+                    altered.add(parent as T);
                 }
                 node.documentParent = parent;
             }
         }
-        for (const node of cache) {
-            if (alteredParent.has(node)) {
-                const layers: Array<T[]> = [];
-                let maxIndex = -1;
-                node.each((item: T) => {
-                    if (item.siblingIndex === Number.POSITIVE_INFINITY) {
-                        for (const adjacent of node.children) {
-                            let valid = adjacent.actualChildren.includes(item);
-                            if (!valid) {
-                                const nested = adjacent.cascade();
-                                valid = item.ascend(child => nested.includes(child)).length > 0;
+        for (const node of altered) {
+            const layers: Array<T[]> = [];
+            let maxIndex = -1;
+            node.each((item: T) => {
+                if (item.containerIndex === Number.POSITIVE_INFINITY) {
+                    for (const adjacent of node.children as T[]) {
+                        let valid = adjacent.actualChildren.includes(item);
+                        if (!valid) {
+                            const nested = adjacent.cascade();
+                            valid = item.ascend(child => nested.includes(child)).length > 0;
+                        }
+                        if (valid) {
+                            const index = adjacent.containerIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0);
+                            if (layers[index] === undefined) {
+                                layers[index] = [];
                             }
-                            if (valid) {
-                                const index = adjacent.siblingIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0);
-                                if (layers[index] === undefined) {
-                                    layers[index] = [];
-                                }
-                                layers[index].push(item);
-                                break;
-                            }
+                            layers[index].push(item);
+                            break;
                         }
                     }
-                    else if (item.siblingIndex > maxIndex) {
-                        maxIndex = item.siblingIndex;
-                    }
-                });
-                const length = layers.length;
-                if (length) {
-                    const children = node.children as T[];
-                    for (let j = 0, k = 0, l = 1; j < length; j++, k++) {
-                        const order = layers[j];
-                        if (order) {
-                            order.sort((a, b) => {
-                                if (a.parent === b.parent) {
-                                    if (a.zIndex === b.zIndex) {
-                                        return a.id < b.id ? -1 : 1;
-                                    }
-                                    return a.zIndex < b.zIndex ? -1 : 1;
-                                }
-                                return 0;
-                            });
-                            for (const item of order) {
-                                item.siblingIndex = maxIndex + l++;
-                            }
-                            for (let m = 0; m < children.length; m++) {
-                                if (order.includes(children[m])) {
-                                    children[m] = undefined as any;
-                                }
-                            }
-                            children.splice(k, 0, ...order);
-                            k += order.length;
-                        }
-                    }
-                    node.retain($util.flatArray(children));
                 }
+                else if (item.containerIndex > maxIndex) {
+                    maxIndex = item.containerIndex;
+                }
+            });
+            const length = layers.length;
+            if (length) {
+                const children = node.children as T[];
+                for (let j = 0, k = 0, l = 1; j < length; j++, k++) {
+                    const order = layers[j];
+                    if (order) {
+                        order.sort((a, b) => {
+                            if (a.parent === b.parent) {
+                                if (a.zIndex === b.zIndex) {
+                                    return a.id < b.id ? -1 : 1;
+                                }
+                                return a.zIndex < b.zIndex ? -1 : 1;
+                            }
+                            return 0;
+                        });
+                        for (const item of order) {
+                            item.containerIndex = maxIndex + l++;
+                        }
+                        for (let m = 0; m < children.length; m++) {
+                            if (order.includes(children[m])) {
+                                children[m] = undefined as any;
+                            }
+                        }
+                        children.splice(k, 0, ...order);
+                        k += order.length;
+                    }
+                }
+                node.retain($util.flatArray(children));
             }
         }
     }
@@ -533,7 +531,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         return parentA.depth < parentA.depth ? -1 : 1;
                     }
                     else if (parentA.actualParent === parentB.actualParent) {
-                        return parentA.siblingIndex < parentB.siblingIndex ? -1 : 1;
+                        return parentA.childIndex < parentB.childIndex ? -1 : 1;
                     }
                     return parentA.id < parentB.id ? -1 : 1;
                 }

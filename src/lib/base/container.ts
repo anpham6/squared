@@ -103,7 +103,9 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public sort(predicate: (a: T, b: T) => number) {
-        this._children.sort(predicate);
+        if (predicate) {
+            this._children.sort(predicate);
+        }
         return this;
     }
 

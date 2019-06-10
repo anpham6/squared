@@ -58,8 +58,8 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 });
                 node.unsetCache();
                 node.android('src', `@drawable/${drawable}`);
-                node.outerWrapper = container;
                 container.innerWrapped = node;
+                node.outerWrapper = container;
                 node.parent = container;
                 return {
                     renderAs: container,

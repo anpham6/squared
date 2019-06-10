@@ -285,7 +285,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const nodeRoot = this.cascadeParentNode(documentRoot);
         if (nodeRoot) {
             nodeRoot.parent = new NodeConstructor(0, this.processing.sessionId, documentRoot.parentElement || document.body, controller.afterInsertNode);
-            nodeRoot.siblingIndex = 0;
+            nodeRoot.childIndex = 0;
             nodeRoot.documentRoot = true;
             nodeRoot.documentParent = nodeRoot.parent;
             this.processing.node = nodeRoot;
@@ -440,7 +440,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             const children: T[] = [];
             const childNodes = element.childNodes;
             const length = childNodes.length;
-            for (let i = 0; i < length; i++) {
+            for (let i = 0, j = 0; i < length; i++) {
                 const childElement = <HTMLElement> childNodes[i];
                 let child: T | undefined;
                 if (childElement === beforeElement) {
@@ -466,6 +466,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     child = this.partitionNodeChildren(childElement, depth);
                 }
                 if (child) {
+                    child.childIndex = j++;
                     children.push(child);
                     if (queryMap && child.styleElement) {
                         queryMap[0].push(child);
@@ -486,16 +487,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (let i = 0; i < length; i++) {
             const child = children[i];
             child.parent = node;
-            child.siblingIndex = i;
             child.actualParent = node;
             if (!child.plainText) {
                 inlineText = false;
                 this.processing.cache.append(child);
             }
         }
-        if (inlineText) {
-            node.inlineText = true;
-        }
+        node.inlineText = inlineText;
     }
 
     protected partitionNodeChildren(element: HTMLElement, depth: number) {

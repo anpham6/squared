@@ -9,16 +9,16 @@ const $const = squared.lib.constant;
 export default abstract class NodeGroupUI extends NodeUI {
     public init() {
         if (this.length) {
-            let siblingIndex = Number.POSITIVE_INFINITY;
-            for (const item of this.children) {
-                siblingIndex = Math.min(siblingIndex, item.siblingIndex);
+            let containerIndex = Number.POSITIVE_INFINITY;
+            for (const item of this.children as NodeUI[]) {
+                containerIndex = Math.min(containerIndex, item.containerIndex);
                 item.parent = this;
             }
-            if (this.siblingIndex === Number.POSITIVE_INFINITY) {
-                this.siblingIndex = siblingIndex;
+            if (this.containerIndex === Number.POSITIVE_INFINITY) {
+                this.containerIndex = containerIndex;
             }
             if (this.parent) {
-                this.parent.sort(NodeUI.siblingIndex);
+                (<NodeUI> this.parent).sort();
             }
             this.setBounds();
             this.saveAsInitial();

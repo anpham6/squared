@@ -28,6 +28,7 @@ declare global {
             siblingsTrailing: Node[];
             floatContainer: boolean;
             inputContainer: boolean;
+            containerIndex: number;
             flexbox: Flexbox;
             localSettings: {};
             renderAs?: NodeUI;
@@ -76,6 +77,7 @@ declare global {
             exclude(resource?: number, procedure?: number, section?: number): void;
             hide(invisible?: boolean): void;
             appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
+            sort(predicate?: (a: Node, b: Node) => number): this;
             render(parent?: NodeUI): void;
             renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
             renderFilter(predicate: IteratorPredicate<NodeUI, boolean>): NodeUI[];
@@ -95,7 +97,6 @@ declare global {
             public static outerRegion<T>(node: T): BoxRect;
             public static baseline<T>(list: T[], text?: boolean): T | undefined;
             public static partitionRows<T>(list: T[], parent?: T): T[][];
-            public static siblingIndex(): number;
             constructor(id: number, sessionId?: string, element?: Element);
         }
 
