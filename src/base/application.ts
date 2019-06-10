@@ -35,6 +35,19 @@ async function getImageSvgAsync(value: string)  {
     return await response.text();
 }
 
+function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
+    const element = document.createElement(tagName);
+    element.className = '__squared.pseudo';
+    element.style.setProperty('display', $const.CSS.NONE);
+    if (index >= 0 && index < parent.childNodes.length) {
+        parent.insertBefore(element, parent.childNodes[index]);
+    }
+    else {
+        parent.appendChild(element);
+    }
+    return element;
+}
+
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public controllerHandler: Controller<T>;
     public resourceHandler: Resource<T>;
@@ -381,7 +394,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return true;
     }
 
-    public createNode(element: Element, append = true, parent?: T, children?: T[]) {
+    public createNode(element?: Element, append = true, parent?: T, children?: T[]) {
         const node = new NodeConstructor(this.nextId, this.processing.sessionId, element, this.controllerHandler.afterInsertNode) as T;
         if (parent) {
             node.depth = parent.depth + 1;
@@ -728,7 +741,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     break;
             }
             if (content || value === '""') {
-                const pseudoElement = $dom.createElement(element, tagName, false, target === 'before' ? 0 : -1);
+                const pseudoElement = createPseudoElement(element, tagName, target === 'before' ? 0 : -1);
                 if (tagName === 'img') {
                     (<HTMLImageElement> pseudoElement).src = content;
                 }

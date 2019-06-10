@@ -9,7 +9,6 @@ const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
-const $dom = squared.lib.dom;
 const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
@@ -134,8 +133,9 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         return this.included(<HTMLElement> node.element);
     }
 
-    public processNode(node: T) {
-        const parentAs = this.application.createNode($dom.createElement(), false);
+    public processNode(node: T, parent: T) {
+        const parentAs = this.application.createNode(undefined, false);
+        parentAs.actualParent = parent.actualParent;
         node.documentRoot = true;
         node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
         node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);

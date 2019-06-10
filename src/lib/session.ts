@@ -83,6 +83,5 @@ export function deleteElementCache(element: Element, attr: string, sessionId: st
 }
 
 export function getElementAsNode<T>(element: Element, sessionId: string): T | undefined {
-    const node = getElementCache(element, 'node', sessionId);
-    return node && node.naturalElement ? node : undefined;
+    return getElementCache(element, 'node', sessionId) || undefined;
 }

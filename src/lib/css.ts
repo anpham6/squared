@@ -97,9 +97,6 @@ export function getSpecificity(value: string) {
         else if (segment.charAt(0) === '*') {
             segment = segment.substring(1);
         }
-        CSS_RX.SELECTOR_PSEUDO.lastIndex = 0;
-        CSS_RX.SELECTOR_ATTR.lastIndex = 0;
-        CSS_RX.SELECTOR_LABEL_G.lastIndex = 0;
         let subMatch: RegExpExecArray | null;
         while ((subMatch = CSS_RX.SELECTOR_PSEUDO.exec(segment)) !== null) {
             if (subMatch[0].startsWith(':not(')) {
@@ -128,7 +125,7 @@ export function getSpecificity(value: string) {
             }
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        while ((subMatch = CSS_RX.SELECTOR_LABEL_G.exec(segment)) !== null) {
+        while ((subMatch = CSS_RX.SELECTOR_LABEL.exec(segment)) !== null) {
             switch (subMatch[0].charAt(0)) {
                 case '#':
                     result += 100;
@@ -140,6 +137,10 @@ export function getSpecificity(value: string) {
                     result += 1;
                     break;
             }
+            segment = spliceString(segment, subMatch.index, subMatch[0].length);
+        }
+        if (segment.trim() === '') {
+            break;
         }
     }
     return result;

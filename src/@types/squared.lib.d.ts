@@ -80,8 +80,7 @@ declare global {
             function removeElementsByClassName(className: string): void;
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
             function getNamedItem(element: Element | null, attr: string): string;
-            function createElement(parent?: Element | null, tagName?: string, placeholder?: boolean, index?: number): HTMLElement;
-            function createStyleElement(parent: HTMLElement, tagName: string, attrs: StringMap): HTMLElement;
+            function createElement(parent: HTMLElement, tagName: string, attrs: StringMap): HTMLElement;
             function measureTextWidth(value: string, fontFamily: string, fontSize: number): number;
         }
 

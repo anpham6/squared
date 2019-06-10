@@ -11,7 +11,6 @@ import $LayoutUI = squared.base.LayoutUI;
 
 const $css = squared.lib.css;
 const $const = squared.lib.constant;
-const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $c = squared.base.lib.constant;
@@ -40,7 +39,7 @@ function getRowData(mainData: CssGridData<View>, direction: string) {
 
 function getGridSize(mainData: CssGridData<View>, direction: string, node: View) {
     const horizontal = direction === 'column';
-    const data = mainData[direction];
+    const data: CssGridDirectionData = mainData[direction];
     const length = data.unit.length;
     let value = 0;
     if (length) {
@@ -67,7 +66,7 @@ function getGridSize(mainData: CssGridData<View>, direction: string, node: View)
             return 0;
         }
     }
-    value += data.gap * (data.count - 1);
+    value += data.gap * (data.length - 1);
     if (horizontal) {
         value += node.contentBox ? node.borderLeftWidth + node.borderRightWidth : node.contentBoxWidth;
         return node.actualWidth - value;
@@ -97,7 +96,7 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                 dimension = $const.CSS.HEIGHT;
             }
             const rowData = getRowData(mainData, direction);
-            const itemCount = mainData[direction].count;
+            const itemCount = mainData[direction].length;
             const adjusted = new Set<View>();
             function getMarginSize(value: number) {
                 const marginSize = Math.floor(sizeTotal / value);
@@ -358,10 +357,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             const { alignSelf, justifySelf } = node.flexbox;
             if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf)) {
-                renderAs = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
+                renderAs = this.application.createNode();
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                renderAs.inherit(node, 'initial', 'base');
+                renderAs.inherit(node, 'base', 'initial');
                 renderAs.resetBox($e.BOX_STANDARD.MARGIN | $e.BOX_STANDARD.PADDING);
                 renderAs.exclude($e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET, $e.NODE_PROCEDURE.CUSTOMIZATION);
                 parent.appendTry(node, renderAs);

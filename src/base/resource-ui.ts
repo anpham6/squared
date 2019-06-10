@@ -469,8 +469,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 const length = borderRadius.length;
                 if (length) {
+                    const dimension = horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT;
                     for (let i = 0; i < length; i++) {
-                        borderRadius[i] = node.convertPX(borderRadius[i], horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT, false);
+                        borderRadius[i] = node.convertPX(borderRadius[i], dimension, false);
                     }
                     boxStyle.borderRadius = borderRadius;
                 }
@@ -666,7 +667,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public setFontStyle(node: T) {
-        if (!(node.element === null || node.renderChildren.length || node.imageElement || node.svgElement || node.tagName === 'HR' || node.textEmpty && !node.visibleStyle.background)) {
+        if (!(node.element === null && !node.inlineText || node.renderChildren.length || node.imageElement || node.svgElement || node.tagName === 'HR' || node.textEmpty && !node.visibleStyle.background)) {
             const color = $color.parseColor(node.css('color'), node.css('opacity'));
             let fontWeight = node.css('fontWeight');
             if (!$util.isNumber(fontWeight)) {

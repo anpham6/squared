@@ -436,22 +436,25 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (value) {
             if ($css.isPercent(value)) {
                 let result = parseFloat(value) / 100;
+                let node = this as T;
                 if (parent) {
                     const absoluteParent = this.absoluteParent;
                     if (absoluteParent) {
-                        switch (dimension) {
-                            case $const.CSS.WIDTH:
-                            case $const.CSS.HEIGHT:
-                                result *= absoluteParent.hasPX(dimension, false) ? absoluteParent.parseUnit(value, dimension, false) : absoluteParent.bounds[dimension];
-                                break;
-                            default:
-                                result *= Math.max(absoluteParent.actualWidth, absoluteParent.actualHeight);
-                                break;
-                        }
-                        return result;
+                        node = absoluteParent;
                     }
                 }
-                return result * (this.hasPX(dimension, false) ? $css.parseUnit(value, this.fontSize) : this.bounds[dimension]);
+                switch (dimension) {
+                    case $const.CSS.WIDTH:
+                        result *= node.hasPX(dimension, false) ? node.actualWidth : node.bounds.width;
+                        break;
+                    case $const.CSS.HEIGHT:
+                        result *= node.hasPX(dimension, false) ? node.actualHeight : node.bounds.height;
+                        break;
+                    default:
+                        result *= Math.max(node.actualWidth, node.actualHeight);
+                        break;
+                }
+                return result;
             }
             return $css.parseUnit(value, this.fontSize);
         }
@@ -477,7 +480,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'baseline':
                 case 'left':
                 case 'start':
-                    return attr.startsWith('flex');
+                    return this.flexElement || this.documentParent.flexElement;
                 default:
                     if (options) {
                         if (options.not) {
@@ -587,7 +590,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 }
                             }
                             if (!all) {
-                                $regex.CSS.SELECTOR_LABEL_G.lastIndex = 0;
                                 let subMatch: RegExpExecArray | null;
                                 while ((subMatch = $regex.CSS.SELECTOR_PSEUDO.exec(segment)) !== null) {
                                     if (subMatch[0].startsWith(':not(')) {
@@ -623,7 +625,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     });
                                     segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
-                                while ((subMatch = $regex.CSS.SELECTOR_LABEL_G.exec(segment)) !== null) {
+                                while ((subMatch = $regex.CSS.SELECTOR_LABEL.exec(segment)) !== null) {
                                     const label = subMatch[0];
                                     switch (label.charAt(0)) {
                                         case '#':
@@ -639,6 +641,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             tagName = label.toUpperCase();
                                             break;
                                     }
+                                    segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
                             }
                             if (selectors.length > 0 || pseudoList === undefined) {

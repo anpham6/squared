@@ -7,7 +7,6 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
-const $dom = squared.lib.dom;
 const $e = squared.base.lib.enumeration;
 
 export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {
@@ -43,16 +42,18 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         }
         const lengthA = overflow.length;
         for (let i = 0; i < lengthA; i++) {
-            const container = this.application.createNode(i === 0 ? <Element> node.element : $dom.createElement(node.actualParent && node.actualParent.element, node.block ? 'div' : 'span'));
-            container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
+            let container: T;
             if (i === 0) {
-                container.inherit(node, 'initial', 'base', 'styleMap');
+                container = this.application.createNode(<HTMLElement> node.element);
+                container.inherit(node, 'base', 'initial', 'styleMap');
                 parent.appendTry(node, container);
             }
             else {
+                container = this.application.createNode();
                 container.inherit(node, 'base');
                 container.exclude($e.NODE_RESOURCE.BOX_STYLE);
             }
+            container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
             container.exclude($e.NODE_RESOURCE.ASSET);
             container.resetBox($e.BOX_STANDARD.PADDING);
             scrollView.push(container);

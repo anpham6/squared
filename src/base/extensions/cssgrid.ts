@@ -73,7 +73,7 @@ function getColumnTotal(rows: (NodeUI[] | undefined)[]) {
 const convertLength = (node: NodeUI, value: string) => $css.isLength(value) ? node.convertPX(value) : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataAttribute<T extends NodeUI>(): CssGridData<T> {
+    public static createDataAttribute<T extends NodeUI>(alignItems = '', alignContent = '', justifyItems = '', justifyContent = ''): CssGridData<T> {
         return {
             children: new Set(),
             rowData: [],
@@ -84,10 +84,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             row: CssGrid.createDataRowAttribute(),
             column: CssGrid.createDataRowAttribute(),
             emptyRows: [],
-            alignItems: '',
-            alignContent: '',
-            justifyItems: '',
-            justifyContent: ''
+            alignItems,
+            alignContent,
+            justifyItems,
+            justifyContent
         };
     }
 
@@ -118,13 +118,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             CACHE_PATTERN.REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
             CACHE_PATTERN.STARTEND = /^([\w\-]+)-(start|end)$/;
         }
-        const mainData = {
-            ...CssGrid.createDataAttribute(),
-            alignItems: node.css('alignItems'),
-            alignContent: node.css('alignContent'),
-            justifyItems: node.css('justifyItems'),
-            justifyContent: node.css('justifyContent')
-        };
+        const mainData = CssGrid.createDataAttribute(
+            node.css('alignItems'),
+            node.css('alignContent'),
+            node.css('justifyItems'),
+            node.css('justifyContent')
+        );
         const gridAutoFlow = node.css('gridAutoFlow');
         const horizontal = gridAutoFlow.indexOf('column') === -1;
         const dense = gridAutoFlow.indexOf('dense') !== -1;

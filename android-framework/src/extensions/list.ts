@@ -1,9 +1,10 @@
 import { NodeXmlTemplate } from '../../../src/base/@types/application';
 import { ListData } from '../../../src/base/@types/extension';
 
+import Resource from '../resource';
 import View from '../view';
 
-import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
+import { CONTAINER_ANDROID, EXT_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
@@ -12,7 +13,6 @@ import $NodeUI = squared.base.NodeUI;
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
-const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $c = squared.base.lib.constant;
 const $e = squared.base.lib.enumeration;
@@ -96,7 +96,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     ordinal.android('minWidth', $css.formatPX(minWidth));
                 }
                 ordinal.modifyBox($e.BOX_STANDARD.MARGIN_LEFT);
-                ordinal.positioned = true;
                 application.addLayoutTemplate(
                     parent,
                     ordinal,
@@ -141,8 +140,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     paddingRight = Math.max(minWidth / (image ? 6 : length * 4), 4);
                 }
                 const options = createViewAttribute(undefined, { layout_columnWeight: columnWeight });
-                const element = $dom.createElement(node.actualParent && node.actualParent.element, image ? 'img' : 'span');
-                ordinal = application.createNode(element);
+                ordinal = application.createNode();
                 ordinal.containerName = `${node.containerName}_ORDINAL`;
                 if (inside) {
                     controller.addBeforeOutsideTemplate(ordinal.id, controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, createViewAttribute(undefined, { minWidth: $css.formatPX(minWidth), layout_columnWeight: columnWeight })));
@@ -156,16 +154,19 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 else {
                     if (image) {
+                        ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
                         Object.assign(options.android, {
                             src: `@drawable/${image}`,
                             scaleType: !inside && gravity === $const.CSS.RIGHT ? 'fitEnd' : 'fitStart',
                             baselineAlignBottom: adjustPadding ? 'true' : ''
                         });
-                        ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
-                        (<HTMLImageElement> element).src = $css.resolveURL(mainData.imageSrc);
                     }
                     else if (mainData.ordinal) {
-                        element.textContent = mainData.ordinal;
+                        const numberResourceValue = application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
+                        const stringName = Resource.addString(mainData.ordinal, mainData.ordinal, numberResourceValue);
+                        if (stringName !== '') {
+                            node.android('text', numberResourceValue || !$util.isNumber(stringName) ? `@string/${stringName}` : stringName, false);
+                        }
                         ordinal.inlineText = true;
                         ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
                         if (node.tagName === 'DFN') {
@@ -203,7 +204,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (left !== 0) {
                         ordinal.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, left);
                     }
-                    ordinal.positioned = true;
                     ordinal.render(parent);
                     application.addLayoutTemplate(
                         parent,

@@ -23,8 +23,8 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
         if (mainData) {
             const drawable = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
             if (drawable !== '') {
-                const container = this.application.createNode(<HTMLElement> node.element);
-                container.inherit(node, 'initial', 'base', 'styleMap');
+                const container = this.application.createNode();
+                container.inherit(node, 'base', 'initial', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 container.exclude($e.NODE_RESOURCE.IMAGE_SOURCE, $e.NODE_PROCEDURE.CUSTOMIZATION);
                 parent.appendTry(node, container);

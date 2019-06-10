@@ -104,7 +104,6 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                     if (item !== node) {
                         item.setControlType(CONTAINER_ANDROID.RADIO, CONTAINER_NODE.RADIO);
                     }
-                    item.positioned = true;
                 });
                 container.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);
                 container.android('orientation', $NodeUI.linearData(children).linearX ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL);

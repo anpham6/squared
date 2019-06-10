@@ -11,7 +11,6 @@ export interface CachedValue<T> {
     htmlElement?: boolean;
     svgElement?: boolean;
     inputElement?: boolean;
-    naturalElement?: boolean;
     actualElement?: boolean;
     pageFlow?: boolean;
     inlineFlow?: boolean;

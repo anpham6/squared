@@ -12,7 +12,6 @@ type ToolbarThemeData = {
 
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
-const $dom = squared.lib.dom;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 const $constA = android.lib.constant;
@@ -308,7 +307,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         for (const item of children) {
             siblingIndex = Math.min(siblingIndex, item.siblingIndex);
         }
-        const placeholder = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element, node.block ? 'div' : 'span'), true, node, children);
+        const placeholder = this.application.createNode(undefined, true, node, children);
         placeholder.siblingIndex = siblingIndex;
         if (target) {
             placeholder.dataset.target = target;

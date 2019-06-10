@@ -1,4 +1,3 @@
-import { CSS } from './constant';
 import { spliceArray } from './util';
 
 export const ELEMENT_BLOCK = [
@@ -131,34 +130,7 @@ export function getElementsBetweenSiblings(elementStart: Element | null, element
     return undefined;
 }
 
-export function createElement(parent?: Element | null, tagName = 'span', placeholder = true, index = -1) {
-    const element = document.createElement(tagName);
-    const style = element.style;
-    if (placeholder) {
-        style.setProperty('position', 'static');
-        style.setProperty('margin', CSS.PX_0);
-        style.setProperty('padding', CSS.PX_0);
-        style.setProperty('border', CSS.NONE);
-        style.setProperty('float', CSS.NONE);
-        style.setProperty('clear', CSS.NONE);
-        element.className = '__squared.placeholder';
-    }
-    else {
-        element.className = '__squared.pseudo';
-    }
-    style.setProperty('display', CSS.NONE);
-    if (parent) {
-        if (index >= 0 && index < parent.childNodes.length) {
-            parent.insertBefore(element, parent.childNodes[index]);
-        }
-        else {
-            parent.appendChild(element);
-        }
-    }
-    return element;
-}
-
-export function createStyleElement(parent: HTMLElement, tagName: string, attrs: StringMap) {
+export function createElement(parent: HTMLElement, tagName: string, attrs: StringMap) {
     const element = document.createElement(tagName);
     for (const attr in attrs) {
         element.style.setProperty(attr, attrs[attr]);

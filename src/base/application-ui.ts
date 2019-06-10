@@ -129,7 +129,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         for (const ext of this.extensions) {
             ext.afterFinalize();
         }
-        $dom.removeElementsByClassName('__squared.placeholder');
         $dom.removeElementsByClassName('__squared.pseudo');
         this.closed = true;
     }
@@ -276,7 +275,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public createNode(element: Element, append = true, parent?: T, children?: T[]) {
+    public createNode(element?: Element, append = true, parent?: T, children?: T[]) {
         const node = new NodeConstructor(this.nextId, this.processing.sessionId, element, this.controllerHandler.afterInsertNode) as T;
         if (parent) {
             node.depth = parent.depth + 1;
@@ -883,7 +882,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 inlineBelow[0].addAlign(NODE_ALIGNMENT.EXTENDABLE);
             }
             inlineBelow.unshift(layout.node);
-            const parent = this.createNode($dom.createElement(layout.node.actualParent && layout.node.actualParent.element), true, layout.parent, inlineBelow);
+            const parent = this.createNode(undefined, true, layout.parent, inlineBelow);
+            parent.actualParent = layout.parent;
             this.addLayout(new LayoutUI(
                 layout.parent,
                 parent,
