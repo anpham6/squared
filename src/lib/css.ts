@@ -139,9 +139,6 @@ export function getSpecificity(value: string) {
             }
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        if (segment.trim() === '') {
-            break;
-        }
     }
     return result;
 }

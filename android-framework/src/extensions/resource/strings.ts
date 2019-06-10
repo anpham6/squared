@@ -48,27 +48,22 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         if (valueString) {
                             const name = valueString.key || valueString.value;
                             let value = valueString.value;
-                            if (node.naturalElement) {
-                                const renderParent = node.renderParent as T;
-                                if (renderParent && renderParent.layoutRelative) {
-                                    if (node.alignParent($const.CSS.LEFT) && !(node.actualParent as T).preserveWhiteSpace) {
-                                        const textContent = node.textContent;
-                                        let leadingSpace = 0;
-                                        const length = textContent.length;
-                                        for (let i = 0; i < length; i++) {
-                                            switch (textContent.charCodeAt(i)) {
-                                                case 160:
-                                                    leadingSpace++;
-                                                case 32:
-                                                    continue;
-                                                default:
-                                                    break;
-                                            }
-                                        }
-                                        if (leadingSpace === 0) {
-                                            value = value.replace(/^(\s|&#160;)+/, '');
-                                        }
+                            if (node.naturalElement && node.alignParent($const.CSS.LEFT) && !(!node.plainText && node.preserveWhiteSpace || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
+                                const textContent = node.textContent;
+                                let leadingSpace = 0;
+                                const length = textContent.length;
+                                for (let i = 0; i < length; i++) {
+                                    switch (textContent.charCodeAt(i)) {
+                                        case 160:
+                                            leadingSpace++;
+                                        case 32:
+                                            continue;
+                                        default:
+                                            break;
                                     }
+                                }
+                                if (leadingSpace === 0) {
+                                    value = value.replace(/^(\s|&#160;)+/, '');
                                 }
                             }
                             if (node.css('fontVariant') === 'small-caps') {

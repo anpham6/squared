@@ -63,6 +63,7 @@ export interface CachedValue<T> {
     tagName?: string;
     containerName?: string;
     textContent?: string;
+    textEmpty?: boolean;
     src?: string;
     float?: string;
     actualParent?: T | null;

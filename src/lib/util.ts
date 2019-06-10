@@ -531,18 +531,22 @@ export function flatMultiArray<T>(list: any[]): T[] {
 }
 
 export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
-    const valid: T[] = [];
-    const invalid: T[] = [];
     const length = list.length;
+    const valid: T[] = new Array(length);
+    const invalid: T[] = new Array(length);
+    let j = 0;
+    let k = 0;
     for (let i = 0; i < length; i++) {
         const item = list[i];
         if (predicate(item, i, list)) {
-            valid.push(item);
+            valid[j++] = item;
         }
         else {
-            invalid.push(item);
+            invalid[k++] = item;
         }
     }
+    valid.length = j;
+    invalid.length = k;
     return [valid, invalid];
 }
 
@@ -559,13 +563,15 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
 }
 
 export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>) {
-    const result: T[] = [];
     const length = list.length;
+    const result: T[] = new Array(length);
+    let j = 0;
     for (let i = 0; i < length; i++) {
         if (predicate(list[i], i, list)) {
-            result.push(list[i]);
+            result[j++] = list[i];
         }
     }
+    result.length = j;
     return result;
 }
 
@@ -588,25 +594,29 @@ export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
 }
 
 export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
-    const result: U[] = [];
     const length = list.length;
+    const result: U[] = new Array(length);
+    let j = 0;
     for (let i = 0; i < length; i++) {
         const item = predicate(list[i], i, list);
         if (hasValue(item)) {
-            result.push(item);
+            result[j++] = item;
         }
     }
+    result.length = j;
     return result;
 }
 
 export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[] {
-    const result: U[] = [];
     const length = list.length;
+    const result: U[] = new Array(length);
+    let j = 0;
     for (let i = 0; i < length; i++) {
         if (predicate(list[i], i, list)) {
-            result.push(callback(list[i], i, list));
+            result[j++] = callback(list[i], i, list);
         }
     }
+    result.length = j;
     return result;
 }
 

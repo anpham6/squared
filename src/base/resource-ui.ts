@@ -698,155 +698,161 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public setValueString(node: T) {
         if (node.visible && !node.svgElement) {
-            const element = <HTMLInputElement> node.element;
             const renderParent = node.renderParent;
-            if (element && renderParent) {
-                let name = '';
-                let value = '';
-                let hint = '';
-                let trimming = false;
-                let inlined = false;
-                switch (element.tagName) {
-                    case 'INPUT':
-                        value = element.value;
-                        switch (element.type) {
-                            case 'radio':
-                            case 'checkbox':
-                                if (node.companion && !node.companion.visible) {
-                                    value = node.companion.textContent;
-                                }
-                                break;
-                            case 'submit':
-                                if (value === '' && !node.visibleStyle.backgroundImage) {
-                                    value = 'Submit';
-                                }
-                                break;
-                            case 'time':
-                                if (value === '') {
-                                    hint = '--:-- --';
-                                }
-                                break;
-                            case 'date':
-                            case 'datetime-local':
-                                if (value === '') {
-                                    switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
-                                        case 'en-US':
-                                            hint = 'mm/dd/yyyy';
-                                            break;
-                                        default:
-                                            hint = 'dd/mm/yyyy';
-                                            break;
+            if (renderParent) {
+                const element = <HTMLInputElement> node.element;
+                if (element) {
+                    let key = '';
+                    let value = '';
+                    let hint = '';
+                    let trimming = false;
+                    let inlined = false;
+                    switch (element.tagName) {
+                        case 'INPUT':
+                            value = element.value;
+                            switch (element.type) {
+                                case 'radio':
+                                case 'checkbox':
+                                    if (node.companion && !node.companion.visible) {
+                                        value = node.companion.textContent;
                                     }
-                                    if (element.type === 'datetime-local') {
-                                        hint += ' --:-- --';
+                                    break;
+                                case 'submit':
+                                    if (value === '' && !node.visibleStyle.backgroundImage) {
+                                        value = 'Submit';
                                     }
-                                }
-                                break;
-                            case 'week':
-                                if (value === '') {
-                                    hint = 'Week: --, ----';
-                                }
-                                break;
-                            case 'month':
-                                if (value === '') {
-                                    hint = '--------- ----';
-                                }
-                                break;
-                            case 'url':
-                            case 'email':
-                            case 'search':
-                            case 'number':
-                            case 'tel':
-                                if (value === '') {
-                                    hint = element.placeholder;
-                                }
-                                break;
-                            case 'file':
-                                value = $client.isUserAgent($client.USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
-                                break;
-                        }
-                        break;
-                    case 'TEXTAREA':
-                        value = element.value;
-                        break;
-                    case 'IFRAME':
-                        value = element.src;
-                        break;
-                    default:
-                        const textContent = node.textContent;
-                        if (node.plainText) {
-                            name = textContent.trim();
-                            [value] = replaceWhiteSpace(
-                                renderParent,
-                                node,
-                                element,
-                                textContent.replace(REGEXP_AMPERSAND, '&amp;')
-                            );
-                            inlined = true;
-                            trimming = true;
-                        }
-                        else if (node.inlineText) {
-                            name = textContent.trim();
-                            [value, inlined] = replaceWhiteSpace(
-                                renderParent,
-                                node,
-                                element,
-                                removeExcluded(node, element, element.children.length || element.tagName === 'CODE' ? 'innerHTML' : 'textContent')
-                            );
-                            trimming = true;
-                        }
-                        else if (textContent.trim() === '' && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
-                            value = textContent;
-                        }
-                        break;
-                }
-                if (value !== '') {
-                    if (trimming) {
-                        const previousSibling = node.siblingsLeading[0];
-                        let previousSpaceEnd = false;
-                        if (value.length > 1) {
-                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $regex.CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
-                                value = value.replace($regex.CHAR.LEADINGSPACE, '');
+                                    break;
+                                case 'time':
+                                    if (value === '') {
+                                        hint = '--:-- --';
+                                    }
+                                    break;
+                                case 'date':
+                                case 'datetime-local':
+                                    if (value === '') {
+                                        switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
+                                            case 'en-US':
+                                                hint = 'mm/dd/yyyy';
+                                                break;
+                                            default:
+                                                hint = 'dd/mm/yyyy';
+                                                break;
+                                        }
+                                        if (element.type === 'datetime-local') {
+                                            hint += ' --:-- --';
+                                        }
+                                    }
+                                    break;
+                                case 'week':
+                                    if (value === '') {
+                                        hint = 'Week: --, ----';
+                                    }
+                                    break;
+                                case 'month':
+                                    if (value === '') {
+                                        hint = '--------- ----';
+                                    }
+                                    break;
+                                case 'url':
+                                case 'email':
+                                case 'search':
+                                case 'number':
+                                case 'tel':
+                                    if (value === '') {
+                                        hint = element.placeholder;
+                                    }
+                                    break;
+                                case 'file':
+                                    value = $client.isUserAgent($client.USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
+                                    break;
                             }
-                            else if (previousSibling.naturalElement) {
-                                const textContent = previousSibling.textContent;
-                                if (textContent.length) {
-                                    previousSpaceEnd = textContent.charCodeAt(textContent.length - 1) === 32;
-                                }
+                            break;
+                        case 'TEXTAREA':
+                            value = element.value;
+                            break;
+                        case 'IFRAME':
+                            value = element.src;
+                            break;
+                        default:
+                            const textContent = node.textContent;
+                            if (node.plainText) {
+                                key = textContent.trim();
+                                [value] = replaceWhiteSpace(
+                                    renderParent,
+                                    node,
+                                    element,
+                                    textContent.replace(REGEXP_AMPERSAND, '&amp;')
+                                );
+                                inlined = true;
+                                trimming = true;
                             }
-                        }
-                        if (inlined) {
-                            const original = value;
-                            value = value.trim();
-                            if (previousSibling && $regex.CHAR.LEADINGSPACE.test(original) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
-                                value = STRING_SPACE + value;
+                            else if (node.inlineText) {
+                                key = textContent.trim();
+                                [value, inlined] = replaceWhiteSpace(
+                                    renderParent,
+                                    node,
+                                    element,
+                                    removeExcluded(node, element, element.children.length || element.tagName === 'CODE' ? 'innerHTML' : 'textContent')
+                                );
+                                trimming = true;
                             }
-                            if (!node.lineBreakTrailing && $regex.CHAR.TRAILINGSPACE.test(original)) {
-                                const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
-                                if (nextSibling && !nextSibling.blockStatic) {
-                                    value += STRING_SPACE;
-                                }
+                            else if (textContent.trim() === '' && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
+                                value = textContent;
                             }
-                        }
-                        else if (value.trim() !== '') {
-                            value = value.replace($regex.CHAR.LEADINGSPACE, previousSibling && (
-                                previousSibling.block ||
-                                previousSibling.lineBreak ||
-                                previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
-                            );
-                            value = value.replace($regex.CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
-                        }
-                        else if (!node.inlineText) {
-                            return;
-                        }
+                            break;
                     }
                     if (value !== '') {
-                        node.data(ResourceUI.KEY_NAME, 'valueString', { name, value });
+                        if (trimming) {
+                            const previousSibling = node.siblingsLeading[0];
+                            let previousSpaceEnd = false;
+                            if (value.length > 1) {
+                                if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $regex.CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
+                                    value = value.replace($regex.CHAR.LEADINGSPACE, '');
+                                }
+                                else if (previousSibling.naturalElement) {
+                                    const textContent = previousSibling.textContent;
+                                    if (textContent.length) {
+                                        previousSpaceEnd = textContent.charCodeAt(textContent.length - 1) === 32;
+                                    }
+                                }
+                            }
+                            if (inlined) {
+                                const original = value;
+                                value = value.trim();
+                                if (previousSibling && $regex.CHAR.LEADINGSPACE.test(original) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
+                                    value = STRING_SPACE + value;
+                                }
+                                if (!node.lineBreakTrailing && $regex.CHAR.TRAILINGSPACE.test(original)) {
+                                    const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
+                                    if (nextSibling && !nextSibling.blockStatic) {
+                                        value += STRING_SPACE;
+                                    }
+                                }
+                            }
+                            else if (value.trim() !== '') {
+                                value = value.replace($regex.CHAR.LEADINGSPACE, previousSibling && (
+                                    previousSibling.block ||
+                                    previousSibling.lineBreak ||
+                                    previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                    node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
+                                );
+                                value = value.replace($regex.CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
+                            }
+                            else if (!node.inlineText) {
+                                return;
+                            }
+                        }
+                        if (value !== '') {
+                            node.data(ResourceUI.KEY_NAME, 'valueString', { key, value });
+                        }
+                    }
+                    if (hint !== '') {
+                        node.data(ResourceUI.KEY_NAME, 'hintString', hint);
                     }
                 }
-                if (hint !== '') {
-                    node.data(ResourceUI.KEY_NAME, 'hintString', hint);
+                else if (node.inlineText && node.textContent) {
+                    const value = node.textContent;
+                    node.data(ResourceUI.KEY_NAME, 'valueString', { key: value, value });
                 }
             }
         }

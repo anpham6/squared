@@ -63,10 +63,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         };
     }
 
-    public static siblingIndex<T extends NodeUI>(a: T, b: T) {
-        return a.siblingIndex < b.siblingIndex ? -1 : 1;
-    }
-
     public static baseline<T extends NodeUI>(list: T[], text = false) {
         list = $util.filterArray(list, item => {
             if ((item.baseline || $css.isLength(item.verticalAlign)) && (!text || item.textElement && item.naturalElement)) {
@@ -252,46 +248,60 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static partitionRows(list: T[]) {
-        const parent = list[0].actualParent;
-        const children = parent ? parent.actualChildren as T[] : list;
-        const cleared = NodeUI.linearData(list as T[], true).cleared;
+        const parent = list[0].actualParent as T;
         const groupParent = $util.filterArray(list, node => node.groupParent);
-        const result: T[][] = [];
-        let row: T[] = [];
         function includes(node: T) {
             if (list.includes(node)) {
                 return node;
             }
-            let current = node.outerWrapper as T;
+            let current = node.outerWrapper;
             while (current) {
                 if (list.includes(current)) {
                     return current;
                 }
-                current = current.outerWrapper as T;
+                current = current.outerWrapper;
             }
             return undefined;
         }
+        let children: T[];
+        let cleared: Map<T, string> | undefined;
+        if (parent) {
+            children = parent.actualChildren as T[];
+            if (parent.floatContainer) {
+                cleared = NodeUI.linearData(list, true).cleared;
+            }
+        }
+        else {
+            children = list;
+            if (children.some(item => item.floating)) {
+                cleared = NodeUI.linearData(children, true).cleared;
+            }
+        }
+        const result: T[][] = [];
+        let row: T[] = [];
         const length = children.length;
         for (let i = 0; i < length; i++) {
             let node: T | undefined = children[i];
-            let next = false;
-            for (let j = 0; j < groupParent.length; j++) {
-                const group = groupParent[j];
-                if (group.contains(node) || group === node) {
-                    if (row.length) {
-                        result.push(row);
+            if (groupParent.length) {
+                let next = false;
+                for (let j = 0; j < groupParent.length; j++) {
+                    const group = groupParent[j];
+                    if (group.contains(node) || group === node) {
+                        if (row.length) {
+                            result.push(row);
+                        }
+                        result.push([group]);
+                        row = [];
+                        groupParent.splice(j, 1);
+                        next = true;
+                        break;
                     }
-                    result.push([group]);
-                    row = [];
-                    groupParent.splice(j, 1);
-                    next = true;
-                    break;
+                }
+                if (next) {
+                    continue;
                 }
             }
-            if (next) {
-                continue;
-            }
-            if (i === 0 || node.siblingsLeading.length === 0) {
+            if (row.length === 0) {
                 node = includes(node);
                 if (node) {
                     row.push(node);
@@ -317,11 +327,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
             }
-            if (i === length - 1 && row.length) {
-                result.push(row);
-            }
+        }
+        if (row.length) {
+            result.push(row);
         }
         return result;
+    }
+
+    public static siblingIndex<T extends NodeUI>(a: T, b: T) {
+        return a.siblingIndex < b.siblingIndex ? -1 : 1;
     }
 
     public alignmentType = 0;
@@ -506,6 +520,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this._box = $dom.assignRect(node.box);
                     this._boxReset = $dom.newBoxModel();
                     this._boxAdjustment = $dom.newBoxModel();
+                    if (this.depth === -1) {
+                        this.depth = node.depth;
+                    }
                     const actualParent = node.actualParent;
                     if (actualParent) {
                         this.actualParent = actualParent;
@@ -1002,7 +1019,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get blockStatic() {
-        return super.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK);
+        return super.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK) && !this.floating;
     }
 
     get rightAligned() {
@@ -1139,6 +1156,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         return null;
+    }
+
+    get firstChild() {
+        return this.actualChildren[0] || null;
+    }
+
+    get lastChild() {
+        const children = this.actualChildren;
+        return children.length ? children[children.length - 1] : null;
     }
 
     get singleChild() {

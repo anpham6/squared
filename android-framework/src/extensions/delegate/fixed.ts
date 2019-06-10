@@ -121,6 +121,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     }
                 }
             }
+            this.subscribers.add(container);
             return {
                 parent: container,
                 renderAs: container,
@@ -136,5 +137,16 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
             };
         }
         return undefined;
+    }
+
+    public postConstraints(node: T) {
+        node.each((item: T) => {
+            if (!item.constraint.horizontal) {
+                item.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
+            }
+            if (!item.constraint.vertical) {
+                item.anchor($const.CSS.TOP, STRING_ANDROID.PARENT);
+            }
+        });
     }
 }

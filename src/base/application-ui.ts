@@ -337,7 +337,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected cacheNodeChildren(node: T, children: T[]) {
         const length = children.length;
-        let inlineText = true;
+        let inlineText: boolean;
         if (length) {
             let siblingsLeading: T[] = [];
             let siblingsTrailing: T[] = [];
@@ -390,6 +390,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 node.inputContainer = input;
             }
             else {
+                inlineText = true;
                 const child = children[0];
                 if (child.excluded) {
                     this.processing.excluded.append(child);
@@ -408,9 +409,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 node.inputContainer = child.inputElement;
             }
         }
-        if (inlineText) {
-            node.inlineText = true;
+        else {
+            inlineText = !node.textEmpty;
         }
+        node.inlineText = inlineText;
     }
 
     protected setBaseLayout(layoutName: string) {

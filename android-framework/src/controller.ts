@@ -843,8 +843,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, adjustAbsolutePaddingOffset(node, $e.BOX_STANDARD.PADDING_BOTTOM, item.bottom));
                                     }
                                 }
+                                item.positioned = true;
                             }
-                            item.positioned = true;
                         }
                     }
                     if (pageFlow.length) {

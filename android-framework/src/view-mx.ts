@@ -506,6 +506,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public clone(id?: number, attributes = false, position = false): T {
             const node = new View(id || this.id, this.sessionId, this.element || undefined);
+            node.localSettings = { ...this.localSettings };
             if (id !== undefined) {
                 node.setControlType(this.controlName, this.containerType);
             }
@@ -1410,6 +1411,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else if (this.inputElement) {
                         switch (this.controlName) {
+                            case CONTAINER_ANDROID.BUTTON:
+                                height += 2;
+                                break;
                             case CONTAINER_ANDROID.RADIO:
                             case CONTAINER_ANDROID.CHECKBOX:
                                 height += 8;

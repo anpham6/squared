@@ -1857,16 +1857,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     set inlineText(value) {
         switch (this.tagName) {
-            case '':
             case 'INPUT':
             case 'IMG':
             case 'SELECT':
             case 'SVG':
+            case 'BR':
             case 'HR':
             case 'TEXTAREA':
+                this._inlineText = false;
                 break;
             case 'BUTTON':
-                this._inlineText = true;
+                this._inlineText = this.textContent.trim() !== '';
                 break;
             default:
                 this._inlineText = value;
@@ -2034,7 +2035,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get textEmpty() {
-        return this.inlineText && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
+        if (this._cached.textEmpty === undefined) {
+            this._cached.textEmpty = this.inlineText && this.naturalElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
+        }
+        return this._cached.textEmpty;
     }
 
     get src() {
@@ -2090,7 +2094,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get multiline() {
         if (this._cached.multiline === undefined) {
-            this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? ($session.getRangeClientRect(<Element> this._element, this.sessionId).numberOfLines as number) > 0 : false;
+            this._cached.multiline = this.plainText || this._element && this.inlineText && (this.inlineFlow || this.length === 0) ? ($session.getRangeClientRect(<Element> this._element, this.sessionId).numberOfLines as number) > 0 : false;
         }
         return this._cached.multiline;
     }
@@ -2201,7 +2205,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get absoluteParent() {
         if (this._cached.absoluteParent === undefined) {
             let current = this.actualParent;
-            if (this.naturalElement && !this.pageFlow) {
+            if (!this.pageFlow) {
                 while (current && current.id !== 0) {
                     const position = current.cssInitial('position', false, true);
                     if (current.documentBody || position !== 'static' && position !== 'initial' && position !== 'unset') {
