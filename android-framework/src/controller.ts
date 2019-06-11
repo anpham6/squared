@@ -188,7 +188,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
         const renderParent = <View> node.renderParent;
         if (renderParent) {
             function setAlignmentBlock() {
-                if (renderParent.groupParent) {
+                if (renderParent.nodeGroup) {
                     renderParent.addAlign($e.NODE_ALIGNMENT.BLOCK);
                     renderParent.unsetCache('blockStatic');
                 }
@@ -342,20 +342,10 @@ function getTextBottom<T extends View>(nodes: T[]): T | undefined {
 
 function getAnchorDirection(reverse: boolean) {
     if (reverse) {
-        return {
-            anchorStart: $const.CSS.RIGHT,
-            anchorEnd: $const.CSS.LEFT,
-            chainStart: $c.STRING_BASE.RIGHT_LEFT,
-            chainEnd: $c.STRING_BASE.LEFT_RIGHT
-        };
+        return [$const.CSS.RIGHT, $const.CSS.LEFT, $c.STRING_BASE.RIGHT_LEFT, $c.STRING_BASE.LEFT_RIGHT];
     }
     else {
-        return {
-            anchorStart: $const.CSS.LEFT,
-            anchorEnd: $const.CSS.RIGHT,
-            chainStart: $c.STRING_BASE.LEFT_RIGHT,
-            chainEnd: $c.STRING_BASE.RIGHT_LEFT
-        };
+        return [$const.CSS.LEFT, $const.CSS.RIGHT, $c.STRING_BASE.LEFT_RIGHT, $c.STRING_BASE.RIGHT_LEFT];
     }
 }
 
@@ -495,7 +485,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.setType(CONTAINER_NODE.CONSTRAINT, $e.NODE_ALIGNMENT.ABSOLUTE | $e.NODE_ALIGNMENT.UNKNOWN);
         }
         else if (layout.visible.length <= 1) {
-            const child = node.find(item => item.visible) as T;
+            const child = node.find((item: T) => item.visible) as T;
             if (child) {
                 if (node.documentRoot && isTargeted(node, child)) {
                     node.hide();
@@ -577,7 +567,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public processUnknownChild(layout: $LayoutUI<T>) {
         const node = layout.node;
         const style = node.visibleStyle;
-        if (node.textContent.length && (node.inlineText || style.borderWidth)) {
+        if (node.inlineText && (!node.textEmpty || style.borderWidth)) {
             layout.setType(CONTAINER_NODE.TEXT);
         }
         else if (node.blockStatic && !node.overflowX && !node.overflowY && (style.borderWidth || style.backgroundImage || node.paddingTop + node.paddingBottom > 0)) {
@@ -599,7 +589,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             return { layout, next: true };
         }
         else {
-            layout.setType(style.background || node.overflowX || node.overflowY ? CONTAINER_NODE.TEXT : CONTAINER_NODE.FRAME);
+            layout.setType(style.background ? CONTAINER_NODE.TEXT : CONTAINER_NODE.FRAME);
         }
         return { layout };
     }
@@ -1298,8 +1288,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public addGuideline(node: T, parent: T, orientation?: string, percent = false, opposite = false) {
-        const boxParent = parent.groupParent && !(node.documentParent as T).hasAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
         const absoluteParent = node.absoluteParent as T;
+        const boxParent = parent.nodeGroup && !(node.documentParent as T).hasAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
         GUIDELINE_AXIS.forEach(value => {
             if (!node.constraint[value] && (!orientation || value === orientation)) {
                 const horizontal = value === STRING_ANDROID.HORIZONTAL;
@@ -1397,7 +1387,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     location = bounds[LT] - box[!opposite ? LT : RB];
-                    if (!horizontal && !boxParent.groupParent && boxParent !== absoluteParent && absoluteParent.getBox($e.BOX_STANDARD.MARGIN_TOP)[0] === 1) {
+                    if (!horizontal && !boxParent.nodeGroup && boxParent !== absoluteParent && absoluteParent.getBox($e.BOX_STANDARD.MARGIN_TOP)[0] === 1) {
                         location -= absoluteParent.marginTop;
                     }
                     beginPercent += 'begin';
@@ -1467,12 +1457,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
+                    let resourceValue: string;
+                    if (percent) {
+                        resourceValue = location.toString();
+                    }
+                    else {
+                        resourceValue = `@dimen/${Resource.insertStoredAsset('dimens', `constraint_guideline_${!opposite ? LT : RB}`, $css.formatPX(location))}`;
+                    }
                     const options = createViewAttribute(
                         undefined,
                         { orientation: horizontal ? STRING_ANDROID.VERTICAL : STRING_ANDROID.HORIZONTAL },
-                        { [beginPercent]: percent ? location.toString() : $css.formatPX(location) }
+                        { [beginPercent]: resourceValue }
                     );
-                    this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(CONTAINER_ANDROID.GUIDELINE, options));
+                    this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(CONTAINER_ANDROID.GUIDELINE, options), false);
                     const documentId = options.documentId;
                     if (documentId) {
                         node.anchor(LT, documentId, true);
@@ -1488,7 +1485,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public addBarrier(nodes: T[], barrierDirection: string) {
-        const ids = [];
+        const unbound = [];
         for (const node of nodes) {
             if (node.constraint.barrier === undefined) {
                 node.constraint.barrier = {};
@@ -1496,19 +1493,21 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             else if (node.constraint.barrier[barrierDirection]) {
                 continue;
             }
-            node.constraint.barrier[barrierDirection] = true;
-            ids.push(getDocumentId(node.documentId));
+            unbound.push(node);
         }
-        if (ids.length) {
+        if (unbound.length) {
             const options = createViewAttribute(
                 undefined,
                 undefined,
                 {
                     barrierDirection,
-                    constraint_referenced_ids: ids.join(',')
+                    constraint_referenced_ids: $util.objectMap(unbound, item => getDocumentId(item.documentId)).join(',')
                 }
             );
-            this.addAfterOutsideTemplate(nodes[nodes.length - 1].id, this.renderNodeStatic(CONTAINER_ANDROID.BARRIER, options));
+            this.addAfterOutsideTemplate(unbound[unbound.length - 1].id, this.renderNodeStatic(CONTAINER_ANDROID.BARRIER, options), false);
+            for (const node of unbound) {
+                (node.constraint.barrier as {})[barrierDirection] = options.documentId;
+            }
             return options.documentId;
         }
         return '';
@@ -1544,8 +1543,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     else {
-                        if (current !== node && (current.constraint.barrier === undefined || !current.constraint.barrier.bottom)) {
-                            const documentId = this.addBarrier([current], $const.CSS.BOTTOM);
+                        if (current !== node) {
+                            let documentId: string | undefined;
+                            if (current.constraint.barrier === undefined || !current.constraint.barrier.bottom) {
+                                documentId = this.addBarrier([current], $const.CSS.BOTTOM);
+                            }
+                            else {
+                                documentId = current.constraint.barrier.bottom;
+                            }
                             if (documentId) {
                                 current.anchor($c.STRING_BASE.BOTTOM_TOP, documentId);
                             }
@@ -1664,17 +1669,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     protected processRelativeHorizontal(node: T, children: T[]) {
         const rowsLeft: T[][] = [];
-        const rowsRight: T[][] = [];
+        let rowsRight: T[][] | undefined;
         let alignmentMultiLine = false;
         let sortPositionAuto = false;
         if (node.hasAlign($e.NODE_ALIGNMENT.VERTICAL)) {
             let previous: T | undefined;
             for (const item of children) {
-                if (previous === undefined) {
-                    item.anchor($const.CSS.TOP, 'true');
+                if (previous) {
+                    item.anchor($c.STRING_BASE.TOP_BOTTOM, previous.documentId);
                 }
                 else {
-                    item.anchor($c.STRING_BASE.TOP_BOTTOM, previous.documentId);
+                    item.anchor($const.CSS.TOP, 'true');
                 }
                 if (item.pageFlow) {
                     rowsLeft.push([item]);
@@ -1753,6 +1758,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     alignParent = $const.CSS.RIGHT;
+                    rowsRight = [];
                     rows = rowsRight;
                 }
                 let previousMultiline = false;
@@ -1800,19 +1806,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         anchored = false;
                     }
-                    if (previous === undefined) {
-                        if (leftForward) {
-                            if (!anchored) {
-                                item.anchor(alignParent, 'true');
-                            }
-                        }
-                        rows.push([item]);
-                    }
-                    else {
+                    if (previous) {
                         const items = rows[rows.length - 1];
                         let maxWidth = 0;
                         let baseWidth = 0;
-                        const checkFloatWrap = () => previous.floating && previous.alignParent($const.CSS.LEFT) && Math.floor(rowWidth + item.width) < boxWidth;
+                        const checkFloatWrap = () => previous.floating && previous.alignParent($const.CSS.LEFT) && (item.multiline || Math.floor(rowWidth + item.width) < boxWidth);
                         const checkWrapWidth = () => {
                             baseWidth = rowWidth + item.marginLeft;
                             if (previousRowLeft && !items.includes(previousRowLeft)) {
@@ -1839,7 +1837,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (adjustFloatingNegativeMargin(item, previous)) {
                             alignSibling = '';
                         }
-                        const viewGroup = item.groupParent && !item.hasAlign($e.NODE_ALIGNMENT.SEGMENTED);
+                        const viewGroup = item.nodeGroup && !item.hasAlign($e.NODE_ALIGNMENT.SEGMENTED);
                         let retainMultiline = false;
                         siblings = !viewGroup && item.inlineVertical && previous.inlineVertical ? $dom.getElementsBetweenSiblings(previous.element, <Element> item.element, true) : undefined;
                         const startNewRow = () => {
@@ -1920,11 +1918,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                             if (!previous.floating && !retainMultiline && item.multiline && !item.hasPX($const.CSS.WIDTH)) {
-                                item.multiline = false;
                                 multiline = false;
+                                item.multiline = false;
                             }
                             items.push(item);
                         }
+                    }
+                    else {
+                        if (leftForward) {
+                            if (!anchored) {
+                                item.anchor(alignParent, 'true');
+                            }
+                        }
+                        rows.push([item]);
                     }
                     if (item.float === $const.CSS.LEFT && leftAlign) {
                         if (previousRowLeft) {
@@ -1952,15 +1958,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             });
         }
-        if (rowsLeft.length > 1 || rowsRight.length > 1) {
+        if (rowsLeft.length > 1 || rowsRight && rowsRight.length > 1) {
             alignmentMultiLine = true;
         }
-        [rowsLeft, rowsRight].forEach(rows => {
-            let previousBaseline: T | undefined;
+        const setVerticalAlign = (rows: T[][]) => {
+            let previousBaseline: T | null = null;
             const length = rows.length;
             for (let i = 0; i < length; i++) {
                 const items = rows[i];
-                let baseline: T | undefined;
+                let baseline: T | null;
                 if (items.length > 1) {
                     let textBottom = getTextBottom(items);
                     baseline = $NodeUI.baseline(textBottom ? items.filter(item => item !== textBottom) : items);
@@ -1973,10 +1979,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             textBottom = undefined;
                         }
                     }
+                    else {
+                        textBottom = undefined;
+                    }
                     const baselineAlign: T[] = [];
                     let documentId = i === 0 ? 'true' : (baseline ? baseline.documentId : '');
                     let maxCenterHeight = 0;
-                    let textBaseline: T | undefined;
+                    let textBaseline: T | null = null;
                     for (const item of items) {
                         if (item !== baseline && item !== textBottom) {
                             if (item.baseline) {
@@ -1985,7 +1994,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             else if (item.inlineVertical) {
                                 switch (item.verticalAlign) {
                                     case 'text-top':
-                                        if (textBaseline === undefined) {
+                                        if (textBaseline === null) {
                                             textBaseline = $NodeUI.baseline(items, true);
                                         }
                                         if (textBaseline) {
@@ -1999,7 +2008,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         if (!item.baselineAltered) {
                                             item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, Math.ceil(item.fontSize * this.localSettings.deviations.superscriptTopOffset) * -1);
                                         }
-                                    case $const.CSS.TOP:
+                                    case 'top':
                                         if (documentId !== '' && documentId !== item.documentId) {
                                             item.anchor($const.CSS.TOP, documentId);
                                         }
@@ -2007,7 +2016,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             item.anchor($const.CSS.TOP, baseline.documentId);
                                         }
                                         break;
-                                    case $const.CSS.MIDDLE:
+                                    case 'middle':
                                         const height = Math.max(item.actualHeight, item.lineHeight);
                                         if (!alignmentMultiLine) {
                                             item.anchor('centerVertical', 'true');
@@ -2042,7 +2051,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         if (!item.baselineAltered) {
                                             item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(item.fontSize * this.localSettings.deviations.subscriptBottomOffset) * -1);
                                         }
-                                    case $const.CSS.BOTTOM:
+                                    case 'bottom':
                                         if (documentId !== '' && !$util.withinRange(node.bounds.height, item.bounds.height)) {
                                             if (!node.hasHeight && documentId === 'true') {
                                                 if (!alignmentMultiLine) {
@@ -2071,7 +2080,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         else if (baseline.textElement && maxCenterHeight > baseline.actualHeight) {
                             baseline.anchor('centerVertical', 'true');
-                            baseline = undefined;
+                            baseline = null;
                         }
                     }
                     else if (baselineAlign.length && baselineAlign.length < items.length) {
@@ -2084,9 +2093,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    const lastItem = items[items.length - 1];
-                    if (lastItem.textElement && !lastItem.multiline && !checkSingleLine(lastItem, false, false)) {
-                        lastItem.android('maxLines', '1');
+                    const itemEnd = items[items.length - 1];
+                    if (itemEnd.textElement && !itemEnd.multiline && !checkSingleLine(itemEnd, false, false)) {
+                        itemEnd.android('maxLines', '1');
                     }
                 }
                 else {
@@ -2094,7 +2103,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     baseline.baselineActive = true;
                 }
                 if (i > 0) {
-                    if (previousBaseline === undefined) {
+                    if (previousBaseline === null) {
                         const previousRow = rows[i - 1];
                         previousBaseline = previousRow.find(sibling => !sibling.floating) || previousRow[0];
                         let valid = false;
@@ -2115,9 +2124,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 previousBaseline = baseline;
             }
-        });
+        };
+        setVerticalAlign(rowsLeft);
+        if (rowsRight) {
+            setVerticalAlign(rowsRight);
+        }
         if (alignmentMultiLine) {
-            node.horizontalRows = rowsLeft.concat(rowsRight);
+            node.horizontalRows = rowsRight ? rowsLeft.concat(rowsRight) : rowsLeft;
         }
         if (sortPositionAuto) {
             const renderChildren = node.renderChildren;
@@ -2142,13 +2155,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const textBaseline = $NodeUI.baseline(children, true);
         const reverse = node.hasAlign($e.NODE_ALIGNMENT.RIGHT);
         const textBottom = getTextBottom(children);
-        const { anchorStart, anchorEnd, chainStart, chainEnd } = getAnchorDirection(reverse);
-        if (!node.hasWidth && children.some(item => item.percentWidth)) {
-            node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
-        }
+        const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
         let bias = 0;
-        let tallest: T | undefined;
-        let bottom: T | undefined;
         switch (node.cssAscend('textAlign', true)) {
             case $const.CSS.CENTER:
                 bias = 0.5;
@@ -2161,15 +2169,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
         }
         sortHorizontalFloat(children);
+        if (!node.hasPX($const.CSS.WIDTH) && children.some(item => item.percentWidth)) {
+            node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
+        }
+        let tallest: T | undefined;
+        let bottom: T | undefined;
         let previous: T | undefined;
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const item = children[i];
-            if (previous === undefined) {
-                item.anchor(anchorStart, STRING_ANDROID.PARENT);
-                item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', bias);
-            }
-            else {
+            if (previous) {
                 if (item.pageFlow) {
                     previous.anchor(chainEnd, item.documentId);
                     item.anchor(chainStart, previous.documentId);
@@ -2180,6 +2189,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else if (item.positionAuto) {
                     item.anchor(chainStart, previous.documentId);
                 }
+            }
+            else {
+                item.anchor(anchorStart, STRING_ANDROID.PARENT);
+                item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', bias);
             }
             if (item.pageFlow) {
                 if (item !== baseline) {
@@ -2197,7 +2210,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     alignTop = true;
                                 }
                                 break;
-                            case $const.CSS.MIDDLE:
+                            case 'middle':
                                 if (baseline && !baseline.textElement || textBottom) {
                                     alignTop = true;
                                 }
@@ -2215,7 +2228,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                     break;
                                 }
-                            case $const.CSS.BOTTOM:
+                            case 'bottom':
                                 if (bottom === undefined) {
                                     for (const child of children) {
                                         if (!child.baseline && (bottom === undefined || child.linear.bottom > bottom.linear.bottom)) {
@@ -2231,7 +2244,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 break;
                             case 'baseline':
-                                if (baseline === undefined || item.blockVertical || !item.textElement && getMaxHeight(item) > getMaxHeight(baseline)) {
+                                if (baseline === null || item.blockVertical || !item.textElement && getMaxHeight(item) > getMaxHeight(baseline)) {
                                     alignTop = true;
                                 }
                                 else {
@@ -2270,13 +2283,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (baseline) {
             if (tallest && tallest !== baseline && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
                 switch (tallest.verticalAlign) {
-                    case $const.CSS.MIDDLE:
+                    case 'middle':
                         baseline.anchorParent(STRING_ANDROID.VERTICAL, undefined, undefined, true);
                         break;
                     case 'baseline':
                         baseline.anchor('baseline', tallest.documentId);
                         break;
-                    case $const.CSS.BOTTOM:
+                    case 'bottom':
                     case 'text-bottom':
                         baseline.anchor($const.CSS.BOTTOM, tallest.documentId);
                         break;
@@ -2551,8 +2564,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 if (!previousRow) {
                     let maxColumnHeight = 0;
-                    const lengthC = columnHeight.length;
-                    for (let j = 0; j < lengthC; j++) {
+                    const lengthE = columnHeight.length;
+                    for (let j = 0; j < lengthE; j++) {
                         if (columnHeight[j] >= maxColumnHeight) {
                             previousRow = columns[j].pop() as T;
                             maxColumnHeight = columnHeight[j];
@@ -2588,7 +2601,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     return;
                 }
                 const reverse = seg === floatingRight;
-                const { anchorStart, anchorEnd, chainStart, chainEnd } = getAnchorDirection(reverse);
+                const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
                 const rowStart = seg[0];
                 const rowEnd = seg[lengthA - 1];
                 rowStart.anchor(anchorStart, STRING_ANDROID.PARENT);

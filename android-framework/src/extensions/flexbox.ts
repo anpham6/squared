@@ -328,7 +328,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     let maxSize = 0;
                     let growAvailable = 0;
                     let parentEnd = true;
-                    let baseline: T | undefined;
+                    let baseline: T | null = null;
                     if (opposing) {
                         if (dimensionInverse) {
                             let chainStyle = 'spread';
@@ -454,7 +454,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 case 'baseline':
                                     if (horizontal) {
-                                        if (baseline === undefined) {
+                                        if (baseline === null) {
                                             baseline = $NodeUI.baseline(seg);
                                         }
                                         if (baseline && chain !== baseline) {

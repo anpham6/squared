@@ -9,16 +9,8 @@ const $const = squared.lib.constant;
 export default abstract class NodeGroupUI extends NodeUI {
     public init() {
         if (this.length) {
-            let containerIndex = Number.POSITIVE_INFINITY;
-            for (const item of this.children as NodeUI[]) {
-                containerIndex = Math.min(containerIndex, item.containerIndex);
+            for (const item of this.children) {
                 item.parent = this;
-            }
-            if (this.containerIndex === Number.POSITIVE_INFINITY) {
-                this.containerIndex = containerIndex;
-            }
-            if (this.parent) {
-                (<NodeUI> this.parent).sort();
             }
             this.setBounds();
             this.saveAsInitial();
@@ -148,10 +140,6 @@ export default abstract class NodeGroupUI extends NodeUI {
         );
     }
 
-    get groupParent() {
-        return true;
-    }
-
     get tagName() {
         return '';
     }
@@ -162,6 +150,10 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get multiline() {
         return false;
+    }
+
+    get nodeGroup() {
+        return true;
     }
 
     get firstChild() {

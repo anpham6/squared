@@ -10,7 +10,7 @@ export interface Constraint {
     current: ObjectMap<{ documentId: string; horizontal: boolean; }>;
     horizontal: boolean;
     vertical: boolean;
-    barrier?: ObjectMap<boolean>;
+    barrier?: ObjectMap<string>;
     guideline?: ObjectMapNested<ObjectMapNested<number>>;
 }
 

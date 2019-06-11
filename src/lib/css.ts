@@ -94,6 +94,9 @@ export function getSpecificity(value: string) {
                     continue;
             }
         }
+        else if (segment.endsWith('|*')) {
+            continue;
+        }
         else if (segment.charAt(0) === '*') {
             segment = segment.substring(1);
         }
@@ -110,7 +113,9 @@ export function getSpecificity(value: string) {
         while ((subMatch = CSS_RX.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
             if (subMatch[0].startsWith(':not(')) {
                 if (subMatch[1]) {
+                    const lastIndex = CSS_RX.SELECTOR_G.lastIndex;
                     result += getSpecificity(subMatch[1]);
+                    CSS_RX.SELECTOR_G.lastIndex = lastIndex;
                 }
             }
             else {

@@ -22,10 +22,10 @@ declare global {
             renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
             createNodeGroup(node: T, children: T[], parent?: T, traverse?: boolean): T;
             sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
-            addBeforeOutsideTemplate(id: number, value: string, index?: number): void;
-            addBeforeInsideTemplate(id: number, value: string, index?: number): void;
-            addAfterInsideTemplate(id: number, value: string, index?: number): void;
-            addAfterOutsideTemplate(id: number, value: string, index?: number): void;
+            addBeforeOutsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
+            addBeforeInsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
+            addAfterInsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
+            addAfterOutsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
             getBeforeOutsideTemplate(id: number, depth: number): string;
             getBeforeInsideTemplate(id: number, depth: number): string;
             getAfterInsideTemplate(id: number, depth: number): string;

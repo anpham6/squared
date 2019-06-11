@@ -113,7 +113,11 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill');
         if (spaceSpan > 0) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
-            controller.addAfterOutsideTemplate(node.id, controller.renderSpace(STRING_ANDROID.WRAP_CONTENT, STRING_ANDROID.WRAP_CONTENT, spaceSpan));
+            controller.addAfterOutsideTemplate(
+                node.id,
+                controller.renderSpace(STRING_ANDROID.WRAP_CONTENT, STRING_ANDROID.WRAP_CONTENT, spaceSpan),
+                false
+            );
         }
         if (parent.css('empty-cells') === 'hide' && node.actualChildren.length === 0 && node.textContent === '') {
             node.hide(true);

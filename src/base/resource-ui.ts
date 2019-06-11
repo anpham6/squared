@@ -17,9 +17,6 @@ const $util = squared.lib.util;
 
 const STRING_SPACE = '&#160;';
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
-const REGEXP_U00A0  = /\u00A0/g;
-const REGEXP_NEWLINE = /\n/g;
-const REGEXP_AMPERSAND = /&/g;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 let REGEXP_COLORSTOP: RegExp | undefined;
 
@@ -172,10 +169,10 @@ function parseAngle(value: string) {
 }
 
 function replaceWhiteSpace(parent: NodeUI, node: NodeUI, element: Element, value: string): [string, boolean] {
-    value = value.replace(REGEXP_U00A0, STRING_SPACE);
+    value = value.replace(/\u00A0/g, STRING_SPACE);
     switch (node.css('whiteSpace')) {
         case 'nowrap':
-            value = value.replace(REGEXP_NEWLINE, ' ');
+            value = value.replace(/\n/g, ' ');
             break;
         case 'pre':
         case 'pre-wrap':
@@ -183,19 +180,19 @@ function replaceWhiteSpace(parent: NodeUI, node: NodeUI, element: Element, value
                 value = value.replace(/^\s*?\n/, '');
             }
             value = value
-                .replace(REGEXP_NEWLINE, '\\n')
+                .replace(/\n/g, '\\n')
                 .replace(/\s/g, STRING_SPACE);
             break;
         case 'pre-line':
             value = value
-                .replace(REGEXP_NEWLINE, '\\n')
+                .replace(/\n/g, '\\n')
                 .replace(/\s+/g, ' ');
             break;
         default:
-            if (element.previousSibling && ControllerUI.causesLineBreak(<Element> element.previousSibling, node.sessionId) || node.singleChild && node.htmlElement) {
+            if (element.previousSibling && ControllerUI.causesLineBreak(<Element> element.previousSibling, node.sessionId) || node.onlyChild && node.htmlElement) {
                 value = value.replace($regex.CHAR.LEADINGSPACE, '');
             }
-            if (element.nextSibling && ControllerUI.causesLineBreak(<Element> element.nextSibling, node.sessionId) || node.singleChild && node.htmlElement) {
+            if (element.nextSibling && ControllerUI.causesLineBreak(<Element> element.nextSibling, node.sessionId) || node.onlyChild && node.htmlElement) {
                 value = value.replace($regex.CHAR.TRAILINGSPACE, '');
             }
             return [value, false];
@@ -644,7 +641,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     boxStyle.backgroundImage = images;
                 }
             }
-            const backgroundColor = node.documentParent.visible ? node.backgroundColor : node.css('backgroundColor');
+            const backgroundColor = (node.documentParent as T).visible ? node.backgroundColor : node.css('backgroundColor');
             if (backgroundColor !== '') {
                 const color = $color.parseColor(backgroundColor, opacity);
                 boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
@@ -667,7 +664,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public setFontStyle(node: T) {
-        if (!(node.element === null && !node.inlineText || node.renderChildren.length || node.imageElement || node.svgElement || node.tagName === 'HR' || node.textEmpty && !node.visibleStyle.background)) {
+        if (!(node.element === null && !node.inlineText || node.renderChildren.length || node.imageElement || node.svgElement || node.tagName === 'HR' || node.textElement && node.textEmpty && !node.visibleStyle.background)) {
             const color = $color.parseColor(node.css('color'), node.css('opacity'));
             let fontWeight = node.css('fontWeight');
             if (!$util.isNumber(fontWeight)) {
@@ -781,7 +778,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     renderParent,
                                     node,
                                     element,
-                                    textContent.replace(REGEXP_AMPERSAND, '&amp;')
+                                    textContent.replace(/&/g, '&amp;')
                                 );
                                 inlined = true;
                                 trimming = true;

@@ -1,6 +1,5 @@
 import { AccessibilityOptions } from '../@types/extension';
 
-import NodeList from '../nodelist';
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
@@ -12,7 +11,7 @@ export default abstract class Accessibility<T extends NodeUI> extends ExtensionU
     };
 
     public afterInit() {
-        for (const node of this.application.processing.cache as NodeList<T>) {
+        for (const node of this.application.processing.cache) {
             if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (node.containerName) {
                     case 'INPUT_IMAGE':

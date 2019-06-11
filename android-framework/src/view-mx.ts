@@ -666,7 +666,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         adjustViewBounds = true;
                     }
                     if (layoutWidth === '') {
-                        if (this.textElement && this.inlineText && this.textEmpty && !this.visibleStyle.backgroundImage) {
+                        if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
                             layoutWidth = $css.formatPX(this.actualWidth);
                         }
                         else {
@@ -753,7 +753,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         adjustViewBounds = true;
                     }
                     if (layoutHeight === '') {
-                        if (this.textEmpty && !this.visibleStyle.backgroundImage) {
+                        if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
                             if (renderParent.layoutConstraint && this.alignParent($const.CSS.TOP) && this.actualHeight >= (this.absoluteParent || documentParent).box.height) {
                                 layoutHeight = $const.CSS.PX_0;
                                 this.anchor($const.CSS.BOTTOM, STRING_ANDROID.PARENT);
@@ -762,7 +762,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 layoutHeight = $css.formatPX(this.actualHeight);
                             }
                         }
-                        else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.hasPX($const.CSS.TOP) && this.hasPX($const.CSS.BOTTOM) || this.outerWrapper === undefined && this.singleChild && renderParent.flexElement && !renderParent.inlineHeight && renderParent.css('flexDirection') === 'row') {
+                        else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.hasPX($const.CSS.TOP) && this.hasPX($const.CSS.BOTTOM) || this.outerWrapper === undefined && this.onlyChild && renderParent.flexElement && !renderParent.inlineHeight && renderParent.css('flexDirection') === 'row') {
                             layoutHeight = STRING_ANDROID.MATCH_PARENT;
                         }
                     }
@@ -832,7 +832,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 const outerRenderParent = (node.renderParent || renderParent) as T;
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
-                if (this.groupParent && !alignFloat && textAlign === '') {
+                if (this.nodeGroup && !alignFloat && textAlign === '') {
                     const actualParent = this.actualParent;
                     if (actualParent) {
                         textAlign = checkTextAlign(actualParent.cssInitial('textAlign', true));
@@ -866,11 +866,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (this.rightAligned || this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
                             floating = $const.CSS.RIGHT;
                         }
-                        else if (this.groupParent && alignFloat && !this.renderChildren.some(item => item.rightAligned)) {
+                        else if (this.nodeGroup && alignFloat && !this.renderChildren.some(item => item.rightAligned)) {
                             floating = $const.CSS.LEFT;
                         }
                     }
-                    else if (node.groupParent && node.layoutVertical && this.rightAligned) {
+                    else if (node.nodeGroup && node.layoutVertical && this.rightAligned) {
                         node.renderEach((item: T) => {
                             if (item.rightAligned) {
                                 item.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, $const.CSS.RIGHT);
@@ -882,11 +882,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (this.floating) {
                                 floating = this.float;
                             }
-                            if (floating !== '' && (renderParent.inlineWidth || !renderParent.documentRoot && this.singleChild)) {
+                            if (floating !== '' && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
                                 renderParent.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, floating);
                             }
                         }
-                        if (this.singleChild && renderParent.display === 'table-cell') {
+                        if (this.onlyChild && renderParent.display === 'table-cell') {
                             let gravity: string;
                             switch (renderParent.css('verticalAlign')) {
                                 case $const.CSS.TOP:
@@ -948,7 +948,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (attr === STRING_ANDROID.LAYOUT_GRAVITY) {
                 const renderParent = this.renderParent;
                 if (renderParent) {
-                    if (isHorizontalAlign(alignment) && (this.blockWidth || renderParent.inlineWidth && this.singleChild || !overwrite && this.outerWrapper && this.hasPX('maxWidth'))) {
+                    if (isHorizontalAlign(alignment) && (this.blockWidth || renderParent.inlineWidth && this.onlyChild || !overwrite && this.outerWrapper && this.hasPX('maxWidth'))) {
                         return;
                     }
                     else if (renderParent.layoutConstraint) {
@@ -1096,7 +1096,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else if (this.inline) {
                             const boxRight = this.documentParent.box.right;
                             if (Math.floor(this.bounds.right) > boxRight) {
-                                if (this.textElement && !this.singleChild && !this.alignParent($const.CSS.LEFT)) {
+                                if (this.textElement && !this.onlyChild && !this.alignParent($const.CSS.LEFT)) {
                                     setSingleLine(this);
                                 }
                                 continue;

@@ -1,5 +1,6 @@
 import { GridCellData, GridData } from '../../../src/base/@types/extension';
 
+import Resource from '../resource';
 import View from '../view';
 
 import { STRING_ANDROID } from '../lib/constant';
@@ -116,7 +117,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 node.renderEach(item => {
                     const cellData: GridCellData<T> = item.data($c.EXT_NAME.GRID, 'cellData');
                     if (cellData) {
-                        const actualParent = item.actualParent;
+                        const actualParent = item.actualParent as T;
                         if (actualParent && !actualParent.visible) {
                             if (cellData.cellStart) {
                                 mainData.paddingTop = actualParent.paddingTop + actualParent.marginTop;
@@ -132,7 +133,15 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                                     }
                                     else {
                                         const controller = <android.base.Controller<T>> this.application.controllerHandler;
-                                        controller.addAfterOutsideTemplate(item.id, controller.renderSpace(STRING_ANDROID.MATCH_PARENT, $css.formatPX(heightBottom), mainData.columnCount));
+                                        controller.addAfterOutsideTemplate(
+                                            item.id,
+                                            controller.renderSpace(
+                                                STRING_ANDROID.MATCH_PARENT,
+                                                `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_grid_space_`, $css.formatPX(heightBottom))}`,
+                                                mainData.columnCount
+                                            ),
+                                            false
+                                        );
                                     }
                                 }
                                 mainData.paddingRight = Math.max(actualParent.marginRight + actualParent.paddingRight, mainData.paddingRight);

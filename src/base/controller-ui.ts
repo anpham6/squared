@@ -32,6 +32,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public abstract readonly localSettings: ControllerUISettings;
 
+    private _requireFormat = false;
     private _beforeOutside: ObjectIndex<string[]> = {};
     private _beforeInside: ObjectIndex<string[]> = {};
     private _afterInside: ObjectIndex<string[]> = {};
@@ -57,6 +58,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract get containerTypePercent(): LayoutType;
 
     public reset() {
+        this._requireFormat = false;
         this._beforeOutside = {};
         this._beforeInside = {};
         this._afterInside = {};
@@ -231,7 +233,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         $session.setElementCache(element, 'styleMap', this.application.processing.sessionId, styleMap);
     }
 
-    public addBeforeOutsideTemplate(id: number, value: string, index = -1) {
+    public addBeforeOutsideTemplate(id: number, value: string, format = true, index = -1) {
         if (this._beforeOutside[id] === undefined) {
             this._beforeOutside[id] = [];
         }
@@ -241,9 +243,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             this._beforeOutside[id].push(value);
         }
+        if (format) {
+            this._requireFormat = true;
+        }
     }
 
-    public addBeforeInsideTemplate(id: number, value: string, index = -1) {
+    public addBeforeInsideTemplate(id: number, value: string, format = true, index = -1) {
         if (this._beforeInside[id] === undefined) {
             this._beforeInside[id] = [];
         }
@@ -253,9 +258,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             this._beforeInside[id].push(value);
         }
+        if (format) {
+            this._requireFormat = true;
+        }
     }
 
-    public addAfterInsideTemplate(id: number, value: string, index = -1) {
+    public addAfterInsideTemplate(id: number, value: string, format = true, index = -1) {
         if (this._afterInside[id] === undefined) {
             this._afterInside[id] = [];
         }
@@ -265,9 +273,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             this._afterInside[id].push(value);
         }
+        if (format) {
+            this._requireFormat = true;
+        }
     }
 
-    public addAfterOutsideTemplate(id: number, value: string, index = -1) {
+    public addAfterOutsideTemplate(id: number, value: string, format = true, index = -1) {
         if (this._afterOutside[id] === undefined) {
             this._afterOutside[id] = [];
         }
@@ -276,6 +287,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
         else {
             this._afterOutside[id].push(value);
+        }
+        if (format) {
+            this._requireFormat = true;
         }
     }
 
@@ -297,7 +311,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public hasAppendProcessing(id?: number) {
         if (id === undefined) {
-            return Object.keys(this._beforeOutside).length > 0 || Object.keys(this._beforeInside).length > 0 || Object.keys(this._afterInside).length > 0 || Object.keys(this._afterOutside).length > 0;
+            return this._requireFormat;
         }
         return this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined;
     }

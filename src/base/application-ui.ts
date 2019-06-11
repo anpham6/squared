@@ -292,7 +292,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public resolveTarget(target: string) {
-        for (const parent of this.processing.cache as NodeList<T>) {
+        for (const parent of this.processing.cache) {
             if (parent.elementId === target || parent.controlId === target) {
                 return parent;
             }
@@ -472,7 +472,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    if (length > 1 && k < length - 1 && nodeY.pageFlow && !nodeY.groupParent && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (length > 1 && k < length - 1 && nodeY.pageFlow && !nodeY.nodeGroup && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let extended = false;
@@ -734,10 +734,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         CACHE.sort((a, b) => {
             if (a.depth === b.depth) {
-                if (a.groupParent && (b.length === 0 || b.naturalElement)) {
+                if (a.nodeGroup && (b.length === 0 || b.naturalElement)) {
                     return -1;
                 }
-                else if (b.groupParent && (a.length === 0 || a.naturalElement)) {
+                else if (b.nodeGroup && (a.length === 0 || a.naturalElement)) {
                     return 1;
                 }
                 return 0;
@@ -1082,7 +1082,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         layoutGroup.itemCount = children.length;
                         this.addLayout(layoutGroup);
                         for (let node of children) {
-                            if (!node.groupParent) {
+                            if (!node.nodeGroup) {
                                 node = controller.createNodeGroup(node, [node], basegroup, true);
                             }
                             this.addLayout(new LayoutUI(

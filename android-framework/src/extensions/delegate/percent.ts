@@ -16,12 +16,12 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             if (node.has($const.CSS.WIDTH, $e.CSS_UNIT.PERCENT, { not: $const.CSS.PERCENT_100 }) && !parent.layoutConstraint && (
                     node.documentRoot ||
                     node.hasPX($const.CSS.HEIGHT) ||
-                    (parent.layoutVertical || node.singleChild) && (parent.blockStatic || parent.hasPX($const.CSS.WIDTH))
+                    (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX($const.CSS.WIDTH))
                ))
             {
                 return isFlexible(node);
             }
-            else if (node.has($const.CSS.HEIGHT, $e.CSS_UNIT.PERCENT, { not: $const.CSS.PERCENT_100 }) && (node.documentRoot || parent.hasHeight && node.singleChild)) {
+            else if (node.has($const.CSS.HEIGHT, $e.CSS_UNIT.PERCENT, { not: $const.CSS.PERCENT_100 }) && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
                 return isFlexible(node);
             }
         }

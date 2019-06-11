@@ -1,6 +1,7 @@
 import { NodeXmlTemplate } from '../../../src/base/@types/application';
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../src/base/@types/extension';
 
+import Resource from '../resource';
 import View from '../view';
 
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
@@ -419,7 +420,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 target.css('minHeight', $css.formatPX(node.actualHeight), true);
             }
             else if (!target.hasPX($const.CSS.HEIGHT) && !(mainData.row.length === 1 && mainData.alignContent === 'space-between')) {
-                target.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill_vertical');
+                if (!REGEXP_ALIGNSELF.test(mainData.alignItems)) {
+                    target.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill_vertical');
+                }
                 if (mainData.alignContent === 'normal' && parent.hasHeight && mainData.rowSpanMultiple.length === 0) {
                     target.mergeGravity('layout_rowWeight', '1');
                 }
@@ -495,11 +498,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 0,
                                 0,
                                 createViewAttribute(undefined, {
-                                    [node.localizeString(STRING_ANDROID.MARGIN_LEFT)]: $css.formatPX(mainData.column.gap),
+                                    [node.localizeString(STRING_ANDROID.MARGIN_LEFT)]: `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_column_gap_`, $css.formatPX(mainData.column.gap))}`,
                                     layout_row: i.toString(),
                                     layout_column: mainData.column.length.toString()
                                 })
-                            )
+                            ),
+                            false
                         );
                     }
                 }
@@ -516,11 +520,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 lastChild.id,
                                 controller.renderSpace(
                                     STRING_ANDROID.WRAP_CONTENT,
-                                    $css.formatPX(mainData.row.gap),
+                                    `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_row_gap_`, $css.formatPX(mainData.row.gap))}`,
                                     0,
                                     0,
                                     createViewAttribute(undefined, { layout_row: i.toString(), layout_column: j.toString() })
-                                )
+                                ),
+                                false
                             );
                             break;
                         }

@@ -1,6 +1,7 @@
 import { NodeXmlTemplate } from '../../../src/base/@types/application';
 import { ListData } from '../../../src/base/@types/extension';
 
+import Resource from '../resource';
 import View from '../view';
 
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
@@ -141,7 +142,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 ordinal = application.createNode();
                 ordinal.containerName = `${node.containerName}_ORDINAL`;
                 if (inside) {
-                    controller.addBeforeOutsideTemplate(ordinal.id, controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, createViewAttribute(undefined, { minWidth: $css.formatPX(minWidth) })));
+                    controller.addBeforeOutsideTemplate(
+                        ordinal.id,
+                        controller.renderNodeStatic(
+                            CONTAINER_ANDROID.SPACE,
+                            createViewAttribute(undefined, { minWidth: `@dimen/${Resource.insertStoredAsset('dimens', `${node.tagName.toLowerCase()}_space_`, $css.formatPX(minWidth))}` })
+                        ),
+                        false
+                    );
                     minWidth = MINWIDTH_INSIDE;
                 }
                 else if (columnCount === 3) {
@@ -229,7 +237,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         container.android('baselineAlignedChildIndex', '0');
                     }
                 }
-                else if (node.filter(item => item.visible).length > 1 && $NodeUI.linearData(node.children).linearY) {
+                else if (node.filter((item: T) => item.visible).length > 1 && $NodeUI.linearData(node.children).linearY) {
                     node.addAlign($e.NODE_ALIGNMENT.TOP);
                 }
             }

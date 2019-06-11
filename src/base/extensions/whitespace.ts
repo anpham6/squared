@@ -319,8 +319,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     valid = true;
                     if (aboveParent && belowParent) {
-                        const aboveGroup = aboveParent.groupParent && aboveParent.lastChild === above;
-                        const belowGroup = belowParent.groupParent && belowParent.firstChild === below;
+                        const aboveGroup = aboveParent.nodeGroup && aboveParent.lastChild === above;
+                        const belowGroup = belowParent.nodeGroup && belowParent.firstChild === below;
                         if (belowGroup) {
                             belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, belowParent.linear.top - (aboveGroup ? aboveParent : above).linear.bottom);
                         }

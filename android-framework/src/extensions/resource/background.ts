@@ -978,22 +978,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case 'initial':
                     case 'contain':
                         break;
+                    case '100%':
                     case '100% 100%':
                         gravityX = 'fill_horizontal';
                         gravityY = 'fill_vertical';
-                    case 'cover':
-                        gravity = '';
-                        tileMode = '';
-                        tileModeX = '';
-                        tileModeY = '';
-                        break;
-                    case $const.CSS.PERCENT_100:
-                        gravityX = 'fill_horizontal';
                         tileModeX = '';
                         if (tileMode === 'repeat') {
                             tileMode = '';
                             tileModeY = 'repeat';
                         }
+                    case 'cover':
+                        gravity = '';
+                        tileMode = '';
+                        tileModeX = '';
+                        tileModeY = '';
                         break;
                     default:
                         backgroundSize[i].split(' ').forEach((size, index) => {
@@ -1013,6 +1011,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     else {
                                         height = node.parseUnit(size, $const.CSS.HEIGHT, false);
                                     }
+                                }
+                            }
+                            else {
+                                if (index === 0) {
+                                    gravityX = 'fill_horizontal';
+                                }
+                                else {
+                                    gravityY = 'fill_vertical';
                                 }
                             }
                         });

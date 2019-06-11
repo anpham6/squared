@@ -10,6 +10,7 @@ declare global {
             baselineActive: boolean;
             baselineAltered: boolean;
             positioned: boolean;
+            visible: boolean;
             rendered: boolean;
             excluded: boolean;
             controlId: string;
@@ -44,11 +45,13 @@ declare global {
             readonly excludeProcedure: number;
             readonly excludeResource: number;
             readonly renderChildren: NodeUI[];
-            readonly groupParent: boolean;
+            readonly nodeGroup: boolean;
+            readonly textEmpty: boolean;
+            readonly preserveWhiteSpace: boolean;
             readonly baselineHeight: number;
             readonly layoutHorizontal: boolean;
             readonly layoutVertical: boolean;
-            readonly singleChild: boolean;
+            readonly onlyChild: boolean;
             readonly support: Support;
             readonly documentId: string;
             setControlType(controlName: string, containerType?: number): void;
@@ -95,7 +98,7 @@ declare global {
         class NodeUI implements NodeUI {
             public static linearData<T>(list: T[], clearOnly?: boolean): LinearData<T>;
             public static outerRegion<T>(node: T): BoxRect;
-            public static baseline<T>(list: T[], text?: boolean): T | undefined;
+            public static baseline<T>(list: T[], text?: boolean): T | null;
             public static partitionRows<T>(list: T[], parent?: T): T[][];
             constructor(id: number, sessionId?: string, element?: Element);
         }

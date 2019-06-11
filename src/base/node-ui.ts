@@ -111,7 +111,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 return 0;
             });
         }
-        return list.shift();
+        return list.shift() || null;
     }
 
     public static linearData<T extends NodeUI>(list: T[], clearOnly = false): LinearData<T> {
@@ -249,7 +249,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static partitionRows(list: T[]) {
         const parent = list[0].actualParent as T;
-        const groupParent = $util.filterArray(list, node => node.groupParent);
+        const nodeGroup = $util.filterArray(list, node => node.nodeGroup);
         function includes(node: T) {
             if (list.includes(node)) {
                 return node;
@@ -282,17 +282,17 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const length = children.length;
         for (let i = 0; i < length; i++) {
             let node: T | undefined = children[i];
-            if (groupParent.length) {
+            if (nodeGroup.length) {
                 let next = false;
-                for (let j = 0; j < groupParent.length; j++) {
-                    const group = groupParent[j];
+                for (let j = 0; j < nodeGroup.length; j++) {
+                    const group = nodeGroup[j];
                     if (group.contains(node) || group === node) {
                         if (row.length) {
                             result.push(row);
                         }
                         result.push([group]);
                         row = [];
-                        groupParent.splice(j, 1);
+                        nodeGroup.splice(j, 1);
                         next = true;
                         break;
                     }
@@ -386,29 +386,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract get support(): Support;
     public abstract set renderExclude(value: boolean);
     public abstract get renderExclude(): boolean;
-
-    public cloneBase(node: T) {
-        Object.assign(node.localSettings, this.localSettings);
-        node.alignmentType = this.alignmentType;
-        node.containerName = this.containerName;
-        node.depth = this.depth;
-        node.visible = this.visible;
-        node.excluded = this.excluded;
-        node.rendered = this.rendered;
-        node.childIndex = this.childIndex;
-        node.containerIndex = this.containerIndex;
-        node.inlineText = this.inlineText;
-        node.lineBreakLeading = this.lineBreakLeading;
-        node.lineBreakTrailing = this.lineBreakTrailing;
-        node.renderParent = this.renderParent;
-        node.documentParent = this.documentParent;
-        node.documentRoot = this.documentRoot;
-        if (this.length) {
-            node.retain(this.duplicate());
-        }
-        node.inherit(this, 'initial', 'base', 'alignment', 'styleMap', 'textStyle');
-        Object.assign(node.unsafe('cached'), this._cached);
-    }
 
     public is(containerType: number) {
         return this.containerType === containerType;
@@ -643,7 +620,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 break;
             }
         }
-        if (append) {
+        if (!valid && append) {
             replacement.parent = this;
             valid = true;
         }
@@ -951,12 +928,36 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return node[dimension][direction] as number;
     }
 
+    public cloneBase(node: T) {
+        node.localSettings = this.localSettings;
+        node.alignmentType = this.alignmentType;
+        node.containerName = this.containerName;
+        node.depth = this.depth;
+        node.visible = this.visible;
+        node.excluded = this.excluded;
+        node.rendered = this.rendered;
+        node.childIndex = this.childIndex;
+        node.containerIndex = this.containerIndex;
+        node.inlineText = this.inlineText;
+        node.lineBreakLeading = this.lineBreakLeading;
+        node.lineBreakTrailing = this.lineBreakTrailing;
+        node.actualParent = this.actualParent;
+        node.documentParent = this.documentParent;
+        node.documentRoot = this.documentRoot;
+        node.renderParent = this.renderParent;
+        if (this.length) {
+            node.retain(this.duplicate());
+        }
+        node.inherit(this, 'initial', 'base', 'alignment', 'styleMap', 'textStyle');
+        Object.assign(node.unsafe('cached'), this._cached);
+    }
+
     get element() {
         let element = this._element;
         if (element === null) {
             let current = this.innerWrapped;
             while (current) {
-                element = current.unsafe('element');
+                element = <Element | null> current.unsafe('element');
                 if (element) {
                     break;
                 }
@@ -1013,7 +1014,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this.hasAlign(NODE_ALIGNMENT.VERTICAL);
     }
 
-    get groupParent() {
+    get nodeGroup() {
         return false;
     }
 
@@ -1175,7 +1176,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return children.length ? children[children.length - 1] : null;
     }
 
-    get singleChild() {
+    get onlyChild() {
         if (this.renderParent) {
             return this.renderParent.length === 1;
         }
@@ -1183,5 +1184,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return this.parent.length === 1;
         }
         return false;
+    }
+
+    get textEmpty() {
+        if (this._cached.textEmpty === undefined) {
+            this._cached.textEmpty = !this.textElement || this.naturalElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
+        }
+        return this._cached.textEmpty;
+    }
+
+    get preserveWhiteSpace() {
+        if (this._cached.whiteSpace === undefined) {
+            this._cached.whiteSpace = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
+        }
+        return this._cached.whiteSpace;
     }
 }

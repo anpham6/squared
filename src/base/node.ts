@@ -14,7 +14,7 @@ const $util = squared.lib.util;
 const CACHE_PATTERN = {
     BACKGROUND: /\s*(url\(.+?\))\s*/,
     NTH_CHILD_OFTYPE: /^:nth(-last)?-(child|of-type)\((.+)\)$/,
-    NTH_CHILD_OFTYPE_VALUE: /(-)?(\d+)?n\s*(\+\d+)?/,
+    NTH_CHILD_OFTYPE_VALUE: /(-)?(\d+)?n\s*([+\-]\d+)?/,
     LANG: /^:lang\(\s*(.+)\s*\)$/
 };
 
@@ -585,13 +585,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         break;
                                 }
                             }
+                            else if (segment.endsWith('|*')) {
+                                all = segment === '*|*';
+                            }
                             else if (segment.charAt(0) === '*') {
-                                if (segment.endsWith('|*')) {
-                                    all = segment === '*|*';
-                                }
-                                else {
-                                    segment = segment.substring(1);
-                                }
+                                segment = segment.substring(1);
                             }
                             else if (segment.startsWith('::')) {
                                 selectors.length = 0;
@@ -928,16 +926,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                             default:
                                                                 const subMatch = CACHE_PATTERN.NTH_CHILD_OFTYPE_VALUE.exec(placement);
                                                                 if (subMatch) {
-                                                                    const childOffset = $util.convertInt(subMatch[3]);
+                                                                    const modifier = $util.convertInt(subMatch[3]);
                                                                     if (subMatch[2]) {
                                                                         if (subMatch[1]) {
                                                                             return false;
                                                                         }
                                                                         const increment = parseInt(subMatch[2]);
-                                                                        if (increment > 0) {
-                                                                            if (index !== childOffset) {
+                                                                        if (increment !== 0) {
+                                                                            if (index !== modifier) {
                                                                                 for (let j = increment; ; j += increment) {
-                                                                                    const total = increment + childOffset;
+                                                                                    const total = increment + modifier;
                                                                                     if (total === index) {
                                                                                         break;
                                                                                     }
@@ -947,17 +945,22 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                                                 }
                                                                             }
                                                                         }
-                                                                        else if (index !== childOffset) {
+                                                                        else if (index !== modifier) {
                                                                             return false;
                                                                         }
                                                                     }
                                                                     else if (subMatch[3]) {
-                                                                        if (subMatch[1]) {
-                                                                            if (index > childOffset) {
+                                                                        if (modifier > 0) {
+                                                                            if (subMatch[1]) {
+                                                                                if (index > modifier) {
+                                                                                    return false;
+                                                                                }
+                                                                            }
+                                                                            else if (index < modifier) {
                                                                                 return false;
                                                                             }
                                                                         }
-                                                                        else if (index < childOffset) {
+                                                                        else {
                                                                             return false;
                                                                         }
                                                                     }
@@ -2054,13 +2057,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.textContent;
     }
 
-    get textEmpty() {
-        if (this._cached.textEmpty === undefined) {
-            this._cached.textEmpty = this.inlineText && this.naturalElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
-        }
-        return this._cached.textEmpty;
-    }
-
     get src() {
         return this.htmlElement && (<HTMLImageElement> this._element).src || '';
     }
@@ -2194,13 +2190,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.visibleStyle;
     }
 
-    get preserveWhiteSpace() {
-        if (this._cached.whiteSpace === undefined) {
-            this._cached.whiteSpace = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
-        }
-        return this._cached.whiteSpace;
-    }
-
     get percentWidth() {
         if (this._cached.percentWidth === undefined) {
             this._cached.percentWidth = $css.isPercent(this.cssInitial($const.CSS.WIDTH, true));
@@ -2330,7 +2319,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.actualHeight;
     }
 
-    get actualDimension(): Dimension {
+    get actualDimension() {
         return { width: this.actualWidth, height: this.actualHeight };
     }
 
@@ -2439,15 +2428,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             x: (this.bounds.left + this.bounds.right) / 2,
             y: (this.bounds.top + this.bounds.bottom) / 2
         };
-    }
-
-    set visible(value) {
-        if (this.styleElement) {
-            this.cssSet('visibility', value ? 'visible' : 'hidden');
-        }
-    }
-    get visible() {
-        return !this.cssAny('visibility', 'hidden', 'collapse');
     }
 
     get extensions() {

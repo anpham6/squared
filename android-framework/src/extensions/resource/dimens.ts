@@ -9,8 +9,8 @@ const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-const REGEXP_WIDGETNAME = /[\s\n]*<([\w\-.]+)[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
-const REGEXP_DEVICEUNIT = /\d(px|dp|sp)$/;
+const REGEXP_WIDGETNAME = /:(\w+)="(-?[\d.]+px)"/;
+const REGEXP_DEVICEUNIT = /\dpx$/;
 const NAMESPACE_ATTR = [STRING_ANDROID.ANDROID, STRING_ANDROID.APP];
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
@@ -67,16 +67,15 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     }
 
     public afterFinalize() {
-        const application = this.application;
-        if (application.controllerHandler.hasAppendProcessing()) {
-            for (const layout of application.layouts) {
+        if (this.application.controllerHandler.hasAppendProcessing()) {
+            for (const layout of this.application.layouts) {
                 let content = layout.content;
                 let match: RegExpExecArray | null;
                 while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
-                    if (match[3] !== 'text') {
-                        const key = getResourceName(STORED.dimens, `${getDisplayName(match[1]).toLowerCase()}_${$util.convertUnderscore(match[3])}`, match[4]);
-                        STORED.dimens.set(key, match[4]);
-                        content = content.replace(match[0], match[0].replace(match[4], `@dimen/${key}`));
+                    if (match[1] !== 'text') {
+                        const key = getResourceName(STORED.dimens, `custom_${$util.convertUnderscore(match[1])}`, match[2]);
+                        STORED.dimens.set(key, match[2]);
+                        content = content.replace(match[0], match[0].replace(match[2], `@dimen/${key}`));
                     }
                 }
                 layout.content = content;

@@ -6,16 +6,15 @@ declare global {
     namespace squared.base {
         interface Node extends Container<Node>, BoxModel {
             id: number;
-            style: CSSStyleDeclaration;
             depth: number;
             childIndex: number;
             documentRoot: boolean;
             actualParent: Node | null;
-            visible: boolean;
             inlineText: boolean;
             dir: string;
             documentParent: Node;
             actualChildren: Node[];
+            style: CSSStyleDeclaration;
             parent?: Node;
             innerBefore?: Node;
             innerAfter?: Node;
@@ -91,7 +90,6 @@ declare global {
             readonly positionAuto: boolean;
             readonly baseline: boolean;
             readonly multiline: boolean;
-            readonly overflow: number;
             readonly contentBoxWidth: number;
             readonly contentBoxHeight: number;
             readonly flexbox: Flexbox;
@@ -104,11 +102,10 @@ declare global {
             readonly percentWidth: boolean;
             readonly percentHeight: boolean;
             readonly src: string;
+            readonly overflow: number;
             readonly overflowX: boolean;
             readonly overflowY: boolean;
             readonly verticalAlign: string;
-            readonly textEmpty: boolean;
-            readonly preserveWhiteSpace: boolean;
             readonly absoluteParent: Node | null;
             readonly actualWidth: number;
             readonly actualHeight: number;
