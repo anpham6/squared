@@ -8,7 +8,8 @@ export const STRING = {
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
     DATAURI: '(?:data:([^;]+);([^,]+),)?(.*?)',
     CSS_SELECTOR_LABEL: '[\\.#]?[\\w\\-]+',
-    CSS_SELECTOR_PSEUDO: ':[\\w\\-]+(?:\\(\\s*([^()]+)\\s*\\)|\\(\\s*([\\w\\-]+\\(.+?\\))\\s*\\))?',
+    CSS_SELECTOR_PSEUDO_ELEMENT: '::[\\w\\-]+',
+    CSS_SELECTOR_PSEUDO_CLASS: ':[\\w\\-]+(?:\\(\\s*([^()]+)\\s*\\)|\\(\\s*([\\w\\-]+\\(.+?\\))\\s*\\))?',
     CSS_SELECTOR_ATTR: '\\[([\\w\\-]+)(?:([~^$*|])?=(?:"([^"]+)"|\'([^\']+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_CALC: 'calc(\\(.+\\))'
@@ -28,10 +29,11 @@ export const CSS = {
     CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
     HEX: /[A-Za-z\d]{3,8}/,
     RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/,
-    SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_LABEL}|${STRING.CSS_SELECTOR_PSEUDO}|${STRING.CSS_SELECTOR_ATTR}|::[\\w\\-]+)+|[>~+])\\s*`, 'g'),
-    SELECTOR_PSEUDO: new RegExp(STRING.CSS_SELECTOR_PSEUDO),
-    SELECTOR_ATTR: new RegExp(STRING.CSS_SELECTOR_ATTR),
-    SELECTOR_LABEL: new RegExp(STRING.CSS_SELECTOR_LABEL)
+    SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+])\\s*`, 'g'),
+    SELECTOR_LABEL: new RegExp(STRING.CSS_SELECTOR_LABEL),
+    SELECTOR_PSEUDO_ELEMENT: new RegExp(STRING.CSS_SELECTOR_PSEUDO_ELEMENT),
+    SELECTOR_PSEUDO_CLASS: new RegExp(STRING.CSS_SELECTOR_PSEUDO_CLASS),
+    SELECTOR_ATTR: new RegExp(STRING.CSS_SELECTOR_ATTR)
 };
 
 export const XML = {

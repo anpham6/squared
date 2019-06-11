@@ -178,7 +178,7 @@ declare global {
             function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[];
             function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
             function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
-            function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char?: string): string;
+            function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;
             function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
         }
 

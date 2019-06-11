@@ -62,6 +62,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private _data = {};
     private _fontSize = 0;
     private _inlineText = false;
+    private _dataset?: {};
 
     protected constructor(
         public readonly id: number,
@@ -74,6 +75,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         else {
             this._styleMap = {};
+            this._dataset = {};
             this.style = <CSSStyleDeclaration> {};
         }
     }
@@ -277,19 +279,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._styleMap[attr] || this.style[attr] || '';
     }
 
-    public cssSet(attr: string, value: string, cache = true) {
-        let valid = true;
-        if (this.styleElement) {
-            this.style[attr] = value;
-            const result = this.style[attr];
-            valid = result === value || $css.isLength(value, true) && result.endsWith('px');
-        }
-        if (valid) {
-            this.css(attr, value, cache);
-        }
-        return this;
-    }
-
     public cssApply(values: StringMap, cache = false) {
         Object.assign(this._styleMap, values);
         if (cache) {
@@ -393,6 +382,19 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
         }
         return 0;
+    }
+
+    public cssSet(attr: string, value: string, cache = true) {
+        let valid = true;
+        if (this.styleElement) {
+            this.style[attr] = value;
+            const result = this.style[attr];
+            valid = result === value || $css.isLength(value, true) && result.endsWith('px');
+        }
+        if (valid) {
+            this.css(attr, value, cache);
+        }
+        return this;
     }
 
     public cssTry(attr: string, value: string) {
@@ -597,23 +599,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             }
                             if (!all) {
                                 let subMatch: RegExpExecArray | null;
-                                while ((subMatch = $regex.CSS.SELECTOR_PSEUDO.exec(segment)) !== null) {
-                                    if (subMatch[0].startsWith(':not(')) {
-                                        if (subMatch[1]) {
-                                            if (notList === undefined) {
-                                                notList = [];
-                                            }
-                                            notList.push(subMatch[1]);
-                                        }
-                                    }
-                                    else {
-                                        if (pseudoList === undefined) {
-                                            pseudoList = [];
-                                        }
-                                        pseudoList.push(subMatch[0]);
-                                    }
-                                    segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
-                                }
                                 while ((subMatch = $regex.CSS.SELECTOR_ATTR.exec(segment)) !== null) {
                                     if (attrList === undefined) {
                                         attrList = [];
@@ -629,6 +614,27 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         value: attrValue,
                                         caseInsensitive
                                     });
+                                    segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
+                                }
+                                if (segment.indexOf('::') !== -1) {
+                                    selectors.length = 0;
+                                    break invalid;
+                                }
+                                while ((subMatch = $regex.CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
+                                    if (subMatch[0].startsWith(':not(')) {
+                                        if (subMatch[1]) {
+                                            if (notList === undefined) {
+                                                notList = [];
+                                            }
+                                            notList.push(subMatch[1]);
+                                        }
+                                    }
+                                    else {
+                                        if (pseudoList === undefined) {
+                                            pseudoList = [];
+                                        }
+                                        pseudoList.push(subMatch[0]);
+                                    }
                                     segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
                                 while ((subMatch = $regex.CSS.SELECTOR_LABEL.exec(segment)) !== null) {
@@ -1540,7 +1546,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get dataset(): DOMStringMap {
-        return this.htmlElement ? (<HTMLElement> this._element).dataset : {};
+        if (this.styleElement) {
+            return (<HTMLElement> this._element).dataset;
+        }
+        else {
+            if (this._dataset === undefined) {
+                this._dataset = {};
+            }
+            return this._dataset;
+        }
     }
 
     get flexbox() {
@@ -1898,8 +1912,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     this._cached.block = $dom.ELEMENT_BLOCK.includes(this.tagName);
                     break;
                 case 'inline':
-                    if (this.tagName === 'svg') {
-                        this._cached.block = !this.hasPX($const.CSS.WIDTH);
+                    if (this.tagName === 'svg' && (this.actualParent as T).htmlElement) {
+                        this._cached.block = !this.hasPX($const.CSS.WIDTH) && $util.convertFloat($dom.getNamedItem(this._element, 'width')) === 0;
                         break;
                     }
                 default:

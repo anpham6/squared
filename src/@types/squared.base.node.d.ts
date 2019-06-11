@@ -135,7 +135,6 @@ declare global {
             outsideX(rect: BoxRectDimension, dimension?: string): boolean;
             outsideY(rect: BoxRectDimension, dimension?: string): boolean;
             css(attr: string, value?: string, cache?: boolean): string;
-            cssSet(attr: string, value: string, cache?: boolean): this;
             cssApply(values: StringMap, cache?: boolean): this;
             cssInitial(attr: string, modified?: boolean, computed?: boolean): string;
             cssAny(attr: string, ...values: string[]): boolean;
@@ -144,6 +143,7 @@ declare global {
             cssSort(attr: string, ascending?: boolean, duplicate?: boolean): Node[];
             cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
             cssSpecificity(attr: string): number;
+            cssSet(attr: string, value: string, cache?: boolean): this;
             cssTry(attr: string, value: string): boolean;
             cssFinally(attr: string): boolean;
             toInt(attr: string, initial?: boolean, fallback?: number): number;

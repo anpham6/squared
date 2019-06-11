@@ -278,7 +278,7 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
                 const baseArray = $util.replaceMap<string, number>(baseValue.split($regex.CHAR.SPACE), value => parseFloat(value));
                 const valuesArray = $util.objectMap<string, number[]>(values, value => $util.replaceMap<string, number>(value.trim().split($regex.CHAR.SPACE), pt => parseFloat(pt)));
                 const lengthA = baseArray.length;
-                if (valuesArray.every(value => lengthA === value.length)) {
+                if (valuesArray.every(value => value.length === lengthA)) {
                     const result = valuesArray[index];
                     if (!item.accumulateSum) {
                         iteration = 0;
@@ -931,6 +931,10 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         function queueIncomplete(item: SvgAnimate) {
                             if (!item.hasState(SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID)) {
                                 item.addState(SYNCHRONIZE_STATE.INTERRUPTED);
+                                const index = incomplete.indexOf(item);
+                                if (index !== -1) {
+                                    incomplete.splice(index, 1);
+                                }
                                 incomplete.push(item);
                             }
                         }
@@ -942,9 +946,11 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 return a.group.id < b.group.id ? 1 : -1;
                             });
                         }
-                        function removeIncomplete(item?: SvgAnimation) {
+                        function removeIncomplete(item?: SvgAnimate) {
                             if (item) {
-                                $util.spliceArray(incomplete, previous => previous === item);
+                                if (item.iterationCount !== -1) {
+                                    $util.spliceArray(incomplete, previous => previous === item);
+                                }
                             }
                             else {
                                 $util.spliceArray(incomplete, previous => previous.animationElement !== null);
@@ -1460,9 +1466,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                             if (incomplete.length) {
                                 sortIncomplete();
-                                const lengthB = incomplete.length;
-                                for (let i = 0; i < lengthB; i++) {
-                                    const item = incomplete[i];
+                                while (incomplete.length) {
+                                    const item = <SvgAnimate> incomplete.shift();
                                     const delay = item.delay;
                                     const duration = item.duration;
                                     const durationTotal = maxTime - delay;
@@ -1472,7 +1477,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         let values = getStartItemValues(intervalMap, item, baseValue);
                                         let keySplines: string[] | undefined;
                                         if (item.partialType) {
-                                            if (item.getIntervalEndTime(actualMaxTime) < maxThreadTime && i < lengthB - 1) {
+                                            if (item.getIntervalEndTime(actualMaxTime) < maxThreadTime && incomplete.length) {
                                                 [keyTimes, values, keySplines] = appendPartialKeyTimes(intervalMap, item, actualMaxTime, maxThreadTime, values, baseValue, incomplete);
                                             }
                                             else {

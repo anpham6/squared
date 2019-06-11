@@ -40,7 +40,7 @@ export function pushIndent(value: string, depth: number, char = '\t', indent?: s
         if (indent === undefined) {
             indent = char.repeat(depth);
         }
-        return joinMap(value.split('\n'), line => line !== '' ? indent + line : '');
+        return joinMap(value.split('\n'), line => line !== '' ? indent + line : '', '\n', true);
     }
     return value;
 }
@@ -68,7 +68,7 @@ export function replaceIndent(value: string, depth: number, pattern: RegExp) {
                 return (match[1] || '') + '\t'.repeat(depth + (match[2].length - indent)) + match[3];
             }
             return line;
-        });
+        }, '\n', true);
     }
     return value;
 }
@@ -82,8 +82,7 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
                     return ' '.repeat(spaces * match[1].length) + match[2];
                 }
                 return line;
-            })
-            .trim();
+            });
         }
         else {
             return value.replace(/\t/g, ' '.repeat(spaces));

@@ -98,7 +98,16 @@ export function getSpecificity(value: string) {
             segment = segment.substring(1);
         }
         let subMatch: RegExpExecArray | null;
-        while ((subMatch = CSS_RX.SELECTOR_PSEUDO.exec(segment)) !== null) {
+        while ((subMatch = CSS_RX.SELECTOR_ATTR.exec(segment)) !== null) {
+            if (subMatch[1]) {
+                result += 1;
+            }
+            if (subMatch[3] || subMatch[4] || subMatch[5]) {
+                result += 10;
+            }
+            segment = spliceString(segment, subMatch.index, subMatch[0].length);
+        }
+        while ((subMatch = CSS_RX.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
             if (subMatch[0].startsWith(':not(')) {
                 if (subMatch[1]) {
                     result += getSpecificity(subMatch[1]);
@@ -116,13 +125,8 @@ export function getSpecificity(value: string) {
             }
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        while ((subMatch = CSS_RX.SELECTOR_ATTR.exec(segment)) !== null) {
-            if (subMatch[1]) {
-                result += 1;
-            }
-            if (subMatch[3] || subMatch[4] || subMatch[5]) {
-                result += 10;
-            }
+        while ((subMatch = CSS_RX.SELECTOR_PSEUDO_ELEMENT.exec(segment)) !== null) {
+            result += 1;
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
         while ((subMatch = CSS_RX.SELECTOR_LABEL.exec(segment)) !== null) {

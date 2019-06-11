@@ -280,19 +280,19 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public getBeforeOutsideTemplate(id: number, depth = 0): string {
-        return this._beforeOutside[id] ? $xml.pushIndentArray(this._beforeOutside[id], depth) + '\n' : '';
+        return this._beforeOutside[id] ? $xml.pushIndentArray(this._beforeOutside[id], depth) : '';
     }
 
     public getBeforeInsideTemplate(id: number, depth = 0): string {
-        return this._beforeInside[id] ? $xml.pushIndentArray(this._beforeInside[id], depth) + '\n' : '';
+        return this._beforeInside[id] ? $xml.pushIndentArray(this._beforeInside[id], depth) : '';
     }
 
     public getAfterInsideTemplate(id: number, depth = 0): string {
-        return this._afterInside[id] ? $xml.pushIndentArray(this._afterInside[id], depth) + '\n' : '';
+        return this._afterInside[id] ? $xml.pushIndentArray(this._afterInside[id], depth) : '';
     }
 
     public getAfterOutsideTemplate(id: number, depth = 0): string {
-        return this._afterOutside[id] ? $xml.pushIndentArray(this._afterOutside[id], depth) + '\n' : '';
+        return this._afterOutside[id] ? $xml.pushIndentArray(this._afterOutside[id], depth) : '';
     }
 
     public hasAppendProcessing(id?: number) {

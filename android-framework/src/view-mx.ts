@@ -163,8 +163,10 @@ function adjustMinHeight(node: T, value: number) {
 }
 
 function setSingleLine(node: T) {
-    node.android('maxLines', '1');
-    node.android('ellipsize', $const.CSS.END);
+    if (node.textElement) {
+        node.android('maxLines', '1');
+        node.android('ellipsize', $const.CSS.END);
+    }
 }
 
 const isFlexibleDimension = (node: T, value: string) => !!node.renderParent && value === $const.CSS.PX_0 && ((node.renderParent as T).layoutConstraint || (node.renderParent as T).is(CONTAINER_NODE.GRID));

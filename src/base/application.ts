@@ -482,15 +482,13 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     protected cacheNodeChildren(node: T, children: T[]) {
-        const length = children.length;
         let inlineText = true;
-        for (let i = 0; i < length; i++) {
-            const child = children[i];
-            child.parent = node;
-            child.actualParent = node;
-            if (!child.plainText) {
+        for (const item of children) {
+            item.parent = node;
+            item.actualParent = node;
+            if (!item.plainText) {
                 inlineText = false;
-                this.processing.cache.append(child);
+                this.processing.cache.append(item);
             }
         }
         node.inlineText = inlineText;
