@@ -1043,7 +1043,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = this.renderParent;
             if (renderParent) {
                 const borderWidth = !this.tableElement ? this.styleElement : this.css('boxSizing') === 'content-box' || $client.isUserAgent($client.USER_AGENT.FIREFOX);
-                if (borderWidth && this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE) && (this.actualChildren.length === 0 || !this.actualChildren.every(node => !node.pageFlow && node.absoluteParent === this))) {
+                if (borderWidth && this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE) && (this.renderChildren.length === 0 || !this.actualChildren.every(node => !node.pageFlow && node.absoluteParent === this))) {
                     this.modifyBox($e.BOX_STANDARD.PADDING_LEFT, this.borderLeftWidth);
                     this.modifyBox($e.BOX_STANDARD.PADDING_RIGHT, this.borderRightWidth);
                     this.modifyBox($e.BOX_STANDARD.PADDING_TOP, this.borderTopWidth);
@@ -1379,7 +1379,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get renderExclude() {
             if (this._cached.renderExclude === undefined) {
-                if (this.naturalElement && this.length === 0) {
+                if (this.naturalElement && !this.imageElement && this.length === 0) {
                     if (this.blockStatic || this.layoutVertical) {
                         return this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0;
                     }
@@ -1422,6 +1422,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 break;
                             case CONTAINER_ANDROID.SELECT:
                                 height += 4;
+                                height /= (<HTMLSelectElement> this.element).size || 1;
                                 break;
                         }
                     }

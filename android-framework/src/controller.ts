@@ -333,10 +333,10 @@ function getTextBottom<T extends View>(nodes: T[]): T | undefined {
         return false;
     })
     .sort((a, b) => {
-        if (a.bounds.height === b.bounds.height) {
+        if (a.baselineHeight === b.baselineHeight) {
             return a.tagName === 'SELECT' ? 1 : 0;
         }
-        return a.bounds.height > b.bounds.height ? -1 : 1;
+        return a.baselineHeight > b.baselineHeight ? -1 : 1;
     })[0];
 }
 
@@ -570,8 +570,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (node.inlineText && (!node.textEmpty || style.borderWidth)) {
             layout.setType(CONTAINER_NODE.TEXT);
         }
-        else if (node.blockStatic && !node.overflowX && !node.overflowY && (style.borderWidth || style.backgroundImage || node.paddingTop + node.paddingBottom > 0)) {
-            layout.setType(CONTAINER_NODE.LINE);
+        else if (node.blockStatic && (style.borderWidth || style.backgroundImage || node.paddingTop + node.paddingBottom > 0) && node.childrenElements.length === 0) {
+            layout.setType(CONTAINER_NODE.FRAME);
         }
         else if (
             node.naturalElement &&
@@ -1979,9 +1979,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             textBottom = undefined;
                         }
                     }
-                    else {
-                        textBottom = undefined;
-                    }
                     const baselineAlign: T[] = [];
                     let documentId = i === 0 ? 'true' : (baseline ? baseline.documentId : '');
                     let maxCenterHeight = 0;
@@ -2592,7 +2589,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         for (let i = 0; i < length; i++) {
             const partition = horizontal[i];
             const previousRow = horizontal[i - 1];
-            const [floatingRight, floatingLeft] = $util.partitionArray(partition, item => item.float === $const.CSS.RIGHT || item.autoMargin.left);
+            const [floatingRight, floatingLeft] = $util.partitionArray(partition, item => item.float === $const.CSS.RIGHT || item.autoMargin.left === true);
             let aboveRowEnd: T | undefined;
             let currentRowBottom: T | undefined;
             [floatingLeft, floatingRight].forEach(seg => {

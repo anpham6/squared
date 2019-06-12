@@ -5,6 +5,7 @@ import View from './view';
 
 import { STRING_ANDROID, XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID } from './lib/enumeration';
+import { convertLength } from './lib/util';
 
 import COLOR_TMPL from './template/resources/color';
 import DIMEN_TMPL from './template/resources/dimen';
@@ -13,17 +14,11 @@ import STRING_TMPL from './template/resources/string';
 import STRINGARRAY_TMPL from './template/resources/string-array';
 import STYLE_TMPL from './template/resources/style';
 
-type StyleXML = {
-    data: ExternalData[];
-    pathname: string;
-    filename: string;
-};
 type ItemValue = {
     name: string;
     innerText: string;
 };
 
-const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -55,20 +50,6 @@ function getImageAssets(items: string[]) {
         });
     }
     return result;
-}
-
-function convertLength(value: string, dpi = 160, font = false, precision = 3) {
-    let result = parseFloat(value);
-    if (!isNaN(result)) {
-        if (dpi !== 160) {
-            result /= dpi / 160;
-            return (result !== 0 && result > -1 && result < 1 ? result.toPrecision(precision)  : $math.truncate(result, precision - 1)) + (font ? 'sp' : 'dp');
-        }
-        else {
-            return Math.round(result) + (font ? 'sp' : 'dp');
-        }
-    }
-    return '0dp';
 }
 
 function replaceLength(value: string, dpi = 160, format = 'dp', font = false, precision = 3) {
@@ -280,7 +261,6 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     public resourceStyleToXml(saveToDisk = false) {
         const settings = this.userSettings;
         const result: string[] = [];
-        const files: StyleXML[] = [];
         if (this.stored.styles.size) {
             const data: ExternalData[] = [{ style: [] }];
             for (const style of Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
@@ -296,7 +276,14 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     });
                 }
             }
-            files.push({ data, pathname: this.directory.string, filename: 'styles.xml' });
+            result.push(
+                $xml.replaceTab(
+                    $xml.applyTemplate('resources', STYLE_TMPL, data),
+                    settings.insertSpaces
+                ),
+                this.directory.string,
+                'styles.xml'
+            );
         }
         if (this.stored.themes.size) {
             const appTheme: ObjectMap<boolean> = {};
@@ -320,24 +307,20 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 }
                 const match = REGEXP_FILENAME.exec(filename);
                 if (match) {
-                    files.push({ data, pathname: match[1], filename: match[2] });
+                    result.push(
+                        $xml.replaceTab(
+                            replaceLength(
+                                $xml.applyTemplate('resources', STYLE_TMPL, data),
+                                settings.resolutionDPI,
+                                settings.convertPixels
+                            ),
+                            settings.insertSpaces
+                        ),
+                        match[1],
+                        match[2]
+                    );
                 }
             }
-        }
-        for (const style of files) {
-            result.push(
-                $xml.replaceTab(
-                    replaceLength(
-                        $xml.applyTemplate('resources', STYLE_TMPL, style.data),
-                        settings.resolutionDPI,
-                        settings.convertPixels,
-                        true
-                    ),
-                    settings.insertSpaces
-                ),
-                style.pathname,
-                style.filename
-            );
         }
         if (saveToDisk) {
             this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
@@ -350,18 +333,13 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         if (this.stored.dimens.size) {
             const data: ExternalData[] = [{ dimen: [] }];
             const settings = this.userSettings;
-            for (const [name, innerText] of Array.from(this.stored.dimens.entries()).sort()) {
-                data[0].dimen.push({ name, innerText });
+            const dpi = settings.resolutionDPI;
+            const convertPixels = settings.convertPixels;
+            for (const [name, value] of Array.from(this.stored.dimens.entries()).sort()) {
+                data[0].dimen.push({ name, innerText: convertPixels ? convertLength(value, dpi, false) : value });
             }
             result.push(
-                $xml.replaceTab(
-                    replaceLength(
-                        $xml.applyTemplate('resources', DIMEN_TMPL, data),
-                        settings.resolutionDPI,
-                        settings.convertPixels
-                    ),
-                    settings.insertSpaces
-                ),
+                $xml.replaceTab($xml.applyTemplate('resources', DIMEN_TMPL, data)),
                 this.directory.string,
                 'dimens.xml'
             );

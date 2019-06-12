@@ -9,9 +9,9 @@ const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-const REGEXP_WIDGETNAME = /:(\w+)="(-?[\d.]+px)"/;
-const REGEXP_DEVICEUNIT = /\dpx$/;
 const NAMESPACE_ATTR = [STRING_ANDROID.ANDROID, STRING_ANDROID.APP];
+const REGEXP_UNIT = /\dpx$/;
+const REGEXP_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/;
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     for (const [storedName, storedValue] of map.entries()) {
@@ -38,15 +38,13 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 for (const namespace of NAMESPACE_ATTR) {
                     const obj = node.namespace(namespace);
                     for (const attr in obj) {
-                        if (attr !== 'text') {
-                            const value = obj[attr].trim();
-                            if (REGEXP_DEVICEUNIT.test(value)) {
-                                const dimen = `${namespace},${attr},${value}`;
-                                if (groups[containerName][dimen] === undefined) {
-                                    groups[containerName][dimen] = [];
-                                }
-                                groups[containerName][dimen].push(node);
+                        const value = obj[attr];
+                        if (REGEXP_UNIT.test(value) && attr !== 'text') {
+                            const dimen = `${namespace},${attr},${value}`;
+                            if (groups[containerName][dimen] === undefined) {
+                                groups[containerName][dimen] = [];
                             }
+                            groups[containerName][dimen].push(node);
                         }
                     }
                 }
@@ -71,10 +69,11 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             for (const layout of this.application.layouts) {
                 let content = layout.content;
                 let match: RegExpExecArray | null;
-                while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
+                while ((match = REGEXP_UNIT_ATTR.exec(content)) !== null) {
                     if (match[1] !== 'text') {
-                        const key = getResourceName(STORED.dimens, `custom_${$util.convertUnderscore(match[1])}`, match[2]);
-                        STORED.dimens.set(key, match[2]);
+                        const value = match[2];
+                        const key = getResourceName(STORED.dimens, `custom_${$util.convertUnderscore(match[1])}`, value);
+                        STORED.dimens.set(key, value);
                         content = content.replace(match[0], match[0].replace(match[2], `@dimen/${key}`));
                     }
                 }

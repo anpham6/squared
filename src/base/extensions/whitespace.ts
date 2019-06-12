@@ -76,7 +76,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                 }
                 else {
                     const outside = node[margin] >= child[margin];
-                    if (child.bounds.height === 0 && outside && child.textElement && child.textContent === '' && child.extensions.length === 0) {
+                    if (child.bounds.height === 0 && outside && child.textEmpty && child.extensions.length === 0) {
                         child.hide();
                     }
                     else if (child.getBox(boxMargin)[0] !== 1) {

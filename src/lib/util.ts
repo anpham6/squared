@@ -520,7 +520,7 @@ export function flatMultiArray<T>(list: any[]): T[] {
         const item = list[i];
         if (Array.isArray(item)) {
             if (item.length) {
-                result.push(...flatArray<T>(item));
+                result.push(...flatMultiArray<T>(item));
             }
         }
         else if (item !== undefined && item !== null) {

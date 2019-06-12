@@ -62,7 +62,6 @@ export interface CachedValue<T> {
     dir?: string;
     tagName?: string;
     containerName?: string;
-    textContent?: string;
     textEmpty?: boolean;
     src?: string;
     float?: string;
@@ -101,14 +100,14 @@ export interface Support {
 }
 
 export type AutoMargin = {
-    horizontal: boolean;
-    left: boolean;
-    right: boolean;
-    leftRight: boolean;
-    vertical: boolean;
-    top: boolean;
-    bottom: boolean;
-    topBottom: boolean;
+    horizontal?: boolean;
+    left?: boolean;
+    right?: boolean;
+    leftRight?: boolean;
+    vertical?: boolean;
+    top?: boolean;
+    bottom?: boolean;
+    topBottom?: boolean;
 };
 
 export interface SiblingOptions {

@@ -65,7 +65,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static baseline<T extends NodeUI>(list: T[], text = false) {
         list = $util.filterArray(list, item => {
-            if ((item.baseline || $css.isLength(item.verticalAlign)) && (!text || item.textElement && item.naturalElement)) {
+            if ((item.baseline || $css.isLength(item.verticalAlign)) && (!text || item.textElement)) {
                 return !item.floating && !item.baselineAltered && (item.naturalElement && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline));
             }
             return false;
@@ -369,6 +369,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
     private _renderAs?: T;
+    private _textContent?: string;
 
     public abstract setControlType(viewName: string, containerType?: number): void;
     public abstract setLayout(width?: number, height?: number): void;
@@ -1064,10 +1065,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     set textContent(value: string) {
-        this._cached.textContent = value;
+        this._textContent = value;
     }
     get textContent() {
-        return super.textContent;
+        return this._textContent || super.textContent;
     }
 
     set overflow(value: number) {
@@ -1188,7 +1189,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get textEmpty() {
         if (this._cached.textEmpty === undefined) {
-            this._cached.textEmpty = !this.textElement || this.naturalElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
+            this._cached.textEmpty = this.naturalElement && !this.plainText && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
         }
         return this._cached.textEmpty;
     }

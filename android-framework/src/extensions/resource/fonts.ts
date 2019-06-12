@@ -5,6 +5,7 @@ import Resource from '../../resource';
 import View from '../../view';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
+import { convertLength } from '../../lib/util';
 
 type StyleList = ObjectMap<number[]>;
 type SharedAttributes = ObjectMapNested<number[]>;
@@ -113,7 +114,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     public readonly eventOnly = true;
 
     public afterParseDocument() {
-        const resource = this.application.resourceHandler;
+        const resource = <android.base.Resource<T>> this.application.resourceHandler;
+        const settings = resource.userSettings;
+        const dpi = settings.resolutionDPI;
+        const convertPixels = settings.convertPixels === 'dp';
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         for (const node of this.application.session.cache) {
@@ -185,9 +189,13 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
                 stored.color = Resource.addColor(stored.color);
                 for (let i = 0; i < length; i++) {
-                    const value: string = stored[styleKeys[i]];
+                    const key = styleKeys[i];
+                    let value: string = stored[key];
                     if (value) {
-                        const attr = FONT_STYLE[styleKeys[i]] + value + '"';
+                        if (convertPixels && key === 'fontSize') {
+                            value = convertLength(value, dpi, true);
+                        }
+                        const attr = FONT_STYLE[key] + value + '"';
                         if (sorted[i] === undefined) {
                             sorted[i] = {};
                         }

@@ -438,7 +438,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         setMapY(-1, 0, documentRoot.parent as T);
         let maxDepth = 0;
         for (const node of CACHE) {
-            if (node.visible) {
+            if (node.visible && node.length) {
                 setMapY(node.depth, node.id, node);
                 maxDepth = Math.max(node.depth, maxDepth);
             }
@@ -460,10 +460,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     continue;
                 }
                 const axisY = parent.duplicate() as T[];
-                const hasFloat = parent.floatContainer;
+                const floatContainer = parent.floatContainer;
                 const length = axisY.length;
                 let cleared!: Map<T, string>;
-                if (hasFloat) {
+                if (floatContainer) {
                     cleared = <Map<T, string>> NodeUI.linearData(parent.actualChildren as T[], true).cleared;
                 }
                 for (let k = 0; k < length; k++) {
@@ -500,14 +500,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         traverse: {
                             let floatActive!: Set<string>;
                             let floatCleared!: Map<T, string>;
-                            if (hasFloat) {
+                            if (floatContainer) {
                                 floatActive = new Set<string>();
                                 floatCleared = new Map<T, string>();
                             }
                             for ( ; l < length; l++, m++) {
                                 const item = axisY[l];
                                 if (item.pageFlow) {
-                                    if (hasFloat) {
+                                    if (floatContainer) {
                                         if (floatActive.size) {
                                             const float = cleared.get(item);
                                             if (float) {
@@ -538,7 +538,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     }
                                     const previous = item.siblingsLeading[0];
                                     if (previous) {
-                                        if (hasFloat) {
+                                        if (floatContainer) {
                                             const status = item.alignedVertically(horizontal.length ? horizontal : vertical, floatCleared, horizontal.length > 0);
                                             if (status > 0) {
                                                 if (horizontal.length) {
@@ -647,12 +647,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         const descendant = <ExtensionUI<T>[]> this.session.extensionMap.get(nodeY.id);
                         let combined = parent.renderExtension && <ExtensionUI<T>[]> parent.renderExtension.slice(0);
                         if (descendant) {
-                            if (combined) {
-                                combined = combined.concat(descendant);
-                            }
-                            else {
-                                combined = descendant.slice(0);
-                            }
+                            combined = combined ? combined.concat(descendant) : descendant.slice(0);
                         }
                         if (combined) {
                             let next = false;

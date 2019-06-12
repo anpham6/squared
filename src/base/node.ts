@@ -18,6 +18,8 @@ const CACHE_PATTERN = {
     LANG: /^:lang\(\s*(.+)\s*\)$/
 };
 
+const validateCssSet = (value: string, styleValue: string) => value === styleValue || $css.isLength(value, true) && styleValue.endsWith('px');
+
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static copyTextStyle(dest: T, source: T) {
         dest.cssApply({
@@ -388,8 +390,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let valid = true;
         if (this.styleElement) {
             this.style[attr] = value;
-            const result = this.style[attr];
-            valid = result === value || $css.isLength(value, true) && result.endsWith('px');
+            valid = validateCssSet(value, this.style[attr]);
         }
         if (valid) {
             this.css(attr, value, cache);
@@ -403,8 +404,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const current = (this.pseudoElement ? element.style : this.style).getPropertyValue(attr);
             if (current !== value) {
                 element.style.setProperty(attr, value);
-                const result = element.style.getPropertyValue(attr);
-                if (result === value || $css.isLength(value, true) && result.endsWith('px')) {
+                if (validateCssSet(value, element.style.getPropertyValue(attr))) {
                     $session.setElementCache(element, attr, this.sessionId, current);
                     return true;
                 }
@@ -535,8 +535,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.multiline = (rect.numberOfLines as number) > 0;
         }
         if (!cache) {
-            this._linear = undefined;
             this._box = undefined;
+            this._linear = undefined;
         }
     }
 
@@ -2012,16 +2012,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 };
             }
             else {
-                this._cached.autoMargin = {
-                    horizontal: false,
-                    left: false,
-                    right: false,
-                    leftRight: false,
-                    top: false,
-                    bottom: false,
-                    vertical: false,
-                    topBottom: false
-                };
+                this._cached.autoMargin = {};
             }
         }
         return this._cached.autoMargin;
@@ -2051,10 +2042,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get textContent() {
-        if (this._cached.textContent === undefined) {
-            this._cached.textContent = this.htmlElement || this.plainText ? (<Element> this._element).textContent as string : '';
-        }
-        return this._cached.textContent;
+        return this.htmlElement || this.plainText ? (<Element> this._element).textContent as string : '';
     }
 
     get src() {

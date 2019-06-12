@@ -434,12 +434,12 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (controller.preventNodeCascade(element)) {
                 return node;
             }
-            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap ? [[]] : undefined;
             const beforeElement = this.createPseduoElement(element, 'before');
             const afterElement = this.createPseduoElement(element, 'after');
             const children: T[] = [];
             const childNodes = element.childNodes;
             const length = childNodes.length;
+            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap && element.children.length ? [[]] : undefined;
             for (let i = 0, j = 0; i < length; i++) {
                 const childElement = <HTMLElement> childNodes[i];
                 let child: T | undefined;
@@ -468,14 +468,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (child) {
                     child.childIndex = j++;
                     children.push(child);
-                    if (queryMap && child.styleElement) {
+                    if (child.actualElement && queryMap) {
                         queryMap[0].push(child);
                         this.appendQueryMap(queryMap, depth, child);
                     }
                 }
             }
             this.cacheNodeChildren(node, children);
-            node.queryMap = queryMap;
+            if (queryMap && queryMap[0].length) {
+                node.queryMap = queryMap;
+            }
             node.actualChildren = children;
         }
         return node;

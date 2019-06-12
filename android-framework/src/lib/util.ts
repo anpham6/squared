@@ -7,6 +7,7 @@ import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
 const $const = squared.lib.constant;
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 
 const REGEXP_ID = /^@\+?id\//;
@@ -21,6 +22,20 @@ function calculateBias(start: number, end: number, accuracy = 4) {
     else {
         return parseFloat(Math.max(start / (start + end), 0).toPrecision(accuracy));
     }
+}
+
+export function convertLength(value: string, dpi = 160, font = false, precision = 3) {
+    let result = parseFloat(value);
+    if (!isNaN(result)) {
+        if (dpi !== 160) {
+            result /= dpi / 160;
+            return (result !== 0 && result > -1 && result < 1 ? result.toPrecision(precision)  : $math.truncate(result, precision - 1)) + (font ? 'sp' : 'dp');
+        }
+        else {
+            return Math.round(result) + (font ? 'sp' : 'dp');
+        }
+    }
+    return '0dp';
 }
 
 export function getDocumentId(value: string) {
