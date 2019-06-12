@@ -155,7 +155,7 @@ declare global {
         }
 
         class Node implements Node {
-            public static copyTextStyle(dest: Node, source: Node): void;
+            public static copyTextStyle(node: Node, source: Node): void;
             constructor(id: number, sessionId?: string, element?: Element);
         }
     }

@@ -434,8 +434,8 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (controller.preventNodeCascade(element)) {
                 return node;
             }
-            const beforeElement = this.createPseduoElement(element, 'before');
-            const afterElement = this.createPseduoElement(element, 'after');
+            const beforeElement = this.createPseduoElement(element, '::before');
+            const afterElement = this.createPseduoElement(element, '::after');
             const children: T[] = [];
             const childNodes = element.childNodes;
             const length = childNodes.length;
@@ -515,8 +515,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    protected createPseduoElement(element: HTMLElement, target: string) {
-        const styleMap: StringMap = $session.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
+    protected createPseduoElement(element: HTMLElement, pseudoElt: string) {
+        const styleMap: StringMap = $session.getElementCache(element, `styleMap${pseudoElt}`, this.processing.sessionId);
         if (styleMap && styleMap.content) {
             if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== $const.CSS.NONE)) {
                 let valid = true;
@@ -532,9 +532,9 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             let value = styleMap.content;
             if (value === 'inherit') {
-                let current = element.parentElement;
+                let current: HTMLElement | null = element;
                 while (current) {
-                    value = $css.getStyle(current, target).getPropertyValue('content');
+                    value = $css.getStyle(current).getPropertyValue('content');
                     if (value !== 'inherit') {
                         break;
                     }
@@ -569,12 +569,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                 case '""':
                     break;
                 case 'open-quote':
-                    if (target === 'before') {
+                    if (pseudoElt === '::before') {
                         content = '&quot;';
                     }
                     break;
                 case 'close-quote':
-                    if (target === 'after') {
+                    if (pseudoElt === '::after') {
                         content = '&quot;';
                     }
                     break;
@@ -629,7 +629,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     return undefined;
                                 }
                                 const getIncrementValue = (parent: Element) => {
-                                    const pseduoStyle: StringMap = $session.getElementCache(parent, `styleMap::${target}`, this.processing.sessionId);
+                                    const pseduoStyle: StringMap = $session.getElementCache(parent, `styleMap${pseudoElt}`, this.processing.sessionId);
                                     if (pseduoStyle && pseduoStyle.counterIncrement) {
                                         return getCounterValue(pseduoStyle.counterIncrement);
                                     }
@@ -739,7 +739,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     break;
             }
             if (content || value === '""') {
-                const pseudoElement = createPseudoElement(element, tagName, target === 'before' ? 0 : -1);
+                const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
                 if (tagName === 'img') {
                     (<HTMLImageElement> pseudoElement).src = content;
                 }
@@ -751,7 +751,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         pseudoElement.style[attr] = styleMap[attr];
                     }
                 }
-                $session.setElementCache(pseudoElement, 'pseudoElement', this.processing.sessionId, target);
+                $session.setElementCache(pseudoElement, 'pseudoElement', this.processing.sessionId, pseudoElt);
                 $session.setElementCache(pseudoElement, 'styleMap', this.processing.sessionId, styleMap);
                 return pseudoElement;
             }

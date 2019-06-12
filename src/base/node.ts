@@ -18,11 +18,13 @@ const CACHE_PATTERN = {
     LANG: /^:lang\(\s*(.+)\s*\)$/
 };
 
+const getPseudoElt = (node: T) => node.pseudoElement ? $session.getElementCache(<Element> node.element, 'pseudoElement', node.sessionId) : '';
+
 const validateCssSet = (value: string, styleValue: string) => value === styleValue || $css.isLength(value, true) && styleValue.endsWith('px');
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static copyTextStyle(dest: T, source: T) {
-        dest.cssApply({
+    public static copyTextStyle(node: T, source: T) {
+        node.cssApply({
             fontFamily: source.css('fontFamily'),
             fontSize: $css.formatPX(source.fontSize),
             fontWeight: source.css('fontWeight'),
@@ -89,8 +91,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (sessionId !== '0') {
                 $session.setElementCache(element, 'node', sessionId, this);
             }
-            this.style = $session.getElementCache(element, 'style', '0') || $css.getStyle(element, undefined, false);
-            this._styleMap = { ...$session.getElementCache(element, 'styleMap', sessionId) };
+            if (this.pseudoElement) {
+                const pseudoElt = getPseudoElt(this);
+                this.style = $session.getElementCache(<Element> element.parentElement, `style${pseudoElt}`, '0') || $css.getStyle(element.parentElement, pseudoElt, false);
+            }
+            else {
+                this.style = $session.getElementCache(element, 'style', '0') || $css.getStyle(element, '', false);
+            }
+            this._styleMap = $session.getElementCache(element, 'styleMap', sessionId) || {};
             if (this.styleElement && !this.pseudoElement && sessionId !== '0') {
                 for (let attr of Array.from(element.style)) {
                     let value = element.style.getPropertyValue(attr);
@@ -377,8 +385,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssSpecificity(attr: string) {
         if (this.styleElement) {
             const element = <Element> this._element;
-            const target = this.pseudoElement ? $session.getElementCache(element, 'pseudoElement', this.sessionId) : '';
-            const data: ObjectMap<number> = $session.getElementCache(element, `styleSpecificity${target ? '::' + target : ''}`, this.sessionId);
+            const data: ObjectMap<number> = $session.getElementCache(this.pseudoElement ? <Element> element.parentElement : element, `styleSpecificity${getPseudoElt(this)}`, this.sessionId);
             if (data) {
                 return data[attr] || 0;
             }
@@ -400,9 +407,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssTry(attr: string, value: string) {
         if (this.styleElement) {
-            const element = <HTMLElement> this._element;
-            const current = (this.pseudoElement ? element.style : this.style).getPropertyValue(attr);
+            const current = this.style.getPropertyValue(attr);
             if (current !== value) {
+                const element = <HTMLElement> this._element;
                 element.style.setProperty(attr, value);
                 if (validateCssSet(value, element.style.getPropertyValue(attr))) {
                     $session.setElementCache(element, attr, this.sessionId, current);

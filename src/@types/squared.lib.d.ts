@@ -39,7 +39,7 @@ declare global {
             export import BOX_BORDER = $css.BOX_BORDER;
             export import CSSKeyframesData = $css.CSSKeyframesData;
             export import CSSFontFaceData = $css.CSSFontFaceData;
-            function getStyle(element: Element | null, target?: string, cache?: boolean): CSSStyleDeclaration;
+            function getStyle(element: Element | null, pseudoElt?: string, cache?: boolean): CSSStyleDeclaration;
             function getFontSize(element: Element | null): number | undefined;
             function hasComputedStyle(element: Element): element is HTMLElement;
             function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;

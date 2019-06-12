@@ -49,18 +49,17 @@ export const BOX_BORDER = [
 ];
 export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
 
-export function getStyle(element: Element | null, target = '', cache = true): CSSStyleDeclaration {
+export function getStyle(element: Element | null, pseudoElt = '', cache = true): CSSStyleDeclaration {
     if (element) {
-        const attr = 'style' + target;
         if (cache) {
-            const style = getElementCache(element, attr, '0');
+            const style = getElementCache(element, 'style' + pseudoElt, '0');
             if (style) {
                 return style;
             }
         }
         if (hasComputedStyle(element)) {
-            const style = getComputedStyle(element, target);
-            setElementCache(element, attr, '0', style);
+            const style = getComputedStyle(element, pseudoElt);
+            setElementCache(element, 'style' + pseudoElt, '0', style);
             return style;
         }
         return <CSSStyleDeclaration> { display: 'inline' };
