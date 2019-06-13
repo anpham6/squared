@@ -3,8 +3,6 @@ import { UserSettingsChrome } from './@types/application';
 
 import View from './view';
 
-import $NodeList = squared.base.NodeList;
-
 const $const = squared.lib.constant;
 const $session = squared.lib.session;
 
@@ -32,23 +30,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public reset() {
         this._elementMap.clear();
-    }
-
-    public evaluateNonStatic(documentRoot: T, cache: $NodeList<T>) {
-        for (const node of cache) {
-            if (!node.documentRoot) {
-                let parent: T | undefined;
-                switch (node.css('position')) {
-                    case 'fixed':
-                        parent = documentRoot;
-                        break;
-                    case 'absolute':
-                        parent = node.absoluteParent as T;
-                        break;
-                }
-                node.documentParent = parent || node.parent as T;
-            }
-        }
     }
 
     public applyDefaultStyles(element: Element) {

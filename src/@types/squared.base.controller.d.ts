@@ -12,7 +12,6 @@ declare global {
             init(): void;
             reset(): void;
             includeElement(element: Element): boolean;
-            evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
             preventNodeCascade(element: Element): boolean;
             applyDefaultStyles(element: Element): void;
         }

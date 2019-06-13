@@ -83,11 +83,11 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 }
             }
             else if (node.naturalElement && node.positionRelative) {
-                const actualParent = node.actualParent;
-                if (actualParent) {
+                const parent = node.actualParent;
+                if (parent) {
                     let preceding = false;
                     let previous: T | undefined;
-                    for (const item of actualParent.naturalElements as T[]) {
+                    for (const item of parent.naturalElements as T[]) {
                         if (item === node) {
                             if (preceding) {
                                 if (renderParent.layoutVertical && (node.top !== 0 || node.bottom !== 0)) {

@@ -71,7 +71,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
             const container = node.length === 0 ? controller.createNodeGroup(node, [node], parent) : node;
-            let ordinal = !mainData.ordinal ? node.find(item => item.float === $const.CSS.LEFT && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
+            let ordinal = !mainData.ordinal ? node.find((item: T) => item.float === $const.CSS.LEFT && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
             if (ordinal) {
                 const layoutOrdinal = new $LayoutUI(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {

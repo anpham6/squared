@@ -103,9 +103,9 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (textIndent === 0) {
-                                const actualParent = node.actualParent;
-                                if (actualParent && (actualParent.blockDimension || actualParent.display === 'table-cell') && node === actualParent.firstChild) {
-                                    textIndent = actualParent.parseUnit(actualParent.css('textIndent'));
+                                const parent = node.actualParent;
+                                if (parent && (parent.blockDimension || parent.display === 'table-cell') && node === parent.firstChild) {
+                                    textIndent = parent.parseUnit(parent.css('textIndent'));
                                 }
                             }
                             if (textIndent > 0) {

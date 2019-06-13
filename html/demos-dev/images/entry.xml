@@ -44,13 +44,12 @@
                 android:inputType="text"
                 android:layout_height="wrap_content"
                 android:layout_width="@dimen/input_text_layout_width"
-                android:paddingHorizontal="@dimen/input_text_padding_horizontal"
-                android:paddingVertical="@dimen/input_text_padding_vertical"
+                android:padding="@dimen/input_text_padding"
                 style="@style/Input_text" />
             <Space
                 android:id="@+id/space_1"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <LinearLayout
                 android:id="@+id/linearlayout_1"
@@ -78,7 +77,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol26437"
+                    android:text="@string/__symbol92635"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -162,7 +161,7 @@
             <Space
                 android:id="@+id/space_2"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_3"
@@ -192,7 +191,7 @@
             <Space
                 android:id="@+id/space_3"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_4"
@@ -204,10 +203,10 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/typeofentry"
-                android:background="@drawable/input_text_order"
-                android:entries="@array/subset_1_array"
+                android:background="@drawable/select_hour"
+                android:entries="@array/typeofentry_array"
                 android:layout_height="wrap_content"
-                android:layout_width="@dimen/select_layout_width_1"
+                android:layout_width="@dimen/select_layout_width"
                 android:minWidth="@dimen/select_min_width"
                 android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
@@ -215,7 +214,7 @@
             <Space
                 android:id="@+id/space_4"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <LinearLayout
                 android:id="@+id/linearlayout_3"
@@ -243,7 +242,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol26437"
+                    android:text="@string/__symbol92635"
                     style="@style/Plaintext" />
             </LinearLayout>
             <RelativeLayout
@@ -259,13 +258,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/input_text_layout_margin_end"
                     android:layout_width="@dimen/input_text_layout_width_1"
-                    android:paddingHorizontal="@dimen/input_text_padding_horizontal"
-                    android:paddingVertical="@dimen/input_text_padding_vertical"
+                    android:padding="@dimen/input_text_padding"
                     style="@style/Input_text" />
                 <Spinner
                     android:id="@+id/prominence0"
-                    android:background="@drawable/input_text_order"
-                    android:entries="@array/subset_1_array"
+                    android:background="@drawable/select_hour"
+                    android:entries="@array/typeofentry_array"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/select_layout_margin_start"
                     android:layout_toEndOf="@+id/topic0"
@@ -278,7 +276,7 @@
             <Space
                 android:id="@+id/space_5"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_5"
@@ -290,10 +288,10 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/series"
-                android:background="@drawable/input_text_order"
-                android:entries="@array/series_1_array"
+                android:background="@drawable/select_hour"
+                android:entries="@array/series_array"
                 android:layout_height="wrap_content"
-                android:layout_width="@dimen/select_layout_width"
+                android:layout_width="@dimen/select_layout_width_1"
                 android:minWidth="@dimen/select_min_width"
                 android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
@@ -301,7 +299,7 @@
             <Space
                 android:id="@+id/space_6"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_6"
@@ -313,8 +311,8 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/subset"
-                android:background="@drawable/input_text_order"
-                android:entries="@array/subset_1_array"
+                android:background="@drawable/select_hour"
+                android:entries="@array/typeofentry_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
@@ -324,7 +322,7 @@
             <Space
                 android:id="@+id/space_7"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_7"
@@ -336,7 +334,7 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/entryactive"
-                android:background="@drawable/input_text_order"
+                android:background="@drawable/select_hour"
                 android:entries="@array/entryactive_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -370,10 +368,10 @@
                 style="@style/Label_1" />
             <Spinner
                 android:id="@+id/series_1"
-                android:background="@drawable/input_text_order"
-                android:entries="@array/series_1_array"
+                android:background="@drawable/select_hour"
+                android:entries="@array/series_array"
                 android:layout_height="wrap_content"
-                android:layout_width="@dimen/select_layout_width"
+                android:layout_width="@dimen/select_layout_width_1"
                 android:minWidth="@dimen/select_min_width"
                 android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
@@ -381,7 +379,7 @@
             <Space
                 android:id="@+id/space_8"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_9"
@@ -393,8 +391,8 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/subset_1"
-                android:background="@drawable/input_text_order"
-                android:entries="@array/subset_1_array"
+                android:background="@drawable/select_hour"
+                android:entries="@array/typeofentry_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
@@ -404,7 +402,7 @@
             <Space
                 android:id="@+id/space_9"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_10"
@@ -420,18 +418,18 @@
                 android:layout_width="wrap_content">
                 <Spinner
                     android:id="@+id/entry_1"
-                    android:background="@drawable/input_text_order"
-                    android:entries="@array/subset_1_array"
+                    android:background="@drawable/select_hour"
+                    android:entries="@array/typeofentry_array"
                     android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
-                    android:layout_width="@dimen/select_layout_width"
+                    android:layout_width="@dimen/select_layout_width_1"
                     android:minWidth="@dimen/select_min_width"
                     android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
                 <Button
                     android:id="@+id/button_1"
-                    android:background="@drawable/input_button_button_1"
+                    android:background="@drawable/input_text_order"
                     android:enabled="false"
                     android:gravity="center"
                     android:layout_alignBaseline="@+id/entry_1"
@@ -449,7 +447,7 @@
                     style="@style/Input_button_2" />
                 <Button
                     android:id="@+id/button_2"
-                    android:background="@drawable/input_button_button_1"
+                    android:background="@drawable/input_text_order"
                     android:enabled="false"
                     android:gravity="center"
                     android:layout_alignBaseline="@+id/entry_1"
@@ -469,7 +467,7 @@
             <Space
                 android:id="@+id/space_10"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_11"
@@ -481,7 +479,7 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/mode"
-                android:background="@drawable/input_text_order"
+                android:background="@drawable/select_hour"
                 android:entries="@array/mode_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -492,7 +490,7 @@
             <Space
                 android:id="@+id/space_11"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_12"
@@ -504,8 +502,8 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/style1"
-                android:background="@drawable/input_text_order"
-                android:entries="@array/subset_1_array"
+                android:background="@drawable/select_hour"
+                android:entries="@array/typeofentry_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
@@ -515,7 +513,7 @@
             <Space
                 android:id="@+id/space_12"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_13"
@@ -527,7 +525,7 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/calendar"
-                android:background="@drawable/input_text_order"
+                android:background="@drawable/select_hour"
                 android:entries="@array/calendar_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -538,7 +536,7 @@
             <Space
                 android:id="@+id/space_13"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_14"
@@ -554,7 +552,7 @@
                 android:layout_width="wrap_content">
                 <Spinner
                     android:id="@+id/version"
-                    android:background="@drawable/input_text_order"
+                    android:background="@drawable/select_hour"
                     android:entries="@array/version_array"
                     android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
@@ -565,7 +563,7 @@
                     style="@style/Select" />
                 <Spinner
                     android:id="@+id/version_update"
-                    android:background="@drawable/input_text_order"
+                    android:background="@drawable/select_hour"
                     android:entries="@array/version_array"
                     android:layout_alignBaseline="@+id/version"
                     android:layout_height="wrap_content"
@@ -578,7 +576,7 @@
                     style="@style/Select" />
                 <Button
                     android:id="@+id/button_3"
-                    android:background="@drawable/input_button_button_1"
+                    android:background="@drawable/input_text_order"
                     android:gravity="center"
                     android:layout_alignBaseline="@+id/version"
                     android:layout_height="wrap_content"
@@ -597,7 +595,7 @@
             <Space
                 android:id="@+id/space_14"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_15"
@@ -613,7 +611,7 @@
                 android:layout_width="wrap_content">
                 <Spinner
                     android:id="@+id/branch"
-                    android:background="@drawable/input_text_order"
+                    android:background="@drawable/select_hour"
                     android:entries="@array/branch_array"
                     android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
@@ -624,7 +622,7 @@
                     style="@style/Select" />
                 <Spinner
                     android:id="@+id/branch_update"
-                    android:background="@drawable/input_text_order"
+                    android:background="@drawable/select_hour"
                     android:entries="@array/branch_array"
                     android:layout_alignBaseline="@+id/branch"
                     android:layout_height="wrap_content"
@@ -637,7 +635,7 @@
                     style="@style/Select" />
                 <Button
                     android:id="@+id/button_4"
-                    android:background="@drawable/input_button_button_1"
+                    android:background="@drawable/input_text_order"
                     android:gravity="center"
                     android:layout_alignBaseline="@+id/branch"
                     android:layout_height="wrap_content"
@@ -654,7 +652,7 @@
                     style="@style/Input_button_1" />
                 <Button
                     android:id="@+id/button_5"
-                    android:background="@drawable/input_button_button_1"
+                    android:background="@drawable/input_text_order"
                     android:gravity="center"
                     android:layout_alignBaseline="@+id/branch"
                     android:layout_height="wrap_content"
@@ -673,7 +671,7 @@
             <Space
                 android:id="@+id/space_15"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <LinearLayout
                 android:id="@+id/linearlayout_4"
@@ -701,7 +699,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:maxLines="1"
-                    android:text="@string/__symbol26437"
+                    android:text="@string/__symbol92635"
                     style="@style/Plaintext" />
             </LinearLayout>
             <RelativeLayout
@@ -717,12 +715,11 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/input_text_layout_margin_end"
                     android:layout_width="@dimen/input_text_layout_width_1"
-                    android:paddingHorizontal="@dimen/input_text_padding_horizontal"
-                    android:paddingVertical="@dimen/input_text_padding_vertical"
+                    android:padding="@dimen/input_text_padding"
                     style="@style/Input_text" />
                 <Spinner
                     android:id="@+id/custommonth0"
-                    android:background="@drawable/input_text_order"
+                    android:background="@drawable/select_hour"
                     android:entries="@array/month0_array"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/select_layout_margin_start"
@@ -734,7 +731,7 @@
                     style="@style/Select" />
                 <Spinner
                     android:id="@+id/customday0"
-                    android:background="@drawable/input_text_order"
+                    android:background="@drawable/select_hour"
                     android:entries="@array/day0_array"
                     android:layout_alignBaseline="@+id/custommonth0"
                     android:layout_height="wrap_content"
@@ -749,7 +746,7 @@
             <Space
                 android:id="@+id/space_16"
                 android:layout_columnSpan="2"
-                android:layout_height="@dimen/space_layout_height"
+                android:layout_height="@dimen/gridlayout_1_grid_space"
                 android:layout_width="match_parent" />
             <TextView
                 android:id="@+id/textview_16"
@@ -765,8 +762,8 @@
                 android:layout_width="wrap_content">
                 <Spinner
                     android:id="@+id/person"
-                    android:background="@drawable/input_text_order"
-                    android:entries="@array/subset_1_array"
+                    android:background="@drawable/select_hour"
+                    android:entries="@array/typeofentry_array"
                     android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
                     android:layout_width="@dimen/select_layout_width_2"
@@ -774,51 +771,48 @@
                     android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
-                <RadioGroup
-                    android:id="@+id/radiogroup_1"
-                    android:checkedButton="@+id/c2"
-                    android:layout_centerVertical="true"
+                <RelativeLayout
+                    android:id="@+id/relativelayout_11"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/div_layout_margin_start"
                     android:layout_toEndOf="@+id/person"
-                    android:layout_width="wrap_content"
-                    android:orientation="horizontal">
-                    <RadioButton
-                        android:id="@+id/c2"
+                    android:layout_width="wrap_content">
+                    <RadioGroup
+                        android:id="@+id/radiogroup_1"
+                        android:checkedButton="@+id/c2"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/input_radio_layout_margin_end"
-                        android:layout_marginStart="@dimen/input_radio_layout_margin_start"
-                        android:layout_marginTop="@dimen/input_radio_layout_margin_top"
                         android:layout_width="wrap_content"
-                        android:text="@string/birth"
-                        style="@style/Input_radio" />
-                    <RadioButton
-                        android:id="@+id/c3"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/input_radio_layout_margin_end"
-                        android:layout_marginStart="@dimen/input_radio_layout_margin_start"
-                        android:layout_marginTop="@dimen/input_radio_layout_margin_top"
-                        android:layout_width="wrap_content"
-                        android:text="@string/death"
-                        style="@style/Input_radio" />
+                        android:orientation="horizontal">
+                        <RadioButton
+                            android:id="@+id/c2"
+                            android:text="@string/birth"
+                            style="@style/Input_radio.Radiogroup_1" />
+                        <RadioButton
+                            android:id="@+id/c3"
+                            android:text="@string/death"
+                            style="@style/Input_radio.Radiogroup_1" />
+                    </RadioGroup>
                     <CheckBox
                         android:id="@+id/c4"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/input_checkbox_layout_margin_end"
                         android:layout_marginStart="@dimen/input_checkbox_layout_margin_start"
                         android:layout_marginVertical="@dimen/input_checkbox_layout_margin_vertical"
+                        android:layout_toEndOf="@+id/radiogroup_1"
                         android:layout_width="wrap_content"
                         android:text="@string/none"
                         style="@style/Input_checkbox" />
-                </RadioGroup>
+                </RelativeLayout>
                 <Button
                     android:id="@+id/button_6"
-                    android:background="@drawable/input_button_button_1"
+                    android:background="@drawable/input_text_order"
                     android:gravity="center"
                     android:layout_alignBaseline="@+id/person"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/input_button_layout_margin_start_2"
-                    android:layout_toEndOf="@+id/radiogroup_1"
+                    android:layout_toEndOf="@+id/relativelayout_11"
                     android:layout_width="wrap_content"
                     android:minHeight="@dimen/input_button_min_height"
                     android:minWidth="@dimen/input_button_min_width"
@@ -838,7 +832,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol26437">):</string>
+    <string name="__symbol92635">):</string>
     <string name="active">Active:</string>
     <string name="add"><u>Add</u></string>
     <string name="all">All</string>
@@ -977,11 +971,11 @@
         <item>11</item>
         <item>12</item>
     </string-array>
-    <string-array name="series_1_array">
+    <string-array name="series_array">
         <item>@string/__00_inactive</item>
         <item>@string/__01_active</item>
     </string-array>
-    <string-array name="subset_1_array">
+    <string-array name="typeofentry_array">
         <item>0</item>
         <item>1</item>
     </string-array>
@@ -1018,10 +1012,12 @@
     <color name="black">#000000</color>
     <color name="darkblue">#00008B</color>
     <color name="blue">#0000FF</color>
+    <color name="black_1">#3E000000</color>
     <color name="gray">#808080</color>
     <color name="yellowgreen">#9ACD32</color>
     <color name="lightgray_1">#CCCCCC</color>
-    <color name="gainsboro_1">#DDDDDD</color>
+    <color name="black_2">#D7000000</color>
+    <color name="whitesmoke_1">#F8F8F8</color>
     <color name="white">#FFFFFF</color>
 </resources>
 <!-- filename: res/values/colors.xml -->
@@ -1040,29 +1036,35 @@
         <item name="android:textSize">12sp</item>
     </style>
     <style name="Input_button">
-        <item name="android:fontFamily">arial</item>
-        <item name="android:textSize">10sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">9sp</item>
     </style>
     <style name="Input_button_1" parent="Input_button">
-        <item name="android:textColor">@color/black</item>
+        <item name="android:textColor">@color/black_2</item>
     </style>
     <style name="Input_button_2" parent="Input_button">
-        <item name="android:textColor">@color/gray</item>
+        <item name="android:textColor">@color/black_1</item>
     </style>
     <style name="Input_checkbox">
-        <item name="android:fontFamily">arial</item>
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">11sp</item>
     </style>
     <style name="Input_radio">
-        <item name="android:fontFamily">arial</item>
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+    <style name="Input_radio.Radiogroup_1">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginHorizontal">@dimen/input_radio_layout_margin_horizontal</item>
+        <item name="android:layout_marginVertical">@dimen/input_radio_layout_margin_vertical</item>
+        <item name="android:layout_width">wrap_content</item>
     </style>
     <style name="Input_text">
-        <item name="android:fontFamily">arial</item>
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">11sp</item>
     </style>
     <style name="Label">
         <item name="android:fontFamily">arial</item>
@@ -1082,12 +1084,12 @@
         <item name="android:textSize">11sp</item>
     </style>
     <style name="Select">
-        <item name="android:fontFamily">arial</item>
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/black</item>
         <item name="android:textSize">11sp</item>
     </style>
     <style name="Select.Relativelayout_1">
-        <item name="android:background">@drawable/input_text_order</item>
+        <item name="android:background">@drawable/select_hour</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:minWidth">@dimen/select_min_width</item>
@@ -1102,6 +1104,7 @@
     <dimen name="div_layout_margin_start">3dp</dimen>
     <dimen name="form_padding_horizontal">11dp</dimen>
     <dimen name="form_padding_vertical">6dp</dimen>
+    <dimen name="gridlayout_1_grid_space">6dp</dimen>
     <dimen name="h2_padding">9dp</dimen>
     <dimen name="hr_layout_height">1dp</dimen>
     <dimen name="hr_layout_margin_vertical">10dp</dimen>
@@ -1115,28 +1118,25 @@
     <dimen name="input_button_padding_horizontal">7dp</dimen>
     <dimen name="input_button_padding_top">3dp</dimen>
     <dimen name="input_checkbox_layout_margin_end">3dp</dimen>
-    <dimen name="input_checkbox_layout_margin_start">7dp</dimen>
+    <dimen name="input_checkbox_layout_margin_start">6dp</dimen>
     <dimen name="input_checkbox_layout_margin_vertical">3dp</dimen>
-    <dimen name="input_radio_layout_margin_end">3dp</dimen>
-    <dimen name="input_radio_layout_margin_start">5dp</dimen>
-    <dimen name="input_radio_layout_margin_top">3dp</dimen>
+    <dimen name="input_radio_layout_margin_horizontal">3dp</dimen>
+    <dimen name="input_radio_layout_margin_vertical">3dp</dimen>
     <dimen name="input_text_layout_margin_end">5dp</dimen>
-    <dimen name="input_text_layout_width">42dp</dimen>
-    <dimen name="input_text_layout_width_1">132dp</dimen>
-    <dimen name="input_text_padding_horizontal">1dp</dimen>
-    <dimen name="input_text_padding_vertical">2dp</dimen>
+    <dimen name="input_text_layout_width">44dp</dimen>
+    <dimen name="input_text_layout_width_1">134dp</dimen>
+    <dimen name="input_text_padding">2dp</dimen>
     <dimen name="label_layout_margin_end">5dp</dimen>
     <dimen name="label_layout_width">80dp</dimen>
     <dimen name="label_padding_top">3dp</dimen>
     <dimen name="select_group_layout_margin_top">13dp</dimen>
     <dimen name="select_layout_margin_start">3dp</dimen>
-    <dimen name="select_layout_width">200dp</dimen>
-    <dimen name="select_layout_width_1">160dp</dimen>
+    <dimen name="select_layout_width">160dp</dimen>
+    <dimen name="select_layout_width_1">200dp</dimen>
     <dimen name="select_layout_width_2">100dp</dimen>
     <dimen name="select_min_width">37dp</dimen>
     <dimen name="select_padding_horizontal">1dp</dimen>
     <dimen name="select_padding_vertical">3dp</dimen>
-    <dimen name="space_layout_height">6dp</dimen>
     <dimen name="ul_padding_bottom">11dp</dimen>
     <dimen name="ul_padding_horizontal">5dp</dimen>
     <dimen name="ul_padding_top">2dp</dimen>
@@ -1191,7 +1191,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/gainsboro_1" />
+            <solid android:color="@color/whitesmoke_1" />
         </shape>
     </item>
     <item android:left="-2dp" android:right="-2dp" android:bottom="-2dp">
@@ -1215,4 +1215,4 @@
         </shape>
     </item>
 </layer-list>
-<!-- filename: res/drawable/input_button_button_1.xml -->
+<!-- filename: res/drawable/select_hour.xml -->

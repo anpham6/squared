@@ -11,6 +11,7 @@ declare global {
             readonly containerTypePercent: LayoutType;
             optimize(nodes: T[]): void;
             finalize(layouts: FileAsset[]): void;
+            evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
             visibleElement(element: Element, target?: string): boolean;
             processUnknownParent(layout: LayoutUI<T>): LayoutResult<T>;
             processUnknownChild(layout: LayoutUI<T>): LayoutResult<T>;

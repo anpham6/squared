@@ -15,6 +15,7 @@ declare global {
             excluded: boolean;
             controlId: string;
             controlName: string;
+            documentParent: NodeUI;
             renderExclude: boolean;
             textContent: string;
             positionAuto: boolean;
@@ -25,15 +26,15 @@ declare global {
             contentBoxHeight: number;
             lineBreakLeading: boolean;
             lineBreakTrailing: boolean;
-            siblingsLeading: Node[];
-            siblingsTrailing: Node[];
+            siblingsLeading: NodeUI[];
+            siblingsTrailing: NodeUI[];
             floatContainer: boolean;
             containerIndex: number;
             flexbox: Flexbox;
             localSettings: {};
             renderAs?: NodeUI;
             renderParent?: NodeUI;
-            renderExtension?: Extension<Node>[];
+            renderExtension?: Extension<NodeUI>[];
             renderTemplates?: (NodeTemplate<NodeUI> | null)[];
             outerWrapper?: NodeUI;
             innerWrapped?: NodeUI;
@@ -50,6 +51,7 @@ declare global {
             readonly textEmpty: boolean;
             readonly preserveWhiteSpace: boolean;
             readonly baselineHeight: number;
+            readonly leftTopAxis: boolean;
             readonly layoutHorizontal: boolean;
             readonly layoutVertical: boolean;
             readonly onlyChild: boolean;

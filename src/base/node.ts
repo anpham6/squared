@@ -60,7 +60,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     };
 
     protected abstract _cached: CachedValue<T>;
-    protected abstract _documentParent?: T;
     protected abstract _naturalChildren?: T[];
     protected abstract _naturalElements?: T[];
 
@@ -80,9 +79,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._element = element;
         }
         else {
-            this._styleMap = {};
-            this._dataset = {};
             this.style = <CSSStyleDeclaration> {};
+            this._styleMap = {};
         }
     }
 
@@ -93,13 +91,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (sessionId !== '0') {
                 $session.setElementCache(element, 'node', sessionId, this);
             }
-            if (this.pseudoElement) {
-                const pseudoElt = Node.getPseudoElt(this);
-                this.style = $session.getElementCache(<Element> element.parentElement, `style${pseudoElt}`, '0') || $css.getStyle(element.parentElement, pseudoElt, false);
-            }
-            else {
-                this.style = $session.getElementCache(element, 'style', '0') || $css.getStyle(element, '', false);
-            }
+            this.style = this.pseudoElement ? $css.getStyle(element.parentElement, Node.getPseudoElt(this)) : $css.getStyle(element);
             this._styleMap = $session.getElementCache(element, 'styleMap', sessionId) || {};
             if (this.styleElement && !this.pseudoElement && sessionId !== '0') {
                 for (let attr of Array.from(element.style)) {
@@ -305,7 +297,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._initial.iteration === -1 && !modified) {
             computed = true;
         }
-        let value = modified ? this._styleMap[attr] : this._initial.styleMap[attr];
+        let value = (modified ? this._styleMap : this._initial.styleMap)[attr];
         if (computed && !value) {
             value = this.style[attr];
         }
@@ -496,7 +488,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'baseline':
                 case 'left':
                 case 'start':
-                    return this.flexElement || this.documentParent.flexElement;
+                    return this.flexElement || !!this.actualParent && this.actualParent.flexElement;
                 default:
                     if (options) {
                         if (options.not) {
@@ -1609,8 +1601,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const value = this.css($const.CSS.HEIGHT);
         if ($css.isPercent(value)) {
             if (this.pageFlow) {
-                const actualParent = this.actualParent;
-                if (actualParent && actualParent.hasHeight) {
+                const parent = this.actualParent;
+                if (parent && parent.hasHeight) {
                     return parseFloat(value) > 0;
                 }
             }
@@ -2112,14 +2104,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.positiveAxis;
     }
 
-    get leftTopAxis() {
-        if (this._cached.leftTopAxis === undefined) {
-            const value = this.cssInitial('position');
-            this._cached.leftTopAxis = value === 'absolute' && this.absoluteParent === this.documentParent || value === 'fixed';
-        }
-        return this._cached.leftTopAxis;
-    }
-
     get backgroundColor() {
         if (this._cached.backgroundColor === undefined) {
             let value = this.css('backgroundColor');
@@ -2194,13 +2178,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.percentHeight;
     }
 
-    set documentParent(value) {
-        this._documentParent = value;
-    }
-    get documentParent() {
-        return this._documentParent || this.absoluteParent || this.actualParent || this.parent || this;
-    }
-
     get absoluteParent() {
         if (this._cached.absoluteParent === undefined) {
             let current = this.actualParent;
@@ -2234,18 +2211,21 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.plainText) {
                 this._cached.actualWidth = this.bounds.right - this.bounds.left;
             }
-            else if (!this.documentParent.flexElement && this.display !== 'table-cell') {
-                let width = this.parseUnit(this.cssInitial($const.CSS.WIDTH, true));
-                if (width > 0) {
-                    const maxWidth = this.parseUnit(this.css('maxWidth'));
-                    if (maxWidth > 0) {
-                        width = Math.min(width, maxWidth);
+            else {
+                const parent = this.actualParent;
+                if (parent && !parent.flexElement && this.display !== 'table-cell') {
+                    let width = this.parseUnit(this.cssInitial($const.CSS.WIDTH, true));
+                    if (width > 0) {
+                        const maxWidth = this.parseUnit(this.css('maxWidth'));
+                        if (maxWidth > 0) {
+                            width = Math.min(width, maxWidth);
+                        }
+                        if (this.contentBox && !this.tableElement) {
+                            width += this.contentBoxWidth;
+                        }
+                        this._cached.actualWidth = width;
+                        return width;
                     }
-                    if (this.contentBox && !this.tableElement) {
-                        width += this.contentBoxWidth;
-                    }
-                    this._cached.actualWidth = width;
-                    return width;
                 }
             }
             this._cached.actualWidth = this.bounds.width;
@@ -2255,7 +2235,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get actualHeight() {
         if (this._cached.actualHeight === undefined) {
-            if (!this.plainText && !this.documentParent.flexElement && this.display !== 'table-cell') {
+            const parent = this.actualParent;
+            if (!this.plainText && parent && !parent.flexElement && this.display !== 'table-cell') {
                 let height = this.parseUnit(this.cssInitial($const.CSS.HEIGHT, true), $const.CSS.HEIGHT);
                 if (height > 0) {
                     const maxHeight = this.parseUnit(this.css('maxHeight'));

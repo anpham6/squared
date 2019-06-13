@@ -268,7 +268,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 item.setBounds();
                 item.saveAsInitial();
             }
-            controller.evaluateNonStatic(node, CACHE);
             controller.sortInitialCache(CACHE);
             for (const ext of this.extensions) {
                 ext.afterInit(documentRoot);
@@ -319,7 +318,6 @@ export default abstract class Application<T extends Node> implements squared.bas
             const parent = new NodeConstructor(0, processing.sessionId, element.parentElement || document.body, this.controllerHandler.afterInsertNode);
             node.parent = parent;
             node.actualParent = parent;
-            node.documentParent = parent;
             node.childIndex = 0;
             node.documentRoot = true;
         }

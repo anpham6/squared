@@ -329,9 +329,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public static isInheritedStyle(node: NodeUI, attr: string) {
         if (node.styleElement) {
-            const actualParent = node.actualParent;
-            if (actualParent && node.cssInitial(attr) === '') {
-                return node.style[attr] === actualParent.style[attr];
+            const parent = node.actualParent;
+            if (parent && node.cssInitial(attr) === '') {
+                return node.style[attr] === parent.style[attr];
             }
         }
         return false;

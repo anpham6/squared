@@ -833,9 +833,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
                 if (this.nodeGroup && !alignFloat && textAlign === '') {
-                    const actualParent = this.actualParent;
-                    if (actualParent) {
-                        textAlign = checkTextAlign(actualParent.cssInitial('textAlign', true));
+                    const parent = this.actualParent;
+                    if (parent) {
+                        textAlign = checkTextAlign(parent.cssInitial('textAlign', true));
                     }
                 }
                 if (this.pageFlow) {
@@ -1379,9 +1379,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get renderExclude() {
             if (this._cached.renderExclude === undefined) {
-                if (this.naturalElement && !this.imageElement && this.length === 0) {
+                if (this.styleElement && !this.imageElement && this.length === 0) {
                     if (this.blockStatic || this.layoutVertical) {
-                        return this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0;
+                        return this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0 || this.css($const.CSS.HEIGHT) === '0px' && this.css('overflow') === 'hidden';
                     }
                     else {
                         return this.bounds.width === 0 && this.textEmpty && this.marginLeft <= 0 && this.marginRight <= 0;

@@ -52,7 +52,15 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         }
         if (children.length > 1) {
             const container = this.application.controllerHandler.createNodeGroup(node, children, parent, true);
-            container.addAlign($e.NODE_ALIGNMENT.HORIZONTAL | (parent.length !== children.length ? $e.NODE_ALIGNMENT.SEGMENTED : 0));
+            const linearX = $NodeUI.linearData(children).linearX;
+            if (linearX) {
+                container.addAlign($e.NODE_ALIGNMENT.HORIZONTAL | $e.NODE_ALIGNMENT.SEGMENTED);
+                container.android('orientation', STRING_ANDROID.HORIZONTAL);
+            }
+            else {
+                container.addAlign($e.NODE_ALIGNMENT.VERTICAL);
+                container.android('orientation', STRING_ANDROID.VERTICAL);
+            }
             if (parent.layoutConstraint) {
                 container.companion = node;
             }
@@ -64,7 +72,6 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             }
             container.exclude($e.NODE_RESOURCE.ASSET);
             container.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);
-            container.android('orientation', $NodeUI.linearData(children).linearX ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL);
             for (const item of removeable) {
                 item.hide();
             }

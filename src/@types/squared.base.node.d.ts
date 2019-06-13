@@ -12,7 +12,6 @@ declare global {
             actualParent: Node | null;
             inlineText: boolean;
             dir: string;
-            documentParent: Node;
             naturalChildren: Node[];
             naturalElements: Node[];
             style: CSSStyleDeclaration;
@@ -94,7 +93,6 @@ declare global {
             readonly flexbox: Flexbox;
             readonly zIndex: number;
             readonly positiveAxis: boolean;
-            readonly leftTopAxis: boolean;
             readonly backgroundImage: string;
             readonly visibleStyle: VisibleStyle;
             readonly fontSize: number;

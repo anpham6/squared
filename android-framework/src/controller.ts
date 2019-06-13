@@ -1698,18 +1698,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         return renderParent.box.width;
                     }
                     else {
-                        const actualParent = node.actualParent as T;
-                        if (actualParent) {
-                            if (actualParent === renderParent && actualParent.blockStatic && node.naturalElement && node.inlineStatic) {
-                                return actualParent.box.width - (node.linear.left - actualParent.box.left);
+                        const parent = node.actualParent as T;
+                        if (parent) {
+                            if (parent === renderParent && parent.blockStatic && node.naturalElement && node.inlineStatic) {
+                                return parent.box.width - (node.linear.left - parent.box.left);
                             }
-                            else if (actualParent.floatContainer) {
+                            else if (parent.floatContainer) {
                                 const { containerType, alignmentType } = this.containerTypeVerticalMargin;
-                                const container = node.ascend((item: T) => item.of(containerType, alignmentType), actualParent, 'renderParent');
+                                const container = node.ascend((item: T) => item.of(containerType, alignmentType), parent, 'renderParent');
                                 if (container.length) {
                                     let leftOffset = 0;
                                     let rightOffset = 0;
-                                    for (const item of actualParent.naturalElements as T[]) {
+                                    for (const item of parent.naturalElements as T[]) {
                                         if (item.floating && !children.includes(item) && node.intersectY(item.linear)) {
                                             if (item.float === $const.CSS.LEFT) {
                                                 if (Math.floor(item.linear.right) > node.box.left) {
@@ -1744,8 +1744,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let alignParent: string;
                 let rows: T[][];
                 if (leftAlign) {
-                    const actualParent = seg[0].actualParent;
-                    if (actualParent && actualParent.cssInitialAny('textAlign', $const.CSS.RIGHT, $const.CSS.END)) {
+                    const parent = seg[0].actualParent;
+                    if (parent && parent.cssInitialAny('textAlign', $const.CSS.RIGHT, $const.CSS.END)) {
                         alignParent = $const.CSS.RIGHT;
                         leftForward = false;
                         seg[length - 1].anchor(alignParent, 'true');
@@ -2574,7 +2574,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     protected processConstraintChain(node: T, children: T[]) {
-        const actualParent = children[0].actualParent || node;
+        const parent = children[0].actualParent || node;
         const horizontal = $NodeUI.partitionRows(children);
         const floating = node.hasAlign($e.NODE_ALIGNMENT.FLOAT);
         const length = horizontal.length;
@@ -2602,7 +2602,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const rowStart = seg[0];
                 const rowEnd = seg[lengthA - 1];
                 rowStart.anchor(anchorStart, STRING_ANDROID.PARENT);
-                if (!floating && actualParent.css('textAlign') === $const.CSS.CENTER) {
+                if (!floating && parent.css('textAlign') === $const.CSS.CENTER) {
                     rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread');
                 }
                 else if (lengthA > 1) {
@@ -2660,7 +2660,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 for (let k = previousSiblings.length - 2; k >= 0; k--) {
                                     const aboveBefore = previousSiblings[k];
                                     if (aboveBefore.linear.bottom > aboveRowEnd.linear.bottom) {
-                                        if (reverse && Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(actualParent.box[anchorEnd]) < chain.linear.width) {
+                                        if (reverse && Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(parent.box[anchorEnd]) < chain.linear.width) {
                                             continue;
                                         }
                                         const adjacent = previousSiblings[k + 1];

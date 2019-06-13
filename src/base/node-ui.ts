@@ -278,6 +278,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             if (row.length === 0) {
                 row.push(node);
+                siblings.push(active);
             }
             else {
                 if (active.alignedVertically(siblings, cleared)) {
@@ -323,6 +324,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract horizontalRows?: T[][];
     public abstract readonly renderChildren: T[];
 
+    protected _documentParent?: T;
     protected _controlName?: string;
     protected abstract _namespaces: string[];
     protected abstract _boxAdjustment?: BoxModel;
@@ -942,6 +944,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._element !== null && this._element.className === '__squared.pseudo';
     }
 
+    set documentParent(value) {
+        this._documentParent = value;
+    }
+    get documentParent() {
+        return <NodeUI> (this._documentParent || this.absoluteParent || this.actualParent || this.parent || this);
+    }
+
     set containerName(value) {
         this._cached.containerName = value.toUpperCase();
     }
@@ -1169,5 +1178,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             this._cached.whiteSpace = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
         }
         return this._cached.whiteSpace;
+    }
+
+    get leftTopAxis() {
+        if (this._cached.leftTopAxis === undefined) {
+            const value = this.cssInitial('position');
+            this._cached.leftTopAxis = value === 'absolute' && this.absoluteParent === this.documentParent || value === 'fixed';
+        }
+        return this._cached.leftTopAxis;
     }
 }

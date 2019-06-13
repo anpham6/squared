@@ -308,6 +308,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public createCache(documentRoot: HTMLElement) {
         const node = this.createRootNode(documentRoot);
         if (node) {
+            node.documentParent = node.parent as T;
             const controller = this.controllerHandler;
             const CACHE = <NodeList<T>> this.processing.cache;
             const preAlignment: ObjectIndex<StringMap> = {};
