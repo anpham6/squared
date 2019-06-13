@@ -11,6 +11,7 @@ declare global {
             readonly containerTypePercent: LayoutType;
             optimize(nodes: T[]): void;
             finalize(layouts: FileAsset[]): void;
+            visibleElement(element: Element, target?: string): boolean;
             processUnknownParent(layout: LayoutUI<T>): LayoutResult<T>;
             processUnknownChild(layout: LayoutUI<T>): LayoutResult<T>;
             processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): LayoutUI<T>;

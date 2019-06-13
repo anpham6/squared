@@ -307,7 +307,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public excluded = false;
     public controlId = '';
     public floatContainer = false;
-    public inputContainer = false;
     public containerIndex = Number.POSITIVE_INFINITY;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
@@ -317,6 +316,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract renderTemplates?: (NodeTemplate<T> | null)[];
     public abstract outerWrapper?: T;
     public abstract innerWrapped?: T;
+    public abstract innerBefore?: T;
+    public abstract innerAfter?: T;
     public abstract companion?: T;
     public abstract extracted?: T[];
     public abstract horizontalRows?: T[][];
@@ -935,6 +936,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get naturalChild() {
         return this._element !== null;
+    }
+
+    get pseudoElement() {
+        return this._element !== null && this._element.className === '__squared.pseudo';
     }
 
     set containerName(value) {

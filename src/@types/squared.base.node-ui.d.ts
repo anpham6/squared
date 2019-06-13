@@ -28,7 +28,6 @@ declare global {
             siblingsLeading: Node[];
             siblingsTrailing: Node[];
             floatContainer: boolean;
-            inputContainer: boolean;
             containerIndex: number;
             flexbox: Flexbox;
             localSettings: {};
@@ -38,6 +37,8 @@ declare global {
             renderTemplates?: (NodeTemplate<NodeUI> | null)[];
             outerWrapper?: NodeUI;
             innerWrapped?: NodeUI;
+            innerBefore?: NodeUI;
+            innerAfter?: NodeUI;
             companion?: NodeUI;
             extracted?: NodeUI[];
             horizontalRows?: NodeUI[][];

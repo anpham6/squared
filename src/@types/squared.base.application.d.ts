@@ -18,7 +18,7 @@ declare global {
             readonly length: number;
             reset(): void;
             parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
-            createCache(element: HTMLElement): boolean;
+            createCache(documentRoot: HTMLElement): boolean;
             createNode(element?: Element, append?: boolean, parent?: T, children?: T[]): T;
             insertNode(element: Element, parent?: T): T | undefined;
             afterCreateCache(element: HTMLElement): void;

@@ -17,8 +17,6 @@ declare global {
             naturalElements: Node[];
             style: CSSStyleDeclaration;
             parent?: Node;
-            innerBefore?: Node;
-            innerAfter?: Node;
             queryMap?: Node[][];
             readonly sessionId: string;
             readonly initial: InitialData<Node>;
@@ -155,6 +153,7 @@ declare global {
         }
 
         class Node implements Node {
+            public static getPseudoElt(node: Node): string;
             public static copyTextStyle(node: Node, source: Node): void;
             constructor(id: number, sessionId?: string, element?: Element);
         }

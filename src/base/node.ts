@@ -18,11 +18,13 @@ const CACHE_PATTERN = {
     LANG: /^:lang\(\s*(.+)\s*\)$/
 };
 
-const getPseudoElt = (node: T) => node.pseudoElement ? $session.getElementCache(<Element> node.element, 'pseudoElement', node.sessionId) : '';
-
 const validateCssSet = (value: string, styleValue: string) => value === styleValue || $css.isLength(value, true) && styleValue.endsWith('px');
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
+    public static getPseudoElt(node: T) {
+        return node.pseudoElement ? $session.getElementCache(<Element> node.element, 'pseudoElement', node.sessionId) : '';
+    }
+
     public static copyTextStyle(node: T, source: T) {
         node.cssApply({
             fontFamily: source.css('fontFamily'),
@@ -43,8 +45,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public childIndex = Number.POSITIVE_INFINITY;
     public style!: CSSStyleDeclaration;
 
-    public abstract innerBefore?: T;
-    public abstract innerAfter?: T;
     public abstract queryMap?: T[][];
 
     protected _styleMap!: StringMap;
@@ -94,7 +94,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 $session.setElementCache(element, 'node', sessionId, this);
             }
             if (this.pseudoElement) {
-                const pseudoElt = getPseudoElt(this);
+                const pseudoElt = Node.getPseudoElt(this);
                 this.style = $session.getElementCache(<Element> element.parentElement, `style${pseudoElt}`, '0') || $css.getStyle(element.parentElement, pseudoElt, false);
             }
             else {
@@ -387,7 +387,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssSpecificity(attr: string) {
         if (this.styleElement) {
             const element = <Element> this._element;
-            const data: ObjectMap<number> = $session.getElementCache(this.pseudoElement ? <Element> element.parentElement : element, `styleSpecificity${getPseudoElt(this)}`, this.sessionId);
+            const data: ObjectMap<number> = $session.getElementCache(this.pseudoElement ? <Element> element.parentElement : element, `styleSpecificity${Node.getPseudoElt(this)}`, this.sessionId);
             if (data) {
                 return data[attr] || 0;
             }
@@ -1442,7 +1442,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get pseudoElement() {
-        return this._element !== null && this._element.className === '__squared.pseudo';
+        return false;
     }
 
     get imageElement() {

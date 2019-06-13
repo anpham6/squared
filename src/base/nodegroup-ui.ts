@@ -171,6 +171,10 @@ export default abstract class NodeGroupUI extends NodeUI {
         return false;
     }
 
+    get pseudoElement() {
+        return false;
+    }
+
     get previousSibling() {
         return null;
     }

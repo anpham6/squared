@@ -11,10 +11,9 @@ declare global {
             readonly afterInsertNode?: BindGeneric<Node, void>;
             init(): void;
             reset(): void;
+            includeElement(element: Element): boolean;
             evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
             preventNodeCascade(element: Element): boolean;
-            includeElement(element: Element): boolean;
-            visibleElement(element: Element, target?: string): boolean;
             applyDefaultStyles(element: Element): void;
         }
 

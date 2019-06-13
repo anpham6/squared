@@ -67,10 +67,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
         return true;
     }
 
-    public visibleElement() {
-        return true;
-    }
-
     public addElement(node: T) {
         this._elementMap.set(<Element> node.element, node);
     }
