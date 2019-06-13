@@ -556,7 +556,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (this.controlId === '') {
                 let name: string | undefined;
-                if (this.styleElement && this.naturalElement) {
+                if (this.styleElement && this.naturalChild) {
                     name = validateString(this.elementId || $dom.getNamedItem(this.element, 'name'));
                     if (name === STRING_ANDROID.PARENT || RESERVED_JAVA.includes(name)) {
                         name = `_${name}`;
@@ -679,7 +679,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                             }
                             if (layoutWidth === '' && (
-                                    renderParent.blockWidth && this.layoutVertical && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.actualChildren.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) ||
+                                    renderParent.blockWidth && this.layoutVertical && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalChildren.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) ||
                                     !this.pageFlow && this.absoluteParent === documentParent && this.hasPX($const.CSS.LEFT) && this.hasPX($const.CSS.RIGHT) ||
                                     documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row'
                                ))
@@ -1043,7 +1043,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = this.renderParent;
             if (renderParent) {
                 const borderWidth = !this.tableElement ? this.styleElement : this.css('boxSizing') === 'content-box' || $client.isUserAgent($client.USER_AGENT.FIREFOX);
-                if (borderWidth && this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE) && (this.renderChildren.length === 0 || !this.actualChildren.every(node => !node.pageFlow && node.absoluteParent === this))) {
+                if (borderWidth && this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE) && (this.renderChildren.length === 0 || !this.naturalChildren.every(node => !node.pageFlow && node.absoluteParent === this))) {
                     this.modifyBox($e.BOX_STANDARD.PADDING_LEFT, this.borderLeftWidth);
                     this.modifyBox($e.BOX_STANDARD.PADDING_RIGHT, this.borderRightWidth);
                     this.modifyBox($e.BOX_STANDARD.PADDING_TOP, this.borderTopWidth);
@@ -1206,7 +1206,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.android('layoutDirection', 'rtl');
                 }
             }
-            if (this.styleElement && this.naturalElement) {
+            if (this.styleElement && this.naturalChild) {
                 const dataset = $css.getDataSet(<HTMLElement> this.element, STRING_ANDROID.ANDROID);
                 for (const name in dataset) {
                     const obj = name === 'attr' ? STRING_ANDROID.ANDROID
@@ -1379,7 +1379,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get renderExclude() {
             if (this._cached.renderExclude === undefined) {
-                if (this.naturalElement && !this.imageElement && this.length === 0) {
+                if (this.naturalChild && !this.imageElement && this.length === 0) {
                     if (this.blockStatic || this.layoutVertical) {
                         return this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0;
                     }

@@ -95,7 +95,7 @@ function adjustBaseline(baseline: View, nodes: View[]) {
                         imageBaseline = node;
                     }
                 }
-                else if (node.naturalElement && node.length === 0 || node.layoutHorizontal && node.renderChildren.every(item => item.baseline)) {
+                else if (node.naturalChild && node.length === 0 || node.layoutHorizontal && node.renderChildren.every(item => item.baseline)) {
                     node.anchor('baseline', baseline.documentId);
                 }
             }
@@ -220,7 +220,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
                 let valid = false;
                 if (horizontal) {
                     if (node.outerWrapper || node.ascend(item => item.hasPX($const.CSS.WIDTH) || item.blockStatic).length) {
-                        node.setLayoutWidth(renderParent.flexibleWidth ? STRING_ANDROID.MATCH_PARENT : $const.CSS.PX_0, node.innerWrapped && node.innerWrapped.naturalElement);
+                        node.setLayoutWidth(renderParent.flexibleWidth ? STRING_ANDROID.MATCH_PARENT : $const.CSS.PX_0, node.innerWrapped && node.innerWrapped.naturalChild);
                         valid = node.flexibleWidth;
                         setAlignmentBlock();
                         if (valid && !$css.isPercent(maxWH)) {
@@ -229,7 +229,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
                     }
                 }
                 else if ((node.absoluteParent || documentParent).hasHeight && !node.hasPX($const.CSS.HEIGHT)) {
-                    node.setLayoutHeight(renderParent.flexibleHeight ? STRING_ANDROID.MATCH_PARENT : $const.CSS.PX_0, node.innerWrapped && node.innerWrapped.naturalElement);
+                    node.setLayoutHeight(renderParent.flexibleHeight ? STRING_ANDROID.MATCH_PARENT : $const.CSS.PX_0, node.innerWrapped && node.innerWrapped.naturalChild);
                     valid = node.flexibleHeight;
                     if (valid && !$css.isPercent(maxWH)) {
                         contentBox += node.contentBoxHeight;
@@ -491,7 +491,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.hide();
                     return { layout, next: true };
                 }
-                else if (node.naturalElement && child.plainText) {
+                else if (node.naturalChild && child.plainText) {
                     node.clear();
                     node.inlineText = true;
                     node.textContent = child.textContent;
@@ -570,11 +570,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (node.inlineText && (!node.textEmpty || style.borderWidth)) {
             layout.setType(CONTAINER_NODE.TEXT);
         }
-        else if (node.blockStatic && (style.borderWidth || style.backgroundImage || node.paddingTop + node.paddingBottom > 0) && node.childrenElements.length === 0) {
+        else if (node.blockStatic && (style.borderWidth || style.backgroundImage || node.paddingTop + node.paddingBottom > 0) && node.naturalElements.length === 0) {
             layout.setType(CONTAINER_NODE.FRAME);
         }
         else if (
-            node.naturalElement &&
+            node.naturalChild &&
             !node.documentRoot &&
             node.elementId === '' &&
             node.bounds.height === 0 &&
@@ -756,7 +756,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if ((floated.size === 0 || floated.size === 1 && floated.has($const.CSS.LEFT)) && layout.singleRowAligned) {
             const lineHeight = layout.children[0].lineHeight;
             for (const node of layout) {
-                if (!(node.naturalElement && node.length === 0 && !node.inputElement && !node.positionRelative && !node.blockVertical && !node.positionAuto && node.lineHeight === lineHeight && (node.baseline || node.cssAny('verticalAlign', $const.CSS.TOP, $const.CSS.MIDDLE, $const.CSS.BOTTOM)))) {
+                if (!(node.naturalChild && node.length === 0 && !node.inputElement && !node.positionRelative && !node.blockVertical && !node.positionAuto && node.lineHeight === lineHeight && (node.baseline || node.cssAny('verticalAlign', $const.CSS.TOP, $const.CSS.MIDDLE, $const.CSS.BOTTOM)))) {
                     return false;
                 }
             }
@@ -1700,7 +1700,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         const actualParent = node.actualParent as T;
                         if (actualParent) {
-                            if (actualParent === renderParent && actualParent.blockStatic && node.naturalElement && node.inlineStatic) {
+                            if (actualParent === renderParent && actualParent.blockStatic && node.naturalChild && node.inlineStatic) {
                                 return actualParent.box.width - (node.linear.left - actualParent.box.left);
                             }
                             else if (actualParent.floatContainer) {
@@ -1709,7 +1709,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 if (container.length) {
                                     let leftOffset = 0;
                                     let rightOffset = 0;
-                                    for (const item of actualParent.actualChildren as T[]) {
+                                    for (const item of actualParent.naturalChildren as T[]) {
                                         if (item.floating && !children.includes(item) && node.intersectY(item.linear)) {
                                             if (item.float === $const.CSS.LEFT) {
                                                 if (Math.floor(item.linear.right) > node.box.left) {
@@ -1779,7 +1779,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         continue;
                     }
                     let bounds = item.bounds;
-                    if (item.naturalElement && item.inlineText && !item.hasPX($const.CSS.WIDTH)) {
+                    if (item.naturalChild && item.inlineText && !item.hasPX($const.CSS.WIDTH)) {
                         const rect = $session.getRangeClientRect(<Element> item.element, item.sessionId);
                         if (rect.numberOfLines || rect.width < item.box.width) {
                             bounds = rect;
@@ -2527,7 +2527,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const elements: Element[] = [];
                     for (let k = 0; k < item.length; k++) {
                         const column = item[k];
-                        if (column.naturalElement) {
+                        if (column.naturalChild) {
                             elements.push(<Element> (<Element> column.element).cloneNode(true));
                         }
                         else {

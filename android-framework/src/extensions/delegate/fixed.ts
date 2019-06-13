@@ -20,7 +20,7 @@ export interface FixedData {
 
 export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T) {
-        if (node.naturalElement && (node.documentBody || node.contentBoxWidth > 0 || node.contentBoxHeight > 0)) {
+        if (node.naturalChild && (node.documentBody || node.contentBoxWidth > 0 || node.contentBoxHeight > 0)) {
             const absolute = node.filter(item => !item.pageFlow && item.leftTopAxis && item.left >= 0 && item.right >= 0) as T[];
             if (absolute.length) {
                 const paddingTop = node.paddingTop + (node.documentBody ? node.marginTop : 0);

@@ -111,7 +111,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         for (const layout of this.session.documentRoot) {
             const node = layout.node;
-            if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.actualChildren.every(item => item.documentRoot)) {
+            if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.naturalChildren.every(item => item.documentRoot)) {
                 continue;
             }
             const parent = node.renderParent;
@@ -464,11 +464,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const length = axisY.length;
                 let cleared!: Map<T, string>;
                 if (floatContainer) {
-                    cleared = <Map<T, string>> NodeUI.linearData(parent.actualChildren as T[], true).cleared;
+                    cleared = <Map<T, string>> NodeUI.linearData(parent.naturalChildren as T[], true).cleared;
                 }
                 for (let k = 0; k < length; k++) {
                     let nodeY = axisY[k];
-                    if (nodeY.rendered || !nodeY.visible || nodeY.naturalElement && !nodeY.documentRoot && this.rootElements.has(<HTMLElement> nodeY.element)) {
+                    if (nodeY.rendered || !nodeY.visible || nodeY.naturalChild && !nodeY.documentRoot && this.rootElements.has(<HTMLElement> nodeY.element)) {
                         continue;
                     }
                     let parentY = nodeY.parent as T;
@@ -729,10 +729,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         CACHE.sort((a, b) => {
             if (a.depth === b.depth) {
-                if (a.nodeGroup && (b.length === 0 || b.naturalElement)) {
+                if (a.nodeGroup && (b.length === 0 || b.naturalChild)) {
                     return -1;
                 }
-                else if (b.nodeGroup && (a.length === 0 || a.naturalElement)) {
+                else if (b.nodeGroup && (a.length === 0 || a.naturalChild)) {
                     return 1;
                 }
                 return 0;

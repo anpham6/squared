@@ -12,7 +12,7 @@ const $css = squared.lib.css;
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
-const REGEXP_CLIPPATH: ObjectMap<RegExp> = {
+const CACHE_PATTERN: ObjectMap<RegExp> = {
     url: $regex.CSS.URL
 };
 
@@ -55,14 +55,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this.setAttribute('clip-rule');
             const clipPath = this.getAttribute('clip-path', true, false);
             if (clipPath !== '' && clipPath !== 'none') {
-                if (REGEXP_CLIPPATH.polygon === undefined) {
-                    REGEXP_CLIPPATH.polygon = /polygon\(([^)]+)\)/;
-                    REGEXP_CLIPPATH.inset = new RegExp(`inset\\(${$regex.STRING.LENGTH_PERCENTAGE}\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\)`);
-                    REGEXP_CLIPPATH.circle = new RegExp(`circle\\(${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`);
-                    REGEXP_CLIPPATH.ellipse = new RegExp(`ellipse\\(${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`);
+                if (CACHE_PATTERN.polygon === undefined) {
+                    CACHE_PATTERN.polygon = /polygon\(([^)]+)\)/;
+                    CACHE_PATTERN.inset = new RegExp(`inset\\(${$regex.STRING.LENGTH_PERCENTAGE}\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\)`);
+                    CACHE_PATTERN.circle = new RegExp(`circle\\(${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`);
+                    CACHE_PATTERN.ellipse = new RegExp(`ellipse\\(${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`);
                 }
-                for (const name in REGEXP_CLIPPATH) {
-                    const match = REGEXP_CLIPPATH[name].exec(clipPath);
+                for (const name in CACHE_PATTERN) {
+                    const match = CACHE_PATTERN[name].exec(clipPath);
                     if (match) {
                         if (name === 'url') {
                             this.clipPath = match[1];

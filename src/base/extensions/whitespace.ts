@@ -146,8 +146,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
         const inheritTop = new Set<number>();
         const inheritBottom = new Set<number>();
         for (const node of this.application.processing.cache) {
-            if (node.naturalElement && !node.layoutElement && node.actualChildren.length) {
-                const children = node.actualChildren;
+            if (node.naturalChild && !node.layoutElement && node.naturalChildren.length) {
+                const children = node.naturalChildren;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;
                 const length = children.length;
@@ -471,7 +471,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             const actualParent = node.actualParent;
                             if (actualParent) {
                                 let maxBottom = Number.NEGATIVE_INFINITY;
-                                for (const item of actualParent.actualChildren) {
+                                for (const item of actualParent.naturalChildren) {
                                     if (horizontal.includes(item as T)) {
                                         break;
                                     }

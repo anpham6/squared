@@ -22,7 +22,7 @@ let REGEXP_COLORSTOP: RegExp | undefined;
 
 function removeExcluded(node: NodeUI, element: Element, attr: string) {
     let value: string = element[attr];
-    const children = node.actualChildren;
+    const children = node.naturalChildren;
     const length = children.length;
     for (let i = 0; i < length; i++) {
         const item = <NodeUI> children[i];
@@ -338,10 +338,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak = false, trim = false) {
-        if (node.actualChildren.length) {
-            return node.actualChildren.some(item => item.lineBreak);
+        if (node.naturalChildren.length) {
+            return node.naturalChildren.some(item => item.lineBreak);
         }
-        else if (!lineBreak && node.naturalElement) {
+        else if (!lineBreak && node.naturalChild) {
             const element = <Element> node.element;
             let value = element.textContent as string;
             if (trim) {
@@ -806,7 +806,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $regex.CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
                                     value = value.replace($regex.CHAR.LEADINGSPACE, '');
                                 }
-                                else if (previousSibling.naturalElement) {
+                                else if (previousSibling.naturalChild) {
                                     const textContent = previousSibling.textContent;
                                     if (textContent.length) {
                                         previousSpaceEnd = textContent.charCodeAt(textContent.length - 1) === 32;

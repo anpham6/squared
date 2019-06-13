@@ -9,7 +9,7 @@ const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-const REGEXP_TIME = {
+const CACHE_PATTERN = {
     MS: /-?\d+ms$/,
     S: /-?\d+s$/,
     MIN: /-?\d+min$/,
@@ -25,20 +25,20 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             s = parseInt(value);
         }
         else {
-            if (REGEXP_TIME.MS.test(value)) {
+            if (CACHE_PATTERN.MS.test(value)) {
                 ms = parseFloat(value);
             }
-            else if (REGEXP_TIME.S.test(value)) {
+            else if (CACHE_PATTERN.S.test(value)) {
                 s = parseFloat(value);
             }
-            else if (REGEXP_TIME.MIN.test(value)) {
+            else if (CACHE_PATTERN.MIN.test(value)) {
                 s = parseFloat(value) * 60;
             }
-            else if (REGEXP_TIME.H.test(value)) {
+            else if (CACHE_PATTERN.H.test(value)) {
                 s = parseFloat(value) * 60 * 60;
             }
             else {
-                const match = REGEXP_TIME.CLOCK.exec(value);
+                const match = CACHE_PATTERN.CLOCK.exec(value);
                 if (match) {
                     if (match[2]) {
                         s += parseInt(match[2]) * 60 * 60;

@@ -66,7 +66,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public static baseline<T extends NodeUI>(list: T[], text = false) {
         list = $util.filterArray(list, item => {
             if ((item.baseline || $css.isLength(item.verticalAlign)) && (!text || item.textElement)) {
-                return !item.floating && !item.baselineAltered && (item.naturalElement && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline));
+                return !item.floating && !item.baselineAltered && (item.naturalChild && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline));
             }
             return false;
         });
@@ -266,7 +266,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         let children: T[];
         let cleared: Map<T, string> | undefined;
         if (parent) {
-            children = parent.actualChildren as T[];
+            children = parent.naturalChildren as T[];
             if (parent.floatContainer) {
                 cleared = NodeUI.linearData(list, true).cleared;
             }
@@ -873,7 +873,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     const attr = CSS_SPACING.get(CSS_SPACING_KEYS[i + start]) as string;
                     const value = this[attr];
                     if (node && value !== 0) {
-                        if (!node.naturalElement && node[attr] === 0) {
+                        if (!node.naturalChild && node[attr] === 0) {
                             node.css(attr, $css.formatPX(value), true);
                         }
                         else {
@@ -968,7 +968,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return element;
     }
 
-    get naturalElement() {
+    get naturalChild() {
         return this._element !== null;
     }
 
@@ -1136,7 +1136,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get previousSibling() {
         const parent = this.actualParent;
         if (parent) {
-            const children = <NodeUI[]> parent.actualChildren;
+            const children = <NodeUI[]> parent.naturalChildren;
             const index = children.indexOf(this);
             if (index !== -1) {
                 for (let i = index - 1; i >= 0; i--) {
@@ -1153,7 +1153,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get nextSibling() {
         const parent = this.actualParent;
         if (parent) {
-            const children = <NodeUI[]> parent.actualChildren;
+            const children = <NodeUI[]> parent.naturalChildren;
             const index = children.indexOf(this);
             if (index !== -1) {
                 const length = children.length;
@@ -1169,11 +1169,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get firstChild() {
-        return this.actualChildren[0] || null;
+        return this.naturalChildren[0] || null;
     }
 
     get lastChild() {
-        const children = this.actualChildren;
+        const children = this.naturalChildren;
         return children.length ? children[children.length - 1] : null;
     }
 
@@ -1189,7 +1189,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get textEmpty() {
         if (this._cached.textEmpty === undefined) {
-            this._cached.textEmpty = this.naturalElement && !this.plainText && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
+            this._cached.textEmpty = this.naturalChild && !this.plainText && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
         }
         return this._cached.textEmpty;
     }

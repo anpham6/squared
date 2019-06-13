@@ -436,11 +436,15 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             const beforeElement = this.createPseduoElement(element, '::before');
             const afterElement = this.createPseduoElement(element, '::after');
-            const children: T[] = [];
             const childNodes = element.childNodes;
-            const length = childNodes.length;
-            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap && element.children.length ? [[]] : undefined;
-            for (let i = 0, j = 0; i < length; i++) {
+            const lengthA = childNodes.length;
+            const lengthB = element.children.length;
+            const children: T[] = new Array(lengthA);
+            const elements: T[] = new Array(lengthB);
+            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap && lengthB ? [[]] : undefined;
+            let j = 0;
+            let k = 0;
+            for (let i = 0; i < lengthA; i++) {
                 const childElement = <HTMLElement> childNodes[i];
                 let child: T | undefined;
                 if (childElement === beforeElement) {
@@ -464,21 +468,27 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 else if (controller.includeElement(childElement)) {
                     child = this.partitionNodeChildren(childElement, depth);
-                }
-                if (child) {
-                    child.childIndex = j++;
-                    children.push(child);
-                    if (child.actualElement && queryMap) {
-                        queryMap[0].push(child);
-                        this.appendQueryMap(queryMap, depth, child);
+                    if (child) {
+                        elements[k++] = child;
+                        if (queryMap) {
+                            queryMap[0].push(child);
+                            this.appendQueryMap(queryMap, depth, child);
+                        }
                     }
                 }
+                if (child) {
+                    child.childIndex = j;
+                    children[j++] = child;
+                }
             }
+            children.length = j;
+            elements.length = k;
+            node.naturalChildren = children;
+            node.naturalElements = elements;
             this.cacheNodeChildren(node, children);
             if (queryMap && queryMap[0].length) {
                 node.queryMap = queryMap;
             }
-            node.actualChildren = children;
         }
         return node;
     }

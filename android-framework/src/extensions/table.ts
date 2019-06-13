@@ -119,7 +119,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 false
             );
         }
-        if (parent.css('empty-cells') === 'hide' && node.actualChildren.length === 0 && node.textContent === '') {
+        if (parent.css('empty-cells') === 'hide' && node.naturalChildren.length === 0 && node.textContent === '') {
             node.hide(true);
         }
         return undefined;

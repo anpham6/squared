@@ -13,7 +13,8 @@ declare global {
             inlineText: boolean;
             dir: string;
             documentParent: Node;
-            actualChildren: Node[];
+            naturalChildren: Node[];
+            naturalElements: Node[];
             style: CSSStyleDeclaration;
             parent?: Node;
             innerBefore?: Node;
@@ -29,8 +30,8 @@ declare global {
             readonly tagName: string;
             readonly htmlElement: boolean;
             readonly styleElement: boolean;
+            readonly naturalChild: boolean;
             readonly naturalElement: boolean;
-            readonly actualElement: boolean;
             readonly imageElement: boolean;
             readonly svgElement: boolean;
             readonly flexElement: boolean;
@@ -116,7 +117,6 @@ declare global {
             readonly nextSibling: Node | null;
             readonly previousElementSibling: Node | null;
             readonly nextElementSibling: Node | null;
-            readonly childrenElements: Node[];
             readonly attributes: StringMap;
             readonly center: Point;
             init(): void;

@@ -59,8 +59,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         styleMap: {}
     };
 
-    protected abstract _documentParent?: T;
     protected abstract _cached: CachedValue<T>;
+    protected abstract _documentParent?: T;
+    protected abstract _naturalChildren?: T[];
+    protected abstract _naturalElements?: T[];
 
     private _parent?: T;
     private _data = {};
@@ -707,13 +709,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             }
                                             break;
                                         case ':only-child':
-                                            if (parent.childrenElements.length > 1) {
+                                            if (parent.naturalElements.length > 1) {
                                                 return false;
                                             }
                                             break;
                                         case ':only-of-type': {
                                             let j = 0;
-                                            for (const item of parent.childrenElements) {
+                                            for (const item of parent.naturalElements) {
                                                 if (item.tagName === tagName && ++j > 1) {
                                                     return false;
                                                 }
@@ -721,7 +723,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             break;
                                         }
                                         case ':first-of-type': {
-                                            for (const item of parent.childrenElements) {
+                                            for (const item of parent.naturalElements) {
                                                 if (item.tagName === tagName) {
                                                     if (item !== node) {
                                                         return false;
@@ -900,7 +902,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             let match = CACHE_PATTERN.NTH_CHILD_OFTYPE.exec(pseudo);
                                             if (match) {
                                                 const placement = match[3].trim();
-                                                const children = parent.childrenElements;
+                                                const children = parent.naturalElements;
                                                 if (match[1]) {
                                                     children.reverse();
                                                 }
@@ -1128,7 +1130,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             }
                                         }
                                         else {
-                                            const children = parent.childrenElements as T[];
+                                            const children = parent.naturalElements as T[];
                                             switch (adjacent) {
                                                 case '+': {
                                                     const indexA = children.indexOf(node);
@@ -1207,7 +1209,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private setDimension(attr: string, attrMin: string, attrMax: string) {
         const baseValue = this.parseUnit(this._styleMap[attr], attr);
         let value = Math.max(baseValue, this.parseUnit(this._styleMap[attrMin], attr));
-        if (value === 0 && this.naturalElement && this.styleElement) {
+        if (value === 0 && this.naturalChild && this.styleElement) {
             const element = <HTMLInputElement> this._element;
             switch (element.tagName) {
                 case 'IMG':
@@ -1435,15 +1437,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.htmlElement || this.svgElement;
     }
 
-    get naturalElement() {
+    get naturalChild() {
         return true;
     }
 
-    get actualElement() {
-        if (this._cached.actualElement === undefined) {
-            this._cached.actualElement = this.naturalElement && this.styleElement && !this.pseudoElement;
+    get naturalElement() {
+        if (this._cached.naturalElement === undefined) {
+            this._cached.naturalElement = this.naturalChild && this.styleElement && !this.pseudoElement;
         }
-        return this._cached.actualElement;
+        return this._cached.naturalElement;
     }
 
     get pseudoElement() {
@@ -1632,7 +1634,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (hasOwnStyle) {
                     value = $css.parseUnit(this.css('lineHeight'), this.fontSize);
                 }
-                else if (this.naturalElement) {
+                else if (this.naturalChild) {
                     value = $util.convertFloat(this.cssAscend('lineHeight', false, $const.CSS.HEIGHT));
                     if (this.styleElement) {
                         const fontSize = this.cssInitial('fontSize');
@@ -1646,7 +1648,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                     }
                 }
-                this._cached.lineHeight = hasOwnStyle || value > this.actualHeight || this.multiline || this.block && this.actualChildren.some(node => node.textElement) ? value : 0;
+                this._cached.lineHeight = hasOwnStyle || value > this.actualHeight || this.multiline || this.block && this.naturalChildren.some(node => node.textElement) ? value : 0;
             }
             else {
                 this._cached.lineHeight = 0;
@@ -2234,41 +2236,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.actualParent;
     }
 
-    set actualChildren(value) {
-        this._cached.actualChildren = value;
-    }
-
-    get actualChildren() {
-        if (this._cached.actualChildren === undefined) {
-            if (this.actualElement) {
-                const children: T[] = [];
-                let i = 0;
-                (<HTMLElement> this._element).childNodes.forEach((element: Element) => {
-                    const node = $session.getElementAsNode<T>(element, this.sessionId);
-                    if (node) {
-                        node.childIndex = i++;
-                        children.push(node);
-                    }
-                });
-                this._cached.actualChildren = children;
-            }
-            else {
-                if (this._initial.iteration === -1) {
-                    this.saveAsInitial();
-                }
-                this._cached.actualChildren = this._initial.children;
-            }
-        }
-        return this._cached.actualChildren;
-    }
-
-    get childrenElements() {
-        if (this._cached.childrenElements === undefined) {
-            this._cached.childrenElements = $util.filterArray(this.actualChildren, node => node.actualElement);
-        }
-        return this._cached.childrenElements;
-    }
-
     get actualWidth() {
         if (this._cached.actualWidth === undefined) {
             if (this.plainText) {
@@ -2318,19 +2285,56 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return { width: this.actualWidth, height: this.actualHeight };
     }
 
+    set naturalChildren(value) {
+        this._naturalChildren = value;
+    }
+    get naturalChildren() {
+        if (this._naturalChildren === undefined) {
+            if (this.naturalElement) {
+                const children: T[] = [];
+                let i = 0;
+                (<HTMLElement> this._element).childNodes.forEach((element: Element) => {
+                    const node = $session.getElementAsNode<T>(element, this.sessionId);
+                    if (node) {
+                        node.childIndex = i++;
+                        children.push(node);
+                    }
+                });
+                this._naturalChildren = children;
+            }
+            else {
+                if (this._initial.iteration === -1) {
+                    this.saveAsInitial();
+                }
+                this._naturalChildren = this._initial.children;
+            }
+        }
+        return this._naturalChildren;
+    }
+
+    set naturalElements(value) {
+        this._naturalElements = value;
+    }
+    get naturalElements() {
+        if (this._naturalElements === undefined) {
+            this._naturalElements = $util.filterArray(this.naturalChildren, node => node.naturalElement);
+        }
+        return this._naturalElements;
+    }
+
     get firstChild() {
-        return this.childrenElements[0] || null;
+        return this.naturalElements[0] || null;
     }
 
     get lastChild() {
-        const children = this.childrenElements;
+        const children = this.naturalElements;
         return children.length ? children[children.length - 1] : null;
     }
 
     get previousSibling() {
         const parent = this.actualParent;
         if (parent) {
-            return parent.actualChildren[this.childIndex - 1] || null;
+            return parent.naturalChildren[this.childIndex - 1] || null;
         }
         return null;
     }
@@ -2338,7 +2342,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get nextSibling() {
         const parent = this.actualParent;
         if (parent) {
-            return parent.actualChildren[this.childIndex + 1] || null;
+            return parent.naturalChildren[this.childIndex + 1] || null;
         }
         return null;
     }
@@ -2346,7 +2350,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get previousElementSibling() {
         const parent = this.actualParent;
         if (parent) {
-            const children = parent.childrenElements;
+            const children = parent.naturalElements;
             const index = children.indexOf(this);
             if (index > 0) {
                 return children[index - 1];
@@ -2358,7 +2362,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get nextElementSibling() {
         const parent = this.actualParent;
         if (parent) {
-            const children = parent.childrenElements;
+            const children = parent.naturalElements;
             const index = children.indexOf(this);
             if (index < children.length - 1) {
                 return children[index + 1];
@@ -2396,7 +2400,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get dir() {
         if (this._cached.dir === undefined) {
-            let value = this.naturalElement && this.styleElement && !this.pseudoElement ? (<HTMLElement> this._element).dir : '';
+            let value = this.naturalChild && this.styleElement && !this.pseudoElement ? (<HTMLElement> this._element).dir : '';
             switch (value) {
                 case 'ltr':
                 case 'rtl':

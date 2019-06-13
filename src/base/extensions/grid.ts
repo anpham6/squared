@@ -237,7 +237,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (columnEnd.length) {
                             const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
-                            for (const sibling of item.documentParent.actualChildren as T[]) {
+                            for (const sibling of item.documentParent.naturalChildren as T[]) {
                                 if (!assigned.has(sibling) && sibling.visible && !sibling.rendered && $util.aboveRange(sibling.linear.left, item.linear.right) && $util.belowRange(sibling.linear.right, columnEnd[l])) {
                                     if (data.siblings === undefined) {
                                         data.siblings = [];
