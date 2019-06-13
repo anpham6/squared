@@ -694,15 +694,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundSize = backgroundSize.concat(backgroundSize.slice(0));
                 }
                 backgroundSize.length = lengthImage;
+                const resource = <android.base.Resource<T>> this.application.resourceHandler;
+                const resourceInstance = this._resourceSvgInstance;
                 for (let i = 0, j = 0; i < lengthImage; i++) {
                     let value = bgImage[i];
                     let valid = false;
                     if (typeof value === 'string') {
                         if (value !== 'initial') {
-                            if (this._resourceSvgInstance) {
-                                const [parentElement, element] = this._resourceSvgInstance.createSvgElement(node, value);
+                            if (resourceInstance) {
+                                const [parentElement, element] = resourceInstance.createSvgElement(node, value);
                                 if (parentElement && element) {
-                                    const drawable = this._resourceSvgInstance.createSvgDrawable(node, element);
+                                    const drawable = resourceInstance.createSvgDrawable(node, element);
                                     if (drawable !== '') {
                                         backgroundImage[j] = drawable;
                                         imageDimensions[j] = { width: element.width.baseVal.value, height: element.height.baseVal.value };
@@ -715,11 +717,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 const match = $regex.CSS.URL.exec(value);
                                 if (match) {
                                     if (match[1].startsWith('data:image')) {
-                                        const rawData = this.application.resourceHandler.getRawData(match[1]);
+                                        const rawData = resource.getRawData(match[1]);
                                         if (rawData && rawData.base64) {
                                             backgroundImage[j] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));
                                             imageDimensions[j] = { width: rawData.width, height: rawData.height };
-                                            (<android.base.Resource<T>> this.application.resourceHandler).writeRawImage(rawData.filename, rawData.base64);
+                                            resource.writeRawImage(rawData.filename, rawData.base64);
                                             valid = true;
                                         }
                                     }
@@ -727,7 +729,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         value = $util.resolvePath(match[1]);
                                         backgroundImage[j] = Resource.addImage({ mdpi: value });
                                         if (backgroundImage[j] !== '') {
-                                            imageDimensions[j] = this.application.resourceHandler.getImage(value);
+                                            imageDimensions[j] = resource.getImage(value);
                                             valid = true;
                                         }
                                     }
@@ -980,6 +982,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         break;
                     case '100%':
                     case '100% 100%':
+                    case '100% auto':
+                    case 'auto 100%':
                         gravityX = 'fill_horizontal';
                         gravityY = 'fill_vertical';
                         tileModeX = '';

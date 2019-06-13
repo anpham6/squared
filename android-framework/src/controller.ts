@@ -491,7 +491,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.hide();
                     return { layout, next: true };
                 }
-                else if (node.naturalChild && child.plainText) {
+                else if (node.naturalElement && child.plainText) {
                     node.clear();
                     node.inlineText = true;
                     node.textContent = child.textContent;
@@ -574,7 +574,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.setType(CONTAINER_NODE.FRAME);
         }
         else if (
-            node.naturalChild &&
+            node.naturalElement &&
             !node.documentRoot &&
             node.elementId === '' &&
             node.bounds.height === 0 &&
@@ -1700,7 +1700,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         const actualParent = node.actualParent as T;
                         if (actualParent) {
-                            if (actualParent === renderParent && actualParent.blockStatic && node.naturalChild && node.inlineStatic) {
+                            if (actualParent === renderParent && actualParent.blockStatic && node.naturalElement && node.inlineStatic) {
                                 return actualParent.box.width - (node.linear.left - actualParent.box.left);
                             }
                             else if (actualParent.floatContainer) {
@@ -1709,7 +1709,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 if (container.length) {
                                     let leftOffset = 0;
                                     let rightOffset = 0;
-                                    for (const item of actualParent.naturalChildren as T[]) {
+                                    for (const item of actualParent.naturalElements as T[]) {
                                         if (item.floating && !children.includes(item) && node.intersectY(item.linear)) {
                                             if (item.float === $const.CSS.LEFT) {
                                                 if (Math.floor(item.linear.right) > node.box.left) {
@@ -1779,7 +1779,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         continue;
                     }
                     let bounds = item.bounds;
-                    if (item.naturalChild && item.inlineText && !item.hasPX($const.CSS.WIDTH)) {
+                    if (item.naturalElement && item.inlineText && !item.hasPX($const.CSS.WIDTH)) {
                         const rect = $session.getRangeClientRect(<Element> item.element, item.sessionId);
                         if (rect.numberOfLines || rect.width < item.box.width) {
                             bounds = rect;

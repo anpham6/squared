@@ -902,18 +902,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             let match = CACHE_PATTERN.NTH_CHILD_OFTYPE.exec(pseudo);
                                             if (match) {
                                                 const placement = match[3].trim();
-                                                const children = parent.naturalElements;
+                                                let children = parent.naturalElements;
                                                 if (match[1]) {
-                                                    children.reverse();
+                                                    children = children.slice(0).reverse();
                                                 }
-                                                let index: number;
-                                                if (match[2] === 'child') {
-                                                    index = children.indexOf(node);
-                                                }
-                                                else {
-                                                    index = $util.filterArray(children, item => item.tagName === tagName).indexOf(node);
-                                                }
-                                                index++;
+                                                const index = (match[2] === 'child' ? children.indexOf(node) : $util.filterArray(children, item => item.tagName === tagName).indexOf(node)) + 1;
                                                 if (index > 0) {
                                                     if ($util.isNumber(placement)) {
                                                         if (parseInt(placement) !== index) {
@@ -1209,7 +1202,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private setDimension(attr: string, attrMin: string, attrMax: string) {
         const baseValue = this.parseUnit(this._styleMap[attr], attr);
         let value = Math.max(baseValue, this.parseUnit(this._styleMap[attrMin], attr));
-        if (value === 0 && this.naturalChild && this.styleElement) {
+        if (value === 0 && this.styleElement) {
             const element = <HTMLInputElement> this._element;
             switch (element.tagName) {
                 case 'IMG':
@@ -2293,8 +2286,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.naturalElement) {
                 const children: T[] = [];
                 let i = 0;
-                (<HTMLElement> this._element).childNodes.forEach((element: Element) => {
-                    const node = $session.getElementAsNode<T>(element, this.sessionId);
+                (<HTMLElement> this._element).childNodes.forEach((child: Element) => {
+                    const node = $session.getElementAsNode<T>(child, this.sessionId);
                     if (node) {
                         node.childIndex = i++;
                         children.push(node);
@@ -2328,7 +2321,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get lastChild() {
         const children = this.naturalElements;
-        return children.length ? children[children.length - 1] : null;
+        const length = children.length;
+        return length ? children[length - 1] : null;
     }
 
     get previousSibling() {
@@ -2400,20 +2394,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get dir() {
         if (this._cached.dir === undefined) {
-            let value = this.naturalChild && this.styleElement && !this.pseudoElement ? (<HTMLElement> this._element).dir : '';
+            let value = this.naturalElement ? (<HTMLElement> this._element).dir : '';
             switch (value) {
                 case 'ltr':
                 case 'rtl':
                     break;
                 default:
-                    let parent = this.actualParent;
-                    while (parent) {
-                        value = parent.dir;
+                    let current = this.actualParent;
+                    while (current) {
+                        value = current.dir;
                         if (value) {
                             this._cached.dir = value;
                             break;
                         }
-                        parent = parent.actualParent;
+                        current = current.actualParent;
                     }
                     break;
             }

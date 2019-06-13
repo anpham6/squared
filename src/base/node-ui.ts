@@ -249,82 +249,47 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static partitionRows(list: T[]) {
         const parent = list[0].actualParent as T;
-        const nodeGroup = $util.filterArray(list, node => node.nodeGroup);
-        function includes(node: T) {
-            if (list.includes(node)) {
-                return node;
-            }
-            let current = node.outerWrapper;
-            while (current) {
-                if (list.includes(current)) {
-                    return current;
-                }
-                current = current.outerWrapper;
-            }
-            return undefined;
-        }
-        let children: T[];
-        let cleared: Map<T, string> | undefined;
-        if (parent) {
-            children = parent.naturalChildren as T[];
-            if (parent.floatContainer) {
-                cleared = NodeUI.linearData(list, true).cleared;
-            }
-        }
-        else {
-            children = list;
-            if (children.some(item => item.floating)) {
-                cleared = NodeUI.linearData(children, true).cleared;
-            }
-        }
+        const cleared = parent && parent.floatContainer ? NodeUI.linearData(parent.naturalElements as T[], true).cleared : undefined;
         const result: T[][] = [];
         let row: T[] = [];
-        const length = children.length;
+        let siblings: T[] = [];
+        const length = list.length;
         for (let i = 0; i < length; i++) {
-            let node: T | undefined = children[i];
-            if (nodeGroup.length) {
-                let next = false;
-                for (let j = 0; j < nodeGroup.length; j++) {
-                    const group = nodeGroup[j];
-                    if (group.contains(node) || group === node) {
-                        if (row.length) {
-                            result.push(row);
-                        }
-                        result.push([group]);
-                        row = [];
-                        nodeGroup.splice(j, 1);
-                        next = true;
-                        break;
-                    }
-                }
-                if (next) {
-                    continue;
-                }
-            }
-            if (row.length === 0) {
-                node = includes(node);
-                if (node) {
-                    row.push(node);
-                }
-            }
-            else {
-                if (node.alignedVertically(row, cleared)) {
+            const node = list[i];
+            let active = node;
+            if (!node.naturalChild) {
+                if (node.nodeGroup) {
                     if (row.length) {
                         result.push(row);
                     }
-                    node = includes(node);
-                    if (node) {
-                        row = [node];
+                    result.push([node]);
+                    row = [];
+                    siblings.length = 0;
+                    continue;
+                }
+                let current = node.innerWrapped;
+                while (current) {
+                    if (current.naturalChild) {
+                        active = current;
+                        break;
                     }
-                    else {
-                        row = [];
+                    current = current.innerWrapped;
+                }
+            }
+            if (row.length === 0) {
+                row.push(node);
+            }
+            else {
+                if (active.alignedVertically(siblings, cleared)) {
+                    if (row.length) {
+                        result.push(row);
                     }
+                    row = [node];
+                    siblings = [active];
                 }
                 else {
-                    node = includes(node);
-                    if (node) {
-                        row.push(node);
-                    }
+                    row.push(node);
+                    siblings.push(active);
                 }
             }
         }
@@ -1189,7 +1154,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get textEmpty() {
         if (this._cached.textEmpty === undefined) {
-            this._cached.textEmpty = this.naturalChild && !this.plainText && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
+            this._cached.textEmpty = this.naturalElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
         }
         return this._cached.textEmpty;
     }

@@ -464,11 +464,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const length = axisY.length;
                 let cleared!: Map<T, string>;
                 if (floatContainer) {
-                    cleared = <Map<T, string>> NodeUI.linearData(parent.naturalChildren as T[], true).cleared;
+                    cleared = <Map<T, string>> NodeUI.linearData(parent.naturalElements as T[], true).cleared;
                 }
                 for (let k = 0; k < length; k++) {
                     let nodeY = axisY[k];
-                    if (nodeY.rendered || !nodeY.visible || nodeY.naturalChild && !nodeY.documentRoot && this.rootElements.has(<HTMLElement> nodeY.element)) {
+                    if (nodeY.rendered || !nodeY.visible || nodeY.naturalElement && !nodeY.documentRoot && this.rootElements.has(<HTMLElement> nodeY.element)) {
                         continue;
                     }
                     let parentY = nodeY.parent as T;

@@ -9,7 +9,7 @@ const $e = squared.base.lib.enumeration;
 
 export default class NegativeViewport<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T, parent: T) {
-        return !node.pageFlow && parent.naturalChild && parent.documentRoot && (
+        return !node.pageFlow && parent.naturalElement && parent.documentRoot && (
             Math.ceil(node.linear.left) < Math.floor(parent.box.left) && (node.left < 0 || node.marginLeft < 0 || !node.hasPX($const.CSS.LEFT) && node.right > 0) ||
             Math.floor(node.linear.right) > Math.ceil(parent.box.right) && (node.left > 0 || node.marginLeft > 0 || !node.hasPX($const.CSS.LEFT) && node.right < 0) ||
             Math.ceil(node.linear.top) < Math.floor(parent.box.top) && (node.top < 0 || node.marginTop < 0 || !node.hasPX($const.CSS.TOP) && node.bottom > 0) ||

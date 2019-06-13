@@ -22,12 +22,10 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     public setBounds() {
         if (this.length) {
-            const bounds = NodeUI.outerRegion(this);
-            this._bounds = {
-                ...bounds,
-                width: bounds.right - bounds.left,
-                height: bounds.bottom - bounds.top
-            };
+            const bounds = <BoxRectDimension> NodeUI.outerRegion(this);
+            bounds.width = bounds.right - bounds.left;
+            bounds.height = bounds.bottom - bounds.top;
+            this._bounds = bounds;
         }
     }
 
@@ -52,8 +50,8 @@ export default abstract class NodeGroupUI extends NodeUI {
         if (this._cached.blockStatic === undefined) {
             const value = (
                 this.naturalChildren.length && this.naturalChildren[0].blockStatic ||
-                this.actualWidth === this.documentParent.actualWidth && !this.some(node => node.plainText || node.naturalChild && node.rightAligned) ||
-                this.layoutVertical && this.some(node => node.naturalChild && node.blockStatic) ||
+                this.actualWidth === this.documentParent.actualWidth && !this.some(node => node.plainText || node.naturalElement && node.rightAligned) ||
+                this.layoutVertical && this.some(node => node.naturalElement && node.blockStatic) ||
                 this.documentParent.blockStatic && this.hasAlign(NODE_ALIGNMENT.COLUMN)
             );
             if (value || this.containerType !== 0) {
@@ -140,6 +138,15 @@ export default abstract class NodeGroupUI extends NodeUI {
         );
     }
 
+    get firstChild() {
+        return this.children[0] || null;
+    }
+
+    get lastChild() {
+        const children = this.children;
+        return children.length ? children[children.length - 1] : null;
+    }
+
     get tagName() {
         return '';
     }
@@ -156,13 +163,12 @@ export default abstract class NodeGroupUI extends NodeUI {
         return true;
     }
 
-    get firstChild() {
-        return this.children[0] || null;
+    get naturalChild() {
+        return false;
     }
 
-    get lastChild() {
-        const children = this.children;
-        return children.length ? children[children.length - 1] : null;
+    get naturalElement() {
+        return false;
     }
 
     get previousSibling() {

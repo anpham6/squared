@@ -146,7 +146,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
         const inheritTop = new Set<number>();
         const inheritBottom = new Set<number>();
         for (const node of this.application.processing.cache) {
-            if (node.naturalChild && !node.layoutElement && node.naturalChildren.length) {
+            if (node.naturalElement && !node.layoutElement && node.naturalElements.length) {
                 const children = node.naturalChildren;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;

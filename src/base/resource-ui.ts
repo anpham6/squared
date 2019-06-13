@@ -338,8 +338,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak = false, trim = false) {
-        if (node.naturalChildren.length) {
-            return node.naturalChildren.some(item => item.lineBreak);
+        if (node.naturalElements.length) {
+            return node.naturalElements.some(item => item.lineBreak);
         }
         else if (!lineBreak && node.naturalChild) {
             const element = <Element> node.element;
@@ -806,7 +806,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $regex.CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
                                     value = value.replace($regex.CHAR.LEADINGSPACE, '');
                                 }
-                                else if (previousSibling.naturalChild) {
+                                else if (previousSibling.naturalElement) {
                                     const textContent = previousSibling.textContent;
                                     if (textContent.length) {
                                         previousSpaceEnd = textContent.charCodeAt(textContent.length - 1) === 32;

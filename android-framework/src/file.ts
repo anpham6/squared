@@ -22,8 +22,9 @@ type ItemValue = {
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const REGEXP_UNIT = /([">])(-?[\d.]+)px(["<])/g;
 const REGEXP_FILENAME = /^(.+)\/(.+?\.\w+)$/;
+const REGEXP_DRAWABLE_UNIT = /"(-?[\d.]+)px"/g;
+const REGEXP_THEME_UNIT = />(-?[\d.]+)px</g;
 
 function getFileAssets(items: string[]) {
     const result: FileAsset[] = [];
@@ -52,12 +53,9 @@ function getImageAssets(items: string[]) {
     return result;
 }
 
-function replaceLength(value: string, dpi = 160, format = 'dp', font = false, precision = 3) {
-    if (format === 'dp') {
-        return value.replace(REGEXP_UNIT, (match, ...capture) => capture[0] + convertLength(capture[1], dpi, font, precision) + capture[2]);
-    }
-    return value;
-}
+const replaceDrawableLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEXP_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], dpi, false) + '"') : value;
+
+const replaceThemeLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEXP_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], dpi, false) + '<') : value;
 
 const createFileAsset = (pathname: string, filename: string, content: string): FileAsset => ({ pathname, filename, content });
 
@@ -309,7 +307,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 if (match) {
                     result.push(
                         $xml.replaceTab(
-                            replaceLength(
+                            replaceThemeLength(
                                 $xml.applyTemplate('resources', STYLE_TMPL, data),
                                 settings.resolutionDPI,
                                 settings.convertPixels
@@ -358,7 +356,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             for (const [name, value] of this.stored.drawables.entries()) {
                 result.push(
                     $xml.replaceTab(
-                        replaceLength(
+                        replaceDrawableLength(
                             value,
                             settings.resolutionDPI,
                             settings.convertPixels

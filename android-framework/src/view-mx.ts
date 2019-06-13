@@ -556,7 +556,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (this.controlId === '') {
                 let name: string | undefined;
-                if (this.styleElement && this.naturalChild) {
+                if (this.styleElement) {
                     name = validateString(this.elementId || $dom.getNamedItem(this.element, 'name'));
                     if (name === STRING_ANDROID.PARENT || RESERVED_JAVA.includes(name)) {
                         name = `_${name}`;
@@ -679,7 +679,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                             }
                             if (layoutWidth === '' && (
-                                    renderParent.blockWidth && this.layoutVertical && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalChildren.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) ||
+                                    renderParent.blockWidth && this.layoutVertical && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) ||
                                     !this.pageFlow && this.absoluteParent === documentParent && this.hasPX($const.CSS.LEFT) && this.hasPX($const.CSS.RIGHT) ||
                                     documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row'
                                ))
@@ -1206,7 +1206,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.android('layoutDirection', 'rtl');
                 }
             }
-            if (this.styleElement && this.naturalChild) {
+            if (this.styleElement) {
                 const dataset = $css.getDataSet(<HTMLElement> this.element, STRING_ANDROID.ANDROID);
                 for (const name in dataset) {
                     const obj = name === 'attr' ? STRING_ANDROID.ANDROID
@@ -1379,7 +1379,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get renderExclude() {
             if (this._cached.renderExclude === undefined) {
-                if (this.naturalChild && !this.imageElement && this.length === 0) {
+                if (this.naturalElement && !this.imageElement && this.length === 0) {
                     if (this.blockStatic || this.layoutVertical) {
                         return this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0;
                     }
