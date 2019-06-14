@@ -1379,12 +1379,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get renderExclude() {
             if (this._cached.renderExclude === undefined) {
-                if (this.styleElement && !this.imageElement && this.length === 0) {
+                if (this.styleElement && this.length === 0 && !this.imageElement) {
                     if (this.blockStatic || this.layoutVertical) {
-                        return this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0 || this.css($const.CSS.HEIGHT) === '0px' && this.css('overflow') === 'hidden';
+                        return this.contentBoxHeight === 0 && (this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0 || this.css($const.CSS.HEIGHT) === '0px' && this.css('overflow') === 'hidden');
                     }
                     else {
-                        return this.bounds.width === 0 && this.textEmpty && this.marginLeft <= 0 && this.marginRight <= 0;
+                        return this.bounds.width === 0 && this.contentBoxWidth === 0 && this.textEmpty && this.marginLeft <= 0 && this.marginRight <= 0;
                     }
                 }
                 else {

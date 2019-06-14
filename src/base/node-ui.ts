@@ -1168,7 +1168,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get textEmpty() {
         if (this._cached.textEmpty === undefined) {
-            this._cached.textEmpty = this.naturalElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '');
+            this._cached.textEmpty = this.styleElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '') && !this.imageElement && !this.svgElement;
         }
         return this._cached.textEmpty;
     }

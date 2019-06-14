@@ -1,10 +1,10 @@
 # squared
 
-This program can convert moderately complex HTML pages into the standard XML layouts for Android. HTML is the most popular and versatile way to design user interfaces and can be used to generate the UI for any platform.
+This program can convert moderately complex HTML pages into the standard XML layouts for Android. HTML is the most popular and versatile way to design user interfaces and can be used to generate the UI for any platform. SVG is nearly fully supported including transformations and CSS/SMIL animations.
 
 The ratio is about 1 line of HTML for every 10 lines of Android XML when using squared to generate the UI for your mobile application. It will also auto-generate the XML resources for the entire project. Using HTML best practices and techniques will output the fastest possible layout structure which is close to 95% efficient and better than most hand-written code.
 
-There is also nearly full SVG support including transformations and CSS/SMIL animations.
+There is also a virtual DOM framework for the browser which offers fast querying and a better programming interface than a plain DOM element.
 
 ## Installation (global js variable: squared)
 
@@ -31,7 +31,7 @@ GitHub
 <script src="/dist/squared.min.js"></script>
 <script src="/dist/squared.base.min.js"></script>
 <script src="/dist/squared.svg.min.js"></script> /* optional */
-<script src="/dist/android.framework.min.js"></script>
+<script src="/dist/android.framework.min.js"></script> /* OR: chrome.framework.min.js */
 <script>
     // optional
     squared.settings.targetAPI = 26;
@@ -41,7 +41,7 @@ GitHub
 
     document.addEventListener('DOMContentLoaded', function() {
         // required
-        squared.setFramework(android);
+        squared.setFramework(android); // OR: 'chrome'
 
         // required: zero or more DOM elements
         squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview' */, /* etc... */);
@@ -60,7 +60,7 @@ Library files are in the /dist folder. A minimum of *three* files are required t
 1. squared
 2. squared-base
 3. squared-svg - *optional*
-4. framework (e.g. android)
+4. framework (e.g. android | chrome)
 5. extensions (e.g. android.widget) - *optional*
 
 Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3
@@ -83,9 +83,11 @@ NOTE: Calling "save" or "write" methods before the images have completely loaded
 
 *** External CSS files cannot be parsed when loading HTML pages using the file:// protocol (hard drive) with Chrome 64 or higher. Loading the HTML page from a web server (http://localhost) or embedding the CSS files into a &lt;style&gt; tag can get you past this security restriction. You can also use your preferred browser Safari/Edge/Firefox. The latest version of Chrome is ideally what you should use to generate the production version of your program. ***
 
-### ALL: User Settings (example: android)
+### ALL: User Settings
 
 These settings are available in the global variable "squared" to customize your desired output structure. Each framework shares a common set of settings and also a subset of their own settings.
+
+#### Example: android
 
 ```javascript
 squared.settings = {
@@ -127,8 +129,9 @@ squared.settings = {
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
     showAttributes: true,
+    createQuerySelectorMap: false,
     convertPixels: 'dp',
-    insertSpaces: 4, // tabs: 0
+    insertSpaces: 4,
     handleExtensionsAsync: true,
     autoCloseOnWrite: true,
     showErrorMessages: true,
@@ -139,6 +142,18 @@ squared.settings = {
     outputMainFileName: 'activity_main.xml',
     outputArchiveFormat: 'zip', // zip | tar
     outputArchiveTimeout: 30 // seconds
+};
+```
+#### Example: chrome
+
+```javascript
+squared.settings = {
+    builtInExtensions: [],
+    preloadImages: false,
+    handleExtensionsAsync: true,
+    showErrorMessages: false,
+    createQuerySelectorMap: true,
+    excludePlainText: true
 };
 ```
 
@@ -229,19 +244,19 @@ Using "target" into a ConstraintLayout or RelativeLayout container will not incl
 You can use the "system.customize" method to change the default settings for the specific controls which are applied when a view is rendered.
 
 ```javascript
-system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
-system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
-system.writeLayoutAllXml(saveToDisk: boolean) // output generated xml
-system.writeResourceAllXml(saveToDisk: boolean)
-system.writeResourceAnimXml(saveToDisk: boolean)
-system.writeResourceArrayXml(saveToDisk: boolean)
-system.writeResourceColorXml(saveToDisk: boolean)
-system.writeResourceDimenXml(saveToDisk: boolean)
-system.writeResourceDrawableXml(saveToDisk: boolean)
-system.writeResourceDrawableImageXml(saveToDisk: boolean)
-system.writeResourceFontXml(saveToDisk: boolean)
-system.writeResourceStringXml(saveToDisk: boolean)
-system.writeResourceStyleXml(saveToDisk: boolean)
+squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
+squared.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
+squared.system.writeLayoutAllXml(saveToDisk: boolean) // output generated xml
+squared.system.writeResourceAllXml(saveToDisk: boolean)
+squared.system.writeResourceAnimXml(saveToDisk: boolean)
+squared.system.writeResourceArrayXml(saveToDisk: boolean)
+squared.system.writeResourceColorXml(saveToDisk: boolean)
+squared.system.writeResourceDimenXml(saveToDisk: boolean)
+squared.system.writeResourceDrawableXml(saveToDisk: boolean)
+squared.system.writeResourceDrawableImageXml(saveToDisk: boolean)
+squared.system.writeResourceFontXml(saveToDisk: boolean)
+squared.system.writeResourceStringXml(saveToDisk: boolean)
+squared.system.writeResourceStyleXml(saveToDisk: boolean)
 ```
 
 ```javascript
@@ -254,6 +269,24 @@ system.writeResourceStyleXml(saveToDisk: boolean)
         }
     });
 </script>
+```
+
+### CHROME: Public System Methods
+
+The system methods querySelector and querySelectorAll can also be called from every Node object and provide the same functionality as the similarly named DOM methods.
+
+```javascript
+squared.system.getElement(element: HTMLElement)
+squared.system.getElementById(value: string)
+squared.system.querySelector(value: string)
+squared.system.querySelectorAll(value: string)
+squared.system.getElementMap()
+
+// async methods
+await chrome.getElement(element: HTMLElement)
+await chrome.getElementById(value: string)
+await chrome.querySelector(value: string)
+await chrome.querySelectorAll(value: string)
 ```
 
 ### ANDROID: Extension Widgets
@@ -360,9 +393,11 @@ The attributes "android-include" and "android-include-end" can only be applied t
 Only the XML based layout and resource files are generated with squared which can be viewed on the Android device/emulator without any Java/Kotlin backend code. To play animations you also have to "start" the animation in MainActivity.java.
 
 ```javascript
+    import android.graphics.drawable.Animatable;
+
     android.widget.ImageView imageView1 = findViewById(R.id.imageview_1);
     if (imageView1 != null) {
-        android.graphics.drawable.Animatable animatable = imageView1.getDrawable();
+        Animatable animatable = (Animatable) imageView1.getDrawable();
         animatable.start();
     }
 ```

@@ -1,4 +1,4 @@
-/* android.widget 1.0.0
+/* android.widget 1.1.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -15,7 +15,7 @@ this.android.widget.floatingactionbutton = (function () {
     const $utilA = android.lib.util;
     const $e = squared.base.lib.enumeration;
     const PREFIX_DIALOG = 'ic_dialog_';
-    class FloatingActionButton extends squared.base.Extension {
+    class FloatingActionButton extends squared.base.ExtensionUI {
         is(node) {
             const element = node.element;
             return super.is(node) && (element.tagName !== 'INPUT' || ['button', 'file', 'image', 'reset', 'search', 'submit'].includes(element.type));

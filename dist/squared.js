@@ -1,4 +1,4 @@
-/* squared 1.0.0
+/* squared 1.1.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -15,10 +15,12 @@
         LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
         LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
         DATAURI: '(?:data:([^;]+);([^,]+),)?(.*?)',
-        CSS_SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
+        CSS_SELECTOR_LABEL: '[\\.#]?[\\w\\-]+',
+        CSS_SELECTOR_PSEUDO_ELEMENT: '::[\\w\\-]+',
+        CSS_SELECTOR_PSEUDO_CLASS: ':[\\w\\-]+(?:\\(\\s*([^()]+)\\s*\\)|\\(\\s*([\\w\\-]+\\(.+?\\))\\s*\\))?',
+        CSS_SELECTOR_ATTR: '\\[([\\w\\-]+)(?:([~^$*|])?=(?:"([^"]+)"|\'([^\']+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
-        CSS_CALC: 'calc(\\(.+\\))',
-        CSS_VAR: 'var\\((--[A-Za-z\\d\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)'
+        CSS_CALC: 'calc(\\(.+\\))'
     };
     const UNIT = {
         DECIMAL: new RegExp(`^${STRING.DECIMAL}$`),
@@ -28,16 +30,22 @@
     const CSS = {
         ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
         CALC: new RegExp(`^${STRING.CSS_CALC}$`),
+        VAR: /var\((--[A-Za-z\d\-]+)(?!,\s*var\()(?:,\s*([a-z\-]+\([^)]+\)|[^)]+))?\)/,
         URL: /^url\("?(.+?)"?\)$/,
         CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
         HEX: /[A-Za-z\d]{3,8}/,
-        RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/
+        RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/,
+        SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+])\\s*`, 'g'),
+        SELECTOR_LABEL: new RegExp(STRING.CSS_SELECTOR_LABEL),
+        SELECTOR_PSEUDO_ELEMENT: new RegExp(STRING.CSS_SELECTOR_PSEUDO_ELEMENT),
+        SELECTOR_PSEUDO_CLASS: new RegExp(STRING.CSS_SELECTOR_PSEUDO_CLASS),
+        SELECTOR_ATTR: new RegExp(STRING.CSS_SELECTOR_ATTR)
     };
     const XML = {
         ATTRIBUTE: /([^\s]+)="([^"]+)"/,
         ENTITY: /&#?[A-Za-z\d]+;/,
         SEPARATOR: /\s*,\s*/,
-        BREAKWORD_G: /([A-Za-z\\d]+|&#?[A-Za-z\\d]+;)/g,
+        BREAKWORD_G: /([A-Za-z\d]+|&#?[A-Za-z\d]+;)/g,
         NONWORD_G: /[^A-Za-z\d]+/g,
         TAGNAME_G: /(<([^>]+)>)/g
     };
@@ -82,6 +90,7 @@
         return upper ? value.charAt(0).toUpperCase() + value.substring(1).toLowerCase() : value.charAt(0).toLowerCase() + value.substring(1);
     }
     function capitalizeString(value) {
+        XML.BREAKWORD_G.lastIndex = 0;
         const result = value.split('');
         let match;
         while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
@@ -92,6 +101,7 @@
         return result.join('');
     }
     function lowerCaseString(value) {
+        XML.BREAKWORD_G.lastIndex = 0;
         let result = value;
         let match;
         while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
@@ -101,13 +111,20 @@
         }
         return result;
     }
+    function spliceString(value, index, length) {
+        if (index === 0) {
+            return value.substring(length);
+        }
+        return value.substring(0, index) + value.substring(index + length);
+    }
     function convertUnderscore(value) {
         if (CACHE_UNDERSCORE[value]) {
             return CACHE_UNDERSCORE[value];
         }
+        const length = value.length;
         let result = value[0].toLowerCase();
         let lower = true;
-        for (let i = 1; i < value.length; i++) {
+        for (let i = 1; i < length; i++) {
             const char = value[i];
             const upper = char === char.toUpperCase();
             if (char !== '_' && lower && upper) {
@@ -125,9 +142,10 @@
         if (CACHE_CAMELCASE[value]) {
             return CACHE_CAMELCASE[value];
         }
+        const length = value.length;
         let result = '';
         let previous = '';
-        for (let i = 0; i < value.length; i++) {
+        for (let i = 0; i < length; i++) {
             if (value[i] !== char) {
                 if (previous === char) {
                     result += value[i].toUpperCase();
@@ -142,9 +160,10 @@
         return result;
     }
     function convertWord(value, dash = false) {
+        const length = value.length;
         let result = '';
         if (dash) {
-            for (let i = 0; i < value.length; i++) {
+            for (let i = 0; i < length; i++) {
                 if (CHAR.WORDDASH.test(value[i])) {
                     result += value[i];
                 }
@@ -154,7 +173,7 @@
             }
         }
         else {
-            for (let i = 0; i < value.length; i++) {
+            for (let i = 0; i < length; i++) {
                 if (CHAR.WORD.test(value[i])) {
                     result += value[i];
                 }
@@ -173,22 +192,23 @@
     }
     function convertAlpha(value) {
         if (value >= 0) {
+            const length = ALPHABET.length;
             let result = '';
-            while (value >= ALPHABET.length) {
-                const base = Math.floor(value / ALPHABET.length);
-                if (base > 1 && base <= ALPHABET.length) {
+            while (value >= length) {
+                const base = Math.floor(value / length);
+                if (base > 1 && base <= length) {
                     result += ALPHABET.charAt(base - 1);
-                    value -= base * ALPHABET.length;
+                    value -= base * length;
                 }
                 else if (base > 0) {
                     result += 'Z';
-                    value -= Math.pow(ALPHABET.length, 2);
+                    value -= Math.pow(length, 2);
                     result += convertAlpha(value);
                     return result;
                 }
-                const index = value % ALPHABET.length;
+                const index = value % length;
                 result += ALPHABET.charAt(index);
-                value -= index + ALPHABET.length;
+                value -= index + length;
             }
             return ALPHABET.charAt(value) + result;
         }
@@ -219,7 +239,8 @@
         return result;
     }
     function formatString(value, ...params) {
-        for (let i = 0; i < params.length; i++) {
+        const length = params.length;
+        for (let i = 0; i < length; i++) {
             value = value.replace(`{${i}}`, params[i]);
         }
         return value;
@@ -244,8 +265,9 @@
             return true;
         }
         else if (Array.isArray(source) && Array.isArray(values)) {
-            if (source.length === values.length) {
-                for (let i = 0; i < source.length; i++) {
+            const length = source.length;
+            if (length === values.length) {
+                for (let i = 0; i < length; i++) {
                     if (source[i] !== values[i]) {
                         return false;
                     }
@@ -366,7 +388,7 @@
                             segments.push(dir);
                         }
                     }
-                    pathname = concatArray(pathname.slice(0, Math.max(pathname.length - levels, 0)), segments);
+                    pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
                     value = location.origin + pathname.join('/');
                 }
                 else {
@@ -512,12 +534,22 @@
         });
     }
     function flatArray(list) {
-        const result = [];
         for (let i = 0; i < list.length; i++) {
+            const item = list[i];
+            if (item === undefined || item === null) {
+                list.splice(i--, 1);
+            }
+        }
+        return list;
+    }
+    function flatMultiArray(list) {
+        const result = [];
+        const length = list.length;
+        for (let i = 0; i < length; i++) {
             const item = list[i];
             if (Array.isArray(item)) {
                 if (item.length) {
-                    result.push(...flatArray(item));
+                    result.push(...flatMultiArray(item));
                 }
             }
             else if (item !== undefined && item !== null) {
@@ -527,17 +559,22 @@
         return result;
     }
     function partitionArray(list, predicate) {
-        const valid = [];
-        const invalid = [];
-        for (let i = 0; i < list.length; i++) {
+        const length = list.length;
+        const valid = new Array(length);
+        const invalid = new Array(length);
+        let j = 0;
+        let k = 0;
+        for (let i = 0; i < length; i++) {
             const item = list[i];
             if (predicate(item, i, list)) {
-                valid.push(item);
+                valid[j++] = item;
             }
             else {
-                invalid.push(item);
+                invalid[k++] = item;
             }
         }
+        valid.length = j;
+        invalid.length = k;
         return [valid, invalid];
     }
     function spliceArray(list, predicate, callback) {
@@ -552,32 +589,22 @@
         return list;
     }
     function filterArray(list, predicate) {
-        const result = [];
-        for (let i = 0; i < list.length; i++) {
+        const length = list.length;
+        const result = new Array(length);
+        let j = 0;
+        for (let i = 0; i < length; i++) {
             if (predicate(list[i], i, list)) {
-                result.push(list[i]);
+                result[j++] = list[i];
             }
         }
+        result.length = j;
         return result;
     }
-    function concatArray(dest, source) {
-        for (const item of source) {
-            dest.push(item);
-        }
-        return dest;
-    }
-    function concatMultiArray(dest, ...source) {
-        for (const list of source) {
-            for (const item of list) {
-                dest.push(item);
-            }
-        }
-        return dest;
-    }
     function sameArray(list, predicate) {
-        if (list.length) {
+        const length = list.length;
+        if (length) {
             let baseValue;
-            for (let i = 0; i < list.length; i++) {
+            for (let i = 0; i < length; i++) {
                 const value = predicate(list[i], i, list);
                 if (i === 0) {
                     baseValue = value;
@@ -591,53 +618,59 @@
         return false;
     }
     function flatMap(list, predicate) {
-        const result = [];
-        for (let i = 0; i < list.length; i++) {
+        const length = list.length;
+        const result = new Array(length);
+        let j = 0;
+        for (let i = 0; i < length; i++) {
             const item = predicate(list[i], i, list);
             if (hasValue(item)) {
-                result.push(item);
+                result[j++] = item;
             }
         }
+        result.length = j;
         return result;
     }
     function filterMap(list, predicate, callback) {
-        const result = [];
-        for (let i = 0; i < list.length; i++) {
+        const length = list.length;
+        const result = new Array(length);
+        let j = 0;
+        for (let i = 0; i < length; i++) {
             if (predicate(list[i], i, list)) {
-                result.push(callback(list[i], i, list));
+                result[j++] = callback(list[i], i, list);
             }
         }
+        result.length = j;
         return result;
     }
     function replaceMap(list, predicate) {
-        for (let i = 0; i < list.length; i++) {
+        const length = list.length;
+        for (let i = 0; i < length; i++) {
             list[i] = predicate(list[i], i, list);
         }
         return list;
     }
     function objectMap(list, predicate) {
-        const result = new Array(list.length);
-        for (let i = 0; i < list.length; i++) {
+        const length = list.length;
+        const result = new Array(length);
+        for (let i = 0; i < length; i++) {
             result[i] = predicate(list[i], i, list);
         }
         return result;
     }
-    function joinMap(list, predicate, char = '\n') {
+    function joinMap(list, predicate, char = '\n', trailing = false) {
         let result = '';
         const length = list.length;
         for (let i = 0; i < length; i++) {
             const value = predicate(list[i], i, list);
             if (value !== '') {
-                result += value;
-                if (i < length - 1) {
-                    result += char;
-                }
+                result += value + char;
             }
         }
-        return result;
+        return trailing ? result : result.substring(0, result.length - char.length);
     }
     function captureMap(list, predicate, callback) {
-        for (let i = 0; i < list.length; i++) {
+        const length = list.length;
+        for (let i = 0; i < length; i++) {
             if (predicate(list[i], i, list)) {
                 const value = callback(list[i], i, list);
                 if (value === false) {
@@ -651,6 +684,7 @@
         capitalize: capitalize,
         capitalizeString: capitalizeString,
         lowerCaseString: lowerCaseString,
+        spliceString: spliceString,
         convertUnderscore: convertUnderscore,
         convertCamelCase: convertCamelCase,
         convertWord: convertWord,
@@ -691,11 +725,10 @@
         sortNumber: sortNumber,
         sortArray: sortArray,
         flatArray: flatArray,
+        flatMultiArray: flatMultiArray,
         partitionArray: partitionArray,
         spliceArray: spliceArray,
         filterArray: filterArray,
-        concatArray: concatArray,
-        concatMultiArray: concatMultiArray,
         sameArray: sameArray,
         flatMap: flatMap,
         filterMap: filterMap,
@@ -710,12 +743,13 @@
             this._children = children || [];
         }
         [Symbol.iterator]() {
-            const list = this._children;
             const data = { done: false, value: undefined };
+            const list = this._children;
+            const length = list.length;
             let i = 0;
             return {
                 next() {
-                    if (i < list.length) {
+                    if (i < length) {
                         data.value = list[i++];
                     }
                     else {
@@ -743,9 +777,11 @@
             return this;
         }
         remove(item) {
-            for (let i = 0; i < this._children.length; i++) {
-                if (this._children[i] === item) {
-                    return this._children.splice(i, 1);
+            const children = this._children;
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                if (children[i] === item) {
+                    return children.splice(i, 1);
                 }
             }
             return [];
@@ -765,40 +801,48 @@
             return this;
         }
         each(predicate) {
-            for (let i = 0; i < this._children.length; i++) {
-                predicate(this._children[i], i, this._children);
+            const children = this._children;
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                predicate(children[i], i, children);
             }
             return this;
         }
         find(predicate, value) {
+            const children = this._children;
+            const length = children.length;
             if (typeof predicate === 'string') {
-                for (let i = 0; i < this._children.length; i++) {
-                    if (this._children[i][predicate] === value) {
-                        return this._children[i];
+                for (let i = 0; i < length; i++) {
+                    if (children[i][predicate] === value) {
+                        return children[i];
                     }
                 }
             }
             else {
-                for (let i = 0; i < this._children.length; i++) {
-                    if (predicate(this._children[i], i, this._children)) {
-                        return this._children[i];
+                for (let i = 0; i < length; i++) {
+                    if (predicate(children[i], i, children)) {
+                        return children[i];
                     }
                 }
             }
             return undefined;
         }
         sort(predicate) {
-            this._children.sort(predicate);
+            if (predicate) {
+                this._children.sort(predicate);
+            }
             return this;
         }
         concat(list) {
-            concatArray(this._children, list);
+            this._children = this._children.concat(list);
             return this;
         }
         every(predicate) {
-            if (this.length) {
-                for (let i = 0; i < this._children.length; i++) {
-                    if (!predicate(this._children[i], i, this._children)) {
+            const children = this._children;
+            const length = children.length;
+            if (length) {
+                for (let i = 0; i < length; i++) {
+                    if (!predicate(children[i], i, children)) {
                         return false;
                     }
                 }
@@ -807,8 +851,10 @@
             return false;
         }
         some(predicate) {
-            for (let i = 0; i < this._children.length; i++) {
-                if (predicate(this._children[i], i, this._children)) {
+            const children = this._children;
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                if (predicate(children[i], i, children)) {
                     return true;
                 }
             }
@@ -834,9 +880,11 @@
         }
         cascadeSome(predicate) {
             function cascade(container) {
-                for (let i = 0; i < container.length; i++) {
-                    const item = container.item(i);
-                    if (predicate(item, i, container.children)) {
+                const children = container.children;
+                const length = children.length;
+                for (let i = 0; i < length; i++) {
+                    const item = children[i];
+                    if (predicate(item, i, children)) {
                         return true;
                     }
                     if (item instanceof Container && item.length && cascade(item)) {
@@ -849,13 +897,13 @@
         }
         cascade(predicate) {
             function cascade(container) {
-                const result = [];
+                let result = [];
                 for (const item of container.children) {
                     if (predicate === undefined || predicate(item)) {
                         result.push(item);
                     }
                     if (item instanceof Container && item.length) {
-                        concatArray(result, cascade(item));
+                        result = result.concat(cascade(item));
                     }
                 }
                 return result;
@@ -2961,14 +3009,15 @@
                     baseline = color.hsl.h;
                 }
             }
-            if (result.length === 1) {
+            const length = result.length;
+            if (length === 1) {
                 return result[0];
             }
-            else if (result.length > 1) {
+            else if (length > 1) {
                 const total = hsl.l + hsl.s;
                 let nearest = Number.POSITIVE_INFINITY;
                 let index = -1;
-                for (let i = 0; i < result.length; i++) {
+                for (let i = 0; i < length; i++) {
                     const offset = Math.abs(total - (result[i].hsl.l + result[i].hsl.s));
                     if (offset < nearest) {
                         nearest = offset;
@@ -3356,7 +3405,8 @@
                 let startIndex = elementStart ? -1 : 0;
                 let endIndex = -1;
                 const elements = Array.from(parent.childNodes);
-                for (let i = 0; i < elements.length; i++) {
+                const length = elements.length;
+                for (let i = 0; i < length; i++) {
                     if (elements[i] === elementStart) {
                         startIndex = i;
                     }
@@ -3378,33 +3428,7 @@
         }
         return undefined;
     }
-    function createElement(parent, tagName = 'span', placeholder = true, index = -1) {
-        const element = document.createElement(tagName);
-        const style = element.style;
-        if (placeholder) {
-            style.setProperty('position', 'static');
-            style.setProperty('margin', CSS$1.PX_0);
-            style.setProperty('padding', CSS$1.PX_0);
-            style.setProperty('border', CSS$1.NONE);
-            style.setProperty('float', CSS$1.NONE);
-            style.setProperty('clear', CSS$1.NONE);
-            element.className = '__squared.placeholder';
-        }
-        else {
-            element.className = '__squared.pseudo';
-        }
-        style.setProperty('display', CSS$1.NONE);
-        if (parent) {
-            if (index >= 0 && index < parent.childNodes.length) {
-                parent.insertBefore(element, parent.childNodes[index]);
-            }
-            else {
-                parent.appendChild(element);
-            }
-        }
-        return element;
-    }
-    function createStyleElement(parent, tagName, attrs) {
+    function createElement(parent, tagName, attrs) {
         const element = document.createElement(tagName);
         for (const attr in attrs) {
             element.style.setProperty(attr, attrs[attr]);
@@ -3442,7 +3466,6 @@
         removeElementsByClassName: removeElementsByClassName,
         getElementsBetweenSiblings: getElementsBetweenSiblings,
         createElement: createElement,
-        createStyleElement: createStyleElement,
         measureTextWidth: measureTextWidth,
         getNamedItem: getNamedItem
     });
@@ -3468,8 +3491,9 @@
         const range = document.createRange();
         range.selectNodeContents(element);
         const clientRects = range.getClientRects();
+        let length = clientRects.length;
         const domRect = [];
-        for (let i = 0; i < clientRects.length; i++) {
+        for (let i = 0; i < length; i++) {
             const item = clientRects.item(i);
             if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
                 domRect.push(item);
@@ -3477,9 +3501,10 @@
         }
         let bounds;
         let maxTop = Number.NEGATIVE_INFINITY;
-        if (domRect.length) {
+        length = domRect.length;
+        if (length) {
             bounds = assignRect(domRect[0]);
-            for (let i = 1; i < domRect.length; i++) {
+            for (let i = 1; i < length; i++) {
                 const rect = domRect[i];
                 if (rect.left < bounds.left) {
                     bounds.left = rect.left;
@@ -3509,18 +3534,6 @@
         setElementCache(element, 'rangeClientRect', sessionId, bounds);
         return bounds;
     }
-    function causesLineBreak(element, sessionId) {
-        if (element.tagName === 'BR') {
-            return true;
-        }
-        else {
-            const node = getElementAsNode(element, sessionId);
-            if (node) {
-                return node.excluded && node.blockStatic;
-            }
-        }
-        return false;
-    }
     function setElementCache(element, attr, sessionId, data) {
         element[`__${attr}::${sessionId}`] = data;
     }
@@ -3534,21 +3547,33 @@
         delete element[`__${attr}::${sessionId}`];
     }
     function getElementAsNode(element, sessionId) {
-        const node = getElementCache(element, 'node', sessionId);
-        return node && node.naturalElement ? node : undefined;
+        return getElementCache(element, 'node', sessionId) || undefined;
     }
 
     var session = /*#__PURE__*/Object.freeze({
         getClientRect: getClientRect,
         getRangeClientRect: getRangeClientRect,
-        causesLineBreak: causesLineBreak,
         setElementCache: setElementCache,
         getElementCache: getElementCache,
         deleteElementCache: deleteElementCache,
         getElementAsNode: getElementAsNode
     });
 
-    const REGEXP_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+    const CACHE_PATTERN = {};
+    function compareRange(operation, unit, range) {
+        switch (operation) {
+            case '<=':
+                return unit <= range;
+            case '<':
+                return unit < range;
+            case '>=':
+                return unit >= range;
+            case '>':
+                return unit > range;
+            default:
+                return unit === range;
+        }
+    }
     const convertLength = (value, dimension, fontSize) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
     const convertPercent = (value, dimension, fontSize) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
     const BOX_POSITION = [CSS$1.TOP, CSS$1.RIGHT, CSS$1.BOTTOM, CSS$1.LEFT];
@@ -3561,18 +3586,17 @@
         ['outlineStyle', 'outlineWidth', 'outlineColor']
     ];
     const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
-    function getStyle(element, target = '', cache = true) {
+    function getStyle(element, pseudoElt = '', cache = true) {
         if (element) {
-            const attr = 'style' + target;
             if (cache) {
-                const style = getElementCache(element, attr, '0');
+                const style = getElementCache(element, 'style' + pseudoElt, '0');
                 if (style) {
                     return style;
                 }
             }
             if (hasComputedStyle(element)) {
-                const style = getComputedStyle(element, target);
-                setElementCache(element, attr, '0', style);
+                const style = getComputedStyle(element, pseudoElt);
+                setElementCache(element, 'style' + pseudoElt, '0', style);
                 return style;
             }
             return { display: 'inline' };
@@ -3589,68 +3613,73 @@
         return false;
     }
     function getSpecificity(value) {
-        const pattern = new RegExp(STRING.CSS_SELECTOR, 'g');
+        CSS.SELECTOR_G.lastIndex = 0;
         let result = 0;
         let match;
-        while ((match = pattern.exec(value.trim())) !== null) {
-            if (match[0]) {
-                if (match[1]) {
-                    let check = true;
-                    switch (match[1].charAt(0)) {
-                        case '*':
-                        case '>':
-                        case '+':
-                        case '~':
-                            continue;
-                        case ':':
-                        case '[':
-                            check = false;
-                            break;
-                        case '#':
-                            result += 100;
-                            break;
-                        case '.':
-                            result += 10;
-                            match[1] = match[1].substring(1);
-                            break;
-                        default:
-                            if (match[1].indexOf('#') > 0) {
-                                result += 100;
-                            }
-                            result += 1;
-                            break;
-                    }
-                    if (check) {
-                        result += (match[1].split('.').length - 1) * 10;
-                    }
-                }
-                if (match[2]) {
-                    if (match[2].startsWith(':not(')) {
-                        if (match[3]) {
-                            result += getSpecificity(match[3]);
-                        }
-                    }
-                    else {
-                        switch (match[2]) {
-                            case ':root':
-                            case ':global':
-                            case ':local':
-                                break;
-                            default:
-                                result += 10;
-                                break;
-                        }
-                    }
-                }
-                if (match[4]) {
-                    result += 1;
-                }
-                if (match[5]) {
-                    result += 10;
+        while ((match = CSS.SELECTOR_G.exec(value)) !== null) {
+            let segment = match[1];
+            if (segment.length === 1) {
+                switch (segment.charAt(0)) {
+                    case '+':
+                    case '~':
+                    case '>':
+                    case '*':
+                        continue;
                 }
             }
-            else {
-                break;
+            else if (segment.endsWith('|*')) {
+                continue;
+            }
+            else if (segment.charAt(0) === '*') {
+                segment = segment.substring(1);
+            }
+            let subMatch;
+            while ((subMatch = CSS.SELECTOR_ATTR.exec(segment)) !== null) {
+                if (subMatch[1]) {
+                    result += 1;
+                }
+                if (subMatch[3] || subMatch[4] || subMatch[5]) {
+                    result += 10;
+                }
+                segment = spliceString(segment, subMatch.index, subMatch[0].length);
+            }
+            while ((subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
+                if (subMatch[0].startsWith(':not(')) {
+                    if (subMatch[1]) {
+                        const lastIndex = CSS.SELECTOR_G.lastIndex;
+                        result += getSpecificity(subMatch[1]);
+                        CSS.SELECTOR_G.lastIndex = lastIndex;
+                    }
+                }
+                else {
+                    switch (match[2]) {
+                        case ':scope':
+                        case ':root':
+                            break;
+                        default:
+                            result += 10;
+                            break;
+                    }
+                }
+                segment = spliceString(segment, subMatch.index, subMatch[0].length);
+            }
+            while ((subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) !== null) {
+                result += 1;
+                segment = spliceString(segment, subMatch.index, subMatch[0].length);
+            }
+            while ((subMatch = CSS.SELECTOR_LABEL.exec(segment)) !== null) {
+                switch (subMatch[0].charAt(0)) {
+                    case '#':
+                        result += 100;
+                        break;
+                    case '.':
+                        result += 10;
+                        break;
+                    default:
+                        result += 1;
+                        break;
+                }
+                segment = spliceString(segment, subMatch.index, subMatch[0].length);
             }
         }
         return result;
@@ -3683,12 +3712,16 @@
     function getKeyframeRules() {
         const result = {};
         violation: {
-            for (let i = 0; i < document.styleSheets.length; i++) {
-                const styleSheet = document.styleSheets[i];
-                if (styleSheet.cssRules) {
-                    for (let j = 0; j < styleSheet.cssRules.length; j++) {
+            const styleSheets = document.styleSheets;
+            const lengthA = styleSheets.length;
+            for (let i = 0; i < lengthA; i++) {
+                const styleSheet = styleSheets[i];
+                const cssRules = styleSheet.cssRules;
+                if (cssRules) {
+                    const lengthB = cssRules.length;
+                    for (let j = 0; j < lengthB; j++) {
                         try {
-                            const item = styleSheet.cssRules[j];
+                            const item = cssRules[j];
                             if (item.type === CSSRule.KEYFRAMES_RULE) {
                                 const value = parseKeyframeRule(item.cssRules);
                                 if (Object.keys(value).length) {
@@ -3711,11 +3744,16 @@
         return result;
     }
     function parseKeyframeRule(rules) {
+        if (CACHE_PATTERN.KEYFRAME === undefined) {
+            CACHE_PATTERN.KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+        }
         const result = {};
-        for (let k = 0; k < rules.length; k++) {
-            const match = REGEXP_KEYFRAME.exec(rules[k].cssText);
+        const length = rules.length;
+        for (let i = 0; i < length; i++) {
+            const item = rules[i];
+            const match = CACHE_PATTERN.KEYFRAME.exec(item.cssText);
             if (match) {
-                for (let percent of (rules[k]['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
+                for (let percent of (item['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
                     percent = percent.trim();
                     switch (percent) {
                         case 'from':
@@ -3743,40 +3781,32 @@
             case 'only screen':
                 return true;
             default: {
-                function compareRange(operation, unit, range) {
-                    switch (operation) {
-                        case '<=':
-                            return unit <= range;
-                        case '<':
-                            return unit < range;
-                        case '>=':
-                            return unit >= range;
-                        case '>':
-                            return unit > range;
-                        default:
-                            return unit === range;
-                    }
+                if (CACHE_PATTERN.MEDIA_RULE === undefined) {
+                    CACHE_PATTERN.MEDIA_RULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+                    CACHE_PATTERN.MEDIA_CONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
                 }
-                const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+                else {
+                    CACHE_PATTERN.MEDIA_RULE.lastIndex = 0;
+                }
                 let match;
-                while ((match = pattern.exec(value)) !== null) {
+                while ((match = CACHE_PATTERN.MEDIA_RULE.exec(value)) !== null) {
+                    CACHE_PATTERN.MEDIA_CONDITION.lastIndex = 0;
                     const negate = match[1] === 'not';
-                    const conditionPattern = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-                    let conditionMatch;
+                    let subMatch;
                     let valid = false;
-                    while ((conditionMatch = conditionPattern.exec(match[2])) !== null) {
-                        const attr = conditionMatch[1];
+                    while ((subMatch = CACHE_PATTERN.MEDIA_CONDITION.exec(match[2])) !== null) {
+                        const attr = subMatch[1];
                         let operation;
-                        if (conditionMatch[1].startsWith('min')) {
+                        if (subMatch[1].startsWith('min')) {
                             operation = '>=';
                         }
-                        else if (conditionMatch[1].startsWith('max')) {
+                        else if (subMatch[1].startsWith('max')) {
                             operation = '<=';
                         }
                         else {
                             operation = match[2];
                         }
-                        const rule = conditionMatch[3];
+                        const rule = subMatch[3];
                         switch (attr) {
                             case 'aspect-ratio':
                             case 'min-aspect-ratio':
@@ -3866,7 +3896,7 @@
     function parseVar(element, value) {
         const style = getStyle(element);
         let match;
-        while ((match = new RegExp(STRING.CSS_VAR).exec(value)) !== null) {
+        while ((match = CSS.VAR.exec(value)) !== null) {
             let propertyValue = style.getPropertyValue(match[1]).trim();
             if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) !== undefined && parseColor(propertyValue) === undefined)) {
                 propertyValue = match[2];
@@ -3914,7 +3944,7 @@
             orientation
         };
         if (orientation.length === 2) {
-            for (let i = 0; i < orientation.length; i++) {
+            for (let i = 0; i < 2; i++) {
                 const position = orientation[i];
                 let direction;
                 let offsetParent;
@@ -3952,7 +3982,7 @@
             }
         }
         else if (orientation.length === 4) {
-            for (let i = 0; i < orientation.length; i++) {
+            for (let i = 0; i < 4; i++) {
                 const position = orientation[i];
                 switch (i) {
                     case 0:
@@ -4009,8 +4039,10 @@
         let srcset = element.srcset;
         let sizes = element.sizes;
         if (parentElement && parentElement.tagName === 'PICTURE') {
-            for (let i = 0; i < parentElement.children.length; i++) {
-                const source = parentElement.children[i];
+            const children = parentElement.children;
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                const source = children[i];
                 if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || isString(source.type) && mimeType && mimeType.includes(source.type.split('/').pop().toLowerCase()))) {
                     srcset = source.srcset;
                     sizes = source.sizes;
@@ -4087,7 +4119,8 @@
             if (width > 0) {
                 const resolution = width * window.devicePixelRatio;
                 let index = -1;
-                for (let i = 0; i < result.length; i++) {
+                const length = result.length;
+                for (let i = 0; i < length; i++) {
                     const imageWidth = result[i].width;
                     if (imageWidth > 0 && imageWidth <= resolution && (index === -1 || result[index].width < imageWidth)) {
                         index = i;
@@ -4185,7 +4218,8 @@
         const opening = [];
         const closing = [];
         let opened = 0;
-        for (let i = 0; i < value.length; i++) {
+        const length = value.length;
+        for (let i = 0; i < length; i++) {
             switch (value.charAt(i)) {
                 case '(':
                     opened++;
@@ -4416,6 +4450,13 @@
     const REGEXP_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
     const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
     const REGEXP_TRUNCATECACHE = {};
+    function convertDecimalNotation(value) {
+        const match = REGEXP_DECIMALNOTATION.exec(value.toString());
+        if (match) {
+            return parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0';
+        }
+        return value.toString();
+    }
     function minArray(list) {
         if (list.length) {
             return Math.min.apply(null, list);
@@ -4437,14 +4478,6 @@
     }
     function lessEqual(valueA, valueB, precision = 5) {
         return valueA < valueB || isEqual$1(valueA, valueB, precision);
-    }
-    function convertDecimalNotation(value) {
-        const match = REGEXP_DECIMALNOTATION.exec(value.toString());
-        if (match) {
-            const multiplier = parseInt(match[2]);
-            return value.toFixed(multiplier > 0 ? multiplier + 1 : Math.abs(multiplier));
-        }
-        return value.toString();
     }
     function truncate(value, precision = 3) {
         if (typeof value === 'string') {
@@ -4499,6 +4532,9 @@
         if (REGEXP_TRUNCATECACHE[precision] === undefined) {
             REGEXP_TRUNCATECACHE[precision] = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
         }
+        else {
+            REGEXP_TRUNCATECACHE[precision].lastIndex = 0;
+        }
         let match;
         let output = value;
         while ((match = REGEXP_TRUNCATECACHE[precision].exec(value)) !== null) {
@@ -4512,7 +4548,7 @@
     function convertRadian(value) {
         return value * Math.PI / 180;
     }
-    function triangulateASA(a, b, clen) {
+    function triangulate(a, b, clen) {
         const c = 180 - a - b;
         return [
             (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(a)),
@@ -4547,9 +4583,10 @@
         return value;
     }
     function nextMultiple(values, minimum = 0, offset) {
-        if (values.length > 1) {
+        const length = values.length;
+        if (length > 1) {
             const increment = minArray(values);
-            if (offset && offset.length === values.length) {
+            if (offset && offset.length === length) {
                 for (let i = 0; i < offset.length; i++) {
                     minimum = Math.max(minimum, offset[i] + values[i]);
                 }
@@ -4566,7 +4603,7 @@
             let valid = false;
             while (!valid) {
                 const total = start + value;
-                for (let i = 1; i < values.length; i++) {
+                for (let i = 1; i < length; i++) {
                     const multiple = values[i] + (offset ? offset[i] : 0);
                     if (total % multiple === 0) {
                         valid = true;
@@ -4589,13 +4626,12 @@
         isEqual: isEqual$1,
         moreEqual: moreEqual,
         lessEqual: lessEqual,
-        convertDecimalNotation: convertDecimalNotation,
         truncate: truncate,
         truncateFraction: truncateFraction,
         truncateTrailingZero: truncateTrailingZero,
         truncateString: truncateString,
         convertRadian: convertRadian,
-        triangulateASA: triangulateASA,
+        triangulate: triangulate,
         absoluteAngle: absoluteAngle,
         relativeAngle: relativeAngle,
         offsetAngleX: offsetAngleX,
@@ -4614,7 +4650,8 @@
     };
     const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
     function isPlainText(value) {
-        for (let i = 0; i < value.length; i++) {
+        const length = value.length;
+        for (let i = 0; i < length; i++) {
             switch (value.charCodeAt(i)) {
                 case 9:
                 case 10:
@@ -4632,14 +4669,15 @@
             if (indent === undefined) {
                 indent = char.repeat(depth);
             }
-            return joinMap(value.split('\n'), line => line !== '' ? indent + line : '');
+            return joinMap(value.split('\n'), line => line !== '' ? indent + line : '', '\n', true);
         }
         return value;
     }
     function pushIndentArray(values, depth, char = '\t', separator = '') {
         if (depth > 0) {
             const indent = char.repeat(depth);
-            for (let i = 0; i < values.length; i++) {
+            const length = values.length;
+            for (let i = 0; i < length; i++) {
                 values[i] = pushIndent(values[i], depth, char, indent);
             }
         }
@@ -4657,7 +4695,7 @@
                     return (match[1] || '') + '\t'.repeat(depth + (match[2].length - indent)) + match[3];
                 }
                 return line;
-            });
+            }, '\n', true);
         }
         return value;
     }
@@ -4670,8 +4708,7 @@
                         return ' '.repeat(spaces * match[1].length) + match[2];
                     }
                     return line;
-                })
-                    .trim();
+                });
             }
             else {
                 return value.replace(/\t/g, ' '.repeat(spaces));
@@ -4691,28 +4728,31 @@
         else {
             indent += '\t'.repeat(depth);
         }
-        for (let i = 0; i < children.length; i++) {
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
             const item = children[i];
             const include = tag['#'] && item[tag['#']];
             const closed = !nested && !include;
             let valid = false;
             output += indent + '<' + tagName;
-            if (tag['@']) {
-                for (const attr of tag['@']) {
+            const attrs = tag['@'];
+            const descend = tag['>'];
+            if (attrs) {
+                for (const attr of attrs) {
                     if (item[attr]) {
                         output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${item[attr]}"`;
                     }
                 }
             }
-            if (tag['>']) {
+            if (descend) {
                 let innerText = '';
                 const childDepth = depth + (nested ? i : 0) + 1;
-                for (const name in tag['>']) {
+                for (const name in descend) {
                     if (Array.isArray(item[name])) {
-                        innerText += applyTemplate(name, tag['>'], item[name], childDepth);
+                        innerText += applyTemplate(name, descend, item[name], childDepth);
                     }
                     else if (typeof item[name] === 'object') {
-                        innerText += applyTemplate(name, tag['>'], [item[name]], childDepth);
+                        innerText += applyTemplate(name, descend, [item[name]], childDepth);
                     }
                 }
                 if (innerText !== '') {
@@ -4751,7 +4791,7 @@
             }
         }
         if (nested) {
-            for (let i = 0; i < children.length; i++) {
+            for (let i = 0; i < length; i++) {
                 indent = indent.substring(1);
                 output += indent + `</${tagName}>\n`;
             }
@@ -4771,7 +4811,8 @@
         }
         let output = '';
         let indent = startIndent;
-        for (let i = 0; i < lines.length; i++) {
+        const length = lines.length;
+        for (let i = 0; i < length; i++) {
             const line = lines[i];
             let previous = indent;
             if (i > 0) {
@@ -4907,14 +4948,15 @@
             main = appBase.application;
             main.userSettings = exports.settings;
             const register = new Set();
+            const builtInExtensions = main.builtInExtensions;
             for (const namespace of exports.settings.builtInExtensions) {
-                if (main.builtInExtensions[namespace]) {
-                    register.add(main.builtInExtensions[namespace]);
+                if (builtInExtensions[namespace]) {
+                    register.add(builtInExtensions[namespace]);
                 }
                 else {
-                    for (const extension in main.builtInExtensions) {
+                    for (const extension in builtInExtensions) {
                         if (extension.startsWith(`${namespace}.`)) {
-                            register.add(main.builtInExtensions[extension]);
+                            register.add(builtInExtensions[extension]);
                         }
                     }
                 }
@@ -4928,34 +4970,36 @@
         reset();
     }
     function parseDocument(...elements) {
-        if (main && !main.closed) {
-            if (exports.settings.handleExtensionsAsync) {
-                for (const item of extensionsAsync) {
-                    main.extensionManager.include(item);
-                }
-                for (const [name, options] of optionsAsync.entries()) {
-                    configure(name, options);
-                }
-                extensionsAsync.clear();
-                optionsAsync.clear();
+        if (!main) {
+            if (exports.settings.showErrorMessages) {
+                alert('ERROR: Framework not installed.');
             }
-            return main.parseDocument(...elements);
         }
-        return {
-            then: (callback) => {
-                if (!main) {
-                    if (exports.settings.showErrorMessages) {
-                        alert('ERROR: Framework not installed.');
+        else {
+            if (!main.closed) {
+                if (exports.settings.handleExtensionsAsync) {
+                    for (const item of extensionsAsync) {
+                        main.extensionManager.include(item);
                     }
+                    for (const [name, options] of optionsAsync.entries()) {
+                        configure(name, options);
+                    }
+                    extensionsAsync.clear();
+                    optionsAsync.clear();
                 }
-                else if (main.closed) {
-                    if (!exports.settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
-                        main.reset();
-                        parseDocument.call(null, ...elements).then(callback);
-                    }
+                return main.parseDocument(...elements);
+            }
+            else {
+                if (!exports.settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
+                    main.reset();
+                    return main.parseDocument(...elements);
                 }
             }
+        }
+        const PromiseResult = class {
+            then(resolve) { }
         };
+        return new PromiseResult();
     }
     function include(value) {
         if (main) {
@@ -5049,17 +5093,17 @@
     function retrieve(value) {
         return main && main.extensionManager.retrieve(value);
     }
+    function reset() {
+        if (main) {
+            main.reset();
+        }
+    }
     function ready() {
         return !!main && !main.initialized && !main.closed;
     }
     function close() {
         if (main && !main.initialized && main.length) {
             main.finalize();
-        }
-    }
-    function reset() {
-        if (main) {
-            main.reset();
         }
     }
     function saveAllToDisk() {

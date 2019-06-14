@@ -1,4 +1,4 @@
-/* android.widget 1.0.0
+/* android.widget 1.1.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -15,7 +15,7 @@ this.android.widget.drawer = (function () {
     const $utilA = android.lib.util;
     const $c = squared.base.lib.constant;
     const $e = squared.base.lib.enumeration;
-    class Drawer extends squared.base.Extension {
+    class Drawer extends squared.base.ExtensionUI {
         constructor(name, framework, tagNames, options) {
             super(name, framework, tagNames, options);
             this.documentBase = true;
@@ -24,15 +24,19 @@ this.android.widget.drawer = (function () {
             this.require("android.widget.coordinator" /* COORDINATOR */);
         }
         init(element) {
-            if (this.included(element) && element.children.length) {
-                for (let i = 0; i < element.children.length; i++) {
-                    const item = element.children[i];
-                    if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
-                        item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
+            if (this.included(element)) {
+                const children = element.children;
+                const length = children.length;
+                if (length) {
+                    for (let i = 0; i < length; i++) {
+                        const item = children[i];
+                        if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
+                            item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
+                        }
                     }
+                    this.application.rootElements.add(element);
+                    return true;
                 }
-                this.application.rootElements.add(element);
-                return true;
             }
             return false;
         }
@@ -78,17 +82,18 @@ this.android.widget.drawer = (function () {
                 $util.assignEmptyValue(options, $constA.STRING_ANDROID.APP, 'headerLayout', `@layout/${headerLayout}`);
             }
             if (menu !== '' || headerLayout !== '') {
+                const controller = this.application.controllerHandler;
                 $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'id', `${node.documentId}_navigation`);
                 $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'fitsSystemWindows', 'true');
                 $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, $constA.STRING_ANDROID.LAYOUT_GRAVITY, node.localizeString($const.CSS.LEFT));
-                this.application.controllerHandler.addAfterInsideTemplate(node.id, this.application.controllerHandler.renderNodeStatic($constA.SUPPORT_ANDROID.NAVIGATION_VIEW, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), $constA.STRING_ANDROID.WRAP_CONTENT, $constA.STRING_ANDROID.MATCH_PARENT));
+                controller.addAfterInsideTemplate(node.id, controller.renderNodeStatic($constA.SUPPORT_ANDROID.NAVIGATION_VIEW, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), $constA.STRING_ANDROID.WRAP_CONTENT, $constA.STRING_ANDROID.MATCH_PARENT));
             }
         }
         postOptimize(node) {
             const element = Drawer.findNestedElement(node.element, "android.widget.coordinator" /* COORDINATOR */);
             if (element) {
                 const coordinator = $session.getElementAsNode(element, node.sessionId);
-                if (coordinator && coordinator.inlineHeight && coordinator.some(item => item.positioned)) {
+                if (coordinator && coordinator.inlineHeight && coordinator.some((item) => item.positioned)) {
                     coordinator.setLayoutHeight($constA.STRING_ANDROID.MATCH_PARENT);
                 }
             }

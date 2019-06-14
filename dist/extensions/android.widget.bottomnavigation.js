@@ -1,4 +1,4 @@
-/* android.widget 1.0.0
+/* android.widget 1.1.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -13,7 +13,7 @@ this.android.widget.bottomnavigation = (function () {
     const $enumA = android.lib.enumeration;
     const $utilA = android.lib.util;
     const $e = squared.base.lib.enumeration;
-    class BottomNavigation extends squared.base.Extension {
+    class BottomNavigation extends squared.base.ExtensionUI {
         constructor(name, framework, tagNames, options) {
             super(name, framework, tagNames, options);
             this.require("android.widget.menu" /* MENU */);
@@ -21,8 +21,10 @@ this.android.widget.bottomnavigation = (function () {
         processNode(node, parent) {
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
             $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'background', `?android:attr/windowBackground`);
-            for (let i = 5; i < node.length; i++) {
-                const item = node.item(i);
+            const children = node.children;
+            const length = children.length;
+            for (let i = 5; i < length; i++) {
+                const item = children[i];
                 item.hide();
                 for (const child of item.cascade()) {
                     child.hide();
@@ -50,10 +52,10 @@ this.android.widget.bottomnavigation = (function () {
         postBaseLayout(node) {
             const renderParent = node.renderParent;
             if (renderParent) {
-                if (!renderParent.has($const.CSS.WIDTH)) {
+                if (!renderParent.hasPX($const.CSS.WIDTH)) {
                     renderParent.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);
                 }
-                if (!renderParent.has($const.CSS.HEIGHT)) {
+                if (!renderParent.hasPX($const.CSS.HEIGHT)) {
                     renderParent.setLayoutHeight($constA.STRING_ANDROID.MATCH_PARENT);
                 }
             }

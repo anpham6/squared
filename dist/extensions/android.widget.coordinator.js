@@ -1,4 +1,4 @@
-/* android.widget 1.0.0
+/* android.widget 1.1.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -12,7 +12,7 @@ this.android.widget.coordinator = (function () {
     const $enumA = android.lib.enumeration;
     const $utilA = android.lib.util;
     const $e = squared.base.lib.enumeration;
-    class Coordinator extends squared.base.Extension {
+    class Coordinator extends squared.base.ExtensionUI {
         processNode(node, parent) {
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
             $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));

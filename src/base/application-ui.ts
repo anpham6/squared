@@ -357,20 +357,23 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     item.setBounds(preAlignment[item.id] === undefined && !resetBounds);
                 }
                 else {
-                    const element = <HTMLElement> item.element;
-                    let styleElement: HTMLElement | undefined;
-                    if (item.pageFlow) {
-                        element.id = `id_${Math.round(Math.random() * new Date().getTime())}`;
-                        styleElement = $css.insertStyleSheetRule(`#${element.id + NodeUI.getPseudoElt(item)} { display: none !important; }`);
+                    const element = (item.actualParent as T).element;
+                    if (element) {
+                        const id = element.id;
+                        let styleElement: HTMLElement | undefined;
+                        if (item.pageFlow) {
+                            element.id = `id_${Math.round(Math.random() * new Date().getTime())}`;
+                            styleElement = $css.insertStyleSheetRule(`#${element.id + NodeUI.getPseudoElt(item)} { display: none !important; }`);
+                        }
+                        if (item.cssTry('display', item.display)) {
+                            item.setBounds(false);
+                            item.cssFinally('display');
+                        }
+                        if (styleElement) {
+                            document.head.removeChild(styleElement);
+                        }
+                        element.id = id;
                     }
-                    if (item.cssTry('display', item.display)) {
-                        item.setBounds(false);
-                        item.cssFinally('display');
-                    }
-                    if (styleElement) {
-                        document.head.removeChild(styleElement);
-                    }
-                    element.id = '';
                 }
             }
             for (const item of this.processing.excluded) {

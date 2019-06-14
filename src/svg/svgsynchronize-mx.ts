@@ -362,7 +362,11 @@ function insertSplitValue(item: SvgAnimate, actualTime: number, baseValue: Anima
         actualTime -= delay;
         delay = 0;
     }
-    const fraction = Math.max(0, Math.min((actualTime - (delay + item.duration * iteration)) / item.duration, 1));
+    const duration = item.duration;
+    let fraction = Math.max(0, Math.min((actualTime - (delay + duration * iteration)) / duration, 1));
+    if (fraction === 0 && actualTime > 0 && actualTime % duration === 0) {
+        fraction = 1;
+    }
     let previousIndex = -1;
     let nextIndex = -1;
     const length = keyTimes.length;
@@ -1504,7 +1508,11 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 if (joined) {
                                                     if (time >= maxThreadTime) {
                                                         if (maxThreadTime > maxTime) {
-                                                            [maxTime, baseValue] = insertIntermediateValue(maxThreadTime);
+                                                            const fillReplace = item.fillReplace || item.iterationCount === -1;
+                                                            [maxTime, baseValue] = insertIntermediateValue(maxThreadTime - (fillReplace ? 1 : 0));
+                                                            if (fillReplace) {
+                                                                maxTime = setTimelineValue(repeatingMap[attr], maxThreadTime, getItemValue(item, values, j, 0, baseValue));
+                                                            }
                                                             actualMaxTime = maxThreadTime;
                                                         }
                                                     }
@@ -1629,8 +1637,10 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             for (let j = 0; j < length; j++) {
                                                 let time = getItemTime(delay, item.duration, keyTimesBase, i, j);
                                                 if (!joined && time >= maxTime) {
-                                                    [maxTime, baseValue] = insertSplitValue(item, maxTime, baseValue, keyTimesBase, values, item.keySplines, delay, i, maxTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
-                                                    keyTimesRepeating.add(maxTime);
+                                                    if (!repeatingMap[attr].has(maxTime)) {
+                                                        [maxTime, baseValue] = insertSplitValue(item, maxTime, baseValue, keyTimesBase, values, item.keySplines, delay, i, maxTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                        keyTimesRepeating.add(maxTime);
+                                                    }
                                                     joined = true;
                                                 }
                                                 if (joined && time > maxTime) {

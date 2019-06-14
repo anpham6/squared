@@ -1,4 +1,4 @@
-/* android.widget 1.0.0
+/* android.widget 1.1.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -9,7 +9,6 @@ this.android.widget.toolbar = (function () {
     var $Resource = android.base.Resource;
     const $const = squared.lib.constant;
     const $css = squared.lib.css;
-    const $dom = squared.lib.dom;
     const $session = squared.lib.session;
     const $util = squared.lib.util;
     const $constA = android.lib.constant;
@@ -18,15 +17,17 @@ this.android.widget.toolbar = (function () {
     const $c = squared.base.lib.constant;
     const $e = squared.base.lib.enumeration;
     const PREFIX_MENU = 'ic_menu_';
-    class Toolbar extends squared.base.Extension {
+    class Toolbar extends squared.base.ExtensionUI {
         constructor(name, framework, tagNames, options) {
             super(name, framework, tagNames, options);
             this.require("android.widget.menu" /* MENU */);
         }
         init(element) {
             if (this.included(element)) {
-                for (let i = 0; i < element.children.length; i++) {
-                    const item = element.children[i];
+                const children = element.children;
+                const length = children.length;
+                for (let i = 0; i < length; i++) {
+                    const item = children[i];
                     if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
                         item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
                         break;
@@ -57,8 +58,10 @@ this.android.widget.toolbar = (function () {
             const backgroundImage = node.has('backgroundImage');
             const appBarChildren = [];
             const collapsingToolbarChildren = [];
-            for (let i = 0; i < element.children.length; i++) {
-                const item = element.children[i];
+            const children = element.children;
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                const item = children[i];
                 if (item.tagName === 'IMG') {
                     if (item.dataset.navigationIcon) {
                         const src = resource.addImageSrc(item, PREFIX_MENU);
@@ -119,7 +122,7 @@ this.android.widget.toolbar = (function () {
                 node.exclude(0, $e.NODE_PROCEDURE.LAYOUT);
                 $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'fitsSystemWindows', 'true');
             }
-            $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'layout_height', hasAppBar || !node.has($const.CSS.HEIGHT) ? '?android:attr/actionBarSize' : '');
+            $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'layout_height', hasAppBar || !node.hasPX($const.CSS.HEIGHT) ? '?android:attr/actionBarSize' : '');
             node.setControlType($constA.SUPPORT_ANDROID.TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
             node.exclude($e.NODE_RESOURCE.FONT_STYLE);
             let appBarNode;
@@ -273,18 +276,21 @@ this.android.widget.toolbar = (function () {
             }
         }
         createPlaceholder(node, children, target) {
-            let siblingIndex = Number.POSITIVE_INFINITY;
-            for (const item of children) {
-                siblingIndex = Math.min(siblingIndex, item.siblingIndex);
+            const placeholder = this.application.createNode(undefined, true, node, children);
+            if (children.length) {
+                let containerIndex = Number.POSITIVE_INFINITY;
+                for (const item of children) {
+                    containerIndex = Math.min(containerIndex, item.containerIndex);
+                }
+                placeholder.containerIndex = containerIndex;
             }
-            const placeholder = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element, node.block ? 'div' : 'span'), true, node, children);
-            placeholder.siblingIndex = siblingIndex;
             if (target) {
                 placeholder.dataset.target = target;
             }
             placeholder.inherit(node, 'base');
             placeholder.exclude($e.NODE_RESOURCE.ALL);
             placeholder.positioned = true;
+            placeholder.renderExclude = false;
             return placeholder;
         }
     }
