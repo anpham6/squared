@@ -4,13 +4,12 @@ import View from './view';
 
 import { RESERVED_JAVA } from './lib/constant';
 
-const $ResourceUI = squared.base.ResourceUI;
 const $color = squared.lib.color;
 const $css = squared.lib.css;
 const $regex = squared.lib.regex;
 const $util = squared.lib.util;
 
-const STORED = <ResourceStoredMapAndroid> $ResourceUI.STORED;
+const STORED = <ResourceStoredMapAndroid> squared.base.ResourceUI.STORED;
 const REGEXP_NONWORD = /[^\w+]/g;
 let IMAGE_FORMAT!: string[];
 

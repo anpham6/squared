@@ -8,9 +8,6 @@ import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { localizeString } from './lib/util';
 
-import $NodeUI = squared.base.NodeUI;
-import $ResourceUI = squared.base.ResourceUI;
-
 type T = android.base.View;
 
 const $client = squared.lib.client;
@@ -562,7 +559,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         name = `_${name}`;
                     }
                 }
-                this.controlId = $util.convertWord($ResourceUI.generateId(STRING_ANDROID.ANDROID, name || $util.fromLastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
+                this.controlId = $util.convertWord(squared.base.ResourceUI.generateId(STRING_ANDROID.ANDROID, name || $util.fromLastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
                 this.android('id', this.documentId);
             }
         }
@@ -1258,7 +1255,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         this.android('baselineAligned', 'false');
                     }
                     else {
-                        const baseline = $NodeUI.baseline(renderChildren, true);
+                        const baseline = squared.base.NodeUI.baseline(renderChildren, true);
                         if (baseline && (baseline.textElement || baseline.inputElement)) {
                             this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
                         }

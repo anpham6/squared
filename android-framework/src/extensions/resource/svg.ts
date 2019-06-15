@@ -17,8 +17,8 @@ import LAYERLIST_TMPL from '../../template/layer-list';
 import SET_TMPL from '../../template/set';
 import VECTOR_TMPL from '../../template/vector';
 
-if (!squared.svg) {
-    squared.svg = { lib: {} } as any;
+if (squared.svg === undefined) {
+    Object.assign(squared, { svg: { lib: {} } });
 }
 
 import $Svg = squared.svg.Svg;

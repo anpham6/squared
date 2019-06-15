@@ -1,10 +1,9 @@
 import { ExtensionResult, NodeXmlTemplate } from '../../src/base/@types/application';
 import { ViewAttribute } from '../../android-framework/src/@types/node';
 
-import $Resource = android.base.Resource;
-
 type View = android.base.View;
 
+const $Resource = android.base.Resource;
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $session = squared.lib.session;

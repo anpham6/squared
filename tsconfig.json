@@ -14,7 +14,8 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
-    "suppressImplicitAnyIndexErrors": true
+    "suppressImplicitAnyIndexErrors": true,
+    "allowUmdGlobalAccess": true
   },
   "include": [
     "android-framework/**/*",

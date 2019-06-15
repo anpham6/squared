@@ -5,8 +5,7 @@ import View from '../../view';
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $NodeUI = squared.base.NodeUI;
-
+const $NodeUI = squared.base.NodeUI;
 const $e = squared.base.lib.enumeration;
 
 const getInputName = (element: HTMLInputElement) => element.name ? element.name.trim() : '';

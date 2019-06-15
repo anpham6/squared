@@ -2,8 +2,7 @@ import { NodeXmlTemplate } from '../../src/base/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
-import $Resource = android.base.Resource;
-
+const $Resource = android.base.Resource;
 const $session = squared.lib.session;
 const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;

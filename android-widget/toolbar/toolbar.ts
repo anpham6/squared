@@ -3,13 +3,12 @@ import { UserSettingsAndroid } from '../../android-framework/src/@types/applicat
 
 import { WIDGET_NAME } from '../lib/constant';
 
-import $Resource = android.base.Resource;
-
 type ToolbarThemeData = {
     appBarOverlay: string;
     popupOverlay: string;
 };
 
+const $Resource = android.base.Resource;
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $session = squared.lib.session;

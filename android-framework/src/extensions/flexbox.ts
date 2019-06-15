@@ -7,7 +7,6 @@ import { STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
-import $NodeUI = squared.base.NodeUI;
 
 type FlexBasis = {
     item: View;
@@ -17,6 +16,7 @@ type FlexBasis = {
     grow: number;
 };
 
+const $NodeUI = squared.base.NodeUI;
 const $const = squared.lib.constant;
 const $math = squared.lib.math;
 const $util = squared.lib.util;

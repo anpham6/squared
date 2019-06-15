@@ -2,8 +2,7 @@ import { NodeXmlTemplate } from '../../src/base/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
-import $Resource = android.base.Resource;
-
+const $Resource = android.base.Resource;
 const $const = squared.lib.constant;
 const $color = squared.lib.color;
 const $util = squared.lib.util;

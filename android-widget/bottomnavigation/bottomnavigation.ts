@@ -3,8 +3,7 @@ import { UserSettingsAndroid } from '../../android-framework/src/@types/applicat
 
 import { WIDGET_NAME } from '../lib/constant';
 
-import $Resource = android.base.Resource;
-
+const $Resource = android.base.Resource;
 const $const = squared.lib.constant;
 const $util = squared.lib.util;
 const $constA = android.lib.constant;

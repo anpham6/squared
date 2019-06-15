@@ -11,9 +11,8 @@ import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { createViewAttribute, getDocumentId, getRootNs } from './lib/util';
 
 import $LayoutUI = squared.base.LayoutUI;
-import $NodeUI = squared.base.NodeUI;
-import $NodeList = squared.base.NodeList;
 
+const $NodeUI = squared.base.NodeUI;
 const $client = squared.lib.client;
 const $color = squared.lib.color;
 const $const = squared.lib.constant;
@@ -766,7 +765,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public setConstraints() {
-        for (const node of this.cache as $NodeList<T>) {
+        for (const node of this.cache) {
             if (node.layoutRelative) {
                 this.processRelativeHorizontal(node, node.renderChildren as T[]);
             }

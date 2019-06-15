@@ -9,8 +9,8 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
 import $LayoutUI = squared.base.LayoutUI;
-import $NodeUI = squared.base.NodeUI;
 
+const $NodeUI = squared.base.NodeUI;
 const $const = squared.lib.constant;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
