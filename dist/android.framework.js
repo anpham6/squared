@@ -1,4 +1,4 @@
-/* android-framework 1.1.0
+/* android-framework 1.1.1
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -269,12 +269,11 @@ var android = (function () {
         RESERVED_JAVA: RESERVED_JAVA
     });
 
-    const $ResourceUI = squared.base.ResourceUI;
     const $color = squared.lib.color;
     const $css = squared.lib.css;
     const $regex = squared.lib.regex;
     const $util = squared.lib.util;
-    const STORED = $ResourceUI.STORED;
+    const STORED = squared.base.ResourceUI.STORED;
     const REGEXP_NONWORD = /[^\w+]/g;
     let IMAGE_FORMAT;
     function formatObject(obj, numberAlias = false) {
@@ -1137,8 +1136,6 @@ var android = (function () {
         getRootNs: getRootNs
     });
 
-    var $NodeUI = squared.base.NodeUI;
-    var $ResourceUI$1 = squared.base.ResourceUI;
     const $client = squared.lib.client;
     const $const$2 = squared.lib.constant;
     const $css$1 = squared.lib.css;
@@ -1636,7 +1633,7 @@ var android = (function () {
                             name = `_${name}`;
                         }
                     }
-                    this.controlId = $util$3.convertWord($ResourceUI$1.generateId(STRING_ANDROID.ANDROID, name || $util$3.fromLastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
+                    this.controlId = $util$3.convertWord(squared.base.ResourceUI.generateId(STRING_ANDROID.ANDROID, name || $util$3.fromLastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
                     this.android('id', this.documentId);
                 }
             }
@@ -2319,7 +2316,7 @@ var android = (function () {
                             this.android('baselineAligned', 'false');
                         }
                         else {
-                            const baseline = $NodeUI.baseline(renderChildren, true);
+                            const baseline = squared.base.NodeUI.baseline(renderChildren, true);
                             if (baseline && (baseline.textElement || baseline.inputElement)) {
                                 this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
                             }
@@ -2552,7 +2549,7 @@ var android = (function () {
         }
     }
 
-    var $NodeUI$1 = squared.base.NodeUI;
+    const $NodeUI = squared.base.NodeUI;
     const $client$1 = squared.lib.client;
     const $color$1 = squared.lib.color;
     const $const$3 = squared.lib.constant;
@@ -4215,7 +4212,7 @@ var android = (function () {
                     return node.box.width;
                 })();
                 const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
-                const cleared = $NodeUI$1.linearData(children, true).cleared;
+                const cleared = $NodeUI.linearData(children, true).cleared;
                 const textIndent = node.blockDimension ? node.parseUnit(node.css('textIndent')) : 0;
                 let rowWidth = 0;
                 let previousRowLeft;
@@ -4453,13 +4450,13 @@ var android = (function () {
                     let baseline;
                     if (items.length > 1) {
                         let textBottom = getTextBottom(items);
-                        baseline = $NodeUI$1.baseline(textBottom ? items.filter(item => item !== textBottom) : items);
+                        baseline = $NodeUI.baseline(textBottom ? items.filter(item => item !== textBottom) : items);
                         if (baseline && textBottom) {
                             if (baseline !== textBottom && textBottom.bounds.height > baseline.bounds.height) {
                                 baseline.anchor($const$3.CSS.BOTTOM, textBottom.documentId);
                             }
                             else {
-                                baseline = $NodeUI$1.baseline(items);
+                                baseline = $NodeUI.baseline(items);
                                 textBottom = undefined;
                             }
                         }
@@ -4476,7 +4473,7 @@ var android = (function () {
                                     switch (item.verticalAlign) {
                                         case 'text-top':
                                             if (textBaseline === null) {
-                                                textBaseline = $NodeUI$1.baseline(items, true);
+                                                textBaseline = $NodeUI.baseline(items, true);
                                             }
                                             if (textBaseline) {
                                                 if (item !== textBaseline) {
@@ -4519,7 +4516,7 @@ var android = (function () {
                                             break;
                                         case 'text-bottom':
                                             if (textBaseline === null) {
-                                                textBaseline = $NodeUI$1.baseline(items, true);
+                                                textBaseline = $NodeUI.baseline(items, true);
                                             }
                                             if (textBaseline && textBaseline !== item) {
                                                 item.anchor($const$3.CSS.BOTTOM, textBaseline.documentId);
@@ -4631,8 +4628,8 @@ var android = (function () {
             }
         }
         processConstraintHorizontal(node, children) {
-            const baseline = $NodeUI$1.baseline(children);
-            const textBaseline = $NodeUI$1.baseline(children, true);
+            const baseline = $NodeUI.baseline(children);
+            const textBaseline = $NodeUI.baseline(children, true);
             const reverse = node.hasAlign(2048 /* RIGHT */);
             const textBottom = getTextBottom(children);
             const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
@@ -5056,7 +5053,7 @@ var android = (function () {
         }
         processConstraintChain(node, children) {
             const parent = children[0].actualParent || node;
-            const horizontal = $NodeUI$1.partitionRows(children);
+            const horizontal = $NodeUI.partitionRows(children);
             const floating = node.hasAlign(512 /* FLOAT */);
             const length = horizontal.length;
             if (length > 1) {
@@ -6172,7 +6169,7 @@ var android = (function () {
     }
 
     var $LayoutUI$1 = squared.base.LayoutUI;
-    var $NodeUI$2 = squared.base.NodeUI;
+    const $NodeUI$1 = squared.base.NodeUI;
     const $const$5 = squared.lib.constant;
     const $math$4 = squared.lib.math;
     const $util$7 = squared.lib.util;
@@ -6584,7 +6581,7 @@ var android = (function () {
                                     case 'baseline':
                                         if (horizontal) {
                                             if (baseline === null) {
-                                                baseline = $NodeUI$2.baseline(seg);
+                                                baseline = $NodeUI$1.baseline(seg);
                                             }
                                             if (baseline && chain !== baseline) {
                                                 chain.anchor('baseline', baseline.documentId);
@@ -6914,7 +6911,7 @@ var android = (function () {
     }
 
     var $LayoutUI$3 = squared.base.LayoutUI;
-    var $NodeUI$3 = squared.base.NodeUI;
+    const $NodeUI$2 = squared.base.NodeUI;
     const $const$7 = squared.lib.constant;
     const $css$5 = squared.lib.css;
     const $util$9 = squared.lib.util;
@@ -7123,7 +7120,7 @@ var android = (function () {
                             container.android('baselineAlignedChildIndex', '0');
                         }
                     }
-                    else if (node.filter((item) => item.visible).length > 1 && $NodeUI$3.linearData(node.children).linearY) {
+                    else if (node.filter((item) => item.visible).length > 1 && $NodeUI$2.linearData(node.children).linearY) {
                         node.addAlign(1024 /* TOP */);
                     }
                 }
@@ -7871,7 +7868,7 @@ var android = (function () {
         }
     }
 
-    var $NodeUI$4 = squared.base.NodeUI;
+    const $NodeUI$3 = squared.base.NodeUI;
     const $e$g = squared.base.lib.enumeration;
     const getInputName = (element) => element.name ? element.name.trim() : '';
     class RadioGroup extends squared.base.ExtensionUI {
@@ -7914,7 +7911,7 @@ var android = (function () {
             }
             if (children.length > 1) {
                 const container = this.application.controllerHandler.createNodeGroup(node, children, parent, true);
-                const linearX = $NodeUI$4.linearData(children).linearX;
+                const linearX = $NodeUI$3.linearData(children).linearX;
                 if (linearX) {
                     container.addAlign(8 /* HORIZONTAL */ | 128 /* SEGMENTED */);
                     container.android('orientation', STRING_ANDROID.HORIZONTAL);
@@ -10264,8 +10261,8 @@ var android = (function () {
         }
     };
 
-    if (!squared.svg) {
-        squared.svg = { lib: {} };
+    if (squared.svg === undefined) {
+        Object.assign(squared, { svg: { lib: {} } });
     }
     var $Svg = squared.svg.Svg;
     var $SvgAnimate = squared.svg.SvgAnimate;

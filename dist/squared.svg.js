@@ -1,4 +1,4 @@
-/* squared.svg 1.1.0
+/* squared.svg 1.1.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -2947,15 +2947,19 @@
         }
         return previousValue;
     }
-    function insertSplitValue(item, actualTime, baseValue, keyTimes, values, keySplines, delay, iteration, time, keyTimeMode, timelineMap, interpolatorMap, transformOriginMap) {
+    function insertSplitValue(item, actualTime, baseValue, keyTimes, values, keySplines, delay, iteration, index, time, keyTimeMode, timelineMap, interpolatorMap, transformOriginMap) {
         if (delay < 0) {
             actualTime -= delay;
             delay = 0;
         }
         const duration = item.duration;
-        let fraction = Math.max(0, Math.min((actualTime - (delay + duration * iteration)) / duration, 1));
-        if (fraction === 0 && actualTime > 0 && actualTime % duration === 0) {
-            fraction = 1;
+        const offset = actualTime - (delay + duration * iteration);
+        let fraction;
+        if (offset === 0) {
+            fraction = index === 0 ? 0 : 1;
+        }
+        else {
+            fraction = $math$2.clampRange(offset / duration);
         }
         let previousIndex = -1;
         let nextIndex = -1;
@@ -3865,7 +3869,7 @@
                                                             }
                                                             else {
                                                                 function insertIntermediateValue(splitTime) {
-                                                                    [maxTime, lastValue] = insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, k, splitTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                                    [maxTime, lastValue] = insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, k, l, splitTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                                 }
                                                                 if (delay < 0 && maxTime === -1) {
                                                                     if (time > 0) {
@@ -4037,22 +4041,23 @@
                                             const startTime = maxTime + 1;
                                             let j = Math.floor(durationTotal / duration);
                                             let joined = false;
-                                            const insertIntermediateValue = (time) => insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, j, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                            const insertIntermediateValue = (time, index) => insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, j, index, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                             do {
                                                 const lengthC = keyTimes.length;
                                                 for (let k = 0; k < lengthC; k++) {
                                                     let time = getItemTime(delay, duration, keyTimes, j, k);
                                                     if (!joined && time >= maxTime) {
-                                                        [maxTime, baseValue] = insertIntermediateValue(maxTime);
+                                                        [maxTime, baseValue] = insertIntermediateValue(maxTime, k);
                                                         joined = true;
                                                     }
                                                     if (joined) {
                                                         if (time >= maxThreadTime) {
                                                             if (maxThreadTime > maxTime) {
                                                                 const fillReplace = item.fillReplace || item.iterationCount === -1;
-                                                                [maxTime, baseValue] = insertIntermediateValue(maxThreadTime - (fillReplace ? 1 : 0));
+                                                                [maxTime, baseValue] = insertIntermediateValue(maxThreadTime - (fillReplace ? 1 : 0), k);
                                                                 if (fillReplace) {
-                                                                    maxTime = setTimelineValue(repeatingMap[attr], maxThreadTime, getItemValue(item, values, j, 0, baseValue));
+                                                                    baseValue = getItemValue(item, values, j, 0, baseValue);
+                                                                    maxTime = setTimelineValue(repeatingMap[attr], maxThreadTime, baseValue);
                                                                 }
                                                                 actualMaxTime = maxThreadTime;
                                                             }
@@ -4178,7 +4183,7 @@
                                                     let time = getItemTime(delay, item.duration, keyTimesBase, i, j);
                                                     if (!joined && time >= maxTime) {
                                                         if (!repeatingMap[attr].has(maxTime)) {
-                                                            [maxTime, baseValue] = insertSplitValue(item, maxTime, baseValue, keyTimesBase, values, item.keySplines, delay, i, maxTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                            [maxTime, baseValue] = insertSplitValue(item, maxTime, baseValue, keyTimesBase, values, item.keySplines, delay, i, j, maxTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                             keyTimesRepeating.add(maxTime);
                                                         }
                                                         joined = true;

@@ -1,4 +1,4 @@
-/* android.widget 1.1.0
+/* android.widget 1.1.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,7 +6,7 @@ this.android.widget = this.android.widget || {};
 this.android.widget.drawer = (function () {
     'use strict';
 
-    var $Resource = android.base.Resource;
+    const $Resource = android.base.Resource;
     const $const = squared.lib.constant;
     const $session = squared.lib.session;
     const $util = squared.lib.util;

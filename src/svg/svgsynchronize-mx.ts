@@ -1515,7 +1515,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                             const fillReplace = item.fillReplace || item.iterationCount === -1;
                                                             [maxTime, baseValue] = insertIntermediateValue(maxThreadTime - (fillReplace ? 1 : 0), k);
                                                             if (fillReplace) {
-                                                                maxTime = setTimelineValue(repeatingMap[attr], maxThreadTime, getItemValue(item, values, j, 0, baseValue));
+                                                                baseValue = getItemValue(item, values, j, 0, baseValue);
+                                                                maxTime = setTimelineValue(repeatingMap[attr], maxThreadTime, baseValue);
                                                             }
                                                             actualMaxTime = maxThreadTime;
                                                         }
