@@ -29,24 +29,24 @@ export default class Application<T extends View> extends squared.base.Applicatio
         const file = this.resourceHandler.fileHandler;
         if (file) {
             const origin = location.origin + '/';
-            for (const uri of ASSETS.images.keys()) {
-                let pathname: string | undefined;
-                let filename: string | undefined;
-                if (uri.startsWith(origin)) {
-                    const length = origin.length;
-                    filename = $util.fromLastIndexOf(uri, '/');
-                    pathname = uri.substring(length, uri.lastIndexOf('/'));
+            const length = origin.length;
+            function parseUri(value: string) {
+                if (value.startsWith(origin)) {
+                    return [value.substring(length, value.lastIndexOf('/')), $util.fromLastIndexOf(value, '/')];
                 }
                 else {
-                    const match = $regex.COMPONENT.PROTOCOL.exec(uri);
+                    const match = $regex.COMPONENT.PROTOCOL.exec(value);
                     if (match) {
                         const host = match[2];
                         const port = match[3];
                         const path = match[4];
-                        filename = $util.fromLastIndexOf(path, '/');
-                        pathname = $util.convertWord(host) + (port ? '/' + port.substring(1) : '') + path.substring(0, origin.lastIndexOf('/'));
+                        return [$util.convertWord(host) + (port ? '/' + port.substring(1) : '') + path.substring(0, origin.lastIndexOf('/')), $util.fromLastIndexOf(path, '/')];
                     }
                 }
+                return [];
+            }
+            for (const uri of ASSETS.images.keys()) {
+                const [pathname, filename] = parseUri(uri);
                 if (pathname && filename) {
                     file.addAsset({ pathname, filename, uri });
                 }
@@ -58,12 +58,22 @@ export default class Application<T extends View> extends squared.base.Applicatio
                 }
                 else if (base64) {
                     if (uri.startsWith('data:image') && data.filename) {
-                        file.addAsset({ pathname: 'data_base64', filename: data.filename, base64 });
+                        file.addAsset({ pathname: 'base64', filename: data.filename, base64 });
                     }
                 }
                 else if (content) {
                     if (data.mimeType === 'image/svg+xml') {
-                        file.addAsset({ pathname: 'data_svg', filename: data.filename, content });
+                        file.addAsset({ pathname: 'svg+xml', filename: data.filename, content });
+                    }
+                }
+            }
+            for (const data of ASSETS.fonts.values()) {
+                for (const font of data) {
+                    if (font.srcUrl) {
+                        const [pathname, filename] = parseUri(font.srcUrl);
+                        if (pathname && filename) {
+                            file.addAsset({ pathname, filename, uri: font.srcUrl });
+                        }
                     }
                 }
             }
@@ -80,6 +90,6 @@ export default class Application<T extends View> extends squared.base.Applicatio
     }
 
     get length() {
-        return ASSETS.images.size + ASSETS.rawData.size;
+        return ASSETS.images.size + ASSETS.rawData.size + ASSETS.fonts.size;
     }
 }

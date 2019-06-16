@@ -8,7 +8,7 @@ const settings: UserSettingsChrome = {
     createQuerySelectorMap: true,
     excludePlainText: true,
     outputDirectory: '',
-    outputArchiveName: 'chrome-images',
+    outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip',
     outputArchiveTimeout: 30
 };
