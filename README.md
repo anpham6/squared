@@ -140,6 +140,7 @@ squared.settings = {
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
     outputDirectory: 'app/src/main',
     outputMainFileName: 'activity_main.xml',
+    outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip', // zip | tar
     outputArchiveTimeout: 30 // seconds
 };
@@ -276,15 +277,16 @@ squared.system.writeResourceStyleXml(saveToDisk: boolean)
 The system methods querySelector and querySelectorAll can also be called from every Node object and provide the same functionality as the similarly named DOM methods.
 
 ```javascript
-squared.system.getElement(element: HTMLElement)
-squared.system.getElementById(value: string)
+squared.system.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"
+squared.system.getElementById(value: string, cache?: boolean)
 squared.system.querySelector(value: string)
 squared.system.querySelectorAll(value: string)
 squared.system.getElementMap()
+squared.system.clearElementMap()
 
 // async methods
-await chrome.getElement(element: HTMLElement)
-await chrome.getElementById(value: string)
+await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"
+await chrome.getElementById(value: string, cache?: boolean)
 await chrome.querySelector(value: string)
 await chrome.querySelectorAll(value: string)
 ```

@@ -47,7 +47,7 @@ declare namespace base {
         resourceHandler: Resource<T>;
         extensionManager: ExtensionManager<T>;
         userSettings: UserSettings;
-        initialized: boolean;
+        initializing: boolean;
         closed: boolean;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly session: AppSession<T>;
@@ -161,6 +161,7 @@ declare namespace base {
     }
 
     interface Resource<T extends Node> extends AppHandler<T> {
+        fileHandler?: File<T>;
         cache: NodeList<T>;
         readonly userSettings: UserSettings;
         readonly assets: ResourceAssetMap;
@@ -171,6 +172,7 @@ declare namespace base {
         getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): CSSFontFaceData | undefined;
         addRawData(dataURI: string, mimeType: string, encoding: string, content: string): string;
         getRawData(dataURI: string): RawAsset | undefined;
+        setFileHandler(instance: File<T>): void;
     }
 
     class Resource<T extends Node> implements Resource<T> {
@@ -179,7 +181,6 @@ declare namespace base {
     }
 
     interface ResourceUI<T extends NodeUI> extends Resource<T> {
-        fileHandler?: FileUI<T>;
         readonly userSettings: UserUISettings;
         readonly stored: ResourceStoredMap;
         finalize(layouts: FileAsset[]): void;
@@ -265,23 +266,29 @@ declare namespace base {
 
     class ExtensionManager<T extends Node> implements ExtensionManager<T> {}
 
-    interface FileUI<T extends NodeUI> {
+    interface File<T extends Node> {
+        resource: Resource<T>;
+        userSettings: UserSettings;
+        readonly assets: FileAsset[];
+        saveAllToDisk(files?: FileAsset[]): void;
+        addAsset(data: Optional<RawAsset>): void;
+        reset(): void;
+        saveToDisk(files: FileAsset[], filename?: string): void;
+    }
+
+    class File<T extends Node> implements File<T> {
+        public static downloadToDisk(data: Blob, filename: string, mime?: string): void;
+    }
+
+    interface FileUI<T extends NodeUI> extends File<T> {
         resource: ResourceUI<T>;
         userSettings: UserUISettings;
         appName: string;
-        readonly assets: FileAsset[];
         readonly stored: ResourceStoredMap;
         readonly directory: { string: string, font: string, image: string };
-        saveAllToDisk(layouts: FileAsset[]): void;
-        addAsset(data: Optional<RawAsset>): void;
-        reset(): void;
-        saveToDisk(files: FileAsset[], appName?: string): void;
     }
 
-    class FileUI<T extends NodeUI> implements FileUI<T> {
-        public static downloadToDisk(data: Blob, filename: string, mime?: string): void;
-        constructor(resource: ResourceUI<T>);
-    }
+    class FileUI<T extends NodeUI> implements FileUI<T> {}
 
     interface LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T>, LayoutType {
         parent: T;
@@ -752,7 +759,7 @@ declare namespace lib {
         export import CSS = $regex.CSS;
         export import XML = $regex.XML;
         export import CHAR = $regex.CHAR;
-        export import PREFIX = $regex.PREFIX;
+        export import COMPONENT = $regex.COMPONENT;
         export import ESCAPE = $regex.ESCAPE;
     }
 

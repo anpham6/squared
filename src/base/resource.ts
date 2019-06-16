@@ -2,7 +2,6 @@ import { ResourceAssetMap, UserSettings } from './@types/application';
 
 import Application from './application';
 import Node from './node';
-import NodeList from './nodelist';
 
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
 
@@ -17,9 +16,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         rawData: new Map()
     };
 
+    public fileHandler?: squared.base.File<T>;
+
     protected constructor(
         public application: Application<T>,
-        public cache: NodeList<T>)
+        public cache: squared.base.NodeList<T>)
     {
     }
 
@@ -28,6 +29,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public reset() {
         for (const name in Resource.ASSETS) {
             Resource.ASSETS[name].clear();
+        }
+        if (this.fileHandler) {
+            this.fileHandler.reset();
         }
     }
 
@@ -78,9 +82,20 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         else {
             content = content.replace(/\\"/g, '"');
         }
+        const getFileName = () => $util.buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
+        const pathname = dataURI.startsWith(location.origin) ? dataURI.substring(location.origin.length + 1, dataURI.lastIndexOf('/')) : '';
         let filename: string | undefined;
         if (settings.supported.imageFormat === '*') {
-            filename = '';
+            if (dataURI.startsWith(location.origin)) {
+                filename = $util.fromLastIndexOf(dataURI, '/');
+            }
+            else {
+                let extension = mimeType.split('/').pop() as string;
+                if (extension === 'svg+xml') {
+                    extension = 'svg';
+                }
+                filename = getFileName() + '.' + extension;
+            }
         }
         else {
             for (const format of settings.supported.imageFormat) {
@@ -89,14 +104,15 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         filename = $util.fromLastIndexOf(dataURI, '/');
                     }
                     else {
-                        filename = `${$util.buildAlphaString(5).toLowerCase()}_${new Date().getTime()}.${format}`;
+                        filename = getFileName() + '.' + format;
                     }
+                    break;
                 }
             }
         }
-        if (filename !== undefined) {
+        if (filename) {
             Resource.ASSETS.rawData.set(dataURI, {
-                pathname: '',
+                pathname,
                 filename,
                 content,
                 base64,
@@ -117,6 +133,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             }
         }
         return Resource.ASSETS.rawData.get(dataURI);
+    }
+
+    public setFileHandler(instance: squared.base.File<T>) {
+        instance.resource = this;
+        this.fileHandler = instance;
     }
 
     get assets() {

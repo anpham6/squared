@@ -379,9 +379,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         for (const name in ResourceUI.STORED) {
             ResourceUI.STORED[name].clear();
         }
-        if (this.fileHandler) {
-            this.fileHandler.reset();
-        }
     }
 
     public writeRawImage(filename: string, base64: string) {

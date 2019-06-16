@@ -57,8 +57,8 @@ export const CHAR = {
     WORDDASH: /[a-zA-Z\d]/
 };
 
-export const PREFIX = {
-    PROTOCOL: /^[A-Za-z]+:\/\//
+export const COMPONENT = {
+    PROTOCOL: /^([A-Za-z]+:\/\/)([A-Za-z0-9\-.])(:[0-9]+)?(\/.+)/
 };
 
 export const ESCAPE = {

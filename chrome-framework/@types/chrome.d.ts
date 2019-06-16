@@ -1,4 +1,12 @@
+import { FileAsset } from '../../src/base/@types/application';
 import { UserSettingsChrome } from '../src/@types/application';
+
+type View = chrome.base.View;
+
+declare function getElement(element: HTMLElement, cache?: boolean): Promise<View | null>;
+declare function getElementById(value: string, cache?: boolean): Promise<View | null>;
+declare function querySelector(value: string): Promise<View | null>;
+declare function querySelectorAll(value: string): Promise<View[] | null>;
 
 declare namespace base {
     interface Controller<T extends View> extends squared.base.Controller<T> {
@@ -16,8 +24,11 @@ declare namespace base {
 
     class Resource<T extends View> implements Resource<T> {}
 
-    interface View extends squared.base.Node {
-    }
+    interface File<T extends View> extends squared.base.File<T> {}
+
+    class File<T extends View> implements File<T> {}
+
+    interface View extends squared.base.Node {}
 
     class View implements View {
         constructor(id: number, sessionId: string, element: Element);

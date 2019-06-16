@@ -37,9 +37,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     public controllerHandler: Controller<T>;
     public resourceHandler: Resource<T>;
     public extensionManager: ExtensionManager<T>;
-    public initialized = false;
+    public initializing = false;
     public closed = false;
-    public userSettings!: UserSettings;
     public readonly builtInExtensions: ObjectMap<Extension<T>> = {};
     public readonly extensions: Extension<T>[] = [];
     public readonly rootElements = new Set<HTMLElement>();
@@ -51,6 +50,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         excluded: new NodeList<T>(),
         sessionId: ''
     };
+    public abstract userSettings: UserSettings;
 
     constructor(
         public framework: number,
@@ -87,7 +87,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const controller = this.controllerHandler;
         let __THEN: Undefined<() => void>;
         this.rootElements.clear();
-        this.initialized = false;
+        this.initializing = false;
         this.processing.sessionId = controller.generateSessionId;
         this.session.active.push(this.processing.sessionId);
         controller.init();
@@ -114,7 +114,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const documentRoot = this.rootElements.values().next().value;
         const preloadImages: HTMLImageElement[] = [];
         const resume = () => {
-            this.initialized = false;
+            this.initializing = false;
             for (const image of preloadImages) {
                 if (image.parentElement) {
                     documentRoot.removeChild(image);
@@ -208,7 +208,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             });
         }
         if (images.length) {
-            this.initialized = true;
+            this.initializing = true;
             Promise.all($util.objectMap<PreloadImage, Promise<PreloadImage>>(images, image => {
                 return new Promise((resolve, reject) => {
                     if (typeof image === 'string') {

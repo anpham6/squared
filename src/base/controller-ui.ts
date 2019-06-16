@@ -1,7 +1,6 @@
 import { ControllerUISettings, FileAsset, LayoutResult, LayoutType, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserUISettings } from './@types/application';
 
 import Controller from './controller';
-import NodeList from './nodelist';
 import LayoutUI from './layout-ui';
 import NodeUI from './node-ui';
 
@@ -335,7 +334,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return false;
     }
 
-    public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
+    public evaluateNonStatic(documentRoot: T, cache: squared.base.NodeList<T>) {
         const altered = new Set<T>();
         for (const node of cache) {
             if (!node.documentRoot) {
@@ -532,7 +531,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public sortInitialCache(cache: NodeList<T>) {
+    public sortInitialCache(cache: squared.base.NodeList<T>) {
         cache.sort((a, b) => {
             if (a.depth !== b.depth) {
                 return a.depth < b.depth ? -1 : 1;

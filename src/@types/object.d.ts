@@ -3,11 +3,9 @@ interface KeyValue<T, U> {
     value: U;
 }
 
-interface StringValue<T = string> extends KeyValue<string, T> {
-}
+interface StringValue<T = string> extends KeyValue<string, T> {}
 
-interface NumberValue<T = string> extends KeyValue<number, T> {
-}
+interface NumberValue<T = string> extends KeyValue<number, T> {}
 
 interface RGB {
     r: number;

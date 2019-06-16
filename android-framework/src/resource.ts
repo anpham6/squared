@@ -33,7 +33,7 @@ function formatObject(obj: {}, numberAlias = false) {
                         break;
                     case 'src':
                     case 'srcCompat':
-                        if ($regex.PREFIX.PROTOCOL.test(value)) {
+                        if ($regex.COMPONENT.PROTOCOL.test(value)) {
                             value = Resource.addImage({ mdpi: value });
                             if (value !== '') {
                                 obj[attr] = `@drawable/${value}`;

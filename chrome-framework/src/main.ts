@@ -4,6 +4,7 @@ import { ChromeFramework } from './@types/application';
 import Application from './application';
 import Controller from './controller';
 import ExtensionManager from './extensionmanager';
+import File from './file';
 import Resource from './resource';
 import View from './view';
 
@@ -18,10 +19,12 @@ let controller: Controller<View>;
 let userSettings: UserSettings;
 let elementMap: Map<Element, View>;
 
-function findElement(element: HTMLElement) {
-    const result = elementMap.get(element);
-    if (result) {
-        return result;
+function findElement(element: HTMLElement, cache = true) {
+    if (cache) {
+        const result = elementMap.get(element);
+        if (result) {
+            return result;
+        }
     }
     const settings = application.userSettings;
     const preloadImages = settings.preloadImages;
@@ -31,10 +34,12 @@ function findElement(element: HTMLElement) {
     return elementMap.get(element) || null;
 }
 
-async function findElementAsync(element: HTMLElement) {
-    const result = elementMap.get(element);
-    if (result) {
-        return result;
+async function findElementAsync(element: HTMLElement, cache = true) {
+    if (cache) {
+        const result = elementMap.get(element);
+        if (result) {
+            return result;
+        }
     }
     await application.parseDocument(element);
     return elementMap.get(element) || null;
@@ -42,24 +47,27 @@ async function findElementAsync(element: HTMLElement) {
 
 const appBase: ChromeFramework<View> = {
     base: {
+        Application,
+        ExtensionManager,
         Controller,
+        File,
         Resource,
         View
     },
     lib: {},
     extensions: {},
     system: {
-        getElement(element: HTMLElement) {
+        getElement(element: HTMLElement, cache = true) {
             if (application) {
-                return findElement(element);
+                return findElement(element, cache);
             }
             return null;
         },
-        getElementById(value: string) {
+        getElementById(value: string, cache = true) {
             if (application) {
                 const element = document.getElementById(value);
                 if (element) {
-                    return findElement(element);
+                    return findElement(element, cache);
                 }
             }
             return null;
@@ -86,15 +94,21 @@ const appBase: ChromeFramework<View> = {
             return result;
         },
         getElementMap() {
-            if (application) {
-                return (<Controller<View>> application.controllerHandler).elementMap;
+            if (controller) {
+                return controller.elementMap;
             }
             return new Map<Element, View>();
+        },
+        clearElementMap() {
+            if (controller) {
+                return controller.elementMap.clear();
+            }
         }
     },
     create() {
         application = new Application(framework, View, Controller, Resource, ExtensionManager);
         controller = <Controller<View>> application.controllerHandler;
+        application.resourceHandler.setFileHandler(new File());
         elementMap = controller.elementMap;
         userSettings = { ...SETTINGS };
         initialized = true;
@@ -114,17 +128,17 @@ const appBase: ChromeFramework<View> = {
         }
         return appBase.create();
     },
-    getElement: async (element: HTMLElement) => {
+    getElement: async (element: HTMLElement, cache = true) => {
         if (application) {
-            return await findElementAsync(element);
+            return await findElementAsync(element, cache);
         }
         return null;
     },
-    getElementById: async (value: string) => {
+    getElementById: async (value: string, cache = true) => {
         if (application) {
             const element = document.getElementById(value);
             if (element) {
-                return await findElementAsync(element);
+                return await findElementAsync(element, cache);
             }
         }
         return null;

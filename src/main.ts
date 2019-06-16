@@ -194,17 +194,17 @@ export function reset() {
 }
 
 export function ready() {
-    return !!main && !main.initialized && !main.closed;
+    return !!main && !main.initializing && !main.closed;
 }
 
 export function close() {
-    if (main && !main.initialized && main.length) {
+    if (main && !main.initializing && main.length) {
         main.finalize();
     }
 }
 
 export function saveAllToDisk() {
-    if (main && !main.initialized && main.length) {
+    if (main && !main.initializing && main.length) {
         if (!main.closed) {
             main.finalize();
         }

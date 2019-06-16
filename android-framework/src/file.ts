@@ -53,23 +53,23 @@ function getImageAssets(items: string[]) {
     return result;
 }
 
+const createFileAsset = (pathname: string, filename: string, content: string): FileAsset => ({ pathname, filename, content });
+
 const replaceDrawableLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEXP_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], dpi, false) + '"') : value;
 
 const replaceThemeLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEXP_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], dpi, false) + '<') : value;
 
-const createFileAsset = (pathname: string, filename: string, content: string): FileAsset => ({ pathname, filename, content });
-
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
 export default class File<T extends View> extends squared.base.FileUI<T> implements android.base.File<T> {
-    public saveAllToDisk(layouts: FileAsset[]) {
-        const files: FileAsset[] = [];
-        const length = layouts.length;
+    public saveAllToDisk(files: FileAsset[]) {
+        const layouts: FileAsset[] = [];
+        const length = files.length;
         for (let i = 0; i < length; i++) {
-            files.push(createFileAsset(layouts[i].pathname, i === 0 ? this.userSettings.outputMainFileName : `${layouts[i].filename}.xml`, layouts[i].content));
+            layouts.push(createFileAsset(files[i].pathname, i === 0 ? this.userSettings.outputMainFileName : `${files[i].filename}.xml`, files[i].content));
         }
         this.saveToDisk(
-            files.concat(
+            layouts.concat(
                 getFileAssets(this.resourceStringToXml()),
                 getFileAssets(this.resourceStringArrayToXml()),
                 getFileAssets(this.resourceFontToXml()),
@@ -80,23 +80,23 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 getImageAssets(this.resourceDrawableImageToXml()),
                 getFileAssets(this.resourceAnimToXml())
             ),
-            this.userSettings.manifestLabelAppName
+            this.userSettings.outputArchiveName
         );
     }
 
-    public layoutAllToXml(layouts: FileAsset[], saveToDisk = false) {
+    public layoutAllToXml(files: FileAsset[], saveToDisk = false) {
         const result = {};
-        const files: FileAsset[] = [];
-        const length = layouts.length;
+        const layouts: FileAsset[] = [];
+        const length = files.length;
         for (let i = 0; i < length; i++) {
-            const layout = layouts[i];
+            const layout = files[i];
             result[layout.filename] = [layout.content];
             if (saveToDisk) {
-                files.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
+                layouts.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
             }
         }
         if (saveToDisk) {
-            this.saveToDisk(files, this.userSettings.manifestLabelAppName);
+            this.saveToDisk(layouts, this.userSettings.outputArchiveName);
         }
         return result;
     }
@@ -128,7 +128,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     files = files.concat(getFileAssets(result[name]));
                 }
             }
-            this.saveToDisk(files, this.userSettings.manifestLabelAppName);
+            this.saveToDisk(files, this.userSettings.outputArchiveName);
         }
         return result;
     }
@@ -137,7 +137,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         const result: string[] = [];
         const data: ExternalData[] = [{ string: [] }];
         if (!this.stored.strings.has('app_name')) {
-            data[0].string.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
+            data[0].string.push({ name: 'app_name', innerText: this.userSettings.outputArchiveName });
         }
         for (const [name, innerText] of Array.from(this.stored.strings.entries()).sort(caseInsensitive)) {
             data[0].string.push(<ItemValue> { name, innerText });
@@ -151,7 +151,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             'strings.xml'
         );
         if (saveToDisk) {
-            this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+            this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
         }
         return result;
     }
@@ -175,7 +175,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 'string_arrays.xml'
             );
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
             }
         }
         return result;
@@ -228,7 +228,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 result.push(output, pathname, `${name}.xml`);
             }
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
             }
         }
         return result;
@@ -250,7 +250,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 'colors.xml'
             );
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
             }
         }
         return result;
@@ -321,7 +321,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             }
         }
         if (saveToDisk) {
-            this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+            this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
         }
         return result;
     }
@@ -342,7 +342,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 'dimens.xml'
             );
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
             }
         }
         return result;
@@ -368,7 +368,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 );
             }
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
             }
         }
         return result;
@@ -397,7 +397,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 }
             }
             if (saveToDisk) {
-                this.saveToDisk(getImageAssets(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getImageAssets(result), this.userSettings.outputArchiveName);
             }
         }
         return result;
@@ -415,7 +415,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 );
             }
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
             }
         }
         return result;

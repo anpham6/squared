@@ -6,7 +6,11 @@ const settings: UserSettingsChrome = {
     handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,
-    excludePlainText: true
+    excludePlainText: true,
+    outputDirectory: '',
+    outputArchiveName: 'chrome-images',
+    outputArchiveFormat: 'zip',
+    outputArchiveTimeout: 30
 };
 
 export default settings;

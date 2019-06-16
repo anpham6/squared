@@ -8,6 +8,7 @@ import Resource from './resource-ui';
 import ApplicationUI from './application-ui';
 import ControllerUI from './controller-ui';
 import ExtensionUI from './extension-ui';
+import File from './file';
 import FileUI from './file-ui';
 import LayoutUI from './layout-ui';
 import NodeUI from './node-ui';
@@ -58,6 +59,7 @@ export {
     Extension,
     ExtensionUI,
     ExtensionManager,
+    File,
     FileUI,
     LayoutUI,
     Node,

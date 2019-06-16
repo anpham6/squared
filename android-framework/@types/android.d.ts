@@ -50,8 +50,8 @@ declare namespace base {
 
     interface File<T extends View> extends squared.base.FileUI<T> {
         readonly stored: ResourceStoredMapAndroid;
-        saveAllToDisk(layouts: FileAsset[]): void;
-        layoutAllToXml(layouts: FileAsset[], saveToDisk?: boolean): {};
+        saveAllToDisk(files: FileAsset[]): void;
+        layoutAllToXml(files: FileAsset[], saveToDisk?: boolean): {};
         resourceAllToXml(saveToDisk?: boolean): {};
         resourceStringToXml(saveToDisk?: boolean): string[];
         resourceStringArrayToXml(saveToDisk?: boolean): string[];

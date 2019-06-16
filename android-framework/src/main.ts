@@ -53,7 +53,7 @@ let fileHandler: File<View>;
 let userSettings: UserSettingsAndroid;
 
 function autoClose() {
-    if (application && application.userSettings.autoCloseOnWrite && !application.initialized && !application.closed) {
+    if (application && application.userSettings.autoCloseOnWrite && !application.initializing && !application.closed) {
         application.finalize();
         return true;
     }
@@ -200,7 +200,8 @@ const appBase: AppFramework<View> = {
         const EN = squared.base.lib.constant.EXT_NAME;
         const EA = constant.EXT_ANDROID;
         application = new Application(framework, View, Controller, Resource, ExtensionManager);
-        fileHandler = new File(application.resourceHandler);
+        fileHandler = new File();
+        application.resourceHandler.setFileHandler(fileHandler);
         userSettings = { ...SETTINGS };
         Object.assign(application.builtInExtensions, {
             [EN.EXTERNAL]: new External(EN.EXTERNAL, framework),

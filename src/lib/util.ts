@@ -1,4 +1,4 @@
-import { CHAR, PREFIX, UNIT, XML } from './regex';
+import { CHAR, COMPONENT, UNIT, XML } from './regex';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
@@ -48,17 +48,17 @@ export function convertUnderscore(value: string) {
     if (CACHE_UNDERSCORE[value]) {
         return CACHE_UNDERSCORE[value];
     }
-    const length = value.length;
     let result = value[0].toLowerCase();
     let lower = true;
+    const length = value.length;
     for (let i = 1; i < length; i++) {
-        const char = value[i];
-        const upper = char === char.toUpperCase();
-        if (char !== '_' && lower && upper) {
-            result += '_' + char.toLowerCase();
+        const ch = value[i];
+        const upper = ch === ch.toUpperCase();
+        if (ch !== '_' && lower && upper) {
+            result += '_' + ch.toLowerCase();
         }
         else {
-            result += char;
+            result += ch;
         }
         lower = !upper;
     }
@@ -74,42 +74,28 @@ export function convertCamelCase(value: string, char = '-') {
     let result = '';
     let previous = '';
     for (let i = 0; i < length; i++) {
-        if (value[i] !== char) {
+        const ch = value.charAt(i);
+        if (ch !== char) {
             if (previous === char) {
-                result += value[i].toUpperCase();
+                result += ch.toUpperCase();
             }
             else {
-                result += value[i];
+                result += ch;
             }
         }
-        previous = value[i];
+        previous = ch;
     }
     CACHE_CAMELCASE[value] = result;
     return result;
 }
 
 export function convertWord(value: string, dash = false) {
-    const length = value.length;
+    const pattern = dash ? CHAR.WORDDASH : CHAR.WORD;
     let result = '';
-    if (dash) {
-        for (let i = 0; i < length; i++) {
-            if (CHAR.WORDDASH.test(value[i])) {
-                result += value[i];
-            }
-            else {
-                result += '_';
-            }
-        }
-    }
-    else {
-        for (let i = 0; i < length; i++) {
-            if (CHAR.WORD.test(value[i])) {
-                result += value[i];
-            }
-            else {
-                result += '_';
-            }
-        }
+    const length = value.length;
+    for (let i = 0; i < length; i++) {
+        const ch = value.charAt(i);
+        result += pattern.test(ch) ? ch : '_';
     }
     return result;
 }
@@ -325,7 +311,7 @@ export function optionalAsBoolean(obj: UndefNull<object>, value: string): boolea
 }
 
 export function resolvePath(value: string) {
-    if (!PREFIX.PROTOCOL.test(value)) {
+    if (!COMPONENT.PROTOCOL.test(value)) {
         let pathname = location.pathname.split('/');
         pathname.pop();
         if (value.charAt(0) === '/') {

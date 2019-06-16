@@ -33,7 +33,7 @@ app.post('/api/savetodisk', (req, res) => {
     try {
         mkdirp.sync(directory);
         const archive = archiver(format, { zlib: { level: 9 } });
-        const zipname = `${dirname}/${req.query.appname || 'squared'}.${format}`;
+        const zipname = `${dirname}/${req.query.filename || 'squared'}.${format}`;
         const output = fs.createWriteStream(zipname);
         let delayed = 0;
         output.on('close', () => {

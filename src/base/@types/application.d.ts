@@ -1,3 +1,5 @@
+import string from "../../../android-framework/src/template/resources/string";
+
 type Node = squared.base.Node;
 type NodeUI = squared.base.NodeUI;
 
@@ -7,6 +9,10 @@ export interface UserSettings {
     handleExtensionsAsync: boolean;
     showErrorMessages: boolean;
     createQuerySelectorMap: boolean;
+    outputDirectory: string;
+    outputArchiveFormat: string;
+    outputArchiveName: string;
+    outputArchiveTimeout: number;
 }
 
 export interface UserUISettings extends UserSettings {
@@ -16,10 +22,6 @@ export interface UserUISettings extends UserSettings {
     showAttributes: boolean;
     insertSpaces: number;
     autoCloseOnWrite: boolean;
-    outputDirectory: string;
-    outputMainFileName: string;
-    outputArchiveFormat: string;
-    outputArchiveTimeout: number;
 }
 
 export interface ControllerSettings {

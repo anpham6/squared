@@ -9,6 +9,7 @@ export interface UserSettingsAndroid extends UserUISettings {
     manifestLabelAppName: string;
     manifestThemeName: string;
     manifestParentThemeName: string;
+    outputMainFileName: string;
 }
 
 export interface ControllerSettingsAndroid extends ControllerUISettings {
