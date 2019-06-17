@@ -9,9 +9,11 @@ import SvgContainer from './svgcontainer';
 import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getDOMRect, getTargetElement } from './lib/util';
 
-const $color = squared.lib.color;
-const $dom = squared.lib.dom;
-const $util = squared.lib.util;
+const {
+    color: $color,
+    dom: $dom,
+    util: $util
+} = squared.lib;
 
 function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];

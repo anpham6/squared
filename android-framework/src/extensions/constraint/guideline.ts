@@ -7,9 +7,12 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    util: $util
+} = squared.lib;
+
 const $e = squared.base.lib.enumeration;
 
 export default class Guideline<T extends View> extends squared.base.ExtensionUI<T> {

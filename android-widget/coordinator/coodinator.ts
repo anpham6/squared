@@ -2,11 +2,14 @@ import { NodeXmlTemplate } from '../../src/base/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
+const {
+    constant: $constA,
+    enumeration: $enumA,
+    util: $utilA
+} = android.lib;
+
 const $Resource = android.base.Resource;
 const $session = squared.lib.session;
-const $constA = android.lib.constant;
-const $enumA = android.lib.enumeration;
-const $utilA = android.lib.util;
 const $e = squared.base.lib.enumeration;
 
 export default class Coordinator<T extends android.base.View> extends squared.base.ExtensionUI<T> {

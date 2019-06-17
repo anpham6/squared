@@ -15,11 +15,13 @@ interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    dom: $dom,
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 const STRING_CUBICBEZIER = `cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)`;
 const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');

@@ -6,8 +6,10 @@ import NodeUI from '../node-ui';
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { NODE_RESOURCE } from '../lib/enumeration';
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
+const {
+    constant: $const,
+    css: $css
+} = squared.lib;
 
 const hasSingleImage = (node: NodeUI) => node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
 

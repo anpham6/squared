@@ -5,9 +5,12 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
+const {
+    constant: $c,
+    enumeration: $e
+} = squared.base.lib;
+
 const $const = squared.lib.constant;
-const $c = squared.base.lib.constant;
-const $e = squared.base.lib.enumeration;
 
 export interface MaxWidthHeightData {
     width: boolean;

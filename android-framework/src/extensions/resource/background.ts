@@ -44,13 +44,16 @@ interface ShapeStrokeData {
     dashGap: string;
 }
 
-const $color = squared.lib.color;
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $math = squared.lib.math;
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
-const $xml = squared.lib.xml;
+const {
+    color: $color,
+    constant: $const,
+    css: $css,
+    math: $math,
+    regex: $regex,
+    util: $util,
+    xml: $xml
+} = squared.lib;
+
 const $e = squared.base.lib.enumeration;
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeStrokeData {

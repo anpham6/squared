@@ -5,8 +5,10 @@ import Node from './node';
 
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
 
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
     public static ASSETS: ResourceAssetMap = {

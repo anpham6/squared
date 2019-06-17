@@ -9,10 +9,12 @@ import Resource from './resource';
 
 type PreloadImage = HTMLImageElement | string;
 
-const $css = squared.lib.css;
-const $regex = squared.lib.regex;
-const $session = squared.lib.session;
-const $util = squared.lib.util;
+const {
+    css: $css,
+    regex: $regex,
+    session: $session,
+    util: $util
+} = squared.lib;
 
 const ASSETS = Resource.ASSETS;
 const CACHE_PATTERN: ObjectMap<RegExp> = {};

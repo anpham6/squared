@@ -10,14 +10,19 @@ import { localizeString } from './lib/util';
 
 type T = android.base.View;
 
-const $client = squared.lib.client;
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $math = squared.lib.math;
-const $util = squared.lib.util;
-const $c = squared.base.lib.constant;
-const $e = squared.base.lib.enumeration;
+const {
+    client: $client,
+    constant: $const,
+    css: $css,
+    dom: $dom,
+    math: $math,
+    util: $util
+} = squared.lib;
+
+const {
+    constant: $c,
+    enumeration: $e
+} = squared.base.lib;
 
 const REGEXP_DATASETATTR = /^attr[A-Z]/;
 const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;

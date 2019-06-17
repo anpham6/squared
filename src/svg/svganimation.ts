@@ -5,9 +5,11 @@ import SvgBuild from './svgbuild';
 import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
 import { getAttribute } from './lib/util';
 
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $util = squared.lib.util;
+const {
+    css: $css,
+    dom: $dom,
+    util: $util
+} = squared.lib;
 
 const CACHE_PATTERN = {
     MS: /-?\d+ms$/,

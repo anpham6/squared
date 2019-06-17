@@ -18,10 +18,12 @@ type RepeatItem = {
     unitMin?: string
 };
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';

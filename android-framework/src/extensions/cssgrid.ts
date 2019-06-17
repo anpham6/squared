@@ -10,12 +10,17 @@ import { createViewAttribute } from '../lib/util';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const $css = squared.lib.css;
-const $const = squared.lib.constant;
-const $math = squared.lib.math;
-const $util = squared.lib.util;
-const $c = squared.base.lib.constant;
-const $e = squared.base.lib.enumeration;
+const {
+    constant: $const,
+    css: $css,
+    math: $math,
+    util: $util
+} = squared.lib;
+
+const {
+    constant: $c,
+    enumeration: $e
+} = squared.base.lib;
 
 const REGEXP_ALIGNSELF = /(start|end|center|baseline)/;
 const REGEXP_JUSTIFYSELF = /(start|end|center|baseline|left|right)/;

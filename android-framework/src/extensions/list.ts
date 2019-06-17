@@ -10,12 +10,18 @@ import { createViewAttribute } from '../lib/util';
 
 import $LayoutUI = squared.base.LayoutUI;
 
+const {
+    constant: $const,
+    css: $css,
+    util: $util,
+} = squared.lib;
+
+const {
+    constant: $c,
+    enumeration: $e
+} = squared.base.lib;
+
 const $NodeUI = squared.base.NodeUI;
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $util = squared.lib.util;
-const $c = squared.base.lib.constant;
-const $e = squared.base.lib.enumeration;
 
 const MINWIDTH_INSIDE = 24;
 const PADDINGRIGHT_DFN = 8;

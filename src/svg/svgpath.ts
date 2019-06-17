@@ -21,10 +21,12 @@ interface DashGroup {
     duration: number;
 }
 
-const $const = squared.lib.constant;
-const $dom = squared.lib.dom;
-const $math = squared.lib.math;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    dom: $dom,
+    math: $math,
+    util: $util
+} = squared.lib;
 
 function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?: number) {
     const commandA = path[0];

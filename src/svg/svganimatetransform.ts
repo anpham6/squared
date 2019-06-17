@@ -4,8 +4,10 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
-const $dom = squared.lib.dom;
-const $util = squared.lib.util;
+const {
+    dom: $dom,
+    util: $util
+} = squared.lib;
 
 export default class SvgAnimateTransform extends SvgAnimate implements squared.svg.SvgAnimateTransform {
     public static toRotateList(values: string[]) {

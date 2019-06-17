@@ -5,8 +5,10 @@ import View from '../../view';
 
 import { STRING_ANDROID } from '../../lib/constant';
 
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const NAMESPACE_ATTR = [STRING_ANDROID.ANDROID, STRING_ANDROID.APP];

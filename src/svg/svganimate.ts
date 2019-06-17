@@ -5,12 +5,14 @@ import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 
-const $color = squared.lib.color;
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    color: $color,
+    constant: $const,
+    css: $css,
+    dom: $dom,
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 

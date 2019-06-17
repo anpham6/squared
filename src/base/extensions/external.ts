@@ -1,8 +1,10 @@
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
-const $css = squared.lib.css;
-const $session = squared.lib.session;
+const {
+    css: $css,
+    session: $session
+} = squared.lib;
 
 export default abstract class External<T extends NodeUI> extends ExtensionUI<T> {
     public beforeInit(element: HTMLElement, internal = false) {

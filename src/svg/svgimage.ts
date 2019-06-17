@@ -7,8 +7,10 @@ import SvgElement from './svgelement';
 import { INSTANCE_TYPE } from './lib/constant';
 import { MATRIX, SVG } from './lib/util';
 
-const $const = squared.lib.constant;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    util: $util
+} = squared.lib;
 
 export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) implements squared.svg.SvgImage {
     public rotateAngle?: number;

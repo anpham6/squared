@@ -12,8 +12,10 @@ import SvgPattern from './svgpattern';
 import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
+const {
+    css: $css,
+    dom: $dom
+} = squared.lib;
 
 const getPercent = (value: string) => $css.isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
 
@@ -39,8 +41,8 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         const path = new SvgPath(element);
         path.build(options);
         if (path.value) {
-            options = { ...options };
             const precision = options && options.precision;
+            options = { ...options };
             this.clipRegion = path.value;
             if (path.clipPath) {
                 this.clipRegion = path.clipPath;

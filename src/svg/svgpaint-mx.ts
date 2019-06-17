@@ -6,11 +6,13 @@ type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
-const $color = squared.lib.color;
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    color: $color,
+    constant: $const,
+    css: $css,
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 const CACHE_PATTERN: ObjectMap<RegExp> = {
     url: $regex.CSS.URL

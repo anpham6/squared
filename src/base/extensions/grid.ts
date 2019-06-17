@@ -6,9 +6,11 @@ import NodeUI from '../node-ui';
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    util: $util
+} = squared.lib;
 
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     for (const column of columns) {

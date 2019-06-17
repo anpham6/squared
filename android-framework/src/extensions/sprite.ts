@@ -12,10 +12,15 @@ type SpriteData = {
     position: BoxRectPosition
 };
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $c = squared.base.lib.constant;
-const $e = squared.base.lib.enumeration;
+const {
+    constant: $const,
+    css: $css
+} = squared.lib;
+
+const {
+    constant: $c,
+    enumeration: $e
+} = squared.base.lib;
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {

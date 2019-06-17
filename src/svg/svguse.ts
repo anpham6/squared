@@ -35,8 +35,10 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {
-        options = { ...options };
-        options.element = this.shapeElement;
+        options = {
+            ...options,
+            element: this.shapeElement
+        };
         if (this.animations.length) {
             this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
         }

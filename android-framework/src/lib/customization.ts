@@ -17,8 +17,10 @@ type Deprecations = {
     android: ObjectMap<CustomizationResult>;
 };
 
-const $const = squared.lib.constant;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    util: $util
+} = squared.lib;
 
 function substitute(result: {}, value: string, api?: number, minApi = 0) {
     if (!api || api >= minApi) {

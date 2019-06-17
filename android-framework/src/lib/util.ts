@@ -6,9 +6,11 @@ import View from '../view';
 import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
-const $const = squared.lib.constant;
-const $math = squared.lib.math;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    math: $math,
+    util: $util
+} = squared.lib;
 
 const REGEXP_ID = /^@\+?id\//;
 

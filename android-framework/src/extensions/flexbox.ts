@@ -16,12 +16,18 @@ type FlexBasis = {
     grow: number;
 };
 
+const {
+    constant: $const,
+    math: $math,
+    util: $util
+} = squared.lib;
+
+const {
+    constant: $c,
+    enumeration: $e
+} = squared.base.lib;
+
 const $NodeUI = squared.base.NodeUI;
-const $const = squared.lib.constant;
-const $math = squared.lib.math;
-const $util = squared.lib.util;
-const $c = squared.base.lib.constant;
-const $e = squared.base.lib.enumeration;
 
 const CHAIN_MAP = {
     leftTop: [$const.CSS.LEFT, $const.CSS.TOP],

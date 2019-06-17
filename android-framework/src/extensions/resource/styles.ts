@@ -6,8 +6,10 @@ import View from '../../view';
 import { STRING_ANDROID } from '../../lib/constant';
 import { createStyleAttribute } from '../../lib/util';
 
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const REGEXP_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;

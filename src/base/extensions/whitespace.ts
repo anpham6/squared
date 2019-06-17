@@ -4,10 +4,12 @@ import NodeUI from '../node-ui';
 import { CSS_SPACING } from '../lib/constant';
 import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $session = squared.lib.session;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    session: $session,
+    util: $util
+} = squared.lib;
 
 const DOCTYPE_HTML = document.doctype !== null && document.doctype.name === 'html';
 

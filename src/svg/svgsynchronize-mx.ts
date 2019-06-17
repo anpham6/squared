@@ -26,10 +26,12 @@ interface ForwardValue extends NumberValue<AnimateValue> {
     time: number;
 }
 
-const $const = squared.lib.constant;
-const $math = squared.lib.math;
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    math: $math,
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
 const RECT_ARGS = [$const.CSS.WIDTH, $const.CSS.HEIGHT, 'x', 'y'];

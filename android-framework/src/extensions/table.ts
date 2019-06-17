@@ -7,11 +7,16 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $util = squared.lib.util;
-const $c = squared.base.lib.constant;
-const $e = squared.base.lib.enumeration;
+const {
+    constant: $const,
+    css: $css,
+    util: $util
+} = squared.lib;
+
+const {
+    constant: $c,
+    enumeration: $e
+} = squared.base.lib;
 
 export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T) {

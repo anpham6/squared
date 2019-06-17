@@ -5,11 +5,14 @@ import View from '../../view';
 
 import { CONTAINER_ANDROID } from '../../lib/constant';
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $util = squared.lib.util;
-const $xml = squared.lib.xml;
+const {
+    constant: $const,
+    css: $css,
+    dom: $dom,
+    util: $util,
+    xml: $xml
+} = squared.lib;
+
 const $e = squared.base.lib.enumeration;
 
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {

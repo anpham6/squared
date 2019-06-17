@@ -4,8 +4,10 @@ import Extension from './extension';
 import ApplicationUI from './application-ui';
 import NodeUI from './node-ui';
 
-const $css = squared.lib.css;
-const $util = squared.lib.util;
+const {
+    css: $css,
+    util: $util,
+} = squared.lib;
 
 export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
     public static findNestedElement(element: Element | null, name: string) {

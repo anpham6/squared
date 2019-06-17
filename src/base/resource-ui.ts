@@ -7,13 +7,15 @@ import NodeUI from './node-ui';
 
 import { NODE_RESOURCE } from './lib/enumeration';
 
-const $client = squared.lib.client;
-const $color = squared.lib.color;
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $math = squared.lib.math;
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    client: $client,
+    color: $color,
+    constant: $const,
+    css: $css,
+    math: $math,
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 const STRING_SPACE = '&#160;';
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;

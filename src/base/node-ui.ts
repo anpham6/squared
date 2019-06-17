@@ -9,12 +9,14 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 
 type T = NodeUI;
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $math = squared.lib.math;
-const $session = squared.lib.session;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    dom: $dom,
+    math: $math,
+    session: $session,
+    util: $util
+} = squared.lib;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];

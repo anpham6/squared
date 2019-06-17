@@ -6,8 +6,10 @@ import NodeUI from '../node-ui';
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
 
-const $const = squared.lib.constant;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    util: $util
+} = squared.lib;
 
 export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute<T extends NodeUI>(node: T, children: T[]): FlexboxData<T> {

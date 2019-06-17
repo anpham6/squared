@@ -12,19 +12,25 @@ import { createViewAttribute, getDocumentId, getRootNs } from './lib/util';
 
 import $LayoutUI = squared.base.LayoutUI;
 
+const {
+    client: $client,
+    color: $color,
+    constant: $const,
+    css: $css,
+    dom: $dom,
+    math: $math,
+    regex: $regex,
+    session: $session,
+    util: $util,
+    xml: $xml
+} = squared.lib;
+
+const {
+    constant: $c,
+    enumeration: $e
+} = squared.base.lib;
+
 const $NodeUI = squared.base.NodeUI;
-const $client = squared.lib.client;
-const $color = squared.lib.color;
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $math = squared.lib.math;
-const $regex = squared.lib.regex;
-const $session = squared.lib.session;
-const $util = squared.lib.util;
-const $xml = squared.lib.xml;
-const $c = squared.base.lib.constant;
-const $e = squared.base.lib.enumeration;
 
 const GUIDELINE_AXIS = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
 const CACHE_PATTERN: ObjectMap<RegExp> = {};

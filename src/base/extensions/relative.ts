@@ -5,9 +5,11 @@ import NodeUI from '../node-ui';
 import { STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const $const = squared.lib.constant;
-const $dom = squared.lib.dom;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    dom: $dom,
+    util: $util
+} = squared.lib;
 
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {

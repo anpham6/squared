@@ -21,11 +21,13 @@ type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $math = squared.lib.math;
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    css: $css,
+    dom: $dom,
+    math: $math,
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 const REGEXP_DECIMAL = new RegExp($regex.STRING.DECIMAL, 'g');
 const REGEXP_COMMAND = /([A-Za-z])([^A-Za-z]+)?/g;

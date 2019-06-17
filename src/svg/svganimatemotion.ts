@@ -6,11 +6,13 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 import { SVG, getPathLength, getAttribute, getTargetElement } from './lib/util';
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $math = squared.lib.math;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    dom: $dom,
+    math: $math,
+    util: $util
+} = squared.lib;
 
 export default class SvgAnimateMotion extends SvgAnimateTransform implements squared.svg.SvgAnimateMotion {
     public path = '';

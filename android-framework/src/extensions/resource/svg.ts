@@ -135,14 +135,19 @@ interface AnimateGroup {
     pathData?: string;
 }
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $math = squared.lib.math;
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
-const $xml = squared.lib.xml;
-const $constS = squared.svg.lib.constant;
-const $utilS = squared.svg.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    math: $math,
+    regex: $regex,
+    util: $util,
+    xml: $xml
+} = squared.lib;
+
+const {
+    constant: $constS,
+    util: $utilS
+} = squared.svg.lib;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const INTERPOLATOR_ANDROID = {

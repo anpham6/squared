@@ -6,11 +6,13 @@ import NodeUI from '../node-ui';
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $math = squared.lib.math;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    dom: $dom,
+    math: $math,
+    util: $util
+} = squared.lib;
 
 const enum LAYOUT_TABLE {
     NONE = 0,

@@ -6,12 +6,14 @@ import NodeUI from './node-ui';
 
 import { NODE_TEMPLATE } from './lib/enumeration';
 
-const $const = squared.lib.constant;
-const $client = squared.lib.client;
-const $css = squared.lib.css;
-const $session = squared.lib.session;
-const $util = squared.lib.util;
-const $xml = squared.lib.xml;
+const {
+    client: $client,
+    constant: $const,
+    css: $css,
+    session: $session,
+    util: $util,
+    xml: $xml
+} = squared.lib;
 
 const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
 

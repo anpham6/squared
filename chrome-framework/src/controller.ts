@@ -3,8 +3,10 @@ import { UserSettingsChrome } from './@types/application';
 
 import View from './view';
 
-const $const = squared.lib.constant;
-const $session = squared.lib.session;
+const {
+    constant: $const,
+    session: $session
+} = squared.lib;
 
 export default class Controller<T extends View> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
     public afterInsertNode?: BindGeneric<T, void>;

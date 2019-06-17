@@ -3,9 +3,11 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    util: $util
+} = squared.lib;
 
 export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {

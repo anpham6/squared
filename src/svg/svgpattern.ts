@@ -15,9 +15,11 @@ export default class SvgPattern extends SvgView$MX(SvgContainer) implements squa
     }
 
     public build(options?: SvgBuildOptions) {
-        options = { ...options };
-        options.patternElement = this.patternElement;
-        options.initialize = false;
+        options = {
+            ...options,
+            patternElement: this.patternElement,
+            initialize: false
+        };
         super.build(options);
     }
 

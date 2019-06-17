@@ -13,8 +13,11 @@ type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    regex: $regex,
+    util: $util
+} = squared.lib;
+
 const $e = squared.base.lib.enumeration;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;

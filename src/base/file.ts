@@ -3,8 +3,10 @@ import { RawAsset, UserSettings } from './@types/application';
 import Node from './node';
 import Resource from './resource';
 
-const $const = squared.lib.constant;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    util: $util
+} = squared.lib;
 
 export interface ExpressResult {
     zipname: string;

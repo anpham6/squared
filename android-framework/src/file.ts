@@ -20,8 +20,10 @@ type ItemValue = {
     innerText: string;
 };
 
-const $util = squared.lib.util;
-const $xml = squared.lib.xml;
+const {
+    util: $util,
+    xml: $xml
+} = squared.lib;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const REGEXP_FILENAME = /^(.+)\/(.+?\.\w+)$/;

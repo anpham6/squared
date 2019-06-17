@@ -1,12 +1,14 @@
 import { SvgMatrix, SvgPoint, SvgTransform } from '../@types/object';
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $math = squared.lib.math;
-const $regex = squared.lib.regex;
-const $session = squared.lib.session;
-const $util = squared.lib.util;
+const {
+    constant: $const,
+    css: $css,
+    dom: $dom,
+    math: $math,
+    regex: $regex,
+    session: $session,
+    util: $util,
+} = squared.lib;
 
 const SHAPES = {
     path: 1,

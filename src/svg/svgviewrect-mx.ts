@@ -1,5 +1,7 @@
-const $client = squared.lib.client;
-const $const = squared.lib.constant;
+const {
+    client: $client,
+    constant: $const
+} = squared.lib;
 
 function hasUnsupportedAccess(element: SVGElement) {
     if (element.tagName === 'svg') {

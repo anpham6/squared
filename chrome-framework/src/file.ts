@@ -4,8 +4,10 @@ import { UserSettingsChrome } from './@types/application';
 import Resource from './resource';
 import View from './view';
 
-const $regex = squared.lib.regex;
-const $util = squared.lib.util;
+const {
+    regex: $regex,
+    util: $util
+} = squared.lib;
 
 const ASSETS = Resource.ASSETS;
 

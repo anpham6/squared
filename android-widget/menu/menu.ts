@@ -3,16 +3,25 @@ import { ViewAttribute } from '../../android-framework/src/@types/node';
 
 type View = android.base.View;
 
+const {
+    constant: $const,
+    css: $css,
+    session: $session,
+    util: $util
+} = squared.lib;
+
+const {
+    constant: $constA,
+    enumeration: $enumA,
+    util: $utilA
+} = android.lib;
+
+const {
+    constant: $c,
+    enumeration: $e
+} = squared.base.lib;
+
 const $Resource = android.base.Resource;
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $session = squared.lib.session;
-const $util = squared.lib.util;
-const $constA = android.lib.constant;
-const $enumA = android.lib.enumeration;
-const $utilA = android.lib.util;
-const $c = squared.base.lib.constant;
-const $e = squared.base.lib.enumeration;
 
 const REGEXP_ITEM = {
     id: /^@\+id\/\w+$/,

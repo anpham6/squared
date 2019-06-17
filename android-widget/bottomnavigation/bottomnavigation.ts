@@ -3,12 +3,18 @@ import { UserSettingsAndroid } from '../../android-framework/src/@types/applicat
 
 import { WIDGET_NAME } from '../lib/constant';
 
+const {
+    constant: $const,
+    util: $util
+} = squared.lib;
+
+const {
+    constant: $constA,
+    enumeration: $enumA,
+    util: $utilA
+} = android.lib;
+
 const $Resource = android.base.Resource;
-const $const = squared.lib.constant;
-const $util = squared.lib.util;
-const $constA = android.lib.constant;
-const $enumA = android.lib.enumeration;
-const $utilA = android.lib.util;
 const $e = squared.base.lib.enumeration;
 
 export default class BottomNavigation<T extends android.base.View> extends squared.base.ExtensionUI<T> {

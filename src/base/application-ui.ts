@@ -10,13 +10,15 @@ import ResourceUI from './resource-ui';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
-const $const = squared.lib.constant;
-const $css = squared.lib.css;
-const $dom = squared.lib.dom;
-const $regex = squared.lib.regex;
-const $session = squared.lib.session;
-const $util = squared.lib.util;
-const $xml = squared.lib.xml;
+const {
+    constant: $const,
+    css: $css,
+    dom: $dom,
+    regex: $regex,
+    session: $session,
+    util: $util,
+    xml: $xml
+} = squared.lib;
 
 const CACHE_PATTERN: ObjectMap<RegExp> = {};
 let NodeConstructor!: Constructor<NodeUI>;
