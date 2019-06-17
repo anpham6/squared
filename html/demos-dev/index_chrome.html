@@ -102,10 +102,10 @@
                     chrome = result.default;
                     squared.setFramework(chrome);
                     const time = new Date().getTime();
-                    const input = squared.system.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1:nth-child(2):nth-child(1n+1):nth-child(even):nth-child(n+1):nth-child(-n+5):nth-child(0n+2):nth-of-type(1n+1) > ul:last-child:not(:first-child) li div label > input[type=Radio i], label + input[type=checkbox]');
+                    const input = squared.system.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1:nth-child(2):nth-child(1n+1):nth-child(even):nth-child(n+1):nth-child(-n+5):nth-child(0n+2):nth-of-type(1n+1) > ul:last-child:not(:first-child) li div label > input[type=Radio i][title="c2,birth"], label + input[type=checkbox]');
                     console.log(new Date().getTime() - time);
                     console.log(input);
-                    console.log(document.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1:nth-child(2):nth-child(1n+1):nth-child(even):nth-child(n+1):nth-child(-n+5):nth-child(0n+2):nth-of-type(1n+1) > ul:last-child:not(:first-child) li div label > input[type=Radio i], label + input[type=checkbox]'));
+                    console.log(document.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1:nth-child(2):nth-child(1n+1):nth-child(even):nth-child(n+1):nth-child(-n+5):nth-child(0n+2):nth-of-type(1n+1) > ul:last-child:not(:first-child) li div label > input[type=Radio i][title="c2,birth"], label + input[type=checkbox]'));
                 });
             });
         });
@@ -563,8 +563,8 @@
                         <option value="1">1</option>
                     </select>
                     <div>
-                        <label for="c2"><input id="c2" type="radio" name="personbirth" value="1" checked="checked" />Birth</label>
-                        <label for="c3"><input id="c3" type="radio" name="personbirth" value="0" />Death</label>
+                        <label for="c2"><input id="c2" type="radio" name="personbirth" value="1" checked="checked" title="c2,birth" />Birth</label>
+                        <label for="c3"><input id="c3" type="radio" name="personbirth" value="0" title="c3,death" />Death</label>
                         <input id="c4" type="checkbox" name="conclusionnone" value="1" /><label for="c4">None</label>
                     </div>
                     <input type="button" value="Update" />

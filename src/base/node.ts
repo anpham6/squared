@@ -16,7 +16,7 @@ const {
 const CACHE_PATTERN = {
     BACKGROUND: /\s*(url\(.+?\))\s*/,
     NTH_CHILD_OFTYPE: /^:nth(-last)?-(child|of-type)\((.+)\)$/,
-    NTH_CHILD_OFTYPE_VALUE: /(-)?(\d+)?n\s*([+\-]\d+)?/,
+    NTH_CHILD_OFTYPE_VALUE: /^(-)?(\d+)?n\s*([+\-]\d+)?$/,
     LANG: /^:lang\(\s*(.+)\s*\)$/
 };
 
@@ -142,7 +142,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         else if (value === null) {
             delete this._data[name];
         }
-        return this._data[name] === undefined || this._data[name][attr] === undefined ? undefined : this._data[name][attr];
+        return typeof this._data[name] === 'object' && this._data[name] !== null ? this._data[name][attr] : undefined;
     }
 
     public unsetCache(...attrs: string[]) {
@@ -153,14 +153,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         this._cached = {};
                         return;
                     case 'width':
-                        this._cached.percentWidth = undefined;
                         this._cached.actualWidth = undefined;
+                        this._cached.percentWidth = undefined;
                     case 'minWidth':
                         this._cached.width = undefined;
                         break;
                     case 'height':
-                        this._cached.percentHeight = undefined;
                         this._cached.actualHeight = undefined;
+                        this._cached.percentHeight = undefined;
                     case 'minHeight':
                         this._cached.height = undefined;
                         break;
@@ -552,7 +552,38 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this.length) {
             const queryMap = this.queryMap;
             if (queryMap) {
-                const queries = value.split($regex.XML.SEPARATOR);
+                const queries: string[] = [];
+                if (value.indexOf(',') !== -1) {
+                    let separatorValue = value;
+                    let match: RegExpExecArray | null;
+                    let found = false;
+                    while ((match = $regex.CSS.SELECTOR_ATTR.exec(separatorValue)) !== null) {
+                        const index = match.index;
+                        const length = match[0].length;
+                        separatorValue = (index > 0 ? separatorValue.substring(0, index) : '') + '_'.repeat(length) + separatorValue.substring(index + length);
+                        found = true;
+                    }
+                    if (found) {
+                        let index = 0;
+                        let position = 0;
+                        while (true) {
+                            index = separatorValue.indexOf(',', position);
+                            if (index !== -1) {
+                                queries.push(value.substring(position, index).trim());
+                                position = index + 1;
+                            }
+                            else {
+                                if (position > 0) {
+                                    queries.push(value.substring(position).trim());
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (queries.length === 0) {
+                    queries.push(value.trim());
+                }
                 for (let i = 0; i < queries.length; i++) {
                     const query = queries[i];
                     const selectors: QueryData[] = [];

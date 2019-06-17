@@ -16,8 +16,8 @@ export default class Application<T extends View> extends squared.base.Applicatio
             this.controllerHandler.applyDefaultStyles(element);
         }
         const node = this.createNode(element, false);
-        if (node.plainText) {
-            View.copyTextStyle(node, parent as T);
+        if (node.plainText && parent) {
+            View.copyTextStyle(node, parent);
         }
         return node;
     }

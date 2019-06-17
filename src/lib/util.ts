@@ -265,8 +265,8 @@ export function cloneObject(data: {}, result = {}, array = false) {
 
 export function optional(obj: UndefNull<object>, value: string, type?: string) {
     let valid = false;
-    let result!: any;
-    if (obj && typeof obj === 'object') {
+    let result: any;
+    if (typeof obj === 'object' && obj !== null) {
         result = obj;
         const attrs = value.split('.');
         let i = 0;

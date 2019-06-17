@@ -11,10 +11,10 @@ const {
 
 const ASSETS = Resource.ASSETS;
 
-function parseUri(value: string) {
-    const origin = location.origin + '/';
+function parseUri(value: string): Optional<RawAsset> | undefined {
+    const origin = location.origin;
     if (value.startsWith(origin)) {
-        return [value.substring(origin.length, value.lastIndexOf('/')), $util.fromLastIndexOf(value, '/')];
+        return { pathname: value.substring(origin.length + 1, value.lastIndexOf('/')), filename: $util.fromLastIndexOf(value, '/') };
     }
     else {
         const match = $regex.COMPONENT.PROTOCOL.exec(value);
@@ -22,10 +22,10 @@ function parseUri(value: string) {
             const host = match[2];
             const port = match[3];
             const path = match[4];
-            return [$util.convertWord(host) + (port ? '/' + port.substring(1) : '') + path.substring(0, origin.lastIndexOf('/')), $util.fromLastIndexOf(path, '/')];
+            return { pathname: $util.convertWord(host) + (port ? '/' + port.substring(1) : '') + path.substring(0, origin.lastIndexOf('/')), filename: $util.fromLastIndexOf(path, '/') };
         }
     }
-    return [];
+    return undefined;
 }
 
 export default class File<T extends View> extends squared.base.File<T> implements chrome.base.File<T> {
@@ -39,13 +39,14 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public getImageAssets() {
         const result: Optional<RawAsset>[] = [];
         for (const uri of ASSETS.images.keys()) {
-            const [pathname, filename] = parseUri(uri);
-            if (pathname && filename) {
-                result.push({ pathname, filename, uri });
+            const data = parseUri(uri);
+            if (data) {
+                data.uri = uri;
+                result.push(data);
             }
         }
         for (const [uri, data] of ASSETS.rawData) {
-            const { content, base64, pathname, filename } = data;
+            const { pathname, filename, base64, content } = data;
             if (pathname && filename) {
                 result.push({ pathname, filename, uri });
             }
@@ -65,12 +66,13 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     public getFontAssets() {
         const result: Optional<RawAsset>[] = [];
-        for (const data of ASSETS.fonts.values()) {
-            for (const font of data) {
+        for (const fonts of ASSETS.fonts.values()) {
+            for (const font of fonts) {
                 if (font.srcUrl) {
-                    const [pathname, filename] = parseUri(font.srcUrl);
-                    if (pathname && filename) {
-                        result.push({ pathname, filename, uri: font.srcUrl });
+                    const data = parseUri(font.srcUrl);
+                    if (data) {
+                        data.uri = font.srcUrl;
+                        result.push(data);
                     }
                 }
             }
