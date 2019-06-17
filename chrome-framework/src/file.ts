@@ -1,4 +1,4 @@
-import { RawAsset, FileAsset } from '../../src/base/@types/application';
+import { FileAsset, RawAsset } from '../../src/base/@types/application';
 import { UserSettingsChrome } from './@types/application';
 
 import Resource from './resource';
@@ -46,18 +46,20 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
         }
         for (const [uri, data] of ASSETS.rawData) {
-            const { pathname, filename, base64, content } = data;
-            if (pathname && filename) {
-                result.push({ pathname, filename, uri });
-            }
-            else if (base64) {
-                if (uri.startsWith('data:image') && data.filename) {
-                    result.push({ pathname: 'base64', filename: data.filename, base64 });
+            const filename = data.filename;
+            if (filename) {
+                const { pathname, base64, content } = data;
+                if (pathname) {
+                    result.push({ pathname, filename, uri });
                 }
-            }
-            else if (content) {
-                if (data.mimeType === 'image/svg+xml') {
-                    result.push({ pathname: 'svg+xml', filename: data.filename, content });
+                else if (base64) {
+                    result.push({ pathname: 'base64', filename, base64 });
+                }
+                else if (content) {
+                    const mimeType = data.mimeType;
+                    if (mimeType) {
+                        result.push({ pathname: mimeType, filename, content });
+                    }
                 }
             }
         }

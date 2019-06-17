@@ -270,26 +270,25 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return self.top < Math.floor(rect.top) || Math.floor(self.bottom) > rect.bottom;
     }
 
-    public css(attr: string, value?: string, cache = false): string {
-        if (arguments.length >= 2) {
-            if (value) {
+    public css(attr: string, value?: string, cache = true): string {
+        if (this.styleElement && value) {
+            this.style[attr] = value;
+            if (validateCssSet(value, this.style[attr])) {
                 this._styleMap[attr] = value;
-            }
-            else {
-                delete this._styleMap[attr];
-            }
-            if (cache) {
-                this.unsetCache(attr);
+                if (cache) {
+                    this.unsetCache(attr);
+                }
+                return value;
             }
         }
-        return this._styleMap[attr] || this.style[attr] || '';
+        return this._styleMap[attr] || this.styleElement && this.style[attr] || '';
     }
 
-    public cssApply(values: StringMap, cache = false) {
-        Object.assign(this._styleMap, values);
-        if (cache) {
-            for (const name in values) {
-                this.unsetCache(name);
+    public cssApply(values: StringMap, cache = true) {
+        for (const attr in values) {
+            const value = values[attr];
+            if (this.css(attr, value, cache) === value && cache) {
+                this.unsetCache(attr);
             }
         }
         return this;
@@ -387,18 +386,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
         }
         return 0;
-    }
-
-    public cssSet(attr: string, value: string, cache = true) {
-        let valid = true;
-        if (this.styleElement) {
-            this.style[attr] = value;
-            valid = validateCssSet(value, this.style[attr]);
-        }
-        if (valid) {
-            this.css(attr, value, cache);
-        }
-        return this;
     }
 
     public cssTry(attr: string, value: string) {
@@ -549,282 +536,246 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public querySelectorAll(value: string, resultCount = -1) {
         let result: T[] = [];
-        if (this.length) {
-            const queryMap = this.queryMap;
-            if (queryMap) {
-                const queries: string[] = [];
-                if (value.indexOf(',') !== -1) {
-                    let separatorValue = value;
+        const queryMap = this.queryMap;
+        if (queryMap) {
+            const queries = $css.parseSelectorText(value);
+            for (let i = 0; i < queries.length; i++) {
+                const query = queries[i];
+                const selectors: QueryData[] = [];
+                let offset = -1;
+                invalid: {
+                    $regex.CSS.SELECTOR_G.lastIndex = 0;
+                    let adjacent: string | undefined;
                     let match: RegExpExecArray | null;
-                    let found = false;
-                    while ((match = $regex.CSS.SELECTOR_ATTR.exec(separatorValue)) !== null) {
-                        const index = match.index;
-                        const length = match[0].length;
-                        separatorValue = (index > 0 ? separatorValue.substring(0, index) : '') + '_'.repeat(length) + separatorValue.substring(index + length);
-                        found = true;
-                    }
-                    if (found) {
-                        let index = 0;
-                        let position = 0;
-                        while (true) {
-                            index = separatorValue.indexOf(',', position);
-                            if (index !== -1) {
-                                queries.push(value.substring(position, index).trim());
-                                position = index + 1;
-                            }
-                            else {
-                                if (position > 0) {
-                                    queries.push(value.substring(position).trim());
-                                }
-                                break;
+                    while ((match = $regex.CSS.SELECTOR_G.exec(query)) !== null) {
+                        let segment = match[1];
+                        let all = false;
+                        let tagName: string | undefined;
+                        let id: string | undefined;
+                        let classList: string[] | undefined;
+                        let attrList: QueryAttribute[] | undefined;
+                        let pseudoList: string[] | undefined;
+                        let notList: string[] | undefined;
+                        if (segment.length === 1) {
+                            const ch = segment.charAt(0);
+                            switch (ch) {
+                                case '+':
+                                case '~':
+                                    offset--;
+                                case '>':
+                                    if (adjacent || selectors.length === 0) {
+                                        selectors.length = 0;
+                                        break invalid;
+                                    }
+                                    adjacent = ch;
+                                    continue;
+                                case '*':
+                                    all = true;
+                                    break;
                             }
                         }
-                    }
-                }
-                if (queries.length === 0) {
-                    queries.push(value.trim());
-                }
-                for (let i = 0; i < queries.length; i++) {
-                    const query = queries[i];
-                    const selectors: QueryData[] = [];
-                    let offset = -1;
-                    invalid: {
-                        $regex.CSS.SELECTOR_G.lastIndex = 0;
-                        let adjacent: string | undefined;
-                        let match: RegExpExecArray | null;
-                        while ((match = $regex.CSS.SELECTOR_G.exec(query)) !== null) {
-                            let segment = match[1];
-                            let all = false;
-                            let tagName: string | undefined;
-                            let id: string | undefined;
-                            let classList: string[] | undefined;
-                            let attrList: QueryAttribute[] | undefined;
-                            let pseudoList: string[] | undefined;
-                            let notList: string[] | undefined;
-                            if (segment.length === 1) {
-                                const ch = segment.charAt(0);
-                                switch (ch) {
-                                    case '+':
-                                    case '~':
-                                        offset--;
-                                    case '>':
-                                        if (adjacent || selectors.length === 0) {
-                                            selectors.length = 0;
-                                            break invalid;
-                                        }
-                                        adjacent = ch;
-                                        continue;
-                                    case '*':
-                                        all = true;
-                                        break;
+                        else if (segment.endsWith('|*')) {
+                            all = segment === '*|*';
+                        }
+                        else if (segment.charAt(0) === '*') {
+                            segment = segment.substring(1);
+                        }
+                        else if (segment.startsWith('::')) {
+                            selectors.length = 0;
+                            break invalid;
+                        }
+                        if (!all) {
+                            let subMatch: RegExpExecArray | null;
+                            while ((subMatch = $regex.CSS.SELECTOR_ATTR.exec(segment)) !== null) {
+                                if (attrList === undefined) {
+                                    attrList = [];
                                 }
+                                const caseInsensitive = subMatch[6] === 'i';
+                                let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
+                                if (caseInsensitive) {
+                                    attrValue = attrValue.toLowerCase();
+                                }
+                                attrList.push({
+                                    key: subMatch[1],
+                                    symbol: subMatch[2],
+                                    value: attrValue,
+                                    caseInsensitive
+                                });
+                                segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
                             }
-                            else if (segment.endsWith('|*')) {
-                                all = segment === '*|*';
-                            }
-                            else if (segment.charAt(0) === '*') {
-                                segment = segment.substring(1);
-                            }
-                            else if (segment.startsWith('::')) {
+                            if (segment.indexOf('::') !== -1) {
                                 selectors.length = 0;
                                 break invalid;
                             }
-                            if (!all) {
-                                let subMatch: RegExpExecArray | null;
-                                while ((subMatch = $regex.CSS.SELECTOR_ATTR.exec(segment)) !== null) {
-                                    if (attrList === undefined) {
-                                        attrList = [];
-                                    }
-                                    const caseInsensitive = subMatch[6] === 'i';
-                                    let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
-                                    if (caseInsensitive) {
-                                        attrValue = attrValue.toLowerCase();
-                                    }
-                                    attrList.push({
-                                        key: subMatch[1],
-                                        symbol: subMatch[2],
-                                        value: attrValue,
-                                        caseInsensitive
-                                    });
-                                    segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
-                                }
-                                if (segment.indexOf('::') !== -1) {
-                                    selectors.length = 0;
-                                    break invalid;
-                                }
-                                while ((subMatch = $regex.CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
-                                    if (subMatch[0].startsWith(':not(')) {
-                                        if (subMatch[1]) {
-                                            if (notList === undefined) {
-                                                notList = [];
-                                            }
-                                            notList.push(subMatch[1]);
+                            while ((subMatch = $regex.CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
+                                if (subMatch[0].startsWith(':not(')) {
+                                    if (subMatch[1]) {
+                                        if (notList === undefined) {
+                                            notList = [];
                                         }
+                                        notList.push(subMatch[1]);
                                     }
-                                    else {
-                                        if (pseudoList === undefined) {
-                                            pseudoList = [];
+                                }
+                                else {
+                                    if (pseudoList === undefined) {
+                                        pseudoList = [];
+                                    }
+                                    pseudoList.push(subMatch[0]);
+                                }
+                                segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
+                            }
+                            while ((subMatch = $regex.CSS.SELECTOR_LABEL.exec(segment)) !== null) {
+                                const label = subMatch[0];
+                                switch (label.charAt(0)) {
+                                    case '#':
+                                        id = label.substring(1);
+                                        break;
+                                    case '.':
+                                        if (classList === undefined) {
+                                            classList = [];
                                         }
-                                        pseudoList.push(subMatch[0]);
-                                    }
-                                    segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
+                                        classList.push(label.substring(1));
+                                        break;
+                                    default:
+                                        tagName = label.toUpperCase();
+                                        break;
                                 }
-                                while ((subMatch = $regex.CSS.SELECTOR_LABEL.exec(segment)) !== null) {
-                                    const label = subMatch[0];
-                                    switch (label.charAt(0)) {
-                                        case '#':
-                                            id = label.substring(1);
-                                            break;
-                                        case '.':
-                                            if (classList === undefined) {
-                                                classList = [];
-                                            }
-                                            classList.push(label.substring(1));
-                                            break;
-                                        default:
-                                            tagName = label.toUpperCase();
-                                            break;
-                                    }
-                                    segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
-                                }
+                                segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
                             }
-                            if (selectors.length > 0 || pseudoList === undefined) {
-                                offset++;
-                            }
-                            selectors.push({
-                                all,
-                                tagName,
-                                id,
-                                adjacent,
-                                classList,
-                                pseudoList,
-                                notList,
-                                attrList
-                            });
-                            adjacent = undefined;
                         }
+                        if (selectors.length > 0 || pseudoList === undefined) {
+                            offset++;
+                        }
+                        selectors.push({
+                            all,
+                            tagName,
+                            id,
+                            adjacent,
+                            classList,
+                            pseudoList,
+                            notList,
+                            attrList
+                        });
+                        adjacent = undefined;
                     }
-                    let length = queryMap.length;
-                    if (selectors.length && offset !== -1 && offset < length) {
-                        const validate = (node: T, data: QueryData, last: boolean, adjacent?: string) => {
-                            if (data.all) {
-                                return true;
-                            }
-                            if (data.tagName && data.tagName !== node.tagName.toUpperCase()) {
-                                return false;
-                            }
-                            if (data.id && data.id !== node.elementId) {
-                                return false;
-                            }
-                            if (data.pseudoList) {
-                                const parent = node.actualParent as T;
-                                const tagName = node.tagName;
-                                for (const pseudo of data.pseudoList) {
-                                    switch (pseudo) {
-                                        case ':first-child':
-                                        case ':nth-child(1)':
-                                            if (node !== parent.firstChild) {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':last-child':
-                                        case ':nth-last-child(1)':
-                                            if (node !== parent.lastChild) {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':only-child':
-                                            if (parent.naturalElements.length > 1) {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':only-of-type': {
-                                            let j = 0;
-                                            for (const item of parent.naturalElements) {
-                                                if (item.tagName === tagName && ++j > 1) {
-                                                    return false;
-                                                }
-                                            }
-                                            break;
+                }
+                let length = queryMap.length;
+                if (selectors.length && offset !== -1 && offset < length) {
+                    const validate = (node: T, data: QueryData, last: boolean, adjacent?: string) => {
+                        if (data.all) {
+                            return true;
+                        }
+                        if (data.tagName && data.tagName !== node.tagName.toUpperCase()) {
+                            return false;
+                        }
+                        if (data.id && data.id !== node.elementId) {
+                            return false;
+                        }
+                        if (data.pseudoList) {
+                            const parent = node.actualParent as T;
+                            const tagName = node.tagName;
+                            for (const pseudo of data.pseudoList) {
+                                switch (pseudo) {
+                                    case ':first-child':
+                                    case ':nth-child(1)':
+                                        if (node !== parent.firstChild) {
+                                            return false;
                                         }
-                                        case ':first-of-type': {
-                                            for (const item of parent.naturalElements) {
-                                                if (item.tagName === tagName) {
-                                                    if (item !== node) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                                }
-                                            }
-                                            break;
+                                        break;
+                                    case ':last-child':
+                                    case ':nth-last-child(1)':
+                                        if (node !== parent.lastChild) {
+                                            return false;
                                         }
-                                        case ':nth-child(n)':
-                                        case ':nth-last-child(n)':
-                                            break;
-                                        case ':empty':
-                                            if ((<HTMLElement> node.element).childNodes.length) {
+                                        break;
+                                    case ':only-child':
+                                        if (parent.naturalElements.length > 1) {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':only-of-type': {
+                                        let j = 0;
+                                        for (const item of parent.naturalElements) {
+                                            if (item.tagName === tagName && ++j > 1) {
                                                 return false;
                                             }
-                                            break;
-                                        case ':checked':
-                                            if (node.inputElement) {
-                                                if (!(<HTMLInputElement> node.element).checked) {
+                                        }
+                                        break;
+                                    }
+                                    case ':first-of-type': {
+                                        for (const item of parent.naturalElements) {
+                                            if (item.tagName === tagName) {
+                                                if (item !== node) {
                                                     return false;
                                                 }
+                                                break;
                                             }
-                                            else if (tagName === 'OPTION') {
-                                                if (!(<HTMLOptionElement> node.element).selected) {
-                                                    return false;
-                                                }
-                                            }
-                                            else {
+                                        }
+                                        break;
+                                    }
+                                    case ':nth-child(n)':
+                                    case ':nth-last-child(n)':
+                                        break;
+                                    case ':empty':
+                                        if ((<HTMLElement> node.element).childNodes.length) {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':checked':
+                                        if (node.inputElement) {
+                                            if (!(<HTMLInputElement> node.element).checked) {
                                                 return false;
                                             }
-                                            break;
-                                        case ':enabled':
-                                            if ((<HTMLInputElement> node.element).disabled) {
+                                        }
+                                        else if (tagName === 'OPTION') {
+                                            if (!(<HTMLOptionElement> node.element).selected) {
                                                 return false;
                                             }
-                                            break;
-                                        case ':disabled':
-                                            if (!(<HTMLInputElement> node.element).disabled) {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':read-only':
-                                            if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' || !(<HTMLInputElement> node.element).readOnly) {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':read-write':
-                                            if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' || (<HTMLInputElement> node.element).readOnly) {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':required':
-                                            if (!(node.inputElement && (<HTMLInputElement> node.element).required) && tagName !== 'BUTTON') {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':optional':
-                                            if (!node.inputElement || tagName === 'BUTTON' || (<HTMLInputElement> node.element).required) {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':in-range':
-                                        case ':out-of-range': {
-                                            if (tagName === 'INPUT') {
-                                                const element = <HTMLInputElement> node.element;
-                                                const rangeValue = parseFloat(element.value);
-                                                if (!isNaN(rangeValue)) {
-                                                    const min = $util.convertFloat(element.min);
-                                                    const max = $util.convertFloat(element.max);
-                                                    if (rangeValue >= min && rangeValue <= max) {
-                                                        if (pseudo === ':out-of-range') {
-                                                            return false;
-                                                        }
-                                                    }
-                                                    else if (pseudo === ':in-range') {
+                                        }
+                                        else {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':enabled':
+                                        if ((<HTMLInputElement> node.element).disabled) {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':disabled':
+                                        if (!(<HTMLInputElement> node.element).disabled) {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':read-only':
+                                        if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' || !(<HTMLInputElement> node.element).readOnly) {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':read-write':
+                                        if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' || (<HTMLInputElement> node.element).readOnly) {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':required':
+                                        if (!(node.inputElement && (<HTMLInputElement> node.element).required) && tagName !== 'BUTTON') {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':optional':
+                                        if (!node.inputElement || tagName === 'BUTTON' || (<HTMLInputElement> node.element).required) {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':in-range':
+                                    case ':out-of-range': {
+                                        if (tagName === 'INPUT') {
+                                            const element = <HTMLInputElement> node.element;
+                                            const rangeValue = parseFloat(element.value);
+                                            if (!isNaN(rangeValue)) {
+                                                const min = $util.convertFloat(element.min);
+                                                const max = $util.convertFloat(element.max);
+                                                if (rangeValue >= min && rangeValue <= max) {
+                                                    if (pseudo === ':out-of-range') {
                                                         return false;
                                                     }
                                                 }
@@ -832,390 +783,393 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                     return false;
                                                 }
                                             }
-                                            else {
+                                            else if (pseudo === ':in-range') {
                                                 return false;
-                                            }
-                                            break;
-                                        }
-                                        case ':indeterminate':
-                                            if (tagName === 'INPUT') {
-                                                const element = <HTMLInputElement> node.element;
-                                                switch (element.type) {
-                                                    case 'checkbox':
-                                                        if (!element.indeterminate) {
-                                                            return false;
-                                                        }
-                                                        break;
-                                                    case 'radio':
-                                                        if (element.checked) {
-                                                            return false;
-                                                        }
-                                                        else if (element.name) {
-                                                            let form = element.parentElement;
-                                                            while (form) {
-                                                                if (form.tagName === 'FORM') {
-                                                                    break;
-                                                                }
-                                                                form = form.parentElement;
-                                                            }
-                                                            const children = (form || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
-                                                            const lengthA = children.length;
-                                                            for (let j = 0; j < lengthA; j++) {
-                                                                if ((<HTMLInputElement> children.item(j)).checked) {
-                                                                    return false;
-                                                                }
-                                                            }
-                                                        }
-                                                        break;
-                                                    default:
-                                                        return false;
-                                                }
-                                            }
-                                            else if (tagName === 'PROGRESS') {
-                                                if ((<HTMLProgressElement> node.element).value !== -1) {
-                                                    return false;
-                                                }
-                                            }
-                                            else {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':target': {
-                                            if (location.hash === '') {
-                                                return false;
-                                            }
-                                            else {
-                                                const element = <HTMLAnchorElement> node.element;
-                                                if (!(location.hash === `#${element.id}` || tagName === 'A' && location.hash === `#${element.name}`)) {
-                                                    return false;
-                                                }
-                                            }
-                                            break;
-                                        }
-                                        case ':scope':
-                                            if (!last || adjacent === '>' && node !== this) {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':root':
-                                            if (!last || adjacent) {
-                                                return false;
-                                            }
-                                            break;
-                                        case ':link':
-                                        case ':visited':
-                                        case ':hover':
-                                        case ':focus':
-                                        case ':valid':
-                                        case ':invalid': {
-                                            const element = node.element;
-                                            const children = (<HTMLElement> parent.element).querySelectorAll(`:scope > ${pseudo}`);
-                                            let valid = false;
-                                            const lengthA = children.length;
-                                            for (let j = 0; j < lengthA; j++) {
-                                                if (children.item(i) === element) {
-                                                    valid = true;
-                                                    break;
-                                                }
-                                            }
-                                            if (!valid) {
-                                                return false;
-                                            }
-                                            continue;
-                                        }
-                                        default: {
-                                            let match = CACHE_PATTERN.NTH_CHILD_OFTYPE.exec(pseudo);
-                                            if (match) {
-                                                const placement = match[3].trim();
-                                                let children = parent.naturalElements;
-                                                if (match[1]) {
-                                                    children = children.slice(0).reverse();
-                                                }
-                                                const index = (match[2] === 'child' ? children.indexOf(node) : $util.filterArray(children, item => item.tagName === tagName).indexOf(node)) + 1;
-                                                if (index > 0) {
-                                                    if ($util.isNumber(placement)) {
-                                                        if (parseInt(placement) !== index) {
-                                                            return false;
-                                                        }
-                                                    }
-                                                    else {
-                                                        switch (placement) {
-                                                            case 'even':
-                                                                if (index % 2 !== 0) {
-                                                                    return false;
-                                                                }
-                                                                break;
-                                                            case 'odd':
-                                                                if (index % 2 === 0) {
-                                                                    return false;
-                                                                }
-                                                                break;
-                                                            default:
-                                                                const subMatch = CACHE_PATTERN.NTH_CHILD_OFTYPE_VALUE.exec(placement);
-                                                                if (subMatch) {
-                                                                    const modifier = $util.convertInt(subMatch[3]);
-                                                                    if (subMatch[2]) {
-                                                                        if (subMatch[1]) {
-                                                                            return false;
-                                                                        }
-                                                                        const increment = parseInt(subMatch[2]);
-                                                                        if (increment !== 0) {
-                                                                            if (index !== modifier) {
-                                                                                for (let j = increment; ; j += increment) {
-                                                                                    const total = increment + modifier;
-                                                                                    if (total === index) {
-                                                                                        break;
-                                                                                    }
-                                                                                    else if (total > index) {
-                                                                                        return false;
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                        else if (index !== modifier) {
-                                                                            return false;
-                                                                        }
-                                                                    }
-                                                                    else if (subMatch[3]) {
-                                                                        if (modifier > 0) {
-                                                                            if (subMatch[1]) {
-                                                                                if (index > modifier) {
-                                                                                    return false;
-                                                                                }
-                                                                            }
-                                                                            else if (index < modifier) {
-                                                                                return false;
-                                                                            }
-                                                                        }
-                                                                        else {
-                                                                            return false;
-                                                                        }
-                                                                    }
-                                                                }
-                                                                break;
-                                                        }
-                                                    }
-                                                    continue;
-                                                }
-                                            }
-                                            else {
-                                                match = CACHE_PATTERN.LANG.exec(pseudo);
-                                                if (match) {
-                                                    const attributes = node.attributes;
-                                                    if (attributes['lang'] && match[1].toLowerCase() === attributes['lang'].toLowerCase()) {
-                                                        continue;
-                                                    }
-                                                }
-                                            }
-                                            return false;
-                                        }
-                                    }
-                                }
-                            }
-                            if (data.notList) {
-                                for (const not of data.notList) {
-                                    const notData: QueryData = { all: false };
-                                    switch (not.charAt(0)) {
-                                        case '.':
-                                            notData.classList = [not];
-                                            break;
-                                        case '#':
-                                            notData.id = not.substring(1);
-                                            break;
-                                        case ':':
-                                            notData.pseudoList = [not];
-                                            break;
-                                        case '[': {
-                                            $regex.CSS.SELECTOR_ATTR.lastIndex = 0;
-                                            const match = $regex.CSS.SELECTOR_ATTR.exec(not);
-                                            if (match) {
-                                                const caseInsensitive = match[6] === 'i';
-                                                let attrValue = match[3] || match[4] || match[5] || '';
-                                                if (caseInsensitive) {
-                                                    attrValue = attrValue.toLowerCase();
-                                                }
-                                                notData.attrList = [{
-                                                    key: match[1],
-                                                    symbol: match[2],
-                                                    value: attrValue,
-                                                    caseInsensitive
-                                                }];
-                                            }
-                                            else {
-                                                continue;
-                                            }
-                                            break;
-                                        }
-                                        default:
-                                            if ($regex.CHAR.WORDDASH.test(not)) {
-                                                notData.tagName = not;
-                                            }
-                                            else {
-                                                return false;
-                                            }
-                                    }
-                                    if (validate(node, notData, last)) {
-                                        return false;
-                                    }
-                                }
-                            }
-                            if (data.classList) {
-                                const classList = (<HTMLElement> node.element).classList;
-                                for (const className of data.classList) {
-                                    if (!classList.contains(className)) {
-                                        return false;
-                                    }
-                                }
-                            }
-                            if (data.attrList) {
-                                const attributes = node.attributes;
-                                for (const attr of data.attrList) {
-                                    let actualValue = attributes[attr.key];
-                                    if (actualValue === undefined) {
-                                        return false;
-                                    }
-                                    else if (attr.value) {
-                                        if (attr.caseInsensitive) {
-                                            actualValue = actualValue.toLowerCase();
-                                        }
-                                        if (attr.symbol) {
-                                            switch (attr.symbol) {
-                                                case '~':
-                                                    if (!actualValue.split($regex.CHAR.SPACE).includes(attr.value)) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                                case '^':
-                                                    if (!actualValue.startsWith(attr.value)) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                                case '$':
-                                                    if (!actualValue.endsWith(attr.value)) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                                case '*':
-                                                    if (actualValue.indexOf(attr.value) === -1) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                                case '|':
-                                                    if (actualValue !== attr.value && !actualValue.startsWith(`${attr.value}-`)) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                            }
-                                        }
-                                        else if (actualValue !== attr.value) {
-                                            return false;
-                                        }
-                                    }
-                                }
-                            }
-                            return true;
-                        };
-                        const dataEnd = <QueryData> selectors.pop();
-                        const lastEnd = selectors.length === 0;
-                        let pending: T[] = [];
-                        for (let j = offset; j < length; j++) {
-                            const dataMap = queryMap[j];
-                            if (dataEnd.all) {
-                                pending = pending.concat(dataMap);
-                            }
-                            else {
-                                for (const node of dataMap) {
-                                    if (validate(node, dataEnd, lastEnd)) {
-                                        pending.push(node);
-                                    }
-                                }
-                            }
-                        }
-                        if (selectors.length) {
-                            const depth = this.depth;
-                            selectors.reverse();
-                            length = selectors.length;
-                            function ascend(index: number, adjacent: string | undefined, nodes: T[]): boolean {
-                                const selector = selectors[index];
-                                const last = index === length - 1;
-                                const next: T[] = [];
-                                for (const node of nodes) {
-                                    if (adjacent) {
-                                        const parent = node.actualParent as T;
-                                        if (adjacent === '>') {
-                                            if (validate(parent, selector, last, adjacent)) {
-                                                next.push(parent);
                                             }
                                         }
                                         else {
-                                            const children = parent.naturalElements as T[];
-                                            switch (adjacent) {
-                                                case '+': {
-                                                    const indexA = children.indexOf(node);
-                                                    if (indexA > 0) {
-                                                        const sibling = children[indexA - 1];
-                                                        if (sibling && validate(sibling, selector, last, adjacent)) {
-                                                            next.push(sibling);
+                                            return false;
+                                        }
+                                        break;
+                                    }
+                                    case ':indeterminate':
+                                        if (tagName === 'INPUT') {
+                                            const element = <HTMLInputElement> node.element;
+                                            switch (element.type) {
+                                                case 'checkbox':
+                                                    if (!element.indeterminate) {
+                                                        return false;
+                                                    }
+                                                    break;
+                                                case 'radio':
+                                                    if (element.checked) {
+                                                        return false;
+                                                    }
+                                                    else if (element.name) {
+                                                        let form = element.parentElement;
+                                                        while (form) {
+                                                            if (form.tagName === 'FORM') {
+                                                                break;
+                                                            }
+                                                            form = form.parentElement;
+                                                        }
+                                                        const children = (form || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
+                                                        const lengthA = children.length;
+                                                        for (let j = 0; j < lengthA; j++) {
+                                                            if ((<HTMLInputElement> children.item(j)).checked) {
+                                                                return false;
+                                                            }
                                                         }
                                                     }
                                                     break;
+                                                default:
+                                                    return false;
+                                            }
+                                        }
+                                        else if (tagName === 'PROGRESS') {
+                                            if ((<HTMLProgressElement> node.element).value !== -1) {
+                                                return false;
+                                            }
+                                        }
+                                        else {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':target': {
+                                        if (location.hash === '') {
+                                            return false;
+                                        }
+                                        else {
+                                            const element = <HTMLAnchorElement> node.element;
+                                            if (!(location.hash === `#${element.id}` || tagName === 'A' && location.hash === `#${element.name}`)) {
+                                                return false;
+                                            }
+                                        }
+                                        break;
+                                    }
+                                    case ':scope':
+                                        if (!last || adjacent === '>' && node !== this) {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':root':
+                                        if (!last || adjacent) {
+                                            return false;
+                                        }
+                                        break;
+                                    case ':link':
+                                    case ':visited':
+                                    case ':hover':
+                                    case ':focus':
+                                    case ':valid':
+                                    case ':invalid': {
+                                        const element = node.element;
+                                        const children = (<HTMLElement> parent.element).querySelectorAll(`:scope > ${pseudo}`);
+                                        let valid = false;
+                                        const lengthA = children.length;
+                                        for (let j = 0; j < lengthA; j++) {
+                                            if (children.item(i) === element) {
+                                                valid = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!valid) {
+                                            return false;
+                                        }
+                                        continue;
+                                    }
+                                    default: {
+                                        let match = CACHE_PATTERN.NTH_CHILD_OFTYPE.exec(pseudo);
+                                        if (match) {
+                                            const placement = match[3].trim();
+                                            let children = parent.naturalElements;
+                                            if (match[1]) {
+                                                children = children.slice(0).reverse();
+                                            }
+                                            const index = (match[2] === 'child' ? children.indexOf(node) : $util.filterArray(children, item => item.tagName === tagName).indexOf(node)) + 1;
+                                            if (index > 0) {
+                                                if ($util.isNumber(placement)) {
+                                                    if (parseInt(placement) !== index) {
+                                                        return false;
+                                                    }
                                                 }
-                                                case '~': {
-                                                    const lengthA = children.length;
-                                                    for (let k = 0; k < lengthA; k++) {
-                                                        const sibling = children[k];
-                                                        if (sibling === node) {
+                                                else {
+                                                    switch (placement) {
+                                                        case 'even':
+                                                            if (index % 2 !== 0) {
+                                                                return false;
+                                                            }
                                                             break;
-                                                        }
-                                                        else if (validate(sibling, selector, last, adjacent)) {
-                                                            next.push(sibling);
-                                                        }
+                                                        case 'odd':
+                                                            if (index % 2 === 0) {
+                                                                return false;
+                                                            }
+                                                            break;
+                                                        default:
+                                                            const subMatch = CACHE_PATTERN.NTH_CHILD_OFTYPE_VALUE.exec(placement);
+                                                            if (subMatch) {
+                                                                const modifier = $util.convertInt(subMatch[3]);
+                                                                if (subMatch[2]) {
+                                                                    if (subMatch[1]) {
+                                                                        return false;
+                                                                    }
+                                                                    const increment = parseInt(subMatch[2]);
+                                                                    if (increment !== 0) {
+                                                                        if (index !== modifier) {
+                                                                            for (let j = increment; ; j += increment) {
+                                                                                const total = increment + modifier;
+                                                                                if (total === index) {
+                                                                                    break;
+                                                                                }
+                                                                                else if (total > index) {
+                                                                                    return false;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    else if (index !== modifier) {
+                                                                        return false;
+                                                                    }
+                                                                }
+                                                                else if (subMatch[3]) {
+                                                                    if (modifier > 0) {
+                                                                        if (subMatch[1]) {
+                                                                            if (index > modifier) {
+                                                                                return false;
+                                                                            }
+                                                                        }
+                                                                        else if (index < modifier) {
+                                                                            return false;
+                                                                        }
+                                                                    }
+                                                                    else {
+                                                                        return false;
+                                                                    }
+                                                                }
+                                                            }
+                                                            break;
                                                     }
-                                                    break;
+                                                }
+                                                continue;
+                                            }
+                                        }
+                                        else {
+                                            match = CACHE_PATTERN.LANG.exec(pseudo);
+                                            if (match) {
+                                                const attributes = node.attributes;
+                                                if (attributes['lang'] && match[1].toLowerCase() === attributes['lang'].toLowerCase()) {
+                                                    continue;
                                                 }
                                             }
                                         }
-                                    }
-                                    else if (node.depth - depth >= length - index) {
-                                        let parent = node.actualParent as T;
-                                        do {
-                                            if (validate(parent, selector, last)) {
-                                                next.push(parent);
-                                            }
-                                            parent = parent.actualParent as T;
-                                        }
-                                        while (parent);
-                                    }
-                                }
-                                if (next.length) {
-                                    if (++index === length) {
-                                        return true;
-                                    }
-                                    return ascend(index, selector.adjacent, next);
-                                }
-                                return false;
-                            }
-                            for (const node of pending) {
-                                if (ascend(0, dataEnd.adjacent, [node])) {
-                                    result.push(node);
-                                    if (result.length === resultCount) {
-                                        return result;
+                                        return false;
                                     }
                                 }
                             }
                         }
-                        else if (result.length === 0 && (i === queries.length - 1 || resultCount >= 0 && resultCount <= pending.length)) {
-                            if (resultCount >= 0 && pending.length > resultCount) {
-                                pending.length = resultCount;
+                        if (data.notList) {
+                            for (const not of data.notList) {
+                                const notData: QueryData = { all: false };
+                                switch (not.charAt(0)) {
+                                    case '.':
+                                        notData.classList = [not];
+                                        break;
+                                    case '#':
+                                        notData.id = not.substring(1);
+                                        break;
+                                    case ':':
+                                        notData.pseudoList = [not];
+                                        break;
+                                    case '[': {
+                                        $regex.CSS.SELECTOR_ATTR.lastIndex = 0;
+                                        const match = $regex.CSS.SELECTOR_ATTR.exec(not);
+                                        if (match) {
+                                            const caseInsensitive = match[6] === 'i';
+                                            let attrValue = match[3] || match[4] || match[5] || '';
+                                            if (caseInsensitive) {
+                                                attrValue = attrValue.toLowerCase();
+                                            }
+                                            notData.attrList = [{
+                                                key: match[1],
+                                                symbol: match[2],
+                                                value: attrValue,
+                                                caseInsensitive
+                                            }];
+                                        }
+                                        else {
+                                            continue;
+                                        }
+                                        break;
+                                    }
+                                    default:
+                                        if ($regex.CHAR.WORDDASH.test(not)) {
+                                            notData.tagName = not;
+                                        }
+                                        else {
+                                            return false;
+                                        }
+                                }
+                                if (validate(node, notData, last)) {
+                                    return false;
+                                }
                             }
-                            return pending;
+                        }
+                        if (data.classList) {
+                            const classList = (<HTMLElement> node.element).classList;
+                            for (const className of data.classList) {
+                                if (!classList.contains(className)) {
+                                    return false;
+                                }
+                            }
+                        }
+                        if (data.attrList) {
+                            const attributes = node.attributes;
+                            for (const attr of data.attrList) {
+                                let actualValue = attributes[attr.key];
+                                if (actualValue === undefined) {
+                                    return false;
+                                }
+                                else if (attr.value) {
+                                    if (attr.caseInsensitive) {
+                                        actualValue = actualValue.toLowerCase();
+                                    }
+                                    if (attr.symbol) {
+                                        switch (attr.symbol) {
+                                            case '~':
+                                                if (!actualValue.split($regex.CHAR.SPACE).includes(attr.value)) {
+                                                    return false;
+                                                }
+                                                break;
+                                            case '^':
+                                                if (!actualValue.startsWith(attr.value)) {
+                                                    return false;
+                                                }
+                                                break;
+                                            case '$':
+                                                if (!actualValue.endsWith(attr.value)) {
+                                                    return false;
+                                                }
+                                                break;
+                                            case '*':
+                                                if (actualValue.indexOf(attr.value) === -1) {
+                                                    return false;
+                                                }
+                                                break;
+                                            case '|':
+                                                if (actualValue !== attr.value && !actualValue.startsWith(`${attr.value}-`)) {
+                                                    return false;
+                                                }
+                                                break;
+                                        }
+                                    }
+                                    else if (actualValue !== attr.value) {
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                        return true;
+                    };
+                    const dataEnd = <QueryData> selectors.pop();
+                    const lastEnd = selectors.length === 0;
+                    let pending: T[] = [];
+                    for (let j = offset; j < length; j++) {
+                        const dataMap = queryMap[j];
+                        if (dataEnd.all) {
+                            pending = pending.concat(dataMap);
                         }
                         else {
-                            result = result.concat(pending);
-                            if (resultCount >= 0 && result.length >= resultCount) {
-                                result.length = resultCount;
-                                return result;
+                            for (const node of dataMap) {
+                                if (validate(node, dataEnd, lastEnd)) {
+                                    pending.push(node);
+                                }
                             }
+                        }
+                    }
+                    if (selectors.length) {
+                        const depth = this.depth;
+                        selectors.reverse();
+                        length = selectors.length;
+                        function ascend(index: number, adjacent: string | undefined, nodes: T[]): boolean {
+                            const selector = selectors[index];
+                            const last = index === length - 1;
+                            const next: T[] = [];
+                            for (const node of nodes) {
+                                if (adjacent) {
+                                    const parent = node.actualParent as T;
+                                    if (adjacent === '>') {
+                                        if (validate(parent, selector, last, adjacent)) {
+                                            next.push(parent);
+                                        }
+                                    }
+                                    else {
+                                        const children = parent.naturalElements as T[];
+                                        switch (adjacent) {
+                                            case '+': {
+                                                const indexA = children.indexOf(node);
+                                                if (indexA > 0) {
+                                                    const sibling = children[indexA - 1];
+                                                    if (sibling && validate(sibling, selector, last, adjacent)) {
+                                                        next.push(sibling);
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                            case '~': {
+                                                const lengthA = children.length;
+                                                for (let k = 0; k < lengthA; k++) {
+                                                    const sibling = children[k];
+                                                    if (sibling === node) {
+                                                        break;
+                                                    }
+                                                    else if (validate(sibling, selector, last, adjacent)) {
+                                                        next.push(sibling);
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                else if (node.depth - depth >= length - index) {
+                                    let parent = node.actualParent as T;
+                                    do {
+                                        if (validate(parent, selector, last)) {
+                                            next.push(parent);
+                                        }
+                                        parent = parent.actualParent as T;
+                                    }
+                                    while (parent);
+                                }
+                            }
+                            if (next.length) {
+                                if (++index === length) {
+                                    return true;
+                                }
+                                return ascend(index, selector.adjacent, next);
+                            }
+                            return false;
+                        }
+                        for (const node of pending) {
+                            if (ascend(0, dataEnd.adjacent, [node])) {
+                                result.push(node);
+                                if (result.length === resultCount) {
+                                    return result;
+                                }
+                            }
+                        }
+                    }
+                    else if (result.length === 0 && (i === queries.length - 1 || resultCount >= 0 && resultCount <= pending.length)) {
+                        if (resultCount >= 0 && pending.length > resultCount) {
+                            pending.length = resultCount;
+                        }
+                        return pending;
+                    }
+                    else {
+                        result = result.concat(pending);
+                        if (resultCount >= 0 && result.length >= resultCount) {
+                            result.length = resultCount;
+                            return result;
                         }
                     }
                 }

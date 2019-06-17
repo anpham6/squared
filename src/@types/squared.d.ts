@@ -445,7 +445,6 @@ declare namespace base {
         cssSort(attr: string, ascending?: boolean, duplicate?: boolean): Node[];
         cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
         cssSpecificity(attr: string): number;
-        cssSet(attr: string, value: string, cache?: boolean): this;
         cssTry(attr: string, value: string): boolean;
         cssFinally(attr: string): boolean;
         toInt(attr: string, initial?: boolean, fallback?: number): number;
@@ -558,6 +557,7 @@ declare namespace base {
         resetBox(region: number, node?: NodeUI, fromParent?: boolean): void;
         transferBox(region: number, node: NodeUI): void;
         extractAttributes(depth: number): string;
+        cssSet(attr: string, value: string, cache?: boolean): string;
     }
 
     class NodeUI implements NodeUI {
@@ -689,6 +689,7 @@ declare namespace lib {
         function getFontSize(element: Element | null): number | undefined;
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
+        function parseSelectorText(value: string): string;
         function getSpecificity(value: string): number;
         function getKeyframeRules(): ObjectMap<CSSKeyframesData>;
         function parseKeyframeRule(rules: CSSRuleList): CSSKeyframesData;

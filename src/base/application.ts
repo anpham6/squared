@@ -478,7 +478,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 for (const attr of Array.from(item.style)) {
                     fromRule.push($util.convertCamelCase(attr));
                 }
-                for (const selectorText of item.selectorText.split($regex.XML.SEPARATOR)) {
+                for (const selectorText of $css.parseSelectorText(item.selectorText)) {
                     const specificity = $css.getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');
                     const targetElt = target ? '::' + target : '';

@@ -78,6 +78,42 @@ export function hasComputedStyle(element: Element): element is HTMLElement {
     return false;
 }
 
+export function parseSelectorText(value: string) {
+    const result: string[] = [];
+    if (value.indexOf(',') !== -1) {
+        let separatorValue = value;
+        let match: RegExpExecArray | null;
+        let found = false;
+        while ((match = CSS_RX.SELECTOR_ATTR.exec(separatorValue)) !== null) {
+            const index = match.index;
+            const length = match[0].length;
+            separatorValue = (index > 0 ? separatorValue.substring(0, index) : '') + '_'.repeat(length) + separatorValue.substring(index + length);
+            found = true;
+        }
+        if (found) {
+            let index = 0;
+            let position = 0;
+            while (true) {
+                index = separatorValue.indexOf(',', position);
+                if (index !== -1) {
+                    result.push(value.substring(position, index).trim());
+                    position = index + 1;
+                }
+                else {
+                    if (position > 0) {
+                        result.push(value.substring(position).trim());
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    if (result.length === 0) {
+        result.push(value.trim());
+    }
+    return result;
+}
+
 export function getSpecificity(value: string) {
     CSS_RX.SELECTOR_G.lastIndex = 0;
     let result = 0;

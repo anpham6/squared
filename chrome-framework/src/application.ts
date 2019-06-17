@@ -8,7 +8,7 @@ const ASSETS = Resource.ASSETS;
 export default class Application<T extends View> extends squared.base.Application<T> {
     public userSettings!: UserSettingsChrome;
 
-    public insertNode(element: Element, parent?: T): T | undefined {
+    public insertNode(element: Element, parent?: T) {
         if (element.nodeName === '#text') {
             if (this.userSettings.excludePlainText) {
                 return undefined;

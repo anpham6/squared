@@ -923,6 +923,35 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         Object.assign(node.unsafe('cached'), this._cached);
     }
 
+    public css(attr: string, value?: string, cache = false): string {
+        if (arguments.length >= 2) {
+            if (value) {
+                this._styleMap[attr] = value;
+            }
+            else {
+                delete this._styleMap[attr];
+            }
+            if (cache) {
+                this.unsetCache(attr);
+            }
+        }
+        return this._styleMap[attr] || this.styleElement && this.style[attr] || '';
+    }
+
+    public cssApply(values: StringMap, cache = false) {
+        Object.assign(this._styleMap, values);
+        if (cache) {
+            for (const attr in values) {
+                this.unsetCache(attr);
+            }
+        }
+        return this;
+    }
+
+    public cssSet(attr: string, value: string, cache = true) {
+        return super.css(attr, value, cache);
+    }
+
     get element() {
         let element = this._element;
         if (element === null) {
