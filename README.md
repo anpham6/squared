@@ -285,6 +285,8 @@ squared.system.getElementMap()
 squared.system.clearElementMap()
 squared.system.saveImageAssets()
 squared.system.saveFontAssets()
+squared.system.saveScriptAssets()
+squared.system.saveLinkAssets(rel?: string) // optional: e.g. "stylesheet"
 
 // async methods
 await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"

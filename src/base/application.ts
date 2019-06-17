@@ -347,15 +347,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                 return node;
             }
             const childNodes = parentElement.childNodes;
-            const lengthA = childNodes.length;
-            const lengthB = parentElement.childElementCount;
-            const children: T[] = new Array(lengthA);
-            const elements: T[] = new Array(lengthB);
-            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap && lengthB ? [[]] : undefined;
+            const length = childNodes.length;
+            const children: T[] = new Array(length);
+            const elements: T[] = new Array(parentElement.childElementCount);
+            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap && parentElement.childElementCount ? [[]] : undefined;
             let inlineText = true;
             let j = 0;
             let k = 0;
-            for (let i = 0; i < lengthA; i++) {
+            for (let i = 0; i < length; i++) {
                 const element = <HTMLElement> childNodes[i];
                 let child: T | undefined;
                 if (element.nodeName.charAt(0) === '#') {

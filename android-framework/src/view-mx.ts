@@ -141,11 +141,12 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
             offset = (lineHeight - node.actualHeight) / 2;
         }
         if (Math.floor(offset) > 0) {
+            const boxPadding = usePadding && node.textElement && !node.plainText && !inlineStyle;
             if (top) {
-                node.modifyBox(usePadding && node.textElement && !node.plainText && !inlineStyle ? $e.BOX_STANDARD.PADDING_TOP : $e.BOX_STANDARD.MARGIN_TOP, Math.round(offset));
+                node.modifyBox(boxPadding ? $e.BOX_STANDARD.PADDING_TOP : $e.BOX_STANDARD.MARGIN_TOP, Math.round(offset));
             }
             if (bottom) {
-                node.modifyBox(usePadding && node.textElement && !node.plainText && !inlineStyle ? $e.BOX_STANDARD.PADDING_BOTTOM : $e.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
+                node.modifyBox(boxPadding ? $e.BOX_STANDARD.PADDING_BOTTOM : $e.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
             }
         }
     }

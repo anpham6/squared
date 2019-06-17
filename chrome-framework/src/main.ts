@@ -27,11 +27,10 @@ function findElement(element: HTMLElement, cache = true) {
             return result;
         }
     }
-    const settings = application.userSettings;
-    const preloadImages = settings.preloadImages;
-    settings.preloadImages = false;
+    const preloadImages = userSettings.preloadImages;
+    userSettings.preloadImages = false;
     application.parseDocument(element);
-    settings.preloadImages = preloadImages;
+    userSettings.preloadImages = preloadImages;
     return elementMap.get(element) || null;
 }
 
@@ -107,12 +106,22 @@ const appBase: ChromeFramework<View> = {
         },
         saveImageAssets() {
             if (file) {
-                file.saveToDisk(<FileAsset[]> file.getImageAssets(), userSettings.outputArchiveName);
+                file.saveToDisk(<FileAsset[]> file.getImageAssets(), `${userSettings.outputArchiveName}-image`);
             }
         },
         saveFontAssets() {
             if (file) {
-                file.saveToDisk(<FileAsset[]> file.getFontAssets(), userSettings.outputArchiveName);
+                file.saveToDisk(<FileAsset[]> file.getFontAssets(), `${userSettings.outputArchiveName}-font`);
+            }
+        },
+        saveScriptAssets() {
+            if (file) {
+                file.saveToDisk(<FileAsset[]> file.getScriptAssets(), `${userSettings.outputArchiveName}-script`);
+            }
+        },
+        saveLinkAssets() {
+            if (file) {
+                file.saveToDisk(<FileAsset[]> file.getLinkAssets(), `${userSettings.outputArchiveName}-link`);
             }
         }
     },

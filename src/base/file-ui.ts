@@ -8,10 +8,6 @@ export default abstract class FileUI<T extends NodeUI> extends File<T> implement
     public appName = '';
     public resource!: ResourceUI<T>;
 
-    constructor() {
-        super();
-    }
-
     public abstract saveAllToDisk(files?: FileAsset[]): void;
     public abstract get userSettings(): UserUISettings;
 

@@ -15,6 +15,7 @@
     </style>
     <script src="/node_modules/systemjs/dist/system.js"></script>
     <script src="common/dev.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script>
         System.import('/build/src/main.js').then(result => {
             squared = result;
@@ -28,6 +29,8 @@
                         squared.settings.preloadImages = true;
                         squared.parseDocument('squared_ui').then(function() {
                             squared.system.saveImageAssets();
+                            squared.system.saveScriptAssets();
+                            squared.system.saveLinkAssets();
                         });
                     });
                 });

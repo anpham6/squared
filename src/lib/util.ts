@@ -70,9 +70,9 @@ export function convertCamelCase(value: string, char = '-') {
     if (CACHE_CAMELCASE[value]) {
         return CACHE_CAMELCASE[value];
     }
-    const length = value.length;
     let result = '';
     let previous = '';
+    const length = value.length;
     for (let i = 0; i < length; i++) {
         const ch = value.charAt(i);
         if (ch !== char) {
@@ -333,7 +333,7 @@ export function resolvePath(value: string) {
                 value = location.origin + pathname.join('/');
             }
             else {
-                value = `${location.origin + pathname.join('/')}/${value}`;
+                value = location.origin + pathname.join('/') + '/' + value;
             }
         }
     }
@@ -447,12 +447,7 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
 }
 
 export function sortNumber(values: number[], ascending = true) {
-    if (ascending) {
-        return values.sort((a, b) => a < b ? -1 : 1);
-    }
-    else {
-        return values.sort((a, b) => a > b ? -1 : 1);
-    }
+    return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
 }
 
 export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {

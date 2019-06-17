@@ -13,17 +13,11 @@ function convertDecimalNotation(value: number) {
 }
 
 export function minArray(list: number[]): number {
-    if (list.length) {
-        return Math.min.apply(null, list);
-    }
-    return Number.POSITIVE_INFINITY;
+    return Math.min.apply(null, list);
 }
 
 export function maxArray(list: number[]): number {
-    if (list.length) {
-        return Math.max.apply(null, list);
-    }
-    return Number.NEGATIVE_INFINITY;
+    return Math.max.apply(null, list);
 }
 
 export function isEqual(valueA: number, valueB: number, precision = 5) {

@@ -42,11 +42,12 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     }
 
     public addDescendant(node: T) {
-        const extensions = this.application.session.extensionMap.get(node.id) || [];
+        const map = this.application.session.extensionMap;
+        const extensions = map.get(node.id) || [];
         if (!extensions.includes(this)) {
             extensions.push(this);
         }
-        this.application.session.extensionMap.set(node.id, extensions);
+        map.set(node.id, extensions);
     }
 
     public postBaseLayout(node: T) {}

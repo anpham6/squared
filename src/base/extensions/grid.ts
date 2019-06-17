@@ -13,8 +13,9 @@ const {
 } = squared.lib;
 
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
+    const top = target.linear.top;
     for (const column of columns) {
-        const index = column.findIndex(item => $util.withinRange(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
+        const index = column.findIndex(item => $util.withinRange(top, item.linear.top) || top > item.linear.top && top < item.linear.bottom);
         if (index !== -1) {
             return index;
         }
@@ -52,25 +53,25 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell'));
             }
             else {
-                let multipleLength = 0;
-                let listItemCount = 0;
+                let length = 0;
+                let itemCount = 0;
                 for (const item of node) {
                     if (item.pageFlow && !item.visibleStyle.background && item.blockStatic && !item.autoMargin.leftRight && !item.autoMargin.left) {
                         if (item.length > 1) {
-                            multipleLength++;
+                            length++;
                         }
                         if (item.display === 'list-item' && !item.has('listStyleType')) {
-                            listItemCount++;
+                            itemCount++;
                         }
                     }
                     else {
                         return false;
                     }
                 }
-                if (listItemCount === node.length) {
+                if (itemCount === node.length) {
                     return true;
                 }
-                else if (multipleLength > 0) {
+                else if (length > 0) {
                     return node.every(item => item.length > 0 && NodeUI.linearData(item.children as T[]).linearX);
                 }
             }
@@ -144,8 +145,13 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                 let minLeft = Number.POSITIVE_INFINITY;
                                 let maxRight = Number.NEGATIVE_INFINITY;
                                 columns[endIndex].forEach(item => {
-                                    minLeft = Math.min(minLeft, item.linear.left);
-                                    maxRight = Math.max(maxRight, item.linear.right);
+                                    const { left, right } = item.linear;
+                                    if (left < minLeft) {
+                                        minLeft = left;
+                                    }
+                                    if (right > maxRight) {
+                                        maxRight = right;
+                                    }
                                 });
                                 if (Math.floor(nextX.linear.left) > Math.ceil(minLeft) && Math.floor(nextX.linear.right) > Math.ceil(maxRight)) {
                                     const index = getRowIndex(columns, nextX);
@@ -287,11 +293,11 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         const length = group.length;
                         for (let i = 1; i < length; i++) {
                             const item = group[i];
-                            const siblingData = item.data(EXT_NAME.GRID, 'cellData');
+                            const siblingData: GridCellData<T> = item.data(EXT_NAME.GRID, 'cellData');
                             if (siblingData && siblingData.rowSpan === 1) {
                                 siblings.push(group[i]);
-                                if (siblingData.sibling) {
-                                    siblings = siblings.concat(siblingData.sibling);
+                                if (siblingData.siblings) {
+                                    siblings = siblings.concat(siblingData.siblings);
                                 }
                             }
                             else {

@@ -22,7 +22,7 @@ function parseUri(value: string): Optional<RawAsset> | undefined {
             const host = match[2];
             const port = match[3];
             const path = match[4];
-            return { pathname: $util.convertWord(host) + (port ? '/' + port.substring(1) : '') + path.substring(0, origin.lastIndexOf('/')), filename: $util.fromLastIndexOf(path, '/') };
+            return { pathname: $util.convertWord(host) + (port ? '/' + port.substring(1) : '') + path.substring(0, path.lastIndexOf('/')), filename: $util.fromLastIndexOf(path, '/') };
         }
     }
     return undefined;
@@ -31,7 +31,7 @@ function parseUri(value: string): Optional<RawAsset> | undefined {
 export default class File<T extends View> extends squared.base.File<T> implements chrome.base.File<T> {
     public saveAllToDisk() {
         this.saveToDisk(
-            <FileAsset[]> this.getImageAssets().concat(this.getFontAssets()),
+            <FileAsset[]> this.getImageAssets().concat(this.getFontAssets()).concat(this.getScriptAssets()).concat(this.getLinkAssets()),
             this.userSettings.outputArchiveName
         );
     }
@@ -77,6 +77,38 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
         }
+        return result;
+    }
+
+    public getScriptAssets() {
+        const result: Optional<RawAsset>[] = [];
+        document.querySelectorAll('script').forEach(item => {
+            const src = item.src;
+            if (src) {
+                const uri = $util.resolvePath(src);
+                const data = parseUri(uri);
+                if (data) {
+                    data.uri = uri;
+                    result.push(data);
+                }
+            }
+        });
+        return result;
+    }
+
+    public getLinkAssets(rel?: string) {
+        const result: Optional<RawAsset>[] = [];
+        document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((item: HTMLLinkElement) => {
+            const href = item.href;
+            if (href) {
+                const uri = $util.resolvePath(href);
+                const data = parseUri(uri);
+                if (data) {
+                    data.uri = uri;
+                    result.push(data);
+                }
+            }
+        });
         return result;
     }
 
