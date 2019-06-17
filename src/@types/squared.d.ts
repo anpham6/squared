@@ -164,7 +164,6 @@ declare namespace base {
         fileHandler?: File<T>;
         cache: NodeList<T>;
         readonly userSettings: UserSettings;
-        readonly assets: ResourceAssetMap;
         reset(): void;
         addImage(element: HTMLImageElement | undefined): void;
         getImage(src: string): ImageAsset | undefined;
@@ -182,7 +181,6 @@ declare namespace base {
 
     interface ResourceUI<T extends NodeUI> extends Resource<T> {
         readonly userSettings: UserUISettings;
-        readonly stored: ResourceStoredMap;
         finalize(layouts: FileAsset[]): void;
         writeRawImage(filename: string, base64: string): void;
         setBoxStyle(node: T): void;
@@ -284,7 +282,6 @@ declare namespace base {
         resource: ResourceUI<T>;
         userSettings: UserUISettings;
         appName: string;
-        readonly stored: ResourceStoredMap;
         readonly directory: { string: string, font: string, image: string };
     }
 
@@ -1110,8 +1107,7 @@ declare namespace svg {
         clipViewBox(x: number, y: number, width: number, height: number, precision?: number, documentRoot?: boolean): void;
     }
 
-    interface SvgViewRectExtended extends SvgView, SvgViewRect, SvgViewBox, SvgBaseVal, SvgSynchronize {
-    }
+    interface SvgViewRectExtended extends SvgView, SvgViewRect, SvgViewBox, SvgBaseVal, SvgSynchronize {}
 
     interface Svg extends SvgContainer, SvgViewRectExtended {
         precision?: number;

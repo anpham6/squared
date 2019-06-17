@@ -851,8 +851,4 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             }
         }
     }
-
-    get stored() {
-        return ResourceUI.STORED;
-    }
 }

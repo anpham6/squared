@@ -15,10 +15,6 @@ export default abstract class FileUI<T extends NodeUI> extends File<T> implement
     public abstract saveAllToDisk(files?: FileAsset[]): void;
     public abstract get userSettings(): UserUISettings;
 
-    get stored() {
-        return this.resource.stored;
-    }
-
     get directory() {
         return (<ControllerUISettings> this.resource.application.controllerHandler.localSettings).directory;
     }

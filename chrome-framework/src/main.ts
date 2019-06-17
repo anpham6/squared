@@ -1,4 +1,4 @@
-import { UserSettings } from '../../src/base/@types/application';
+import { FileAsset, UserSettings } from '../../src/base/@types/application';
 import { ChromeFramework } from './@types/application';
 
 import Application from './application';
@@ -16,6 +16,7 @@ const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 let initialized = false;
 let application: Application<View>;
 let controller: Controller<View>;
+let file: File<View>;
 let userSettings: UserSettings;
 let elementMap: Map<Element, View>;
 
@@ -103,12 +104,23 @@ const appBase: ChromeFramework<View> = {
             if (controller) {
                 return controller.elementMap.clear();
             }
+        },
+        saveImageAssets() {
+            if (file) {
+                file.saveToDisk(<FileAsset[]> file.getImageAssets(), userSettings.outputArchiveName);
+            }
+        },
+        saveFontAssets() {
+            if (file) {
+                file.saveToDisk(<FileAsset[]> file.getFontAssets(), userSettings.outputArchiveName);
+            }
         }
     },
     create() {
         application = new Application(framework, View, Controller, Resource, ExtensionManager);
         controller = <Controller<View>> application.controllerHandler;
-        application.resourceHandler.setFileHandler(new File());
+        file = new File();
+        application.resourceHandler.setFileHandler(file);
         elementMap = controller.elementMap;
         userSettings = { ...SETTINGS };
         initialized = true;

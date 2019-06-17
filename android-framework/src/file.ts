@@ -2,6 +2,7 @@ import { FileAsset } from '../../src/base/@types/application';
 import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/application';
 
 import View from './view';
+import Resource from './resource';
 
 import { STRING_ANDROID, XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID } from './lib/enumeration';
@@ -22,6 +23,7 @@ type ItemValue = {
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
+const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const REGEXP_FILENAME = /^(.+)\/(.+?\.\w+)$/;
 const REGEXP_DRAWABLE_UNIT = /"(-?[\d.]+)px"/g;
 const REGEXP_THEME_UNIT = />(-?[\d.]+)px</g;
@@ -136,10 +138,10 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     public resourceStringToXml(saveToDisk = false) {
         const result: string[] = [];
         const data: ExternalData[] = [{ string: [] }];
-        if (!this.stored.strings.has('app_name')) {
+        if (!STORED.strings.has('app_name')) {
             data[0].string.push({ name: 'app_name', innerText: this.userSettings.outputArchiveName });
         }
-        for (const [name, innerText] of Array.from(this.stored.strings.entries()).sort(caseInsensitive)) {
+        for (const [name, innerText] of Array.from(STORED.strings.entries()).sort(caseInsensitive)) {
             data[0].string.push(<ItemValue> { name, innerText });
         }
         result.push(
@@ -158,9 +160,9 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceStringArrayToXml(saveToDisk = false) {
         const result: string[] = [];
-        if (this.stored.arrays.size) {
+        if (STORED.arrays.size) {
             const data: ExternalData[] = [{ 'string-array': [] }];
-            for (const [name, values] of Array.from(this.stored.arrays.entries()).sort()) {
+            for (const [name, values] of Array.from(STORED.arrays.entries()).sort()) {
                 data[0]['string-array'].push({
                     name,
                     item: $util.objectMap<string, {}>(values, innerText => ({ innerText }))
@@ -183,11 +185,11 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceFontToXml(saveToDisk = false) {
         const result: string[] = [];
-        if (this.stored.fonts.size) {
+        if (STORED.fonts.size) {
             const settings = this.userSettings;
             const xmlns = XMLNS_ANDROID[settings.targetAPI < BUILD_ANDROID.OREO ? STRING_ANDROID.APP : STRING_ANDROID.ANDROID];
             const pathname = this.directory.font;
-            for (const [name, font] of Array.from(this.stored.fonts.entries()).sort()) {
+            for (const [name, font] of Array.from(STORED.fonts.entries()).sort()) {
                 const data: ExternalData[] = [{
                     'xmlns:android': xmlns,
                     font: []
@@ -236,9 +238,9 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceColorToXml(saveToDisk = false) {
         const result: string[] = [];
-        if (this.stored.colors.size) {
+        if (STORED.colors.size) {
             const data: ExternalData[] = [{ color: [] }];
-            for (const [innerText, name] of Array.from(this.stored.colors.entries()).sort()) {
+            for (const [innerText, name] of Array.from(STORED.colors.entries()).sort()) {
                 data[0].color.push(<ItemValue> { name, innerText });
             }
             result.push(
@@ -259,9 +261,9 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     public resourceStyleToXml(saveToDisk = false) {
         const settings = this.userSettings;
         const result: string[] = [];
-        if (this.stored.styles.size) {
+        if (STORED.styles.size) {
             const data: ExternalData[] = [{ style: [] }];
-            for (const style of Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
+            for (const style of Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
                 if (Array.isArray(style.items)) {
                     const item: ItemValue[] = [];
                     for (const obj of style.items.sort((a, b) => a.key >= b.key ? 1 : -1)) {
@@ -283,9 +285,9 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 'styles.xml'
             );
         }
-        if (this.stored.themes.size) {
+        if (STORED.themes.size) {
             const appTheme: ObjectMap<boolean> = {};
-            for (const [filename, theme] of this.stored.themes.entries()) {
+            for (const [filename, theme] of STORED.themes.entries()) {
                 const data: ExternalData[] = [{ style: [] }];
                 for (const [themeName, themeData] of theme.entries()) {
                     const item: ItemValue[] = [];
@@ -328,12 +330,12 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceDimenToXml(saveToDisk = false) {
         const result: string[] = [];
-        if (this.stored.dimens.size) {
+        if (STORED.dimens.size) {
             const data: ExternalData[] = [{ dimen: [] }];
             const settings = this.userSettings;
             const dpi = settings.resolutionDPI;
             const convertPixels = settings.convertPixels;
-            for (const [name, value] of Array.from(this.stored.dimens.entries()).sort()) {
+            for (const [name, value] of Array.from(STORED.dimens.entries()).sort()) {
                 data[0].dimen.push({ name, innerText: convertPixels ? convertLength(value, dpi, false) : value });
             }
             result.push(
@@ -350,10 +352,10 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceDrawableToXml(saveToDisk = false) {
         const result: string[] = [];
-        if (this.stored.drawables.size) {
+        if (STORED.drawables.size) {
             const settings = this.userSettings;
             const directory = this.directory.image;
-            for (const [name, value] of this.stored.drawables.entries()) {
+            for (const [name, value] of STORED.drawables.entries()) {
                 result.push(
                     $xml.replaceTab(
                         replaceDrawableLength(
@@ -376,9 +378,9 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceDrawableImageToXml(saveToDisk = false) {
         const result: string[] = [];
-        if (this.stored.images.size) {
+        if (STORED.images.size) {
             const directory = this.directory.image;
-            for (const [name, images] of this.stored.images.entries()) {
+            for (const [name, images] of STORED.images.entries()) {
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
                         result.push(
@@ -405,9 +407,9 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceAnimToXml(saveToDisk = false) {
         const result: string[] = [];
-        if (this.stored.animators.size) {
+        if (STORED.animators.size) {
             const settings = this.userSettings;
-            for (const [name, value] of this.stored.animators.entries()) {
+            for (const [name, value] of STORED.animators.entries()) {
                 result.push(
                     $xml.replaceTab(value, settings.insertSpaces),
                     'res/anim',
@@ -423,9 +425,5 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     get userSettings() {
         return <UserSettingsAndroid> this.resource.userSettings;
-    }
-
-    get stored() {
-        return <ResourceStoredMapAndroid> this.resource.stored;
     }
 }

@@ -283,6 +283,8 @@ squared.system.querySelector(value: string)
 squared.system.querySelectorAll(value: string)
 squared.system.getElementMap()
 squared.system.clearElementMap()
+squared.system.saveImageAssets()
+squared.system.saveFontAssets()
 
 // async methods
 await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"

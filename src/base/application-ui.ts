@@ -148,8 +148,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public saveAllToDisk() {
-        if (this.resourceHandler.fileHandler) {
-            this.resourceHandler.fileHandler.saveAllToDisk(this.layouts);
+        const file = this.resourceHandler.fileHandler;
+        if (file) {
+            file.saveAllToDisk(this.layouts);
         }
     }
 

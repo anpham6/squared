@@ -49,7 +49,7 @@ import SETTINGS from './settings';
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
 let initialized = false;
 let application: Application<View>;
-let fileHandler: File<View>;
+let file: File<View>;
 let userSettings: UserSettingsAndroid;
 
 function autoClose() {
@@ -130,68 +130,68 @@ const appBase: AppFramework<View> = {
             constant.XMLNS_ANDROID[name] = uri;
         },
         writeLayoutAllXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.layoutAllToXml(application.layouts, saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.layoutAllToXml(application.layouts, saveToDisk);
             }
             return {};
         },
         writeResourceAllXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceAllToXml(saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.resourceAllToXml(saveToDisk);
             }
             return {};
         },
         writeResourceStringXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceStringToXml(saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.resourceStringToXml(saveToDisk);
             }
             return [];
         },
         writeResourceArrayXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceStringArrayToXml(saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.resourceStringArrayToXml(saveToDisk);
             }
             return [];
         },
         writeResourceFontXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceFontToXml(saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.resourceFontToXml(saveToDisk);
             }
             return [];
         },
         writeResourceColorXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceColorToXml(saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.resourceColorToXml(saveToDisk);
             }
             return [];
         },
         writeResourceStyleXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceStyleToXml(saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.resourceStyleToXml(saveToDisk);
             }
             return [];
         },
         writeResourceDimenXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceDimenToXml(saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.resourceDimenToXml(saveToDisk);
             }
             return [];
         },
         writeResourceDrawableXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceDrawableToXml(saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.resourceDrawableToXml(saveToDisk);
             }
             return [];
         },
         writeResourceDrawableImageXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceDrawableImageToXml(saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.resourceDrawableImageToXml(saveToDisk);
             }
             return [];
         },
         writeResourceAnimXml(saveToDisk = false) {
-            if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceAnimToXml(saveToDisk);
+            if (file && checkApplication(application)) {
+                return file.resourceAnimToXml(saveToDisk);
             }
             return [];
         }
@@ -200,8 +200,8 @@ const appBase: AppFramework<View> = {
         const EN = squared.base.lib.constant.EXT_NAME;
         const EA = constant.EXT_ANDROID;
         application = new Application(framework, View, Controller, Resource, ExtensionManager);
-        fileHandler = new File();
-        application.resourceHandler.setFileHandler(fileHandler);
+        file = new File();
+        application.resourceHandler.setFileHandler(file);
         userSettings = { ...SETTINGS };
         Object.assign(application.builtInExtensions, {
             [EN.EXTERNAL]: new External(EN.EXTERNAL, framework),

@@ -27,7 +27,7 @@
                         squared.setFramework(chrome);
                         squared.settings.preloadImages = true;
                         squared.parseDocument('squared_ui').then(function() {
-                            squared.close();
+                            squared.system.saveImageAssets();
                         });
                     });
                 });

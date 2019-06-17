@@ -152,9 +152,9 @@ export interface Asset {
 }
 
 export interface FileAsset extends Asset {
-    content: string;
     pathname: string;
     filename: string;
+    content: string;
 }
 
 export interface ImageAsset extends Asset {

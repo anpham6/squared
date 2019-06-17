@@ -14,6 +14,7 @@ const $regex = squared.lib.regex;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
+const ASSETS = Resource.ASSETS;
 const CACHE_PATTERN: ObjectMap<RegExp> = {};
 let NodeConstructor!: Constructor<Node>;
 
@@ -68,7 +69,13 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract afterCreateCache(element: HTMLElement): void;
 
     public finalize() {}
-    public saveAllToDisk() {}
+
+    public saveAllToDisk() {
+        const file = this.resourceHandler.fileHandler;
+        if (file) {
+            file.saveAllToDisk();
+        }
+    }
 
     public reset() {
         this.session.active.length = 0;
@@ -110,7 +117,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 this.rootElements.add(element);
             }
         }
-        const ASSETS = this.resourceHandler.assets;
         const documentRoot = this.rootElements.values().next().value;
         const preloadImages: HTMLImageElement[] = [];
         const resume = () => {
@@ -500,7 +506,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     else if (this.userSettings.preloadImages) {
                                         const uri = $util.resolvePath(match[4]);
                                         if (uri !== '' && this.resourceHandler.getImage(uri) === undefined) {
-                                            this.resourceHandler.assets.images.set(uri, { width: 0, height: 0, uri });
+                                            ASSETS.images.set(uri, { width: 0, height: 0, uri });
                                         }
                                     }
                                 }

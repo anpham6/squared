@@ -139,8 +139,4 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         instance.resource = this;
         this.fileHandler = instance;
     }
-
-    get assets() {
-        return Resource.ASSETS;
-    }
 }
