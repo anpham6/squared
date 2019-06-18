@@ -26,7 +26,7 @@ export const CSS = {
     CALC: new RegExp(`^${STRING.CSS_CALC}$`),
     VAR: /var\((--[A-Za-z\d\-]+)(?!,\s*var\()(?:,\s*([a-z\-]+\([^)]+\)|[^)]+))?\)/,
     URL: /^url\("?(.+?)"?\)$/,
-    CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
+    CUSTOM_PROPERTY: /^(?:var|calc)\(.+\)$/,
     HEX: /[A-Za-z\d]{3,8}/,
     RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/,
     SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+])\\s*`, 'g'),

@@ -231,7 +231,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 if (isNaN(resetPadding) || resetPadding <= 0) {
                     parent.modifyBox(parent.paddingLeft > 0 ? $e.BOX_STANDARD.PADDING_LEFT : $e.BOX_STANDARD.MARGIN_LEFT);
                 }
-                if (typeof resetPadding === 'number' && resetPadding < 0) {
+                if (resetPadding < 0) {
                     parent.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, resetPadding);
                 }
             }

@@ -876,7 +876,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         if (!valid) {
                                             return false;
                                         }
-                                        continue;
+                                        break;
                                     }
                                     default: {
                                         let match = CACHE_PATTERN.NTH_CHILD_OFTYPE.exec(pseudo);

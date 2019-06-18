@@ -1,5 +1,3 @@
-import string from "../../../android-framework/src/template/resources/string";
-
 type Node = squared.base.Node;
 type NodeUI = squared.base.NodeUI;
 

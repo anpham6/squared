@@ -10,6 +10,10 @@ const {
 } = squared.lib;
 
 const ASSETS = Resource.ASSETS;
+const CACHE_PATTERN = {
+    SRCSET: /\s*(.+?\.[^\s,]+).*?,\s*/,
+    SRCSET_SPECIFIER: /\s+[0-9.][wx]$/
+};
 
 function parseUri(value: string): Optional<RawAsset> | undefined {
     const origin = location.origin;
@@ -113,6 +117,28 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
         }
+        document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
+            let srcset = element.srcset;
+            const images: string[] = [];
+            let match: RegExpExecArray | null;
+            while ((match = CACHE_PATTERN.SRCSET.exec(srcset)) !== null) {
+                images.push($util.resolvePath(match[1]));
+                srcset = $util.spliceString(srcset, match.index, match[0].length);
+            }
+            srcset = srcset.trim();
+            if (srcset !== '') {
+                images.push($util.resolvePath(srcset.replace(CACHE_PATTERN.SRCSET_SPECIFIER, '')));
+            }
+            for (const src of images) {
+                if ($regex.COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
+                    const data = parseUri(src);
+                    if (data) {
+                        data.uri = src;
+                        result.push(data);
+                    }
+                }
+            }
+        });
         return result;
     }
 

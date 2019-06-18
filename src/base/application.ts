@@ -55,7 +55,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     };
     public abstract userSettings: UserSettings;
 
-    constructor(
+    protected constructor(
         public framework: number,
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<T>,

@@ -1,4 +1,4 @@
-import { FileAsset, RawAsset } from '../../src/base/@types/application';
+import { RawAsset } from '../../src/base/@types/application';
 import { UserSettingsChrome } from '../src/@types/application';
 
 type View = chrome.base.View;

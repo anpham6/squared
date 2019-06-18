@@ -25,7 +25,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             const node = $session.getElementAsNode<NodeUI>(element, sessionId);
             if (node) {
-                return node.excluded === false && node.blockStatic;
+                return !node.excluded && node.blockStatic;
             }
         }
         return false;

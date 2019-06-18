@@ -331,13 +331,7 @@ function isTargeted(parent: View, node: View) {
 }
 
 function getTextBottom<T extends View>(nodes: T[]): T | undefined {
-    return $util.filterArray(nodes, node => {
-        if ((node.baseline || $css.isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && (<HTMLSelectElement> node.element).size > 1) || node.verticalAlign === 'text-bottom' && node.containerName !== 'INPUT_IMAGE') {
-            return true;
-        }
-        return false;
-    })
-    .sort((a, b) => {
+    return $util.filterArray(nodes, node => (node.baseline || $css.isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && (<HTMLSelectElement> node.element).size > 1) || node.verticalAlign === 'text-bottom' && node.containerName !== 'INPUT_IMAGE').sort((a, b) => {
         if (a.baselineHeight === b.baselineHeight) {
             return a.tagName === 'SELECT' ? 1 : 0;
         }
@@ -1882,7 +1876,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             previous.autoMargin.horizontal ||
                             cleared.has(item) ||
                             !item.textElement && !checkFloatWrap() && checkWrapWidth() && Math.floor(baseWidth) > maxWidth ||
-                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded === true && sibling.blockStatic) || !!siblings && siblings.some(element => Controller.causesLineBreak(element, node.sessionId))))
+                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => Controller.causesLineBreak(element, node.sessionId))))
                         {
                             if (leftForward) {
                                 if (previousRowLeft && item.linear.bottom <= previousRowLeft.bounds.bottom) {

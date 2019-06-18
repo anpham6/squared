@@ -91,7 +91,7 @@ export function parseSelectorText(value: string) {
             found = true;
         }
         if (found) {
-            let index = 0;
+            let index: number;
             let position = 0;
             while (true) {
                 index = separatorValue.indexOf(',', position);
@@ -927,7 +927,7 @@ export function isCalc(value: string) {
 }
 
 export function isCustomProperty(value: string) {
-    return CSS_RX.CUSTOMPROPERTY.test(value);
+    return CSS_RX.CUSTOM_PROPERTY.test(value);
 }
 
 export function isAngle(value: string) {

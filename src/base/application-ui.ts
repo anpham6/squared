@@ -74,7 +74,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     private readonly _layouts: FileAsset[] = [];
 
-    constructor(
+    protected constructor(
         framework: number,
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<T>,
