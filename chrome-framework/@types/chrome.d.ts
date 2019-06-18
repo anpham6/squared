@@ -25,10 +25,11 @@ declare namespace base {
     class Resource<T extends View> implements Resource<T> {}
 
     interface File<T extends View> extends squared.base.File<T> {
-        getImageAssets(): Optional<RawAsset>[];
-        getFontAssets(): Optional<RawAsset>[];
+        getHtmlPage(name?: string): Optional<RawAsset>[];
         getScriptAssets(): Optional<RawAsset>[];
         getLinkAssets(): Optional<RawAsset>[];
+        getImageAssets(): Optional<RawAsset>[];
+        getFontAssets(): Optional<RawAsset>[];
     }
 
     class File<T extends View> implements File<T> {}

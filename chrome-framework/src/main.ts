@@ -104,14 +104,9 @@ const appBase: ChromeFramework<View> = {
                 return controller.elementMap.clear();
             }
         },
-        saveImageAssets() {
+        saveHtmlPage(name?: string) {
             if (file) {
-                file.saveToDisk(<FileAsset[]> file.getImageAssets(), `${userSettings.outputArchiveName}-image`);
-            }
-        },
-        saveFontAssets() {
-            if (file) {
-                file.saveToDisk(<FileAsset[]> file.getFontAssets(), `${userSettings.outputArchiveName}-font`);
+                file.saveToDisk(<FileAsset[]> file.getHtmlPage(name), `${userSettings.outputArchiveName}-html`);
             }
         },
         saveScriptAssets() {
@@ -123,7 +118,17 @@ const appBase: ChromeFramework<View> = {
             if (file) {
                 file.saveToDisk(<FileAsset[]> file.getLinkAssets(), `${userSettings.outputArchiveName}-link`);
             }
-        }
+        },
+        saveImageAssets() {
+            if (file) {
+                file.saveToDisk(<FileAsset[]> file.getImageAssets(), `${userSettings.outputArchiveName}-image`);
+            }
+        },
+        saveFontAssets() {
+            if (file) {
+                file.saveToDisk(<FileAsset[]> file.getFontAssets(), `${userSettings.outputArchiveName}-font`);
+            }
+        },
     },
     create() {
         application = new Application(framework, View, Controller, Resource, ExtensionManager);

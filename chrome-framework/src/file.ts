@@ -31,9 +31,59 @@ function parseUri(value: string): Optional<RawAsset> | undefined {
 export default class File<T extends View> extends squared.base.File<T> implements chrome.base.File<T> {
     public saveAllToDisk() {
         this.saveToDisk(
-            <FileAsset[]> this.getImageAssets().concat(this.getFontAssets()).concat(this.getScriptAssets()).concat(this.getLinkAssets()),
+            <FileAsset[]> this.getImageAssets().concat(this.getFontAssets()).concat(this.getScriptAssets()).concat(this.getLinkAssets()).concat(this.getHtmlPage()),
             this.userSettings.outputArchiveName
         );
+    }
+
+    public getHtmlPage(name?: string) {
+        const result: Optional<RawAsset>[] = [];
+        const href = location.href;
+        const data = <RawAsset> parseUri(href);
+        if (data) {
+            if (name) {
+                data.filename = name;
+            }
+            else if (data.filename.indexOf('.') === -1) {
+                data.pathname += '/' + data.filename;
+                data.filename = 'index.html';
+            }
+            data.uri = href;
+            result.push(data);
+        }
+        return result;
+    }
+
+    public getScriptAssets() {
+        const result: Optional<RawAsset>[] = [];
+        document.querySelectorAll('script').forEach(item => {
+            const src = item.src;
+            if (src) {
+                const uri = $util.resolvePath(src);
+                const data = parseUri(uri);
+                if (data) {
+                    data.uri = uri;
+                    result.push(data);
+                }
+            }
+        });
+        return result;
+    }
+
+    public getLinkAssets(rel?: string) {
+        const result: Optional<RawAsset>[] = [];
+        document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((item: HTMLLinkElement) => {
+            const href = item.href;
+            if (href) {
+                const uri = $util.resolvePath(href);
+                const data = parseUri(uri);
+                if (data) {
+                    data.uri = uri;
+                    result.push(data);
+                }
+            }
+        });
+        return result;
     }
 
     public getImageAssets() {
@@ -79,38 +129,6 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
         }
-        return result;
-    }
-
-    public getScriptAssets() {
-        const result: Optional<RawAsset>[] = [];
-        document.querySelectorAll('script').forEach(item => {
-            const src = item.src;
-            if (src) {
-                const uri = $util.resolvePath(src);
-                const data = parseUri(uri);
-                if (data) {
-                    data.uri = uri;
-                    result.push(data);
-                }
-            }
-        });
-        return result;
-    }
-
-    public getLinkAssets(rel?: string) {
-        const result: Optional<RawAsset>[] = [];
-        document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((item: HTMLLinkElement) => {
-            const href = item.href;
-            if (href) {
-                const uri = $util.resolvePath(href);
-                const data = parseUri(uri);
-                if (data) {
-                    data.uri = uri;
-                    result.push(data);
-                }
-            }
-        });
         return result;
     }
 
