@@ -96,27 +96,33 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public getImageAssets() {
         const result: Optional<RawAsset>[] = [];
         for (const uri of ASSETS.images.keys()) {
-            const data = parseUri(uri);
+            const data = <RawAsset> parseUri(uri);
             if (data) {
                 data.uri = uri;
+                this.checkBrotliCompatibility(data);
                 result.push(data);
             }
         }
-        for (const [uri, data] of ASSETS.rawData) {
-            const filename = data.filename;
+        for (const [uri, rawData] of ASSETS.rawData) {
+            const filename = rawData.filename;
+            let data: Optional<RawAsset> | undefined;
             if (filename) {
-                const { pathname, base64, content } = data;
+                const { pathname, base64, content } = rawData;
                 if (pathname) {
-                    result.push({ pathname, filename, uri });
+                    data = { pathname, filename, uri };
                 }
                 else if (base64) {
-                    result.push({ pathname: 'base64', filename, base64 });
+                    data = { pathname: 'base64', filename, base64 };
                 }
                 else if (content) {
-                    const mimeType = data.mimeType;
+                    const mimeType = rawData.mimeType;
                     if (mimeType) {
-                        result.push({ pathname: mimeType, filename, content });
+                        data = { pathname: mimeType, filename, content };
                     }
+                }
+                if (data) {
+                    this.checkBrotliCompatibility(<RawAsset> data);
+                    result.push(data);
                 }
             }
         }

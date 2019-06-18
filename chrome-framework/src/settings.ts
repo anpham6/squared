@@ -8,7 +8,7 @@ const settings: UserSettingsChrome = {
     createQuerySelectorMap: true,
     excludePlainText: true,
     brotliCompressionQuality: 11,
-    brotliCompatibleExtensions: ['js', 'css', 'woff2'],
+    brotliCompatibleExtensions: ['js', 'css', 'json', 'svg', 'woff2'],
     outputDirectory: '',
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip',
