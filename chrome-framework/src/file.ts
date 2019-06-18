@@ -53,6 +53,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 data.filename = 'index.html';
             }
             data.uri = href;
+            this.checkBrotliCompatibility(data);
             result.push(data);
         }
         return result;
@@ -64,9 +65,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const src = item.src;
             if (src) {
                 const uri = $util.resolvePath(src);
-                const data = parseUri(uri);
+                const data = <RawAsset> parseUri(uri);
                 if (data) {
                     data.uri = uri;
+                    this.checkBrotliCompatibility(data);
                     result.push(data);
                 }
             }
@@ -80,9 +82,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const href = item.href;
             if (href) {
                 const uri = $util.resolvePath(href);
-                const data = parseUri(uri);
+                const data = <RawAsset> parseUri(uri);
                 if (data) {
                     data.uri = uri;
+                    this.checkBrotliCompatibility(data);
                     result.push(data);
                 }
             }
@@ -147,15 +150,25 @@ export default class File<T extends View> extends squared.base.File<T> implement
         for (const fonts of ASSETS.fonts.values()) {
             for (const font of fonts) {
                 if (font.srcUrl) {
-                    const data = parseUri(font.srcUrl);
+                    const data = <RawAsset> parseUri(font.srcUrl);
                     if (data) {
                         data.uri = font.srcUrl;
+                        this.checkBrotliCompatibility(data);
                         result.push(data);
                     }
                 }
             }
         }
         return result;
+    }
+
+    private checkBrotliCompatibility(data: RawAsset) {
+        const { brotliCompressionQuality, brotliCompatibleExtensions } = this.userSettings;
+        if (brotliCompressionQuality) {
+            if (brotliCompatibleExtensions.includes($util.fromLastIndexOf(data.filename, '.').toLowerCase())) {
+                data.brotliQuality = brotliCompressionQuality;
+            }
+        }
     }
 
     get userSettings() {

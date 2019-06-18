@@ -5,6 +5,7 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const uuid = require('uuid/v1');
 const archiver = require('archiver');
+const brotli = require('brotli');
 const request = require('request');
 
 const app = express();
@@ -57,6 +58,15 @@ app.post('/api/savetodisk', (req, res) => {
             for (const file of req.body) {
                 const pathname = `${directory}/${file.pathname}`;
                 const filename = `${pathname}/${file.filename}`;
+                const quality = file.brotliQuality ? Math.min(file.brotliQuality, 11) : 0;
+                function writeBuffer() {
+                    if (quality > 0) {
+                        const filename_br = filename + '.br';
+                        fs.writeFileSync(filename_br, brotli.compress(fs.readFileSync(filename), { mode: filename.toLowerCase().endsWith('woff2') ? 2 : 1, quality }));
+                        archive.file(filename_br, { name: data.name + '.br' });
+                    }
+                    archive.file(filename, data);
+                }
                 fileerror = filename;
                 mkdirp.sync(pathname);
                 const data = { name: `${(req.query.directory ? `${req.query.directory}/` : '') + file.pathname}/${file.filename}` };
@@ -65,7 +75,7 @@ app.post('/api/savetodisk', (req, res) => {
                     fs.writeFile(filename, file.base64 || file.content, file.base64 ? 'base64' : 'utf8', err => {
                         if (delayed !== -1) {
                             if (!err) {
-                                archive.file(filename, data);
+                                writeBuffer();
                             }
                             delayed--;
                             finalize();
@@ -77,7 +87,7 @@ app.post('/api/savetodisk', (req, res) => {
                     const stream = fs.createWriteStream(filename);
                     stream.on('finish', () => {
                         if (delayed !== -1) {
-                            archive.file(filename, data);
+                            writeBuffer();
                             delayed--;
                             finalize();
                         }

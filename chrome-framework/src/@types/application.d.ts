@@ -10,5 +10,7 @@ interface ChromeFramework<T extends View> extends AppFramework<T> {
 }
 
 interface UserSettingsChrome extends UserSettings {
+    brotliCompressionQuality: number;
+    brotliCompatibleExtensions: string[];
     excludePlainText: boolean;
 }

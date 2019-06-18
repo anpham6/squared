@@ -154,7 +154,13 @@ squared.settings = {
     handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,
-    excludePlainText: true
+    excludePlainText: true,
+    brotliCompressionQuality: 11, // 0 to 11 - skip compression '0'
+    brotliCompatibleExtensions: ['js', 'css'],
+    outputDirectory: '',
+    outputArchiveName: 'chrome-data',
+    outputArchiveFormat: 'zip',
+    outputArchiveTimeout: 30
 };
 ```
 

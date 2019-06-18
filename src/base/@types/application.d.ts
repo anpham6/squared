@@ -162,6 +162,7 @@ export interface ImageAsset extends Asset {
 
 export interface RawAsset extends FileAsset, ImageAsset {
     base64?: string;
+    brotliQuality?: number;
 }
 
 export interface NodeTemplate<T extends NodeUI> {
