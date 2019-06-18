@@ -1,5 +1,4 @@
-import { RawAsset } from '../../src/base/@types/application';
-import { UserSettingsChrome } from '../src/@types/application';
+import { ChromeAsset, UserSettingsChrome } from '../src/@types/application';
 
 type View = chrome.base.View;
 
@@ -25,11 +24,11 @@ declare namespace base {
     class Resource<T extends View> implements Resource<T> {}
 
     interface File<T extends View> extends squared.base.File<T> {
-        getHtmlPage(name?: string): Optional<RawAsset>[];
-        getScriptAssets(): Optional<RawAsset>[];
-        getLinkAssets(): Optional<RawAsset>[];
-        getImageAssets(): Optional<RawAsset>[];
-        getFontAssets(): Optional<RawAsset>[];
+        getHtmlPage(name?: string): ChromeAsset[];
+        getScriptAssets(): ChromeAsset[];
+        getLinkAssets(): ChromeAsset[];
+        getImageAssets(): ChromeAsset[];
+        getFontAssets(): ChromeAsset[];
     }
 
     class File<T extends View> implements File<T> {}

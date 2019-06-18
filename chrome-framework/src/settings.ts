@@ -7,12 +7,13 @@ const settings: UserSettingsChrome = {
     showErrorMessages: false,
     createQuerySelectorMap: true,
     excludePlainText: true,
+    gzipCompressionQuality: 9,
     brotliCompressionQuality: 11,
-    brotliCompatibleExtensions: ['js', 'css', 'json', 'svg', 'woff2'],
+    compressFileExtensions: ['js', 'css', 'json', 'svg'],
     outputDirectory: '',
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip',
-    outputArchiveTimeout: 30
+    outputArchiveTimeout: 60
 };
 
 export default settings;

@@ -1,4 +1,4 @@
-import { AppFramework, UserSettings } from '../../../src/base/@types/application';
+import { AppFramework, RawAsset, UserSettings } from '../../../src/base/@types/application';
 
 type View = chrome.base.View;
 
@@ -10,7 +10,15 @@ interface ChromeFramework<T extends View> extends AppFramework<T> {
 }
 
 interface UserSettingsChrome extends UserSettings {
-    brotliCompressionQuality: number;
-    brotliCompatibleExtensions: string[];
     excludePlainText: boolean;
+    gzipCompressionQuality: number;
+    brotliCompressionQuality: number;
+    compressFileExtensions: string[];
+}
+
+interface ChromeAsset extends Omit<RawAsset, 'width' | 'height' | 'content'> {
+    content?: string;
+    extension?: string;
+    gzipQuality?: number;
+    brotliQuality?: number;
 }

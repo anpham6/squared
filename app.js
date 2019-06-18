@@ -5,6 +5,7 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const uuid = require('uuid/v1');
 const archiver = require('archiver');
+const zlib = require('zlib');
 const brotli = require('brotli');
 const request = require('request');
 
@@ -58,11 +59,17 @@ app.post('/api/savetodisk', (req, res) => {
             for (const file of req.body) {
                 const pathname = `${directory}/${file.pathname}`;
                 const filename = `${pathname}/${file.filename}`;
-                const quality = file.brotliQuality ? Math.min(file.brotliQuality, 11) : 0;
+                const level = file.gzipQuality > 0 ? Math.min(file.gzipQuality, 9) : 0;
+                const quality = file.brotliQuality > 0 ? Math.min(file.brotliQuality, 11) : 0;
                 function writeBuffer() {
+                    if (level > 0) {
+                        const filename_gz = filename + '.gz';
+                        fs.writeFileSync(filename_gz, zlib.createGzip({ level }));
+                        archive.file(filename_gz, { name: data.name + '.gz' });
+                    }
                     if (quality > 0) {
                         const filename_br = filename + '.br';
-                        fs.writeFileSync(filename_br, brotli.compress(fs.readFileSync(filename), { mode: filename.toLowerCase().endsWith('woff2') ? 2 : 1, quality }));
+                        fs.writeFileSync(filename_br, brotli.compress(fs.readFileSync(filename), { mode: (file.mimeType || '').startsWith('font/') ? 2 : 1, quality }));
                         archive.file(filename_br, { name: data.name + '.br' });
                     }
                     archive.file(filename, data);

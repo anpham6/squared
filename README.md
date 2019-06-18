@@ -138,8 +138,8 @@ squared.settings = {
     manifestLabelAppName: 'android',
     manifestThemeName: 'AppTheme',
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
-    outputDirectory: 'app/src/main',
     outputMainFileName: 'activity_main.xml',
+    outputDirectory: 'app/src/main',
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip', // zip | tar
     outputArchiveTimeout: 30 // seconds
@@ -155,12 +155,13 @@ squared.settings = {
     showErrorMessages: false,
     createQuerySelectorMap: true,
     excludePlainText: true,
+    gzipCompressionQuality: 9, // 0 to 9 - skip compression '0'
     brotliCompressionQuality: 11, // 0 to 11 - skip compression '0'
-    brotliCompatibleExtensions: ['js', 'css'],
+    compressFileExtensions: ['js', 'css', 'json', 'svg'],
     outputDirectory: '',
     outputArchiveName: 'chrome-data',
-    outputArchiveFormat: 'zip',
-    outputArchiveTimeout: 30
+    outputArchiveFormat: 'zip', // zip | tar
+    outputArchiveTimeout: 60 // seconds
 };
 ```
 

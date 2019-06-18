@@ -1,5 +1,5 @@
-import { FileAsset, RawAsset } from '../../src/base/@types/application';
-import { UserSettingsChrome } from './@types/application';
+import { FileAsset } from '../../src/base/@types/application';
+import { ChromeAsset, UserSettingsChrome } from './@types/application';
 
 import Resource from './resource';
 import View from './view';
@@ -15,35 +15,51 @@ const CACHE_PATTERN = {
     SRCSET_SPECIFIER: /\s+[0-9.][wx]$/
 };
 
-function parseUri(value: string): Optional<RawAsset> | undefined {
-    const origin = location.origin;
-    if (value.startsWith(origin)) {
-        return { pathname: value.substring(origin.length + 1, value.lastIndexOf('/')), filename: $util.fromLastIndexOf(value, '/') };
-    }
-    else {
-        const match = $regex.COMPONENT.PROTOCOL.exec(value);
-        if (match) {
-            const host = match[2];
-            const port = match[3];
-            const path = match[4];
-            return { pathname: $util.convertWord(host) + (port ? '/' + port.substring(1) : '') + path.substring(0, path.lastIndexOf('/')), filename: $util.fromLastIndexOf(path, '/') };
+function parseUri(value: string): ChromeAsset | undefined {
+    value = $util.trimEnd(value, '/');
+    const match = $regex.COMPONENT.PROTOCOL.exec(value);
+    let pathname = '';
+    let filename = '';
+    if (match) {
+        const host = match[2];
+        const port = match[3];
+        const path = match[4];
+        if (!value.startsWith($util.trimEnd(location.origin, '/'))) {
+            pathname = $util.convertWord(host) + (port ? '/' + port.substring(1) : '');
         }
+        if (path) {
+            const index = path.lastIndexOf('/');
+            if (index > 0) {
+                pathname += path.substring(0, index);
+                filename = $util.fromLastIndexOf(path, '/');
+            }
+        }
+    }
+    if (pathname !== '') {
+        const data: ChromeAsset = { pathname, filename };
+        if (filename.indexOf('.') !== -1) {
+            data.extension = $util.fromLastIndexOf(filename, '.').toLowerCase();
+            data.mimeType = File.getMimeType(data.extension);
+        }
+        return data;
     }
     return undefined;
 }
 
 export default class File<T extends View> extends squared.base.File<T> implements chrome.base.File<T> {
     public saveAllToDisk() {
-        this.saveToDisk(
-            <FileAsset[]> this.getImageAssets().concat(this.getFontAssets()).concat(this.getScriptAssets()).concat(this.getLinkAssets()).concat(this.getHtmlPage()),
-            this.userSettings.outputArchiveName
-        );
+        const files = this.getHtmlPage()
+            .concat(this.getScriptAssets())
+            .concat(this.getLinkAssets())
+            .concat(this.getImageAssets())
+            .concat(this.getFontAssets());
+        this.saveToDisk(<FileAsset[]> files, this.userSettings.outputArchiveName);
     }
 
     public getHtmlPage(name?: string) {
-        const result: Optional<RawAsset>[] = [];
+        const result: ChromeAsset[] = [];
         const href = location.href;
-        const data = <RawAsset> parseUri(href);
+        const data = parseUri(href);
         if (data) {
             if (name) {
                 data.filename = name;
@@ -53,22 +69,26 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 data.filename = 'index.html';
             }
             data.uri = href;
-            this.checkBrotliCompatibility(data);
+            data.mimeType = File.getMimeType('html');
+            this.checkCompressionCompatibility(data);
             result.push(data);
         }
         return result;
     }
 
     public getScriptAssets() {
-        const result: Optional<RawAsset>[] = [];
-        document.querySelectorAll('script').forEach(item => {
-            const src = item.src;
-            if (src) {
+        const result: ChromeAsset[] = [];
+        document.querySelectorAll('script').forEach(element => {
+            const src = element.src.trim();
+            if (src !== '') {
                 const uri = $util.resolvePath(src);
-                const data = <RawAsset> parseUri(uri);
+                const data = parseUri(uri);
                 if (data) {
                     data.uri = uri;
-                    this.checkBrotliCompatibility(data);
+                    if (element.type) {
+                        data.mimeType = element.type;
+                    }
+                    this.checkCompressionCompatibility(data);
                     result.push(data);
                 }
             }
@@ -77,15 +97,15 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public getLinkAssets(rel?: string) {
-        const result: Optional<RawAsset>[] = [];
-        document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((item: HTMLLinkElement) => {
-            const href = item.href;
-            if (href) {
+        const result: ChromeAsset[] = [];
+        document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((element: HTMLLinkElement) => {
+            const href = element.href.trim();
+            if (href !== '') {
                 const uri = $util.resolvePath(href);
-                const data = <RawAsset> parseUri(uri);
+                const data = parseUri(uri);
                 if (data) {
                     data.uri = uri;
-                    this.checkBrotliCompatibility(data);
+                    this.checkCompressionCompatibility(data);
                     result.push(data);
                 }
             }
@@ -94,41 +114,39 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public getImageAssets() {
-        const result: Optional<RawAsset>[] = [];
+        const result: ChromeAsset[] = [];
         for (const uri of ASSETS.images.keys()) {
-            const data = <RawAsset> parseUri(uri);
+            const data = parseUri(uri);
             if (data) {
                 data.uri = uri;
-                this.checkBrotliCompatibility(data);
+                this.checkCompressionCompatibility(data);
                 result.push(data);
             }
         }
         for (const [uri, rawData] of ASSETS.rawData) {
             const filename = rawData.filename;
-            let data: Optional<RawAsset> | undefined;
             if (filename) {
-                const { pathname, base64, content } = rawData;
+                const { pathname, base64, content, mimeType } = rawData;
+                let data: ChromeAsset | undefined;
                 if (pathname) {
                     data = { pathname, filename, uri };
                 }
                 else if (base64) {
                     data = { pathname: 'base64', filename, base64 };
                 }
-                else if (content) {
-                    const mimeType = rawData.mimeType;
-                    if (mimeType) {
-                        data = { pathname: mimeType, filename, content };
-                    }
+                else if (content && mimeType) {
+                    data = { pathname: mimeType, filename, content };
                 }
                 if (data) {
-                    this.checkBrotliCompatibility(<RawAsset> data);
+                    data.mimeType = rawData.mimeType;
+                    this.checkCompressionCompatibility(data);
                     result.push(data);
                 }
             }
         }
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
-            let srcset = element.srcset;
             const images: string[] = [];
+            let srcset = element.srcset.trim();
             let match: RegExpExecArray | null;
             while ((match = CACHE_PATTERN.SRCSET.exec(srcset)) !== null) {
                 images.push($util.resolvePath(match[1]));
@@ -152,14 +170,15 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public getFontAssets() {
-        const result: Optional<RawAsset>[] = [];
+        const result: ChromeAsset[] = [];
         for (const fonts of ASSETS.fonts.values()) {
             for (const font of fonts) {
-                if (font.srcUrl) {
-                    const data = <RawAsset> parseUri(font.srcUrl);
+                const url = font.srcUrl;
+                if (url) {
+                    const data = parseUri(url);
                     if (data) {
-                        data.uri = font.srcUrl;
-                        this.checkBrotliCompatibility(data);
+                        data.uri = url;
+                        this.checkCompressionCompatibility(data);
                         result.push(data);
                     }
                 }
@@ -168,11 +187,17 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return result;
     }
 
-    private checkBrotliCompatibility(data: RawAsset) {
-        const { brotliCompressionQuality, brotliCompatibleExtensions } = this.userSettings;
-        if (brotliCompressionQuality) {
-            if (brotliCompatibleExtensions.includes($util.fromLastIndexOf(data.filename, '.').toLowerCase())) {
-                data.brotliQuality = brotliCompressionQuality;
+    private checkCompressionCompatibility(data: ChromeAsset) {
+        if (data.extension) {
+            const settings = this.userSettings;
+            if (settings.compressFileExtensions.includes(data.extension)) {
+                const { gzipCompressionQuality, brotliCompressionQuality } = settings;
+                if (gzipCompressionQuality > 0) {
+                    data.gzipQuality = gzipCompressionQuality;
+                }
+                if (brotliCompressionQuality > 0) {
+                    data.brotliQuality = brotliCompressionQuality;
+                }
             }
         }
     }

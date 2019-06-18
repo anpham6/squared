@@ -114,9 +114,9 @@ const appBase: ChromeFramework<View> = {
                 file.saveToDisk(<FileAsset[]> file.getScriptAssets(), `${userSettings.outputArchiveName}-script`);
             }
         },
-        saveLinkAssets() {
+        saveLinkAssets(rel?: string) {
             if (file) {
-                file.saveToDisk(<FileAsset[]> file.getLinkAssets(), `${userSettings.outputArchiveName}-link`);
+                file.saveToDisk(<FileAsset[]> file.getLinkAssets(rel), `${userSettings.outputArchiveName}-link`);
             }
         },
         saveImageAssets() {

@@ -275,6 +275,7 @@ declare namespace base {
     }
 
     class File<T extends Node> implements File<T> {
+        public static getMimeType(value: string): string;
         public static downloadToDisk(data: Blob, filename: string, mime?: string): void;
     }
 
