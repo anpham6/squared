@@ -90,14 +90,14 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
                 else {
-                    mainData.ordinal = $css.convertListStyle(value, i);
-                    if (mainData.ordinal === '') {
+                    let ordinal = $css.convertListStyle(value, i);
+                    if (ordinal === '') {
                         switch (value) {
                             case 'disc':
-                                mainData.ordinal = '●';
+                                ordinal = '●';
                                 break;
                             case 'square':
-                                mainData.ordinal = '■';
+                                ordinal = '■';
                                 break;
                             case 'none':
                                 let src = '';
@@ -113,13 +113,14 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                                 break;
                             default:
-                                mainData.ordinal = '○';
+                                ordinal = '○';
                                 break;
                         }
                     }
                     else {
-                        mainData.ordinal += '.';
+                        ordinal += '.';
                     }
+                    mainData.ordinal = ordinal;
                 }
                 i++;
             }

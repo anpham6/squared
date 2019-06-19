@@ -36,17 +36,32 @@ function parseUri(value: string): ChromeAsset | undefined {
         }
     }
     if (pathname !== '') {
-        const data: ChromeAsset = { pathname, filename };
-        if (filename.indexOf('.') !== -1) {
-            data.extension = $util.fromLastIndexOf(filename, '.').toLowerCase();
-            data.mimeType = File.getMimeType(data.extension);
-        }
-        return data;
+        const extension = filename.indexOf('.') !== -1 ? $util.fromLastIndexOf(filename, '.').toLowerCase() : undefined;
+        return {
+            pathname,
+            filename,
+            extension,
+            mimeType: extension && File.getMimeType(extension)
+        };
     }
     return undefined;
 }
 
+function convertFileMatch(value: string) {
+    value = value.trim()
+        .replace(/([.|/\\{}()?])/g, (match, ...capture) => '\\' + capture[0])
+        .replace(/\*/g, '.*?');
+    return new RegExp(`${value}$`);
+}
+
 export default class File<T extends View> extends squared.base.File<T> implements chrome.base.File<T> {
+    private _outputFileExclusions?: RegExp[];
+
+    public reset() {
+        super.reset();
+        this._outputFileExclusions = undefined;
+    }
+
     public saveAllToDisk() {
         const files = this.getHtmlPage()
             .concat(this.getScriptAssets())
@@ -68,10 +83,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 data.pathname += '/' + data.filename;
                 data.filename = 'index.html';
             }
-            data.uri = href;
-            data.mimeType = File.getMimeType('html');
-            this.checkCompressionCompatibility(data);
-            result.push(data);
+            if (this.validFile(data)) {
+                data.uri = href;
+                data.mimeType = File.getMimeType('html');
+                this.checkCompressionCompatibility(data);
+                result.push(data);
+            }
         }
         return result;
     }
@@ -83,7 +100,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             if (src !== '') {
                 const uri = $util.resolvePath(src);
                 const data = parseUri(uri);
-                if (data) {
+                if (this.validFile(data)) {
                     data.uri = uri;
                     if (element.type) {
                         data.mimeType = element.type;
@@ -103,7 +120,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             if (href !== '') {
                 const uri = $util.resolvePath(href);
                 const data = parseUri(uri);
-                if (data) {
+                if (this.validFile(data)) {
                     data.uri = uri;
                     this.checkCompressionCompatibility(data);
                     result.push(data);
@@ -117,7 +134,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: ChromeAsset[] = [];
         for (const uri of ASSETS.images.keys()) {
             const data = parseUri(uri);
-            if (data) {
+            if (this.validFile(data)) {
                 data.uri = uri;
                 this.checkCompressionCompatibility(data);
                 result.push(data);
@@ -137,7 +154,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 else if (content && mimeType) {
                     data = { pathname: mimeType, filename, content };
                 }
-                if (data) {
+                if (this.validFile(data)) {
                     data.mimeType = rawData.mimeType;
                     this.checkCompressionCompatibility(data);
                     result.push(data);
@@ -159,7 +176,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             for (const src of images) {
                 if ($regex.COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
                     const data = parseUri(src);
-                    if (data) {
+                    if (this.validFile(data)) {
                         data.uri = src;
                         result.push(data);
                     }
@@ -176,7 +193,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 const url = font.srcUrl;
                 if (url) {
                     const data = parseUri(url);
-                    if (data) {
+                    if (this.validFile(data)) {
                         data.uri = url;
                         this.checkCompressionCompatibility(data);
                         result.push(data);
@@ -185,6 +202,14 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
         }
         return result;
+    }
+
+    private validFile(data: ChromeAsset | undefined): data is ChromeAsset {
+        if (data) {
+            const fullpath = data.pathname + '/' + data.filename;
+            return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
+        }
+        return false;
     }
 
     private checkCompressionCompatibility(data: ChromeAsset) {
@@ -200,6 +225,17 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
         }
+    }
+
+    get outputFileExclusions() {
+        if (this._outputFileExclusions === undefined) {
+            const exclusions: RegExp[] = [];
+            for (const value of this.userSettings.outputFileExclusions) {
+                exclusions.push(convertFileMatch(value));
+            }
+            this._outputFileExclusions = exclusions;
+        }
+        return this._outputFileExclusions;
     }
 
     get userSettings() {

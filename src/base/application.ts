@@ -64,9 +64,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         ExtensionManagerConstructor: Constructor<T>)
     {
         NodeConstructor = nodeConstructor;
-        this.controllerHandler = <Controller<T>> (new ControllerConstructor(this, this.processing.cache) as unknown);
-        this.resourceHandler = <Resource<T>> (new ResourceConstructor(this, this.processing.cache) as unknown);
-        this.extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, this.processing.cache) as unknown);
+        const cache = this.processing.cache;
+        this.controllerHandler = <Controller<T>> (new ControllerConstructor(this, cache) as unknown);
+        this.resourceHandler = <Resource<T>> (new ResourceConstructor(this, cache) as unknown);
+        this.extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, cache) as unknown);
     }
 
     public abstract afterCreateCache(element: HTMLElement): void;
@@ -95,6 +96,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public parseDocument(...elements: any[]): squared.PromiseResult {
         const controller = this.controllerHandler;
+        const resource = this.resourceHandler;
         let __THEN: Undefined<() => void>;
         this.rootElements.clear();
         this.initializing = false;
@@ -121,15 +123,15 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         const documentRoot = this.rootElements.values().next().value;
-        const preloadImages: HTMLImageElement[] = [];
+        const preloaded: HTMLImageElement[] = [];
         const resume = () => {
             this.initializing = false;
-            for (const image of preloadImages) {
+            for (const image of preloaded) {
                 if (image.parentElement) {
                     documentRoot.removeChild(image);
                 }
             }
-            preloadImages.length = 0;
+            preloaded.length = 0;
             for (const ext of this.extensions) {
                 ext.beforeParseDocument();
             }
@@ -148,8 +150,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 __THEN.call(this);
             }
         };
+        const preloadImages = this.userSettings.preloadImages;
         const images: PreloadImage[] = [];
-        if (this.userSettings.preloadImages) {
+        if (preloadImages) {
             for (const element of this.rootElements) {
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
                     const uri = image.src;
@@ -178,7 +181,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                         else {
                             documentRoot.appendChild(element);
-                            preloadImages.push(element);
+                            preloaded.push(element);
                         }
                     }
                 }
@@ -195,7 +198,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 else {
                     document.body.appendChild(element);
-                    preloadImages.push(element);
+                    preloaded.push(element);
                 }
             }
         }
@@ -203,14 +206,14 @@ export default abstract class Application<T extends Node> implements squared.bas
             element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
                 if (image.tagName === 'IMG') {
                     if (image.src.toLowerCase().endsWith('.svg')) {
-                        if (this.userSettings.preloadImages) {
+                        if (preloadImages) {
                             images.push(image.src);
                         }
                     }
                     else if (image.complete) {
-                        this.resourceHandler.addImage(image);
+                        resource.addImage(image);
                     }
-                    else if (this.userSettings.preloadImages) {
+                    else if (preloadImages) {
                         images.push(image);
                     }
                 }
@@ -235,11 +238,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const value = result[i];
                     if (typeof value === 'string') {
                         if (typeof images[i] === 'string') {
-                            this.resourceHandler.addRawData(images[i] as string, 'image/svg+xml', 'utf8', value);
+                            resource.addRawData(images[i] as string, 'image/svg+xml', 'utf8', value);
                         }
                     }
                     else {
-                        this.resourceHandler.addImage(value);
+                        resource.addImage(value);
                     }
                 }
                 resume();
@@ -270,14 +273,13 @@ export default abstract class Application<T extends Node> implements squared.bas
     public createCache(documentRoot: HTMLElement) {
         const node = this.createRootNode(documentRoot);
         if (node) {
-            const controller = this.controllerHandler;
             const CACHE = <NodeList<T>> this.processing.cache;
             (node.parent as T).setBounds();
             for (const item of CACHE) {
                 item.setBounds();
                 item.saveAsInitial();
             }
-            controller.sortInitialCache(CACHE);
+            this.controllerHandler.sortInitialCache(CACHE);
             for (const ext of this.extensions) {
                 ext.afterInit(documentRoot);
             }
@@ -338,12 +340,13 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected cascadeParentNode(parentElement: HTMLElement, depth = 0) {
         const node = this.insertNode(parentElement);
         if (node) {
-            const CACHE = this.processing.cache;
+            const controller = this.controllerHandler;
+            const processing = this.processing;
+            const CACHE = processing.cache;
             node.depth = depth;
             if (depth === 0) {
                 CACHE.append(node);
             }
-            const controller = this.controllerHandler;
             if (controller.preventNodeCascade(parentElement)) {
                 return node;
             }
@@ -378,7 +381,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 else {
                     child = this.insertNode(element);
                     if (child) {
-                        this.processing.excluded.append(child);
+                        processing.excluded.append(child);
                         inlineText = false;
                     }
                 }
@@ -472,6 +475,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     protected applyStyleRule(item: CSSStyleRule) {
+        const resource = this.resourceHandler;
         const sessionId = this.processing.sessionId;
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
@@ -503,11 +507,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 let match: RegExpExecArray | null;
                                 while ((match = CACHE_PATTERN.DATAURI.exec(image)) !== null) {
                                     if (match[2] && match[3]) {
-                                        this.resourceHandler.addRawData(match[1], match[2], match[3], match[4]);
+                                        resource.addRawData(match[1], match[2], match[3], match[4]);
                                     }
                                     else if (this.userSettings.preloadImages) {
                                         const uri = $util.resolvePath(match[4]);
-                                        if (uri !== '' && this.resourceHandler.getImage(uri) === undefined) {
+                                        if (uri !== '' && resource.getImage(uri) === undefined) {
                                             ASSETS.images.set(uri, { width: 0, height: 0, uri });
                                         }
                                     }
@@ -570,7 +574,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 else {
                                     srcLocal = urlMatch[2].trim();
                                 }
-                                this.resourceHandler.addFont({
+                                resource.addFont({
                                     fontFamily,
                                     fontWeight,
                                     fontStyle,

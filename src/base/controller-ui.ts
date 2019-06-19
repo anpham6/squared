@@ -72,6 +72,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public applyDefaultStyles(element: Element) {
+        const sessionId = this.application.processing.sessionId;
         let styleMap: StringMap;
         if ($dom.isPlainText(element)) {
             styleMap = {
@@ -83,7 +84,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             };
         }
         else {
-            styleMap = $session.getElementCache(element, 'styleMap', this.application.processing.sessionId) || {};
+            styleMap = $session.getElementCache(element, 'styleMap', sessionId) || {};
             function checkBorderAttribute(index: number) {
                 for (let i = 0; i < 4; i++) {
                     if (styleMap[$css.BOX_BORDER[i][index]]) {
@@ -93,17 +94,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 return true;
             }
             const setBorderStyle = () => {
-                if (styleMap.border === undefined) {
-                    if (checkBorderAttribute(0)) {
-                        const inputBorderColor = this.localSettings.style.inputBorderColor;
-                        styleMap.border = `outset 1px ${inputBorderColor}`;
-                        for (let i = 0; i < 4; i++) {
-                            styleMap[$css.BOX_BORDER[i][0]] = 'outset';
-                            styleMap[$css.BOX_BORDER[i][1]] = '1px';
-                            styleMap[$css.BOX_BORDER[i][2]] = inputBorderColor;
-                        }
-                        return true;
+                if (styleMap.border === undefined && checkBorderAttribute(0)) {
+                    const inputBorderColor = this.localSettings.style.inputBorderColor;
+                    styleMap.border = `outset 1px ${inputBorderColor}`;
+                    for (let i = 0; i < 4; i++) {
+                        styleMap[$css.BOX_BORDER[i][0]] = 'outset';
+                        styleMap[$css.BOX_BORDER[i][1]] = '1px';
+                        styleMap[$css.BOX_BORDER[i][2]] = inputBorderColor;
                     }
+                    return true;
                 }
                 return false;
             };
@@ -232,7 +231,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
             }
         }
-        $session.setElementCache(element, 'styleMap', this.application.processing.sessionId, styleMap);
+        $session.setElementCache(element, 'styleMap', sessionId, styleMap);
     }
 
     public addBeforeOutsideTemplate(id: number, value: string, format = true, index = -1) {

@@ -9,15 +9,16 @@ const {
 export default abstract class External<T extends NodeUI> extends ExtensionUI<T> {
     public beforeInit(element: HTMLElement, internal = false) {
         if (internal || this.included(element)) {
-            if (!$session.getElementCache(element, 'squaredExternalDisplay', this.application.processing.sessionId)) {
+            const sessionId = this.application.processing.sessionId;
+            if (!$session.getElementCache(element, 'squaredExternalDisplay', sessionId)) {
                 const display: string[] = [];
-                let current: HTMLElement | null = <HTMLElement> element;
+                let current: HTMLElement | null = element;
                 while (current) {
                     display.push($css.getStyle(current).getPropertyValue('display'));
                     current.style.setProperty('display', 'block');
                     current = current.parentElement;
                 }
-                $session.setElementCache(element, 'squaredExternalDisplay', this.application.processing.sessionId, display);
+                $session.setElementCache(element, 'squaredExternalDisplay', sessionId, display);
             }
         }
     }
@@ -31,16 +32,16 @@ export default abstract class External<T extends NodeUI> extends ExtensionUI<T> 
 
     public afterInit(element: HTMLElement, internal = false) {
         if (internal || this.included(element)) {
-            const display: string[] = $session.getElementCache(element, 'squaredExternalDisplay', this.application.processing.sessionId);
+            const sessionId = this.application.processing.sessionId;
+            const display: string[] = $session.getElementCache(element, 'squaredExternalDisplay', sessionId);
             if (Array.isArray(display)) {
-                let current: HTMLElement | null = element;
                 let i = 0;
+                let current: HTMLElement | null = element;
                 while (current) {
-                    current.style.setProperty('display', display[i]);
+                    current.style.setProperty('display', display[i++]);
                     current = current.parentElement;
-                    i++;
                 }
-                $session.deleteElementCache(element, 'squaredExternalDisplay', this.application.processing.sessionId);
+                $session.deleteElementCache(element, 'squaredExternalDisplay', sessionId);
             }
         }
     }

@@ -44,10 +44,11 @@ function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
         }
     }
     const result: string[] = [];
-    const lengthB = data.length - unitPX.length;
-    for (let i = 0; i < data.length; i++) {
+    const lengthB = data.length;
+    const lengthC = lengthB - unitPX.length;
+    for (let i = 0; i < lengthB; i++) {
         if (data.repeat[i]) {
-            for (let j = 0, k = 0; j < lengthB; i++, j++, k++) {
+            for (let j = 0, k = 0; j < lengthC; i++, j++, k++) {
                 if (k === unitRepeat.length) {
                     k = 0;
                 }

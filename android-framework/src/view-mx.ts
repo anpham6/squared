@@ -208,7 +208,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _boxReset?: BoxModel;
 
         private _containerType = 0;
-
         private __android: StringMap = {};
         private __app: StringMap = {};
 
@@ -219,9 +218,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             afterInit?: BindGeneric<T, void>)
         {
             super(id, sessionId, element);
-            if (element) {
-                this.init();
-            }
+            this.init();
             if (afterInit) {
                 afterInit(this);
             }

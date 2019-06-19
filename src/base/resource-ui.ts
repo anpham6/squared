@@ -640,7 +640,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     boxStyle.backgroundImage = images;
                 }
             }
-            const backgroundColor = (node.documentParent as T).visible ? node.backgroundColor : node.css('backgroundColor');
+            const backgroundColor = node.documentParent.visible ? node.backgroundColor : node.css('backgroundColor');
             if (backgroundColor !== '') {
                 const color = $color.parseColor(backgroundColor, opacity);
                 boxStyle.backgroundColor = color ? color.valueAsRGBA : '';

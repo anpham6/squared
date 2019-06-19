@@ -18,10 +18,11 @@ export default abstract class ExtensionManager<T extends Node> implements square
             return true;
         }
         else {
-            if ((ext.framework === 0 || $util.hasBit(ext.framework, this.application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
-                ext.application = this.application;
-                if (!this.application.extensions.includes(ext)) {
-                    this.application.extensions.push(ext);
+            const application = this.application;
+            if ((ext.framework === 0 || $util.hasBit(ext.framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
+                ext.application = application;
+                if (!application.extensions.includes(ext)) {
+                    application.extensions.push(ext);
                 }
                 return true;
             }

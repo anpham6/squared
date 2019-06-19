@@ -14,6 +14,7 @@ interface UserSettingsChrome extends UserSettings {
     gzipCompressionQuality: number;
     brotliCompressionQuality: number;
     compressFileExtensions: string[];
+    outputFileExclusions: string[];
 }
 
 interface ChromeAsset extends Omit<RawAsset, keyof Dimension | 'content'> {

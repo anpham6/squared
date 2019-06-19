@@ -37,7 +37,7 @@ declare namespace base {
     interface View extends squared.base.Node {}
 
     class View implements View {
-        constructor(id: number, sessionId: string, element: Element);
+        constructor(id: number, sessionId: string, element: Element, afterInit?: BindGeneric<View, void>);
     }
 }
 

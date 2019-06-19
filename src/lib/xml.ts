@@ -236,7 +236,8 @@ export function replaceCharacterData(value: string) {
     const char = new Array(length);
     let valid = false;
     for (let i = 0; i < length; i++) {
-        switch (value[i]) {
+        const ch = value.charAt(i);
+        switch (ch) {
             case "'":
                 char[i] = "\\'";
                 valid = true;
@@ -261,36 +262,8 @@ export function replaceCharacterData(value: string) {
                 char[i] = '&#160;';
                 valid = true;
                 break;
-            case '\u2002':
-                char[i] = '&#8194;';
-                valid = true;
-                break;
-            case '\u2003':
-                char[i] = '&#8195;';
-                valid = true;
-                break;
-            case '\u2009':
-                char[i] = '&#8201;';
-                valid = true;
-                break;
-            case '\u200C':
-                char[i] = '&#8204;';
-                valid = true;
-                break;
-            case '\u200D':
-                char[i] = '&#8205;';
-                valid = true;
-                break;
-            case '\u200E':
-                char[i] = '&#8206;';
-                valid = true;
-                break;
-            case '\u200F':
-                char[i] = '&#8207;';
-                valid = true;
-                break;
             default:
-                char[i] = value[i];
+                char[i] = ch;
                 break;
         }
     }

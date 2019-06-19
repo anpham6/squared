@@ -72,8 +72,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     }
 
     public addRawData(dataURI: string, mimeType: string, encoding: string, content: string, width = 0, height = 0) {
+        mimeType = mimeType.toLowerCase();
         encoding = encoding.toLowerCase();
-        const settings = this.application.controllerHandler.localSettings;
+        const imageFormat = this.application.controllerHandler.localSettings.supported.imageFormat;
         let base64: string | undefined;
         if (encoding === 'base64') {
             base64 = content;
@@ -82,17 +83,17 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             }
         }
         else {
-            content = content.replace(/\\"/g, '"');
+            content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
         }
         const getFileName = () => $util.buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
         const pathname = dataURI.startsWith(location.origin) ? dataURI.substring(location.origin.length + 1, dataURI.lastIndexOf('/')) : '';
         let filename: string | undefined;
-        if (settings.supported.imageFormat === '*') {
+        if (imageFormat === '*') {
             if (dataURI.startsWith(location.origin)) {
                 filename = $util.fromLastIndexOf(dataURI, '/');
             }
             else {
-                let extension = mimeType.split('/').pop() as string;
+                let extension = mimeType.split('/').pop();
                 if (extension === 'svg+xml') {
                     extension = 'svg';
                 }
@@ -100,13 +101,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             }
         }
         else {
-            for (const format of settings.supported.imageFormat) {
-                if (mimeType.indexOf(format) !== -1) {
-                    if (dataURI.endsWith(`.${format}`)) {
+            for (const extension of imageFormat) {
+                if (mimeType.indexOf(extension) !== -1) {
+                    if (dataURI.endsWith(`.${extension}`)) {
                         filename = $util.fromLastIndexOf(dataURI, '/');
                     }
                     else {
-                        filename = getFileName() + '.' + format;
+                        filename = getFileName() + '.' + extension;
                     }
                     break;
                 }

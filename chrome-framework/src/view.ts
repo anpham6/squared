@@ -15,9 +15,7 @@ export default class View extends squared.base.Node implements chrome.base.View 
         afterInit?: BindGeneric<T, void>)
     {
         super(id, sessionId, element);
-        if (element) {
-            this.init();
-        }
+        this.init();
         if (afterInit) {
             afterInit(this);
         }

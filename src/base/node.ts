@@ -2101,7 +2101,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     this._cached.backgroundColor = '';
                     break;
                 default:
-                    if (value !== '' && this.pageFlow && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === value)) {
+                    if (value !== '' && this.pageFlow && !this.plainText && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === value)) {
                         let current = this.actualParent;
                         while (current && current.id !== 0) {
                             const color = current.cssInitial('backgroundColor', true);

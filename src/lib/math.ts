@@ -40,11 +40,8 @@ export function truncate(value: number | string, precision = 3) {
     if (value === Math.floor(value)) {
         return value.toString();
     }
-    else if (value >= 0 && value <= 1 / Math.pow(10, precision)) {
+    else if ((value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
          return '0';
-    }
-    else if (value < 0 && value >= -1 / Math.pow(10, precision)) {
-        return '0';
     }
     else {
         const absolute = Math.abs(value);
@@ -79,10 +76,7 @@ export function truncateFraction(value: number) {
 
 export function truncateTrailingZero(value: string) {
     const match = CHAR.TRAILINGZERO.exec(value);
-    if (match) {
-        return value.substring(0, value.length - match[match[1] !== '' ? 2 : 0].length);
-    }
-    return value;
+    return match ? value.substring(0, value.length - match[match[1] ? 2 : 0].length) : value;
 }
 
 export function truncateString(value: string, precision = 3) {
@@ -92,8 +86,8 @@ export function truncateString(value: string, precision = 3) {
     else {
         REGEXP_TRUNCATECACHE[precision].lastIndex = 0;
     }
-    let match: RegExpExecArray | null;
     let output = value;
+    let match: RegExpExecArray | null;
     while ((match = REGEXP_TRUNCATECACHE[precision].exec(value)) !== null) {
         if (parseInt(match[2]) >= 5) {
             match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
