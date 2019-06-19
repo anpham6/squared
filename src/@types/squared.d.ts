@@ -727,9 +727,10 @@ declare namespace lib {
         function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
-        function getNamedItem(element: Element | null, attr: string): string;
+        function getNamedItem(element: Element, attr: string): string;
         function createElement(parent: HTMLElement, tagName: string, attrs: StringMap): HTMLElement;
         function measureTextWidth(value: string, fontFamily: string, fontSize: number): number;
+        function isPlainText(element: Element): boolean;
     }
 
     namespace math {

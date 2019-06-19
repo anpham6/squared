@@ -11,8 +11,8 @@ declare namespace base {
     interface Controller<T extends View> extends squared.base.Controller<T> {
         readonly elementMap: Map<Element, T>;
         readonly userSettings: UserSettingsChrome;
-        addElement(node: T): void;
-        addElementList(list: squared.base.NodeList<T>): void;
+        cacheElement(node: T): void;
+        cacheElementList(list: squared.base.NodeList<T>): void;
     }
 
     class Controller<T extends View> implements Controller<T> {}
@@ -24,6 +24,7 @@ declare namespace base {
     class Resource<T extends View> implements Resource<T> {}
 
     interface File<T extends View> extends squared.base.File<T> {
+        readonly userSettings: UserSettingsChrome;
         getHtmlPage(name?: string): ChromeAsset[];
         getScriptAssets(): ChromeAsset[];
         getLinkAssets(): ChromeAsset[];

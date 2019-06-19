@@ -10,6 +10,7 @@ const {
     client: $client,
     constant: $const,
     css: $css,
+    dom: $dom,
     session: $session,
     util: $util,
     xml: $xml
@@ -72,7 +73,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public applyDefaultStyles(element: Element) {
         let styleMap: StringMap;
-        if (element.nodeName === '#text') {
+        if ($dom.isPlainText(element)) {
             styleMap = {
                 position: 'static',
                 display: 'inline',

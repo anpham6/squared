@@ -3,13 +3,15 @@ import { UserSettingsChrome } from './@types/application';
 import Resource from './resource';
 import View from './view';
 
+const $dom = squared.lib.dom;
+
 const ASSETS = Resource.ASSETS;
 
 export default class Application<T extends View> extends squared.base.Application<T> {
     public userSettings!: UserSettingsChrome;
 
     public insertNode(element: Element, parent?: T) {
-        if (element.nodeName === '#text') {
+        if ($dom.isPlainText(element)) {
             if (this.userSettings.excludePlainText) {
                 return undefined;
             }
@@ -24,7 +26,7 @@ export default class Application<T extends View> extends squared.base.Applicatio
 
     public afterCreateCache() {
         if (this.processing.node) {
-            (<chrome.base.Controller<T>> this.controllerHandler).addElementList(this.processing.cache);
+            (<chrome.base.Controller<T>> this.controllerHandler).cacheElementList(this.processing.cache);
         }
     }
 

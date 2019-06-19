@@ -11,6 +11,7 @@ type PreloadImage = HTMLImageElement | string;
 
 const {
     css: $css,
+    dom: $dom,
     regex: $regex,
     session: $session,
     util: $util
@@ -358,7 +359,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const element = <HTMLElement> childNodes[i];
                 let child: T | undefined;
                 if (element.nodeName.charAt(0) === '#') {
-                    if (element.nodeName === '#text') {
+                    if ($dom.isPlainText(element)) {
                         child = this.insertNode(element, node);
                     }
                 }

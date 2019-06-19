@@ -151,12 +151,14 @@ export function measureTextWidth(value: string, fontFamily: string, fontSize: nu
     return 0;
 }
 
-export function getNamedItem(element: Element | null, attr: string) {
-    if (element) {
-        const item = element.attributes.getNamedItem(attr);
-        if (item) {
-            return item.value.trim();
-        }
+export function getNamedItem(element: Element, attr: string) {
+    const item = element.attributes.getNamedItem(attr);
+    if (item) {
+        return item.value.trim();
     }
     return '';
+}
+
+export function isPlainText(element: Element) {
+    return element.nodeName === '#text';
 }

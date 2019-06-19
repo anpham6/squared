@@ -311,7 +311,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     set delay(value) {
         super.delay = value;
-        const end = $dom.getNamedItem(this.animationElement, $const.CSS.END);
+        const animationElement = this.animationElement;
+        const end = animationElement && $dom.getNamedItem(animationElement, $const.CSS.END);
         if (end) {
             const endTime = $util.sortNumber($util.replaceMap<string, number>(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0];
             if (!isNaN(endTime) && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
@@ -343,8 +344,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set iterationCount(value) {
+        const animationElement = this.animationElement;
         this._iterationCount = isNaN(value) ? 1 : value;
-        this.fillFreeze = this.iterationCount !== -1 && $dom.getNamedItem(this.animationElement, 'fill') === 'freeze';
+        this.fillFreeze = this.iterationCount !== -1 && !!animationElement && $dom.getNamedItem(animationElement, 'fill') === 'freeze';
         if (this.iterationCount !== 1) {
             this.setAttribute('accumulate', 'sum');
         }

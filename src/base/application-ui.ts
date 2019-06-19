@@ -201,7 +201,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public insertNode(element: Element, parent?: T) {
-        if (element.nodeName === '#text') {
+        if ($dom.isPlainText(element)) {
             if ($xml.isPlainText(element.textContent as string) || $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode(element, false);
@@ -480,7 +480,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 else if (element.nodeName.charAt(0) === '#') {
-                    if (element.nodeName === '#text') {
+                    if ($dom.isPlainText(element)) {
                         child = this.insertNode(element, node);
                     }
                 }

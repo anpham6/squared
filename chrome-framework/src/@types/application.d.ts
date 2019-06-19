@@ -16,7 +16,7 @@ interface UserSettingsChrome extends UserSettings {
     compressFileExtensions: string[];
 }
 
-interface ChromeAsset extends Omit<RawAsset, 'width' | 'height' | 'content'> {
+interface ChromeAsset extends Omit<RawAsset, keyof Dimension | 'content'> {
     content?: string;
     extension?: string;
     gzipQuality?: number;

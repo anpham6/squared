@@ -560,7 +560,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (this.controlId === '') {
                 let name: string | undefined;
                 if (this.styleElement) {
-                    name = validateString(this.elementId || $dom.getNamedItem(this.element, 'name'));
+                    name = validateString(this.elementId || $dom.getNamedItem(<HTMLElement> this.element, 'name'));
                     if (name === STRING_ANDROID.PARENT || RESERVED_JAVA.includes(name)) {
                         name = `_${name}`;
                     }

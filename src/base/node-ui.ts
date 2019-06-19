@@ -990,7 +990,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const element = <HTMLInputElement> this.element;
             let value = '';
             if (element) {
-                if (element.nodeName === '#text') {
+                if ($dom.isPlainText(element)) {
                     value = 'PLAINTEXT';
                 }
                 else if (element.tagName === 'INPUT') {

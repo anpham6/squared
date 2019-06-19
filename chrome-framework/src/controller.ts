@@ -5,6 +5,7 @@ import View from './view';
 
 const {
     constant: $const,
+    dom: $dom,
     session: $session
 } = squared.lib;
 
@@ -35,7 +36,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public applyDefaultStyles(element: Element) {
-        if (element.nodeName === '#text') {
+        if ($dom.isPlainText(element)) {
             $session.setElementCache(element, 'styleMap', this.application.processing.sessionId, {
                 position: 'static',
                 display: 'inline',
@@ -50,11 +51,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
         return true;
     }
 
-    public addElement(node: T) {
+    public cacheElement(node: T) {
         this._elementMap.set(<Element> node.element, node);
     }
 
-    public addElementList(list: squared.base.NodeList<T>) {
+    public cacheElementList(list: squared.base.NodeList<T>) {
         for (const node of list) {
             this._elementMap.set(<Element> node.element, node);
         }

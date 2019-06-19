@@ -31,7 +31,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         super(element, animationElement);
         if (animationElement) {
             this.setAttribute('path');
-            const rotate = $dom.getNamedItem(this.animationElement, 'rotate');
+            const rotate = $dom.getNamedItem(animationElement, 'rotate');
             switch (rotate) {
                 case 'auto':
                     break;

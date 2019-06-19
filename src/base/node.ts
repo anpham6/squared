@@ -1897,7 +1897,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     break;
                 case 'inline':
                     if (this.tagName === 'svg' && (this.actualParent as T).htmlElement) {
-                        this._cached.block = !this.hasPX($const.CSS.WIDTH) && $util.convertFloat($dom.getNamedItem(this._element, 'width')) === 0;
+                        this._cached.block = !this.hasPX($const.CSS.WIDTH) && $util.convertFloat($dom.getNamedItem(<SVGSVGElement> this._element, 'width')) === 0;
                         break;
                     }
                 default:
