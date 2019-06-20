@@ -34,7 +34,7 @@ async function getImageSvgAsync(value: string)  {
         method: 'GET',
         headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' })
     });
-    return await response.text();
+    return response.text();
 }
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {

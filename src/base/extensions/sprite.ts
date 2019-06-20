@@ -11,7 +11,8 @@ export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {
         let valid = false;
         if (node.hasWidth && node.hasHeight && node.length === 0 && node.backgroundImage !== '' && (this.included(<HTMLElement> node.element) || !node.dataset.use)) {
-            const image = <ImageAsset> (this.application.resourceHandler.getRawData(node.backgroundImage) || this.application.resourceHandler.getImage($css.resolveURL(node.backgroundImage)));
+            const resource = this.application.resourceHandler;
+            const image = <ImageAsset> (resource.getRawData(node.backgroundImage) || resource.getImage($css.resolveURL(node.backgroundImage)));
             if (image) {
                 const dimension = node.actualDimension;
                 const position = $css.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, node.fontSize);

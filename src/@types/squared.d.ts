@@ -117,9 +117,7 @@ declare namespace base {
         applyDefaultStyles(element: Element): void;
     }
 
-    class Controller<T extends Node> implements Controller<T> {
-        constructor(application: Application<T>, cache: NodeList<T>);
-    }
+    class Controller<T extends Node> implements Controller<T> {}
 
     interface ControllerUI<T extends NodeUI> extends Controller<T> {
         readonly userSettings: UserUISettings;
@@ -158,12 +156,12 @@ declare namespace base {
 
     class ControllerUI<T extends NodeUI> implements Controller<T> {
         public static causesLineBreak(element: Element, sessionId: string): boolean;
-        constructor(application: Application<T>, cache: NodeList<T>);
     }
 
     interface Resource<T extends Node> extends AppHandler<T> {
-        fileHandler?: File<T>;
+        application: Application<T>;
         cache: NodeList<T>;
+        fileHandler?: File<T>;
         readonly userSettings: UserSettings;
         reset(): void;
         addImage(element: HTMLImageElement | undefined): void;
@@ -177,7 +175,6 @@ declare namespace base {
 
     class Resource<T extends Node> implements Resource<T> {
         public static ASSETS: ResourceAssetMap;
-        constructor(application: Application<T>, cache: NodeList<T>);
     }
 
     interface ResourceUI<T extends NodeUI> extends Resource<T> {
@@ -199,7 +196,6 @@ declare namespace base {
         public static getBackgroundSize<T extends NodeUI>(node: T, value: string): Dimension | undefined;
         public static isInheritedStyle<T extends NodeUI>(node: T, attr: string): boolean;
         public static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
-        constructor(application: Application<T>, cache: NodeList<T>);
     }
 
     interface Extension<T extends Node> {
@@ -209,7 +205,6 @@ declare namespace base {
         readonly options: ExternalData;
         readonly dependencies: ExtensionDependency[];
         readonly subscribers: Set<T>;
-        readonly installed: boolean;
         require(name: string, preload?: boolean): void;
         beforeParseDocument(): void;
         afterParseDocument(): void;
@@ -401,6 +396,7 @@ declare namespace base {
         readonly flexbox: Flexbox;
         readonly zIndex: number;
         readonly positiveAxis: boolean;
+        readonly backgroundColor: string;
         readonly backgroundImage: string;
         readonly visibleStyle: VisibleStyle;
         readonly fontSize: number;

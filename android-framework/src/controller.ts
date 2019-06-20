@@ -1,5 +1,5 @@
 import { FileAsset, LayoutType, NodeTemplate, NodeXmlTemplate } from '../../src/base/@types/application';
-import { ControllerSettingsAndroid, UserSettingsAndroid } from './@types/application';
+import { ControllerSettingsAndroid } from './@types/application';
 import { LocalSettings, ViewAttribute } from './@types/node';
 
 import Resource from './resource';
@@ -450,6 +450,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             legendBottomOffset: 0.25
         }
     };
+
+    constructor(
+        public application: android.base.Application<T>,
+        public cache: squared.base.NodeList<T>)
+    {
+        super();
+    }
 
     public init() {
         const settings = this.userSettings;
@@ -2727,10 +2734,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return this.createNodeGroup(layout.node, layout.children, layout.parent);
     }
 
-    get userSettings() {
-        return <UserSettingsAndroid> this.application.userSettings;
-    }
-
     get containerTypeHorizontal(): LayoutType {
         return {
             containerType: CONTAINER_NODE.LINEAR,
@@ -2770,5 +2773,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             node.localSettings = DEFAULT_VIEWSETTINGS;
         };
+    }
+
+    get userSettings() {
+        return this.application.userSettings;
     }
 }

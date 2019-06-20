@@ -1,10 +1,10 @@
 import { ControllerUISettings, FileAsset, LayoutResult, LayoutType, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserUISettings } from './@types/application';
 
 import Controller from './controller';
-import LayoutUI from './layout-ui';
-import NodeUI from './node-ui';
 
 import { NODE_TEMPLATE } from './lib/enumeration';
+
+type NodeUI = squared.base.NodeUI;
 
 const {
     client: $client,
@@ -40,14 +40,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     private _afterInside: ObjectIndex<string[]> = {};
     private _afterOutside: ObjectIndex<string[]> = {};
 
-    public abstract processUnknownParent(layout: LayoutUI<T>): LayoutResult<T>;
-    public abstract processUnknownChild(layout: LayoutUI<T>): LayoutResult<T>;
-    public abstract processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): LayoutUI<T>;
-    public abstract processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): LayoutUI<T>;
-    public abstract processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
+    public abstract processUnknownParent(layout: squared.base.LayoutUI<T>): LayoutResult<T>;
+    public abstract processUnknownChild(layout: squared.base.LayoutUI<T>): LayoutResult<T>;
+    public abstract processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]): squared.base.LayoutUI<T>;
+    public abstract processTraverseVertical(layout: squared.base.LayoutUI<T>, siblings: T[]): squared.base.LayoutUI<T>;
+    public abstract processLayoutHorizontal(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
-    public abstract renderNode(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
-    public abstract renderNodeGroup(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
+    public abstract renderNode(layout: squared.base.LayoutUI<T>): NodeTemplate<T> | undefined;
+    public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): NodeTemplate<T> | undefined;
     public abstract renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
     public abstract setConstraints(): void;
     public abstract optimize(nodes: T[]): void;
@@ -322,16 +322,17 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public visibleElement(element: Element) {
-        if (element.className === '__squared.pseudo') {
-            return true;
-        }
         const rect = $session.getClientRect(element, this.application.processing.sessionId);
         if (withinViewport(rect)) {
             if (rect.width > 0 && rect.height > 0) {
                 return true;
             }
             const style = $css.getStyle(element);
-            return element.tagName === 'IMG' && style.getPropertyValue('display') !== $const.CSS.NONE || rect.width > 0 && style.getPropertyValue('float') !== $const.CSS.NONE || style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) || style.getPropertyValue('clear') !== $const.CSS.NONE;
+            return element.tagName === 'IMG' && style.getPropertyValue('display') !== $const.CSS.NONE ||
+                rect.width > 0 && style.getPropertyValue('float') !== $const.CSS.NONE ||
+                style.getPropertyValue('clear') !== $const.CSS.NONE ||
+                style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) ||
+                element.className === '__squared.pseudo';
         }
         return false;
     }
@@ -563,8 +564,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 const node = item.node;
                 switch (item.type) {
                     case NODE_TEMPLATE.XML: {
-                        const controlName = (<NodeXmlTemplate<T>> item).controlName;
-                        const attributes = (<NodeXmlTemplate<T>> item).attributes;
+                        const { controlName, attributes } = <NodeXmlTemplate<T>> item;
                         const renderDepth = depth + 1;
                         const beforeInside = this.getBeforeInsideTemplate(node.id, renderDepth);
                         const afterInside = this.getAfterInsideTemplate(node.id, renderDepth);

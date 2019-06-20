@@ -171,8 +171,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public conditionElement(element: HTMLElement) {
-        if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName)) {
-            if (this.controllerHandler.visibleElement(element) || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
+        const controller = this.controllerHandler;
+        if (!controller.localSettings.unsupported.excluded.has(element.tagName)) {
+            if (controller.visibleElement(element) || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value))) {
                 return true;
             }
             else {
@@ -189,7 +190,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     const children = element.children;
                     const length = children.length;
                     for (let i = 0; i < length; i++) {
-                        if (this.controllerHandler.visibleElement(<Element> children[i])) {
+                        if (controller.visibleElement(<Element> children[i])) {
                             return true;
                         }
                     }
@@ -838,6 +839,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected setBaseLayout(layoutName: string) {
         const processing = this.processing;
+        const session = this.session;
         const CACHE = processing.cache;
         const documentRoot = processing.node as T;
         const extensions = $util.filterArray(this.extensions, item => !item.eventOnly);
@@ -1148,7 +1150,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         for (const node of CACHE) {
             if (node.documentRoot && node.rendered) {
-                this.session.documentRoot.push({ node, layoutName: node === documentRoot ? layoutName : '' });
+                session.documentRoot.push({ node, layoutName: node === documentRoot ? layoutName : '' });
             }
         }
         CACHE.sort((a, b) => {
@@ -1163,8 +1165,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return a.depth < b.depth ? -1 : 1;
         });
-        this.session.cache.concat(CACHE.children);
-        this.session.excluded.concat(processing.excluded.children);
+        session.cache.concat(CACHE.children);
+        session.excluded.concat(processing.excluded.children);
         for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
                 ext.postBaseLayout(node);
@@ -1184,10 +1186,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setResources() {
+        const resource = this.resourceHandler;
         for (const node of this.processing.cache) {
-            this.resourceHandler.setBoxStyle(node);
-            this.resourceHandler.setFontStyle(node);
-            this.resourceHandler.setValueString(node);
+            resource.setBoxStyle(node);
+            resource.setFontStyle(node);
+            resource.setValueString(node);
         }
         for (const ext of this.extensions) {
             ext.afterResources();

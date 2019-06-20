@@ -199,7 +199,7 @@ const appBase: AppFramework<View> = {
     create() {
         const EN = squared.base.lib.constant.EXT_NAME;
         const EA = constant.EXT_ANDROID;
-        application = new Application(framework, View, Controller, Resource, ExtensionManager);
+        application = new Application<View>(framework, View, Controller, Resource, ExtensionManager);
         file = new File();
         application.resourceHandler.setFileHandler(file);
         userSettings = { ...SETTINGS };

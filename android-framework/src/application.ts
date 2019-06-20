@@ -1,7 +1,5 @@
 import { UserSettingsAndroid } from './@types/application';
 
-import View from './view';
-
-export default class Application<T extends View> extends squared.base.ApplicationUI<T> {
+export default class Application<T extends android.base.View> extends squared.base.ApplicationUI<T> implements android.base.Application<T> {
     public userSettings!: UserSettingsAndroid;
 }

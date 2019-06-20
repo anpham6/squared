@@ -1,5 +1,4 @@
 import { ControllerSettings } from '../../src/base/@types/application';
-import { UserSettingsChrome } from './@types/application';
 
 import View from './view';
 
@@ -27,6 +26,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
     };
 
     private _elementMap = new Map<Element, T>();
+
+    constructor(
+        public application: chrome.base.Application<T>,
+        public cache: squared.base.NodeList<T>)
+    {
+        super();
+    }
 
     public init() {}
     public sortInitialCache() {}
@@ -66,6 +72,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     get userSettings() {
-        return <UserSettingsChrome> this.application.userSettings;
+        return this.application.userSettings;
     }
 }

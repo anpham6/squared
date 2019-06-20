@@ -1,8 +1,5 @@
 import { ResourceAssetMap, UserSettings } from './@types/application';
 
-import Application from './application';
-import Node from './node';
-
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
 
 const {
@@ -10,7 +7,7 @@ const {
     util: $util
 } = squared.lib;
 
-export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
+export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
     public static ASSETS: ResourceAssetMap = {
         ids: new Map(),
         images: new Map(),
@@ -19,12 +16,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     };
 
     public fileHandler?: squared.base.File<T>;
-
-    protected constructor(
-        public application: Application<T>,
-        public cache: squared.base.NodeList<T>)
-    {
-    }
+    public abstract application: squared.base.Application<T>;
+    public abstract cache: squared.base.NodeList<T>;
 
     public abstract get userSettings(): UserSettings;
 

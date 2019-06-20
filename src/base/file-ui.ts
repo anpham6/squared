@@ -1,12 +1,10 @@
 import { ControllerUISettings, FileAsset, UserUISettings } from './@types/application';
 
 import File from './file';
-import NodeUI from './node-ui';
-import ResourceUI from './resource-ui';
 
-export default abstract class FileUI<T extends NodeUI> extends File<T> implements squared.base.FileUI<T> {
+export default abstract class FileUI<T extends squared.base.NodeUI> extends File<T> implements squared.base.FileUI<T> {
     public appName = '';
-    public resource!: ResourceUI<T>;
+    public abstract resource: squared.base.ResourceUI<T>;
 
     public abstract saveAllToDisk(files?: FileAsset[]): void;
     public abstract get userSettings(): UserUISettings;

@@ -1,10 +1,7 @@
 import { ExtensionDependency } from './@types/application';
 
-import Application from './application';
-import Node from './node';
-
-export default abstract class Extension<T extends Node> implements squared.base.Extension<T> {
-    public application!: Application<T>;
+export default abstract class Extension<T extends squared.base.Node> implements squared.base.Extension<T> {
+    public application!: squared.base.Application<T>;
     public readonly options: ExternalData = {};
     public readonly dependencies: ExtensionDependency[] = [];
     public readonly subscribers = new Set<T>();
@@ -25,8 +22,4 @@ export default abstract class Extension<T extends Node> implements squared.base.
 
     public beforeParseDocument() {}
     public afterParseDocument() {}
-
-    get installed() {
-        return !!this.application && this.application.extensions.includes(this);
-    }
 }

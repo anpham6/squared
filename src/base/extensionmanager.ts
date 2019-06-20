@@ -1,14 +1,10 @@
-import Application from './application';
-import Extension from './extension';
-import Node from './node';
-
 const $util = squared.lib.util;
 
-export default abstract class ExtensionManager<T extends Node> implements squared.base.ExtensionManager<T> {
-    protected constructor(public readonly application: Application<T>) {
+export default abstract class ExtensionManager<T extends squared.base.Node> implements squared.base.ExtensionManager<T> {
+    protected constructor(public readonly application: squared.base.Application<T>) {
     }
 
-    public include(ext: Extension<T>) {
+    public include(ext: squared.base.Extension<T>) {
         const application = this.application;
         const index = application.extensions.findIndex(item => item.name === ext.name);
         if (index !== -1) {
@@ -25,7 +21,7 @@ export default abstract class ExtensionManager<T extends Node> implements square
         return false;
     }
 
-    public exclude(ext: Extension<T>) {
+    public exclude(ext: squared.base.Extension<T>) {
         const extensions = this.application.extensions;
         for (let i = 0; i < extensions.length; i++) {
             if (extensions[i] === ext) {

@@ -1,7 +1,6 @@
 import { FileAsset } from '../../src/base/@types/application';
-import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/application';
+import { ResourceStoredMapAndroid } from './@types/application';
 
-import View from './view';
 import Resource from './resource';
 
 import { STRING_ANDROID, XMLNS_ANDROID } from './lib/constant';
@@ -65,7 +64,9 @@ const replaceThemeLength = (value: string, dpi: number, format: string) => forma
 
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
-export default class File<T extends View> extends squared.base.FileUI<T> implements android.base.File<T> {
+export default class File<T extends android.base.View> extends squared.base.FileUI<T> implements android.base.File<T> {
+    public resource!: android.base.Resource<T>;
+
     public saveAllToDisk(files: FileAsset[]) {
         const layouts: FileAsset[] = [];
         const length = files.length;
@@ -426,6 +427,6 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     get userSettings() {
-        return <UserSettingsAndroid> this.resource.userSettings;
+        return this.resource.userSettings;
     }
 }

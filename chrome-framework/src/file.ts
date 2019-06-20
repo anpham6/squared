@@ -1,8 +1,7 @@
 import { FileAsset } from '../../src/base/@types/application';
-import { ChromeAsset, UserSettingsChrome } from './@types/application';
+import { ChromeAsset } from './@types/application';
 
 import Resource from './resource';
-import View from './view';
 
 const {
     regex: $regex,
@@ -54,7 +53,9 @@ function convertFileMatch(value: string) {
     return new RegExp(`${value}$`);
 }
 
-export default class File<T extends View> extends squared.base.File<T> implements chrome.base.File<T> {
+export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
+    public resource!: chrome.base.Resource<T>;
+
     private _outputFileExclusions?: RegExp[];
 
     public reset() {
@@ -149,13 +150,13 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     data = { pathname, filename, uri };
                 }
                 else if (base64) {
-                    data = { pathname: 'base64', filename, base64 };
+                    data = { pathname: 'generated/base64', filename, base64 };
                 }
                 else if (content && mimeType) {
-                    data = { pathname: mimeType, filename, content };
+                    data = { pathname: `generated/${mimeType}`, filename, content };
                 }
                 if (this.validFile(data)) {
-                    data.mimeType = rawData.mimeType;
+                    data.mimeType = mimeType;
                     this.processExtensions(data);
                     result.push(data);
                 }
@@ -213,8 +214,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     private processExtensions(data: ChromeAsset) {
-        const application = <chrome.base.Application<T>> this.resource.application;
-        for (const ext of application.extensions) {
+        for (const ext of this.resource.application.extensions) {
             ext.processFile(data);
         }
     }
@@ -231,6 +231,6 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     get userSettings() {
-        return <UserSettingsChrome> this.resource.userSettings;
+        return this.resource.userSettings;
     }
 }

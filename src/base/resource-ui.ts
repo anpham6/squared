@@ -2,8 +2,8 @@ import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } fr
 
 import Resource from './resource';
 import ControllerUI from './controller-ui';
-import FileUI from './file-ui';
-import NodeUI from './node-ui';
+
+type NodeUI = squared.base.NodeUI;
 
 import { NODE_RESOURCE } from './lib/enumeration';
 
@@ -370,7 +370,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return '';
     }
 
-    public fileHandler?: FileUI<T>;
+    public fileHandler?: squared.base.FileUI<T>;
 
     public abstract get userSettings(): UserUISettings;
 

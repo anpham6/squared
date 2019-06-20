@@ -690,13 +690,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         let resizable = true;
         if (node.hasResource($e.NODE_RESOURCE.IMAGE_SOURCE)) {
             const bgImage = data.backgroundImage;
+            const resource = <android.base.Resource<T>> this.application.resourceHandler;
             if (bgImage)  {
                 lengthImage = bgImage.length;
                 while (backgroundSize.length < lengthImage) {
                     backgroundSize = backgroundSize.concat(backgroundSize.slice(0));
                 }
                 backgroundSize.length = lengthImage;
-                const resource = <android.base.Resource<T>> this.application.resourceHandler;
                 const resourceInstance = this._resourceSvgInstance;
                 for (let i = 0, j = 0; i < lengthImage; i++) {
                     let value = bgImage[i];
@@ -769,7 +769,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 for (let i = 0, j = lengthImage; i < extracted.length; i++) {
                     const image = extracted[i];
                     const element = <HTMLImageElement> image.element;
-                    const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(element);
+                    const src = resource.addImageSrc(element);
                     if (src !== '') {
                         backgroundImage[j] = src;
                         backgroundRepeat[j] = 'no-repeat';
@@ -779,7 +779,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             node.actualDimension,
                             node.fontSize
                         );
-                        imageDimensions[j] = this.application.resourceHandler.getImage(element.src);
+                        imageDimensions[j] = resource.getImage(element.src);
                         j++;
                     }
                 }

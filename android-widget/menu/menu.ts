@@ -4,13 +4,6 @@ import { ViewAttribute } from '../../android-framework/src/@types/node';
 type View = android.base.View;
 
 const {
-    constant: $const,
-    css: $css,
-    session: $session,
-    util: $util
-} = squared.lib;
-
-const {
     constant: $constA,
     enumeration: $enumA,
     util: $utilA
@@ -22,6 +15,7 @@ const {
 } = squared.base.lib;
 
 const $Resource = android.base.Resource;
+const $util = squared.lib.util;
 
 const REGEXP_ITEM = {
     id: /^@\+id\/\w+$/,
@@ -125,12 +119,6 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                 }
             }
             if (valid) {
-                element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
-                    if ($css.getStyle(item).display === $const.CSS.NONE) {
-                        $session.setElementCache(item, 'squaredExternalDisplay', application.processing.sessionId, $const.CSS.NONE);
-                        item.style.setProperty('display', 'block');
-                    }
-                });
                 application.rootElements.add(<HTMLElement> element);
             }
         }
@@ -246,15 +234,5 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
             complete: true,
             next: controlName === NAVIGATION.MENU
         };
-    }
-
-    public postBaseLayout(node: T) {
-        (<HTMLElement> node.element).querySelectorAll('NAV').forEach((item: HTMLElement) => {
-            const display: string = $session.getElementCache(item, 'squaredExternalDisplay', node.sessionId);
-            if (display) {
-                item.style.setProperty('display', display);
-                $session.deleteElementCache(item, 'squaredExternalDisplay', node.sessionId);
-            }
-        });
     }
 }

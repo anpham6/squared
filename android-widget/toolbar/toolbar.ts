@@ -64,8 +64,8 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
 
     public processNode(node: T, parent: T) {
         const application = this.application;
-        const controller = <android.base.Controller<T>> application.controllerHandler;
-        const resource = <android.base.Resource<T>> this.application.resourceHandler;
+        const controller = application.controllerHandler;
+        const resource = <android.base.Resource<T>> application.resourceHandler;
         const settings = <UserSettingsAndroid> application.userSettings;
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;

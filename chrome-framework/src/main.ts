@@ -144,7 +144,7 @@ const appBase: ChromeFramework<View> = {
     },
     create() {
         const EC = constant.EXT_CHROME;
-        application = new Application(framework, View, Controller, Resource, ExtensionManager);
+        application = new Application<View>(framework, View, Controller, Resource, ExtensionManager);
         controller = <Controller<View>> application.controllerHandler;
         file = new File();
         application.resourceHandler.setFileHandler(file);

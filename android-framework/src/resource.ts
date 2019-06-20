@@ -1,6 +1,4 @@
-import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './@types/application';
-
-import View from './view';
+import { ResourceStoredMapAndroid, StyleAttribute } from './@types/application';
 
 import { RESERVED_JAVA } from './lib/constant';
 
@@ -56,7 +54,7 @@ function formatObject(obj: {}, numberAlias = false) {
     }
 }
 
-export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
+export default class Resource<T extends android.base.View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
     public static formatOptions(options: ExternalData, numberAlias = false) {
         for (const namespace in options) {
             const obj: ExternalData = options[namespace];
@@ -184,8 +182,11 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    constructor(application: squared.base.Application<T>, cache: squared.base.NodeList<T>) {
-        super(application, cache);
+    constructor(
+        public application: android.base.Application<T>,
+        public cache: squared.base.NodeList<T>)
+    {
+        super();
         STORED.styles = new Map();
         STORED.themes = new Map();
         STORED.dimens = new Map();
@@ -244,13 +245,14 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             }
         }
         if (result.mdpi) {
-            const rawData = this.application.resourceHandler.getRawData(result.mdpi);
+            const resource = this.application.resourceHandler;
+            const rawData = resource.getRawData(result.mdpi);
             if (rawData && rawData.base64) {
                 if (rawData.filename.toLowerCase().endsWith('.svg')) {
                     return '';
                 }
                 const filename = prefix + rawData.filename;
-                (<android.base.Application<T>> this.application).resourceHandler.writeRawImage(filename, rawData.base64);
+                resource.writeRawImage(filename, rawData.base64);
                 return filename.substring(0, filename.lastIndexOf('.'));
             }
         }
@@ -258,6 +260,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     get userSettings() {
-        return <UserSettingsAndroid> this.application.userSettings;
+        return this.application.userSettings;
     }
 }

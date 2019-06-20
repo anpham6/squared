@@ -1,16 +1,9 @@
 import { ControllerSettings, UserSettings } from './@types/application';
 
-import Application from './application';
-import Node from './node';
-
-export default abstract class Controller<T extends Node> implements squared.base.Controller<T> {
+export default abstract class Controller<T extends squared.base.Node> implements squared.base.Controller<T> {
+    public abstract application: squared.base.Application<T>;
+    public abstract cache: squared.base.NodeList<T>;
     public abstract readonly localSettings: ControllerSettings;
-
-    protected constructor(
-        public application: Application<T>,
-        public cache: squared.base.NodeList<T>)
-    {
-    }
 
     public abstract init(): void;
     public abstract reset(): void;

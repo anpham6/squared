@@ -1,8 +1,5 @@
 import { RawAsset, UserSettings } from './@types/application';
 
-import Node from './node';
-import Resource from './resource';
-
 const {
     constant: $const,
     util: $util
@@ -14,7 +11,7 @@ export interface ExpressResult {
     system: string;
 }
 
-export default abstract class File<T extends Node> implements squared.base.File<T> {
+export default abstract class File<T extends squared.base.Node> implements squared.base.File<T> {
     public static getMimeType(value: string) {
         switch (value.toLowerCase()) {
             case 'aac':
@@ -175,8 +172,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
         setTimeout(() => window.URL.revokeObjectURL(url), 1);
     }
 
-    public resource!: Resource<T>;
     public readonly assets: RawAsset[] = [];
+    public abstract resource: squared.base.Resource<T>;
 
     public abstract get userSettings(): UserSettings;
 

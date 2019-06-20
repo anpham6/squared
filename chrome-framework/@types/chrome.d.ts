@@ -11,7 +11,7 @@ declare function querySelectorAll(value: string): Promise<View[] | null>;
 
 declare namespace base {
     interface Application<T extends View> extends squared.base.Application<T> {
-        readonly userSettings: UserSettingsChrome;
+        userSettings: UserSettingsChrome;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
     }
@@ -19,6 +19,7 @@ declare namespace base {
     class Application<T extends View> implements Application<T> {}
 
     interface Controller<T extends View> extends squared.base.Controller<T> {
+        application: Application<T>;
         readonly elementMap: Map<Element, T>;
         readonly userSettings: UserSettingsChrome;
         cacheElement(node: T): void;
@@ -28,12 +29,14 @@ declare namespace base {
     class Controller<T extends View> implements Controller<T> {}
 
     interface Resource<T extends View> extends squared.base.Resource<T> {
+        application: Application<T>;
         readonly userSettings: UserSettingsChrome;
     }
 
     class Resource<T extends View> implements Resource<T> {}
 
     interface File<T extends View> extends squared.base.File<T> {
+        resource: Resource<T>;
         readonly userSettings: UserSettingsChrome;
         getHtmlPage(name?: string): ChromeAsset[];
         getScriptAssets(): ChromeAsset[];
@@ -53,8 +56,7 @@ declare namespace base {
         constructor(name: string, framework: number, options?: ExternalData);
     }
 
-    interface ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {
-    }
+    interface ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {}
 
     class ExtensionManager<T extends View> implements ExtensionManager<T> {}
 

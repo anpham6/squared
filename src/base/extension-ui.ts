@@ -1,15 +1,13 @@
 import { ExtensionResult } from './@types/application';
 
 import Extension from './extension';
-import ApplicationUI from './application-ui';
-import NodeUI from './node-ui';
 
 const {
     css: $css,
     util: $util,
 } = squared.lib;
 
-export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
+export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
     public static findNestedElement(element: Element | null, name: string) {
         if (element && $css.hasComputedStyle(element)) {
             const children = element.children;
@@ -24,7 +22,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         return null;
     }
 
-    public application!: ApplicationUI<T>;
+    public application!: squared.base.ApplicationUI<T>;
     public eventOnly = false;
     public documentBase = false;
     public tagNames: string[];

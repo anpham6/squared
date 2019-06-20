@@ -16,6 +16,7 @@ declare namespace base {
     class Application<T extends View> implements Application<T> {}
 
     interface Controller<T extends View> extends squared.base.ControllerUI<T> {
+        application: Application<T>;
         readonly userSettings: UserSettingsAndroid;
         checkFrameHorizontal(data: squared.base.LayoutUI<T>): boolean;
         checkConstraintFloat(data: squared.base.LayoutUI<T>, horizontal?: boolean): boolean;
@@ -34,6 +35,7 @@ declare namespace base {
     }
 
     interface Resource<T extends View> extends squared.base.ResourceUI<T> {
+        application: Application<T>;
         readonly userSettings: UserSettingsAndroid;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
     }
@@ -49,6 +51,7 @@ declare namespace base {
     }
 
     interface File<T extends View> extends squared.base.FileUI<T> {
+        resource: Resource<T>;
         saveAllToDisk(files: FileAsset[]): void;
         layoutAllToXml(files: FileAsset[], saveToDisk?: boolean): {};
         resourceAllToXml(saveToDisk?: boolean): {};

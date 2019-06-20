@@ -1,7 +1,6 @@
 import View$MX from './view-mx';
-import View from './view';
 
-export default class ViewGroup<T extends View> extends View$MX(squared.base.NodeGroupUI) {
+export default class ViewGroup<T extends android.base.View> extends View$MX(squared.base.NodeGroupUI) {
     constructor(
         id: number,
         node: T,
