@@ -178,9 +178,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public abstract get userSettings(): UserSettings;
 
     public saveAllToDisk() {
-        if (this.assets.length) {
-            this.saveToDisk(this.assets, this.userSettings.outputArchiveName);
-        }
+        this.saveToDisk(this.assets, this.userSettings.outputArchiveName);
     }
 
     public addAsset(data: Optional<RawAsset>) {

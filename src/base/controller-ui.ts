@@ -19,19 +19,6 @@ const {
 const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
-    public static causesLineBreak(element: Element, sessionId: string) {
-        if (element.tagName === 'BR') {
-            return true;
-        }
-        else {
-            const node = $session.getElementAsNode<NodeUI>(element, sessionId);
-            if (node) {
-                return !node.excluded && node.blockStatic;
-            }
-        }
-        return false;
-    }
-
     public abstract readonly localSettings: ControllerUISettings;
 
     private _requireFormat = false;

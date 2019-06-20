@@ -23,6 +23,8 @@ const {
 const $Resource = android.base.Resource;
 
 export default class Drawer<T extends android.base.View> extends squared.base.ExtensionUI<T> {
+    public readonly documentBase = true;
+
     constructor(
         name: string,
         framework: number,
@@ -30,7 +32,6 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         tagNames?: string[])
     {
         super(name, framework, options, tagNames);
-        this.documentBase = true;
         this.require($c.EXT_NAME.EXTERNAL, true);
         this.require(WIDGET_NAME.MENU);
         this.require(WIDGET_NAME.COORDINATOR);

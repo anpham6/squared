@@ -88,8 +88,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public finalize() {
         const controller = this.controllerHandler;
         for (const [node, template] of this.session.targetQueue.entries()) {
-            if (node.dataset.target) {
-                const parent = this.resolveTarget(node.dataset.target);
+            const target = node.dataset.target;
+            if (target) {
+                const parent = this.resolveTarget(target);
                 if (parent) {
                     node.render(parent);
                     this.addLayoutTemplate(parent, node, template);
@@ -125,6 +126,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             ext.beforeCascade();
         }
+        const baseTemplate = controller.localSettings.layout.baseTemplate;
         for (const layout of this.session.documentRoot) {
             const node = layout.node;
             if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.naturalChildren.every(item => item.documentRoot)) {
@@ -134,7 +136,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (parent && parent.renderTemplates) {
                 this.saveDocument(
                     layout.layoutName,
-                    controller.localSettings.layout.baseTemplate + controller.cascadeDocument(<NodeTemplate<T>[]> parent.renderTemplates, 0),
+                    baseTemplate + controller.cascadeDocument(<NodeTemplate<T>[]> parent.renderTemplates, 0),
                     node.dataset.pathname,
                     !!node.renderExtension && node.renderExtension.some(item => item.documentBase) ? 0 : undefined
                 );
@@ -173,7 +175,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public conditionElement(element: HTMLElement) {
         const controller = this.controllerHandler;
         if (!controller.localSettings.unsupported.excluded.has(element.tagName)) {
-            if (controller.visibleElement(element) || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value))) {
+            if (controller.visibleElement(element) || this._cascadeAll || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value))) {
                 return true;
             }
             else {
@@ -443,6 +445,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.depth = depth;
             if (depth === 0) {
                 this.processing.cache.append(node);
+                for (const name of node.extensions) {
+                    const ext = <ExtensionUI<T>> this.extensionManager.retrieve(name);
+                    if (ext && ext.cascadeAll) {
+                        this._cascadeAll = true;
+                        break;
+                    }
+                }
             }
             const controller = this.controllerHandler;
             if (controller.preventNodeCascade(parentElement)) {

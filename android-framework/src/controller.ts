@@ -348,6 +348,19 @@ function getAnchorDirection(reverse: boolean) {
     }
 }
 
+function causesLineBreak(element: Element, sessionId: string) {
+    if (element.tagName === 'BR') {
+        return true;
+    }
+    else {
+        const node = $session.getElementAsNode<View>(element, sessionId);
+        if (node) {
+            return !node.excluded && node.blockStatic;
+        }
+    }
+    return false;
+}
+
 const getRelativeVertical = (layout: $LayoutUI<View>) => layout.some(item => item.positionRelative || !item.pageFlow && item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
@@ -1883,7 +1896,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             previous.autoMargin.horizontal ||
                             cleared.has(item) ||
                             !item.textElement && !checkFloatWrap() && checkWrapWidth() && Math.floor(baseWidth) > maxWidth ||
-                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => Controller.causesLineBreak(element, node.sessionId))))
+                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => causesLineBreak(element, node.sessionId))))
                         {
                             if (leftForward) {
                                 if (previousRowLeft && item.linear.bottom <= previousRowLeft.bounds.bottom) {
@@ -1949,7 +1962,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     let previousOffset = 0;
-                    if (siblings && !siblings.some(element => !!$session.getElementAsNode(element, item.sessionId) || Controller.causesLineBreak(element, item.sessionId))) {
+                    if (siblings && !siblings.some(element => !!$session.getElementAsNode(element, item.sessionId) || causesLineBreak(element, item.sessionId))) {
                         const betweenStart = $session.getRangeClientRect(siblings[0], '0');
                         if (!betweenStart.numberOfLines) {
                             const betweenEnd = siblings.length > 1 ? $session.getRangeClientRect(siblings[siblings.length - 1], '0') : undefined;

@@ -23,9 +23,10 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     }
 
     public application!: squared.base.ApplicationUI<T>;
-    public eventOnly = false;
-    public documentBase = false;
     public tagNames: string[];
+    public readonly eventOnly = false;
+    public readonly documentBase = false;
+    public readonly cascadeAll = false;
 
     constructor(
         name: string,

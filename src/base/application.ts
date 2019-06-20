@@ -56,6 +56,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract extensions: Extension<T>[];
     public abstract userSettings: UserSettings;
 
+    protected _cascadeAll = false;
+
     protected constructor(
         public framework: number,
         nodeConstructor: Constructor<T>,
@@ -71,8 +73,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public abstract afterCreateCache(element: HTMLElement): void;
-
-    public finalize() {}
+    public abstract finalize(): void;
 
     public saveAllToDisk() {
         const file = this.resourceHandler.fileHandler;
@@ -160,7 +161,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 element.querySelectorAll('svg image').forEach((image: SVGImageElement) => {
                     const uri = $util.resolvePath(image.href.baseVal);
                     if (uri !== '') {
-                        ASSETS.images.set(uri, { width: image.width.baseVal.value, height: image.height.baseVal.value, uri });
+                        ASSETS.images.set(uri, {
+                            width: image.width.baseVal.value,
+                            height: image.height.baseVal.value,
+                            uri
+                        });
                     }
                 });
             }
@@ -191,7 +196,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
                     data.width = element.naturalWidth;
                     data.height = element.naturalHeight;
-                    ASSETS.images.set(uri, { width: data.width, height: data.height, uri: data.filename });
+                    ASSETS.images.set(uri, {
+                        width: data.width,
+                        height: data.height,
+                        uri: data.filename
+                    });
                 }
                 else {
                     document.body.appendChild(element);
@@ -315,6 +324,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const processing = this.processing;
         processing.cache.clear();
         processing.excluded.clear();
+        this._cascadeAll = false;
         const node = this.cascadeParentNode(element);
         if (node) {
             const parent = new NodeConstructor(0, processing.sessionId, element.parentElement || document.body, this.controllerHandler.afterInsertNode);

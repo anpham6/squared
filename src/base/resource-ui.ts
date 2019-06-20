@@ -1,7 +1,6 @@
 import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } from './@types/application';
 
 import Resource from './resource';
-import ControllerUI from './controller-ui';
 
 type NodeUI = squared.base.NodeUI;
 
@@ -191,10 +190,12 @@ function replaceWhiteSpace(parent: NodeUI, node: NodeUI, element: Element, value
                 .replace(/\s+/g, ' ');
             break;
         default:
-            if (element.previousSibling && ControllerUI.causesLineBreak(<Element> element.previousSibling, node.sessionId) || node.onlyChild && node.htmlElement) {
+            const previousSibling = node.previousSibling;
+            const nextSibling = node.nextSibling;
+            if (previousSibling && (previousSibling.lineBreak || previousSibling.blockStatic) || node.onlyChild && node.htmlElement) {
                 value = value.replace($regex.CHAR.LEADINGSPACE, '');
             }
-            if (element.nextSibling && ControllerUI.causesLineBreak(<Element> element.nextSibling, node.sessionId) || node.onlyChild && node.htmlElement) {
+            if (nextSibling && (nextSibling.lineBreak || nextSibling.blockStatic) || node.onlyChild && node.htmlElement) {
                 value = value.replace($regex.CHAR.TRAILINGSPACE, '');
             }
             return [value, false];

@@ -65,9 +65,7 @@
             System.import('/build/android-framework/src/main.js').then(result => {
                 android = result.default;
                 squared.setFramework(android);
-                Promise.all([
-                    System.import('/build/android-widget/menu/main.js')
-                ]).then(() => {
+                System.import('/build/android-widget/menu/main.js').then(() => {
                     squared.parseDocument('squared_ui').then(function() {
                         squared.close();
 

@@ -154,9 +154,7 @@ declare namespace base {
         getEnclosingXmlTag(controlName: string, attributes?: string, content?: string): string;
     }
 
-    class ControllerUI<T extends NodeUI> implements Controller<T> {
-        public static causesLineBreak(element: Element, sessionId: string): boolean;
-    }
+    class ControllerUI<T extends NodeUI> implements Controller<T> {}
 
     interface Resource<T extends Node> extends AppHandler<T> {
         application: Application<T>;
@@ -217,8 +215,9 @@ declare namespace base {
     interface ExtensionUI<T extends NodeUI> extends Extension<T> {
         application: ApplicationUI<T>;
         tagNames: string[];
-        documentBase: boolean;
-        eventOnly: boolean;
+        readonly documentBase: boolean;
+        readonly eventOnly: boolean;
+        readonly cascadeAll: boolean;
         included(element: HTMLElement): boolean;
         init(element: HTMLElement): boolean;
         is(node: T): boolean;

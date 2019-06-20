@@ -82,6 +82,8 @@ function getTitle(node: View, element: HTMLElement) {
 const hasInputType = (node: View, value: string) => node.some(item => (<HTMLInputElement> item.element).type === value);
 
 export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
+    public readonly cascadeAll = true;
+
     constructor(
         name: string,
         framework: number,
@@ -94,31 +96,23 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
 
     public init(element: HTMLElement) {
         if (this.included(element)) {
-            const application = this.application;
             const children = element.children;
             const length = children.length;
-            let valid = false;
             if (length) {
-                valid = true;
                 const tagName = children[0].tagName;
                 for (let i = 1; i < length; i++) {
                     if (children[i].tagName !== tagName) {
-                        valid = false;
-                        break;
+                        return false;
                     }
                 }
-                if (valid) {
-                    let current = element.parentElement;
-                    while (current) {
-                        if (current.tagName === 'NAV' && application.rootElements.has(current)) {
-                            valid = false;
-                            break;
-                        }
-                        current = current.parentElement;
+                const application = this.application;
+                let current = element.parentElement;
+                while (current) {
+                    if (current.tagName === 'NAV' && application.rootElements.has(current)) {
+                        return false;
                     }
+                    current = current.parentElement;
                 }
-            }
-            if (valid) {
                 application.rootElements.add(<HTMLElement> element);
             }
         }
