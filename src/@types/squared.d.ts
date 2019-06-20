@@ -49,9 +49,9 @@ declare namespace base {
         userSettings: UserSettings;
         initializing: boolean;
         closed: boolean;
-        readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly session: AppSession<T>;
         readonly processing: AppProcessing<T>;
+        readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
         readonly nextId: number;
         readonly length: number;
@@ -80,8 +80,9 @@ declare namespace base {
         controllerHandler: ControllerUI<T>;
         resourceHandler: ResourceUI<T>;
         userSettings: UserUISettings;
-        readonly builtInExtensions: ObjectMap<ExtensionUI<T>>;
         readonly session: AppSessionUI<T>;
+        readonly builtInExtensions: ObjectMap<ExtensionUI<T>>;
+        readonly extensions: ExtensionUI<T>[];
         readonly rootElements: Set<Element>;
         readonly layouts: FileAsset[];
         conditionElement(element: HTMLElement): boolean;
@@ -203,9 +204,6 @@ declare namespace base {
 
     interface Extension<T extends Node> {
         application: Application<T>;
-        documentBase: boolean;
-        eventOnly: boolean;
-        preloaded: boolean;
         readonly framework: number;
         readonly name: string;
         readonly options: ExternalData;
@@ -224,6 +222,8 @@ declare namespace base {
     interface ExtensionUI<T extends NodeUI> extends Extension<T> {
         application: ApplicationUI<T>;
         tagNames: string[];
+        documentBase: boolean;
+        eventOnly: boolean;
         included(element: HTMLElement): boolean;
         init(element: HTMLElement): boolean;
         is(node: T): boolean;

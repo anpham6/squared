@@ -8,7 +8,12 @@ import File from './file';
 import Resource from './resource';
 import View from './view';
 
+import CompressBrotli from './extensions/compress/brotli';
+import CompressGzip from './extensions/compress/gzip';
+
 import SETTINGS from './settings';
+
+import * as constant from './lib/constant';
 
 const $util = squared.lib.util;
 
@@ -54,8 +59,15 @@ const appBase: ChromeFramework<View> = {
         Resource,
         View
     },
-    lib: {},
-    extensions: {},
+    lib: {
+        constant
+    },
+    extensions: {
+        compress: {
+            Brotli: CompressBrotli,
+            Gzip: CompressGzip
+        }
+    },
     system: {
         getElement(element: HTMLElement, cache = true) {
             if (application) {
@@ -131,12 +143,17 @@ const appBase: ChromeFramework<View> = {
         },
     },
     create() {
+        const EC = constant.EXT_CHROME;
         application = new Application(framework, View, Controller, Resource, ExtensionManager);
         controller = <Controller<View>> application.controllerHandler;
         file = new File();
         application.resourceHandler.setFileHandler(file);
         elementMap = controller.elementMap;
         userSettings = { ...SETTINGS };
+        Object.assign(application.builtInExtensions, {
+            [EC.COMPRESS_BROTLI]: new CompressBrotli(EC.COMPRESS_BROTLI, framework),
+            [EC.COMPRESS_GZIP]: new CompressGzip(EC.COMPRESS_GZIP, framework)
+        });
         initialized = true;
         return {
             application,

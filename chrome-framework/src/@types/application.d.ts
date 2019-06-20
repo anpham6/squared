@@ -11,9 +11,6 @@ interface ChromeFramework<T extends View> extends AppFramework<T> {
 
 interface UserSettingsChrome extends UserSettings {
     excludePlainText: boolean;
-    gzipCompressionQuality: number;
-    brotliCompressionQuality: number;
-    compressFileExtensions: string[];
     outputFileExclusions: string[];
 }
 

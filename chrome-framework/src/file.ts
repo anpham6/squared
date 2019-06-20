@@ -86,7 +86,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             if (this.validFile(data)) {
                 data.uri = href;
                 data.mimeType = File.getMimeType('html');
-                this.checkCompressionCompatibility(data);
+                this.processExtensions(data);
                 result.push(data);
             }
         }
@@ -105,7 +105,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     if (element.type) {
                         data.mimeType = element.type;
                     }
-                    this.checkCompressionCompatibility(data);
+                    this.processExtensions(data);
                     result.push(data);
                 }
             }
@@ -122,7 +122,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
                     data.uri = uri;
-                    this.checkCompressionCompatibility(data);
+                    this.processExtensions(data);
                     result.push(data);
                 }
             }
@@ -136,7 +136,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const data = parseUri(uri);
             if (this.validFile(data)) {
                 data.uri = uri;
-                this.checkCompressionCompatibility(data);
+                this.processExtensions(data);
                 result.push(data);
             }
         }
@@ -156,7 +156,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
                 if (this.validFile(data)) {
                     data.mimeType = rawData.mimeType;
-                    this.checkCompressionCompatibility(data);
+                    this.processExtensions(data);
                     result.push(data);
                 }
             }
@@ -195,7 +195,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     const data = parseUri(url);
                     if (this.validFile(data)) {
                         data.uri = url;
-                        this.checkCompressionCompatibility(data);
+                        this.processExtensions(data);
                         result.push(data);
                     }
                 }
@@ -212,18 +212,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return false;
     }
 
-    private checkCompressionCompatibility(data: ChromeAsset) {
-        if (data.extension) {
-            const settings = this.userSettings;
-            if (settings.compressFileExtensions.includes(data.extension)) {
-                const { gzipCompressionQuality, brotliCompressionQuality } = settings;
-                if (gzipCompressionQuality > 0) {
-                    data.gzipQuality = gzipCompressionQuality;
-                }
-                if (brotliCompressionQuality > 0) {
-                    data.brotliQuality = brotliCompressionQuality;
-                }
-            }
+    private processExtensions(data: ChromeAsset) {
+        const application = <chrome.base.Application<T>> this.resource.application;
+        for (const ext of application.extensions) {
+            ext.processFile(data);
         }
     }
 

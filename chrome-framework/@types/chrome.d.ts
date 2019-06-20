@@ -1,5 +1,7 @@
 import { ChromeAsset, UserSettingsChrome } from '../src/@types/application';
 
+import * as $const from '../src/lib/constant';
+
 type View = chrome.base.View;
 
 declare function getElement(element: HTMLElement, cache?: boolean): Promise<View | null>;
@@ -8,6 +10,14 @@ declare function querySelector(value: string): Promise<View | null>;
 declare function querySelectorAll(value: string): Promise<View[] | null>;
 
 declare namespace base {
+    interface Application<T extends View> extends squared.base.Application<T> {
+        readonly userSettings: UserSettingsChrome;
+        readonly builtInExtensions: ObjectMap<Extension<T>>;
+        readonly extensions: Extension<T>[];
+    }
+
+    class Application<T extends View> implements Application<T> {}
+
     interface Controller<T extends View> extends squared.base.Controller<T> {
         readonly elementMap: Map<Element, T>;
         readonly userSettings: UserSettingsChrome;
@@ -34,10 +44,37 @@ declare namespace base {
 
     class File<T extends View> implements File<T> {}
 
+    interface Extension<T extends View> extends squared.base.Extension<T> {
+        application: Application<T>;
+        processFile(data: ChromeAsset): boolean;
+    }
+
+    class Extension<T extends View> implements Extension<T> {
+        constructor(name: string, framework: number, options?: ExternalData);
+    }
+
+    interface ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {
+    }
+
+    class ExtensionManager<T extends View> implements ExtensionManager<T> {}
+
     interface View extends squared.base.Node {}
 
     class View implements View {
         constructor(id: number, sessionId: string, element: Element, afterInit?: BindGeneric<View, void>);
+    }
+}
+
+declare namespace extensions {
+    namespace compress {
+        class Brotli<T extends View> extends chrome.base.Extension<T> {}
+        class Gzip<T extends View> extends chrome.base.Extension<T> {}
+    }
+}
+
+declare namespace lib {
+    namespace constant {
+        export import EXT_CHROME = $const.EXT_CHROME;
     }
 }
 

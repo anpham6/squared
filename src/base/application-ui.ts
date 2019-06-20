@@ -60,8 +60,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public controllerHandler!: ControllerUI<T>;
     public resourceHandler!: ResourceUI<T>;
-    public readonly builtInExtensions: ObjectMap<ExtensionUI<T>> = {};
-    public readonly extensions: ExtensionUI<T>[] = [];
     public readonly session: AppSessionUI<T> = {
         cache: new NodeList<T>(),
         excluded: new NodeList<T>(),
@@ -70,6 +68,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         documentRoot: [],
         targetQueue: new Map<T, NodeTemplate<T>>()
     };
+    public readonly builtInExtensions: ObjectMap<ExtensionUI<T>> = {};
+    public readonly extensions: ExtensionUI<T>[] = [];
     public abstract userSettings: UserUISettings;
 
     private readonly _layouts: FileAsset[] = [];

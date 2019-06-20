@@ -25,6 +25,8 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     }
 
     public application!: ApplicationUI<T>;
+    public eventOnly = false;
+    public documentBase = false;
     public tagNames: string[];
 
     constructor(

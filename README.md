@@ -149,15 +149,15 @@ squared.settings = {
 
 ```javascript
 squared.settings = {
-    builtInExtensions: [],
+    builtInExtensions: [
+        'chrome.compress.brotli',
+        'chrome.compress.gzip'
+    ],
     preloadImages: false,
     handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,
     excludePlainText: true,
-    gzipCompressionQuality: 9, // 0 to 9 - skip compression '0'
-    brotliCompressionQuality: 11, // 0 to 11 - skip compression '0'
-    compressFileExtensions: ['js', 'css', 'json', 'svg'],
     outputFileExclusions: ['squared.*', 'chrome.framework.*'],
     outputDirectory: '',
     outputArchiveName: 'chrome-data',

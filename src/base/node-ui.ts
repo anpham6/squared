@@ -2,7 +2,7 @@ import { NodeTemplate } from './@types/application';
 import { InitialData, LinearData, SiblingOptions, Support } from './@types/node';
 
 import Node from './node';
-import Extension from './extension';
+import ExtensionUI from './extension-ui';
 
 import { CSS_SPACING } from './lib/constant';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
@@ -315,7 +315,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public lineBreakTrailing = false;
     public abstract localSettings: {};
     public abstract renderParent?: T;
-    public abstract renderExtension?: Extension<T>[];
+    public abstract renderExtension?: ExtensionUI<T>[];
     public abstract renderTemplates?: (NodeTemplate<T> | null)[];
     public abstract outerWrapper?: T;
     public abstract innerWrapped?: T;
