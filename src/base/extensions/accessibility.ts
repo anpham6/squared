@@ -10,7 +10,7 @@ export default abstract class Accessibility<T extends NodeUI> extends ExtensionU
         showLabel: false
     };
 
-    public afterInit() {
+    public beforeBaseLayout() {
         for (const node of this.application.processing.cache) {
             if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (node.containerName) {

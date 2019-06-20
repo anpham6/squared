@@ -34,10 +34,10 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     constructor(
         name: string,
         framework: number,
-        tagNames?: string[],
-        options?: ExternalData)
+        options?: ExternalData,
+        tagNames?: string[])
     {
-        super(name, framework, tagNames, options);
+        super(name, framework, options, tagNames);
         this.require(WIDGET_NAME.MENU);
     }
 

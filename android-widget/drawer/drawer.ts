@@ -26,10 +26,10 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     constructor(
         name: string,
         framework: number,
-        tagNames?: string[],
-        options?: ExternalData)
+        options?: ExternalData,
+        tagNames?: string[])
     {
-        super(name, framework, tagNames, options);
+        super(name, framework, options, tagNames);
         this.documentBase = true;
         this.require($c.EXT_NAME.EXTERNAL, true);
         this.require(WIDGET_NAME.MENU);
@@ -86,7 +86,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         };
     }
 
-    public postParseDocument(node: T) {
+    public postBaseLayout(node: T) {
         const options = $utilA.createViewAttribute(this.options.navigationView);
         const menu = $util.optionalAsString(Drawer.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $c.EXT_NAME.EXTERNAL), 'dataset.layoutName');

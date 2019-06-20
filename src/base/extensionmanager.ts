@@ -9,21 +9,16 @@ export default abstract class ExtensionManager<T extends Node> implements square
     }
 
     public include(ext: Extension<T>) {
-        const found = this.retrieve(ext.name);
-        if (found) {
-            if (Array.isArray(ext.tagNames)) {
-                found.tagNames = ext.tagNames;
-            }
-            Object.assign(found.options, ext.options);
+        const application = this.application;
+        const index = application.extensions.findIndex(item => item.name === ext.name);
+        if (index !== -1) {
+            application.extensions[index] = ext;
             return true;
         }
         else {
-            const application = this.application;
             if ((ext.framework === 0 || $util.hasBit(ext.framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
                 ext.application = application;
-                if (!application.extensions.includes(ext)) {
-                    application.extensions.push(ext);
-                }
+                application.extensions.push(ext);
                 return true;
             }
         }

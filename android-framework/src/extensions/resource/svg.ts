@@ -629,7 +629,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     private SYNCHRONIZE_MODE = 0;
     private NAMESPACE_AAPT = false;
 
-    public beforeInit() {
+    public beforeParseDocument() {
         if ($SvgBuild) {
             $SvgBuild.setName();
             this.application.controllerHandler.localSettings.svg.enabled = true;
@@ -1436,7 +1436,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         return drawable;
     }
 
-    public afterFinalize() {
+    public afterParseDocument() {
         this.application.controllerHandler.localSettings.svg.enabled = false;
     }
 

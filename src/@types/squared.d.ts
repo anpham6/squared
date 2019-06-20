@@ -203,7 +203,6 @@ declare namespace base {
 
     interface Extension<T extends Node> {
         application: Application<T>;
-        tagNames: string[];
         documentBase: boolean;
         eventOnly: boolean;
         preloaded: boolean;
@@ -213,23 +212,21 @@ declare namespace base {
         readonly dependencies: ExtensionDependency[];
         readonly subscribers: Set<T>;
         readonly installed: boolean;
-        is(node: T): boolean;
         require(name: string, preload?: boolean): void;
-        included(element: HTMLElement): boolean;
-        beforeInit(element: HTMLElement, recursive?: boolean): void;
-        init(element: HTMLElement): boolean;
-        afterInit(element: HTMLElement, recursive?: boolean): void;
-        postParseDocument(node: T): void;
         beforeParseDocument(): void;
         afterParseDocument(): void;
     }
 
     class Extension<T extends Node> implements Extension<T> {
-        constructor(name: string, framework: number, tagNames?: string[], options?: ExternalData);
+        constructor(name: string, framework: number, options?: ExternalData);
     }
 
     interface ExtensionUI<T extends NodeUI> extends Extension<T> {
         application: ApplicationUI<T>;
+        tagNames: string[];
+        included(element: HTMLElement): boolean;
+        init(element: HTMLElement): boolean;
+        is(node: T): boolean;
         condition(node: T, parent?: T): boolean;
         processNode(node: T, parent: T): ExtensionResult<T> | undefined;
         processChild(node: T, parent: T): ExtensionResult<T> | undefined;
@@ -241,13 +238,14 @@ declare namespace base {
         afterBaseLayout(): void;
         afterConstraints(): void;
         afterResources(): void;
+        beforeBaseLayout(): void;
         beforeCascade(): void;
         afterFinalize(): void;
     }
 
     class ExtensionUI<T extends NodeUI> implements ExtensionUI<T> {
         public static findNestedElement(element: Element | null, name: string): HTMLElement | null;
-        constructor(name: string, framework: number, tagNames?: string[], options?: ExternalData);
+        constructor(name: string, framework: number, options?: ExternalData, tagNames?: string[]);
     }
 
     interface ExtensionManager<T extends Node> {

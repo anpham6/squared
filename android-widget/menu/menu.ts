@@ -91,10 +91,10 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(
         name: string,
         framework: number,
-        tagNames?: string[],
-        options?: ExternalData)
+        options?: ExternalData,
+        tagNames?: string[])
     {
-        super(name, framework, tagNames, options);
+        super(name, framework, options, tagNames);
         this.require($c.EXT_NAME.EXTERNAL, true);
     }
 

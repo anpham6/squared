@@ -402,9 +402,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             controller.evaluateNonStatic(node, CACHE);
             controller.sortInitialCache(CACHE);
-            for (const ext of this.extensions) {
-                ext.afterInit(documentRoot);
-            }
             return true;
         }
         return false;
@@ -878,6 +875,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 setMapY((item.depth * -1) - 2, item.id, item as T);
             }
         };
+        for (const ext of this.extensions) {
+            ext.beforeBaseLayout();
+        }
         for (const depth of mapY.values()) {
             for (const parent of depth.values()) {
                 if (parent.length === 0) {

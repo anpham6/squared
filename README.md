@@ -356,9 +356,9 @@ CSS Grid and Flexbox layouts are are for the most part fully supported. There is
 
     // third-party: create an extension
     class Sample extends squared.base.Extension {
-        constructor(name, framework = 0, tagNames = [], options = {}) {
-            // framework: universal = 0; android = 2;
-            super(name, framework, tagNames, options);
+        constructor(name, framework = 0, options = {}) {
+            // framework: universal = 0; android = 2; chrome = 4;
+            super(name, framework, options);
         }
     }
 

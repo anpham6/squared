@@ -141,9 +141,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
             for (const ext of this.extensions) {
-                for (const node of ext.subscribers) {
-                    ext.postParseDocument(node);
-                }
                 ext.afterParseDocument();
             }
             if (typeof __THEN === 'function') {
@@ -280,9 +277,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 item.saveAsInitial();
             }
             this.controllerHandler.sortInitialCache(CACHE);
-            for (const ext of this.extensions) {
-                ext.afterInit(documentRoot);
-            }
             return true;
         }
         return false;
@@ -321,9 +315,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         const processing = this.processing;
         processing.cache.clear();
         processing.excluded.clear();
-        for (const ext of this.extensions) {
-            ext.beforeInit(element);
-        }
         const node = this.cascadeParentNode(element);
         if (node) {
             const parent = new NodeConstructor(0, processing.sessionId, element.parentElement || document.body, this.controllerHandler.afterInsertNode);

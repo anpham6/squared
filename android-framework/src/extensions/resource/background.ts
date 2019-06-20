@@ -477,12 +477,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     private _resourceSvgInstance?: ResourceSvg<T>;
 
-    public afterInit() {
-        this._resourceSvgInstance = this.application.controllerHandler.localSettings.svg.enabled ? <ResourceSvg<T>> this.application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
-    }
-
     public afterResources() {
-        const settings = <UserSettingsAndroid> this.application.userSettings;
+        const application = this.application;
+        const settings = <UserSettingsAndroid> application.userSettings;
+        this._resourceSvgInstance = application.controllerHandler.localSettings.svg.enabled ? <ResourceSvg<T>> application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
         function setDrawableBackground(node: T, value: string) {
             let drawable = Resource.insertStoredAsset('drawables', `${node.containerName.toLowerCase()}_${node.controlId}`, value);
             if (drawable !== '') {
@@ -495,7 +493,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
         }
-        for (const node of this.application.processing.cache) {
+        for (const node of application.processing.cache) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && node.hasResource($e.NODE_RESOURCE.BOX_STYLE)) {
                 if (node.inputElement) {
@@ -546,6 +544,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
         }
+        this._resourceSvgInstance = undefined;
     }
 
     public getDrawableBorder(data: BoxStyle, borders: (BorderAttribute | undefined)[], border?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = true) {

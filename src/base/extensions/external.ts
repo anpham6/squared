@@ -1,48 +1,11 @@
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
-const {
-    css: $css,
-    session: $session
-} = squared.lib;
-
 export default abstract class External<T extends NodeUI> extends ExtensionUI<T> {
-    public beforeInit(element: HTMLElement, internal = false) {
-        if (internal || this.included(element)) {
-            const sessionId = this.application.processing.sessionId;
-            if (!$session.getElementCache(element, 'squaredExternalDisplay', sessionId)) {
-                const display: string[] = [];
-                let current: HTMLElement | null = element;
-                while (current) {
-                    display.push($css.getStyle(current).getPropertyValue('display'));
-                    current.style.setProperty('display', 'block');
-                    current = current.parentElement;
-                }
-                $session.setElementCache(element, 'squaredExternalDisplay', sessionId, display);
-            }
-        }
-    }
-
     public init(element: HTMLElement) {
         if (this.included(element)) {
             this.application.rootElements.add(element);
         }
         return false;
-    }
-
-    public afterInit(element: HTMLElement, internal = false) {
-        if (internal || this.included(element)) {
-            const sessionId = this.application.processing.sessionId;
-            const display: string[] = $session.getElementCache(element, 'squaredExternalDisplay', sessionId);
-            if (Array.isArray(display)) {
-                let i = 0;
-                let current: HTMLElement | null = element;
-                while (current) {
-                    current.style.setProperty('display', display[i++]);
-                    current = current.parentElement;
-                }
-                $session.deleteElementCache(element, 'squaredExternalDisplay', sessionId);
-            }
-        }
     }
 }

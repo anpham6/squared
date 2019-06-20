@@ -25,11 +25,34 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     }
 
     public application!: ApplicationUI<T>;
+    public tagNames: string[];
+
+    constructor(
+        name: string,
+        framework: number,
+        options?: ExternalData,
+        tagNames: string[] = [])
+    {
+        super(name, framework, options);
+        this.tagNames = tagNames;
+    }
 
     public condition(node: T, parent?: T) {
         if (node.styleElement) {
             return node.dataset.use ? this.included(<HTMLElement> node.element) : this.tagNames.length > 0;
         }
+        return false;
+    }
+
+    public is(node: T) {
+        return node.styleElement ? this.tagNames.length === 0 || this.tagNames.includes((<HTMLElement> node.element).tagName) : false;
+    }
+
+    public included(element: HTMLElement) {
+        return $util.includes(element.dataset.use, this.name);
+    }
+
+    public init(element: HTMLElement) {
         return false;
     }
 
@@ -59,6 +82,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public afterConstraints() {}
     public afterResources() {}
 
+    public beforeBaseLayout() {}
     public beforeCascade() {}
     public afterFinalize() {}
 }
