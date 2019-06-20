@@ -35,7 +35,7 @@
             System.import('/build/android-framework/src/main.js').then(result => {
                 android = result.default;
                 squared.setFramework(android);
-                squared.configure('android.constraint.guideline', { circlePosition: true });
+                squared.include('android.constraint.guideline', { circlePosition: true });
                 addView();
                 closeDocument();
             });

@@ -21,7 +21,6 @@ const settings: UserSettingsAndroid = {
         'squared.verticalalign',
         'squared.whitespace',
         'squared.accessibility',
-        'android.constraint.guideline',
         'android.resource.svg',
         'android.resource.background',
         'android.resource.strings',

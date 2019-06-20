@@ -111,7 +111,6 @@ squared.settings = {
         'squared.verticalalign',
         'squared.whitespace',
         'squared.accessibility',
-        'android.constraint.guideline',
         'android.resource.svg',
         'android.resource.background',
         'android.resource.strings',
@@ -185,7 +184,7 @@ saveAllToDisk() // download entire project as zip archive - requires Node.js and
 
 toString() // main layout file contents
 
-include(extension: squared.base.Extension) // see extension configuration section | same: apply(extension: {})
+include(extension: squared.base.Extension, options?: {}) // see extension configuration section | same: apply(extension: {})
 retrieve(name: string) // retrieve an extension by namespace or control | same: apply(name: string)
 configure(name: string, options: {}) // see extension configuration section | same: apply(name: string, options: {})
 exclude(name: string) // remove an extension by namespace or control

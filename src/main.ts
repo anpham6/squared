@@ -89,24 +89,24 @@ export function parseDocument(...elements: (string | HTMLElement)[]): squared.Pr
     return new PromiseResult();
 }
 
-export function include(value: any) {
+export function include(value: any, options?: {}) {
     if (main) {
-        if (value instanceof squared.base.Extension) {
-            return main.extensionManager.include(value);
-        }
-        else if (typeof value === 'string') {
+        if (typeof value === 'string') {
             value = value.trim();
-            const extension = main.builtInExtensions[value] || retrieve(value);
-            if (extension) {
-                return main.extensionManager.include(extension);
+            value = main.builtInExtensions[value] || retrieve(value);
+        }
+        if (value instanceof squared.base.Extension && main.extensionManager.include(value)) {
+            if (options) {
+                configure(value, options);
             }
+            return true;
         }
     }
     return false;
 }
 
-export function includeAsync(value: any) {
-    if (include(value)) {
+export function includeAsync(value: any, options?: {}) {
+    if (include(value, options)) {
         return true;
     }
     else if (value instanceof squared.base.Extension) {
