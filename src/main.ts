@@ -25,6 +25,7 @@ let settings = <UserSettings> {};
 let system = <FunctionMap<any>> {};
 
 export function setFramework(value: AppFramework<Node>, cached = false) {
+    const reloading = framework !== undefined;
     if (framework !== value) {
         const appBase = cached ? value.cached() : value.create();
         if (framework === undefined) {
@@ -33,27 +34,34 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
         settings = appBase.userSettings;
         main = appBase.application;
         main.userSettings = settings;
-        const register = new Set<Extension>();
         const builtInExtensions = main.builtInExtensions;
+        const extensions = main.extensions;
+        function includeExtension(extension: Extension) {
+            if (!extensions.includes(extension)) {
+                extension.application = <Application> main;
+                extensions.push(extension);
+            }
+        }
+        extensions.length = 0;
         for (const namespace of settings.builtInExtensions) {
-            if (builtInExtensions[namespace]) {
-                register.add(builtInExtensions[namespace]);
+            const extension = builtInExtensions[namespace];
+            if (extension) {
+                includeExtension(extension);
             }
             else {
-                for (const extension in builtInExtensions) {
-                    if (extension.startsWith(`${namespace}.`)) {
-                        register.add(builtInExtensions[extension]);
+                for (const name in builtInExtensions) {
+                    if (name.startsWith(`${namespace}.`)) {
+                        includeExtension(builtInExtensions[name]);
                     }
                 }
             }
         }
-        for (const extension of register) {
-            main.extensionManager.include(extension);
-        }
         framework = value;
         system = value.system;
     }
-    reset();
+    if (reloading) {
+        reset();
+    }
 }
 
 export function parseDocument(...elements: (string | HTMLElement)[]): squared.PromiseResult {

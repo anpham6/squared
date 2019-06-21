@@ -1,4 +1,4 @@
-/* android.widget 1.1.1
+/* android.widget 1.1.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,11 +6,9 @@ this.android.widget = this.android.widget || {};
 this.android.widget.coordinator = (function () {
     'use strict';
 
+    const { constant: $constA, enumeration: $enumA, util: $utilA } = android.lib;
     const $Resource = android.base.Resource;
     const $session = squared.lib.session;
-    const $constA = android.lib.constant;
-    const $enumA = android.lib.enumeration;
-    const $utilA = android.lib.util;
     const $e = squared.base.lib.enumeration;
     class Coordinator extends squared.base.ExtensionUI {
         processNode(node, parent) {

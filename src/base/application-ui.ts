@@ -1178,17 +1178,22 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         session.excluded.concat(processing.excluded.children);
         for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
-                ext.postBaseLayout(node);
+                if (CACHE.contains(node)) {
+                    ext.postBaseLayout(node);
+                }
             }
             ext.afterBaseLayout();
         }
     }
 
     protected setConstraints() {
+        const CACHE = this.processing.cache;
         this.controllerHandler.setConstraints();
         for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
-                ext.postConstraints(node);
+                if (CACHE.contains(node)) {
+                    ext.postConstraints(node);
+                }
             }
             ext.afterConstraints();
         }

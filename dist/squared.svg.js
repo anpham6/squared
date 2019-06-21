@@ -1,4 +1,4 @@
-/* squared.svg 1.1.1
+/* squared.svg 1.1.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -7,13 +7,7 @@
     (global = global || self, factory((global.squared = global.squared || {}, global.squared.svg = {})));
 }(this, function (exports) { 'use strict';
 
-    const $const = squared.lib.constant;
-    const $css = squared.lib.css;
-    const $dom = squared.lib.dom;
-    const $math = squared.lib.math;
-    const $regex = squared.lib.regex;
-    const $session = squared.lib.session;
-    const $util = squared.lib.util;
+    const { constant: $const, css: $css, dom: $dom, math: $math, regex: $regex, session: $session, util: $util, } = squared.lib;
     const SHAPES = {
         path: 1,
         line: 2,
@@ -487,11 +481,7 @@
         getPathLength: getPathLength
     });
 
-    const $css$1 = squared.lib.css;
-    const $dom$1 = squared.lib.dom;
-    const $math$1 = squared.lib.math;
-    const $regex$1 = squared.lib.regex;
-    const $util$1 = squared.lib.util;
+    const { css: $css$1, dom: $dom$1, math: $math$1, regex: $regex$1, util: $util$1 } = squared.lib;
     const REGEXP_DECIMAL = new RegExp($regex$1.STRING.DECIMAL, 'g');
     const REGEXP_COMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
     const NAME_GRAPHICS = new Map();
@@ -1429,9 +1419,7 @@
         };
     };
 
-    const $css$2 = squared.lib.css;
-    const $dom$3 = squared.lib.dom;
-    const $util$2 = squared.lib.util;
+    const { css: $css$2, dom: $dom$3, util: $util$2 } = squared.lib;
     const CACHE_PATTERN = {
         MS: /-?\d+ms$/,
         S: /-?\d+s$/,
@@ -1657,12 +1645,7 @@
         KEYSPLINE_NAME: KEYSPLINE_NAME
     });
 
-    const $color = squared.lib.color;
-    const $const$1 = squared.lib.constant;
-    const $css$3 = squared.lib.css;
-    const $dom$4 = squared.lib.dom;
-    const $regex$2 = squared.lib.regex;
-    const $util$3 = squared.lib.util;
+    const { color: $color, constant: $const$1, css: $css$3, dom: $dom$4, regex: $regex$2, util: $util$3 } = squared.lib;
     const invertControlPoint = (value) => parseFloat((1 - value).toPrecision(5));
     class SvgAnimate extends SvgAnimation {
         constructor(element, animationElement) {
@@ -1936,7 +1919,8 @@
         }
         set delay(value) {
             super.delay = value;
-            const end = $dom$4.getNamedItem(this.animationElement, $const$1.CSS.END);
+            const animationElement = this.animationElement;
+            const end = animationElement && $dom$4.getNamedItem(animationElement, $const$1.CSS.END);
             if (end) {
                 const endTime = $util$3.sortNumber($util$3.replaceMap(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0];
                 if (!isNaN(endTime) && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
@@ -1966,8 +1950,9 @@
             return value;
         }
         set iterationCount(value) {
+            const animationElement = this.animationElement;
             this._iterationCount = isNaN(value) ? 1 : value;
-            this.fillFreeze = this.iterationCount !== -1 && $dom$4.getNamedItem(this.animationElement, 'fill') === 'freeze';
+            this.fillFreeze = this.iterationCount !== -1 && !!animationElement && $dom$4.getNamedItem(animationElement, 'fill') === 'freeze';
             if (this.iterationCount !== 1) {
                 this.setAttribute('accumulate', 'sum');
             }
@@ -2118,8 +2103,7 @@
         }
     }
 
-    const $dom$5 = squared.lib.dom;
-    const $util$4 = squared.lib.util;
+    const { dom: $dom$5, util: $util$4 } = squared.lib;
     class SvgAnimateTransform extends SvgAnimate {
         constructor(element, animationElement) {
             super(element, animationElement);
@@ -2629,10 +2613,7 @@
         }
     }
 
-    const $const$2 = squared.lib.constant;
-    const $math$2 = squared.lib.math;
-    const $regex$3 = squared.lib.regex;
-    const $util$6 = squared.lib.util;
+    const { constant: $const$2, math: $math$2, regex: $regex$3, util: $util$6 } = squared.lib;
     const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
     const RECT_ARGS = [$const$2.CSS.WIDTH, $const$2.CSS.HEIGHT, 'x', 'y'];
     const POLYGON_ARGS = ['points'];
@@ -4553,11 +4534,7 @@
         };
     };
 
-    const $const$3 = squared.lib.constant;
-    const $css$4 = squared.lib.css;
-    const $dom$6 = squared.lib.dom;
-    const $math$3 = squared.lib.math;
-    const $util$7 = squared.lib.util;
+    const { constant: $const$3, css: $css$4, dom: $dom$6, math: $math$3, util: $util$7 } = squared.lib;
     class SvgAnimateMotion extends SvgAnimateTransform {
         constructor(element, animationElement) {
             super(element, animationElement);
@@ -4569,7 +4546,7 @@
             this._offsetLength = 0;
             if (animationElement) {
                 this.setAttribute('path');
-                const rotate = $dom$6.getNamedItem(this.animationElement, 'rotate');
+                const rotate = $dom$6.getNamedItem(animationElement, 'rotate');
                 switch (rotate) {
                     case 'auto':
                         break;
@@ -5021,11 +4998,7 @@
         }
     }
 
-    const $const$4 = squared.lib.constant;
-    const $css$5 = squared.lib.css;
-    const $dom$7 = squared.lib.dom;
-    const $regex$4 = squared.lib.regex;
-    const $util$8 = squared.lib.util;
+    const { constant: $const$4, css: $css$5, dom: $dom$7, regex: $regex$4, util: $util$8 } = squared.lib;
     const STRING_CUBICBEZIER = `cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)`;
     const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
     const KEYFRAME_MAP = $css$5.getKeyframeRules();
@@ -5518,8 +5491,7 @@
         };
     };
 
-    const $client = squared.lib.client;
-    const $const$5 = squared.lib.constant;
+    const { client: $client, constant: $const$5 } = squared.lib;
     function hasUnsupportedAccess(element) {
         if (element.tagName === 'svg') {
             if ($client.isUserAgent(8 /* FIREFOX */)) {
@@ -5683,15 +5655,12 @@
             let precision;
             let initialize = true;
             if (options) {
-                options = Object.assign({}, options);
                 element = options.symbolElement || options.patternElement || options.element || this.element;
                 precision = options.precision;
+                options = Object.assign({}, options, { symbolElement: undefined, patternElement: undefined, element: undefined });
                 if (options.initialize === false) {
                     initialize = false;
                 }
-                options.symbolElement = undefined;
-                options.patternElement = undefined;
-                options.element = undefined;
             }
             else {
                 element = this.element;
@@ -5863,9 +5832,7 @@
         }
     }
 
-    const $color$1 = squared.lib.color;
-    const $dom$8 = squared.lib.dom;
-    const $util$a = squared.lib.util;
+    const { color: $color$1, dom: $dom$8, util: $util$a } = squared.lib;
     function getColorStop(element) {
         const result = [];
         const stops = element.getElementsByTagName('stop');
@@ -5969,11 +5936,7 @@
         }
     }
 
-    const $color$2 = squared.lib.color;
-    const $const$6 = squared.lib.constant;
-    const $css$6 = squared.lib.css;
-    const $regex$5 = squared.lib.regex;
-    const $util$b = squared.lib.util;
+    const { color: $color$2, constant: $const$6, css: $css$6, regex: $regex$5, util: $util$b } = squared.lib;
     const CACHE_PATTERN$1 = {
         url: $regex$5.CSS.URL
     };
@@ -6213,8 +6176,7 @@
         }
     }
 
-    const $const$7 = squared.lib.constant;
-    const $util$c = squared.lib.util;
+    const { constant: $const$7, util: $util$c } = squared.lib;
     class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) {
         constructor(element, imageElement) {
             super(element);
@@ -6362,10 +6324,7 @@
         }
     }
 
-    const $const$8 = squared.lib.constant;
-    const $dom$9 = squared.lib.dom;
-    const $math$4 = squared.lib.math;
-    const $util$d = squared.lib.util;
+    const { constant: $const$8, dom: $dom$9, math: $math$4, util: $util$d } = squared.lib;
     function updatePathLocation(path, attr, x, y) {
         const commandA = path[0];
         const commandB = path[path.length - 1];
@@ -7392,9 +7351,7 @@
             this.patternElement = patternElement;
         }
         build(options) {
-            options = Object.assign({}, options);
-            options.patternElement = this.patternElement;
-            options.initialize = false;
+            options = Object.assign({}, options, { patternElement: this.patternElement, initialize: false });
             super.build(options);
         }
         get animations() {
@@ -7419,8 +7376,7 @@
         build(options) {
             if (this.path) {
                 this.path.parent = this.parent;
-                options = Object.assign({}, options);
-                options.transforms = this.transforms;
+                options = Object.assign({}, options, { transforms: this.transforms });
                 this.path.build(options);
             }
         }
@@ -7444,8 +7400,7 @@
         }
     }
 
-    const $css$7 = squared.lib.css;
-    const $dom$a = squared.lib.dom;
+    const { css: $css$7, dom: $dom$a } = squared.lib;
     const getPercent = (value) => $css$7.isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
     class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) {
         constructor(element, patternElement) {
@@ -7461,8 +7416,8 @@
             const path = new SvgPath(element);
             path.build(options);
             if (path.value) {
-                options = Object.assign({}, options);
                 const precision = options && options.precision;
+                options = Object.assign({}, options);
                 this.clipRegion = path.value;
                 if (path.clipPath) {
                     this.clipRegion = path.clipPath;
@@ -7663,8 +7618,7 @@
             this.setPaint(this.path ? [this.path.value] : undefined, options && options.precision);
         }
         synchronize(options) {
-            options = Object.assign({}, options);
-            options.element = this.shapeElement;
+            options = Object.assign({}, options, { element: this.shapeElement });
             if (this.animations.length) {
                 this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
             }

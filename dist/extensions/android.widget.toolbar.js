@@ -1,4 +1,4 @@
-/* android.widget 1.1.1
+/* android.widget 1.1.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,20 +6,14 @@ this.android.widget = this.android.widget || {};
 this.android.widget.toolbar = (function () {
     'use strict';
 
+    const { constant: $const, css: $css, session: $session, util: $util } = squared.lib;
+    const { constant: $constA, enumeration: $enumA, util: $utilA } = android.lib;
+    const { constant: $c, enumeration: $e } = squared.base.lib;
     const $Resource = android.base.Resource;
-    const $const = squared.lib.constant;
-    const $css = squared.lib.css;
-    const $session = squared.lib.session;
-    const $util = squared.lib.util;
-    const $constA = android.lib.constant;
-    const $enumA = android.lib.enumeration;
-    const $utilA = android.lib.util;
-    const $c = squared.base.lib.constant;
-    const $e = squared.base.lib.enumeration;
     const PREFIX_MENU = 'ic_menu_';
     class Toolbar extends squared.base.ExtensionUI {
-        constructor(name, framework, tagNames, options) {
-            super(name, framework, tagNames, options);
+        constructor(name, framework, options, tagNames) {
+            super(name, framework, options, tagNames);
             this.require("android.widget.menu" /* MENU */);
         }
         init(element) {
@@ -45,7 +39,7 @@ this.android.widget.toolbar = (function () {
         processNode(node, parent) {
             const application = this.application;
             const controller = application.controllerHandler;
-            const resource = this.application.resourceHandler;
+            const resource = application.resourceHandler;
             const settings = application.userSettings;
             const element = node.element;
             const target = node.dataset.target;

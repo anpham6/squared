@@ -12,6 +12,8 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     public extensions: chrome.base.Extension<T>[] = [];
     public userSettings!: UserSettingsChrome;
 
+    public finalize() {}
+
     public insertNode(element: Element, parent?: T) {
         if ($dom.isPlainText(element)) {
             if (this.userSettings.excludePlainText) {

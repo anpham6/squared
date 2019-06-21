@@ -63,9 +63,19 @@ app.post('/api/savetodisk', (req, res) => {
                 const quality = file.brotliQuality > 0 ? Math.min(file.brotliQuality, 11) : 0;
                 function writeBuffer() {
                     if (level > 0) {
+                        delayed++;
                         const filename_gz = filename + '.gz';
-                        fs.writeFileSync(filename_gz, zlib.createGzip({ level }));
-                        archive.file(filename_gz, { name: data.name + '.gz' });
+                        const gzip = zlib.createGzip({ level });
+                        const inp = fs.createReadStream(filename);
+                        const out = fs.createWriteStream(filename_gz);
+                        inp.pipe(gzip).pipe(out);
+                        out.on('finish', () => {
+                            if (delayed !== -1) {
+                                archive.file(filename_gz, { name: data.name + '.gz' });
+                                delayed--;
+                                finalize();
+                            }
+                        });
                     }
                     if (quality > 0) {
                         const filename_br = filename + '.br';

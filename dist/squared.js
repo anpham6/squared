@@ -1,4 +1,4 @@
-/* squared 1.1.1
+/* squared 1.1.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -32,7 +32,7 @@
         CALC: new RegExp(`^${STRING.CSS_CALC}$`),
         VAR: /var\((--[A-Za-z\d\-]+)(?!,\s*var\()(?:,\s*([a-z\-]+\([^)]+\)|[^)]+))?\)/,
         URL: /^url\("?(.+?)"?\)$/,
-        CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
+        CUSTOM_PROPERTY: /^(?:var|calc)\(.+\)$/,
         HEX: /[A-Za-z\d]{3,8}/,
         RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/,
         SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+])\\s*`, 'g'),
@@ -60,8 +60,8 @@
         WORD: /\w/,
         WORDDASH: /[a-zA-Z\d]/
     };
-    const PREFIX = {
-        PROTOCOL: /^[A-Za-z]+:\/\//
+    const COMPONENT = {
+        PROTOCOL: /^([A-Za-z]+:\/\/)([A-Za-z0-9\-.]+)(:[0-9]+)?(\/.*)?$/
     };
     const ESCAPE = {
         ENTITY: /&#(\d+);/g,
@@ -74,7 +74,7 @@
         CSS: CSS,
         XML: XML,
         CHAR: CHAR,
-        PREFIX: PREFIX,
+        COMPONENT: COMPONENT,
         ESCAPE: ESCAPE
     });
 
@@ -121,17 +121,17 @@
         if (CACHE_UNDERSCORE[value]) {
             return CACHE_UNDERSCORE[value];
         }
-        const length = value.length;
         let result = value[0].toLowerCase();
         let lower = true;
+        const length = value.length;
         for (let i = 1; i < length; i++) {
-            const char = value[i];
-            const upper = char === char.toUpperCase();
-            if (char !== '_' && lower && upper) {
-                result += '_' + char.toLowerCase();
+            const ch = value[i];
+            const upper = ch === ch.toUpperCase();
+            if (ch !== '_' && lower && upper) {
+                result += '_' + ch.toLowerCase();
             }
             else {
-                result += char;
+                result += ch;
             }
             lower = !upper;
         }
@@ -142,45 +142,31 @@
         if (CACHE_CAMELCASE[value]) {
             return CACHE_CAMELCASE[value];
         }
-        const length = value.length;
         let result = '';
         let previous = '';
+        const length = value.length;
         for (let i = 0; i < length; i++) {
-            if (value[i] !== char) {
+            const ch = value.charAt(i);
+            if (ch !== char) {
                 if (previous === char) {
-                    result += value[i].toUpperCase();
+                    result += ch.toUpperCase();
                 }
                 else {
-                    result += value[i];
+                    result += ch;
                 }
             }
-            previous = value[i];
+            previous = ch;
         }
         CACHE_CAMELCASE[value] = result;
         return result;
     }
     function convertWord(value, dash = false) {
-        const length = value.length;
+        const pattern = dash ? CHAR.WORDDASH : CHAR.WORD;
         let result = '';
-        if (dash) {
-            for (let i = 0; i < length; i++) {
-                if (CHAR.WORDDASH.test(value[i])) {
-                    result += value[i];
-                }
-                else {
-                    result += '_';
-                }
-            }
-        }
-        else {
-            for (let i = 0; i < length; i++) {
-                if (CHAR.WORD.test(value[i])) {
-                    result += value[i];
-                }
-                else {
-                    result += '_';
-                }
-            }
+        const length = value.length;
+        for (let i = 0; i < length; i++) {
+            const ch = value.charAt(i);
+            result += pattern.test(ch) ? ch : '_';
         }
         return result;
     }
@@ -333,7 +319,7 @@
     function optional(obj, value, type) {
         let valid = false;
         let result;
-        if (obj && typeof obj === 'object') {
+        if (typeof obj === 'object' && obj !== null) {
             result = obj;
             const attrs = value.split('.');
             let i = 0;
@@ -370,7 +356,7 @@
         return optional(obj, value, 'boolean');
     }
     function resolvePath(value) {
-        if (!PREFIX.PROTOCOL.test(value)) {
+        if (!COMPONENT.PROTOCOL.test(value)) {
             let pathname = location.pathname.split('/');
             pathname.pop();
             if (value.charAt(0) === '/') {
@@ -392,7 +378,7 @@
                     value = location.origin + pathname.join('/');
                 }
                 else {
-                    value = `${location.origin + pathname.join('/')}/${value}`;
+                    value = location.origin + pathname.join('/') + '/' + value;
                 }
             }
         }
@@ -493,12 +479,7 @@
         }
     }
     function sortNumber(values, ascending = true) {
-        if (ascending) {
-            return values.sort((a, b) => a < b ? -1 : 1);
-        }
-        else {
-            return values.sort((a, b) => a > b ? -1 : 1);
-        }
+        return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
     }
     function sortArray(list, ascending, ...attrs) {
         return list.sort((a, b) => {
@@ -3448,13 +3429,14 @@
         return 0;
     }
     function getNamedItem(element, attr) {
-        if (element) {
-            const item = element.attributes.getNamedItem(attr);
-            if (item) {
-                return item.value.trim();
-            }
+        const item = element.attributes.getNamedItem(attr);
+        if (item) {
+            return item.value.trim();
         }
         return '';
+    }
+    function isPlainText(element) {
+        return element.nodeName === '#text';
     }
 
     var dom = /*#__PURE__*/Object.freeze({
@@ -3467,7 +3449,8 @@
         getElementsBetweenSiblings: getElementsBetweenSiblings,
         createElement: createElement,
         measureTextWidth: measureTextWidth,
-        getNamedItem: getNamedItem
+        getNamedItem: getNamedItem,
+        isPlainText: isPlainText
     });
 
     function getClientRect(element, sessionId, cache = true) {
@@ -3611,6 +3594,41 @@
             return element instanceof HTMLElement || element instanceof SVGElement;
         }
         return false;
+    }
+    function parseSelectorText(value) {
+        const result = [];
+        if (value.indexOf(',') !== -1) {
+            let separatorValue = value;
+            let match;
+            let found = false;
+            while ((match = CSS.SELECTOR_ATTR.exec(separatorValue)) !== null) {
+                const index = match.index;
+                const length = match[0].length;
+                separatorValue = (index > 0 ? separatorValue.substring(0, index) : '') + '_'.repeat(length) + separatorValue.substring(index + length);
+                found = true;
+            }
+            if (found) {
+                let index;
+                let position = 0;
+                while (true) {
+                    index = separatorValue.indexOf(',', position);
+                    if (index !== -1) {
+                        result.push(value.substring(position, index).trim());
+                        position = index + 1;
+                    }
+                    else {
+                        if (position > 0) {
+                            result.push(value.substring(position).trim());
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        if (result.length === 0) {
+            result.push(value.trim());
+        }
+        return result;
     }
     function getSpecificity(value) {
         CSS.SELECTOR_G.lastIndex = 0;
@@ -4401,7 +4419,7 @@
         return CSS.CALC.test(value);
     }
     function isCustomProperty(value) {
-        return CSS.CUSTOMPROPERTY.test(value);
+        return CSS.CUSTOM_PROPERTY.test(value);
     }
     function isAngle(value) {
         return CSS.ANGLE.test(value);
@@ -4418,6 +4436,7 @@
         getStyle: getStyle,
         getFontSize: getFontSize,
         hasComputedStyle: hasComputedStyle,
+        parseSelectorText: parseSelectorText,
         getSpecificity: getSpecificity,
         checkStyleValue: checkStyleValue,
         getDataSet: getDataSet,
@@ -4458,16 +4477,10 @@
         return value.toString();
     }
     function minArray(list) {
-        if (list.length) {
-            return Math.min.apply(null, list);
-        }
-        return Number.POSITIVE_INFINITY;
+        return Math.min.apply(null, list);
     }
     function maxArray(list) {
-        if (list.length) {
-            return Math.max.apply(null, list);
-        }
-        return Number.NEGATIVE_INFINITY;
+        return Math.max.apply(null, list);
     }
     function isEqual$1(valueA, valueB, precision = 5) {
         const length = Math.floor(valueA).toString().length;
@@ -4486,10 +4499,7 @@
         if (value === Math.floor(value)) {
             return value.toString();
         }
-        else if (value >= 0 && value <= 1 / Math.pow(10, precision)) {
-            return '0';
-        }
-        else if (value < 0 && value >= -1 / Math.pow(10, precision)) {
+        else if ((value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
             return '0';
         }
         else {
@@ -4523,10 +4533,7 @@
     }
     function truncateTrailingZero(value) {
         const match = CHAR.TRAILINGZERO.exec(value);
-        if (match) {
-            return value.substring(0, value.length - match[match[1] !== '' ? 2 : 0].length);
-        }
-        return value;
+        return match ? value.substring(0, value.length - match[match[1] ? 2 : 0].length) : value;
     }
     function truncateString(value, precision = 3) {
         if (REGEXP_TRUNCATECACHE[precision] === undefined) {
@@ -4535,8 +4542,8 @@
         else {
             REGEXP_TRUNCATECACHE[precision].lastIndex = 0;
         }
-        let match;
         let output = value;
+        let match;
         while ((match = REGEXP_TRUNCATECACHE[precision].exec(value)) !== null) {
             if (parseInt(match[2]) >= 5) {
                 match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
@@ -4649,7 +4656,7 @@
         AMP: /&/g
     };
     const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
-    function isPlainText(value) {
+    function isPlainText$1(value) {
         const length = value.length;
         for (let i = 0; i < length; i++) {
             switch (value.charCodeAt(i)) {
@@ -4859,7 +4866,8 @@
         const char = new Array(length);
         let valid = false;
         for (let i = 0; i < length; i++) {
-            switch (value[i]) {
+            const ch = value.charAt(i);
+            switch (ch) {
                 case "'":
                     char[i] = "\\'";
                     valid = true;
@@ -4884,36 +4892,8 @@
                     char[i] = '&#160;';
                     valid = true;
                     break;
-                case '\u2002':
-                    char[i] = '&#8194;';
-                    valid = true;
-                    break;
-                case '\u2003':
-                    char[i] = '&#8195;';
-                    valid = true;
-                    break;
-                case '\u2009':
-                    char[i] = '&#8201;';
-                    valid = true;
-                    break;
-                case '\u200C':
-                    char[i] = '&#8204;';
-                    valid = true;
-                    break;
-                case '\u200D':
-                    char[i] = '&#8205;';
-                    valid = true;
-                    break;
-                case '\u200E':
-                    char[i] = '&#8206;';
-                    valid = true;
-                    break;
-                case '\u200F':
-                    char[i] = '&#8207;';
-                    valid = true;
-                    break;
                 default:
-                    char[i] = value[i];
+                    char[i] = ch;
                     break;
             }
         }
@@ -4922,7 +4902,7 @@
 
     var xml = /*#__PURE__*/Object.freeze({
         STRING_XMLENCODING: STRING_XMLENCODING,
-        isPlainText: isPlainText,
+        isPlainText: isPlainText$1,
         pushIndent: pushIndent,
         pushIndentArray: pushIndentArray,
         replaceIndent: replaceIndent,
@@ -4939,6 +4919,7 @@
     exports.settings = {};
     exports.system = {};
     function setFramework(value, cached = false) {
+        const reloading = framework !== undefined;
         if (framework !== value) {
             const appBase = cached ? value.cached() : value.create();
             if (framework === undefined) {
@@ -4947,27 +4928,34 @@
             exports.settings = appBase.userSettings;
             main = appBase.application;
             main.userSettings = exports.settings;
-            const register = new Set();
             const builtInExtensions = main.builtInExtensions;
+            const extensions = main.extensions;
+            function includeExtension(extension) {
+                if (!extensions.includes(extension)) {
+                    extension.application = main;
+                    extensions.push(extension);
+                }
+            }
+            extensions.length = 0;
             for (const namespace of exports.settings.builtInExtensions) {
-                if (builtInExtensions[namespace]) {
-                    register.add(builtInExtensions[namespace]);
+                const extension = builtInExtensions[namespace];
+                if (extension) {
+                    includeExtension(extension);
                 }
                 else {
-                    for (const extension in builtInExtensions) {
-                        if (extension.startsWith(`${namespace}.`)) {
-                            register.add(builtInExtensions[extension]);
+                    for (const name in builtInExtensions) {
+                        if (name.startsWith(`${namespace}.`)) {
+                            includeExtension(builtInExtensions[name]);
                         }
                     }
                 }
             }
-            for (const extension of register) {
-                main.extensionManager.include(extension);
-            }
             framework = value;
             exports.system = value.system;
         }
-        reset();
+        if (reloading) {
+            reset();
+        }
     }
     function parseDocument(...elements) {
         if (!main) {
@@ -5001,23 +4989,23 @@
         };
         return new PromiseResult();
     }
-    function include(value) {
+    function include(value, options) {
         if (main) {
-            if (value instanceof squared.base.Extension) {
-                return main.extensionManager.include(value);
-            }
-            else if (typeof value === 'string') {
+            if (typeof value === 'string') {
                 value = value.trim();
-                const extension = main.builtInExtensions[value] || retrieve(value);
-                if (extension) {
-                    return main.extensionManager.include(extension);
+                value = main.builtInExtensions[value] || retrieve(value);
+            }
+            if (value instanceof squared.base.Extension && main.extensionManager.include(value)) {
+                if (options) {
+                    configure(value, options);
                 }
+                return true;
             }
         }
         return false;
     }
-    function includeAsync(value) {
-        if (include(value)) {
+    function includeAsync(value, options) {
+        if (include(value, options)) {
             return true;
         }
         else if (value instanceof squared.base.Extension) {
@@ -5099,15 +5087,15 @@
         }
     }
     function ready() {
-        return !!main && !main.initialized && !main.closed;
+        return !!main && !main.initializing && !main.closed;
     }
     function close() {
-        if (main && !main.initialized && main.length) {
+        if (main && !main.initializing && main.length) {
             main.finalize();
         }
     }
     function saveAllToDisk() {
-        if (main && !main.initialized && main.length) {
+        if (main && !main.initializing && main.length) {
             if (!main.closed) {
                 main.finalize();
             }

@@ -1,4 +1,4 @@
-/* android.widget 1.1.1
+/* android.widget 1.1.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,16 +6,13 @@ this.android.widget = this.android.widget || {};
 this.android.widget.bottomnavigation = (function () {
     'use strict';
 
+    const { constant: $const, util: $util } = squared.lib;
+    const { constant: $constA, enumeration: $enumA, util: $utilA } = android.lib;
     const $Resource = android.base.Resource;
-    const $const = squared.lib.constant;
-    const $util = squared.lib.util;
-    const $constA = android.lib.constant;
-    const $enumA = android.lib.enumeration;
-    const $utilA = android.lib.util;
     const $e = squared.base.lib.enumeration;
     class BottomNavigation extends squared.base.ExtensionUI {
-        constructor(name, framework, tagNames, options) {
-            super(name, framework, tagNames, options);
+        constructor(name, framework, options, tagNames) {
+            super(name, framework, options, tagNames);
             this.require("android.widget.menu" /* MENU */);
         }
         processNode(node, parent) {

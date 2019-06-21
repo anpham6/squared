@@ -24,12 +24,12 @@ function parseUri(value: string): ChromeAsset | undefined {
         const port = match[3];
         const path = match[4];
         if (!value.startsWith($util.trimEnd(location.origin, '/'))) {
-            pathname = $util.convertWord(host) + (port ? '/' + port.substring(1) : '');
+            pathname = $util.convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
         }
         if (path) {
             const index = path.lastIndexOf('/');
             if (index > 0) {
-                pathname += path.substring(0, index);
+                pathname += path.substring(1, index);
                 filename = $util.fromLastIndexOf(path, '/');
             }
         }

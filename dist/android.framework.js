@@ -1,4 +1,4 @@
-/* android-framework 1.1.1
+/* android-framework 1.1.2
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -269,10 +269,7 @@ var android = (function () {
         RESERVED_JAVA: RESERVED_JAVA
     });
 
-    const $color = squared.lib.color;
-    const $css = squared.lib.css;
-    const $regex = squared.lib.regex;
-    const $util = squared.lib.util;
+    const { color: $color, css: $css, regex: $regex, util: $util } = squared.lib;
     const STORED = squared.base.ResourceUI.STORED;
     const REGEXP_NONWORD = /[^\w+]/g;
     let IMAGE_FORMAT;
@@ -296,7 +293,7 @@ var android = (function () {
                             break;
                         case 'src':
                         case 'srcCompat':
-                            if ($regex.PREFIX.PROTOCOL.test(value)) {
+                            if ($regex.COMPONENT.PROTOCOL.test(value)) {
                                 value = Resource.addImage({ mdpi: value });
                                 if (value !== '') {
                                     obj[attr] = `@drawable/${value}`;
@@ -318,7 +315,9 @@ var android = (function () {
     }
     class Resource extends squared.base.ResourceUI {
         constructor(application, cache) {
-            super(application, cache);
+            super();
+            this.application = application;
+            this.cache = cache;
             STORED.styles = new Map();
             STORED.themes = new Map();
             STORED.dimens = new Map();
@@ -497,13 +496,14 @@ var android = (function () {
                 }
             }
             if (result.mdpi) {
-                const rawData = this.application.resourceHandler.getRawData(result.mdpi);
+                const resource = this.application.resourceHandler;
+                const rawData = resource.getRawData(result.mdpi);
                 if (rawData && rawData.base64) {
                     if (rawData.filename.toLowerCase().endsWith('.svg')) {
                         return '';
                     }
                     const filename = prefix + rawData.filename;
-                    this.application.resourceHandler.writeRawImage(filename, rawData.base64);
+                    resource.writeRawImage(filename, rawData.base64);
                     return filename.substring(0, filename.lastIndexOf('.'));
                 }
             }
@@ -514,8 +514,7 @@ var android = (function () {
         }
     }
 
-    const $const = squared.lib.constant;
-    const $util$1 = squared.lib.util;
+    const { constant: $const, util: $util$1 } = squared.lib;
     function substitute(result, value, api, minApi = 0) {
         if (!api || api >= minApi) {
             result['attr'] = value;
@@ -1043,9 +1042,7 @@ var android = (function () {
         getValue: getValue
     });
 
-    const $const$1 = squared.lib.constant;
-    const $math = squared.lib.math;
-    const $util$2 = squared.lib.util;
+    const { constant: $const$1, math: $math, util: $util$2 } = squared.lib;
     const REGEXP_ID = /^@\+?id\//;
     function calculateBias(start, end, accuracy = 4) {
         if (start === 0) {
@@ -1136,14 +1133,8 @@ var android = (function () {
         getRootNs: getRootNs
     });
 
-    const $client = squared.lib.client;
-    const $const$2 = squared.lib.constant;
-    const $css$1 = squared.lib.css;
-    const $dom = squared.lib.dom;
-    const $math$1 = squared.lib.math;
-    const $util$3 = squared.lib.util;
-    const $c = squared.base.lib.constant;
-    const $e = squared.base.lib.enumeration;
+    const { client: $client, constant: $const$2, css: $css$1, dom: $dom, math: $math$1, util: $util$3 } = squared.lib;
+    const { constant: $c, enumeration: $e } = squared.base.lib;
     const REGEXP_DATASETATTR = /^attr[A-Z]/;
     const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
     const REGEXP_VALIDSTRING = /[^\w$\-_.]/g;
@@ -1256,11 +1247,12 @@ var android = (function () {
                 offset = (lineHeight - node.actualHeight) / 2;
             }
             if (Math.floor(offset) > 0) {
+                const boxPadding = usePadding && node.textElement && !node.plainText && !inlineStyle;
                 if (top) {
-                    node.modifyBox(usePadding && node.textElement && !node.plainText && !inlineStyle ? 32 /* PADDING_TOP */ : 2 /* MARGIN_TOP */, Math.round(offset));
+                    node.modifyBox(boxPadding ? 32 /* PADDING_TOP */ : 2 /* MARGIN_TOP */, Math.round(offset));
                 }
                 if (bottom) {
-                    node.modifyBox(usePadding && node.textElement && !node.plainText && !inlineStyle ? 128 /* PADDING_BOTTOM */ : 8 /* MARGIN_BOTTOM */, Math.floor(offset));
+                    node.modifyBox(boxPadding ? 128 /* PADDING_BOTTOM */ : 8 /* MARGIN_BOTTOM */, Math.floor(offset));
                 }
             }
         }
@@ -1301,9 +1293,7 @@ var android = (function () {
                 this._containerType = 0;
                 this.__android = {};
                 this.__app = {};
-                if (element) {
-                    this.init();
-                }
+                this.init();
                 if (afterInit) {
                     afterInit(this);
                 }
@@ -2549,19 +2539,9 @@ var android = (function () {
         }
     }
 
+    const { client: $client$1, color: $color$1, constant: $const$3, css: $css$2, dom: $dom$1, math: $math$2, regex: $regex$1, session: $session, util: $util$4, xml: $xml } = squared.lib;
+    const { constant: $c$1, enumeration: $e$1 } = squared.base.lib;
     const $NodeUI = squared.base.NodeUI;
-    const $client$1 = squared.lib.client;
-    const $color$1 = squared.lib.color;
-    const $const$3 = squared.lib.constant;
-    const $css$2 = squared.lib.css;
-    const $dom$1 = squared.lib.dom;
-    const $math$2 = squared.lib.math;
-    const $regex$1 = squared.lib.regex;
-    const $session = squared.lib.session;
-    const $util$4 = squared.lib.util;
-    const $xml = squared.lib.xml;
-    const $c$1 = squared.base.lib.constant;
-    const $e$1 = squared.base.lib.enumeration;
     const GUIDELINE_AXIS = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
     const CACHE_PATTERN = {};
     let DEFAULT_VIEWSETTINGS;
@@ -2849,13 +2829,7 @@ var android = (function () {
         return false;
     }
     function getTextBottom(nodes) {
-        return $util$4.filterArray(nodes, node => {
-            if ((node.baseline || $css$2.isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && node.element.size > 1) || node.verticalAlign === 'text-bottom' && node.containerName !== 'INPUT_IMAGE') {
-                return true;
-            }
-            return false;
-        })
-            .sort((a, b) => {
+        return $util$4.filterArray(nodes, node => (node.baseline || $css$2.isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && node.element.size > 1) || node.verticalAlign === 'text-bottom' && node.containerName !== 'INPUT_IMAGE').sort((a, b) => {
             if (a.baselineHeight === b.baselineHeight) {
                 return a.tagName === 'SELECT' ? 1 : 0;
             }
@@ -2870,11 +2844,25 @@ var android = (function () {
             return [$const$3.CSS.LEFT, $const$3.CSS.RIGHT, $c$1.STRING_BASE.LEFT_RIGHT, $c$1.STRING_BASE.RIGHT_LEFT];
         }
     }
+    function causesLineBreak(element, sessionId) {
+        if (element.tagName === 'BR') {
+            return true;
+        }
+        else {
+            const node = $session.getElementAsNode(element, sessionId);
+            if (node) {
+                return !node.excluded && node.blockStatic;
+            }
+        }
+        return false;
+    }
     const getRelativeVertical = (layout) => layout.some(item => item.positionRelative || !item.pageFlow && item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
     const getMaxHeight = (node) => Math.max(node.actualHeight, node.lineHeight);
     class Controller extends squared.base.ControllerUI {
-        constructor() {
-            super(...arguments);
+        constructor(application, cache) {
+            super();
+            this.application = application;
+            this.cache = cache;
             this.localSettings = {
                 layout: {
                     pathName: 'res/layout',
@@ -4359,7 +4347,7 @@ var android = (function () {
                                 previous.autoMargin.horizontal ||
                                 cleared.has(item) ||
                                 !item.textElement && !checkFloatWrap() && checkWrapWidth() && Math.floor(baseWidth) > maxWidth ||
-                                !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded === true && sibling.blockStatic) || !!siblings && siblings.some(element => Controller.causesLineBreak(element, node.sessionId)))) {
+                                !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => causesLineBreak(element, node.sessionId)))) {
                                 if (leftForward) {
                                     if (previousRowLeft && item.linear.bottom <= previousRowLeft.bounds.bottom) {
                                         if (!anchored) {
@@ -4424,7 +4412,7 @@ var android = (function () {
                             }
                         }
                         let previousOffset = 0;
-                        if (siblings && !siblings.some(element => !!$session.getElementAsNode(element, item.sessionId) || Controller.causesLineBreak(element, item.sessionId))) {
+                        if (siblings && !siblings.some(element => !!$session.getElementAsNode(element, item.sessionId) || causesLineBreak(element, item.sessionId))) {
                             const betweenStart = $session.getRangeClientRect(siblings[0], '0');
                             if (!betweenStart.numberOfLines) {
                                 const betweenEnd = siblings.length > 1 ? $session.getRangeClientRect(siblings[siblings.length - 1], '0') : undefined;
@@ -5204,9 +5192,6 @@ var android = (function () {
         createLayoutNodeGroup(layout) {
             return this.createNodeGroup(layout.node, layout.children, layout.parent);
         }
-        get userSettings() {
-            return this.application.userSettings;
-        }
         get containerTypeHorizontal() {
             return {
                 containerType: CONTAINER_NODE.LINEAR,
@@ -5242,6 +5227,9 @@ var android = (function () {
                 }
                 node.localSettings = DEFAULT_VIEWSETTINGS;
             };
+        }
+        get userSettings() {
+            return this.application.userSettings;
         }
     }
 
@@ -5324,8 +5312,8 @@ var android = (function () {
         }
     };
 
-    const $util$5 = squared.lib.util;
-    const $xml$1 = squared.lib.xml;
+    const { util: $util$5, xml: $xml$1 } = squared.lib;
+    const STORED$1 = Resource.STORED;
     const REGEXP_FILENAME = /^(.+)\/(.+?\.\w+)$/;
     const REGEXP_DRAWABLE_UNIT = /"(-?[\d.]+)px"/g;
     const REGEXP_THEME_UNIT = />(-?[\d.]+)px</g;
@@ -5354,32 +5342,32 @@ var android = (function () {
         }
         return result;
     }
+    const createFileAsset = (pathname, filename, content) => ({ pathname, filename, content });
     const replaceDrawableLength = (value, dpi, format) => format === 'dp' ? value.replace(REGEXP_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], dpi, false) + '"') : value;
     const replaceThemeLength = (value, dpi, format) => format === 'dp' ? value.replace(REGEXP_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], dpi, false) + '<') : value;
-    const createFileAsset = (pathname, filename, content) => ({ pathname, filename, content });
     const caseInsensitive = (a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
     class File extends squared.base.FileUI {
-        saveAllToDisk(layouts) {
-            const files = [];
-            const length = layouts.length;
+        saveAllToDisk(files) {
+            const layouts = [];
+            const length = files.length;
             for (let i = 0; i < length; i++) {
-                files.push(createFileAsset(layouts[i].pathname, i === 0 ? this.userSettings.outputMainFileName : `${layouts[i].filename}.xml`, layouts[i].content));
+                layouts.push(createFileAsset(files[i].pathname, i === 0 ? this.userSettings.outputMainFileName : `${files[i].filename}.xml`, files[i].content));
             }
-            this.saveToDisk(files.concat(getFileAssets(this.resourceStringToXml()), getFileAssets(this.resourceStringArrayToXml()), getFileAssets(this.resourceFontToXml()), getFileAssets(this.resourceColorToXml()), getFileAssets(this.resourceDimenToXml()), getFileAssets(this.resourceStyleToXml()), getFileAssets(this.resourceDrawableToXml()), getImageAssets(this.resourceDrawableImageToXml()), getFileAssets(this.resourceAnimToXml())), this.userSettings.manifestLabelAppName);
+            this.saveToDisk(layouts.concat(getFileAssets(this.resourceStringToXml()), getFileAssets(this.resourceStringArrayToXml()), getFileAssets(this.resourceFontToXml()), getFileAssets(this.resourceColorToXml()), getFileAssets(this.resourceDimenToXml()), getFileAssets(this.resourceStyleToXml()), getFileAssets(this.resourceDrawableToXml()), getImageAssets(this.resourceDrawableImageToXml()), getFileAssets(this.resourceAnimToXml())), this.userSettings.outputArchiveName);
         }
-        layoutAllToXml(layouts, saveToDisk = false) {
+        layoutAllToXml(files, saveToDisk = false) {
             const result = {};
-            const files = [];
-            const length = layouts.length;
+            const layouts = [];
+            const length = files.length;
             for (let i = 0; i < length; i++) {
-                const layout = layouts[i];
+                const layout = files[i];
                 result[layout.filename] = [layout.content];
                 if (saveToDisk) {
-                    files.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
+                    layouts.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
                 }
             }
             if (saveToDisk) {
-                this.saveToDisk(files, this.userSettings.manifestLabelAppName);
+                this.saveToDisk(layouts, this.userSettings.outputArchiveName);
             }
             return result;
         }
@@ -5410,30 +5398,30 @@ var android = (function () {
                         files = files.concat(getFileAssets(result[name]));
                     }
                 }
-                this.saveToDisk(files, this.userSettings.manifestLabelAppName);
+                this.saveToDisk(files, this.userSettings.outputArchiveName);
             }
             return result;
         }
         resourceStringToXml(saveToDisk = false) {
             const result = [];
             const data = [{ string: [] }];
-            if (!this.stored.strings.has('app_name')) {
-                data[0].string.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
+            if (!STORED$1.strings.has('app_name')) {
+                data[0].string.push({ name: 'app_name', innerText: this.userSettings.outputArchiveName });
             }
-            for (const [name, innerText] of Array.from(this.stored.strings.entries()).sort(caseInsensitive)) {
+            for (const [name, innerText] of Array.from(STORED$1.strings.entries()).sort(caseInsensitive)) {
                 data[0].string.push({ name, innerText });
             }
             result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', STRING_TMPL, data), this.userSettings.insertSpaces), this.directory.string, 'strings.xml');
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
             }
             return result;
         }
         resourceStringArrayToXml(saveToDisk = false) {
             const result = [];
-            if (this.stored.arrays.size) {
+            if (STORED$1.arrays.size) {
                 const data = [{ 'string-array': [] }];
-                for (const [name, values] of Array.from(this.stored.arrays.entries()).sort()) {
+                for (const [name, values] of Array.from(STORED$1.arrays.entries()).sort()) {
                     data[0]['string-array'].push({
                         name,
                         item: $util$5.objectMap(values, innerText => ({ innerText }))
@@ -5441,18 +5429,18 @@ var android = (function () {
                 }
                 result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', STRINGARRAY_TMPL, data), this.userSettings.insertSpaces), this.directory.string, 'string_arrays.xml');
                 if (saveToDisk) {
-                    this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+                    this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
                 }
             }
             return result;
         }
         resourceFontToXml(saveToDisk = false) {
             const result = [];
-            if (this.stored.fonts.size) {
+            if (STORED$1.fonts.size) {
                 const settings = this.userSettings;
                 const xmlns = XMLNS_ANDROID[settings.targetAPI < 26 /* OREO */ ? STRING_ANDROID.APP : STRING_ANDROID.ANDROID];
                 const pathname = this.directory.font;
-                for (const [name, font] of Array.from(this.stored.fonts.entries()).sort()) {
+                for (const [name, font] of Array.from(STORED$1.fonts.entries()).sort()) {
                     const data = [{
                             'xmlns:android': xmlns,
                             font: []
@@ -5490,21 +5478,21 @@ var android = (function () {
                     result.push(output, pathname, `${name}.xml`);
                 }
                 if (saveToDisk) {
-                    this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
+                    this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
                 }
             }
             return result;
         }
         resourceColorToXml(saveToDisk = false) {
             const result = [];
-            if (this.stored.colors.size) {
+            if (STORED$1.colors.size) {
                 const data = [{ color: [] }];
-                for (const [innerText, name] of Array.from(this.stored.colors.entries()).sort()) {
+                for (const [innerText, name] of Array.from(STORED$1.colors.entries()).sort()) {
                     data[0].color.push({ name, innerText });
                 }
                 result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', COLOR_TMPL, data), this.userSettings.insertSpaces), this.directory.string, 'colors.xml');
                 if (saveToDisk) {
-                    this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+                    this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
                 }
             }
             return result;
@@ -5512,9 +5500,9 @@ var android = (function () {
         resourceStyleToXml(saveToDisk = false) {
             const settings = this.userSettings;
             const result = [];
-            if (this.stored.styles.size) {
+            if (STORED$1.styles.size) {
                 const data = [{ style: [] }];
-                for (const style of Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
+                for (const style of Array.from(STORED$1.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
                     if (Array.isArray(style.items)) {
                         const item = [];
                         for (const obj of style.items.sort((a, b) => a.key >= b.key ? 1 : -1)) {
@@ -5529,9 +5517,9 @@ var android = (function () {
                 }
                 result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', STYLE_TMPL, data), settings.insertSpaces), this.directory.string, 'styles.xml');
             }
-            if (this.stored.themes.size) {
+            if (STORED$1.themes.size) {
                 const appTheme = {};
-                for (const [filename, theme] of this.stored.themes.entries()) {
+                for (const [filename, theme] of STORED$1.themes.entries()) {
                     const data = [{ style: [] }];
                     for (const [themeName, themeData] of theme.entries()) {
                         const item = [];
@@ -5556,46 +5544,46 @@ var android = (function () {
                 }
             }
             if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
             }
             return result;
         }
         resourceDimenToXml(saveToDisk = false) {
             const result = [];
-            if (this.stored.dimens.size) {
+            if (STORED$1.dimens.size) {
                 const data = [{ dimen: [] }];
                 const settings = this.userSettings;
                 const dpi = settings.resolutionDPI;
                 const convertPixels = settings.convertPixels;
-                for (const [name, value] of Array.from(this.stored.dimens.entries()).sort()) {
+                for (const [name, value] of Array.from(STORED$1.dimens.entries()).sort()) {
                     data[0].dimen.push({ name, innerText: convertPixels ? convertLength(value, dpi, false) : value });
                 }
                 result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', DIMEN_TMPL, data)), this.directory.string, 'dimens.xml');
                 if (saveToDisk) {
-                    this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
+                    this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
                 }
             }
             return result;
         }
         resourceDrawableToXml(saveToDisk = false) {
             const result = [];
-            if (this.stored.drawables.size) {
+            if (STORED$1.drawables.size) {
                 const settings = this.userSettings;
                 const directory = this.directory.image;
-                for (const [name, value] of this.stored.drawables.entries()) {
+                for (const [name, value] of STORED$1.drawables.entries()) {
                     result.push($xml$1.replaceTab(replaceDrawableLength(value, settings.resolutionDPI, settings.convertPixels), settings.insertSpaces), directory, `${name}.xml`);
                 }
                 if (saveToDisk) {
-                    this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
+                    this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
                 }
             }
             return result;
         }
         resourceDrawableImageToXml(saveToDisk = false) {
             const result = [];
-            if (this.stored.images.size) {
+            if (STORED$1.images.size) {
                 const directory = this.directory.image;
-                for (const [name, images] of this.stored.images.entries()) {
+                for (const [name, images] of STORED$1.images.entries()) {
                     if (Object.keys(images).length > 1) {
                         for (const dpi in images) {
                             result.push(images[dpi], `${directory}-${dpi}`, `${name}.${$util$5.fromLastIndexOf(images[dpi], '.')}`);
@@ -5606,29 +5594,26 @@ var android = (function () {
                     }
                 }
                 if (saveToDisk) {
-                    this.saveToDisk(getImageAssets(result), this.userSettings.manifestLabelAppName);
+                    this.saveToDisk(getImageAssets(result), this.userSettings.outputArchiveName);
                 }
             }
             return result;
         }
         resourceAnimToXml(saveToDisk = false) {
             const result = [];
-            if (this.stored.animators.size) {
+            if (STORED$1.animators.size) {
                 const settings = this.userSettings;
-                for (const [name, value] of this.stored.animators.entries()) {
+                for (const [name, value] of STORED$1.animators.entries()) {
                     result.push($xml$1.replaceTab(value, settings.insertSpaces), 'res/anim', `${name}.xml`);
                 }
                 if (saveToDisk) {
-                    this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
+                    this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
                 }
             }
             return result;
         }
         get userSettings() {
             return this.resource.userSettings;
-        }
-        get stored() {
-            return this.resource.stored;
         }
     }
 
@@ -5681,12 +5666,8 @@ var android = (function () {
     }
 
     var $LayoutUI = squared.base.LayoutUI;
-    const $css$3 = squared.lib.css;
-    const $const$4 = squared.lib.constant;
-    const $math$3 = squared.lib.math;
-    const $util$6 = squared.lib.util;
-    const $c$2 = squared.base.lib.constant;
-    const $e$3 = squared.base.lib.enumeration;
+    const { constant: $const$4, css: $css$3, math: $math$3, util: $util$6 } = squared.lib;
+    const { constant: $c$2, enumeration: $e$3 } = squared.base.lib;
     const REGEXP_ALIGNSELF = /(start|end|center|baseline)/;
     const REGEXP_JUSTIFYSELF = /(start|end|center|baseline|left|right)/;
     function getRowData(mainData, direction) {
@@ -6169,12 +6150,9 @@ var android = (function () {
     }
 
     var $LayoutUI$1 = squared.base.LayoutUI;
+    const { constant: $const$5, math: $math$4, util: $util$7 } = squared.lib;
+    const { constant: $c$3, enumeration: $e$4 } = squared.base.lib;
     const $NodeUI$1 = squared.base.NodeUI;
-    const $const$5 = squared.lib.constant;
-    const $math$4 = squared.lib.math;
-    const $util$7 = squared.lib.util;
-    const $c$3 = squared.base.lib.constant;
-    const $e$4 = squared.base.lib.enumeration;
     const CHAIN_MAP = {
         leftTop: [$const$5.CSS.LEFT, $const$5.CSS.TOP],
         rightBottom: [$const$5.CSS.RIGHT, $const$5.CSS.BOTTOM],
@@ -6779,11 +6757,8 @@ var android = (function () {
     }
 
     var $LayoutUI$2 = squared.base.LayoutUI;
-    const $const$6 = squared.lib.constant;
-    const $css$4 = squared.lib.css;
-    const $util$8 = squared.lib.util;
-    const $c$4 = squared.base.lib.constant;
-    const $e$5 = squared.base.lib.enumeration;
+    const { constant: $const$6, css: $css$4, util: $util$8 } = squared.lib;
+    const { constant: $c$4, enumeration: $e$5 } = squared.base.lib;
     function transferData(parent, siblings) {
         const data = squared.base.extensions.Grid.createDataCellAttribute();
         for (const item of siblings) {
@@ -6911,12 +6886,9 @@ var android = (function () {
     }
 
     var $LayoutUI$3 = squared.base.LayoutUI;
+    const { constant: $const$7, css: $css$5, util: $util$9, } = squared.lib;
+    const { constant: $c$5, enumeration: $e$6 } = squared.base.lib;
     const $NodeUI$2 = squared.base.NodeUI;
-    const $const$7 = squared.lib.constant;
-    const $css$5 = squared.lib.css;
-    const $util$9 = squared.lib.util;
-    const $c$5 = squared.base.lib.constant;
-    const $e$6 = squared.base.lib.enumeration;
     const MINWIDTH_INSIDE = 24;
     const PADDINGRIGHT_DFN = 8;
     class List extends squared.base.extensions.List {
@@ -7108,7 +7080,7 @@ var android = (function () {
                     if (isNaN(resetPadding) || resetPadding <= 0) {
                         parent.modifyBox(parent.paddingLeft > 0 ? 256 /* PADDING_LEFT */ : 16 /* MARGIN_LEFT */);
                     }
-                    if (typeof resetPadding === 'number' && resetPadding < 0) {
+                    if (resetPadding < 0) {
                         parent.modifyBox(16 /* MARGIN_LEFT */, resetPadding);
                     }
                 }
@@ -7153,10 +7125,8 @@ var android = (function () {
     }
 
     var $LayoutUI$4 = squared.base.LayoutUI;
-    const $const$8 = squared.lib.constant;
-    const $css$6 = squared.lib.css;
-    const $c$6 = squared.base.lib.constant;
-    const $e$7 = squared.base.lib.enumeration;
+    const { constant: $const$8, css: $css$6 } = squared.lib;
+    const { constant: $c$6, enumeration: $e$7 } = squared.base.lib;
     class Sprite extends squared.base.extensions.Sprite {
         processNode(node, parent) {
             const mainData = node.data($c$6.EXT_NAME.SPRITE, $c$6.STRING_BASE.EXT_DATA);
@@ -7224,11 +7194,8 @@ var android = (function () {
     }
 
     var $LayoutUI$5 = squared.base.LayoutUI;
-    const $const$9 = squared.lib.constant;
-    const $css$7 = squared.lib.css;
-    const $util$b = squared.lib.util;
-    const $c$7 = squared.base.lib.constant;
-    const $e$8 = squared.base.lib.enumeration;
+    const { constant: $const$9, css: $css$7, util: $util$b } = squared.lib;
+    const { constant: $c$7, enumeration: $e$8 } = squared.base.lib;
     class Table extends squared.base.extensions.Table {
         processNode(node, parent) {
             super.processNode(node, parent);
@@ -7364,9 +7331,7 @@ var android = (function () {
     }
 
     var $LayoutUI$7 = squared.base.LayoutUI;
-    const $const$a = squared.lib.constant;
-    const $css$8 = squared.lib.css;
-    const $util$c = squared.lib.util;
+    const { constant: $const$a, css: $css$8, util: $util$c } = squared.lib;
     const $e$a = squared.base.lib.enumeration;
     class Guideline extends squared.base.ExtensionUI {
         constructor() {
@@ -7384,109 +7349,106 @@ var android = (function () {
                 output: this.application.renderNode(new $LayoutUI$7(parent, node, CONTAINER_NODE.CONSTRAINT, 32 /* ABSOLUTE */, node.children))
             };
         }
-        afterConstraints() {
+        postBaseLayout(node) {
             const controller = this.application.controllerHandler;
-            for (const node of this.subscribers) {
-                let anchor;
+            const circlePosition = this.options.circlePosition;
+            let anchor;
+            node.each((item) => {
+                if ($util$c.withinRange(item.linear.left, node.box.left)) {
+                    item.anchor($const$a.CSS.LEFT, STRING_ANDROID.PARENT);
+                    item.anchorStyle(STRING_ANDROID.HORIZONTAL);
+                }
+                if ($util$c.withinRange(item.linear.top, node.box.top)) {
+                    item.anchor($const$a.CSS.TOP, STRING_ANDROID.PARENT);
+                    item.anchorStyle(STRING_ANDROID.VERTICAL);
+                }
+                if (circlePosition) {
+                    if (item.anchored) {
+                        anchor = item;
+                    }
+                    else if (anchor) {
+                        if (!anchor.constraint.vertical && item.constraint.vertical) {
+                            anchor = item;
+                        }
+                    }
+                    else if (item.constraint.vertical) {
+                        anchor = item;
+                    }
+                    else if (item.constraint.horizontal) {
+                        anchor = item;
+                    }
+                }
+            });
+            if (circlePosition) {
+                if (anchor === undefined) {
+                    anchor = node.item(0);
+                }
+                if (!anchor.anchored) {
+                    controller.addGuideline(anchor, node);
+                }
                 node.each((item) => {
-                    if ($util$c.withinRange(item.linear.left, node.box.left)) {
-                        item.anchor($const$a.CSS.LEFT, STRING_ANDROID.PARENT);
-                        item.anchorStyle(STRING_ANDROID.HORIZONTAL);
-                    }
-                    if ($util$c.withinRange(item.linear.top, node.box.top)) {
-                        item.anchor($const$a.CSS.TOP, STRING_ANDROID.PARENT);
-                        item.anchorStyle(STRING_ANDROID.VERTICAL);
-                    }
-                    if (this.options.circlePosition) {
-                        if (item.anchored) {
-                            anchor = item;
-                        }
-                        else if (anchor) {
-                            if (!anchor.constraint.vertical && item.constraint.vertical) {
-                                anchor = item;
-                            }
-                        }
-                        else if (item.constraint.vertical) {
-                            anchor = item;
-                        }
-                        else if (item.constraint.horizontal) {
-                            anchor = item;
-                        }
-                    }
-                });
-                if (this.options.circlePosition) {
-                    if (anchor === undefined) {
-                        anchor = node.item(0);
-                    }
-                    if (!anchor.anchored) {
-                        controller.addGuideline(anchor, node);
-                    }
-                    node.each((item) => {
-                        if (item !== anchor) {
-                            const center1 = item.center;
-                            const center2 = anchor.center;
-                            const x = Math.abs(center1.x - center2.x);
-                            const y = Math.abs(center1.y - center2.y);
-                            const radius = Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)));
-                            let degrees = Math.round(Math.atan(Math.min(x, y) / Math.max(x, y)) * (180 / Math.PI));
-                            if (center1.y > center2.y) {
-                                if (center1.x > center2.x) {
-                                    if (x > y) {
-                                        degrees += 90;
-                                    }
-                                    else {
-                                        degrees = 180 - degrees;
-                                    }
+                    if (item !== anchor) {
+                        const center1 = item.center;
+                        const center2 = anchor.center;
+                        const x = Math.abs(center1.x - center2.x);
+                        const y = Math.abs(center1.y - center2.y);
+                        const radius = Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)));
+                        let degrees = Math.round(Math.atan(Math.min(x, y) / Math.max(x, y)) * (180 / Math.PI));
+                        if (center1.y > center2.y) {
+                            if (center1.x > center2.x) {
+                                if (x > y) {
+                                    degrees += 90;
                                 }
                                 else {
-                                    if (x > y) {
-                                        degrees = 270 - degrees;
-                                    }
-                                    else {
-                                        degrees += 180;
-                                    }
-                                }
-                            }
-                            else if (center1.y < center2.y) {
-                                if (center2.x > center1.x) {
-                                    if (x > y) {
-                                        degrees += 270;
-                                    }
-                                    else {
-                                        degrees = 360 - degrees;
-                                    }
-                                }
-                                else {
-                                    if (x > y) {
-                                        degrees = 90 - degrees;
-                                    }
+                                    degrees = 180 - degrees;
                                 }
                             }
                             else {
-                                degrees = center1.x > center2.x ? 90 : 270;
+                                if (x > y) {
+                                    degrees = 270 - degrees;
+                                }
+                                else {
+                                    degrees += 180;
+                                }
                             }
-                            item.app('layout_constraintCircle', anchor.documentId);
-                            item.app('layout_constraintCircleRadius', $css$8.formatPX(radius));
-                            item.app('layout_constraintCircleAngle', degrees.toString());
                         }
-                    });
-                }
-                else {
-                    node.each((item) => {
-                        if (!item.anchored) {
-                            controller.addGuideline(item, node);
+                        else if (center1.y < center2.y) {
+                            if (center2.x > center1.x) {
+                                if (x > y) {
+                                    degrees += 270;
+                                }
+                                else {
+                                    degrees = 360 - degrees;
+                                }
+                            }
+                            else {
+                                if (x > y) {
+                                    degrees = 90 - degrees;
+                                }
+                            }
                         }
-                    });
-                }
+                        else {
+                            degrees = center1.x > center2.x ? 90 : 270;
+                        }
+                        item.app('layout_constraintCircle', anchor.documentId);
+                        item.app('layout_constraintCircleRadius', $css$8.formatPX(radius));
+                        item.app('layout_constraintCircleAngle', degrees.toString());
+                    }
+                });
+            }
+            else {
+                node.each((item) => {
+                    if (!item.anchored) {
+                        controller.addGuideline(item, node);
+                    }
+                });
             }
         }
     }
 
     var $LayoutUI$8 = squared.base.LayoutUI;
-    const $const$b = squared.lib.constant;
-    const $util$d = squared.lib.util;
-    const $c$8 = squared.base.lib.constant;
-    const $e$b = squared.base.lib.enumeration;
+    const { constant: $const$b, util: $util$d } = squared.lib;
+    const { constant: $c$8, enumeration: $e$b } = squared.base.lib;
     class Fixed extends squared.base.ExtensionUI {
         condition(node) {
             if (node.naturalElement && (node.documentBody || node.contentBoxWidth > 0 || node.contentBoxHeight > 0)) {
@@ -7611,9 +7573,8 @@ var android = (function () {
     }
 
     var $LayoutUI$9 = squared.base.LayoutUI;
+    const { constant: $c$9, enumeration: $e$c } = squared.base.lib;
     const $const$c = squared.lib.constant;
-    const $c$9 = squared.base.lib.constant;
-    const $e$c = squared.base.lib.enumeration;
     class MaxWidthHeight extends squared.base.ExtensionUI {
         condition(node, parent) {
             if (!node.inputElement) {
@@ -7691,10 +7652,8 @@ var android = (function () {
     }
 
     var $LayoutUI$b = squared.base.LayoutUI;
-    const $const$e = squared.lib.constant;
-    const $css$9 = squared.lib.css;
-    const $c$a = squared.base.lib.constant;
-    const $e$e = squared.base.lib.enumeration;
+    const { constant: $const$e, css: $css$9 } = squared.lib;
+    const { constant: $c$a, enumeration: $e$e } = squared.base.lib;
     function outsideX(node, parent) {
         if (node.pageFlow) {
             return node === parent.firstChild && node.inlineFlow && !node.centerAligned && !node.rightAligned && node.marginLeft < 0 && Math.abs(node.marginLeft) <= parent.marginLeft + parent.paddingLeft && !parent.some(item => item.multiline);
@@ -7957,8 +7916,7 @@ var android = (function () {
         }
     }
 
-    const $const$g = squared.lib.constant;
-    const $css$a = squared.lib.css;
+    const { constant: $const$g, css: $css$a } = squared.lib;
     const $e$h = squared.base.lib.enumeration;
     class ScrollBar extends squared.base.ExtensionUI {
         condition(node) {
@@ -8174,13 +8132,7 @@ var android = (function () {
         }
     };
 
-    const $color$2 = squared.lib.color;
-    const $const$h = squared.lib.constant;
-    const $css$b = squared.lib.css;
-    const $math$5 = squared.lib.math;
-    const $regex$2 = squared.lib.regex;
-    const $util$e = squared.lib.util;
-    const $xml$2 = squared.lib.xml;
+    const { color: $color$2, constant: $const$h, css: $css$b, math: $math$5, regex: $regex$2, util: $util$e, xml: $xml$2 } = squared.lib;
     const $e$i = squared.base.lib.enumeration;
     function getBorderStyle(border, direction = -1, halfSize = false) {
         const style = border.style;
@@ -8570,11 +8522,10 @@ var android = (function () {
             };
             this.eventOnly = true;
         }
-        afterInit() {
-            this._resourceSvgInstance = this.application.controllerHandler.localSettings.svg.enabled ? this.application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
-        }
         afterResources() {
-            const settings = this.application.userSettings;
+            const application = this.application;
+            const settings = application.userSettings;
+            this._resourceSvgInstance = application.controllerHandler.localSettings.svg.enabled ? application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
             function setDrawableBackground(node, value) {
                 let drawable = Resource.insertStoredAsset('drawables', `${node.containerName.toLowerCase()}_${node.controlId}`, value);
                 if (drawable !== '') {
@@ -8587,7 +8538,7 @@ var android = (function () {
                     }
                 }
             }
-            for (const node of this.application.processing.cache) {
+            for (const node of application.processing.cache) {
                 const stored = node.data(Resource.KEY_NAME, 'boxStyle');
                 if (stored && node.hasResource($e$i.NODE_RESOURCE.BOX_STYLE)) {
                     if (node.inputElement) {
@@ -8638,6 +8589,7 @@ var android = (function () {
                     }
                 }
             }
+            this._resourceSvgInstance = undefined;
         }
         getDrawableBorder(data, borders, border, images, indentWidth = 0, borderOnly = true) {
             const borderVisible = [];
@@ -8763,13 +8715,13 @@ var android = (function () {
             let resizable = true;
             if (node.hasResource($e$i.NODE_RESOURCE.IMAGE_SOURCE)) {
                 const bgImage = data.backgroundImage;
+                const resource = this.application.resourceHandler;
                 if (bgImage) {
                     lengthImage = bgImage.length;
                     while (backgroundSize.length < lengthImage) {
                         backgroundSize = backgroundSize.concat(backgroundSize.slice(0));
                     }
                     backgroundSize.length = lengthImage;
-                    const resource = this.application.resourceHandler;
                     const resourceInstance = this._resourceSvgInstance;
                     for (let i = 0, j = 0; i < lengthImage; i++) {
                         let value = bgImage[i];
@@ -8842,13 +8794,13 @@ var android = (function () {
                     for (let i = 0, j = lengthImage; i < extracted.length; i++) {
                         const image = extracted[i];
                         const element = image.element;
-                        const src = this.application.resourceHandler.addImageSrc(element);
+                        const src = resource.addImageSrc(element);
                         if (src !== '') {
                             backgroundImage[j] = src;
                             backgroundRepeat[j] = 'no-repeat';
                             backgroundSize[j] = `${image.actualWidth}px ${image.actualHeight}px`;
                             backgroundPosition[j] = $css$b.getBackgroundPosition(image.containerName === 'INPUT_IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left + node.borderLeftWidth}px ${image.bounds.top - node.bounds.top + node.borderTopWidth}px`, node.actualDimension, node.fontSize);
-                            imageDimensions[j] = this.application.resourceHandler.getImage(element.src);
+                            imageDimensions[j] = resource.getImage(element.src);
                             j++;
                         }
                     }
@@ -9349,9 +9301,8 @@ var android = (function () {
         }
     }
 
-    const $regex$3 = squared.lib.regex;
-    const $util$f = squared.lib.util;
-    const STORED$1 = Resource.STORED;
+    const { regex: $regex$3, util: $util$f } = squared.lib;
+    const STORED$2 = Resource.STORED;
     const NAMESPACE_ATTR = [STRING_ANDROID.ANDROID, STRING_ANDROID.APP];
     const REGEXP_UNIT = /\dpx$/;
     const REGEXP_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/;
@@ -9396,12 +9347,12 @@ var android = (function () {
                 const group = groups[containerName];
                 for (const name in group) {
                     const [namespace, attr, value] = name.split($regex$3.XML.SEPARATOR);
-                    const key = getResourceName(STORED$1.dimens, `${getDisplayName(containerName)}_${$util$f.convertUnderscore(attr)}`, value);
+                    const key = getResourceName(STORED$2.dimens, `${getDisplayName(containerName)}_${$util$f.convertUnderscore(attr)}`, value);
                     const data = group[name];
                     for (const node of data) {
                         node[namespace](attr, `@dimen/${key}`);
                     }
-                    STORED$1.dimens.set(key, value);
+                    STORED$2.dimens.set(key, value);
                 }
             }
         }
@@ -9413,8 +9364,8 @@ var android = (function () {
                     while ((match = REGEXP_UNIT_ATTR.exec(content)) !== null) {
                         if (match[1] !== 'text') {
                             const value = match[2];
-                            const key = getResourceName(STORED$1.dimens, `custom_${$util$f.convertUnderscore(match[1])}`, value);
-                            STORED$1.dimens.set(key, value);
+                            const key = getResourceName(STORED$2.dimens, `custom_${$util$f.convertUnderscore(match[1])}`, value);
+                            STORED$2.dimens.set(key, value);
                             content = content.replace(match[0], match[0].replace(match[2], `@dimen/${key}`));
                         }
                     }
@@ -9424,10 +9375,9 @@ var android = (function () {
         }
     }
 
-    const $regex$4 = squared.lib.regex;
-    const $util$g = squared.lib.util;
+    const { regex: $regex$4, util: $util$g } = squared.lib;
     const $e$j = squared.base.lib.enumeration;
-    const STORED$2 = Resource.STORED;
+    const STORED$3 = Resource.STORED;
     const REGEXP_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
     const REGEXP_DOUBLEQUOTE = /"/g;
     const FONT_ANDROID = {
@@ -9837,8 +9787,8 @@ var android = (function () {
                                 if (array.length === 1) {
                                     items = styleData.items;
                                 }
-                                else if (!STORED$2.styles.has(tag)) {
-                                    STORED$2.styles.set(tag, { name: tag, parent: '', items: styleData.items });
+                                else if (!STORED$3.styles.has(tag)) {
+                                    STORED$3.styles.set(tag, { name: tag, parent: '', items: styleData.items });
                                 }
                             }
                             else {
@@ -9863,11 +9813,11 @@ var android = (function () {
                 });
                 if (items) {
                     if (styleName.length === 0) {
-                        STORED$2.styles.set(parent, { name: parent, parent: '', items });
+                        STORED$3.styles.set(parent, { name: parent, parent: '', items });
                     }
                     else {
                         const name = styleName.join('.');
-                        STORED$2.styles.set(name, { name, parent, items });
+                        STORED$3.styles.set(name, { name, parent, items });
                     }
                 }
             }
@@ -9953,11 +9903,7 @@ var android = (function () {
         }
     }
 
-    const $const$i = squared.lib.constant;
-    const $css$c = squared.lib.css;
-    const $dom$2 = squared.lib.dom;
-    const $util$h = squared.lib.util;
-    const $xml$3 = squared.lib.xml;
+    const { constant: $const$i, css: $css$c, dom: $dom$2, util: $util$h, xml: $xml$3 } = squared.lib;
     const $e$l = squared.base.lib.enumeration;
     class ResourceStrings extends squared.base.ExtensionUI {
         constructor() {
@@ -10108,9 +10054,8 @@ var android = (function () {
         }
     }
 
-    const $regex$5 = squared.lib.regex;
-    const $util$i = squared.lib.util;
-    const STORED$3 = Resource.STORED;
+    const { regex: $regex$5, util: $util$i } = squared.lib;
+    const STORED$4 = Resource.STORED;
     const REGEXP_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;
     class ResourceStyles extends squared.base.ExtensionUI {
         constructor() {
@@ -10202,7 +10147,7 @@ var android = (function () {
                         items.push({ key: match[1], value: match[2] });
                     }
                 }
-                STORED$3.styles.set(name, Object.assign({}, createStyleAttribute(), { name, items }));
+                STORED$4.styles.set(name, Object.assign({}, createStyleAttribute(), { name, items }));
             }
         }
     }
@@ -10271,15 +10216,9 @@ var android = (function () {
     var $SvgG = squared.svg.SvgG;
     var $SvgPath = squared.svg.SvgPath;
     var $SvgShape = squared.svg.SvgShape;
-    const $const$j = squared.lib.constant;
-    const $css$d = squared.lib.css;
-    const $math$6 = squared.lib.math;
-    const $regex$6 = squared.lib.regex;
-    const $util$j = squared.lib.util;
-    const $xml$4 = squared.lib.xml;
-    const $constS = squared.svg.lib.constant;
-    const $utilS = squared.svg.lib.util;
-    const STORED$4 = Resource.STORED;
+    const { constant: $const$j, css: $css$d, math: $math$6, regex: $regex$6, util: $util$j, xml: $xml$4 } = squared.lib;
+    const { constant: $constS, util: $utilS } = squared.svg.lib;
+    const STORED$5 = Resource.STORED;
     const INTERPOLATOR_ANDROID = {
         accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',
         accelerate: '@android:anim/accelerate_interpolator',
@@ -10338,9 +10277,9 @@ var android = (function () {
         }
         else {
             const name = `path_interpolator_${$util$j.convertWord(value)}`;
-            if (!STORED$4.animators.has(name)) {
+            if (!STORED$5.animators.has(name)) {
                 const xml = $util$j.formatString(INTERPOLATOR_XML, ...value.split(' '));
-                STORED$4.animators.set(name, xml);
+                STORED$5.animators.set(name, xml);
             }
             return `@anim/${name}`;
         }
@@ -10731,7 +10670,7 @@ var android = (function () {
             this.SYNCHRONIZE_MODE = 0;
             this.NAMESPACE_AAPT = false;
         }
-        beforeInit() {
+        beforeParseDocument() {
             if ($SvgBuild) {
                 $SvgBuild.setName();
                 this.application.controllerHandler.localSettings.svg.enabled = true;
@@ -11508,7 +11447,7 @@ var android = (function () {
             }
             return drawable;
         }
-        afterFinalize() {
+        afterParseDocument() {
             this.application.controllerHandler.localSettings.svg.enabled = false;
         }
         parseVectorData(group, depth = 0) {
@@ -11999,7 +11938,6 @@ var android = (function () {
             'squared.verticalalign',
             'squared.whitespace',
             'squared.accessibility',
-            'android.constraint.guideline',
             'android.resource.svg',
             'android.resource.background',
             'android.resource.strings',
@@ -12026,8 +11964,9 @@ var android = (function () {
         manifestLabelAppName: 'android',
         manifestThemeName: 'AppTheme',
         manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
-        outputDirectory: 'app/src/main',
         outputMainFileName: 'activity_main.xml',
+        outputDirectory: 'app/src/main',
+        outputArchiveName: 'android-xml',
         outputArchiveFormat: 'zip',
         outputArchiveTimeout: 30
     };
@@ -12035,10 +11974,10 @@ var android = (function () {
     const framework = 2 /* ANDROID */;
     let initialized = false;
     let application;
-    let fileHandler;
+    let file;
     let userSettings;
     function autoClose() {
-        if (application && application.userSettings.autoCloseOnWrite && !application.initialized && !application.closed) {
+        if (application && application.userSettings.autoCloseOnWrite && !application.initializing && !application.closed) {
             application.finalize();
             return true;
         }
@@ -12112,68 +12051,68 @@ var android = (function () {
                 XMLNS_ANDROID[name] = uri;
             },
             writeLayoutAllXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.layoutAllToXml(application.layouts, saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.layoutAllToXml(application.layouts, saveToDisk);
                 }
                 return {};
             },
             writeResourceAllXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceAllToXml(saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.resourceAllToXml(saveToDisk);
                 }
                 return {};
             },
             writeResourceStringXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceStringToXml(saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.resourceStringToXml(saveToDisk);
                 }
                 return [];
             },
             writeResourceArrayXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceStringArrayToXml(saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.resourceStringArrayToXml(saveToDisk);
                 }
                 return [];
             },
             writeResourceFontXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceFontToXml(saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.resourceFontToXml(saveToDisk);
                 }
                 return [];
             },
             writeResourceColorXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceColorToXml(saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.resourceColorToXml(saveToDisk);
                 }
                 return [];
             },
             writeResourceStyleXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceStyleToXml(saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.resourceStyleToXml(saveToDisk);
                 }
                 return [];
             },
             writeResourceDimenXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceDimenToXml(saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.resourceDimenToXml(saveToDisk);
                 }
                 return [];
             },
             writeResourceDrawableXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceDrawableToXml(saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.resourceDrawableToXml(saveToDisk);
                 }
                 return [];
             },
             writeResourceDrawableImageXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceDrawableImageToXml(saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.resourceDrawableImageToXml(saveToDisk);
                 }
                 return [];
             },
             writeResourceAnimXml(saveToDisk = false) {
-                if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceAnimToXml(saveToDisk);
+                if (file && checkApplication(application)) {
+                    return file.resourceAnimToXml(saveToDisk);
                 }
                 return [];
             }
@@ -12182,7 +12121,8 @@ var android = (function () {
             const EN = squared.base.lib.constant.EXT_NAME;
             const EA = EXT_ANDROID;
             application = new Application(framework, View, Controller, Resource, ExtensionManager);
-            fileHandler = new File(application.resourceHandler);
+            file = new File();
+            application.resourceHandler.setFileHandler(file);
             userSettings = Object.assign({}, settings);
             Object.assign(application.builtInExtensions, {
                 [EN.EXTERNAL]: new External(EN.EXTERNAL, framework),
@@ -12190,9 +12130,9 @@ var android = (function () {
                 [EN.SPRITE]: new Sprite(EN.SPRITE, framework),
                 [EN.CSS_GRID]: new CssGrid(EN.CSS_GRID, framework),
                 [EN.FLEXBOX]: new Flexbox(EN.FLEXBOX, framework),
-                [EN.TABLE]: new Table(EN.TABLE, framework, ['TABLE']),
-                [EN.LIST]: new List(EN.LIST, framework, ['DIV', 'UL', 'OL', 'DL']),
-                [EN.GRID]: new Grid(EN.GRID, framework, ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET']),
+                [EN.TABLE]: new Table(EN.TABLE, framework, undefined, ['TABLE']),
+                [EN.LIST]: new List(EN.LIST, framework, undefined, ['DIV', 'UL', 'OL', 'DL']),
+                [EN.GRID]: new Grid(EN.GRID, framework, undefined, ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET']),
                 [EN.RELATIVE]: new Relative(EN.RELATIVE, framework),
                 [EN.VERTICAL_ALIGN]: new VerticalAlign(EN.VERTICAL_ALIGN, framework),
                 [EN.WHITESPACE]: new WhiteSpace(EN.WHITESPACE, framework),

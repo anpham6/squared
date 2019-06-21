@@ -1,4 +1,4 @@
-/* android.widget 1.1.1
+/* android.widget 1.1.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,16 +6,10 @@ this.android.widget = this.android.widget || {};
 this.android.widget.menu = (function () {
     'use strict';
 
+    const { constant: $constA, enumeration: $enumA, util: $utilA } = android.lib;
+    const { constant: $c, enumeration: $e } = squared.base.lib;
     const $Resource = android.base.Resource;
-    const $const = squared.lib.constant;
-    const $css = squared.lib.css;
-    const $session = squared.lib.session;
     const $util = squared.lib.util;
-    const $constA = android.lib.constant;
-    const $enumA = android.lib.enumeration;
-    const $utilA = android.lib.util;
-    const $c = squared.base.lib.constant;
-    const $e = squared.base.lib.enumeration;
     const REGEXP_ITEM = {
         id: /^@\+id\/\w+$/,
         title: /^.+$/,
@@ -77,43 +71,30 @@ this.android.widget.menu = (function () {
     }
     const hasInputType = (node, value) => node.some(item => item.element.type === value);
     class Menu extends squared.base.ExtensionUI {
-        constructor(name, framework, tagNames, options) {
-            super(name, framework, tagNames, options);
+        constructor(name, framework, options, tagNames) {
+            super(name, framework, options, tagNames);
+            this.cascadeAll = true;
             this.require($c.EXT_NAME.EXTERNAL, true);
         }
         init(element) {
             if (this.included(element)) {
-                const application = this.application;
                 const children = element.children;
                 const length = children.length;
-                let valid = false;
                 if (length) {
-                    valid = true;
                     const tagName = children[0].tagName;
                     for (let i = 1; i < length; i++) {
                         if (children[i].tagName !== tagName) {
-                            valid = false;
-                            break;
+                            return false;
                         }
                     }
-                    if (valid) {
-                        let current = element.parentElement;
-                        while (current) {
-                            if (current.tagName === 'NAV' && application.rootElements.has(current)) {
-                                valid = false;
-                                break;
-                            }
-                            current = current.parentElement;
+                    const application = this.application;
+                    let current = element.parentElement;
+                    while (current) {
+                        if (current.tagName === 'NAV' && application.rootElements.has(current)) {
+                            return false;
                         }
+                        current = current.parentElement;
                     }
-                }
-                if (valid) {
-                    element.querySelectorAll('NAV').forEach((item) => {
-                        if ($css.getStyle(item).display === $const.CSS.NONE) {
-                            $session.setElementCache(item, 'squaredExternalDisplay', application.processing.sessionId, $const.CSS.NONE);
-                            item.style.setProperty('display', 'block');
-                        }
-                    });
                     application.rootElements.add(element);
                 }
             }
@@ -226,15 +207,6 @@ this.android.widget.menu = (function () {
                 complete: true,
                 next: controlName === NAVIGATION.MENU
             };
-        }
-        postBaseLayout(node) {
-            node.element.querySelectorAll('NAV').forEach((item) => {
-                const display = $session.getElementCache(item, 'squaredExternalDisplay', node.sessionId);
-                if (display) {
-                    item.style.setProperty('display', display);
-                    $session.deleteElementCache(item, 'squaredExternalDisplay', node.sessionId);
-                }
-            });
         }
     }
 
