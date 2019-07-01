@@ -5060,9 +5060,6 @@
         }
         return false;
     }
-    function apply(value, options) {
-        return include(value, options);
-    }
     function retrieve(value) {
         return main && main.extensionManager.retrieve(value);
     }
@@ -5095,11 +5092,14 @@
             main.saveToArchive(value || exports.settings.outputArchiveName);
         }
     }
-    function saveAllToDisk() {
-        saveToArchive();
-    }
     function toString() {
         return main ? main.toString() : '';
+    }
+    function apply(value, options) {
+        return include(value, options);
+    }
+    function saveAllToDisk() {
+        saveToArchive();
     }
     const lib = {
         base: {

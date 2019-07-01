@@ -81,26 +81,28 @@ app.post('/api/assets/copy', (req, res) => {
             for (const file of req.body) {
                 const { pathname, filename, level, quality } = getFileData(file, directory);
                 function writeBuffer() {
-                    if (level > 0) {
-                        delayed++;
-                        createGzipWriteStream(level, filename, filename + '.gz').on('finish', finalize);
-                    }
-                    if (quality > 0) {
-                        delayed++;
-                        const filename_br = filename + '.br';
-                        fs.writeFile(
-                            filename_br,
-                            brotli.compress(
-                                fs.readFileSync(filename),
-                                { mode: file.mimeType && file.mimeType.startsWith('font/') ? 2 : 1, quality }
-                            ),
-                            () => {
-                                if (delayed !== -1) {
-                                    archive.file(filename_br, { name: data.name + '.br' });
-                                    finalize();
+                    if (delayed !== -1) {
+                        if (level > 0) {
+                            delayed++;
+                            createGzipWriteStream(level, filename, filename + '.gz').on('finish', finalize);
+                        }
+                        if (quality > 0) {
+                            delayed++;
+                            const filename_br = filename + '.br';
+                            fs.writeFile(
+                                filename_br,
+                                brotli.compress(
+                                    fs.readFileSync(filename),
+                                    { mode: file.mimeType && file.mimeType.startsWith('font/') ? 2 : 1, quality }
+                                ),
+                                () => {
+                                    if (delayed !== -1) {
+                                        archive.file(filename_br, { name: data.name + '.br' });
+                                        finalize();
+                                    }
                                 }
-                            }
-                        );
+                            );
+                        }
                     }
                 }
                 fileerror = filename;
@@ -112,12 +114,10 @@ app.post('/api/assets/copy', (req, res) => {
                         file.base64 || file.content,
                         file.base64 ? 'base64' : 'utf8',
                         err => {
-                            if (delayed !== -1) {
-                                if (!err) {
-                                    writeBuffer();
-                                } 
-                                finalize();
-                            }
+                            if (!err) {
+                                writeBuffer();
+                            } 
+                            finalize();
                         }
                     );
                 }
@@ -125,10 +125,8 @@ app.post('/api/assets/copy', (req, res) => {
                     delayed++;
                     const stream = fs.createWriteStream(filename);
                     stream.on('finish', () => {
-                        if (delayed !== -1) {
-                            writeBuffer();
-                            finalize();
-                        }
+                        writeBuffer();
+                        finalize();
                     });
                     request(file.uri)
                         .on('response', res => {
@@ -160,7 +158,7 @@ app.post('/api/assets/archive', (req, res) => {
         mkdirp.sync(directory);
         function resume(unzip_to = '') {
             const archive = archiver(format, { zlib: { level: 9 } });
-            if (zipname === '') {
+            if (!zipname) {
                 zipname = `${dirname}/${req.query.filename || 'squared'}.${format}`;
             }
             const output = fs.createWriteStream(zipname);
@@ -188,34 +186,36 @@ app.post('/api/assets/archive', (req, res) => {
                     const { pathname, filename, level, quality } = getFileData(file, directory);
                     const data = { name: `${(req.query.directory ? `${req.query.directory}/` : '') + file.pathname}/${file.filename}` };
                     function writeBuffer() {
-                        if (level > 0) {
-                            delayed++;
-                            const filename_gz = filename + '.gz';
-                            createGzipWriteStream(level, filename, filename_gz).on('finish', () => {
-                                if (delayed !== -1) {
-                                    archive.file(filename_gz, { name: data.name + '.gz' });
-                                    finalize();
-                                }
-                            });
-                        }
-                        if (quality > 0) {
-                            delayed++;
-                            const filename_br = filename + '.br';
-                            fs.writeFile(
-                                filename_br,
-                                brotli.compress(
-                                    fs.readFileSync(filename),
-                                    { mode: file.mimeType && file.mimeType.startsWith('font/') ? 2 : 1, quality }
-                                ),
-                                () => {
+                        if (delayed !== -1) {
+                            if (level > 0) {
+                                delayed++;
+                                const filename_gz = filename + '.gz';
+                                createGzipWriteStream(level, filename, filename_gz).on('finish', () => {
                                     if (delayed !== -1) {
-                                        archive.file(filename_br, { name: data.name + '.br' });
+                                        archive.file(filename_gz, { name: data.name + '.gz' });
                                         finalize();
                                     }
-                                }
-                            );
+                                });
+                            }
+                            if (quality > 0) {
+                                delayed++;
+                                const filename_br = filename + '.br';
+                                fs.writeFile(
+                                    filename_br,
+                                    brotli.compress(
+                                        fs.readFileSync(filename),
+                                        { mode: file.mimeType && file.mimeType.startsWith('font/') ? 2 : 1, quality }
+                                    ),
+                                    () => {
+                                        if (delayed !== -1) {
+                                            archive.file(filename_br, { name: data.name + '.br' });
+                                            finalize();
+                                        }
+                                    }
+                                );
+                            }
+                            archive.file(filename, data);
                         }
-                        archive.file(filename, data);
                     }
                     fileerror = filename;
                     mkdirp.sync(pathname);
@@ -226,12 +226,10 @@ app.post('/api/assets/archive', (req, res) => {
                             file.base64 || file.content,
                             file.base64 ? 'base64' : 'utf8',
                             err => {
-                                if (delayed !== -1) {
-                                    if (!err) {
-                                        writeBuffer();
-                                    } 
-                                    finalize();
-                                }
+                                if (!err) {
+                                    writeBuffer();
+                                } 
+                                finalize();
                             }
                         );
                     }
@@ -239,10 +237,8 @@ app.post('/api/assets/archive', (req, res) => {
                         delayed++;
                         const stream = fs.createWriteStream(filename);
                         stream.on('finish', () => {
-                            if (delayed !== -1) {
-                                writeBuffer();
-                                finalize();
-                            }
+                            writeBuffer();
+                            finalize();
                         });
                         request(file.uri)
                             .on('response', res => {
@@ -272,7 +268,7 @@ app.post('/api/assets/archive', (req, res) => {
                             resume(unzip_to);
                         });
                     }
-                    if (append_to.startsWith('[A-Za-z]+://')) {
+                    if (/^[A-Za-z]+:\/\//.test(append_to)) {
                         const stream = fs.createWriteStream(zipname);
                         stream.on('finish', copied);
                         request(append_to)
@@ -304,8 +300,9 @@ app.post('/api/assets/archive', (req, res) => {
 });
 
 app.get('/api/browser/download', (req, res) => {
-    if (req.query.filename && req.query.filename.trim() !== '') {
-        res.sendFile(req.query.filename, err => {
+    const filename = req.query.filename && req.query.filename.trim();
+    if (filename) {
+        res.sendFile(filename, err => {
             if (err) {
                 console.log(`ERROR: ${err}`);
             }
