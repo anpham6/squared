@@ -115,7 +115,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             squared.setFramework(android);
-            squared.apply('android.widget.drawer', {
+            squared.configure('android.widget.drawer', {
                 self: {
                     android: {
                         fitsSystemWindows: 'true'
@@ -133,7 +133,7 @@
                     }
                 }
             });
-            squared.apply('android.widget.toolbar', {
+            squared.configure('android.widget.toolbar', {
                 toolbar_demo: {
                     appBar: {
                         android: {

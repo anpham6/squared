@@ -173,10 +173,6 @@ export function configure(value: any, options: {}) {
     return false;
 }
 
-export function apply(value: any, options: {}) {
-    return include(value, options);
-}
-
 export function retrieve(value: string) {
     return main && main.extensionManager.retrieve(value);
 }
@@ -215,12 +211,16 @@ export function saveToArchive(value?: string) {
     }
 }
 
-export function saveAllToDisk() {
-    saveToArchive();
-}
-
 export function toString() {
     return main ? main.toString() : '';
+}
+
+export function apply(value: any, options: {}) {
+    return include(value, options);
+}
+
+export function saveAllToDisk() {
+    saveToArchive();
 }
 
 const lib = {

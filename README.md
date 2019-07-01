@@ -191,13 +191,14 @@ saveToArchive(filename?: string) // save entire project as zip archive (Express 
 
 toString() // main layout file contents
 
-include(extension: squared.base.Extension, options?: {}) // see extension configuration section | same: apply(extension: {})
-retrieve(name: string) // retrieve an extension by namespace or control | same: apply(name: string)
-configure(name: string, options: {}) // see extension configuration section | same: apply(name: string, options: {})
+include(extension: string | squared.base.Extension, options?: {}) // see extension configuration section
+retrieve(name: string) // retrieve an extension by namespace or control
+configure(name: string, options: {}) // see extension configuration section
 exclude(name: string) // remove an extension by namespace or control
 
 // DEPRECATIONS
 
+apply() // replacement: include() | configure()
 saveAllToDisk() // replacement: saveToArchive()
 ```
 
@@ -405,7 +406,7 @@ CSS Grid and Flexbox layouts are are for the most part fully supported. There is
     }
 
     // third-party: install an extension
-    var sample = new Sample('your.namespace.sample', ['DIV'], { /* same as configure */ });
+    var sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
     squared.include(sample);
 </script>
 ```

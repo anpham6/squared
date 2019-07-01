@@ -90,7 +90,7 @@
                         System.import('/build/android-widget/toolbar/main.js'),
                         System.import('/build/android-widget/drawer/main.js')
                     ]).then(() => {
-                        squared.apply('android.widget.drawer', {
+                        squared.configure('android.widget.drawer', {
                             self: {
                                 android: {
                                     fitsSystemWindows: 'true'
@@ -108,7 +108,7 @@
                                 }
                             }
                         });
-                        squared.apply('android.widget.toolbar', {
+                        squared.configure('android.widget.toolbar', {
                             toolbar_demo: {
                                 appBar: {
                                     android: {

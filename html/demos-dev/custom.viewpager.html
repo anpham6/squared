@@ -71,12 +71,12 @@
                         System.import('/build/android-widget/menu/main.js'),
                         System.import('/build/android-widget/toolbar/main.js')
                     ]).then(() => {
-                        squared.apply('android.widget.toolbar', {
+                        squared.configure('android.widget.toolbar', {
                             toolbar_demo: {
                                 appBar: {}
                             }
                         });
-                        squared.apply('squared.substitute', {
+                        squared.configure('squared.substitute', {
                             viewpager_demo: {
                                 android: {
                                     layout_height: 'match_parent'
