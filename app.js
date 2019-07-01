@@ -5,6 +5,7 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const uuid = require('uuid/v1');
 const archiver = require('archiver');
+const decompress = require('decompress');
 const zlib = require('zlib');
 const brotli = require('brotli');
 const request = require('request');
@@ -29,107 +30,153 @@ if (app.get('env') === 'development') {
 app.post('/api/savetodisk', (req, res) => {
     const dirname = `${__dirname.replace(/\\/g, '/')}/temp/${uuid()}`;
     const directory = dirname + (req.query.directory ? `/${req.query.directory}` : '');
-    const format = req.query.format.toLowerCase() === 'tar' ? 'tar' : 'zip';
+    let format = req.query.format.toLowerCase() === 'tar' ? 'tar' : 'zip';
+    const append_to = req.query.append_to && req.query.append_to.trim();
     const timeout = Math.max(parseInt(req.query.timeout) || 30, 1) * 1000;
     const finalizeTime = Date.now() + timeout;
     try {
+        let zipname = '';
         mkdirp.sync(directory);
-        const archive = archiver(format, { zlib: { level: 9 } });
-        const zipname = `${dirname}/${req.query.filename || 'squared'}.${format}`;
-        const output = fs.createWriteStream(zipname);
-        let delayed = 0;
-        output.on('close', () => {
-            delayed = -1;
-            console.log(`WRITE: ${zipname} (${archive.pointer()} bytes)`);
-            res.json({
-                directory: dirname,
-                zipname,
-                bytes: archive.pointer()
-            });
-        });
-        archive.pipe(output);
-        function finalize() {
-            if (delayed !== -1 && (delayed === 0 || Date.now() >= finalizeTime)) {
-                delayed = -1;
-                archive.finalize();
+        function resume(unzip_to = '') {
+            const archive = archiver(format, { zlib: { level: 9 } });
+            if (zipname === '') {
+                zipname = `${dirname}/${req.query.filename || 'squared'}.${format}`;
             }
-        }
-        let fileerror = '';
-        try {
-            for (const file of req.body) {
-                const pathname = `${directory}/${file.pathname}`;
-                const filename = `${pathname}/${file.filename}`;
-                const level = file.gzipQuality > 0 ? Math.min(file.gzipQuality, 9) : 0;
-                const quality = file.brotliQuality > 0 ? Math.min(file.brotliQuality, 11) : 0;
-                function writeBuffer() {
-                    if (level > 0) {
+            const output = fs.createWriteStream(zipname);
+            let delayed = 0;
+            output.on('close', () => {
+                delayed = -1;
+                console.log(`WRITE: ${zipname} (${archive.pointer()} bytes)`);
+                res.json({
+                    directory: dirname,
+                    zipname,
+                    bytes: archive.pointer()
+                });
+            });
+            archive.pipe(output);
+            function finalize() {
+                if (delayed !== -1 && (delayed === 0 || Date.now() >= finalizeTime)) {
+                    delayed = -1;
+                    archive.finalize();
+                }
+            }
+            let fileerror = '';
+            try {
+                if (unzip_to) {
+                    archive.directory(unzip_to, '');
+                }
+                for (const file of req.body) {
+                    const pathname = `${directory}/${file.pathname}`;
+                    const filename = `${pathname}/${file.filename}`;
+                    const level = file.gzipQuality > 0 ? Math.min(file.gzipQuality, 9) : 0;
+                    const quality = file.brotliQuality > 0 ? Math.min(file.brotliQuality, 11) : 0;
+                    function writeBuffer() {
+                        if (level > 0) {
+                            delayed++;
+                            const filename_gz = filename + '.gz';
+                            const gzip = zlib.createGzip({ level });
+                            const inp = fs.createReadStream(filename);
+                            const out = fs.createWriteStream(filename_gz);
+                            inp.pipe(gzip).pipe(out);
+                            out.on('finish', () => {
+                                if (delayed !== -1) {
+                                    archive.file(filename_gz, { name: data.name + '.gz' });
+                                    delayed--;
+                                    finalize();
+                                }
+                            });
+                        }
+                        if (quality > 0) {
+                            const filename_br = filename + '.br';
+                            fs.writeFileSync(filename_br, brotli.compress(fs.readFileSync(filename), { mode: (file.mimeType || '').startsWith('font/') ? 2 : 1, quality }));
+                            archive.file(filename_br, { name: data.name + '.br' });
+                        }
+                        archive.file(filename, data);
+                    }
+                    fileerror = filename;
+                    mkdirp.sync(pathname);
+                    const data = { name: `${(req.query.directory ? `${req.query.directory}/` : '') + file.pathname}/${file.filename}` };
+                    if (file.content || file.base64) {
                         delayed++;
-                        const filename_gz = filename + '.gz';
-                        const gzip = zlib.createGzip({ level });
-                        const inp = fs.createReadStream(filename);
-                        const out = fs.createWriteStream(filename_gz);
-                        inp.pipe(gzip).pipe(out);
-                        out.on('finish', () => {
+                        fs.writeFile(filename, file.base64 || file.content, file.base64 ? 'base64' : 'utf8', err => {
                             if (delayed !== -1) {
-                                archive.file(filename_gz, { name: data.name + '.gz' });
+                                if (!err) {
+                                    writeBuffer();
+                                }
                                 delayed--;
                                 finalize();
                             }
                         });
                     }
-                    if (quality > 0) {
-                        const filename_br = filename + '.br';
-                        fs.writeFileSync(filename_br, brotli.compress(fs.readFileSync(filename), { mode: (file.mimeType || '').startsWith('font/') ? 2 : 1, quality }));
-                        archive.file(filename_br, { name: data.name + '.br' });
-                    }
-                    archive.file(filename, data);
-                }
-                fileerror = filename;
-                mkdirp.sync(pathname);
-                const data = { name: `${(req.query.directory ? `${req.query.directory}/` : '') + file.pathname}/${file.filename}` };
-                if (file.content || file.base64) {
-                    delayed++;
-                    fs.writeFile(filename, file.base64 || file.content, file.base64 ? 'base64' : 'utf8', err => {
-                        if (delayed !== -1) {
-                            if (!err) {
-                                writeBuffer();
-                            }
-                            delayed--;
-                            finalize();
-                        }
-                    });
-                }
-                else if (file.uri) {
-                    delayed++;
-                    const stream = fs.createWriteStream(filename);
-                    stream.on('finish', () => {
-                        if (delayed !== -1) {
-                            writeBuffer();
-                            delayed--;
-                            finalize();
-                        }
-                    });
-                    request(file.uri).on('response', response => {
-                        if (response.statusCode !== 200) {
+                    else if (file.uri) {
+                        delayed++;
+                        const stream = fs.createWriteStream(filename);
+                        stream.on('finish', () => {
                             if (delayed !== -1) {
+                                writeBuffer();
                                 delayed--;
                                 finalize();
                             }
-                        }
-                    })
-                    .on('error', () => {
-                        if (delayed !== -1) {
-                            delayed--;
-                            finalize();
-                        }
-                    })
-                    .pipe(stream);
+                        });
+                        request(file.uri)
+                            .on('response', response => {
+                                if (response.statusCode !== 200) {
+                                    if (delayed !== -1) {
+                                        delayed--;
+                                        finalize();
+                                    }
+                                }
+                            })
+                            .on('error', () => {
+                                if (delayed !== -1) {
+                                    delayed--;
+                                    finalize();
+                                }
+                            })
+                            .pipe(stream);
+                    }
+                }
+                setTimeout(finalize, timeout);
+            }
+            catch (err) {
+                res.json({ application: `FILE: ${fileerror}`, system: err });
+            }
+        }
+        if (append_to) {
+            const match = /([^/\\]+)\.(zip|tar)$/i.exec(append_to);
+            if (match) {
+                zipname = `${dirname}/${match[0]}`;
+                try {
+                    function copied() {
+                        format = match[2].toLowerCase();
+                        const unzip_to = `${dirname}/${match[1]}`;
+                        decompress(zipname, unzip_to).then(files => {
+                            resume(unzip_to);
+                        });
+                    }
+                    if (append_to.startsWith('[A-Za-z]+://')) {
+                        const stream = fs.createWriteStream(zipname);
+                        stream.on('finish', () => {
+                            copied();
+                        });
+                        request(append_to)
+                            .on('error', () => {
+                                zipname = '';
+                                resume();
+                            })
+                            .pipe(stream);
+                    }
+                    else {
+                        fs.copyFileSync(append_to, zipname);
+                        copied();
+                    }
+                }
+                catch (err) {
+                    console.log(`FAIL: ${zipname} (${err})`);
+                    zipname = '';
+                    resume();
                 }
             }
-            setTimeout(finalize, timeout);
-        }
-        catch (err) {
-            res.json({ application: `FILE: ${fileerror}`, system: err });
         }
     }
     catch (err) {

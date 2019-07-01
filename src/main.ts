@@ -65,31 +65,27 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
 }
 
 export function parseDocument(...elements: (string | HTMLElement)[]): squared.PromiseResult {
-    if (!main) {
-        if (settings.showErrorMessages) {
-            alert('ERROR: Framework not installed.');
-        }
-    }
-    else {
-        if (!main.closed) {
-            if (settings.handleExtensionsAsync) {
-                for (const item of extensionsAsync) {
-                    main.extensionManager.include(item);
-                }
-                for (const [name, options] of optionsAsync.entries()) {
-                    configure(name, options);
-                }
-                extensionsAsync.clear();
-                optionsAsync.clear();
+    if (main) {
+        if (settings.handleExtensionsAsync) {
+            for (const item of extensionsAsync) {
+                main.extensionManager.include(item);
             }
+            for (const [name, options] of optionsAsync.entries()) {
+                configure(name, options);
+            }
+            extensionsAsync.clear();
+            optionsAsync.clear();
+        }
+        if (!main.closed) {
             return main.parseDocument(...elements);
         }
-        else {
-            if (!settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
-                main.reset();
-                return main.parseDocument(...elements);
-            }
+        else if (!settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
+            main.reset();
+            return main.parseDocument(...elements);
         }
+    }
+    else if (settings.showErrorMessages) {
+        alert('ERROR: Framework not installed.');
     }
     const PromiseResult = class {
         public then(resolve: () => void) {}
@@ -175,20 +171,8 @@ export function configure(value: any, options: {}) {
     return false;
 }
 
-export function apply(value: any, options?: {}) {
-    if (value instanceof squared.base.Extension) {
-        return include(value);
-    }
-    else if (typeof value === 'string') {
-        value = value.trim();
-        if (util.isPlainObject(options)) {
-            return configure(value, options);
-        }
-        else {
-            return retrieve(value);
-        }
-    }
-    return false;
+export function apply(value: any, options: {}) {
+    return include(value, options);
 }
 
 export function retrieve(value: string) {

@@ -206,8 +206,9 @@ export default abstract class File<T extends squared.base.Node> implements squar
                     `/api/savetodisk` +
                     `?directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
                     (filename ? `&filename=${encodeURIComponent(filename.trim())}` : '') +
-                    `&format=${settings.outputArchiveFormat.toLowerCase()}` +
-                    `&timeout=${settings.outputArchiveTimeout.toString().trim()}`, {
+                    `&format=${settings.outputArchiveFormat}` +
+                    `&append_to=${encodeURIComponent(settings.outputArchiveAppendTo)}` +
+                    `&timeout=${settings.outputArchiveTimeout}`, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                         body: JSON.stringify(files)

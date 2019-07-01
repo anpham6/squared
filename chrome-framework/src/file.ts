@@ -214,7 +214,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     private processExtensions(data: ChromeAsset) {
-        for (const ext of this.resource.application.extensions) {
+        for (const ext of this.application.extensions) {
             ext.processFile(data);
         }
     }
@@ -232,5 +232,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     get userSettings() {
         return this.resource.userSettings;
+    }
+
+    get application() {
+        return this.resource.application;
     }
 }

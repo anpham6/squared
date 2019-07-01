@@ -14,6 +14,7 @@ const settings: UserSettingsChrome = {
     outputDirectory: '',
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip',
+    outputArchiveAppendTo: '',
     outputArchiveTimeout: 60
 };
 

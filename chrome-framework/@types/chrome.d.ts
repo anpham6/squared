@@ -37,6 +37,7 @@ declare namespace base {
 
     interface File<T extends View> extends squared.base.File<T> {
         resource: Resource<T>;
+        readonly application: Application<T>;
         readonly userSettings: UserSettingsChrome;
         getHtmlPage(name?: string): ChromeAsset[];
         getScriptAssets(): ChromeAsset[];

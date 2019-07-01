@@ -33,7 +33,7 @@ declare function includeAsync(value: {} | string, options?: {}): boolean;
 declare function exclude(value: {} | string): boolean;
 declare function retrieve(value: string): {} | null;
 declare function configure(value: {} | string, options: {}): boolean;
-declare function apply(value: {} | string): {} | boolean | null;
+declare function apply(value: {} | string, options: {}): boolean;
 declare function ready(): boolean;
 declare function close(): void;
 declare function reset(): void;
