@@ -63,13 +63,12 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         this._outputFileExclusions = undefined;
     }
 
-    public saveAllToDisk() {
-        const files = this.getHtmlPage()
-            .concat(this.getScriptAssets())
-            .concat(this.getLinkAssets())
-            .concat(this.getImageAssets())
-            .concat(this.getFontAssets());
-        this.saveToDisk(<FileAsset[]> files, this.userSettings.outputArchiveName);
+    public copyToDisk(directory: string) {
+        this.copying(directory, <FileAsset[]> this.getAssetsAll());
+    }
+
+    public saveToArchive(filename: string) {
+        this.archiving(filename, <FileAsset[]> this.getAssetsAll());
     }
 
     public getHtmlPage(name?: string) {
@@ -203,6 +202,14 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
         }
         return result;
+    }
+
+    private getAssetsAll() {
+        return this.getHtmlPage()
+            .concat(this.getScriptAssets())
+            .concat(this.getLinkAssets())
+            .concat(this.getImageAssets())
+            .concat(this.getFontAssets());
     }
 
     private validFile(data: ChromeAsset | undefined): data is ChromeAsset {

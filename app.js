@@ -27,12 +27,105 @@ if (app.get('env') === 'development') {
     app.use('/demos-dev', express.static(path.join(__dirname, 'html/demos-dev')));
 }
 
-app.post('/api/savetodisk', (req, res) => {
+
+app.post('/api/assets/copy', (req, res) => {
+    const dirname = req.query.to && req.query.to.trim();
+    if (fs.existsSync(dirname)) {
+        const directory = dirname + (req.query.directory ? `/${req.query.directory}` : '');
+        const timeout = Math.max(parseInt(req.query.timeout) || 30, 1) * 1000;
+        const finalizeTime = Date.now() + timeout;
+        let delayed = 0;
+        let fileerror = '';
+        function finalize() {
+            if (delayed !== -1 && (delayed === 0 || Date.now() >= finalizeTime)) {
+                delayed = -1;
+            }
+        }
+        try {
+            for (const file of req.body) {
+                const pathname = `${directory}/${file.pathname}`;
+                const filename = `${pathname}/${file.filename}`;
+                const level = file.gzipQuality > 0 ? Math.min(file.gzipQuality, 9) : 0;
+                const quality = file.brotliQuality > 0 ? Math.min(file.brotliQuality, 11) : 0;
+                function writeBuffer() {
+                    if (level > 0) {
+                        delayed++;
+                        const filename_gz = filename + '.gz';
+                        const gzip = zlib.createGzip({ level });
+                        const inp = fs.createReadStream(filename);
+                        const out = fs.createWriteStream(filename_gz);
+                        inp.pipe(gzip).pipe(out);
+                        out.on('finish', () => {
+                            if (delayed !== -1) {
+                                delayed--;
+                                finalize();
+                            }
+                        });
+                    }
+                    if (quality > 0) {
+                        const filename_br = filename + '.br';
+                        fs.writeFileSync(filename_br, brotli.compress(fs.readFileSync(filename), { mode: (file.mimeType || '').startsWith('font/') ? 2 : 1, quality }));
+                    }
+                }
+                fileerror = filename;
+                mkdirp.sync(pathname);
+                if (file.content || file.base64) {
+                    delayed++;
+                    fs.writeFile(filename, file.base64 || file.content, file.base64 ? 'base64' : 'utf8', err => {
+                        if (delayed !== -1) {
+                            if (!err) {
+                                writeBuffer();
+                            }
+                            delayed--;
+                            finalize();
+                        }
+                    });
+                }
+                else if (file.uri) {
+                    delayed++;
+                    const stream = fs.createWriteStream(filename);
+                    stream.on('finish', () => {
+                        if (delayed !== -1) {
+                            writeBuffer();
+                            delayed--;
+                            finalize();
+                        }
+                    });
+                    request(file.uri)
+                        .on('response', response => {
+                            if (response.statusCode !== 200) {
+                                if (delayed !== -1) {
+                                    delayed--;
+                                    finalize();
+                                }
+                            }
+                        })
+                        .on('error', () => {
+                            if (delayed !== -1) {
+                                delayed--;
+                                finalize();
+                            }
+                        })
+                        .pipe(stream);
+                }
+            }
+            setTimeout(finalize, timeout);
+        }
+        catch (err) {
+            res.json({ application: `FILE: ${fileerror}`, system: err });
+        }
+    }
+    else {
+        res.json({ application: `DIRECTORY: ${dirname}`, system: 'DOES NOT EXIST' });
+    }
+});
+
+app.post('/api/assets/archive', (req, res) => {
     const dirname = `${__dirname.replace(/\\/g, '/')}/temp/${uuid()}`;
     const directory = dirname + (req.query.directory ? `/${req.query.directory}` : '');
     let format = req.query.format.toLowerCase() === 'tar' ? 'tar' : 'zip';
     const append_to = req.query.append_to && req.query.append_to.trim();
-    const timeout = Math.max(parseInt(req.query.timeout) || 30, 1) * 1000;
+    const timeout = Math.max(parseInt(req.query.timeout) || 60, 1) * 1000;
     const finalizeTime = Date.now() + timeout;
     try {
         let zipname = '';
@@ -43,7 +136,6 @@ app.post('/api/savetodisk', (req, res) => {
                 zipname = `${dirname}/${req.query.filename || 'squared'}.${format}`;
             }
             const output = fs.createWriteStream(zipname);
-            let delayed = 0;
             output.on('close', () => {
                 delayed = -1;
                 console.log(`WRITE: ${zipname} (${archive.pointer()} bytes)`);
@@ -54,13 +146,14 @@ app.post('/api/savetodisk', (req, res) => {
                 });
             });
             archive.pipe(output);
+            let delayed = 0;
+            let fileerror = '';
             function finalize() {
                 if (delayed !== -1 && (delayed === 0 || Date.now() >= finalizeTime)) {
                     delayed = -1;
                     archive.finalize();
                 }
             }
-            let fileerror = '';
             try {
                 if (unzip_to) {
                     archive.directory(unzip_to, '');
@@ -178,13 +271,16 @@ app.post('/api/savetodisk', (req, res) => {
                 }
             }
         }
+        else {
+            resume();
+        }
     }
     catch (err) {
         res.json({ application: `DIRECTORY: ${directory}`, system: err });
     }
 });
 
-app.get('/api/downloadtobrowser', (req, res) => {
+app.get('/api/browser/download', (req, res) => {
     if (req.query.filename && req.query.filename.trim() !== '') {
         res.sendFile(req.query.filename, err => {
             if (err) {

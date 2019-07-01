@@ -151,10 +151,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.closed = true;
     }
 
-    public saveAllToDisk() {
+    public copyToDisk(directory: string) {
         const file = this.resourceHandler.fileHandler;
         if (file) {
-            file.saveAllToDisk(this.layouts);
+            file.copyToDisk(directory, this.layouts);
+        }
+    }
+
+    public saveToArchive(filename?: string) {
+        const file = this.resourceHandler.fileHandler;
+        if (file) {
+            file.saveToArchive(filename || this.userSettings.outputArchiveName, this.layouts);
         }
     }
 

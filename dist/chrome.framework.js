@@ -1,4 +1,4 @@
-/* chrome-framework 1.1.0
+/* chrome-framework 1.2.0
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -166,13 +166,11 @@ var chrome = (function () {
             super.reset();
             this._outputFileExclusions = undefined;
         }
-        saveAllToDisk() {
-            const files = this.getHtmlPage()
-                .concat(this.getScriptAssets())
-                .concat(this.getLinkAssets())
-                .concat(this.getImageAssets())
-                .concat(this.getFontAssets());
-            this.saveToDisk(files, this.userSettings.outputArchiveName);
+        copyToDisk(directory) {
+            this.copying(directory, this.getAssetsAll());
+        }
+        saveToArchive(filename) {
+            this.archiving(filename, this.getAssetsAll());
         }
         getHtmlPage(name) {
             const result = [];
@@ -302,6 +300,13 @@ var chrome = (function () {
             }
             return result;
         }
+        getAssetsAll() {
+            return this.getHtmlPage()
+                .concat(this.getScriptAssets())
+                .concat(this.getLinkAssets())
+                .concat(this.getImageAssets())
+                .concat(this.getFontAssets());
+        }
         validFile(data) {
             if (data) {
                 const fullpath = data.pathname + '/' + data.filename;
@@ -310,7 +315,7 @@ var chrome = (function () {
             return false;
         }
         processExtensions(data) {
-            for (const ext of this.resource.application.extensions) {
+            for (const ext of this.application.extensions) {
                 ext.processFile(data);
             }
         }
@@ -326,6 +331,9 @@ var chrome = (function () {
         }
         get userSettings() {
             return this.resource.userSettings;
+        }
+        get application() {
+            return this.resource.application;
         }
     }
 
@@ -389,6 +397,7 @@ var chrome = (function () {
         outputDirectory: '',
         outputArchiveName: 'chrome-data',
         outputArchiveFormat: 'zip',
+        outputArchiveAppendTo: '',
         outputArchiveTimeout: 60
     };
 
@@ -500,31 +509,56 @@ var chrome = (function () {
                     return controller.elementMap.clear();
                 }
             },
-            saveHtmlPage(name) {
-                if (file) {
-                    file.saveToDisk(file.getHtmlPage(name), `${userSettings.outputArchiveName}-html`);
+            copyHtmlPage(directory, name) {
+                if (file && $util$1.isString(directory)) {
+                    file.copying(directory, file.getHtmlPage(name));
                 }
             },
-            saveScriptAssets() {
-                if (file) {
-                    file.saveToDisk(file.getScriptAssets(), `${userSettings.outputArchiveName}-script`);
+            copyScriptAssets(directory) {
+                if (file && $util$1.isString(directory)) {
+                    file.copying(directory, file.getScriptAssets());
                 }
             },
-            saveLinkAssets(rel) {
-                if (file) {
-                    file.saveToDisk(file.getLinkAssets(rel), `${userSettings.outputArchiveName}-link`);
+            copyLinkAssets(directory, rel) {
+                if (file && $util$1.isString(directory)) {
+                    file.copying(directory, file.getLinkAssets(rel));
                 }
             },
-            saveImageAssets() {
-                if (file) {
-                    file.saveToDisk(file.getImageAssets(), `${userSettings.outputArchiveName}-image`);
+            copyImageAssets(directory) {
+                if (file && $util$1.isString(directory)) {
+                    file.copying(directory, file.getImageAssets());
                 }
             },
-            saveFontAssets() {
-                if (file) {
-                    file.saveToDisk(file.getFontAssets(), `${userSettings.outputArchiveName}-font`);
+            copyFontAssets(directory) {
+                if (file && $util$1.isString(directory)) {
+                    file.copying(directory, file.getFontAssets());
                 }
             },
+            saveHtmlPage(filename, name) {
+                if (file) {
+                    file.archiving(filename || `${userSettings.outputArchiveName}-html`, file.getHtmlPage(name));
+                }
+            },
+            saveScriptAssets(filename) {
+                if (file) {
+                    file.archiving(filename || `${userSettings.outputArchiveName}-script`, file.getScriptAssets());
+                }
+            },
+            saveLinkAssets(filename, rel) {
+                if (file) {
+                    file.archiving(filename || `${userSettings.outputArchiveName}-link`, file.getLinkAssets(rel));
+                }
+            },
+            saveImageAssets(filename) {
+                if (file) {
+                    file.archiving(filename || `${userSettings.outputArchiveName}-image`, file.getImageAssets());
+                }
+            },
+            saveFontAssets(filename) {
+                if (file) {
+                    file.archiving(filename || `${userSettings.outputArchiveName}-font`, file.getFontAssets());
+                }
+            }
         },
         create() {
             const EC = EXT_CHROME;

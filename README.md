@@ -46,7 +46,11 @@ GitHub
         // required: zero or more DOM elements
         squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview' */, /* etc... */);
         squared.close();
-        squared.saveAllToDisk(); /* Express required */
+
+        // Express required
+        squared.copyToDisk(/* required: local directory */);
+        // OR
+        squared.saveToArchive(/* optional: archive name */);
 
         // optional: start new "parseDocument" session
         squared.reset();
@@ -75,7 +79,7 @@ NOTE: Calling "save" or "write" methods before the images have completely loaded
         squared.setFramework(android);
         squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(function() {
             squared.close();
-            squared.saveAllToDisk();
+            squared.saveToArchive();
         });
     });
 </script>
@@ -141,6 +145,7 @@ squared.settings = {
     outputDirectory: 'app/src/main',
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip', // zip | tar
+    outputArchiveAppendTo: '', // copy and append content to existing archive file
     outputArchiveTimeout: 30 // seconds
 };
 ```
@@ -161,6 +166,7 @@ squared.settings = {
     outputDirectory: '',
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip', // zip | tar
+    outputArchiveAppendTo: '', // copy and append content to existing archive file
     outputArchiveTimeout: 60 // seconds
 };
 ```
@@ -180,7 +186,8 @@ ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
 
-saveAllToDisk() // download entire project as zip archive - requires Node.js and Express
+copyToDisk(directory: string) // copy entire project to local directory (Express required)
+saveToArchive(filename?: string) // save entire project as zip archive (Express required)
 
 toString() // main layout file contents
 
@@ -188,6 +195,10 @@ include(extension: squared.base.Extension, options?: {}) // see extension config
 retrieve(name: string) // retrieve an extension by namespace or control | same: apply(name: string)
 configure(name: string, options: {}) // see extension configuration section | same: apply(name: string, options: {})
 exclude(name: string) // remove an extension by namespace or control
+
+// DEPRECATIONS
+
+saveAllToDisk() // replacement: saveToArchive()
 ```
 
 ### ALL: Excluding Procedures / Applied Attributes
@@ -254,17 +265,42 @@ You can use the "system.customize" method to change the default settings for the
 ```javascript
 squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
 squared.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
-squared.system.writeLayoutAllXml(saveToDisk: boolean) // output generated xml
-squared.system.writeResourceAllXml(saveToDisk: boolean)
-squared.system.writeResourceAnimXml(saveToDisk: boolean)
-squared.system.writeResourceArrayXml(saveToDisk: boolean)
-squared.system.writeResourceColorXml(saveToDisk: boolean)
-squared.system.writeResourceDimenXml(saveToDisk: boolean)
-squared.system.writeResourceDrawableXml(saveToDisk: boolean)
-squared.system.writeResourceDrawableImageXml(saveToDisk: boolean)
-squared.system.writeResourceFontXml(saveToDisk: boolean)
-squared.system.writeResourceStringXml(saveToDisk: boolean)
-squared.system.writeResourceStyleXml(saveToDisk: boolean)
+
+squared.system.copyLayoutAllXml(directory: string) // copy generated xml
+squared.system.copyResourceAllXml(directory: string)
+squared.system.copyResourceAnimXml(directory: string)
+squared.system.copyResourceArrayXml(directory: string)
+squared.system.copyResourceColorXml(directory: string)
+squared.system.copyResourceDimenXml(directory: string)
+squared.system.copyResourceDrawableXml(directory: string)
+squared.system.copyResourceDrawableImageXml(directory: string)
+squared.system.copyResourceFontXml(directory: string)
+squared.system.copyResourceStringXml(directory: string)
+squared.system.copyResourceStyleXml(directory: string)
+
+squared.system.saveLayoutAllXml(filename?: string) // save generated xml
+squared.system.saveResourceAllXml(filename?: string)
+squared.system.saveResourceAnimXml(filename?: string)
+squared.system.saveResourceArrayXml(filename?: string)
+squared.system.saveResourceColorXml(filename?: string)
+squared.system.saveResourceDimenXml(filename?: string)
+squared.system.saveResourceDrawableXml(filename?: string)
+squared.system.saveResourceDrawableImageXml(filename?: string)
+squared.system.saveResourceFontXml(filename?: string)
+squared.system.saveResourceStringXml(filename?: string)
+squared.system.saveResourceStyleXml(filename?: string)
+
+squared.system.writeLayoutAllXml() // write generated xml
+squared.system.writeResourceAllXml()
+squared.system.writeResourceAnimXml()
+squared.system.writeResourceArrayXml()
+squared.system.writeResourceColorXml()
+squared.system.writeResourceDimenXml()
+squared.system.writeResourceDrawableXml()
+squared.system.writeResourceDrawableImageXml()
+squared.system.writeResourceFontXml()
+squared.system.writeResourceStringXml()
+squared.system.writeResourceStyleXml()
 ```
 
 ```javascript
@@ -290,11 +326,18 @@ squared.system.querySelector(value: string)
 squared.system.querySelectorAll(value: string)
 squared.system.getElementMap()
 squared.system.clearElementMap()
-squared.system.saveHtmlPage(name?: string) // optional: e.g. "index.html"
-squared.system.saveScriptAssets()
-squared.system.saveLinkAssets(rel?: string) // optional: e.g. "stylesheet"
-squared.system.saveImageAssets()
-squared.system.saveFontAssets()
+
+squared.system.copyHtmlPage(directory: string, name?: string) // name: e.g. "index.html"
+squared.system.copyScriptAssets(directory: string)
+squared.system.copyLinkAssets(directory: string, rel?: string) // rel: e.g. "stylesheet"
+squared.system.copyImageAssets(directory: string)
+squared.system.copyFontAssets(directory: string)
+
+squared.system.saveHtmlPage(filename?: string, name?: string) // name: e.g. "index.html"
+squared.system.saveScriptAssets(filename?: string)
+squared.system.saveLinkAssets(filename?: string, rel?: string) // rel: e.g. "stylesheet"
+squared.system.saveImageAssets(filename?: string)
+squared.system.saveFontAssets(filename?: string)
 
 // async methods
 await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"

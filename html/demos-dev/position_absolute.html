@@ -84,7 +84,7 @@
             <div>
                 <button onclick="addView();">Add View (1)</button>
                 <button onclick="closeDocument();">Close (2)</button>
-                <button onclick="closeDocument(); squared.saveAllToDisk();">Save All (3)</button>
+                <button onclick="closeDocument(); squared.saveToArchive();">Save All (3)</button>
                 <button onclick="resetDocument();">Reset (4)</button>
                 &nbsp;&nbsp;
                 <button onclick="copy('output');">Copy</button>
@@ -94,7 +94,7 @@
             <pre id="resource"></pre>
             <div>
                 <button onclick="copy('resource');">Copy</button>
-                <button onclick="squared.system.writeResourceAllXml(true);">Save</button>
+                <button onclick="squared.system.saveResourceAllXml();">Save</button>
             </div>
         </div>
     </div>

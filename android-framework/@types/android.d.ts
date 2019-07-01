@@ -52,18 +52,17 @@ declare namespace base {
 
     interface File<T extends View> extends squared.base.FileUI<T> {
         resource: Resource<T>;
-        saveAllToDisk(files: FileAsset[]): void;
-        layoutAllToXml(files: FileAsset[], saveToDisk?: boolean): {};
-        resourceAllToXml(saveToDisk?: boolean): {};
-        resourceStringToXml(saveToDisk?: boolean): string[];
-        resourceStringArrayToXml(saveToDisk?: boolean): string[];
-        resourceFontToXml(saveToDisk?: boolean): string[];
-        resourceColorToXml(saveToDisk?: boolean): string[];
-        resourceStyleToXml(saveToDisk?: boolean): string[];
-        resourceDimenToXml(saveToDisk?: boolean): string[];
-        resourceDrawableToXml(saveToDisk?: boolean): string[];
-        resourceDrawableImageToXml(saveToDisk?: boolean): string[];
-        resourceAnimToXml(saveToDisk?: boolean): string[];
+        layoutAllToXml(assets: FileAsset[], copyTo?: string, archiveTo?: string): {};
+        resourceAllToXml(copyTo?: string, archiveTo?: string): {};
+        resourceStringToXml(copyTo?: string, archiveTo?: string): string[];
+        resourceStringArrayToXml(copyTo?: string, archiveTo?: string): string[];
+        resourceFontToXml(copyTo?: string, archiveTo?: string): string[];
+        resourceColorToXml(copyTo?: string, archiveTo?: string): string[];
+        resourceStyleToXml(copyTo?: string, archiveTo?: string): string[];
+        resourceDimenToXml(copyTo?: string, archiveTo?: string): string[];
+        resourceDrawableToXml(copyTo?: string, archiveTo?: string): string[];
+        resourceDrawableImageToXml(copyTo?: string, archiveTo?: string): string[];
+        resourceAnimToXml(copyTo?: string, archiveTo?: string): string[];
     }
 
     class File<T extends View> implements File<T> {}

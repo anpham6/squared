@@ -1,4 +1,4 @@
-import { RawAsset, UserSettings } from './@types/application';
+import { FileAsset, RawAsset, UserSettings } from './@types/application';
 
 const {
     constant: $const,
@@ -6,9 +6,9 @@ const {
 } = squared.lib;
 
 export interface ExpressResult {
-    zipname: string;
-    application: string;
-    system: string;
+    zipname?: string;
+    application?: string;
+    system?: string;
 }
 
 export default abstract class File<T extends squared.base.Node> implements squared.base.File<T> {
@@ -156,7 +156,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         }
     }
 
-    public static downloadToDisk(data: Blob, filename: string, mime?: string) {
+    public static downloadFile(data: Blob, filename: string, mime?: string) {
         const blob = new Blob([data], { type: mime || 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
         const element = document.createElement('a');
@@ -177,8 +177,12 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public abstract get userSettings(): UserSettings;
 
-    public saveAllToDisk() {
-        this.saveToDisk(this.assets, this.userSettings.outputArchiveName);
+    public copyToDisk(directory: string, assets: FileAsset[] = []) {
+        this.copying(directory, assets);
+    }
+
+    public saveToArchive(filename: string, assets: FileAsset[] = []) {
+        this.archiving(filename, assets);
     }
 
     public addAsset(data: Optional<RawAsset>) {
@@ -197,30 +201,66 @@ export default abstract class File<T extends squared.base.Node> implements squar
         this.assets.length = 0;
     }
 
-    public saveToDisk(files: RawAsset[], filename?: string) {
+    public copying(directory: string, assets: FileAsset[]) {
         if (location.protocol.startsWith('http')) {
-            if (files.length) {
+            assets = assets.concat(this.assets);
+            if (assets.length) {
                 const settings = this.userSettings;
-                files = files.concat(this.assets);
                 fetch(
-                    `/api/savetodisk` +
-                    `?directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
-                    (filename ? `&filename=${encodeURIComponent(filename.trim())}` : '') +
-                    `&format=${settings.outputArchiveFormat}` +
-                    `&append_to=${encodeURIComponent(settings.outputArchiveAppendTo)}` +
+                    `/api/assets/copy` +
+                    `?to=${encodeURIComponent(directory.trim())}` +
+                    `&directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
                     `&timeout=${settings.outputArchiveTimeout}`, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
-                        body: JSON.stringify(files)
+                        body: JSON.stringify(assets)
                     }
                 )
                 .then((response: Response) => response.json())
                 .then((result: ExpressResult) => {
                     if (result) {
-                        if (result.zipname) {
-                            fetch(`/api/downloadtobrowser?filename=${encodeURIComponent(result.zipname)}`)
+                        if (result.system && this.userSettings.showErrorMessages) {
+                            alert(`${result.application}\n\n${result.system}`);
+                        }
+                    }
+                })
+                .catch(err => {
+                    if (this.userSettings.showErrorMessages) {
+                        alert(`ERROR: ${err}`);
+                    }
+                });
+            }
+        }
+        else if (this.userSettings.showErrorMessages) {
+            alert('SERVER (required): See README for instructions');
+        }
+    }
+
+    public archiving(filename: string, assets: FileAsset[]) {
+        if (location.protocol.startsWith('http')) {
+            assets = assets.concat(this.assets);
+            if (assets.length) {
+                const settings = this.userSettings;
+                fetch(
+                    `/api/assets/archive` +
+                    `?filename=${encodeURIComponent(filename.trim())}` +
+                    `&directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
+                    `&format=${settings.outputArchiveFormat}` +
+                    `&append_to=${encodeURIComponent(settings.outputArchiveAppendTo)}` +
+                    `&timeout=${settings.outputArchiveTimeout}`, {
+                        method: 'POST',
+                        headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
+                        body: JSON.stringify(assets)
+                    }
+                )
+                .then((response: Response) => response.json())
+                .then((result: ExpressResult) => {
+                    if (result) {
+                        const zipname = result.zipname;
+                        if (zipname) {
+                            fetch(`/api/browser/download?filename=${encodeURIComponent(zipname)}`)
                                 .then((response: Response) => response.blob())
-                                .then((blob: Blob) => File.downloadToDisk(blob, $util.fromLastIndexOf(result.zipname, '/')));
+                                .then((blob: Blob) => File.downloadFile(blob, $util.fromLastIndexOf(zipname, '/')));
                         }
                         else if (result.system && this.userSettings.showErrorMessages) {
                             alert(`${result.application}\n\n${result.system}`);

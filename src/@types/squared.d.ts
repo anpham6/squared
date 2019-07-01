@@ -37,8 +37,11 @@ declare function apply(value: {} | string, options: {}): boolean;
 declare function ready(): boolean;
 declare function close(): void;
 declare function reset(): void;
-declare function saveAllToDisk(): void;
+declare function copyToDisk(value: string): void;
+declare function saveToArchive(value?: string): void;
 declare function toString(): string;
+
+declare function saveAllToDisk(): void;
 
 declare namespace base {
     interface Application<T extends Node> {
@@ -62,7 +65,8 @@ declare namespace base {
         insertNode(element: Element, parent?: T): T | undefined;
         afterCreateCache(element: HTMLElement): void;
         finalize(): void;
-        saveAllToDisk(): void;
+        copyToDisk(directory: string): void;
+        saveToArchive(filename?: string): void;
         toString(): string;
     }
 
@@ -260,15 +264,17 @@ declare namespace base {
         resource: Resource<T>;
         userSettings: UserSettings;
         readonly assets: FileAsset[];
-        saveAllToDisk(files?: FileAsset[]): void;
+        copyToDisk(directory: string, assets?: FileAsset[]): void;
+        saveToArchive(filename: string, assets?: FileAsset[]): void;
         addAsset(data: Optional<RawAsset>): void;
         reset(): void;
-        saveToDisk(files: FileAsset[], filename?: string): void;
+        copying(directory: string, assets: FileAsset[]): void;
+        archiving(filename: string, assets: FileAsset[]): void;
     }
 
     class File<T extends Node> implements File<T> {
         public static getMimeType(value: string): string;
-        public static downloadToDisk(data: Blob, filename: string, mime?: string): void;
+        public static downloadFile(data: Blob, filename: string, mime?: string): void;
     }
 
     interface FileUI<T extends NodeUI> extends File<T> {

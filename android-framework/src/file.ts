@@ -67,46 +67,35 @@ const caseInsensitive = (a: string | string[], b: string | string[]) => a.toStri
 export default class File<T extends android.base.View> extends squared.base.FileUI<T> implements android.base.File<T> {
     public resource!: android.base.Resource<T>;
 
-    public saveAllToDisk(files: FileAsset[]) {
-        const layouts: FileAsset[] = [];
-        const length = files.length;
-        for (let i = 0; i < length; i++) {
-            layouts.push(createFileAsset(files[i].pathname, i === 0 ? this.userSettings.outputMainFileName : `${files[i].filename}.xml`, files[i].content));
-        }
-        this.saveToDisk(
-            layouts.concat(
-                getFileAssets(this.resourceStringToXml()),
-                getFileAssets(this.resourceStringArrayToXml()),
-                getFileAssets(this.resourceFontToXml()),
-                getFileAssets(this.resourceColorToXml()),
-                getFileAssets(this.resourceDimenToXml()),
-                getFileAssets(this.resourceStyleToXml()),
-                getFileAssets(this.resourceDrawableToXml()),
-                getImageAssets(this.resourceDrawableImageToXml()),
-                getFileAssets(this.resourceAnimToXml())
-            ),
-            this.userSettings.outputArchiveName
-        );
+    public copyToDisk(directory: string, assets: FileAsset[]) {
+        this.copying(directory, this.getAssetsAll(assets));
     }
 
-    public layoutAllToXml(files: FileAsset[], saveToDisk = false) {
+    public saveToArchive(filename: string, assets: FileAsset[]) {
+        this.archiving(filename, this.getAssetsAll(assets));
+    }
+
+    public layoutAllToXml(assets: FileAsset[], copyTo?: string, archiveTo?: string) {
         const result = {};
         const layouts: FileAsset[] = [];
-        const length = files.length;
+        const length = assets.length;
         for (let i = 0; i < length; i++) {
-            const layout = files[i];
+            const layout = assets[i];
             result[layout.filename] = [layout.content];
-            if (saveToDisk) {
+            if (archiveTo) {
                 layouts.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
             }
         }
-        if (saveToDisk) {
-            this.saveToDisk(layouts, this.userSettings.outputArchiveName);
+        if (copyTo) {
+            this.copying(copyTo, layouts);
+        }
+        if (archiveTo) {
+            this.archiving(archiveTo, layouts);
         }
         return result;
     }
 
-    public resourceAllToXml(saveToDisk = false) {
+    public resourceAllToXml(copyTo?: string, archiveTo?: string) {
         const result = {
             string: this.resourceStringToXml(),
             stringArray: this.resourceStringArrayToXml(),
@@ -123,22 +112,27 @@ export default class File<T extends android.base.View> extends squared.base.File
                 delete result[name];
             }
         }
-        if (saveToDisk) {
-            let files: FileAsset[] = [];
+        if (copyTo || archiveTo) {
+            let assets: FileAsset[] = [];
             for (const name in result) {
                 if (name === 'image') {
-                    files = files.concat(getImageAssets(result[name]));
+                    assets = assets.concat(getImageAssets(result[name]));
                 }
                 else {
-                    files = files.concat(getFileAssets(result[name]));
+                    assets = assets.concat(getFileAssets(result[name]));
                 }
             }
-            this.saveToDisk(files, this.userSettings.outputArchiveName);
+            if (copyTo) {
+                this.copying(copyTo, assets);
+            }
+            if (archiveTo) {
+                this.archiving(archiveTo, assets);
+            }
         }
         return result;
     }
 
-    public resourceStringToXml(saveToDisk = false) {
+    public resourceStringToXml(copyTo?: string, archiveTo?: string) {
         const result: string[] = [];
         const data: ExternalData[] = [{ string: [] }];
         if (!STORED.strings.has('app_name')) {
@@ -155,13 +149,11 @@ export default class File<T extends android.base.View> extends squared.base.File
             this.directory.string,
             'strings.xml'
         );
-        if (saveToDisk) {
-            this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
-        }
+        this.checkFileAssets(result, copyTo, archiveTo);
         return result;
     }
 
-    public resourceStringArrayToXml(saveToDisk = false) {
+    public resourceStringArrayToXml(copyTo?: string, archiveTo?: string) {
         const result: string[] = [];
         if (STORED.arrays.size) {
             const data: ExternalData[] = [{ 'string-array': [] }];
@@ -179,14 +171,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                 this.directory.string,
                 'string_arrays.xml'
             );
-            if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
-            }
+            this.checkFileAssets(result, copyTo, archiveTo);
         }
         return result;
     }
 
-    public resourceFontToXml(saveToDisk = false) {
+    public resourceFontToXml(copyTo?: string, archiveTo?: string) {
         const result: string[] = [];
         if (STORED.fonts.size) {
             const settings = this.userSettings;
@@ -232,14 +222,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                 }
                 result.push(output, pathname, `${name}.xml`);
             }
-            if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
-            }
+            this.checkFileAssets(result, copyTo, archiveTo);
         }
         return result;
     }
 
-    public resourceColorToXml(saveToDisk = false) {
+    public resourceColorToXml(copyTo?: string, archiveTo?: string) {
         const result: string[] = [];
         if (STORED.colors.size) {
             const data: ExternalData[] = [{ color: [] }];
@@ -254,14 +242,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                 this.directory.string,
                 'colors.xml'
             );
-            if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
-            }
+            this.checkFileAssets(result, copyTo, archiveTo);
         }
         return result;
     }
 
-    public resourceStyleToXml(saveToDisk = false) {
+    public resourceStyleToXml(copyTo?: string, archiveTo?: string) {
         const settings = this.userSettings;
         const result: string[] = [];
         if (STORED.styles.size) {
@@ -325,13 +311,11 @@ export default class File<T extends android.base.View> extends squared.base.File
                 }
             }
         }
-        if (saveToDisk) {
-            this.saveToDisk(getFileAssets(result), this.userSettings.outputArchiveName);
-        }
+        this.checkFileAssets(result, copyTo, archiveTo);
         return result;
     }
 
-    public resourceDimenToXml(saveToDisk = false) {
+    public resourceDimenToXml(copyTo?: string, archiveTo?: string) {
         const result: string[] = [];
         if (STORED.dimens.size) {
             const data: ExternalData[] = [{ dimen: [] }];
@@ -346,14 +330,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                 this.directory.string,
                 'dimens.xml'
             );
-            if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
-            }
+            this.checkFileAssets(result, copyTo, archiveTo);
         }
         return result;
     }
 
-    public resourceDrawableToXml(saveToDisk = false) {
+    public resourceDrawableToXml(copyTo?: string, archiveTo?: string) {
         const result: string[] = [];
         if (STORED.drawables.size) {
             const settings = this.userSettings;
@@ -372,14 +354,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                     `${name}.xml`
                 );
             }
-            if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
-            }
+            this.checkFileAssets(result, copyTo, archiveTo);
         }
         return result;
     }
 
-    public resourceDrawableImageToXml(saveToDisk = false) {
+    public resourceDrawableImageToXml(copyTo?: string, archiveTo?: string) {
         const result: string[] = [];
         if (STORED.images.size) {
             const directory = this.directory.image;
@@ -401,14 +381,20 @@ export default class File<T extends android.base.View> extends squared.base.File
                     );
                 }
             }
-            if (saveToDisk) {
-                this.saveToDisk(getImageAssets(result), this.userSettings.outputArchiveName);
+            if (copyTo || archiveTo) {
+                const assets = getImageAssets(result);
+                if (copyTo) {
+                    this.copying(copyTo, assets);
+                }
+                if (archiveTo) {
+                    this.archiving(archiveTo, assets);
+                }
             }
         }
         return result;
     }
 
-    public resourceAnimToXml(saveToDisk = false) {
+    public resourceAnimToXml(copyTo?: string, archiveTo?: string) {
         const result: string[] = [];
         if (STORED.animators.size) {
             const settings = this.userSettings;
@@ -419,11 +405,40 @@ export default class File<T extends android.base.View> extends squared.base.File
                     `${name}.xml`
                 );
             }
-            if (saveToDisk) {
-                this.saveToDisk(getFileAssets(result), settings.outputArchiveName);
-            }
+            this.checkFileAssets(result, copyTo, archiveTo);
         }
         return result;
+    }
+
+    private getAssetsAll(assets: FileAsset[]) {
+        const result: FileAsset[] = [];
+        const length = assets.length;
+        for (let i = 0; i < length; i++) {
+            result.push(createFileAsset(assets[i].pathname, i === 0 ? this.userSettings.outputMainFileName : `${assets[i].filename}.xml`, assets[i].content));
+        }
+        return result.concat(
+            getFileAssets(this.resourceStringToXml()),
+            getFileAssets(this.resourceStringArrayToXml()),
+            getFileAssets(this.resourceFontToXml()),
+            getFileAssets(this.resourceColorToXml()),
+            getFileAssets(this.resourceDimenToXml()),
+            getFileAssets(this.resourceStyleToXml()),
+            getFileAssets(this.resourceDrawableToXml()),
+            getImageAssets(this.resourceDrawableImageToXml()),
+            getFileAssets(this.resourceAnimToXml())
+        );
+    }
+
+    private checkFileAssets(content: string[], copyTo?: string, archiveTo?: string) {
+        if (copyTo || archiveTo) {
+            const assets = getFileAssets(content);
+            if (copyTo) {
+                this.copying(copyTo, assets);
+            }
+            if (archiveTo) {
+                this.archiving(archiveTo, assets);
+            }
+        }
     }
 
     get userSettings() {

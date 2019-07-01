@@ -129,69 +129,179 @@ const appBase: AppFramework<View> = {
         addXmlNs(name: string, uri: string) {
             constant.XMLNS_ANDROID[name] = uri;
         },
-        writeLayoutAllXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.layoutAllToXml(application.layouts, saveToDisk);
+        copyLayoutAllXml(directory: string) {
+            if (checkApplication(application)) {
+                file.layoutAllToXml(application.layouts, directory);
+            }
+        },
+        copyResourceAllXml(directory: string) {
+            if (checkApplication(application)) {
+                file.resourceAllToXml(directory);
+            }
+        },
+        copyResourceStringXml(directory: string) {
+            if (checkApplication(application)) {
+                file.resourceStringToXml(directory);
+            }
+        },
+        copyResourceArrayXml(directory: string) {
+            if (checkApplication(application)) {
+                file.resourceStringArrayToXml(directory);
+            }
+        },
+        copyResourceFontXml(directory: string) {
+            if (checkApplication(application)) {
+                file.resourceFontToXml(directory);
+            }
+        },
+        copyResourceColorXml(directory: string) {
+            if (checkApplication(application)) {
+                file.resourceColorToXml(directory);
+            }
+        },
+        copyResourceStyleXml(directory: string) {
+            if (checkApplication(application)) {
+                file.resourceStyleToXml(directory);
+            }
+        },
+        copyResourceDimenXml(directory: string) {
+            if (checkApplication(application)) {
+                file.resourceDimenToXml(directory);
+            }
+        },
+        copyResourceDrawableXml(directory: string) {
+            if (checkApplication(application)) {
+                file.resourceDrawableToXml(directory);
+            }
+        },
+        copyResourceDrawableImageXml(directory: string) {
+            if (checkApplication(application)) {
+                file.resourceDrawableImageToXml(directory);
+            }
+        },
+        copyResourceAnimXml(directory: string) {
+            if (checkApplication(application)) {
+                file.resourceAnimToXml(directory);
+            }
+        },
+        saveLayoutAllXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.layoutAllToXml(application.layouts, undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        saveResourceAllXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.resourceAllToXml(undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        saveResourceStringXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.resourceStringToXml(undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        saveResourceArrayXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.resourceStringArrayToXml(undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        saveResourceFontXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.resourceFontToXml(undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        saveResourceColorXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.resourceColorToXml(undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        saveResourceStyleXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.resourceStyleToXml(undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        saveResourceDimenXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.resourceDimenToXml(undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        saveResourceDrawableXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.resourceDrawableToXml(undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        saveResourceDrawableImageXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.resourceDrawableImageToXml(undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        saveResourceAnimXml(filename?: string) {
+            if (checkApplication(application)) {
+                file.resourceAnimToXml(undefined, filename || userSettings.outputArchiveName);
+            }
+        },
+        writeLayoutAllXml() {
+            if (checkApplication(application)) {
+                return file.layoutAllToXml(application.layouts);
             }
             return {};
         },
-        writeResourceAllXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.resourceAllToXml(saveToDisk);
+        writeResourceAllXml() {
+            if (checkApplication(application)) {
+                return file.resourceAllToXml();
             }
             return {};
         },
-        writeResourceStringXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.resourceStringToXml(saveToDisk);
+        writeResourceStringXml() {
+            if (checkApplication(application)) {
+                return file.resourceStringToXml();
             }
             return [];
         },
-        writeResourceArrayXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.resourceStringArrayToXml(saveToDisk);
+        writeResourceArrayXml() {
+            if (checkApplication(application)) {
+                return file.resourceStringArrayToXml();
             }
             return [];
         },
-        writeResourceFontXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.resourceFontToXml(saveToDisk);
+        writeResourceFontXml() {
+            if (checkApplication(application)) {
+                return file.resourceFontToXml();
             }
             return [];
         },
-        writeResourceColorXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.resourceColorToXml(saveToDisk);
+        writeResourceColorXml() {
+            if (checkApplication(application)) {
+                return file.resourceColorToXml();
             }
             return [];
         },
-        writeResourceStyleXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.resourceStyleToXml(saveToDisk);
+        writeResourceStyleXml() {
+            if (checkApplication(application)) {
+                return file.resourceStyleToXml();
             }
             return [];
         },
-        writeResourceDimenXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.resourceDimenToXml(saveToDisk);
+        writeResourceDimenXml() {
+            if (checkApplication(application)) {
+                return file.resourceDimenToXml();
             }
             return [];
         },
-        writeResourceDrawableXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.resourceDrawableToXml(saveToDisk);
+        writeResourceDrawableXml() {
+            if (checkApplication(application)) {
+                return file.resourceDrawableToXml();
             }
             return [];
         },
-        writeResourceDrawableImageXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.resourceDrawableImageToXml(saveToDisk);
+        writeResourceDrawableImageXml() {
+            if (checkApplication(application)) {
+                return file.resourceDrawableImageToXml();
             }
             return [];
         },
-        writeResourceAnimXml(saveToDisk = false) {
-            if (file && checkApplication(application)) {
-                return file.resourceAnimToXml(saveToDisk);
+        writeResourceAnimXml() {
+            if (checkApplication(application)) {
+                return file.resourceAnimToXml();
             }
             return [];
         }

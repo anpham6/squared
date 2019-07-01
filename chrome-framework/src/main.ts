@@ -116,31 +116,56 @@ const appBase: ChromeFramework<View> = {
                 return controller.elementMap.clear();
             }
         },
-        saveHtmlPage(name?: string) {
-            if (file) {
-                file.saveToDisk(<FileAsset[]> file.getHtmlPage(name), `${userSettings.outputArchiveName}-html`);
+        copyHtmlPage(directory: string, name?: string) {
+            if (file && $util.isString(directory)) {
+                file.copying(directory, <FileAsset[]> file.getHtmlPage(name));
             }
         },
-        saveScriptAssets() {
-            if (file) {
-                file.saveToDisk(<FileAsset[]> file.getScriptAssets(), `${userSettings.outputArchiveName}-script`);
+        copyScriptAssets(directory: string) {
+            if (file && $util.isString(directory)) {
+                file.copying(directory, <FileAsset[]> file.getScriptAssets());
             }
         },
-        saveLinkAssets(rel?: string) {
-            if (file) {
-                file.saveToDisk(<FileAsset[]> file.getLinkAssets(rel), `${userSettings.outputArchiveName}-link`);
+        copyLinkAssets(directory: string, rel?: string) {
+            if (file && $util.isString(directory)) {
+                file.copying(directory, <FileAsset[]> file.getLinkAssets(rel));
             }
         },
-        saveImageAssets() {
-            if (file) {
-                file.saveToDisk(<FileAsset[]> file.getImageAssets(), `${userSettings.outputArchiveName}-image`);
+        copyImageAssets(directory: string) {
+            if (file && $util.isString(directory)) {
+                file.copying(directory, <FileAsset[]> file.getImageAssets());
             }
         },
-        saveFontAssets() {
-            if (file) {
-                file.saveToDisk(<FileAsset[]> file.getFontAssets(), `${userSettings.outputArchiveName}-font`);
+        copyFontAssets(directory: string) {
+            if (file && $util.isString(directory)) {
+                file.copying(directory, <FileAsset[]> file.getFontAssets());
             }
         },
+        saveHtmlPage(filename?: string, name?: string) {
+            if (file) {
+                file.archiving(filename || `${userSettings.outputArchiveName}-html`, <FileAsset[]> file.getHtmlPage(name));
+            }
+        },
+        saveScriptAssets(filename?: string) {
+            if (file) {
+                file.archiving(filename || `${userSettings.outputArchiveName}-script`, <FileAsset[]> file.getScriptAssets());
+            }
+        },
+        saveLinkAssets(filename?: string, rel?: string) {
+            if (file) {
+                file.archiving(filename || `${userSettings.outputArchiveName}-link`, <FileAsset[]> file.getLinkAssets(rel));
+            }
+        },
+        saveImageAssets(filename?: string) {
+            if (file) {
+                file.archiving(filename || `${userSettings.outputArchiveName}-image`, <FileAsset[]> file.getImageAssets());
+            }
+        },
+        saveFontAssets(filename?: string) {
+            if (file) {
+                file.archiving(filename || `${userSettings.outputArchiveName}-font`, <FileAsset[]> file.getFontAssets());
+            }
+        }
     },
     create() {
         const EC = constant.EXT_CHROME;

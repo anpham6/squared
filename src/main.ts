@@ -19,10 +19,12 @@ type Extension = squared.base.Extension<Node>;
 
 const extensionsAsync = new Set<Extension>();
 const optionsAsync = new Map<string, ExternalData>();
-let main: Application | undefined;
-let framework: AppFramework<Node> | undefined;
+let main: Application;
+let framework: AppFramework<Node>;
 let settings = <UserSettings> {};
 let system = <FunctionMap<any>> {};
+
+const checkMain = () => !!main && !main.initializing && main.length > 0;
 
 export function setFramework(value: AppFramework<Node>, cached = false) {
     const reloading = framework !== undefined;
@@ -190,18 +192,31 @@ export function ready() {
 }
 
 export function close() {
-    if (main && !main.initializing && main.length) {
+    if (checkMain()) {
         main.finalize();
     }
 }
 
-export function saveAllToDisk() {
-    if (main && !main.initializing && main.length) {
+export function copyToDisk(value: string) {
+    if (checkMain() && util.isString(value)) {
         if (!main.closed) {
             main.finalize();
         }
-        main.saveAllToDisk();
+        main.copyToDisk(value);
     }
+}
+
+export function saveToArchive(value?: string) {
+    if (checkMain()) {
+        if (!main.closed) {
+            main.finalize();
+        }
+        main.saveToArchive(value || settings.outputArchiveName);
+    }
+}
+
+export function saveAllToDisk() {
+    saveToArchive();
 }
 
 export function toString() {

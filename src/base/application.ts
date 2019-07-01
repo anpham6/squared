@@ -75,10 +75,17 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract afterCreateCache(element: HTMLElement): void;
     public abstract finalize(): void;
 
-    public saveAllToDisk() {
+    public copyToDisk(directory: string) {
         const file = this.resourceHandler.fileHandler;
         if (file) {
-            file.saveAllToDisk();
+            file.copyToDisk(directory);
+        }
+    }
+
+    public saveToArchive(filename?: string) {
+        const file = this.resourceHandler.fileHandler;
+        if (file) {
+            file.saveToArchive(filename || this.userSettings.outputArchiveName);
         }
     }
 

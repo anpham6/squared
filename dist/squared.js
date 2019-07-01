@@ -1,4 +1,4 @@
-/* squared 1.1.2
+/* squared 1.2.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -4918,6 +4918,7 @@
     let framework;
     exports.settings = {};
     exports.system = {};
+    const checkMain = () => !!main && !main.initializing && main.length > 0;
     function setFramework(value, cached = false) {
         const reloading = framework !== undefined;
         if (framework !== value) {
@@ -4958,31 +4959,27 @@
         }
     }
     function parseDocument(...elements) {
-        if (!main) {
-            if (exports.settings.showErrorMessages) {
-                alert('ERROR: Framework not installed.');
-            }
-        }
-        else {
-            if (!main.closed) {
-                if (exports.settings.handleExtensionsAsync) {
-                    for (const item of extensionsAsync) {
-                        main.extensionManager.include(item);
-                    }
-                    for (const [name, options] of optionsAsync.entries()) {
-                        configure(name, options);
-                    }
-                    extensionsAsync.clear();
-                    optionsAsync.clear();
+        if (main) {
+            if (exports.settings.handleExtensionsAsync) {
+                for (const item of extensionsAsync) {
+                    main.extensionManager.include(item);
                 }
+                for (const [name, options] of optionsAsync.entries()) {
+                    configure(name, options);
+                }
+                extensionsAsync.clear();
+                optionsAsync.clear();
+            }
+            if (!main.closed) {
                 return main.parseDocument(...elements);
             }
-            else {
-                if (!exports.settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
-                    main.reset();
-                    return main.parseDocument(...elements);
-                }
+            else if (!exports.settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
+                main.reset();
+                return main.parseDocument(...elements);
             }
+        }
+        else if (exports.settings.showErrorMessages) {
+            alert('ERROR: Framework not installed.');
         }
         const PromiseResult = class {
             then(resolve) { }
@@ -5064,19 +5061,7 @@
         return false;
     }
     function apply(value, options) {
-        if (value instanceof squared.base.Extension) {
-            return include(value);
-        }
-        else if (typeof value === 'string') {
-            value = value.trim();
-            if (isPlainObject(options)) {
-                return configure(value, options);
-            }
-            else {
-                return retrieve(value);
-            }
-        }
-        return false;
+        return include(value, options);
     }
     function retrieve(value) {
         return main && main.extensionManager.retrieve(value);
@@ -5090,17 +5075,28 @@
         return !!main && !main.initializing && !main.closed;
     }
     function close() {
-        if (main && !main.initializing && main.length) {
+        if (checkMain()) {
             main.finalize();
         }
     }
-    function saveAllToDisk() {
-        if (main && !main.initializing && main.length) {
+    function copyToDisk(value) {
+        if (checkMain() && isString(value)) {
             if (!main.closed) {
                 main.finalize();
             }
-            main.saveAllToDisk();
+            main.copyToDisk(value);
         }
+    }
+    function saveToArchive(value) {
+        if (checkMain()) {
+            if (!main.closed) {
+                main.finalize();
+            }
+            main.saveToArchive(value || exports.settings.outputArchiveName);
+        }
+    }
+    function saveAllToDisk() {
+        saveToArchive();
     }
     function toString() {
         return main ? main.toString() : '';
@@ -5124,6 +5120,7 @@
     exports.apply = apply;
     exports.close = close;
     exports.configure = configure;
+    exports.copyToDisk = copyToDisk;
     exports.exclude = exclude;
     exports.include = include;
     exports.includeAsync = includeAsync;
@@ -5133,6 +5130,7 @@
     exports.reset = reset;
     exports.retrieve = retrieve;
     exports.saveAllToDisk = saveAllToDisk;
+    exports.saveToArchive = saveToArchive;
     exports.setFramework = setFramework;
     exports.toString = toString;
 
