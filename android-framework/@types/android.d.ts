@@ -1,6 +1,7 @@
 import { FileAsset } from '../../src/base/@types/application';
 import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '../src/@types/application';
 import { Constraint, LocalSettings, SupportAndroid, ViewAttribute } from '../src/@types/node';
+import { FileOutputOptions } from '../src/@types/resource';
 
 import * as $const from '../src/lib/constant';
 import * as $custom from '../src/lib/customization';
@@ -52,17 +53,17 @@ declare namespace base {
 
     interface File<T extends View> extends squared.base.FileUI<T> {
         resource: Resource<T>;
-        layoutAllToXml(assets: FileAsset[], copyTo?: string, archiveTo?: string): {};
-        resourceAllToXml(copyTo?: string, archiveTo?: string): {};
-        resourceStringToXml(copyTo?: string, archiveTo?: string): string[];
-        resourceStringArrayToXml(copyTo?: string, archiveTo?: string): string[];
-        resourceFontToXml(copyTo?: string, archiveTo?: string): string[];
-        resourceColorToXml(copyTo?: string, archiveTo?: string): string[];
-        resourceStyleToXml(copyTo?: string, archiveTo?: string): string[];
-        resourceDimenToXml(copyTo?: string, archiveTo?: string): string[];
-        resourceDrawableToXml(copyTo?: string, archiveTo?: string): string[];
-        resourceDrawableImageToXml(copyTo?: string, archiveTo?: string): string[];
-        resourceAnimToXml(copyTo?: string, archiveTo?: string): string[];
+        resourceAllToXml(options: FileOutputOptions): {};
+        resourceStringToXml(options: FileOutputOptions): string[];
+        resourceStringArrayToXml(options: FileOutputOptions): string[];
+        resourceFontToXml(options: FileOutputOptions): string[];
+        resourceColorToXml(options: FileOutputOptions): string[];
+        resourceStyleToXml(options: FileOutputOptions): string[];
+        resourceDimenToXml(options: FileOutputOptions): string[];
+        resourceDrawableToXml(options: FileOutputOptions): string[];
+        resourceDrawableImageToXml(options: FileOutputOptions): string[];
+        resourceAnimToXml(options: FileOutputOptions): string[];
+        layoutAllToXml(options: FileOutputOptions): {};
     }
 
     class File<T extends View> implements File<T> {}

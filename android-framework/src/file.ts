@@ -1,5 +1,6 @@
 import { FileAsset } from '../../src/base/@types/application';
 import { ResourceStoredMapAndroid } from './@types/application';
+import { FileOutputOptions } from './@types/resource';
 
 import Resource from './resource';
 
@@ -67,8 +68,8 @@ const caseInsensitive = (a: string | string[], b: string | string[]) => a.toStri
 export default class File<T extends android.base.View> extends squared.base.FileUI<T> implements android.base.File<T> {
     public resource!: android.base.Resource<T>;
 
-    public copyToDisk(directory: string, assets: FileAsset[]) {
-        this.copying(directory, this.getAssetsAll(assets));
+    public copyToDisk(directory: string, assets: FileAsset[], callback?: CallbackResult) {
+        this.copying(directory, this.getAssetsAll(assets), callback);
     }
 
     public appendToArchive(pathname: string, assets: FileAsset[]) {
@@ -79,27 +80,7 @@ export default class File<T extends android.base.View> extends squared.base.File
         this.archiving(filename, this.getAssetsAll(assets));
     }
 
-    public layoutAllToXml(assets: FileAsset[], copyTo?: string, archiveTo?: string) {
-        const result = {};
-        const layouts: FileAsset[] = [];
-        const length = assets.length;
-        for (let i = 0; i < length; i++) {
-            const layout = assets[i];
-            result[layout.filename] = [layout.content];
-            if (archiveTo) {
-                layouts.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
-            }
-        }
-        if (copyTo) {
-            this.copying(copyTo, layouts);
-        }
-        if (archiveTo) {
-            this.archiving(archiveTo, layouts);
-        }
-        return result;
-    }
-
-    public resourceAllToXml(copyTo?: string, archiveTo?: string) {
+    public resourceAllToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
         const result = {
             string: this.resourceStringToXml(),
             stringArray: this.resourceStringArrayToXml(),
@@ -127,7 +108,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                 }
             }
             if (copyTo) {
-                this.copying(copyTo, assets);
+                this.copying(copyTo, assets, callback);
             }
             if (archiveTo) {
                 this.archiving(archiveTo, assets);
@@ -136,11 +117,11 @@ export default class File<T extends android.base.View> extends squared.base.File
         return result;
     }
 
-    public resourceStringToXml(copyTo?: string, archiveTo?: string) {
+    public resourceStringToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
         const result: string[] = [];
         const data: ExternalData[] = [{ string: [] }];
         if (!STORED.strings.has('app_name')) {
-            data[0].string.push({ name: 'app_name', innerText: this.userSettings.outputArchiveName });
+            data[0].string.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
         }
         for (const [name, innerText] of Array.from(STORED.strings.entries()).sort(caseInsensitive)) {
             data[0].string.push(<ItemValue> { name, innerText });
@@ -153,11 +134,11 @@ export default class File<T extends android.base.View> extends squared.base.File
             this.directory.string,
             'strings.xml'
         );
-        this.checkFileAssets(result, copyTo, archiveTo);
+        this.checkFileAssets(result, copyTo, archiveTo, callback);
         return result;
     }
 
-    public resourceStringArrayToXml(copyTo?: string, archiveTo?: string) {
+    public resourceStringArrayToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.arrays.size) {
             const data: ExternalData[] = [{ 'string-array': [] }];
@@ -175,12 +156,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                 this.directory.string,
                 'string_arrays.xml'
             );
-            this.checkFileAssets(result, copyTo, archiveTo);
+            this.checkFileAssets(result, copyTo, archiveTo, callback);
         }
         return result;
     }
 
-    public resourceFontToXml(copyTo?: string, archiveTo?: string) {
+    public resourceFontToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.fonts.size) {
             const settings = this.userSettings;
@@ -226,12 +207,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                 }
                 result.push(output, pathname, `${name}.xml`);
             }
-            this.checkFileAssets(result, copyTo, archiveTo);
+            this.checkFileAssets(result, copyTo, archiveTo, callback);
         }
         return result;
     }
 
-    public resourceColorToXml(copyTo?: string, archiveTo?: string) {
+    public resourceColorToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.colors.size) {
             const data: ExternalData[] = [{ color: [] }];
@@ -246,12 +227,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                 this.directory.string,
                 'colors.xml'
             );
-            this.checkFileAssets(result, copyTo, archiveTo);
+            this.checkFileAssets(result, copyTo, archiveTo, callback);
         }
         return result;
     }
 
-    public resourceStyleToXml(copyTo?: string, archiveTo?: string) {
+    public resourceStyleToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
         const settings = this.userSettings;
         const result: string[] = [];
         if (STORED.styles.size) {
@@ -315,11 +296,11 @@ export default class File<T extends android.base.View> extends squared.base.File
                 }
             }
         }
-        this.checkFileAssets(result, copyTo, archiveTo);
+        this.checkFileAssets(result, copyTo, archiveTo, callback);
         return result;
     }
 
-    public resourceDimenToXml(copyTo?: string, archiveTo?: string) {
+    public resourceDimenToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.dimens.size) {
             const data: ExternalData[] = [{ dimen: [] }];
@@ -334,12 +315,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                 this.directory.string,
                 'dimens.xml'
             );
-            this.checkFileAssets(result, copyTo, archiveTo);
+            this.checkFileAssets(result, copyTo, archiveTo, callback);
         }
         return result;
     }
 
-    public resourceDrawableToXml(copyTo?: string, archiveTo?: string) {
+    public resourceDrawableToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.drawables.size) {
             const settings = this.userSettings;
@@ -358,12 +339,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                     `${name}.xml`
                 );
             }
-            this.checkFileAssets(result, copyTo, archiveTo);
+            this.checkFileAssets(result, copyTo, archiveTo, callback);
         }
         return result;
     }
 
-    public resourceDrawableImageToXml(copyTo?: string, archiveTo?: string) {
+    public resourceDrawableImageToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.images.size) {
             const directory = this.directory.image;
@@ -388,7 +369,7 @@ export default class File<T extends android.base.View> extends squared.base.File
             if (copyTo || archiveTo) {
                 const assets = getImageAssets(result);
                 if (copyTo) {
-                    this.copying(copyTo, assets);
+                    this.copying(copyTo, assets, callback);
                 }
                 if (archiveTo) {
                     this.archiving(archiveTo, assets);
@@ -398,7 +379,7 @@ export default class File<T extends android.base.View> extends squared.base.File
         return result;
     }
 
-    public resourceAnimToXml(copyTo?: string, archiveTo?: string) {
+    public resourceAnimToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.animators.size) {
             const settings = this.userSettings;
@@ -409,7 +390,29 @@ export default class File<T extends android.base.View> extends squared.base.File
                     `${name}.xml`
                 );
             }
-            this.checkFileAssets(result, copyTo, archiveTo);
+            this.checkFileAssets(result, copyTo, archiveTo, callback);
+        }
+        return result;
+    }
+
+    public layoutAllToXml({ assets, copyTo, archiveTo, callback }: FileOutputOptions = {}) {
+        const result = {};
+        if (assets) {
+            const layouts: FileAsset[] = [];
+            const length = assets.length;
+            for (let i = 0; i < length; i++) {
+                const layout = assets[i];
+                result[layout.filename] = [layout.content];
+                if (archiveTo) {
+                    layouts.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
+                }
+            }
+            if (copyTo) {
+                this.copying(copyTo, layouts, callback);
+            }
+            if (archiveTo) {
+                this.archiving(archiveTo, layouts);
+            }
         }
         return result;
     }
@@ -433,11 +436,11 @@ export default class File<T extends android.base.View> extends squared.base.File
         );
     }
 
-    private checkFileAssets(content: string[], copyTo?: string, archiveTo?: string) {
+    private checkFileAssets(content: string[], copyTo?: string, archiveTo?: string, callback?: CallbackResult) {
         if (copyTo || archiveTo) {
             const assets = getFileAssets(content);
             if (copyTo) {
-                this.copying(copyTo, assets);
+                this.copying(copyTo, assets, callback);
             }
             if (archiveTo) {
                 this.archiving(archiveTo, assets);

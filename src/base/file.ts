@@ -6,6 +6,8 @@ const {
 } = squared.lib;
 
 export interface ExpressResult {
+    success: boolean;
+    directory: string;
     zipname?: string;
     application?: string;
     system?: string;
@@ -175,7 +177,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public readonly assets: RawAsset[] = [];
     public abstract resource: squared.base.Resource<T>;
 
-    public abstract copyToDisk(directory: string, assets?: FileAsset[]): void;
+    public abstract copyToDisk(directory: string, assets?: FileAsset[], callback?: CallbackResult): void;
     public abstract appendToArchive(pathname: string, assets?: FileAsset[]): void;
     public abstract saveToArchive(filename: string, assets?: FileAsset[]): void;
 
@@ -197,7 +199,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         this.assets.length = 0;
     }
 
-    public copying(directory: string, assets: FileAsset[]) {
+    public copying(directory: string, assets: FileAsset[], callback?: CallbackResult) {
         if (location.protocol.startsWith('http')) {
             assets = assets.concat(this.assets);
             if (assets.length) {
@@ -215,6 +217,9 @@ export default abstract class File<T extends squared.base.Node> implements squar
                 .then((response: Response) => response.json())
                 .then((result: ExpressResult) => {
                     if (result) {
+                        if (typeof callback === 'function') {
+                            callback(result);
+                        }
                         if (result.system && this.userSettings.showErrorMessages) {
                             alert(`${result.application}\n\n${result.system}`);
                         }

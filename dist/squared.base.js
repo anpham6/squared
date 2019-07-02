@@ -1,4 +1,4 @@
-/* squared.base 1.2.2
+/* squared.base 1.2.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -2418,10 +2418,10 @@
             this.resourceHandler = new ResourceConstructor(this, cache);
             this.extensionManager = new ExtensionManagerConstructor(this, cache);
         }
-        copyToDisk(directory, assets) {
+        copyToDisk(directory, callback, assets) {
             const file = this.resourceHandler.fileHandler;
             if (file) {
-                file.copyToDisk(directory, assets);
+                file.copyToDisk(directory, assets, callback);
             }
         }
         appendToArchive(pathname, assets) {
@@ -3213,7 +3213,7 @@
         reset() {
             this.assets.length = 0;
         }
-        copying(directory, assets) {
+        copying(directory, assets, callback) {
             if (location.protocol.startsWith('http')) {
                 assets = assets.concat(this.assets);
                 if (assets.length) {
@@ -3229,6 +3229,9 @@
                         .then((response) => response.json())
                         .then((result) => {
                         if (result) {
+                            if (typeof callback === 'function') {
+                                callback(result);
+                            }
                             if (result.system && this.userSettings.showErrorMessages) {
                                 alert(`${result.application}\n\n${result.system}`);
                             }
@@ -4716,8 +4719,8 @@
             $dom$3.removeElementsByClassName('__squared.pseudo');
             this.closed = true;
         }
-        copyToDisk(directory) {
-            super.copyToDisk(directory, this.layouts);
+        copyToDisk(directory, callback) {
+            super.copyToDisk(directory, callback, this.layouts);
         }
         appendToArchive(pathname) {
             super.appendToArchive(pathname, this.layouts);
@@ -6724,10 +6727,6 @@
     }
 
     class FileUI extends File {
-        constructor() {
-            super(...arguments);
-            this.appName = '';
-        }
         get directory() {
             return this.resource.application.controllerHandler.localSettings.directory;
         }

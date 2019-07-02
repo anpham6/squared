@@ -69,40 +69,42 @@ app.post('/api/assets/copy', (req, res) => {
             res.json({ application: `DIRECTORY: ${dirname}`, system: err });
             return;
         }
-        const { directory, timeout, finalizeTime } = getQueryData(req, dirname);
+        let { directory, timeout, finalizeTime } = getQueryData(req, dirname);
         let delayed = 0;
         let fileerror = '';
-        function finalize() {
-            if (delayed !== -1 && (--delayed === 0 || Date.now() >= finalizeTime)) {
-                delayed = -1;
+        function finalize(valid = false) {
+            if (valid && --delayed === 0 || Date.now() >= finalizeTime) {
+                const success = delayed === 0;
+                delayed = Number.POSITIVE_INFINITY;
+                finalizeTime = Number.POSITIVE_INFINITY;
+                res.json({
+                    success,
+                    directory: dirname
+                });
             }
         }
         try {
             for (const file of req.body) {
                 const { pathname, filename, level, quality } = getFileData(file, directory);
                 function writeBuffer() {
-                    if (delayed !== -1) {
-                        if (level > 0) {
-                            delayed++;
-                            const filename_gz = filename + '.gz';
-                            createGzipWriteStream(level, filename, filename_gz).on('finish', () => {
-                                finalize();
-                            });
-                        }
-                        if (quality > 0) {
-                            delayed++;
-                            const filename_br = filename + '.br';
-                            fs.writeFile(
-                                filename_br,
-                                brotli.compress(
-                                    fs.readFileSync(filename),
-                                    { mode: file.mimeType && file.mimeType.startsWith('font/') ? 2 : 1, quality }
-                                ),
-                                () => {
-                                    finalize();
-                                }
-                            );
-                        }
+                    if (level > 0) {
+                        delayed++;
+                        const filename_gz = filename + '.gz';
+                        createGzipWriteStream(level, filename, filename_gz).on('finish', () => {
+                            finalize(true);
+                        });
+                    }
+                    if (quality > 0) {
+                        delayed++;
+                        const filename_br = filename + '.br';
+                        fs.writeFile(
+                            filename_br,
+                            brotli.compress(
+                                fs.readFileSync(filename),
+                                { mode: file.mimeType && file.mimeType.startsWith('font/') ? 2 : 1, quality }
+                            ),
+                            () => finalize(true)
+                        );
                     }
                 }
                 fileerror = filename;
@@ -117,7 +119,7 @@ app.post('/api/assets/copy', (req, res) => {
                             if (!err) {
                                 writeBuffer();
                             } 
-                            finalize();
+                            finalize(true);
                         }
                     );
                 }
@@ -126,15 +128,15 @@ app.post('/api/assets/copy', (req, res) => {
                     const stream = fs.createWriteStream(filename);
                     stream.on('finish', () => {
                         writeBuffer();
-                        finalize();
+                        finalize(true);
                     });
                     request(file.uri)
                         .on('response', res => {
                             if (res.statusCode !== 200) {
-                                finalize();
+                                finalize(true);
                             }
                         })
-                        .on('error', finalize)
+                        .on('error', () => finalize(true))
                         .pipe(stream);
                 }
             }
@@ -157,11 +159,12 @@ app.post('/api/assets/archive', (req, res) => {
     }
     const append_to = req.query.append_to && req.query.append_to.trim();
     let format = req.query.format.toLowerCase() === 'tar' ? 'tar' : 'zip';
+    let success = false;
     let delayed = 0;
     let fileerror = '';
     let zipname = '';
     function resume(unzip_to = '') {
-        const { directory, timeout, finalizeTime } = getQueryData(req, unzip_to || dirname);
+        let { directory, timeout, finalizeTime } = getQueryData(req, unzip_to || dirname);
         try {
             mkdirp.sync(directory);
         }
@@ -175,18 +178,20 @@ app.post('/api/assets/archive', (req, res) => {
         }
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
-            delayed = -1;
             console.log(`WRITE: ${zipname} (${archive.pointer()} bytes)`);
             res.json({
+                success,
                 directory: dirname,
                 zipname,
                 bytes: archive.pointer()
             });
         });
         archive.pipe(output);
-        function finalize() {
-            if (delayed !== -1 && (--delayed === 0 || Date.now() >= finalizeTime)) {
-                delayed = -1;
+        function finalize(valid = false) {
+            if (valid && --delayed === 0 || Date.now() >= finalizeTime) {
+                success = delayed === 0;
+                delayed = Number.POSITIVE_INFINITY;
+                finalizeTime = Number.POSITIVE_INFINITY;
                 archive.finalize();
             }
         }
@@ -198,14 +203,14 @@ app.post('/api/assets/archive', (req, res) => {
                 const { pathname, filename, level, quality } = getFileData(file, directory);
                 const data = { name: `${(req.query.directory ? `${req.query.directory}/` : '') + file.pathname}/${file.filename}` };
                 function writeBuffer() {
-                    if (delayed !== -1) {
+                    if (delayed !== Number.POSITIVE_INFINITY) {
                         if (level > 0) {
                             delayed++;
                             const filename_gz = filename + '.gz';
                             createGzipWriteStream(level, filename, filename_gz).on('finish', () => {
-                                if (delayed !== -1) {
+                                if (delayed !== Number.POSITIVE_INFINITY) {
                                     archive.file(filename_gz, { name: data.name + '.gz' });
-                                    finalize();
+                                    finalize(true);
                                 }
                             });
                         }
@@ -219,9 +224,9 @@ app.post('/api/assets/archive', (req, res) => {
                                     { mode: file.mimeType && file.mimeType.startsWith('font/') ? 2 : 1, quality }
                                 ),
                                 () => {
-                                    if (delayed !== -1) {
+                                    if (delayed !== Number.POSITIVE_INFINITY) {
                                         archive.file(filename_br, { name: data.name + '.br' });
-                                        finalize();
+                                        finalize(true);
                                     }
                                 }
                             );
@@ -241,7 +246,7 @@ app.post('/api/assets/archive', (req, res) => {
                             if (!err) {
                                 writeBuffer();
                             } 
-                            finalize();
+                            finalize(true);
                         }
                     );
                 }
@@ -250,15 +255,15 @@ app.post('/api/assets/archive', (req, res) => {
                     const stream = fs.createWriteStream(filename);
                     stream.on('finish', () => {
                         writeBuffer();
-                        finalize();
+                        finalize(true);
                     });
                     request(file.uri)
                         .on('response', res => {
                             if (res.statusCode !== 200) {
-                                finalize();
+                                finalize(true);
                             }
                         })
-                        .on('error', finalize)
+                        .on('error', () => finalize(true))
                         .pipe(stream);
                 }
             }

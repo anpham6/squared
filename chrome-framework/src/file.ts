@@ -63,12 +63,12 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         this._outputFileExclusions = undefined;
     }
 
-    public copyToDisk(directory: string) {
-        this.copying(directory, <FileAsset[]> this.getAssetsAll());
+    public copyToDisk(directory: string, assets: FileAsset[] = [], callback?: CallbackResult) {
+        this.copying(directory, assets.concat(<FileAsset[]> this.getAssetsAll()), callback);
     }
 
-    public appendToArchive(pathname: string) {
-        this.archiving(this.userSettings.outputArchiveName, <FileAsset[]> this.getAssetsAll(), pathname);
+    public appendToArchive(pathname: string, assets: FileAsset[] = []) {
+        this.archiving(this.userSettings.outputArchiveName, assets.concat(<FileAsset[]> this.getAssetsAll()), pathname);
     }
 
     public saveToArchive(filename: string) {

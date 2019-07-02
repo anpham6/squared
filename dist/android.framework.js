@@ -1,4 +1,4 @@
-/* android-framework 1.2.2
+/* android-framework 1.2.3
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -5347,8 +5347,8 @@ var android = (function () {
     const replaceThemeLength = (value, dpi, format) => format === 'dp' ? value.replace(REGEXP_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], dpi, false) + '<') : value;
     const caseInsensitive = (a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
     class File extends squared.base.FileUI {
-        copyToDisk(directory, assets) {
-            this.copying(directory, this.getAssetsAll(assets));
+        copyToDisk(directory, assets, callback) {
+            this.copying(directory, this.getAssetsAll(assets), callback);
         }
         appendToArchive(pathname, assets) {
             this.archiving(this.userSettings.outputArchiveName, this.getAssetsAll(assets), pathname);
@@ -5356,26 +5356,7 @@ var android = (function () {
         saveToArchive(filename, assets) {
             this.archiving(filename, this.getAssetsAll(assets));
         }
-        layoutAllToXml(assets, copyTo, archiveTo) {
-            const result = {};
-            const layouts = [];
-            const length = assets.length;
-            for (let i = 0; i < length; i++) {
-                const layout = assets[i];
-                result[layout.filename] = [layout.content];
-                if (archiveTo) {
-                    layouts.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
-                }
-            }
-            if (copyTo) {
-                this.copying(copyTo, layouts);
-            }
-            if (archiveTo) {
-                this.archiving(archiveTo, layouts);
-            }
-            return result;
-        }
-        resourceAllToXml(copyTo, archiveTo) {
+        resourceAllToXml({ copyTo, archiveTo, callback } = {}) {
             const result = {
                 string: this.resourceStringToXml(),
                 stringArray: this.resourceStringArrayToXml(),
@@ -5403,7 +5384,7 @@ var android = (function () {
                     }
                 }
                 if (copyTo) {
-                    this.copying(copyTo, assets);
+                    this.copying(copyTo, assets, callback);
                 }
                 if (archiveTo) {
                     this.archiving(archiveTo, assets);
@@ -5411,20 +5392,20 @@ var android = (function () {
             }
             return result;
         }
-        resourceStringToXml(copyTo, archiveTo) {
+        resourceStringToXml({ copyTo, archiveTo, callback } = {}) {
             const result = [];
             const data = [{ string: [] }];
             if (!STORED$1.strings.has('app_name')) {
-                data[0].string.push({ name: 'app_name', innerText: this.userSettings.outputArchiveName });
+                data[0].string.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
             }
             for (const [name, innerText] of Array.from(STORED$1.strings.entries()).sort(caseInsensitive)) {
                 data[0].string.push({ name, innerText });
             }
             result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', STRING_TMPL, data), this.userSettings.insertSpaces), this.directory.string, 'strings.xml');
-            this.checkFileAssets(result, copyTo, archiveTo);
+            this.checkFileAssets(result, copyTo, archiveTo, callback);
             return result;
         }
-        resourceStringArrayToXml(copyTo, archiveTo) {
+        resourceStringArrayToXml({ copyTo, archiveTo, callback } = {}) {
             const result = [];
             if (STORED$1.arrays.size) {
                 const data = [{ 'string-array': [] }];
@@ -5435,11 +5416,11 @@ var android = (function () {
                     });
                 }
                 result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', STRINGARRAY_TMPL, data), this.userSettings.insertSpaces), this.directory.string, 'string_arrays.xml');
-                this.checkFileAssets(result, copyTo, archiveTo);
+                this.checkFileAssets(result, copyTo, archiveTo, callback);
             }
             return result;
         }
-        resourceFontToXml(copyTo, archiveTo) {
+        resourceFontToXml({ copyTo, archiveTo, callback } = {}) {
             const result = [];
             if (STORED$1.fonts.size) {
                 const settings = this.userSettings;
@@ -5482,11 +5463,11 @@ var android = (function () {
                     }
                     result.push(output, pathname, `${name}.xml`);
                 }
-                this.checkFileAssets(result, copyTo, archiveTo);
+                this.checkFileAssets(result, copyTo, archiveTo, callback);
             }
             return result;
         }
-        resourceColorToXml(copyTo, archiveTo) {
+        resourceColorToXml({ copyTo, archiveTo, callback } = {}) {
             const result = [];
             if (STORED$1.colors.size) {
                 const data = [{ color: [] }];
@@ -5494,11 +5475,11 @@ var android = (function () {
                     data[0].color.push({ name, innerText });
                 }
                 result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', COLOR_TMPL, data), this.userSettings.insertSpaces), this.directory.string, 'colors.xml');
-                this.checkFileAssets(result, copyTo, archiveTo);
+                this.checkFileAssets(result, copyTo, archiveTo, callback);
             }
             return result;
         }
-        resourceStyleToXml(copyTo, archiveTo) {
+        resourceStyleToXml({ copyTo, archiveTo, callback } = {}) {
             const settings = this.userSettings;
             const result = [];
             if (STORED$1.styles.size) {
@@ -5544,10 +5525,10 @@ var android = (function () {
                     }
                 }
             }
-            this.checkFileAssets(result, copyTo, archiveTo);
+            this.checkFileAssets(result, copyTo, archiveTo, callback);
             return result;
         }
-        resourceDimenToXml(copyTo, archiveTo) {
+        resourceDimenToXml({ copyTo, archiveTo, callback } = {}) {
             const result = [];
             if (STORED$1.dimens.size) {
                 const data = [{ dimen: [] }];
@@ -5558,11 +5539,11 @@ var android = (function () {
                     data[0].dimen.push({ name, innerText: convertPixels ? convertLength(value, dpi, false) : value });
                 }
                 result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', DIMEN_TMPL, data)), this.directory.string, 'dimens.xml');
-                this.checkFileAssets(result, copyTo, archiveTo);
+                this.checkFileAssets(result, copyTo, archiveTo, callback);
             }
             return result;
         }
-        resourceDrawableToXml(copyTo, archiveTo) {
+        resourceDrawableToXml({ copyTo, archiveTo, callback } = {}) {
             const result = [];
             if (STORED$1.drawables.size) {
                 const settings = this.userSettings;
@@ -5570,11 +5551,11 @@ var android = (function () {
                 for (const [name, value] of STORED$1.drawables.entries()) {
                     result.push($xml$1.replaceTab(replaceDrawableLength(value, settings.resolutionDPI, settings.convertPixels), settings.insertSpaces), directory, `${name}.xml`);
                 }
-                this.checkFileAssets(result, copyTo, archiveTo);
+                this.checkFileAssets(result, copyTo, archiveTo, callback);
             }
             return result;
         }
-        resourceDrawableImageToXml(copyTo, archiveTo) {
+        resourceDrawableImageToXml({ copyTo, archiveTo, callback } = {}) {
             const result = [];
             if (STORED$1.images.size) {
                 const directory = this.directory.image;
@@ -5591,7 +5572,7 @@ var android = (function () {
                 if (copyTo || archiveTo) {
                     const assets = getImageAssets(result);
                     if (copyTo) {
-                        this.copying(copyTo, assets);
+                        this.copying(copyTo, assets, callback);
                     }
                     if (archiveTo) {
                         this.archiving(archiveTo, assets);
@@ -5600,14 +5581,35 @@ var android = (function () {
             }
             return result;
         }
-        resourceAnimToXml(copyTo, archiveTo) {
+        resourceAnimToXml({ copyTo, archiveTo, callback } = {}) {
             const result = [];
             if (STORED$1.animators.size) {
                 const settings = this.userSettings;
                 for (const [name, value] of STORED$1.animators.entries()) {
                     result.push($xml$1.replaceTab(value, settings.insertSpaces), 'res/anim', `${name}.xml`);
                 }
-                this.checkFileAssets(result, copyTo, archiveTo);
+                this.checkFileAssets(result, copyTo, archiveTo, callback);
+            }
+            return result;
+        }
+        layoutAllToXml({ assets, copyTo, archiveTo, callback } = {}) {
+            const result = {};
+            if (assets) {
+                const layouts = [];
+                const length = assets.length;
+                for (let i = 0; i < length; i++) {
+                    const layout = assets[i];
+                    result[layout.filename] = [layout.content];
+                    if (archiveTo) {
+                        layouts.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
+                    }
+                }
+                if (copyTo) {
+                    this.copying(copyTo, layouts, callback);
+                }
+                if (archiveTo) {
+                    this.archiving(archiveTo, layouts);
+                }
             }
             return result;
         }
@@ -5619,11 +5621,11 @@ var android = (function () {
             }
             return result.concat(getFileAssets(this.resourceStringToXml()), getFileAssets(this.resourceStringArrayToXml()), getFileAssets(this.resourceFontToXml()), getFileAssets(this.resourceColorToXml()), getFileAssets(this.resourceDimenToXml()), getFileAssets(this.resourceStyleToXml()), getFileAssets(this.resourceDrawableToXml()), getImageAssets(this.resourceDrawableImageToXml()), getFileAssets(this.resourceAnimToXml()));
         }
-        checkFileAssets(content, copyTo, archiveTo) {
+        checkFileAssets(content, copyTo, archiveTo, callback) {
             if (copyTo || archiveTo) {
                 const assets = getFileAssets(content);
                 if (copyTo) {
-                    this.copying(copyTo, assets);
+                    this.copying(copyTo, assets, callback);
                 }
                 if (archiveTo) {
                     this.archiving(archiveTo, assets);
@@ -12068,119 +12070,119 @@ var android = (function () {
             addXmlNs(name, uri) {
                 XMLNS_ANDROID[name] = uri;
             },
-            copyLayoutAllXml(directory) {
+            copyLayoutAllXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.layoutAllToXml(application.layouts, directory);
+                    file.layoutAllToXml({ assets: application.layouts, copyTo: directory, callback });
                 }
             },
-            copyResourceAllXml(directory) {
+            copyResourceAllXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.resourceAllToXml(directory);
+                    file.resourceAllToXml({ copyTo: directory, callback });
                 }
             },
-            copyResourceStringXml(directory) {
+            copyResourceStringXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.resourceStringToXml(directory);
+                    file.resourceStringToXml({ copyTo: directory, callback });
                 }
             },
-            copyResourceArrayXml(directory) {
+            copyResourceArrayXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.resourceStringArrayToXml(directory);
+                    file.resourceStringArrayToXml({ copyTo: directory, callback });
                 }
             },
-            copyResourceFontXml(directory) {
+            copyResourceFontXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.resourceFontToXml(directory);
+                    file.resourceFontToXml({ copyTo: directory, callback });
                 }
             },
-            copyResourceColorXml(directory) {
+            copyResourceColorXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.resourceColorToXml(directory);
+                    file.resourceColorToXml({ copyTo: directory, callback });
                 }
             },
-            copyResourceStyleXml(directory) {
+            copyResourceStyleXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.resourceStyleToXml(directory);
+                    file.resourceStyleToXml({ copyTo: directory, callback });
                 }
             },
-            copyResourceDimenXml(directory) {
+            copyResourceDimenXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.resourceDimenToXml(directory);
+                    file.resourceDimenToXml({ copyTo: directory, callback });
                 }
             },
-            copyResourceDrawableXml(directory) {
+            copyResourceDrawableXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.resourceDrawableToXml(directory);
+                    file.resourceDrawableToXml({ copyTo: directory, callback });
                 }
             },
-            copyResourceDrawableImageXml(directory) {
+            copyResourceDrawableImageXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.resourceDrawableImageToXml(directory);
+                    file.resourceDrawableImageToXml({ copyTo: directory, callback });
                 }
             },
-            copyResourceAnimXml(directory) {
+            copyResourceAnimXml(directory, callback) {
                 if (checkApplication(application)) {
-                    file.resourceAnimToXml(directory);
+                    file.resourceAnimToXml({ copyTo: directory, callback });
                 }
             },
             saveLayoutAllXml(filename) {
                 if (checkApplication(application)) {
-                    file.layoutAllToXml(application.layouts, undefined, filename || userSettings.outputArchiveName);
+                    file.layoutAllToXml({ assets: application.layouts, archiveTo: filename || `${userSettings.outputArchiveName}-layouts` });
                 }
             },
             saveResourceAllXml(filename) {
                 if (checkApplication(application)) {
-                    file.resourceAllToXml(undefined, filename || userSettings.outputArchiveName);
+                    file.resourceAllToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-resources` });
                 }
             },
             saveResourceStringXml(filename) {
                 if (checkApplication(application)) {
-                    file.resourceStringToXml(undefined, filename || userSettings.outputArchiveName);
+                    file.resourceStringToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-string` });
                 }
             },
             saveResourceArrayXml(filename) {
                 if (checkApplication(application)) {
-                    file.resourceStringArrayToXml(undefined, filename || userSettings.outputArchiveName);
+                    file.resourceStringArrayToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-array` });
                 }
             },
             saveResourceFontXml(filename) {
                 if (checkApplication(application)) {
-                    file.resourceFontToXml(undefined, filename || userSettings.outputArchiveName);
+                    file.resourceFontToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-font` });
                 }
             },
             saveResourceColorXml(filename) {
                 if (checkApplication(application)) {
-                    file.resourceColorToXml(undefined, filename || userSettings.outputArchiveName);
+                    file.resourceColorToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-color` });
                 }
             },
             saveResourceStyleXml(filename) {
                 if (checkApplication(application)) {
-                    file.resourceStyleToXml(undefined, filename || userSettings.outputArchiveName);
+                    file.resourceStyleToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-style` });
                 }
             },
             saveResourceDimenXml(filename) {
                 if (checkApplication(application)) {
-                    file.resourceDimenToXml(undefined, filename || userSettings.outputArchiveName);
+                    file.resourceDimenToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-dimen` });
                 }
             },
             saveResourceDrawableXml(filename) {
                 if (checkApplication(application)) {
-                    file.resourceDrawableToXml(undefined, filename || userSettings.outputArchiveName);
+                    file.resourceDrawableToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-drawable` });
                 }
             },
             saveResourceDrawableImageXml(filename) {
                 if (checkApplication(application)) {
-                    file.resourceDrawableImageToXml(undefined, filename || userSettings.outputArchiveName);
+                    file.resourceDrawableImageToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-drawable-image` });
                 }
             },
             saveResourceAnimXml(filename) {
                 if (checkApplication(application)) {
-                    file.resourceAnimToXml(undefined, filename || userSettings.outputArchiveName);
+                    file.resourceAnimToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-anim` });
                 }
             },
             writeLayoutAllXml() {
                 if (checkApplication(application)) {
-                    return file.layoutAllToXml(application.layouts);
+                    return file.layoutAllToXml({ assets: application.layouts });
                 }
                 return {};
             },

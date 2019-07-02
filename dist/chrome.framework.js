@@ -1,4 +1,4 @@
-/* chrome-framework 1.2.2
+/* chrome-framework 1.2.3
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -166,11 +166,11 @@ var chrome = (function () {
             super.reset();
             this._outputFileExclusions = undefined;
         }
-        copyToDisk(directory) {
-            this.copying(directory, this.getAssetsAll());
+        copyToDisk(directory, assets = [], callback) {
+            this.copying(directory, assets.concat(this.getAssetsAll()), callback);
         }
-        appendToArchive(pathname) {
-            this.archiving(this.userSettings.outputArchiveName, this.getAssetsAll(), pathname);
+        appendToArchive(pathname, assets = []) {
+            this.archiving(this.userSettings.outputArchiveName, assets.concat(this.getAssetsAll()), pathname);
         }
         saveToArchive(filename) {
             this.archiving(filename, this.getAssetsAll());
@@ -511,29 +511,29 @@ var chrome = (function () {
                     return controller.elementMap.clear();
                 }
             },
-            copyHtmlPage(directory, name) {
+            copyHtmlPage(directory, callback, name) {
                 if (file && $util$1.isString(directory)) {
-                    file.copying(directory, file.getHtmlPage(name));
+                    file.copying(directory, file.getHtmlPage(name), callback);
                 }
             },
-            copyScriptAssets(directory) {
+            copyScriptAssets(directory, callback) {
                 if (file && $util$1.isString(directory)) {
-                    file.copying(directory, file.getScriptAssets());
+                    file.copying(directory, file.getScriptAssets(), callback);
                 }
             },
-            copyLinkAssets(directory, rel) {
+            copyLinkAssets(directory, callback, rel) {
                 if (file && $util$1.isString(directory)) {
-                    file.copying(directory, file.getLinkAssets(rel));
+                    file.copying(directory, file.getLinkAssets(rel), callback);
                 }
             },
-            copyImageAssets(directory) {
+            copyImageAssets(directory, callback) {
                 if (file && $util$1.isString(directory)) {
-                    file.copying(directory, file.getImageAssets());
+                    file.copying(directory, file.getImageAssets(), callback);
                 }
             },
-            copyFontAssets(directory) {
+            copyFontAssets(directory, callback) {
                 if (file && $util$1.isString(directory)) {
-                    file.copying(directory, file.getFontAssets());
+                    file.copying(directory, file.getFontAssets(), callback);
                 }
             },
             saveHtmlPage(filename, name) {

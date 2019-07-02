@@ -36,7 +36,7 @@ declare function configure(value: {} | string, options: {}): boolean;
 declare function ready(): boolean;
 declare function close(): void;
 declare function reset(): void;
-declare function copyToDisk(value: string): void;
+declare function copyToDisk(value: string, callback?: CallbackResult): void;
 declare function appendToArchive(value: string): void;
 declare function saveToArchive(value?: string): void;
 declare function toString(): string;
@@ -66,7 +66,7 @@ declare namespace base {
         insertNode(element: Element, parent?: T): T | undefined;
         afterCreateCache(element: HTMLElement): void;
         finalize(): void;
-        copyToDisk(directory: string, assets?: FileAsset[]): void;
+        copyToDisk(directory: string, callback?: CallbackResult, assets?: FileAsset[]): void;
         appendToArchive(pathname: string, assets?: FileAsset[]): void;
         saveToArchive(filename?: string, assets?: FileAsset[]): void;
         toString(): string;
@@ -264,14 +264,14 @@ declare namespace base {
 
     interface File<T extends Node> {
         resource: Resource<T>;
-        userSettings: UserSettings;
+        readonly userSettings: UserSettings;
         readonly assets: FileAsset[];
-        copyToDisk(directory: string, assets?: FileAsset[]): void;
+        copyToDisk(directory: string, assets?: FileAsset[], callback?: CallbackResult): void;
         appendToArchive(pathname: string, assets?: FileAsset[]): void;
         saveToArchive(filename: string, assets?: FileAsset[]): void;
         addAsset(data: Optional<RawAsset>): void;
         reset(): void;
-        copying(directory: string, assets: FileAsset[]): void;
+        copying(directory: string, assets: FileAsset[], callback?: CallbackResult): void;
         archiving(filename: string, assets: FileAsset[], appendTo?: string): void;
     }
 
@@ -282,8 +282,7 @@ declare namespace base {
 
     interface FileUI<T extends NodeUI> extends File<T> {
         resource: ResourceUI<T>;
-        userSettings: UserUISettings;
-        appName: string;
+        readonly userSettings: UserUISettings;
         readonly directory: { string: string, font: string, image: string };
     }
 

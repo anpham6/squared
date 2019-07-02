@@ -1,4 +1,4 @@
-/* squared 1.2.2
+/* squared 1.2.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -5076,12 +5076,12 @@
             main.finalize();
         }
     }
-    function copyToDisk(value) {
+    function copyToDisk(value, callback) {
         if (checkMain() && isString(value)) {
             if (!main.closed) {
                 main.finalize();
             }
-            main.copyToDisk(value);
+            main.copyToDisk(value, callback);
         }
     }
     function appendToArchive(value) {

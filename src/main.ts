@@ -193,12 +193,12 @@ export function close() {
     }
 }
 
-export function copyToDisk(value: string) {
+export function copyToDisk(value: string, callback?: CallbackResult) {
     if (checkMain() && util.isString(value)) {
         if (!main.closed) {
             main.finalize();
         }
-        main.copyToDisk(value);
+        main.copyToDisk(value, callback);
     }
 }
 

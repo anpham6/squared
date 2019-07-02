@@ -151,8 +151,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.closed = true;
     }
 
-    public copyToDisk(directory: string) {
-        super.copyToDisk(directory, this.layouts);
+    public copyToDisk(directory: string, callback?: CallbackResult) {
+        super.copyToDisk(directory, callback, this.layouts);
     }
 
     public appendToArchive(pathname: string) {

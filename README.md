@@ -50,7 +50,7 @@ GitHub
         // Express required
         squared.saveToArchive(/* optional: archive name */);
         // OR
-        squared.copyToDisk(/* required: local directory */);
+        squared.copyToDisk(/* required: local directory */, /* optional: callback() */);
         // OR
         squared.appendToArchive(/* required: location uri */);
 
@@ -186,7 +186,7 @@ ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
 
-copyToDisk(directory: string) // copy entire project to local directory (Express required)
+copyToDisk(directory: string, callback?: () => void) // copy entire project to local directory (Express required)
 appendToArchive(pathname: string) // append entire project to a copy of a preexisting zip archive (Express required)
 saveToArchive(filename?: string) // save entire project as zip archive (Express required)
 
@@ -268,17 +268,17 @@ You can use the "system.customize" method to change the default settings for the
 squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
 squared.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
 
-squared.system.copyLayoutAllXml(directory: string) // copy generated xml
-squared.system.copyResourceAllXml(directory: string)
-squared.system.copyResourceAnimXml(directory: string)
-squared.system.copyResourceArrayXml(directory: string)
-squared.system.copyResourceColorXml(directory: string)
-squared.system.copyResourceDimenXml(directory: string)
-squared.system.copyResourceDrawableXml(directory: string)
-squared.system.copyResourceDrawableImageXml(directory: string)
-squared.system.copyResourceFontXml(directory: string)
-squared.system.copyResourceStringXml(directory: string)
-squared.system.copyResourceStyleXml(directory: string)
+squared.system.copyLayoutAllXml(directory: string, callback?: () => void) // copy generated xml
+squared.system.copyResourceAllXml(directory: string, callback?: () => void)
+squared.system.copyResourceAnimXml(directory: string, callback?: () => void)
+squared.system.copyResourceArrayXml(directory: string, callback?: () => void)
+squared.system.copyResourceColorXml(directory: string, callback?: () => void)
+squared.system.copyResourceDimenXml(directory: string, callback?: () => void)
+squared.system.copyResourceDrawableXml(directory: string, callback?: () => void)
+squared.system.copyResourceDrawableImageXml(directory: string, callback?: () => void)
+squared.system.copyResourceFontXml(directory: string, callback?: () => void)
+squared.system.copyResourceStringXml(directory: string, callback?: () => void)
+squared.system.copyResourceStyleXml(directory: string, callback?: () => void)
 
 squared.system.saveLayoutAllXml(filename?: string) // save generated xml
 squared.system.saveResourceAllXml(filename?: string)
@@ -329,11 +329,11 @@ squared.system.querySelectorAll(value: string)
 squared.system.getElementMap()
 squared.system.clearElementMap()
 
-squared.system.copyHtmlPage(directory: string, name?: string) // name: e.g. "index.html"
-squared.system.copyScriptAssets(directory: string)
-squared.system.copyLinkAssets(directory: string, rel?: string) // rel: e.g. "stylesheet"
-squared.system.copyImageAssets(directory: string)
-squared.system.copyFontAssets(directory: string)
+squared.system.copyHtmlPage(directory: string, callback?: () => void, name?: string) // name: e.g. "index.html"
+squared.system.copyScriptAssets(directory: string, callback?: () => void)
+squared.system.copyLinkAssets(directory: string, callback?: () => void, rel?: string) // rel: e.g. "stylesheet"
+squared.system.copyImageAssets(directory: string, callback?: () => void)
+squared.system.copyFontAssets(directory: string, callback?: () => void)
 
 squared.system.saveHtmlPage(filename?: string, name?: string) // name: e.g. "index.html"
 squared.system.saveScriptAssets(filename?: string)

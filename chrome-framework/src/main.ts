@@ -116,29 +116,29 @@ const appBase: ChromeFramework<View> = {
                 return controller.elementMap.clear();
             }
         },
-        copyHtmlPage(directory: string, name?: string) {
+        copyHtmlPage(directory: string, callback?: CallbackResult, name?: string) {
             if (file && $util.isString(directory)) {
-                file.copying(directory, <FileAsset[]> file.getHtmlPage(name));
+                file.copying(directory, <FileAsset[]> file.getHtmlPage(name), callback);
             }
         },
-        copyScriptAssets(directory: string) {
+        copyScriptAssets(directory: string, callback?: CallbackResult) {
             if (file && $util.isString(directory)) {
-                file.copying(directory, <FileAsset[]> file.getScriptAssets());
+                file.copying(directory, <FileAsset[]> file.getScriptAssets(), callback);
             }
         },
-        copyLinkAssets(directory: string, rel?: string) {
+        copyLinkAssets(directory: string, callback?: CallbackResult, rel?: string) {
             if (file && $util.isString(directory)) {
-                file.copying(directory, <FileAsset[]> file.getLinkAssets(rel));
+                file.copying(directory, <FileAsset[]> file.getLinkAssets(rel), callback);
             }
         },
-        copyImageAssets(directory: string) {
+        copyImageAssets(directory: string, callback?: CallbackResult) {
             if (file && $util.isString(directory)) {
-                file.copying(directory, <FileAsset[]> file.getImageAssets());
+                file.copying(directory, <FileAsset[]> file.getImageAssets(), callback);
             }
         },
-        copyFontAssets(directory: string) {
+        copyFontAssets(directory: string, callback?: CallbackResult) {
             if (file && $util.isString(directory)) {
-                file.copying(directory, <FileAsset[]> file.getFontAssets());
+                file.copying(directory, <FileAsset[]> file.getFontAssets(), callback);
             }
         },
         saveHtmlPage(filename?: string, name?: string) {
