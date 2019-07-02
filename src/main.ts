@@ -202,12 +202,21 @@ export function copyToDisk(value: string) {
     }
 }
 
+export function appendToArchive(value?: string) {
+    if (checkMain() && util.isString(value)) {
+        if (!main.closed) {
+            main.finalize();
+        }
+        main.appendToArchive(value);
+    }
+}
+
 export function saveToArchive(value?: string) {
     if (checkMain()) {
         if (!main.closed) {
             main.finalize();
         }
-        main.saveToArchive(value || settings.outputArchiveName);
+        main.saveToArchive(value);
     }
 }
 

@@ -1,4 +1,4 @@
-/* squared 1.2.0
+/* squared 1.2.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -5084,12 +5084,20 @@
             main.copyToDisk(value);
         }
     }
+    function appendToArchive(value) {
+        if (checkMain() && isString(value)) {
+            if (!main.closed) {
+                main.finalize();
+            }
+            main.appendToArchive(value);
+        }
+    }
     function saveToArchive(value) {
         if (checkMain()) {
             if (!main.closed) {
                 main.finalize();
             }
-            main.saveToArchive(value || exports.settings.outputArchiveName);
+            main.saveToArchive(value);
         }
     }
     function toString() {
@@ -5117,6 +5125,7 @@
         xml
     };
 
+    exports.appendToArchive = appendToArchive;
     exports.apply = apply;
     exports.close = close;
     exports.configure = configure;

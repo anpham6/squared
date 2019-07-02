@@ -51,7 +51,6 @@ const settings: UserSettingsAndroid = {
     outputDirectory: 'app/src/main',
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip',
-    outputArchiveAppendTo: '',
     outputArchiveTimeout: 30
 };
 

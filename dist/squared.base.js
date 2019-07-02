@@ -1,4 +1,4 @@
-/* squared.base 1.2.0
+/* squared.base 1.2.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -2418,16 +2418,22 @@
             this.resourceHandler = new ResourceConstructor(this, cache);
             this.extensionManager = new ExtensionManagerConstructor(this, cache);
         }
-        copyToDisk(directory) {
+        copyToDisk(directory, assets) {
             const file = this.resourceHandler.fileHandler;
             if (file) {
-                file.copyToDisk(directory);
+                file.copyToDisk(directory, assets);
             }
         }
-        saveToArchive(filename) {
+        appendToArchive(pathname, assets) {
             const file = this.resourceHandler.fileHandler;
             if (file) {
-                file.saveToArchive(filename || this.userSettings.outputArchiveName);
+                file.appendToArchive(pathname, assets);
+            }
+        }
+        saveToArchive(filename, assets) {
+            const file = this.resourceHandler.fileHandler;
+            if (file) {
+                file.saveToArchive(filename || this.userSettings.outputArchiveName, assets);
             }
         }
         reset() {
@@ -3193,12 +3199,6 @@
             document.body.removeChild(element);
             setTimeout(() => window.URL.revokeObjectURL(url), 1);
         }
-        copyToDisk(directory, assets = []) {
-            this.copying(directory, assets);
-        }
-        saveToArchive(filename, assets = []) {
-            this.archiving(filename, assets);
-        }
         addAsset(data) {
             if (data.content || data.uri || data.base64) {
                 const index = this.assets.findIndex(item => item.pathname === data.pathname && item.filename === data.filename);
@@ -3245,7 +3245,7 @@
                 alert('SERVER (required): See README for instructions');
             }
         }
-        archiving(filename, assets) {
+        archiving(filename, assets, appendTo) {
             if (location.protocol.startsWith('http')) {
                 assets = assets.concat(this.assets);
                 if (assets.length) {
@@ -3254,7 +3254,7 @@
                         `?filename=${encodeURIComponent(filename.trim())}` +
                         `&directory=${encodeURIComponent($util$4.trimString(settings.outputDirectory, '/'))}` +
                         `&format=${settings.outputArchiveFormat}` +
-                        `&append_to=${encodeURIComponent(settings.outputArchiveAppendTo)}` +
+                        (appendTo ? `&append_to=${encodeURIComponent(appendTo.trim())}` : '') +
                         `&timeout=${settings.outputArchiveTimeout}`, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
@@ -4717,16 +4717,13 @@
             this.closed = true;
         }
         copyToDisk(directory) {
-            const file = this.resourceHandler.fileHandler;
-            if (file) {
-                file.copyToDisk(directory, this.layouts);
-            }
+            super.copyToDisk(directory, this.layouts);
+        }
+        appendToArchive(pathname) {
+            super.appendToArchive(pathname, this.layouts);
         }
         saveToArchive(filename) {
-            const file = this.resourceHandler.fileHandler;
-            if (file) {
-                file.saveToArchive(filename || this.userSettings.outputArchiveName, this.layouts);
-            }
+            super.saveToArchive(filename, this.layouts);
         }
         reset() {
             super.reset();

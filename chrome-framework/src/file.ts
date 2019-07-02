@@ -67,6 +67,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         this.copying(directory, <FileAsset[]> this.getAssetsAll());
     }
 
+    public appendToArchive(pathname: string) {
+        this.archiving(this.userSettings.outputArchiveName, <FileAsset[]> this.getAssetsAll(), pathname);
+    }
+
     public saveToArchive(filename: string) {
         this.archiving(filename, <FileAsset[]> this.getAssetsAll());
     }

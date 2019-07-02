@@ -1,4 +1,4 @@
-/* chrome-framework 1.2.0
+/* chrome-framework 1.2.2
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -168,6 +168,9 @@ var chrome = (function () {
         }
         copyToDisk(directory) {
             this.copying(directory, this.getAssetsAll());
+        }
+        appendToArchive(pathname) {
+            this.archiving(this.userSettings.outputArchiveName, this.getAssetsAll(), pathname);
         }
         saveToArchive(filename) {
             this.archiving(filename, this.getAssetsAll());
@@ -397,7 +400,6 @@ var chrome = (function () {
         outputDirectory: '',
         outputArchiveName: 'chrome-data',
         outputArchiveFormat: 'zip',
-        outputArchiveAppendTo: '',
         outputArchiveTimeout: 60
     };
 

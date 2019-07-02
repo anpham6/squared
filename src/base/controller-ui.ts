@@ -40,6 +40,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract optimize(nodes: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
     public abstract createNodeGroup(node: T, children: T[], parent?: T, traverse?: boolean): T;
+
     public abstract get userSettings(): UserUISettings;
     public abstract get containerTypeHorizontal(): LayoutType;
     public abstract get containerTypeVertical(): LayoutType;

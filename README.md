@@ -48,9 +48,11 @@ GitHub
         squared.close();
 
         // Express required
+        squared.saveToArchive(/* optional: archive name */);
+        // OR
         squared.copyToDisk(/* required: local directory */);
         // OR
-        squared.saveToArchive(/* optional: archive name */);
+        squared.appendToArchive(/* required: location uri */);
 
         // optional: start new "parseDocument" session
         squared.reset();
@@ -145,7 +147,6 @@ squared.settings = {
     outputDirectory: 'app/src/main',
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip', // zip | tar
-    outputArchiveAppendTo: '', // copy and append content to existing archive file
     outputArchiveTimeout: 30 // seconds
 };
 ```
@@ -166,7 +167,6 @@ squared.settings = {
     outputDirectory: '',
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip', // zip | tar
-    outputArchiveAppendTo: '', // copy and append content to existing archive file
     outputArchiveTimeout: 60 // seconds
 };
 ```
@@ -187,6 +187,7 @@ close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
 
 copyToDisk(directory: string) // copy entire project to local directory (Express required)
+appendToArchive(pathname: string) // append entire project to a copy of a preexisting zip archive (Express required)
 saveToArchive(filename?: string) // save entire project as zip archive (Express required)
 
 toString() // main layout file contents

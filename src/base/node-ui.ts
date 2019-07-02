@@ -349,6 +349,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract alignParent(position: string): boolean;
     public abstract alignSibling(position: string, documentId?: string): string;
     public abstract localizeString(value: string): string;
+
     public abstract set containerType(value: number);
     public abstract get containerType(): number;
     public abstract get documentId(): string;

@@ -33,14 +33,15 @@ declare function includeAsync(value: {} | string, options?: {}): boolean;
 declare function exclude(value: {} | string): boolean;
 declare function retrieve(value: string): {} | null;
 declare function configure(value: {} | string, options: {}): boolean;
-declare function apply(value: {} | string, options: {}): boolean;
 declare function ready(): boolean;
 declare function close(): void;
 declare function reset(): void;
 declare function copyToDisk(value: string): void;
+declare function appendToArchive(value: string): void;
 declare function saveToArchive(value?: string): void;
 declare function toString(): string;
 
+declare function apply(value: {} | string, options: {}): boolean;
 declare function saveAllToDisk(): void;
 
 declare namespace base {
@@ -65,8 +66,9 @@ declare namespace base {
         insertNode(element: Element, parent?: T): T | undefined;
         afterCreateCache(element: HTMLElement): void;
         finalize(): void;
-        copyToDisk(directory: string): void;
-        saveToArchive(filename?: string): void;
+        copyToDisk(directory: string, assets?: FileAsset[]): void;
+        appendToArchive(pathname: string, assets?: FileAsset[]): void;
+        saveToArchive(filename?: string, assets?: FileAsset[]): void;
         toString(): string;
     }
 
@@ -265,11 +267,12 @@ declare namespace base {
         userSettings: UserSettings;
         readonly assets: FileAsset[];
         copyToDisk(directory: string, assets?: FileAsset[]): void;
+        appendToArchive(pathname: string, assets?: FileAsset[]): void;
         saveToArchive(filename: string, assets?: FileAsset[]): void;
         addAsset(data: Optional<RawAsset>): void;
         reset(): void;
         copying(directory: string, assets: FileAsset[]): void;
-        archiving(filename: string, assets: FileAsset[]): void;
+        archiving(filename: string, assets: FileAsset[], appendTo?: string): void;
     }
 
     class File<T extends Node> implements File<T> {

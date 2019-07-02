@@ -1,6 +1,6 @@
 {
   "name": "squared",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Converts HTML and SVG into any mobile or desktop UI framework with the flexibility and accuracy of Chrome. CSS Grid, Flexbox, and CSS/SMIL animations are also supported.",
   "main": "dist/squared.js",
   "scripts": {

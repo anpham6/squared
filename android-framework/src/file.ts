@@ -71,6 +71,10 @@ export default class File<T extends android.base.View> extends squared.base.File
         this.copying(directory, this.getAssetsAll(assets));
     }
 
+    public appendToArchive(pathname: string, assets: FileAsset[]) {
+        this.archiving(this.userSettings.outputArchiveName, this.getAssetsAll(assets), pathname);
+    }
+
     public saveToArchive(filename: string, assets: FileAsset[]) {
         this.archiving(filename, this.getAssetsAll(assets));
     }

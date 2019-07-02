@@ -10,7 +10,6 @@ export interface UserSettings {
     outputDirectory: string;
     outputArchiveFormat: string;
     outputArchiveName: string;
-    outputArchiveAppendTo: string;
     outputArchiveTimeout: number;
 }
 

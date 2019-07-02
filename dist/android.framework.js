@@ -1,4 +1,4 @@
-/* android-framework 1.2.0
+/* android-framework 1.2.2
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -5349,6 +5349,9 @@ var android = (function () {
     class File extends squared.base.FileUI {
         copyToDisk(directory, assets) {
             this.copying(directory, this.getAssetsAll(assets));
+        }
+        appendToArchive(pathname, assets) {
+            this.archiving(this.userSettings.outputArchiveName, this.getAssetsAll(assets), pathname);
         }
         saveToArchive(filename, assets) {
             this.archiving(filename, this.getAssetsAll(assets));
@@ -11983,7 +11986,6 @@ var android = (function () {
         outputDirectory: 'app/src/main',
         outputArchiveName: 'android-xml',
         outputArchiveFormat: 'zip',
-        outputArchiveAppendTo: '',
         outputArchiveTimeout: 30
     };
 

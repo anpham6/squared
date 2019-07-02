@@ -175,15 +175,11 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public readonly assets: RawAsset[] = [];
     public abstract resource: squared.base.Resource<T>;
 
+    public abstract copyToDisk(directory: string, assets?: FileAsset[]): void;
+    public abstract appendToArchive(pathname: string, assets?: FileAsset[]): void;
+    public abstract saveToArchive(filename: string, assets?: FileAsset[]): void;
+
     public abstract get userSettings(): UserSettings;
-
-    public copyToDisk(directory: string, assets: FileAsset[] = []) {
-        this.copying(directory, assets);
-    }
-
-    public saveToArchive(filename: string, assets: FileAsset[] = []) {
-        this.archiving(filename, assets);
-    }
 
     public addAsset(data: Optional<RawAsset>) {
         if (data.content || data.uri || data.base64) {
@@ -236,7 +232,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         }
     }
 
-    public archiving(filename: string, assets: FileAsset[]) {
+    public archiving(filename: string, assets: FileAsset[], appendTo?: string) {
         if (location.protocol.startsWith('http')) {
             assets = assets.concat(this.assets);
             if (assets.length) {
@@ -246,7 +242,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                     `?filename=${encodeURIComponent(filename.trim())}` +
                     `&directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
                     `&format=${settings.outputArchiveFormat}` +
-                    `&append_to=${encodeURIComponent(settings.outputArchiveAppendTo)}` +
+                    (appendTo ? `&append_to=${encodeURIComponent(appendTo.trim())}` : '') +
                     `&timeout=${settings.outputArchiveTimeout}`, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
