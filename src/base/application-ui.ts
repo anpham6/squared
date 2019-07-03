@@ -1,4 +1,4 @@
-import { AppSessionUI, FileAsset, NodeTemplate, UserUISettings } from './@types/application';
+import { AppSessionUI, FileAsset, NodeTemplate, UserUISettings } from '../../@types/base/application';
 
 import Application from './application';
 import NodeList from './nodelist';

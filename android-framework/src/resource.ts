@@ -1,4 +1,4 @@
-import { ResourceStoredMapAndroid, StyleAttribute } from './@types/application';
+import { ResourceStoredMapAndroid, StyleAttribute } from '../../@types/android/application';
 
 import { RESERVED_JAVA } from './lib/constant';
 

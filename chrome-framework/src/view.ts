@@ -1,4 +1,4 @@
-import { CachedValue } from '../../src/base/@types/node';
+import { CachedValue } from '../../@types/base/node';
 
 type T = View;
 

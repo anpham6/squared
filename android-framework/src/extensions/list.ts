@@ -1,5 +1,5 @@
-import { NodeXmlTemplate } from '../../../src/base/@types/application';
-import { ListData } from '../../../src/base/@types/extension';
+import { NodeXmlTemplate } from '../../../@types/base/application';
+import { ListData } from '../../../@types/base/extension';
 
 import Resource from '../resource';
 import View from '../view';

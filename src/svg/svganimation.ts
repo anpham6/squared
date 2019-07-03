@@ -1,4 +1,4 @@
-import { SvgAnimationGroup } from './@types/object';
+import { SvgAnimationGroup } from '../../@types/svg/object';
 
 import SvgBuild from './svgbuild';
 

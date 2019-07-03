@@ -1,4 +1,4 @@
-import { NodeTemplate, NodeIncludeTemplate } from '../../../../src/base/@types/application';
+import { NodeTemplate, NodeIncludeTemplate } from '../../../../@types/base/application';
 
 import View from '../../view';
 

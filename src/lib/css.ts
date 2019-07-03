@@ -6,6 +6,8 @@ import { CSS as CSS_RX, STRING, UNIT, XML } from './regex';
 import { getElementCache, setElementCache } from './session';
 import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isString, replaceMap, resolvePath, spliceString } from './util';
 
+type CSSKeyframesData = squared.lib.css.CSSKeyframesData;
+
 const CACHE_PATTERN: ObjectMap<RegExp> = {};
 
 function compareRange(operation: string, unit: number, range: number) {
@@ -26,17 +28,6 @@ function compareRange(operation: string, unit: number, range: number) {
 const convertLength = (value: string, dimension: number, fontSize?: number) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
 
 const convertPercent = (value: string, dimension: number, fontSize?: number) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
-
-export type CSSKeyframesData = ObjectMap<StringMap>;
-
-export interface CSSFontFaceData {
-    fontFamily: string;
-    fontWeight: number;
-    fontStyle: string;
-    srcFormat: string;
-    srcUrl?: string;
-    srcLocal?: string;
-}
 
 export const BOX_POSITION = [CSS.TOP, CSS.RIGHT, CSS.BOTTOM, CSS.LEFT];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];

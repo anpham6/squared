@@ -1,7 +1,7 @@
-import { SvgLinearGradient, SvgMatrix, SvgPoint, SvgRadialGradient, SvgTransform } from '../../../../src/svg/@types/object';
-import { ResourceStoredMapAndroid } from '../../@types/application';
-import { ResourceSvgOptions } from '../../@types/extension';
-import { GradientTemplate } from '../../@types/resource';
+import { SvgLinearGradient, SvgMatrix, SvgPoint, SvgRadialGradient, SvgTransform } from '../../../../@types/svg/object';
+import { ResourceStoredMapAndroid } from '../../../../@types/android/application';
+import { ResourceSvgOptions } from '../../../../@types/android/extension';
+import { GradientTemplate } from '../../../../@types/android/resource';
 
 import Resource from '../../resource';
 import View from '../../view';

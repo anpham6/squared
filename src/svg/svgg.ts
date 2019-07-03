@@ -1,4 +1,4 @@
-import { SvgBuildOptions } from './@types/object';
+import { SvgBuildOptions } from '../../@types/svg/object';
 
 import SvgPaint$MX from './svgpaint-mx';
 import SvgView$MX from './svgview-mx';

@@ -1,26 +1,23 @@
-import { AppHandler, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from '../base/@types/application';
-import { GridCellData, GridData } from '../base/@types/extension';
-import { AutoMargin, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from '../base/@types/node';
+import { AppHandler, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
+import { GridCellData, GridData } from './base/extension';
+import { AutoMargin, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from './base/node';
 
-import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from '../svg/@types/object';
+import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
-import * as $const from '../base/lib/constant';
-import * as $enum from '../base/lib/enumeration';
+import * as $const from '../src/base/lib/constant';
+import * as $enum from '../src/base/lib/enumeration';
 
-import * as $client from '../lib/client';
-import * as $constant from '../lib/constant';
-import * as $css from '../lib/css';
-import * as $dom from '../lib/dom';
-import * as $regex from '../lib/regex';
-import * as $xml from '../lib/xml';
+import * as $client from '../src/lib/client';
+import * as $constant from '../src/lib/constant';
+import * as $css from '../src/lib/css';
+import * as $dom from '../src/lib/dom';
+import * as $regex from '../src/lib/regex';
+import * as $xml from '../src/lib/xml';
 
-import * as $svg_const from '../svg/lib/constant';
-import * as $svg_util from '../svg/lib/util';
-
-type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
+import * as $svg_const from '../src/svg/lib/constant';
+import * as $svg_util from '../src/svg/lib/util';
 
 declare class PromiseResult {
-    constructor();
     public then(resolve: () => void): void;
 }
 
@@ -170,8 +167,8 @@ declare namespace base {
         reset(): void;
         addImage(element: HTMLImageElement | undefined): void;
         getImage(src: string): ImageAsset | undefined;
-        addFont(data: CSSFontFaceData): void;
-        getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): CSSFontFaceData | undefined;
+        addFont(data: squared.lib.css.CSSFontFaceData): void;
+        getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): squared.lib.css.CSSFontFaceData | undefined;
         addRawData(dataURI: string, mimeType: string, encoding: string, content: string): string;
         getRawData(dataURI: string): RawAsset | undefined;
         setFileHandler(instance: File<T>): void;
@@ -681,12 +678,21 @@ declare namespace lib {
     }
 
     namespace css {
+        type CSSKeyframesData = ObjectMap<StringMap>;
+
+        interface CSSFontFaceData {
+            fontFamily: string;
+            fontWeight: number;
+            fontStyle: string;
+            srcFormat: string;
+            srcUrl?: string;
+            srcLocal?: string;
+        }
+
         export import BOX_POSITION = $css.BOX_POSITION;
         export import BOX_MARGIN = $css.BOX_MARGIN;
         export import BOX_PADDING = $css.BOX_PADDING;
         export import BOX_BORDER = $css.BOX_BORDER;
-        export import CSSKeyframesData = $css.CSSKeyframesData;
-        export import CSSFontFaceData = $css.CSSFontFaceData;
         function getStyle(element: Element | null, pseudoElt?: string, cache?: boolean): CSSStyleDeclaration;
         function getFontSize(element: Element | null): number | undefined;
         function hasComputedStyle(element: Element): element is HTMLElement;
@@ -958,8 +964,6 @@ declare namespace svg {
     }
 
     interface SvgAnimation {
-        element: SVGGraphicsElement | null;
-        animationElement: SVGAnimationElement | null;
         attributeName: string;
         delay: number;
         to: string;
@@ -977,6 +981,8 @@ declare namespace svg {
         replaceValue?: string;
         id?: number;
         companion?: NumberValue<SvgAnimation>;
+        readonly element: SVGGraphicsElement | null;
+        readonly animationElement: SVGAnimationElement | null;
         readonly instanceType: number;
         readonly fillReplace: boolean;
         readonly parentContainer?: SvgContainer;
@@ -987,7 +993,6 @@ declare namespace svg {
     }
 
     interface SvgAnimate extends SvgAnimation {
-        animationElement: SVGAnimateElement | null;
         type: number;
         from: string;
         values: string[];
@@ -1004,6 +1009,7 @@ declare namespace svg {
         by?: number;
         end?: number;
         synchronized?: NumberValue;
+        readonly animationElement: SVGAnimateElement | null;
         readonly playable: boolean;
         readonly valueTo: string;
         readonly valueFrom: string;
@@ -1017,21 +1023,21 @@ declare namespace svg {
     }
 
     interface SvgAnimateTransform extends SvgAnimate {
-        animationElement: SVGAnimateTransformElement | null;
         transformFrom?: string;
         transformOrigin?: Point[];
+        readonly animationElement: SVGAnimateTransformElement | null;
         setType(value: string): void;
         expandToValues(): void;
     }
 
     interface SvgAnimateMotion extends SvgAnimateTransform {
-        animationElement: SVGAnimateMotionElement | null;
         motionPathElement: SVGGeometryElement | null;
         path: string;
         distance: string;
         rotate: string;
         rotateData?: NumberValue[];
         framesPerSecond?: number;
+        readonly animationElement: SVGAnimateMotionElement | null;
         readonly keyPoints: number[];
         readonly offsetLength: number;
         readonly offsetPath?: SvgOffsetPath[];
@@ -1129,7 +1135,7 @@ declare namespace svg {
     }
 
     interface SvgUseSymbol extends SvgContainer, SvgViewRectExtended, SvgPaint {
-        element: SVGUseElement;
+        readonly element: SVGUseElement;
         readonly symbolElement: SVGSymbolElement;
     }
 
@@ -1209,8 +1215,8 @@ declare namespace svg {
     }
 
     interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal, SvgPaint {
-        shapeElement: SVGGeometryElement;
         readonly element: SVGUseElement;
+        readonly shapeElement: SVGGeometryElement;
         synchronize(options?: SvgSynchronizeOptions): void;
     }
 

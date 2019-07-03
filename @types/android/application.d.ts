@@ -1,4 +1,4 @@
-import { ControllerUISettings, ResourceStoredMap, UserUISettings } from '../../../src/base/@types/application';
+import { ControllerUISettings, ResourceStoredMap, UserUISettings } from '../base/application';
 
 export interface UserSettingsAndroid extends UserUISettings {
     targetAPI: number;

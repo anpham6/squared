@@ -1,4 +1,4 @@
-import { CssGridCellData, CssGridData, CssGridDirectionData } from '../@types/extension';
+import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';

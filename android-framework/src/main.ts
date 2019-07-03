@@ -1,5 +1,5 @@
-import { AppFramework } from '../../src/base/@types/application';
-import { UserSettingsAndroid } from './@types/application';
+import { AppFramework } from '../../@types/base/application';
+import { UserSettingsAndroid } from '../../@types/android/application';
 
 import Application from './application';
 import Controller from './controller';

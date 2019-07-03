@@ -51,5 +51,3 @@ interface Dimension {
     width: number;
     height: number;
 }
-
-type ExternalData = ObjectMap<any>;

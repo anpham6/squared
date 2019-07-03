@@ -17,3 +17,5 @@ type ObjectIndex<T> = { [key: number]: T; };
 type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;
 type StringMap = ObjectMap<string>;
 type CallbackResult = (result: {}) => void;
+
+type ExternalData = ObjectMap<any>;

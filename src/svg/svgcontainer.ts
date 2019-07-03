@@ -1,4 +1,4 @@
-import { SvgAspectRatio, SvgBuildOptions, SvgPoint, SvgSynchronizeOptions } from './@types/object';
+import { SvgAspectRatio, SvgBuildOptions, SvgPoint, SvgSynchronizeOptions } from '../../@types/svg/object';
 
 import SvgBuild from './svgbuild';
 

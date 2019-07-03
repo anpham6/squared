@@ -1,4 +1,4 @@
-import { ResourceStoredMapAndroid } from '../../@types/application';
+import { ResourceStoredMapAndroid } from '../../../../@types/android/application';
 
 import Resource from '../../resource';
 import View from '../../view';

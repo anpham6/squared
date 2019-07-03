@@ -1,6 +1,6 @@
-import { ChromeAsset, UserSettingsChrome } from '../src/@types/application';
+import { ChromeAsset, UserSettingsChrome } from './application';
 
-import * as $const from '../src/lib/constant';
+import * as $const from '../../chrome-framework/src/lib/constant';
 
 type View = chrome.base.View;
 

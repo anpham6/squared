@@ -1,4 +1,4 @@
-import { UserSettingsChrome } from './@types/application';
+import { UserSettingsChrome } from '../../@types/chrome/application';
 
 import Resource from './resource';
 import View from './view';

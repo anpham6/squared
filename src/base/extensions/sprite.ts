@@ -1,4 +1,4 @@
-import { ImageAsset } from '../@types/application';
+import { ImageAsset } from '../../../@types/base/application';
 
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';

@@ -1,4 +1,4 @@
-import { FileAsset, RawAsset, UserSettings } from './@types/application';
+import { FileAsset, RawAsset, UserSettings } from '../../@types/base/application';
 
 const {
     constant: $const,

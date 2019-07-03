@@ -1,4 +1,4 @@
-import { ListData } from '../@types/extension';
+import { ListData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';

@@ -1,11 +1,11 @@
-import { FileAsset } from '../../src/base/@types/application';
-import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '../src/@types/application';
-import { Constraint, LocalSettings, SupportAndroid, ViewAttribute } from '../src/@types/node';
-import { FileOutputOptions } from '../src/@types/resource';
+import { FileAsset } from '../base/application';
+import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
+import { Constraint, LocalSettings, SupportAndroid, ViewAttribute } from './node';
+import { FileOutputOptions } from './resource';
 
-import * as $const from '../src/lib/constant';
-import * as $custom from '../src/lib/customization';
-import * as $enum from '../src/lib/enumeration';
+import * as $const from '../../android-framework/src/lib/constant';
+import * as $custom from '../../android-framework/src/lib/customization';
+import * as $enum from '../../android-framework/src/lib/enumeration';
 
 type View = base.View;
 

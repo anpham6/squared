@@ -1,4 +1,4 @@
-import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } from './@types/application';
+import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } from '../../@types/base/application';
 
 import Resource from './resource';
 

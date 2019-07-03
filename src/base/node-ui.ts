@@ -1,5 +1,5 @@
-import { NodeTemplate } from './@types/application';
-import { InitialData, LinearData, SiblingOptions, Support } from './@types/node';
+import { NodeTemplate } from '../../@types/base/application';
+import { InitialData, LinearData, SiblingOptions, Support } from '../../@types/base/node';
 
 import Node from './node';
 

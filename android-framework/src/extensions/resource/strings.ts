@@ -1,4 +1,4 @@
-import { ResourceStringsOptions } from '../../@types/extension';
+import { ResourceStringsOptions } from '../../../../@types/android/extension';
 
 import Resource from '../../resource';
 import View from '../../view';

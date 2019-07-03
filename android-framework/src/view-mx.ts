@@ -1,7 +1,7 @@
-import { NodeTemplate } from '../../src/base/@types/application';
-import { CachedValue } from '../../src/base/@types/node';
-import { CustomizationResult } from './@types/application';
-import { Constraint, LocalSettings, SupportAndroid } from './@types/node';
+import { NodeTemplate } from '../../@types/base/application';
+import { CachedValue } from '../../@types/base/node';
+import { CustomizationResult } from '../../@types/android/application';
+import { Constraint, LocalSettings, SupportAndroid } from '../../@types/android/node';
 
 import { CONTAINER_ANDROID, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';

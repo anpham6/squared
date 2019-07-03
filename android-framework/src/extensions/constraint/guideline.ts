@@ -1,4 +1,4 @@
-import { ConstraintGuidelineOptions } from '../../@types/extension';
+import { ConstraintGuidelineOptions } from '../../../../@types/android/extension';
 
 import View from '../../view';
 

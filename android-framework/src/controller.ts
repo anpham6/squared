@@ -1,6 +1,6 @@
-import { FileAsset, LayoutType, NodeTemplate, NodeXmlTemplate } from '../../src/base/@types/application';
-import { ControllerSettingsAndroid } from './@types/application';
-import { LocalSettings, ViewAttribute } from './@types/node';
+import { FileAsset, LayoutType, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
+import { ControllerSettingsAndroid } from '../../@types/android/application';
+import { LocalSettings, ViewAttribute } from '../../@types/android/node';
 
 import Resource from './resource';
 import View from './view';

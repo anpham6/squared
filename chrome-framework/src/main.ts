@@ -1,5 +1,5 @@
-import { FileAsset, UserSettings } from '../../src/base/@types/application';
-import { ChromeFramework } from './@types/application';
+import { FileAsset, UserSettings } from '../../@types/base/application';
+import { ChromeFramework } from '../../@types/chrome/application';
 
 import Application from './application';
 import Controller from './controller';

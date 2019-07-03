@@ -1,4 +1,4 @@
-import { CachedValue, InitialData } from './@types/node';
+import { CachedValue, InitialData } from '../../@types/base/node';
 
 import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
 

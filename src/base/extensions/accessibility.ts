@@ -1,4 +1,4 @@
-import { AccessibilityOptions } from '../@types/extension';
+import { AccessibilityOptions } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';

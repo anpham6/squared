@@ -1,4 +1,4 @@
-import { SvgBuildOptions, SvgGradient, SvgSynchronizeOptions } from './@types/object';
+import { SvgBuildOptions, SvgGradient, SvgSynchronizeOptions } from '../../@types/svg/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgSynchronize$MX from './svgsynchronize-mx';

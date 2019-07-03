@@ -1,4 +1,4 @@
-import { CustomizationResult } from '../@types/application';
+import { CustomizationResult } from '../../../@types/android/application';
 
 import { STRING_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';

@@ -1,4 +1,4 @@
-import { SvgBuildOptions, SvgSynchronizeOptions } from './@types/object';
+import { SvgBuildOptions, SvgSynchronizeOptions } from '../../@types/svg/object';
 
 import SvgContainer from './svgcontainer';
 

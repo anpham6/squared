@@ -1,4 +1,4 @@
-import { Support } from '../../../src/base/@types/node';
+import { Support } from '../base/node';
 
 export interface LocalSettings {
     targetAPI: number;

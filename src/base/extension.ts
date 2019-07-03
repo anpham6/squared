@@ -1,4 +1,4 @@
-import { ExtensionDependency } from './@types/application';
+import { ExtensionDependency } from '../../@types/base/application';
 
 export default abstract class Extension<T extends squared.base.Node> implements squared.base.Extension<T> {
     public application!: squared.base.Application<T>;

@@ -1,4 +1,4 @@
-import { FileAsset } from '../../../src/base/@types/application';
+import { FileAsset } from '../base/application';
 
 export interface GradientColorStop {
     color: string;

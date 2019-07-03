@@ -1,4 +1,4 @@
-import { FlexboxData } from '../@types/extension';
+import { FlexboxData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';

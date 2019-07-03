@@ -1,6 +1,6 @@
-import { UserSettingsAndroid } from '../../@types/application';
-import { ResourceBackgroundOptions } from '../../@types/extension';
-import { GradientColorStop, GradientTemplate } from '../../@types/resource';
+import { UserSettingsAndroid } from '../../../../@types/android/application';
+import { ResourceBackgroundOptions } from '../../../../@types/android/extension';
+import { GradientColorStop, GradientTemplate } from '../../../../@types/android/resource';
 
 import Resource from '../../resource';
 import ResourceSvg from './svg';

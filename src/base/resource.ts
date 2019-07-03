@@ -1,4 +1,4 @@
-import { ResourceAssetMap, UserSettings } from './@types/application';
+import { ResourceAssetMap, UserSettings } from '../../@types/base/application';
 
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
 

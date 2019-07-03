@@ -1,4 +1,4 @@
-import { SvgMatrix, SvgPoint, SvgTransform } from '../@types/object';
+import { SvgMatrix, SvgPoint, SvgTransform } from '../../../@types/svg/object';
 
 const {
     constant: $const,

@@ -18,6 +18,7 @@
     "allowUmdGlobalAccess": true
   },
   "include": [
+    "@types/**/*",
     "android-framework/**/*",
     "android-widget/**/*",
     "chrome-framework/**/*",

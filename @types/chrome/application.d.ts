@@ -1,4 +1,4 @@
-import { AppFramework, RawAsset, UserSettings } from '../../../src/base/@types/application';
+import { AppFramework, RawAsset, UserSettings } from '../base/application';
 
 type View = chrome.base.View;
 

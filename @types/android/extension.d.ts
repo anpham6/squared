@@ -1,4 +1,4 @@
-import { SvgTransformExclude } from '../../../src/svg/@types/object';
+import { SvgTransformExclude } from '../svg/object';
 
 export interface ConstraintGuidelineOptions {
     circlePosition: boolean;

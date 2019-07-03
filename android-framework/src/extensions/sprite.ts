@@ -1,4 +1,4 @@
-import { RawAsset } from '../../../src/base/@types/application';
+import { RawAsset } from '../../../@types/base/application';
 
 import View from '../view';
 

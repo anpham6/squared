@@ -1,4 +1,4 @@
-import { TableData } from '../../../src/base/@types/extension';
+import { TableData } from '../../../@types/base/extension';
 
 import View from '../view';
 

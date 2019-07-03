@@ -1,5 +1,5 @@
-import { FileAsset } from '../../src/base/@types/application';
-import { ChromeAsset } from './@types/application';
+import { FileAsset } from '../../@types/base/application';
+import { ChromeAsset } from '../../@types/chrome/application';
 
 import Resource from './resource';
 

@@ -1,5 +1,5 @@
-import { StyleAttribute } from '../@types/application';
-import { ViewAttribute } from '../@types/node';
+import { StyleAttribute } from '../../../@types/android/application';
+import { ViewAttribute } from '../../../@types/android/node';
 
 import View from '../view';
 
@@ -58,8 +58,24 @@ export function getVerticalBias(node: View) {
     return calculateBias(top, bottom, node.localSettings.floatPrecision);
 }
 
-export function createViewAttribute(options?: ExternalData, android = {}, app = {}): ViewAttribute {
-    return { android, app, ...options };
+export function createViewAttribute(options?: ExternalData, android?: {}, app?: {}): ViewAttribute {
+    const result = <ViewAttribute> {};
+    if (android) {
+        Object.assign(result, android);
+    }
+    else {
+        result.android = {};
+    }
+    if (app) {
+        Object.assign(result, app);
+    }
+    else {
+        result.app = {};
+    }
+    if (options) {
+        Object.assign(result, options);
+    }
+    return result;
 }
 
 export function createStyleAttribute(options?: ExternalData) {
