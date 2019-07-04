@@ -38,9 +38,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T) {
         const mainData = Table.createDataAttribute(node);
         let table: T[] = [];
-        function setAutoWidth(td: T) {
-            td.data(EXT_NAME.TABLE, 'percent', `${Math.round((td.bounds.width / node.box.width) * 100)}%`);
-            td.data(EXT_NAME.TABLE, 'expand', true);
+        function setAutoWidth(td: T, data: ExternalData) {
+            data.percent = `${Math.round((td.bounds.width / node.box.width) * 100)}%`;
+            data.expand = true;
         }
         function inheritStyles(section: T[]) {
             if (section.length) {
@@ -312,7 +312,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             if (!caption.cssInitial('textAlign')) {
                 caption.css('textAlign', $const.CSS.CENTER);
             }
-            caption.data(EXT_NAME.TABLE, 'colSpan', columnCount);
+            caption.data(EXT_NAME.TABLE, 'cellData', { colSpan: columnCount });
             caption.parent = node;
         }
         const hasWidth = node.hasWidth;
@@ -324,17 +324,12 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const element = <HTMLTableCellElement> td.element;
                 const rowSpan = element.rowSpan;
                 const colSpan = element.colSpan;
+                const data: ExternalData = { rowSpan, colSpan };
                 for (let k = 0; k < rowSpan - 1; k++)  {
                     const l = (i + 1) + k;
                     if (columnIndex[l] !== undefined) {
                         columnIndex[l] += colSpan;
                     }
-                }
-                if (rowSpan > 1) {
-                    td.data(EXT_NAME.TABLE, 'rowSpan', rowSpan);
-                }
-                if (colSpan > 1) {
-                    td.data(EXT_NAME.TABLE, 'colSpan', colSpan);
                 }
                 if (!td.has('verticalAlign')) {
                     td.css('verticalAlign', $const.CSS.MIDDLE);
@@ -346,31 +341,31 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             if (columnWidth === $const.CSS.AUTO) {
                                 if (mapPercent >= 1) {
                                     setBoundsWidth(td);
-                                    td.data(EXT_NAME.TABLE, 'exceed', !hasWidth);
-                                    td.data(EXT_NAME.TABLE, 'downsized', true);
+                                    data.exceed = !hasWidth;
+                                    data.downsized = true;
                                 }
                                 else {
-                                    setAutoWidth(td);
+                                    setAutoWidth(td, data);
                                 }
                             }
                             else if ($css.isPercent(columnWidth)) {
-                                td.data(EXT_NAME.TABLE, 'percent', columnWidth);
-                                td.data(EXT_NAME.TABLE, 'expand', true);
+                                data.percent = columnWidth;
+                                data.expand = true;
                             }
                             else if ($css.isLength(columnWidth) && parseInt(columnWidth) > 0) {
                                 if (td.bounds.width >= parseInt(columnWidth)) {
                                     setBoundsWidth(td);
-                                    td.data(EXT_NAME.TABLE, 'expand', false);
-                                    td.data(EXT_NAME.TABLE, 'downsized', false);
+                                    data.expand = false;
+                                    data.downsized = false;
                                 }
                                 else {
                                     if (mainData.layoutFixed) {
-                                        setAutoWidth(td);
-                                        td.data(EXT_NAME.TABLE, 'downsized', true);
+                                        setAutoWidth(td, data);
+                                        data.downsized = true;
                                     }
                                     else {
                                         setBoundsWidth(td);
-                                        td.data(EXT_NAME.TABLE, 'expand', false);
+                                        data.expand = false;
                                     }
                                 }
                             }
@@ -378,7 +373,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 if (!td.hasPX($const.CSS.WIDTH) || td.percentWidth) {
                                     setBoundsWidth(td);
                                 }
-                                td.data(EXT_NAME.TABLE, 'expand', false);
+                                data.expand = false;
                             }
                             break;
                         case LAYOUT_TABLE.FIXED:
@@ -390,12 +385,12 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             }
                             else {
                                 if (mainData.layoutFixed) {
-                                    td.data(EXT_NAME.TABLE, 'downsized', true);
+                                    data.downsized = true;
                                 }
                                 else {
                                     setBoundsWidth(td);
                                 }
-                                td.data(EXT_NAME.TABLE, 'expand', false);
+                                data.expand = false;
                             }
                             break;
                         case LAYOUT_TABLE.COMPRESS:
@@ -412,11 +407,15 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         tableFilled[i + k].push(td);
                     }
                 }
+                td.data(EXT_NAME.TABLE, 'cellData', data);
                 td.parent = node;
             }
             if (columnIndex[i] < columnCount) {
                 const td = children[children.length - 1];
-                td.data(EXT_NAME.TABLE, 'spaceSpan', columnCount - columnIndex[i]);
+                const data: ExternalData = td.data(EXT_NAME.TABLE, 'cellData');
+                if (data) {
+                    data.spaceSpan = columnCount - columnIndex[i];
+                }
             }
             tr.hide();
         }

@@ -39,7 +39,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             else if (layout.linearX || layout.singleRowAligned) {
                 layout.rowCount = 1;
                 layout.columnCount = layout.length;
-                layout.setType(CONTAINER_NODE.RELATIVE, $e.NODE_ALIGNMENT.HORIZONTAL);
+                layout.setType(CONTAINER_NODE.LINEAR, $e.NODE_ALIGNMENT.HORIZONTAL);
             }
             if (layout.containerType !== 0) {
                 return {
@@ -111,13 +111,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             else {
                 const inside = node.css('listStylePosition') === 'inside';
                 let gravity = $const.CSS.RIGHT;
+                let paddingRight = 0;
+                let marginLeft = 0;
                 let top = 0;
                 let left = 0;
                 let image: string | undefined;
                 if (mainData.imageSrc !== '') {
                     if (mainData.imagePosition) {
-                        const position = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize);
-                        ({ top, left } = position);
+                        ({ top, left } = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize));
                         gravity = $const.CSS.LEFT;
                         if (node.marginLeft < 0) {
                             resetPadding = node.marginLeft;
@@ -130,12 +131,12 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         }
                         else {
                             adjustPadding = false;
+                            marginLeft = node.marginLeft;
                         }
                         minWidth = 0;
                     }
                     image = (<android.base.Resource<T>> application.resourceHandler).addImageSrc(mainData.imageSrc);
                 }
-                let paddingRight = 0;
                 if (gravity === $const.CSS.LEFT) {
                     minWidth += node.paddingLeft - left;
                     node.modifyBox($e.BOX_STANDARD.PADDING_LEFT);
@@ -192,6 +193,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     ordinal.cssApply({
                         minWidth: minWidth > 0 ? $css.formatPX(minWidth) : '',
                         marginTop: node.marginTop !== 0 ? $css.formatPX(node.marginTop) : '',
+                        marginLeft: marginLeft > 0 ? $css.formatPX(marginLeft) : '',
                         paddingTop: node.paddingTop > 0 && node.getBox($e.BOX_STANDARD.PADDING_TOP)[0] === 0 ? $css.formatPX(node.paddingTop) : '',
                         paddingRight: paddingRight > 0 && gravity === $const.CSS.RIGHT ? $css.formatPX(paddingRight) : '',
                         paddingLeft: paddingRight > 0 && gravity === $const.CSS.LEFT && (!image || mainData.imagePosition) ? $css.formatPX(paddingRight) : '',

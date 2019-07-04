@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>CSS Typography</title>
+<style type="text/css">
+html, body, h1, h2, h3, h4, h5, h6, p, ol, ul, li, pre, code, address, variable, form, fieldset, blockquote {
+ padding: 0;
+ margin: 0;
+ font-size: 100%;
+ font-weight: normal;
+}
+table { border-collapse: collapse; border-spacing: 0; }
+td, th, caption { font-weight: normal; text-align: left; }
+img, fieldset { border: 0; }
+ol { padding-left: 1.4em; list-style: decimal; }
+ul { padding-left: 1.4em; list-style:square; }
+q:before, q:after { content:''; }
+
+body {
+  color: #002D4B;
+  font-family: Arial, Helvetica, sans-serif;
+	font-size: 62.5%;
+  background: #E1EEFD url(images/bg_body.png) repeat-x;
+}
+
+#main {
+  width: 740px;
+  margin: 0 auto;
+  padding: 0 10px;
+  border: 4px solid white;
+  background: transparent url(images/bg_banner.jpg) no-repeat;
+}
+
+#main h1 {
+  color: #FF6600;
+	font-family: "Arial Black", Arial, Helvetica, sans-serif;
+	font-size: 4em;
+}
+
+#main h1 strong {
+  font-size: 150px;
+  color: white;
+  line-height: 1em;
+  margin-right: -1.25em;
+}
+
+
+#main h2 {
+	font: bold 3.5em "Hoefler Text", Garamond, Times, serif;
+	border-bottom: 1px solid #002D4B;
+	margin-top: 25px;
+}
+
+#main h3 {
+	color: #F60;
+	font-size: 1.9em;
+	font-weight: bold;
+	text-transform: uppercase;
+	margin-top: 25px;
+	margin-bottom: 10px;
+}
+
+#main p {
+	font-size: 1.5em;
+	line-height: 150%;
+	margin-left: 150px;
+	margin-right: 50px;
+	margin-bottom: 10px;
+}
+
+#main p:first-line {
+  font-weight: bold;
+  color: #999;
+}
+
+#main ul {
+	margin: 50px 0 25px 50px;
+	width: 150px;
+	float: right;
+}
+#main li {
+	color: #207EBF;
+	font-size: 1.5em;
+	margin-bottom: 7px;
+}
+
+#main .byline {
+  color: #999999;
+	font-size: 1.6em;
+	margin: 5px 0 25px 50px;
+}
+
+#main .byline strong {
+	color: #207EBF;
+	text-transform: uppercase;
+	margin-left: 11px;
+} 
+
+</style>
+<script src="/node_modules/systemjs/dist/system.js"></script>
+<script src="/dist/squared.js"></script>
+<script src="/dist/squared.base.js"></script>
+<script src="/dist/android.framework.js"></script>
+<script src="../../squared.js"></script>
+</head>
+
+<body>
+<div id="main">
+<h1><strong>CSS</strong> The Missing Manual</h1>
+<h2>Exploring Typographic Possibilities</h2>
+<p class="byline">november 30 <strong>Rod Dibble</strong></p>
+<ul>
+  <li>Lorem Ipsum</li>
+  <li>Reprehenderit qui in ea</li>
+  <li>Lorem Ipsum</li>
+  <li>Reprehenderit qui in ea</li>
+  <li>Lorem Ipsum</li>
+  <li>Reprehenderit qui in ea</li>
+</ul>
+<h3>Esse quam nulla</h3>
+<p>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur? Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+<h3>Quis autem vel eum</h3>
+<p>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur? Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+</div>
+</body>
+</html>

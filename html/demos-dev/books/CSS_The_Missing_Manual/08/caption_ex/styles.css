@@ -1,0 +1,57 @@
+body {
+	font-size: 62.5%;
+	margin: 0;
+	padding: 0;
+}
+
+#content {
+	margin-left: 15px;
+	margin-top: 15px;
+	border: 1px dashed #999;
+	border-right: none;
+	border-bottom: none;
+}
+
+h1 {
+	font: normal 2.4em Verdana, Arial, Helvetica, sans-serif;
+	margin: 0;
+	border-bottom: 1px dashed #999;
+	padding: 5px 0 5px 8px;
+	color: #14556b;
+}
+
+p {
+	font: 1.6em/160% Georgia, "Times New Roman", Times, serif;
+	margin: 10px 8px;
+}
+
+.copyright {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 1em;
+	text-transform: uppercase;
+	color: #666666;
+	margin-left: 0;
+	padding-left: 8px;
+	border-top: 1px dashed #999;
+	clear: both;
+}
+
+.figure img {
+    border: 1px solid #666;
+    padding: 10px;
+}
+
+.figure {
+    float: right;
+    width: 222px;
+    margin: 15px 10px 5px 10px;
+}
+.figure p {
+    font: bold 1em/normal Verdana, Arial, Helvetica, sans-serif;
+    color: #333;
+    text-align: center;
+background-color: #e6f3ff; 
+    border: 1px dashed #666;
+    padding: 5px;
+  margin: 10px 0 0 0;
+}

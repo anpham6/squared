@@ -1,0 +1,214 @@
+/* BASIC */
+
+body {
+	font: 62.7% Verdana, Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, h4, p, ul, ol {
+	margin: 0px;
+	padding: 0px;
+}
+
+a img { 
+	border: none;
+}
+
+/* LAYOUT */
+
+#banner {
+	background: url(images/banner.png) no-repeat right top;
+	height: 90px;
+}
+
+
+
+/* NAVIGATION */
+#mainNav li {
+	list-style: none;
+	display: inline;
+}
+#mainNav a {
+	text-decoration: none;
+	color: #000000;
+	font-size: 1.1em;
+	text-transform: uppercase;
+	border-bottom: 1px dashed #999999;
+	display: block;
+	padding: 7px 5px 7px 30px;
+	background: #E7E7E7 url(images/link.png) no-repeat left center;
+}
+a#homeLink {
+	background-image: url(images/home.png); 
+	background-repeat: no-repeat;
+	background-position: left center;
+}
+#logo {
+	display: none;
+}
+#mainNav ul {
+	border-top: 1px dashed #999999;
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+#mainNav a:hover {
+	background: #B2F511 url(images/go.png) no-repeat left center;
+	padding-right: 15px;
+	padding-left: 30px;
+	font-weight: bold;
+}
+
+#home #mainNav a#homelink,
+#feature #mainNav a#featureLink {
+	background: #FFFFFF url(images/bg_here.png) no-repeat 95% 50%;
+	padding-right: 15px;
+	padding-left: 30px;
+	font-weight: bold;
+}
+
+#home #mainNav a#homelink:hover,
+#feature #mainNav a#featureLink:hover {
+	color: #B2F511;
+}
+
+#nav p {
+	color: #ED6733;
+	padding-right: 5px;
+	padding-left: 5px;
+}
+
+
+#nav a {
+	text-decoration: none;
+	color: #666666;
+}
+
+/* BANNER STYLES */
+#banner img {
+	float: left;
+}
+#banner ul {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+#banner li {
+	display: inline;
+	float: right;
+	margin-right: 5px;
+	padding-bottom: .5em; /* to display bottom border on links in IE */
+}
+
+#sitetools li a {
+	font-size: 1em;
+	text-decoration: none;
+	color: #FFFFFF;
+	line-height: 2em;
+	background: #1B3A89;
+	padding: 5px;
+	height: 2em;
+	border: 1px solid #4D69B0;
+	font-weight: bold;
+}
+#sitetools li a:hover {
+	color: #10214E;
+	background: #DCE5FF;
+}
+
+/* MAIN */
+
+#main a {
+	text-decoration: none;
+	border-bottom: 1px dashed #B2F511;
+	color: #152D6A;
+}
+
+#main h1 {
+	color: #152D6A;
+	margin-top: 15px;
+	margin-bottom: 5px;
+	border-bottom: 2px solid #B2F511;
+	font: normal 2.7em Impact, "Arial Narrow", sans-serif;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	word-spacing: 5px;
+	background: url(images/feature_bug.png) no-repeat top right;
+}
+
+#main h2 {
+	font: normal 2em Georgia, "Times New Roman", Times, serif;
+	margin-top: 15px;
+	margin-bottom: 3px;
+	color: #152D6A;
+}
+#main p {
+	font-size: 1.25em;
+	margin-bottom: 5px;
+}
+
+/* headlines with warnings */
+.warning {
+	background: url(images/warning.png) no-repeat left center;
+	padding-top: 2px;
+	padding-left: 30px;
+	border-bottom: 1px dotted #CCCCCC;
+}
+
+/* NEWS */
+#news .story {
+	background: url(images/bg_story.png) repeat-y;
+	color: #FFFFFF;
+	padding: 5px 5px;
+	border-bottom: 1px dashed #AAEB11;
+	display: block;
+	text-decoration: none;
+	line-height: 110%;
+}
+#news span.title {
+	font-size: 1.1em;
+	font-weight: bold;
+	display: block;
+	line-height: 120%;
+	color: #FFCC00;
+}
+#news a.story:hover {
+	color: #4A761D;
+	background: url(images/bg_story_high.png);
+}
+
+* html #news a {
+	height: 1px;
+}
+
+#news h2 {
+	background: #B2F511 url(images/bg_newshead.png) no-repeat;
+	color: #333333;
+	font-size: 2em;
+	text-transform: uppercase;
+	padding-top: 25px;
+	padding-bottom: 0px;
+	padding-left: 5px;
+}
+#news h2 span {
+	background: url(images/down.png) no-repeat;
+	position: absolute;
+	right: 10px;
+	height: 48px;
+	width: 48px;
+	top: 4px;
+	z-index: 10;
+}
+
+/* ADVERTISING */
+div.natEx {
+	text-align: center;
+	margin-top: 25px;
+	font-weight: bold;
+}
+
+.natEx p {
+	margin-bottom: 5px;
+}
+#news a.story:hover span.title {
+	color: #000000;
+}

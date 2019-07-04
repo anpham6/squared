@@ -1,0 +1,55 @@
+/* reset styles */
+html, body, h1, h2, h3, h4, h5, h6, p, ol, ul, li, pre, code, address, variable, form, fieldset, blockquote {
+ padding: 0;
+ margin: 0;
+ font-size: 100%;
+ font-weight: normal;
+}
+table { border-collapse: collapse; border-spacing: 0; }
+td, th, caption { font-weight: normal; text-align: left; }
+img, fieldset { border: 0; }
+ol { padding-left: 1.4em; list-style: decimal; }
+ul { padding-left: 1.4em; list-style:square; }
+q:before, q:after { content:''; }
+/* end reset */
+
+body {
+	font-size: 62.5%;
+}
+
+#content {
+	margin-left: 15px;
+	margin-top: 15px;
+	border: 1px dashed #999;
+	border-right: none;
+	border-bottom: none;
+}
+h1 {
+	font: normal 2.4em Verdana, Arial, Helvetica, sans-serif;
+	margin: 0;
+	border-bottom: 1px dashed #999;
+	padding: 5px 0 5px 8px;
+	color: #14556b;
+}
+p {
+	font: 1.6em/160% Georgia, "Times New Roman", Times, serif;
+	margin: 10px 8px;
+}
+.copyright {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 1em;
+	text-transform: uppercase;
+	color: #666666;
+	margin-left: 0px;
+	padding-left: 8px;
+	border-top: 1px dashed #999;
+	clear: both;
+}
+
+img.figure {
+  float: right;
+  margin-left: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #666;
+  padding: 10px;
+}

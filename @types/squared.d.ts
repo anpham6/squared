@@ -109,6 +109,7 @@ declare namespace base {
     interface Controller<T extends Node> extends AppHandler<T> {
         application: Application<T>;
         cache: NodeList<T>;
+        sessionId: string;
         readonly userSettings: UserSettings;
         readonly localSettings: ControllerSettings;
         readonly generateSessionId: string;
@@ -809,7 +810,7 @@ declare namespace lib {
         function optionalAsString(obj: UndefNull<object>, value: string): string;
         function optionalAsNumber(obj: UndefNull<object>, value: string): number;
         function optionalAsBoolean(obj: UndefNull<object>, value: string): boolean;
-        function resolvePath(value: string): string;
+        function resolvePath(value: string, href?: string): string;
         function trimString(value: string, char: string): string;
         function trimStart(value: string, char: string): string;
         function trimEnd(value: string, char: string): string;

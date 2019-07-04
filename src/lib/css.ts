@@ -70,7 +70,7 @@ export function hasComputedStyle(element: Element): element is HTMLElement {
 }
 
 export function parseSelectorText(value: string) {
-    const result: string[] = [];
+    value = value.trim();
     if (value.indexOf(',') !== -1) {
         let separatorValue = value;
         let match: RegExpExecArray | null;
@@ -82,6 +82,7 @@ export function parseSelectorText(value: string) {
             found = true;
         }
         if (found) {
+            const result: string[] = [];
             let index: number;
             let position = 0;
             while (true) {
@@ -97,12 +98,11 @@ export function parseSelectorText(value: string) {
                     break;
                 }
             }
+            return result;
         }
+        return value.split(XML.SEPARATOR);
     }
-    if (result.length === 0) {
-        result.push(value.trim());
-    }
-    return result;
+    return [value];
 }
 
 export function getSpecificity(value: string) {

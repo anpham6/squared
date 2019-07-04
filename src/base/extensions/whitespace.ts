@@ -44,7 +44,7 @@ function resetMargin(node: NodeUI, value: number) {
 }
 
 function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
-    if (isBlockElement(child)) {
+    if (isBlockElement(child) && !child.documentBody) {
         let margin: string;
         let borderWidth: string;
         let padding: string;
@@ -367,7 +367,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     if (actualParent && actualParent.visible) {
                         if (!actualParent.documentRoot && actualParent.ascend(item => item.documentRoot, undefined, 'outerWrapper').length === 0 && previousSiblings.length) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
-                            const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? $const.CSS.TOP : $const.CSS.BOTTOM];
+                            const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
+                            const offset = actualParent.box.bottom - rect[previousStart.lineBreak || previousStart.excluded ? $const.CSS.TOP : $const.CSS.BOTTOM];
                             if (offset !== 0) {
                                 if (previousStart.rendered || actualParent.visibleStyle.background) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);

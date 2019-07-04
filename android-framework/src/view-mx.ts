@@ -678,13 +678,26 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     layoutWidth = this.autoMargin.horizontal || this.ascend(item => item.hasPX($const.CSS.WIDTH) || item.blockStatic).length ? $const.CSS.PX_0 : STRING_ANDROID.MATCH_PARENT;
                                 }
                             }
-                            if (layoutWidth === '' && (
-                                    renderParent.blockWidth && this.layoutVertical && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) ||
+                            if (layoutWidth === '') {
+                                if (this.layoutVertical && !this.documentRoot && renderParent.blockStatic && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) ||
                                     !this.pageFlow && this.absoluteParent === documentParent && this.hasPX($const.CSS.LEFT) && this.hasPX($const.CSS.RIGHT) ||
-                                    documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row'
-                               ))
-                            {
-                                layoutWidth = STRING_ANDROID.MATCH_PARENT;
+                                    documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row')
+                                {
+                                    layoutWidth = STRING_ANDROID.MATCH_PARENT;
+                                }
+                                else if (this.naturalElement && !this.floating && this.some(item => item.naturalElement && item.blockStatic && item.textElement)) {
+                                    let current = this.actualParent as T;
+                                    while (current) {
+                                        if (current.has($const.CSS.WIDTH)) {
+                                            layoutWidth = STRING_ANDROID.MATCH_PARENT;
+                                            break;
+                                        }
+                                        else if (!current.blockStatic) {
+                                            break;
+                                        }
+                                        current = current.actualParent as T;
+                                    }
+                                }
                             }
                         }
                     }
@@ -863,7 +876,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, textAlign, false);
                             }
                         }
-                        if (this.rightAligned || this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
+                        if (this.rightAligned || this.nodeGroup && this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
                             floating = $const.CSS.RIGHT;
                         }
                         else if (this.nodeGroup && alignFloat && !this.renderChildren.some(item => item.rightAligned)) {
@@ -884,6 +897,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             if (floating !== '' && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
                                 renderParent.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, floating);
+                            }
+                            if (this.centerAligned) {
+                                this.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, checkTextAlign('center'));
                             }
                         }
                         if (this.onlyChild && renderParent.display === 'table-cell') {

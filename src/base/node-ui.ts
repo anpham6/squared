@@ -628,7 +628,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         else if ($util.aboveRange(this.linear.top, lastSibling.linear.bottom)) {
                             return NODE_TRAVERSE.FLOAT_WRAP;
                         }
-                        else if (horizontal && cleared && !siblings.some((item, index) => index > 0 && cleared.get(item) === this.float)) {
+                        else if (horizontal && cleared && cleared.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === this.float)) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                     }
@@ -638,34 +638,30 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     else if (horizontal !== undefined) {
                         if (!this.display.startsWith('inline-')) {
                             const { top, bottom } = this.linear;
-                            if (this.textElement && cleared && cleared.size && siblings.some((item, index) => index > 0 && cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
+                            if (this.textElement && cleared && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
                             }
                             else if (siblings[0].float === $const.CSS.RIGHT) {
                                 if (siblings.length > 1) {
-                                    let minTop = Number.POSITIVE_INFINITY;
-                                    let maxBottom = Number.NEGATIVE_INFINITY;
-                                    let actualBottom = top;
-                                    for (const item of siblings) {
-                                        if (item.float === $const.CSS.RIGHT) {
-                                            if (item.linear.top < minTop) {
-                                                minTop = item.linear.top;
-                                            }
-                                            if (item.linear.bottom > maxBottom) {
-                                                maxBottom = item.linear.bottom;
-                                            }
-                                        }
-                                    }
+                                    let actualTop = top;
                                     if (this.multiline) {
-                                        actualBottom = bottom;
-                                        if (this.textElement && !this.plainText) {
+                                        if (this.plainText) {
+                                            actualTop = bottom;
+                                        }
+                                        else {
                                             const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
-                                            if (rect.bottom > bottom) {
-                                                actualBottom = rect.bottom;
+                                            if (rect.top > top) {
+                                                actualTop = rect.top;
                                             }
                                         }
                                     }
-                                    if ($util.belowRange(actualBottom, maxBottom)) {
+                                    let maxBottom = Number.NEGATIVE_INFINITY;
+                                    for (const item of siblings) {
+                                        if (item.float === $const.CSS.RIGHT && item.linear.bottom > maxBottom) {
+                                            maxBottom = item.linear.bottom;
+                                        }
+                                    }
+                                    if ($util.belowRange(actualTop, maxBottom)) {
                                         return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
                                     }
                                     else {

@@ -60,7 +60,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public applyDefaultStyles(element: Element) {
-        const sessionId = this.application.processing.sessionId;
+        const sessionId = this.sessionId;
         let styleMap: StringMap;
         if ($dom.isPlainText(element)) {
             styleMap = {
@@ -95,7 +95,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 return false;
             };
             const setButtonStyle = (appliedBorder: boolean) => {
-                if (appliedBorder && styleMap.backgroundColor === undefined) {
+                if (appliedBorder && (styleMap.backgroundColor === undefined || styleMap.backgroundColor === 'initial')) {
                     styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
                 }
                 if (styleMap.textAlign === undefined) {
@@ -167,6 +167,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'TEXTAREA':
                 case 'SELECT':
                     setBorderStyle();
+                    break;
+                case 'BODY':
+                    if (styleMap.backgroundColor === undefined) {
+                        styleMap.backgroundColor = 'rgb(255, 255, 255)';
+                    }
                     break;
                 case 'FORM':
                     if (styleMap.marginTop === undefined) {
@@ -310,7 +315,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public visibleElement(element: Element) {
-        const rect = $session.getClientRect(element, this.application.processing.sessionId);
+        const rect = $session.getClientRect(element, this.sessionId);
         if (withinViewport(rect)) {
             if (rect.width > 0 && rect.height > 0) {
                 return true;

@@ -43,7 +43,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public applyDefaultStyles(element: Element) {
         if ($dom.isPlainText(element)) {
-            $session.setElementCache(element, 'styleMap', this.application.processing.sessionId, {
+            $session.setElementCache(element, 'styleMap', this.sessionId, {
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',

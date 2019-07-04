@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>CSS: The Missing Manual</title>
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+
+#inventory {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  width: 98%;
+  border-collapse: collapse;
+}
+
+#inventory caption {
+  text-align: right;
+  font-size: 1.3em;
+  padding-top: 25px;
+}
+
+#inventory td, #inventory th {
+	font-size: 1.4em;
+	border: 1px solid #DDB575;
+  padding: 3px 7px 2px 7px;
+}
+
+#inventory th {
+  text-transform:uppercase;
+  text-align: left;
+ 	padding-top: 5px;
+  padding-bottom: 4px;
+  background: url(images/bg_th.png) no-repeat left top;
+  color: #FFF;
+}
+
+
+
+#inventory tr.alt td {
+  background-color: #FFF;
+}
+
+#price, #rating {
+  width: 100px;
+}
+
+</style>
+<script src="/node_modules/systemjs/dist/system.js"></script>
+<script src="/dist/squared.js"></script>
+<script src="/dist/squared.base.js"></script>
+<script src="/dist/android.framework.js"></script>
+<script src="../../../squared.js"></script>
+</head>
+
+<body class="secondary" id="lorem">
+<div id="banner"><img src="images/logo2.png" width="571" height="82" alt="CSS: The Missing Manual" id="logo">
+<ul id="siteTools">
+<li><a href="#">Contact</a></li>
+<li><a href="#">Directions</a></li>
+<li>
+  <form name="form1" method="post" action="">
+    <div><input type="text" name="search" id="search"></div>
+  </form>
+</li>
+</ul>
+</div>
+<div id="navWrap">
+<ul id="nav">
+<li><a href="index.html" class="linkHome">Home</a></li>
+<li><a href="#" class="linkAbout">About Us</a></li>
+<li><a href="#" class="linkLorem">Lorem Ipsum</a></li>
+<li><a href="#" class="linkMattis">Mattis</a></li>
+<li><a href="#" class="linkEuismod">Euismod</a></li>
+<li><a href="#" class="linkVenenatis">Venenatis</a></li>
+</ul>
+</div>
+<div id="mainWrap">
+<div id="main">
+<div id="sidebar">
+<h2>Lorem Ipsum</h2>
+<ul>
+  <li><a href="#">Lorem Ipsum</a></li>
+  <li><a href="#">Euismod Venantis</a></li>
+  <li><a href="#">Mattis Euismod</a></li>
+</ul>
+<div class="actions">
+<a class="callToAction" href="#">Duis lectus nisi</a>
+<a class="callToAction" href="#">Quisque lorem lectus</a><a class="callToAction" href="#">Quisque lorem lectus</a><a class="callToAction" href="#">Quisque lorem lectus</a> </div>
+</div>
+<div id="content">
+  <h1>Welcome to the Lorem Ipsum Store</h1>
+  <table id="inventory" width="100%">
+  <caption>
+ Table 1: Current Inventory
+  </caption>
+  <colgroup>
+  <col id="product">
+  <col id="price">
+  <col id="rating">
+  </colgroup>
+    <tr>
+      <th scope="col">Product</th>
+      <th scope="col">Price</th>
+      <th scope="col">Rating</th>
+    </tr>
+    <tr class="alt">
+      <td>Vitae Quam Lorem</td>
+      <td>$19.95</td>
+      <td class="rating"><img src="images/star.png" width="16" height="16" alt="star"><img src="images/star.png" width="16" height="16" alt="star"><img src="images/star.png" width="16" height="16" alt="star"><img src="images/star.png" width="16" height="16" alt="star"><img src="images/star.png" width="16" height="16" alt="star"></td>
+    </tr>
+    <tr>
+      <td>In Tempus Velit</td>
+      <td>$14.55</td>
+      <td><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span></td>
+    </tr>
+    <tr class="alt">
+      <td>Lorem Ipsum Dolor Sat</td>
+      <td>Priceless</td>
+      <td><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span></td>
+    </tr>
+    <tr>
+      <td>Quis Felis Fringilla</td>
+      <td>$29.95</td>
+      <td><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span></td>
+    </tr>
+    <tr class="alt">
+      <td>Nunc Sem Pharetra</td>
+      <td>$75.99</td>
+      <td><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span></td>
+    </tr>
+    <tr>
+      <td>Vel Faucibus Elit</td>
+      <td>$82.00</td>
+      <td><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span></td>
+    </tr>
+    <tr class="alt">
+      <td> Non Adipiscing Vitae</td>
+      <td>$1.95</td>
+      <td><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span></td>
+    </tr>
+    <tr>
+      <td>Aenean Orci Ante</td>
+      <td>$17.95</td>
+      <td><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span></td>
+    </tr>
+    <tr class="alt">
+      <td>Venenatis Non Adipiscing</td>
+      <td>$44.00</td>
+      <td><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span><span class="rating"><img src="images/star.png" width="16" height="16" alt="star"></span></td>
+    </tr>
+  </table>
+  <p>&nbsp;</p>
+</div>
+</div>
+</div>
+<div id="footer">
+  <div id="col1">
+    <ul>
+  <li><a href="#" class="linkHome">Home</a></li>
+  <li><a href="#" class="linkAbout">About Us</a></li>
+  <li><a href="#" class="linkLorem">Lorem Ipsum</a></li>
+  <li><a href="#" class="linkMattis">Mattis</a></li>
+  <li><a href="#" class="linkEuismod">Euismod</a></li>
+  <li><a href="#" class="linkVenenatis">Venenatis</a></li>
+  </ul>
+  </div>
+  <div id="col2">
+  <p><strong>Copyright 2010, Greek Text Generator, Inc.</strong></p>
+  <p>Suspendisse vitae quam lorem, in tempus velit. Sed vitae ante quis felis fringilla condimentum. Aenean orci ante, venenatis non adipiscing vitae, fringilla et neque. In pharetra, eros imperdiet luctus imperdiet, nunc sem pharetra mi, vel faucibus elit risus id tortor.</p>
+  <p>Contact: <a href="mailto:e-mail@here.com">e-mail@here.com</a></p>
+  </div>
+</div>
+</body>
+</html>

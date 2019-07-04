@@ -330,13 +330,13 @@ function isTargeted(parent: View, node: View) {
     return false;
 }
 
-function getTextBottom<T extends View>(nodes: T[]): T | undefined {
+function getTextBottom<T extends View>(nodes: T[]): T[] {
     return $util.filterArray(nodes, node => (node.baseline || $css.isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && (<HTMLSelectElement> node.element).size > 1) || node.verticalAlign === 'text-bottom' && node.containerName !== 'INPUT_IMAGE').sort((a, b) => {
         if (a.baselineHeight === b.baselineHeight) {
             return a.tagName === 'SELECT' ? 1 : 0;
         }
         return a.baselineHeight > b.baselineHeight ? -1 : 1;
-    })[0];
+    });
 }
 
 function getAnchorDirection(reverse: boolean) {
@@ -450,7 +450,22 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         },
         unsupported: {
             cascade: new Set(['SELECT', 'svg']),
-            tagName: new Set(['SCRIPT', 'STYLE', 'OPTION', 'INPUT:hidden', 'MAP', 'AREA', 'SOURCE', 'TEMPLATE', 'DATALIST', 'WBR']),
+            tagName: new Set([
+                'HEAD',
+                'TITLE',
+                'META',
+                'SCRIPT',
+                'STYLE',
+                'LINK',
+                'OPTION',
+                'INPUT:hidden',
+                'MAP',
+                'AREA',
+                'SOURCE',
+                'TEMPLATE',
+                'DATALIST',
+                'WBR'
+            ]),
             excluded: new Set(['BR'])
         },
         precision: {
@@ -1751,6 +1766,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
             const cleared = $NodeUI.linearData(children, true).cleared;
             const textIndent = node.blockDimension ? node.parseUnit(node.css('textIndent')) : 0;
+            const centerAligned = node.cssInitial('textAlign') === 'center';
             let rowWidth = 0;
             let previousRowLeft: T | undefined;
             $util.partitionArray(children, item => item.float !== $const.CSS.RIGHT).forEach((seg, index) => {
@@ -1910,6 +1926,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                     previousRowLeft = undefined;
                                 }
+                                if (centerAligned && items.length === 1 && !previous.blockStatic) {
+                                    previous.anchorDelete(alignParent);
+                                    previous.anchor('centerHorizontal', 'true');
+                                }
                                 anchored = true;
                             }
                             else {
@@ -1987,8 +2007,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const items = rows[i];
                 let baseline: T | null;
                 if (items.length > 1) {
-                    let textBottom = getTextBottom(items);
-                    baseline = $NodeUI.baseline(textBottom ? items.filter(item => item !== textBottom) : items);
+                    const bottomAligned = getTextBottom(items);
+                    let textBottom = bottomAligned[0] as T | undefined;
+                    baseline = $NodeUI.baseline(bottomAligned.length ? items.filter(item => !bottomAligned.includes(item)) : items);
                     if (baseline && textBottom) {
                         if (baseline !== textBottom && textBottom.bounds.height > baseline.bounds.height) {
                             baseline.anchor($const.CSS.BOTTOM, textBottom.documentId);
@@ -2100,7 +2121,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     else if (baselineAlign.length && baselineAlign.length < items.length) {
-                        textBottom = getTextBottom(items);
+                        textBottom = getTextBottom(items)[0];
                         if (textBottom) {
                             for (const item of baselineAlign) {
                                 if (item.baseline && !item.multiline && textBottom.bounds.height > item.bounds.height) {
@@ -2170,7 +2191,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const baseline = $NodeUI.baseline(children);
         const textBaseline = $NodeUI.baseline(children, true);
         const reverse = node.hasAlign($e.NODE_ALIGNMENT.RIGHT);
-        const textBottom = getTextBottom(children);
+        const textBottom = getTextBottom(children)[0];
         const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
         let bias = 0;
         switch (node.cssAscend('textAlign', true)) {

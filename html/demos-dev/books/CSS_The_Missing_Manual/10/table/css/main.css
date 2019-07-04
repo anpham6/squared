@@ -1,0 +1,337 @@
+html, body, h1, h2, h3, h4, h5, h6, p, ol, ul, li, pre, code, address, variable, form, fieldset, blockquote {
+	padding: 0;
+	margin: 0;
+ font-size: 100%;
+	font-weight: normal;
+}
+img, fieldset { border: 0; }
+ol { margin-left: 1.4em; list-style: decimal; }
+ul { margin-left: 1em; list-style:square; }
+q:before, q:after { content:''; }
+
+body {
+	background: #594013 url(../images/banner.png) repeat-x center top;
+	font-size: 62.5%;
+}
+
+a {
+	border-bottom: 1px dotted #47864D;
+  text-decoration: none;
+	color: #47864D;
+}
+
+a:hover {
+  color: #F93;
+}
+
+#banner {
+	background: #325C38 url(../images/banner.png) repeat-x center top;
+	height: 95px;
+	width: 900px;
+	margin: 0 auto;
+	overflow: hidden;
+}
+#navWrap {
+	background: url(../images/bg_nav.png) repeat-x center bottom; 
+  border-top: 1px solid #FFF;
+	border-bottom: 1px solid #FFF; 
+}
+
+#nav li {
+	display: inline;
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+#nav {
+	margin: 0px auto;
+	width: 900px;
+	overflow: hidden; /*if auto causes weird rendering in FF when button clicked */
+}
+#nav a {
+	display: block;
+	float: left;
+	color: #FFF;
+	text-decoration: none;
+	font: bold 14px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	padding: 5px 25px;
+	background-image: url(../images/bg_nav.png);
+	background-repeat: repeat-x;
+	background-position: center bottom;
+	border-style: none;
+}
+#nav a:hover {
+	background-position: center top;
+  color: #325C38;
+}
+#home .linkHome,
+#about .linkAbout , #lorem .linkLorem{
+  background-position: center center;
+}
+
+#siteTools {
+	list-style: none;
+	text-align: right;
+	margin-top: 25px;
+}
+#siteTools li {
+	margin-bottom: 2px;
+}
+#siteTools li a {
+	font: 1.2em "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #FFF;
+	text-transform: uppercase;
+	text-decoration:none;
+	border-style: none;
+	line-height: 140%;
+}
+#siteTools li a:hover {
+  color: #F93;
+}
+#banner #logo {
+	float: left;
+}
+#search {
+	width: 100px;
+	font-size: 10px;
+  background-image: url(../images/magnify.gif);
+  background-repeat:no-repeat;
+  background-position: right center;
+}
+#search:focus {
+  background-color:#FFC;
+  outline: none;
+}
+
+#mainWrap {
+	border-bottom: 1px solid #FFF;
+	background-color: #D8D5B8;
+}
+
+#home #main {
+	height: 186px;
+	background: url(../images/home_bg_photo.jpg) no-repeat center top;
+	padding-top: 150px;
+	position: relative;
+	border-style: none;
+	width: 900px;
+	margin: 0 auto;
+}
+#main #homePhoto {
+	position: absolute;
+	left: 500px;
+	top: 35px;
+}
+#content h2, #sidebar h2, #main h2 {
+	color: #D67B31;
+	letter-spacing: 1px;
+	font: 2em Baskerville, "Palatino Linotype", "Times New Roman", serif;
+	text-transform: uppercase;
+	margin-bottom: 12px;
+	margin-top: 8px;
+}
+#bottom #content h3 {
+  color: #767954;
+	font: bold 1.2em "Trebuchet MS", Arial, Helvetica, sans-serif;
+	text-transform: uppercase;
+}
+
+#bottom #content p {
+  font: 1.5em Baskerville, "Palatino Linotype", "Times New Roman", serif;
+  margin-bottom: 15px;
+}
+.callToAction {
+	background: #B2C09C url(../images/gear.png) no-repeat 99% -117px;
+	padding: 10px 30px 10px 10px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	display: block;
+	text-decoration: none;
+	font: normal 1.8em "Trebuchet MS", Arial, Helvetica, sans-serif;
+	text-transform: uppercase;
+	color: #47864D;
+	border: 1px solid #E7E3CB;
+}
+.callToAction:hover {
+	color: #D67B31;
+	background-color: #FFF;
+  background-position: 99% 8px;
+}
+#footer {
+	clear: both;
+	width: 900px;
+	margin-right: auto;
+	margin-left: auto;
+	border-top: 1px solid black;
+	;
+}
+#footer #col1 {
+	float: left;
+	width: 260px;
+	margin-left: 40px;
+	padding-top: 10px;
+}
+
+.secondary #footer #col1 {
+  width: 210px;
+  margin-left: 0;
+}
+
+#footer #col2{
+	float: left;
+	width: 550px;
+	margin-left: 50px;
+	padding-top: 20px;
+}
+
+#footer ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+#footer li a {
+	text-decoration: none;
+	border-bottom: 1px dotted #47864D;
+	display: block;
+	font: 1em "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #47864D;
+	padding: 2px;
+}
+
+.clear:after {
+  content: ".";
+  display: block;
+  height: 0;
+  font-size: 0;
+  clear: both;
+  visibility: hidden;
+}
+
+.clear { zoom: 1; }
+
+#footer #col2 p {
+	font: 1.2em "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #D5D5B1;
+	margin-bottom: 5px;
+}
+#footer li a:hover {
+	background: #E6E2CA;
+	color: #D48E2C;
+}
+#home #footer .linkHome,
+#about #footer .linkAbout , #lorem #footer .linkLorem{
+  color: #D48E2C;
+}
+#footer #col1 li {
+	display: inline;
+}
+
+#footer #col1 li a { 
+  zoom: 1;
+}
+
+* html #col1, * html #col2 {
+  display:inline;
+}
+
+.secondary #sidebar {
+	background: url(../images/sidebar_bg.png) no-repeat;
+	padding: 35px 10px;
+	float: left;
+	width: 215px;
+}
+.secondary #content {
+	margin-left: 260px;
+	padding-top: 20px;
+}
+
+.secondary #main {
+	width: 900px;
+	margin: 0 auto;
+	background-color:#FCFCCB;
+}
+.secondary #mainWrap {
+	background: #FDFCD2;
+	width: 100%;
+	overflow: hidden;
+}
+
+#sidebar h2 {
+	margin-top: 0;
+	margin-left: 5px;
+}
+
+.secondary #main h1 {
+	font: italic 4em Baskerville, "Palatino Linotype", "Times New Roman", serif;
+	color: #46874D;
+	background: url(../images/underline.png) no-repeat 0px 88%;
+	padding-left: 2px;
+}
+#footerWrapper {
+}
+#sidebar ul {
+	margin: 0 0 0 -4px;
+	padding: 0px;
+	list-style: none;
+	border-top: 1px dotted #47864D;
+}
+#sidebar li a {
+	display: block;
+	padding: 3px;
+	font: 1.3em "Trebuchet MS", Arial, Helvetica, sans-serif;
+	padding-left: 8px;
+}
+.secondary #main p {
+	font: 1.4em/150% "Trebuchet MS", Arial, Helvetica, sans-serif;
+	margin: 0 0 25px 0;
+}
+.secondary #main p:first-line {
+	font-weight: bold;
+	text-transform: uppercase;
+}
+.secondary #main h1+p {
+	color: #634512;
+	font-style: italic;
+	font-size: 1.8em;
+	line-height: 120%;
+	margin: 15px 0 25px;
+}
+.secondary #main .quote {
+	padding: 15px 25px;
+	float: right;
+	width: 175px;
+	background: #FFFEEE;
+	margin-left: 25px;
+	border: 1px dashed #634512;
+	margin-bottom: 15px;
+}
+
+.secondary #main .quote p {
+	font: italic 1.6em Baskerville, "Palatino Linotype", "Times New Roman", serif;
+	margin: 10px 0;
+	color: #666;
+}
+#sidebar .callToAction {
+	font-size: 1em;
+	margin-right: 5px;
+	background-position: 99% -121px;
+}
+#sidebar .callToAction:hover {
+	background-position: 99% 2px;
+}
+.actions {
+	margin-top: 25px;
+}
+
+#sidebar .actions {
+  background: url(../images/leaf.jpg) no-repeat left top;
+	padding-top: 145px;
+	margin-top: 5px;
+}
+
+#sidebar li {
+	display: inline;
+}
+#sidebar a {
+	zoom: 1;
+}

@@ -37,12 +37,10 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 for (let i = 0; i < length; i++) {
                     const item = children[i] as T;
                     const listStyleType = item.css('listStyleType') !== $const.CSS.NONE;
-                    if (item.display === 'list-item') {
-                        if (listStyleType || item.innerBefore || hasSingleImage(item)) {
-                            listType++;
-                        }
+                    if (item.display === 'list-item' && (listStyleType || item.innerBefore)) {
+                        listType++;
                     }
-                    else if (hasSingleImage(item) && !listStyleType && item.marginLeft < 0) {
+                    else if (item.marginLeft < 0 && !listStyleType && hasSingleImage(item)) {
                         imageType++;
                     }
                     if (item.blockStatic) {

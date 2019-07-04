@@ -11,6 +11,7 @@ const {
 
 const STORED = <ResourceStoredMapAndroid> squared.base.ResourceUI.STORED;
 const REGEXP_NONWORD = /[^\w+]/g;
+let CACHE_IMAGE: StringMap = {};
 let IMAGE_FORMAT!: string[];
 
 function formatObject(obj: {}, numberAlias = false) {
@@ -152,11 +153,16 @@ export default class Resource<T extends android.base.View> extends squared.base.
     }
 
     public static addImage(images: StringMap, prefix = '') {
-        if (images.mdpi) {
-            const src = $util.fromLastIndexOf(images.mdpi, '/');
+        const mdpi = images.mdpi;
+        if (mdpi) {
+            if (CACHE_IMAGE[mdpi]) {
+                return CACHE_IMAGE[mdpi];
+            }
+            const src = $util.fromLastIndexOf(mdpi, '/');
             const format = $util.fromLastIndexOf(src, '.').toLowerCase();
             if (format !== 'svg' && IMAGE_FORMAT.includes(format)) {
-                return Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
+                CACHE_IMAGE[mdpi] = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
+                return CACHE_IMAGE[mdpi];
             }
         }
         return '';
@@ -193,6 +199,11 @@ export default class Resource<T extends android.base.View> extends squared.base.
         STORED.drawables = new Map();
         STORED.animators = new Map();
         IMAGE_FORMAT = application.controllerHandler.localSettings.supported.imageFormat as string[];
+    }
+
+    public reset() {
+        super.reset();
+        CACHE_IMAGE = {};
     }
 
     public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {

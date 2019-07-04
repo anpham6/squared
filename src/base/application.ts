@@ -18,7 +18,9 @@ const {
 } = squared.lib;
 
 const ASSETS = Resource.ASSETS;
-const CACHE_PATTERN: ObjectMap<RegExp> = {};
+const CACHE_PATTERN: ObjectMap<RegExp> = {
+    DATAURI: new RegExp(`(url\\("(${$regex.STRING.DATAURI})"\\)),?\\s*`, 'g')
+};
 let NodeConstructor!: Constructor<Node>;
 
 function parseConditionText(rule: string, value: string) {
@@ -115,8 +117,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         let __THEN: Undefined<() => void>;
         this.rootElements.clear();
         this.initializing = false;
-        this.processing.sessionId = controller.generateSessionId;
-        this.session.active.push(this.processing.sessionId);
+        const sessionId = controller.generateSessionId;
+        this.processing.sessionId = sessionId;
+        controller.sessionId = sessionId;
+        this.session.active.push(sessionId);
         controller.init();
         this.setStyleMap();
         if (elements.length === 0) {
@@ -478,7 +482,11 @@ export default abstract class Application<T extends Node> implements squared.bas
         const styleSheets = document.styleSheets;
         const length = styleSheets.length;
         for (let i = 0; i < length; i++) {
-            applyStyleSheet(<CSSStyleSheet> styleSheets[i]);
+            const styleSheet = styleSheets[i];
+            const mediaText = styleSheet.media.mediaText;
+            if (mediaText === '' || /(all|screen)/.test(mediaText)) {
+                applyStyleSheet(<CSSStyleSheet> styleSheet);
+            }
         }
     }
 
@@ -494,8 +502,33 @@ export default abstract class Application<T extends Node> implements squared.bas
         const sessionId = this.processing.sessionId;
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
+                const styleSheetHref = item.parentStyleSheet && item.parentStyleSheet.href || undefined;
+                const parseImageUrl = (styleMap: StringMap, attr: string) => {
+                    const value = styleMap[attr];
+                    if (value && value !== 'initial') {
+                        CACHE_PATTERN.DATAURI.lastIndex = 0;
+                        let result = value;
+                        let match: RegExpExecArray | null;
+                        while ((match = CACHE_PATTERN.DATAURI.exec(value)) !== null) {
+                            if (match[3] && match[4]) {
+                                resource.addRawData(match[2], match[3], match[4], match[5]);
+                            }
+                            else if (this.userSettings.preloadImages) {
+                                const uri = $util.resolvePath(match[5], styleSheetHref);
+                                if (uri !== '') {
+                                    if (resource.getImage(uri) === undefined) {
+                                        ASSETS.images.set(uri, { width: 0, height: 0, uri });
+                                    }
+                                    result = result.replace(match[1], `url("${uri}")`);
+                                }
+                            }
+                        }
+                        styleMap[attr] = result;
+                    }
+                };
                 const fromRule: string[] = [];
-                for (const attr of Array.from(item.style)) {
+                const cssStyle = item.style;
+                for (const attr of Array.from(cssStyle)) {
                     fromRule.push($util.convertCamelCase(attr));
                 }
                 for (const selectorText of $css.parseSelectorText(item.selectorText)) {
@@ -506,41 +539,26 @@ export default abstract class Application<T extends Node> implements squared.bas
                         const style = $css.getStyle(element, targetElt);
                         const styleMap: StringMap = {};
                         for (const attr of fromRule) {
-                            const value = $css.checkStyleValue(element, attr, item.style[attr], style);
+                            const value = $css.checkStyleValue(element, attr, cssStyle[attr], style);
                             if (value) {
                                 styleMap[attr] = value;
                             }
                         }
-                        [styleMap.backgroundImage, styleMap.listStyleImage, styleMap.content].forEach(image => {
-                            if (image) {
-                                if (CACHE_PATTERN.DATAURI === undefined) {
-                                    CACHE_PATTERN.DATAURI = new RegExp(`url\\("(${$regex.STRING.DATAURI})"\\),?\\s*`, 'g');
-                                }
-                                else {
-                                    CACHE_PATTERN.DATAURI.lastIndex = 0;
-                                }
-                                let match: RegExpExecArray | null;
-                                while ((match = CACHE_PATTERN.DATAURI.exec(image)) !== null) {
-                                    if (match[2] && match[3]) {
-                                        resource.addRawData(match[1], match[2], match[3], match[4]);
-                                    }
-                                    else if (this.userSettings.preloadImages) {
-                                        const uri = $util.resolvePath(match[4]);
-                                        if (uri !== '' && resource.getImage(uri) === undefined) {
-                                            ASSETS.images.set(uri, { width: 0, height: 0, uri });
-                                        }
-                                    }
-                                }
-                            }
-                        });
+                        parseImageUrl(styleMap, 'backgroundImage');
+                        parseImageUrl(styleMap, 'listStyleImage');
+                        parseImageUrl(styleMap, 'content');
                         const attrStyle = `styleMap${targetElt}`;
                         const attrSpecificity = `styleSpecificity${targetElt}`;
                         const styleData: StringMap = $session.getElementCache(element, attrStyle, sessionId);
                         if (styleData) {
                             const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, sessionId) || {};
                             for (const attr in styleMap) {
+                                const value = styleMap[attr];
                                 if (specificityData[attr] === undefined || specificity >= specificityData[attr]) {
-                                    styleData[attr] = styleMap[attr];
+                                    if (value === 'initial' && cssStyle.background !== '' && attr.startsWith('background')) {
+                                        continue;
+                                    }
+                                    styleData[attr] = value;
                                     specificityData[attr] = specificity;
                                 }
                             }

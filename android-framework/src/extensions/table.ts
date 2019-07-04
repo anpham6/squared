@@ -25,35 +25,44 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         if (mainData) {
             let requireWidth = false;
             if (mainData.columnCount > 1) {
-                requireWidth = node.data($c.EXT_NAME.TABLE, 'expand') === true;
+                requireWidth = mainData.expand;
                 node.each((item: T) => {
+                    const data = item.data($c.EXT_NAME.TABLE, 'cellData');
                     if (item.css($const.CSS.WIDTH) === $const.CSS.PX_0) {
                         item.setLayoutWidth($const.CSS.PX_0);
                         item.android('layout_columnWeight', ((<HTMLTableCellElement> item.element).colSpan || 1).toString());
                     }
                     else {
-                        const expand: boolean | undefined = item.data($c.EXT_NAME.TABLE, 'expand');
+                        const expand: boolean | undefined = data.expand;
                         if (expand !== undefined) {
                             if (expand) {
-                                const percent = $util.convertFloat(item.data($c.EXT_NAME.TABLE, 'percent')) / 100;
+                                const percent = $util.convertFloat(data.percent) / 100;
                                 if (percent > 0) {
                                     item.setLayoutWidth($const.CSS.PX_0);
                                     item.android('layout_columnWeight', $util.trimEnd(percent.toPrecision(3), '0'));
-                                    requireWidth = !node.hasWidth;
+                                    if (!requireWidth) {
+                                        requireWidth = !item.hasWidth;
+                                    }
                                 }
                             }
                             else {
                                 item.android('layout_columnWeight', '0');
+                                if (item.textElement) {
+                                    item.android('ellipsize', 'end');
+                                }
                             }
                         }
-                        if (item.data($c.EXT_NAME.TABLE, 'downsized') === true) {
-                            if (item.data($c.EXT_NAME.TABLE, 'exceed') === true) {
+                        if (data.downsized) {
+                            if (data.exceed) {
                                 item.setLayoutWidth($const.CSS.PX_0);
                                 item.android('layout_columnWeight', '0.01');
                             }
                             else {
                                 if (item.hasPX($const.CSS.WIDTH) && item.actualWidth < item.bounds.width) {
                                     item.setLayoutWidth($css.formatPX(item.bounds.width));
+                                }
+                                else if (item.textElement) {
+                                    item.android('ellipsize', 'end');
                                 }
                             }
                         }
@@ -106,26 +115,29 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const rowSpan = $util.convertInt(node.data($c.EXT_NAME.TABLE, 'rowSpan'));
-        const columnSpan = $util.convertInt(node.data($c.EXT_NAME.TABLE, 'colSpan'));
-        const spaceSpan = $util.convertInt(node.data($c.EXT_NAME.TABLE, 'spaceSpan'));
-        if (rowSpan > 1) {
-            node.android('layout_rowSpan', rowSpan.toString());
-        }
-        if (columnSpan > 1) {
-            node.android('layout_columnSpan', columnSpan.toString());
-        }
-        node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill');
-        if (spaceSpan > 0) {
-            const controller = <android.base.Controller<T>> this.application.controllerHandler;
-            controller.addAfterOutsideTemplate(
-                node.id,
-                controller.renderSpace(STRING_ANDROID.WRAP_CONTENT, STRING_ANDROID.WRAP_CONTENT, spaceSpan),
-                false
-            );
-        }
-        if (parent.css('empty-cells') === 'hide' && node.naturalChildren.length === 0 && node.textContent === '') {
-            node.hide(true);
+        const data = node.data($c.EXT_NAME.TABLE, 'cellData');
+        if (data) {
+            const rowSpan: number = data.rowSpan;
+            const colSpan: number = data.colSpan;
+            const spaceSpan: number = data.spaceSpan || 0;
+            if (rowSpan > 1) {
+                node.android('layout_rowSpan', rowSpan.toString());
+            }
+            if (colSpan > 1) {
+                node.android('layout_columnSpan', colSpan.toString());
+            }
+            node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill');
+            if (spaceSpan > 0) {
+                const controller = <android.base.Controller<T>> this.application.controllerHandler;
+                controller.addAfterOutsideTemplate(
+                    node.id,
+                    controller.renderSpace(STRING_ANDROID.WRAP_CONTENT, STRING_ANDROID.WRAP_CONTENT, spaceSpan),
+                    false
+                );
+            }
+            if (parent.css('empty-cells') === 'hide' && node.naturalChildren.length === 0 && node.textContent === '') {
+                node.hide(true);
+            }
         }
         return undefined;
     }

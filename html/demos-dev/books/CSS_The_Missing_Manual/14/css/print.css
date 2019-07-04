@@ -1,0 +1,66 @@
+#sidebar, #navWrapper, #footerNav {
+  display: none;
+}
+
+
+#banner, #mainWrapper, #footer, #main, #footerMain {
+ width: auto;
+ margin: 0;
+ padding: 0;
+}
+
+#footerMain {
+ margin: 0;
+}
+
+#main {
+ float: none;
+}
+
+#mainWrapper, #footer {
+ overflow: visible;
+}
+
+html, body, #banner, #footerWrapper {
+ background: #FFF;
+}
+
+
+#banner {
+ height: auto;
+ text-align: center;
+ border-bottom: 2pt solid #000;
+ border-top: 2pt solid #000;
+ padding: 10pt 0;
+ margin-bottom: 15pt;
+}
+
+* {
+  color: #000000 !important;
+}
+
+h1 {
+  font-size: 30pt !important;
+}
+
+h2 {
+  font-size: 16pt !important;
+}
+
+p, li {
+	font-size: 11pt !important;
+}
+
+#footerMain {
+  margin-top: 15pt;
+  border-top: 1pt solid #000;
+  padding-top: 5pt;
+}
+
+#footerMain p {
+  font-size: 9pt !important;
+}
+
+a:after {
+    content: " (" attr(href) ") ";
+}

@@ -165,8 +165,9 @@
                 System.import('/build/android-framework/src/main.js').then(result => {
                     android = result.default;
                     squared.setFramework(android);
-                    squared.parseDocument();
-                    squared.saveToArchive();
+                    squared.parseDocument().then(() => {
+                        squared.copyToDisk('/users/anpham/git/flexbox');
+                    });
                 });
             });
         });

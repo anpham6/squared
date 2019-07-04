@@ -319,7 +319,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public createCache(documentRoot: HTMLElement) {
         const node = this.createRootNode(documentRoot);
         if (node) {
-            node.documentParent = node.parent as T;
+            const parent = node.parent as T;
+            if (node.documentBody) {
+                parent.visible = false;
+                this.processing.cache.append(parent);
+            }
+            node.documentParent = parent;
             const controller = this.controllerHandler;
             const CACHE = <NodeList<T>> this.processing.cache;
             const preAlignment: ObjectIndex<StringMap> = {};
@@ -979,7 +984,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     const previous = item.siblingsLeading[0];
                                     if (previous) {
                                         if (floatContainer) {
-                                            const status = item.alignedVertically(horizontal.length ? horizontal : vertical, floatCleared, horizontal.length > 0);
+                                            const status = item.alignedVertically(horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0);
                                             if (status > 0) {
                                                 if (horizontal.length) {
                                                     if (status !== NODE_TRAVERSE.FLOAT_INTERSECT && status !== NODE_TRAVERSE.FLOAT_BLOCK && floatActive.size && floatCleared.get(item) !== 'both' && !item.siblingsLeading.some((node: T) => node.lineBreak && !cleared.has(node))) {
@@ -1550,6 +1555,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (inlineAbove.some((child: T) => requirePadding(child) || child.blockStatic && child.cascadeSome((nested: T) => requirePadding(nested)))) {
             if (leftAbove.length) {
                 let floatPosition = Number.NEGATIVE_INFINITY;
+                let marginLeft = 0;
                 let invalid = 0;
                 let hasSpacing = false;
                 for (const child of leftAbove) {
@@ -1560,12 +1566,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 for (const child of inlineAbove) {
-                    if (child.blockStatic && child.bounds.left > floatPosition) {
-                        invalid++;
+                    if (child.blockStatic) {
+                        if (child.bounds.left > floatPosition) {
+                            invalid++;
+                        }
+                        else {
+                            marginLeft = Math.max(marginLeft, child.marginLeft);
+                        }
                     }
                 }
                 if (invalid < inlineAbove.length) {
-                    const offset = floatPosition - parent.box.left;
+                    const offset = floatPosition - parent.box.left - marginLeft;
                     if (offset > 0) {
                         target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
                     }
@@ -1573,6 +1584,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             if (rightAbove.length) {
                 let floatPosition = Number.POSITIVE_INFINITY;
+                let marginRight = 0;
                 let invalid = 0;
                 let hasSpacing = false;
                 for (const child of rightAbove) {
@@ -1583,12 +1595,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 for (const child of inlineAbove) {
-                    if (child.blockStatic && child.bounds.right < floatPosition) {
-                        invalid++;
+                    if (child.blockStatic) {
+                        if (child.bounds.right < floatPosition) {
+                            invalid++;
+                        }
+                        else {
+                            marginRight = Math.max(marginRight, child.marginRight);
+                        }
                     }
                 }
                 if (invalid < inlineAbove.length) {
-                    const offset = parent.box.right - floatPosition;
+                    const offset = parent.box.right - floatPosition - marginRight;
                     if (offset > 0) {
                         target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
                     }

@@ -310,9 +310,9 @@ export function optionalAsBoolean(obj: UndefNull<object>, value: string): boolea
     return optional(obj, value, 'boolean');
 }
 
-export function resolvePath(value: string) {
+export function resolvePath(value: string, href?: string) {
     if (!COMPONENT.PROTOCOL.test(value)) {
-        let pathname = location.pathname.split('/');
+        let pathname = (href && href.replace(location.origin, '') || location.pathname).split('/');
         pathname.pop();
         if (value.charAt(0) === '/') {
             value = location.origin + value;

@@ -1604,10 +1604,23 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 let hasOwnStyle = this.has('lineHeight');
                 let value = 0;
                 if (hasOwnStyle) {
-                    value = $css.parseUnit(this.css('lineHeight'), this.fontSize);
+                    const lineHeight = this.css('lineHeight');
+                    if ($css.isPercent(lineHeight)) {
+                        value = $util.convertFloat(this.style.lineHeight as string);
+                    }
+                    else {
+                        value = $css.parseUnit(lineHeight, this.fontSize);
+                    }
                 }
                 else if (this.naturalChild) {
-                    value = $util.convertFloat(this.cssAscend('lineHeight', false, $const.CSS.HEIGHT));
+                    let current = this.actualParent;
+                    while (current) {
+                        if (current.lineHeight > 0) {
+                            value = current.lineHeight;
+                            break;
+                        }
+                        current = current.actualParent;
+                    }
                     if (this.styleElement) {
                         const fontSize = this.cssInitial('fontSize');
                         if (fontSize.endsWith('em')) {
@@ -2101,12 +2114,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     this._cached.backgroundColor = '';
                     break;
                 default:
-                    if (value !== '' && this.pageFlow && !this.plainText && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === value)) {
+                    if (value !== '' && this.pageFlow && !this.plainText && !this.inputElement && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === value)) {
                         let current = this.actualParent;
                         while (current && current.id !== 0) {
                             const color = current.cssInitial('backgroundColor', true);
                             if (color !== '') {
-                                if (color === value) {
+                                if (color === value && current.backgroundImage === '') {
                                     value = '';
                                 }
                                 break;

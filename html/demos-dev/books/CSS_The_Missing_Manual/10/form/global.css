@@ -1,0 +1,333 @@
+/*********************/
+/* BASIC */
+/*********************/
+
+body {
+	font-family: "Century Gothic", "Gill Sans", Arial, sans-serif;
+	margin: 0;
+	background-color: #FFFFFF;
+}
+
+p,h1,h2,h3,h4,h5,h5,ol,ul {
+	margin: 0px;
+	padding: 0px;
+}
+
+br.clear {
+	height:1px;
+	clear:both;
+	line-height: 1px;
+	background-color: #00CC33;
+}
+
+/*********************/
+/* LAYOUT */
+/*********************/
+
+#wrapper {
+	width: 760px;
+	border-right-width: 1px;
+	border-right-style: solid;
+	border-right-color: #999999;
+}
+
+#main {
+	border-right: 1px solid #999999;
+	border-left: 1px solid #999999;
+	padding: 3px 3px 0 6px;
+	float: left;
+	width: 424px;
+}
+
+#subNav {
+	width: 150px;
+	float: left;
+	background-color: #FBEF99;
+}
+
+#banner {
+	background-image: url(images/bg/banner_bg.jpg);
+	background-repeat: repeat-x;
+	background-position: left top;
+	width: 759px;
+	border-bottom: 1px solid #999999;
+}
+
+#announce {
+	float: left;
+	width: 166px;
+	border-top: 10px solid #294E56;
+	margin-top: 3px;
+	background: url(images/bg/announce_bg.jpg) repeat-x left top;
+	margin-left: 3px;
+	line-height: 95%;
+	margin-right: 3px;
+}
+#copyright {
+	clear: both;
+	margin-left: 150px;
+	border: 1px solid #999999;
+	border-right:none;
+	font-size: 12px;
+	padding-left: 6px;
+}
+
+/*********************/
+/* BANNER STYLES */
+/*********************/
+#background {
+	background-image: url(images/bg/banner_flower.jpg);
+	background-repeat: no-repeat;
+	background-position: right top;
+}
+
+/* image replacement technique */
+#banner p.logo {
+	background: url(images/logo.gif) no-repeat left top;
+	height: 70px;
+	text-indent: -5000px;
+}
+
+#nav {
+	margin-top: 10px;
+	margin-bottom: 0px;
+}
+
+#nav li {
+	list-style-type: none;
+	padding: 0px;
+	margin: 0;
+	float: left;
+}
+
+#nav a {
+	display: block;
+	font-size: 11px;
+	color: #D6ECAE;
+	text-decoration: none;
+	background-color: #294E56;
+	padding: 2px 2px 2px 3px;
+	width: 8em;
+	margin-left: 2px;
+	border-right: 1px solid #73AFB7;
+	border-bottom: 1px solid #73AFB7;
+	font-weight: bold;
+	margin-bottom: 2px;
+}
+
+#nav a:hover {
+	background: #73AFB7;
+	border-right: 1px solid #14556B;
+	border-bottom: 1px solid #14556B;
+	color: #FBEF99;
+}
+
+/*highlight "you are here" buttons*/
+#home #nav a#homeLink,
+#feature #nav a#featureLink {
+	background: #73AFB7;
+	border-right: 1px solid #14556B;
+	border-bottom: 1px solid #14556B;
+	color: #FBEF99;
+}
+
+/*********************/
+/* MAIN SECTION STYLES */
+/*********************/
+#main h1 {
+	color: #5F9794;
+	font: bold 24px "Century Gothic", "Gill Sans", Arial, sans-serif;
+}
+
+/*********************/
+/* ANNOUNCEMENT STYLES */
+/*********************/
+
+#announce h2 {
+	font-size: 14px;
+}
+#announce a {
+	font-size: 12px;
+	display: block;
+	text-decoration: none;
+	color: #102536;
+	padding: 3px 5px;
+	border-bottom: 1px solid #14556B;
+}
+#announce .title {
+	font-weight: bold;
+	display: block;
+}
+#announce a:hover {
+	background-color: #5F9794;
+	color: #FBEF99
+}
+
+#announce ul {
+	list-style:none;
+}
+
+#announce li {
+	display: inline; /* for IE 7 and earlier white space bug */
+}
+/*********************/
+/* PAGE SPECIFIC STYLES */
+/*********************/
+
+/* HOME */
+/* no left sidebar--stretch main entire distance */
+#home #main {
+	margin-left: 0;
+	width: 577px;
+}
+/* copyright fits page */
+#home #copyright {
+	margin-left: 0;
+	padding: 3px 0 3px 30px;
+	font-style: italic;
+}
+
+.section {
+	display: block;
+	font-weight: normal;
+	color: #D6ECAE;
+}
+
+.feature {
+	margin-left: 10px;
+	border-top: 10px solid #FDD041;
+	clear: both;
+	border-bottom: 1px solid #FFF!important;
+	margin-bottom: 10px;
+	padding-bottom: 10px;
+	position: relative;
+}
+
+.feature h2 {
+	font-size: 18px;
+	color: #294E56;
+}
+
+.feature img {
+	float: right;
+	margin-left: 10px;
+	border: 10px solid #FDD041;
+	border-top: none;
+}
+
+.feature2 img {
+	border-color: #73AFB7;
+}
+
+.feature3 img {
+	border-color: #FBEF99;
+}
+
+.feature4 img {
+	border-color: #CBD893;
+}
+
+.feature2 {
+	border-color: #73AFB7;
+}
+
+.feature3 {
+	border-color: #FBEF99;
+	margin-bottom: 10px;
+}
+
+.feature4 {
+	border-color: #CBD893;
+}
+
+.feature p.fLink a {
+	font-weight: bold;
+	text-decoration: none;
+	color: #102536;
+	font-size: 11px;
+	text-transform: uppercase;
+	background: #D6ECAE url(images/arrow.gif) no-repeat right center;
+	padding: 1px 15px 2px 5px;
+}
+
+.feature p.fLink {
+	margin-top: 4px;
+}
+
+.feature p.fLink a:hover {
+	color: #FDD041;
+	text-decoration: none;
+	background-color: #294E56;
+}
+
+#home #main h1#lead {
+	background: url(images/features/tomato.jpg) no-repeat right top;
+	color: #FBEF99;
+	padding-top: 130px;
+	padding-left: 25px;
+	padding-bottom: 25px;
+	margin-bottom: 5px;
+}
+#subNav li a {
+	font-size: 12px;
+	text-decoration: none;
+	display: block;
+	width: 138px;
+	background: url(images/bg/side_nav_bg3.jpg) repeat-x;
+	padding: 2px 6px;
+	color: #14556B;
+	border-bottom: 1px solid #d6ecae;
+}
+
+#subNav li a:hover {
+	background: url(images/bg/side_nav_bg.jpg);
+	color: #102536;
+}
+.col2 #announce {
+	float: left;
+	margin-bottom: 10px;
+}
+.col2 #main {
+	float: right;
+	border-right: none;
+	width: 573px;
+}
+.col2 #copyright {
+	margin-left: 0px;
+}
+#main h2 {
+	font-size: 1.2em;
+	margin-top: 15px;
+	color: #666666;
+}
+.col2 #main h1 {
+	color: #333333;
+	border-bottom: 1px dashed #666;
+	margin-top: 5px;
+	margin-bottom: 20px;
+}
+.col2 .section {
+	display: inline;
+	color: #999999;
+}
+.floatRight {
+	float: right;
+	margin: 0 10px 2px 15px;
+}
+img.floatRight {
+	border: 2px solid #000000;
+}
+table {
+	font-family: "Times New Roman", Times, serif;
+}
+#main #subForm p {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+#main p.privacy {
+	color: #73AFB7;
+	margin-top: 25px;
+	margin-bottom: 50px;
+	font-size: 0.85em;
+}
