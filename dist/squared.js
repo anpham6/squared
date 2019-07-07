@@ -1,4 +1,4 @@
-/* squared 1.2.3
+/* squared 1.2.4
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -355,9 +355,9 @@
     function optionalAsBoolean(obj, value) {
         return optional(obj, value, 'boolean');
     }
-    function resolvePath(value) {
+    function resolvePath(value, href) {
         if (!COMPONENT.PROTOCOL.test(value)) {
-            let pathname = location.pathname.split('/');
+            let pathname = (href && href.replace(location.origin, '') || location.pathname).split('/');
             pathname.pop();
             if (value.charAt(0) === '/') {
                 value = location.origin + value;
@@ -3189,10 +3189,10 @@
         };
     }
     function formatRGBA(value) {
-        return `rgb${value.a < 255 ? 'a' : ''}(${value.r}, ${value.g}, ${value.b}${value.a < 255 ? `, ${(value.a / 255).toPrecision(2)}` : ''})`;
+        return `rgb${value.a < 255 ? 'a' : ''}(${value.r}, ${value.g}, ${value.b}` + (value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : '') + ')';
     }
     function formatHSLA(value) {
-        return `hsl${value.a < 255 ? 'a' : ''}(${value.h}, ${value.s}%, ${value.l}%${value.a < 255 ? `, ${(value.a / 255).toPrecision(2)}` : ''})`;
+        return `hsl${value.a < 255 ? 'a' : ''}(${value.h}, ${value.s}%, ${value.l}%` + (value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : '') + ')';
     }
 
     var color = /*#__PURE__*/Object.freeze({
@@ -3596,7 +3596,7 @@
         return false;
     }
     function parseSelectorText(value) {
-        const result = [];
+        value = value.trim();
         if (value.indexOf(',') !== -1) {
             let separatorValue = value;
             let match;
@@ -3608,6 +3608,7 @@
                 found = true;
             }
             if (found) {
+                const result = [];
                 let index;
                 let position = 0;
                 while (true) {
@@ -3623,12 +3624,11 @@
                         break;
                     }
                 }
+                return result;
             }
+            return value.split(XML.SEPARATOR);
         }
-        if (result.length === 0) {
-            result.push(value.trim());
-        }
-        return result;
+        return [value];
     }
     function getSpecificity(value) {
         CSS.SELECTOR_G.lastIndex = 0;

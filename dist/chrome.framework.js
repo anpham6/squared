@@ -1,4 +1,4 @@
-/* chrome-framework 1.2.3
+/* chrome-framework 1.2.4
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -87,7 +87,7 @@ var chrome = (function () {
         }
         applyDefaultStyles(element) {
             if ($dom$1.isPlainText(element)) {
-                $session.setElementCache(element, 'styleMap', this.application.processing.sessionId, {
+                $session.setElementCache(element, 'styleMap', this.sessionId, {
                     position: 'static',
                     display: 'inline',
                     verticalAlign: 'baseline',

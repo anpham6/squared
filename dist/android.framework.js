@@ -1,4 +1,4 @@
-/* android-framework 1.2.3
+/* android-framework 1.2.4
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -272,6 +272,7 @@ var android = (function () {
     const { color: $color, css: $css, regex: $regex, util: $util } = squared.lib;
     const STORED = squared.base.ResourceUI.STORED;
     const REGEXP_NONWORD = /[^\w+]/g;
+    let CACHE_IMAGE = {};
     let IMAGE_FORMAT;
     function formatObject(obj, numberAlias = false) {
         if (obj) {
@@ -418,11 +419,16 @@ var android = (function () {
             return '';
         }
         static addImage(images, prefix = '') {
-            if (images.mdpi) {
-                const src = $util.fromLastIndexOf(images.mdpi, '/');
+            const mdpi = images.mdpi;
+            if (mdpi) {
+                if (CACHE_IMAGE[mdpi]) {
+                    return CACHE_IMAGE[mdpi];
+                }
+                const src = $util.fromLastIndexOf(mdpi, '/');
                 const format = $util.fromLastIndexOf(src, '.').toLowerCase();
                 if (format !== 'svg' && IMAGE_FORMAT.includes(format)) {
-                    return Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
+                    CACHE_IMAGE[mdpi] = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
+                    return CACHE_IMAGE[mdpi];
                 }
             }
             return '';
@@ -445,6 +451,10 @@ var android = (function () {
                 }
             }
             return '';
+        }
+        reset() {
+            super.reset();
+            CACHE_IMAGE = {};
         }
         addImageSrc(element, prefix = '', imageSet) {
             const result = {};
@@ -1084,7 +1094,11 @@ var android = (function () {
         return calculateBias(top, bottom, node.localSettings.floatPrecision);
     }
     function createViewAttribute(options, android = {}, app = {}) {
-        return Object.assign({ android, app }, options);
+        const result = { android, app };
+        if (options) {
+            Object.assign(result, options);
+        }
+        return result;
     }
     function createStyleAttribute(options) {
         const result = {
@@ -1738,10 +1752,25 @@ var android = (function () {
                                         layoutWidth = this.autoMargin.horizontal || this.ascend(item => item.hasPX($const$2.CSS.WIDTH) || item.blockStatic).length ? $const$2.CSS.PX_0 : STRING_ANDROID.MATCH_PARENT;
                                     }
                                 }
-                                if (layoutWidth === '' && (renderParent.blockWidth && this.layoutVertical && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) ||
-                                    !this.pageFlow && this.absoluteParent === documentParent && this.hasPX($const$2.CSS.LEFT) && this.hasPX($const$2.CSS.RIGHT) ||
-                                    documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row')) {
-                                    layoutWidth = STRING_ANDROID.MATCH_PARENT;
+                                if (layoutWidth === '') {
+                                    if (this.layoutVertical && !this.documentRoot && renderParent.blockStatic && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) ||
+                                        !this.pageFlow && this.absoluteParent === documentParent && this.hasPX($const$2.CSS.LEFT) && this.hasPX($const$2.CSS.RIGHT) ||
+                                        documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row') {
+                                        layoutWidth = STRING_ANDROID.MATCH_PARENT;
+                                    }
+                                    else if (this.naturalElement && !this.floating && this.some(item => item.naturalElement && item.blockStatic && item.textElement)) {
+                                        let current = this.actualParent;
+                                        while (current) {
+                                            if (current.has($const$2.CSS.WIDTH)) {
+                                                layoutWidth = STRING_ANDROID.MATCH_PARENT;
+                                                break;
+                                            }
+                                            else if (!current.blockStatic) {
+                                                break;
+                                            }
+                                            current = current.actualParent;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1919,7 +1948,7 @@ var android = (function () {
                                     node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, textAlign, false);
                                 }
                             }
-                            if (this.rightAligned || this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
+                            if (this.rightAligned || this.nodeGroup && this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
                                 floating = $const$2.CSS.RIGHT;
                             }
                             else if (this.nodeGroup && alignFloat && !this.renderChildren.some(item => item.rightAligned)) {
@@ -1940,6 +1969,9 @@ var android = (function () {
                                 }
                                 if (floating !== '' && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
                                     renderParent.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, floating);
+                                }
+                                if (this.centerAligned) {
+                                    this.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, checkTextAlign('center'));
                                 }
                             }
                             if (this.onlyChild && renderParent.display === 'table-cell') {
@@ -2834,7 +2866,7 @@ var android = (function () {
                 return a.tagName === 'SELECT' ? 1 : 0;
             }
             return a.baselineHeight > b.baselineHeight ? -1 : 1;
-        })[0];
+        });
     }
     function getAnchorDirection(reverse) {
         if (reverse) {
@@ -2887,7 +2919,22 @@ var android = (function () {
                 },
                 unsupported: {
                     cascade: new Set(['SELECT', 'svg']),
-                    tagName: new Set(['SCRIPT', 'STYLE', 'OPTION', 'INPUT:hidden', 'MAP', 'AREA', 'SOURCE', 'TEMPLATE', 'DATALIST', 'WBR']),
+                    tagName: new Set([
+                        'HEAD',
+                        'TITLE',
+                        'META',
+                        'SCRIPT',
+                        'STYLE',
+                        'LINK',
+                        'OPTION',
+                        'INPUT:hidden',
+                        'MAP',
+                        'AREA',
+                        'SOURCE',
+                        'TEMPLATE',
+                        'DATALIST',
+                        'WBR'
+                    ]),
                     excluded: new Set(['BR'])
                 },
                 precision: {
@@ -4202,6 +4249,7 @@ var android = (function () {
                 const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
                 const cleared = $NodeUI.linearData(children, true).cleared;
                 const textIndent = node.blockDimension ? node.parseUnit(node.css('textIndent')) : 0;
+                const centerAligned = node.cssInitial('textAlign') === 'center';
                 let rowWidth = 0;
                 let previousRowLeft;
                 $util$4.partitionArray(children, item => item.float !== $const$3.CSS.RIGHT).forEach((seg, index) => {
@@ -4360,6 +4408,10 @@ var android = (function () {
                                         }
                                         previousRowLeft = undefined;
                                     }
+                                    if (centerAligned && items.length === 1 && !previous.blockStatic) {
+                                        previous.anchorDelete(alignParent);
+                                        previous.anchor('centerHorizontal', 'true');
+                                    }
                                     anchored = true;
                                 }
                                 else {
@@ -4437,8 +4489,9 @@ var android = (function () {
                     const items = rows[i];
                     let baseline;
                     if (items.length > 1) {
-                        let textBottom = getTextBottom(items);
-                        baseline = $NodeUI.baseline(textBottom ? items.filter(item => item !== textBottom) : items);
+                        const bottomAligned = getTextBottom(items);
+                        let textBottom = bottomAligned[0];
+                        baseline = $NodeUI.baseline(bottomAligned.length ? items.filter(item => !bottomAligned.includes(item)) : items);
                         if (baseline && textBottom) {
                             if (baseline !== textBottom && textBottom.bounds.height > baseline.bounds.height) {
                                 baseline.anchor($const$3.CSS.BOTTOM, textBottom.documentId);
@@ -4550,7 +4603,7 @@ var android = (function () {
                             }
                         }
                         else if (baselineAlign.length && baselineAlign.length < items.length) {
-                            textBottom = getTextBottom(items);
+                            textBottom = getTextBottom(items)[0];
                             if (textBottom) {
                                 for (const item of baselineAlign) {
                                     if (item.baseline && !item.multiline && textBottom.bounds.height > item.bounds.height) {
@@ -4619,7 +4672,7 @@ var android = (function () {
             const baseline = $NodeUI.baseline(children);
             const textBaseline = $NodeUI.baseline(children, true);
             const reverse = node.hasAlign(2048 /* RIGHT */);
-            const textBottom = getTextBottom(children);
+            const textBottom = getTextBottom(children)[0];
             const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
             let bias = 0;
             switch (node.cssAscend('textAlign', true)) {
@@ -5392,7 +5445,7 @@ var android = (function () {
             }
             return result;
         }
-        resourceStringToXml({ copyTo, archiveTo, callback } = {}) {
+        resourceStringToXml(options = {}) {
             const result = [];
             const data = [{ string: [] }];
             if (!STORED$1.strings.has('app_name')) {
@@ -5402,10 +5455,10 @@ var android = (function () {
                 data[0].string.push({ name, innerText });
             }
             result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', STRING_TMPL, data), this.userSettings.insertSpaces), this.directory.string, 'strings.xml');
-            this.checkFileAssets(result, copyTo, archiveTo, callback);
+            this.checkFileAssets(result, options);
             return result;
         }
-        resourceStringArrayToXml({ copyTo, archiveTo, callback } = {}) {
+        resourceStringArrayToXml(options = {}) {
             const result = [];
             if (STORED$1.arrays.size) {
                 const data = [{ 'string-array': [] }];
@@ -5416,11 +5469,11 @@ var android = (function () {
                     });
                 }
                 result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', STRINGARRAY_TMPL, data), this.userSettings.insertSpaces), this.directory.string, 'string_arrays.xml');
-                this.checkFileAssets(result, copyTo, archiveTo, callback);
+                this.checkFileAssets(result, options);
             }
             return result;
         }
-        resourceFontToXml({ copyTo, archiveTo, callback } = {}) {
+        resourceFontToXml(options = {}) {
             const result = [];
             if (STORED$1.fonts.size) {
                 const settings = this.userSettings;
@@ -5463,11 +5516,11 @@ var android = (function () {
                     }
                     result.push(output, pathname, `${name}.xml`);
                 }
-                this.checkFileAssets(result, copyTo, archiveTo, callback);
+                this.checkFileAssets(result, options);
             }
             return result;
         }
-        resourceColorToXml({ copyTo, archiveTo, callback } = {}) {
+        resourceColorToXml(options = {}) {
             const result = [];
             if (STORED$1.colors.size) {
                 const data = [{ color: [] }];
@@ -5475,11 +5528,11 @@ var android = (function () {
                     data[0].color.push({ name, innerText });
                 }
                 result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', COLOR_TMPL, data), this.userSettings.insertSpaces), this.directory.string, 'colors.xml');
-                this.checkFileAssets(result, copyTo, archiveTo, callback);
+                this.checkFileAssets(result, options);
             }
             return result;
         }
-        resourceStyleToXml({ copyTo, archiveTo, callback } = {}) {
+        resourceStyleToXml(options = {}) {
             const settings = this.userSettings;
             const result = [];
             if (STORED$1.styles.size) {
@@ -5525,10 +5578,10 @@ var android = (function () {
                     }
                 }
             }
-            this.checkFileAssets(result, copyTo, archiveTo, callback);
+            this.checkFileAssets(result, options);
             return result;
         }
-        resourceDimenToXml({ copyTo, archiveTo, callback } = {}) {
+        resourceDimenToXml(options = {}) {
             const result = [];
             if (STORED$1.dimens.size) {
                 const data = [{ dimen: [] }];
@@ -5539,11 +5592,11 @@ var android = (function () {
                     data[0].dimen.push({ name, innerText: convertPixels ? convertLength(value, dpi, false) : value });
                 }
                 result.push($xml$1.replaceTab($xml$1.applyTemplate('resources', DIMEN_TMPL, data)), this.directory.string, 'dimens.xml');
-                this.checkFileAssets(result, copyTo, archiveTo, callback);
+                this.checkFileAssets(result, options);
             }
             return result;
         }
-        resourceDrawableToXml({ copyTo, archiveTo, callback } = {}) {
+        resourceDrawableToXml(options = {}) {
             const result = [];
             if (STORED$1.drawables.size) {
                 const settings = this.userSettings;
@@ -5551,7 +5604,7 @@ var android = (function () {
                 for (const [name, value] of STORED$1.drawables.entries()) {
                     result.push($xml$1.replaceTab(replaceDrawableLength(value, settings.resolutionDPI, settings.convertPixels), settings.insertSpaces), directory, `${name}.xml`);
                 }
-                this.checkFileAssets(result, copyTo, archiveTo, callback);
+                this.checkFileAssets(result, options);
             }
             return result;
         }
@@ -5581,18 +5634,19 @@ var android = (function () {
             }
             return result;
         }
-        resourceAnimToXml({ copyTo, archiveTo, callback } = {}) {
+        resourceAnimToXml(options = {}) {
             const result = [];
             if (STORED$1.animators.size) {
                 const settings = this.userSettings;
                 for (const [name, value] of STORED$1.animators.entries()) {
                     result.push($xml$1.replaceTab(value, settings.insertSpaces), 'res/anim', `${name}.xml`);
                 }
-                this.checkFileAssets(result, copyTo, archiveTo, callback);
+                this.checkFileAssets(result, options);
             }
             return result;
         }
-        layoutAllToXml({ assets, copyTo, archiveTo, callback } = {}) {
+        layoutAllToXml(options = {}) {
+            const { assets, copyTo, archiveTo, callback } = options;
             const result = {};
             if (assets) {
                 const layouts = [];
@@ -5621,7 +5675,7 @@ var android = (function () {
             }
             return result.concat(getFileAssets(this.resourceStringToXml()), getFileAssets(this.resourceStringArrayToXml()), getFileAssets(this.resourceFontToXml()), getFileAssets(this.resourceColorToXml()), getFileAssets(this.resourceDimenToXml()), getFileAssets(this.resourceStyleToXml()), getFileAssets(this.resourceDrawableToXml()), getImageAssets(this.resourceDrawableImageToXml()), getFileAssets(this.resourceAnimToXml()));
         }
-        checkFileAssets(content, copyTo, archiveTo, callback) {
+        checkFileAssets(content, { copyTo, archiveTo, callback } = {}) {
             if (copyTo || archiveTo) {
                 const assets = getFileAssets(content);
                 if (copyTo) {
@@ -6924,7 +6978,7 @@ var android = (function () {
                 else if (layout.linearX || layout.singleRowAligned) {
                     layout.rowCount = 1;
                     layout.columnCount = layout.length;
-                    layout.setType(CONTAINER_NODE.RELATIVE, 8 /* HORIZONTAL */);
+                    layout.setType(CONTAINER_NODE.LINEAR, 8 /* HORIZONTAL */);
                 }
                 if (layout.containerType !== 0) {
                     return {
@@ -6991,13 +7045,14 @@ var android = (function () {
                 else {
                     const inside = node.css('listStylePosition') === 'inside';
                     let gravity = $const$7.CSS.RIGHT;
+                    let paddingRight = 0;
+                    let marginLeft = 0;
                     let top = 0;
                     let left = 0;
                     let image;
                     if (mainData.imageSrc !== '') {
                         if (mainData.imagePosition) {
-                            const position = $css$5.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize);
-                            ({ top, left } = position);
+                            ({ top, left } = $css$5.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize));
                             gravity = $const$7.CSS.LEFT;
                             if (node.marginLeft < 0) {
                                 resetPadding = node.marginLeft;
@@ -7010,12 +7065,12 @@ var android = (function () {
                             }
                             else {
                                 adjustPadding = false;
+                                marginLeft = node.marginLeft;
                             }
                             minWidth = 0;
                         }
                         image = application.resourceHandler.addImageSrc(mainData.imageSrc);
                     }
-                    let paddingRight = 0;
                     if (gravity === $const$7.CSS.LEFT) {
                         minWidth += node.paddingLeft - left;
                         node.modifyBox(256 /* PADDING_LEFT */);
@@ -7065,6 +7120,7 @@ var android = (function () {
                         ordinal.cssApply({
                             minWidth: minWidth > 0 ? $css$5.formatPX(minWidth) : '',
                             marginTop: node.marginTop !== 0 ? $css$5.formatPX(node.marginTop) : '',
+                            marginLeft: marginLeft > 0 ? $css$5.formatPX(marginLeft) : '',
                             paddingTop: node.paddingTop > 0 && node.getBox(32 /* PADDING_TOP */)[0] === 0 ? $css$5.formatPX(node.paddingTop) : '',
                             paddingRight: paddingRight > 0 && gravity === $const$7.CSS.RIGHT ? $css$5.formatPX(paddingRight) : '',
                             paddingLeft: paddingRight > 0 && gravity === $const$7.CSS.LEFT && (!image || mainData.imagePosition) ? $css$5.formatPX(paddingRight) : '',
@@ -7223,35 +7279,44 @@ var android = (function () {
             if (mainData) {
                 let requireWidth = false;
                 if (mainData.columnCount > 1) {
-                    requireWidth = node.data($c$7.EXT_NAME.TABLE, 'expand') === true;
+                    requireWidth = mainData.expand;
                     node.each((item) => {
+                        const data = item.data($c$7.EXT_NAME.TABLE, 'cellData');
                         if (item.css($const$9.CSS.WIDTH) === $const$9.CSS.PX_0) {
                             item.setLayoutWidth($const$9.CSS.PX_0);
                             item.android('layout_columnWeight', (item.element.colSpan || 1).toString());
                         }
                         else {
-                            const expand = item.data($c$7.EXT_NAME.TABLE, 'expand');
+                            const expand = data.expand;
                             if (expand !== undefined) {
                                 if (expand) {
-                                    const percent = $util$b.convertFloat(item.data($c$7.EXT_NAME.TABLE, 'percent')) / 100;
+                                    const percent = $util$b.convertFloat(data.percent) / 100;
                                     if (percent > 0) {
                                         item.setLayoutWidth($const$9.CSS.PX_0);
                                         item.android('layout_columnWeight', $util$b.trimEnd(percent.toPrecision(3), '0'));
-                                        requireWidth = !node.hasWidth;
+                                        if (!requireWidth) {
+                                            requireWidth = !item.hasWidth;
+                                        }
                                     }
                                 }
                                 else {
                                     item.android('layout_columnWeight', '0');
+                                    if (item.textElement) {
+                                        item.android('ellipsize', 'end');
+                                    }
                                 }
                             }
-                            if (item.data($c$7.EXT_NAME.TABLE, 'downsized') === true) {
-                                if (item.data($c$7.EXT_NAME.TABLE, 'exceed') === true) {
+                            if (data.downsized) {
+                                if (data.exceed) {
                                     item.setLayoutWidth($const$9.CSS.PX_0);
                                     item.android('layout_columnWeight', '0.01');
                                 }
                                 else {
                                     if (item.hasPX($const$9.CSS.WIDTH) && item.actualWidth < item.bounds.width) {
                                         item.setLayoutWidth($css$7.formatPX(item.bounds.width));
+                                    }
+                                    else if (item.textElement) {
+                                        item.android('ellipsize', 'end');
                                     }
                                 }
                             }
@@ -7297,22 +7362,25 @@ var android = (function () {
             return undefined;
         }
         processChild(node, parent) {
-            const rowSpan = $util$b.convertInt(node.data($c$7.EXT_NAME.TABLE, 'rowSpan'));
-            const columnSpan = $util$b.convertInt(node.data($c$7.EXT_NAME.TABLE, 'colSpan'));
-            const spaceSpan = $util$b.convertInt(node.data($c$7.EXT_NAME.TABLE, 'spaceSpan'));
-            if (rowSpan > 1) {
-                node.android('layout_rowSpan', rowSpan.toString());
-            }
-            if (columnSpan > 1) {
-                node.android('layout_columnSpan', columnSpan.toString());
-            }
-            node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill');
-            if (spaceSpan > 0) {
-                const controller = this.application.controllerHandler;
-                controller.addAfterOutsideTemplate(node.id, controller.renderSpace(STRING_ANDROID.WRAP_CONTENT, STRING_ANDROID.WRAP_CONTENT, spaceSpan), false);
-            }
-            if (parent.css('empty-cells') === 'hide' && node.naturalChildren.length === 0 && node.textContent === '') {
-                node.hide(true);
+            const data = node.data($c$7.EXT_NAME.TABLE, 'cellData');
+            if (data) {
+                const rowSpan = data.rowSpan;
+                const colSpan = data.colSpan;
+                const spaceSpan = data.spaceSpan || 0;
+                if (rowSpan > 1) {
+                    node.android('layout_rowSpan', rowSpan.toString());
+                }
+                if (colSpan > 1) {
+                    node.android('layout_columnSpan', colSpan.toString());
+                }
+                node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill');
+                if (spaceSpan > 0) {
+                    const controller = this.application.controllerHandler;
+                    controller.addAfterOutsideTemplate(node.id, controller.renderSpace(STRING_ANDROID.WRAP_CONTENT, STRING_ANDROID.WRAP_CONTENT, spaceSpan), false);
+                }
+                if (parent.css('empty-cells') === 'hide' && node.naturalChildren.length === 0 && node.textContent === '') {
+                    node.hide(true);
+                }
             }
             return undefined;
         }
@@ -8155,14 +8223,22 @@ var android = (function () {
     const { color: $color$2, constant: $const$h, css: $css$b, math: $math$5, regex: $regex$2, util: $util$e, xml: $xml$2 } = squared.lib;
     const $e$i = squared.base.lib.enumeration;
     function getBorderStyle(border, direction = -1, halfSize = false) {
-        const style = border.style;
+        const { style, color } = border;
         const width = roundFloat(border.width);
+        const result = getStrokeColor(Resource.addColor(color, true));
         switch (style) {
+            case 'solid':
+                break;
+            case 'dotted':
+            case 'dashed':
+                result.dashWidth = $css$b.formatPX(width * (style === 'dashed' ? 2 : 1));
+                result.dashGap = $css$b.formatPX(width);
+                break;
             case 'inset':
             case 'outset':
             case 'groove':
             case 'ridge':
-                const rgba = border.color.rgba;
+                const rgba = color.rgba;
                 let percent = 1;
                 if (width === 1) {
                     if (style === 'inset' || style === 'outset') {
@@ -8200,7 +8276,7 @@ var android = (function () {
                     }
                 }
                 if (percent !== 1) {
-                    const reduced = $color$2.reduceRGBA(rgba, percent, border.color.valueAsARGB);
+                    const reduced = $color$2.reduceRGBA(rgba, percent, color.valueAsRGBA);
                     if (reduced) {
                         const colorName = Resource.addColor(reduced, true);
                         if (colorName !== '') {
@@ -8208,34 +8284,28 @@ var android = (function () {
                         }
                     }
                 }
-                break;
-        }
-        const result = getStrokeColor(Resource.addColor(border.color, true));
-        switch (style) {
-            case 'dotted':
-            case 'dashed':
-                result.dashWidth = $css$b.formatPX(width * (style === 'dashed' ? 2 : 1));
-                result.dashGap = $css$b.formatPX(width);
-                break;
         }
         return result;
     }
     function getBorderStroke(border, direction = -1, hasInset = false, isInset = false) {
+        let result;
         if (border) {
             if (isAlternatingBorder(border.style)) {
                 const width = parseFloat(border.width);
+                result = getBorderStyle(border, direction, !isInset);
                 if (isInset) {
-                    return Object.assign({ width: $css$b.formatPX(Math.ceil(width / 2) * 2) }, getBorderStyle(border, direction));
+                    result.width = $css$b.formatPX(Math.ceil(width / 2) * 2);
                 }
                 else {
-                    return Object.assign({ width: hasInset ? $css$b.formatPX(Math.ceil(width / 2)) : $css$b.formatPX(roundFloat(border.width)) }, getBorderStyle(border, direction, true));
+                    result.width = hasInset ? $css$b.formatPX(Math.ceil(width / 2)) : $css$b.formatPX(roundFloat(border.width));
                 }
             }
             else {
-                return Object.assign({ width: $css$b.formatPX(roundFloat(border.width)) }, getBorderStyle(border));
+                result = getBorderStyle(border);
+                result.width = $css$b.formatPX(roundFloat(border.width));
             }
         }
-        return undefined;
+        return result;
     }
     function getBorderRadius(radius) {
         if (radius) {
@@ -8551,11 +8621,20 @@ var android = (function () {
                 if (drawable !== '') {
                     drawable = `@drawable/${drawable}`;
                     if (node.documentBody) {
-                        setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                        const backgroundRepeat = node.css('backgroundRepeat') !== 'no-repeat';
+                        if (node.blockStatic && (node.visibleStyle.backgroundImage && backgroundRepeat || !node.has($const$h.CSS.WIDTH) && !node.has('maxWidth') && (node.backgroundColor !== '' || node.css('backgroundRepeat') !== 'no-repeat' || node.css('backgroundSize') === 'cover'))) {
+                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                            return;
+                        }
+                        const parent = node.parent;
+                        if (!parent.visible) {
+                            const background = parent.android('background');
+                            if (background !== '') {
+                                setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, background);
+                            }
+                        }
                     }
-                    else {
-                        node.android('background', drawable, false);
-                    }
+                    node.android('background', drawable, false);
                 }
             }
             for (const node of application.processing.cache) {
@@ -8831,7 +8910,7 @@ var android = (function () {
             let overflowVertically = false;
             for (let i = lengthImage - 1; i >= 0; i--) {
                 const value = backgroundImage[i];
-                if (!$util$e.hasValue(value)) {
+                if (!value) {
                     continue;
                 }
                 const bounds = node.bounds;
@@ -8857,9 +8936,11 @@ var android = (function () {
                         position[directionB] = 0;
                     }
                     const src = `@drawable/${value}`;
+                    const repeat = backgroundRepeat[i];
+                    const repeating = repeat === 'repeat';
                     let gravityX = '';
                     let gravityY = '';
-                    if (backgroundRepeat[i] !== 'repeat-x') {
+                    if (!repeating && repeat !== 'repeat-x') {
                         switch (position.horizontal) {
                             case $const$h.CSS.PERCENT_0:
                             case $const$h.CSS.LEFT:
@@ -8877,12 +8958,7 @@ var android = (function () {
                                 gravityX = node.localizeString($const$h.CSS.RIGHT);
                                 break;
                             default:
-                                if (position.right !== 0) {
-                                    gravityX += node.localizeString($const$h.CSS.RIGHT);
-                                }
-                                else {
-                                    gravityX += node.localizeString($const$h.CSS.LEFT);
-                                }
+                                gravityX += node.localizeString(position.right !== 0 ? $const$h.CSS.RIGHT : $const$h.CSS.LEFT);
                                 break;
                         }
                     }
@@ -8896,9 +8972,8 @@ var android = (function () {
                             position.left = 0;
                         }
                         position.right = 0;
-                        gravityX = node.localizeString($const$h.CSS.LEFT);
                     }
-                    if (backgroundRepeat[i] !== 'repeat-y') {
+                    if (!repeating && repeat !== 'repeat-y') {
                         switch (position.vertical) {
                             case $const$h.CSS.PERCENT_0:
                             case $const$h.CSS.TOP:
@@ -8916,12 +8991,7 @@ var android = (function () {
                                 gravityY += $const$h.CSS.BOTTOM;
                                 break;
                             default:
-                                if (position.bottom !== 0) {
-                                    gravityY += $const$h.CSS.BOTTOM;
-                                }
-                                else {
-                                    gravityY += $const$h.CSS.TOP;
-                                }
+                                gravityY += position.bottom !== 0 ? $const$h.CSS.BOTTOM : $const$h.CSS.TOP;
                                 break;
                         }
                     }
@@ -8935,7 +9005,6 @@ var android = (function () {
                             position.top = 0;
                         }
                         position.bottom = 0;
-                        gravityY = $const$h.CSS.TOP;
                     }
                     let width = 0;
                     let height = 0;
@@ -8943,15 +9012,42 @@ var android = (function () {
                     let tileModeX = '';
                     let tileModeY = '';
                     let gravity;
-                    switch (backgroundRepeat[i]) {
+                    let gravityAlign;
+                    switch (repeat) {
                         case 'repeat':
                             tileMode = 'repeat';
                             break;
                         case 'repeat-x':
-                            tileModeX = 'repeat';
+                            if (!node.documentBody) {
+                                tileModeX = 'repeat';
+                                if (!node.blockStatic && dimension && dimension.width > bounds.width) {
+                                    width = dimension.width;
+                                }
+                            }
+                            else {
+                                if (dimension && dimension.width < bounds.width) {
+                                    tileModeX = 'repeat';
+                                }
+                                else {
+                                    gravityX = 'fill_horizontal';
+                                }
+                            }
                             break;
                         case 'repeat-y':
-                            tileModeY = 'repeat';
+                            if (!node.documentBody) {
+                                tileModeY = 'repeat';
+                                if (dimension && dimension.height > bounds.height) {
+                                    height = dimension.height;
+                                }
+                            }
+                            else {
+                                if (dimension && dimension.height < bounds.height) {
+                                    tileModeY = 'repeat';
+                                }
+                                else {
+                                    gravityY = 'fill_vertical';
+                                }
+                            }
                             break;
                         default:
                             tileMode = 'disabled';
@@ -8959,56 +9055,64 @@ var android = (function () {
                     }
                     if (dimension) {
                         if (gravityX !== '' && tileModeY === 'repeat' && dimension.width < bounds.width) {
+                            function resetX() {
+                                gravityAlign = gravityX;
+                                gravityX = '';
+                                tileModeY = 'disabled';
+                            }
                             switch (gravityX) {
                                 case $const$h.CSS.START:
                                 case $const$h.CSS.LEFT:
                                     position.left = node.borderLeftWidth;
                                     position.right = 0;
+                                    resetX();
                                     break;
                                 case $const$h.CSS.END:
                                 case $const$h.CSS.RIGHT:
                                     position.left = 0;
                                     position.right = node.borderRightWidth;
+                                    resetX();
                                     break;
                                 case STRING_ANDROID.CENTER_HORIZONTAL:
                                     position.left = 0;
                                     position.right = 0;
+                                    resetX();
                                     break;
                             }
-                            width = dimension.width;
                         }
                         if (gravityY !== '' && tileModeX === 'repeat' && dimension.height < bounds.height) {
+                            function resetY() {
+                                gravityAlign = (gravityAlign ? '|' : '') + gravityY;
+                                gravityY = '';
+                                tileModeX = 'disabled';
+                            }
                             switch (gravityY) {
                                 case $const$h.CSS.TOP:
                                     position.top = node.borderTopWidth;
                                     position.bottom = 0;
-                                    imageData.gravity = gravityY;
-                                    gravityY = '';
+                                    resetY();
                                     break;
                                 case $const$h.CSS.BOTTOM:
                                     position.top = 0;
                                     position.bottom = node.borderBottomWidth;
-                                    imageData.gravity = gravityY;
-                                    gravityY = '';
+                                    resetY();
                                     break;
                                 case STRING_ANDROID.CENTER_VERTICAL:
                                     position.top = 0;
                                     position.bottom = 0;
-                                    imageData.gravity = gravityY;
-                                    gravityY = '';
+                                    resetY();
                                     break;
                             }
-                            height = dimension.height;
                         }
                         if (!node.blockStatic || node.hasWidth) {
-                            if (dimension.width >= bounds.width) {
+                            if (dimension.width + position.left >= bounds.width) {
                                 tileModeX = '';
                                 if (tileMode === 'repeat') {
                                     tileModeY = 'repeat';
                                     tileMode = '';
                                 }
                             }
-                            if (dimension.height >= bounds.height) {
+                            if (dimension.height + position.top >= bounds.height) {
                                 tileModeY = '';
                                 if (tileMode === 'repeat') {
                                     tileModeX = 'repeat';
@@ -9073,8 +9177,8 @@ var android = (function () {
                     }
                     if (dimension) {
                         const backgroundClip = data.backgroundClip;
-                        const canResizeHorizontal = () => gravityX !== 'fill_horizontal' && tileMode !== 'repeat' && tileModeX !== 'repeat';
-                        const canResizeVertical = () => gravityY !== 'fill_vertical' && tileMode !== 'repeat' && tileModeY !== 'repeat';
+                        const canResizeHorizontal = () => gravityX !== 'fill_horizontal' && tileMode !== 'repeat' && tileModeX === '';
+                        const canResizeVertical = () => gravityY !== 'fill_vertical' && tileMode !== 'repeat' && tileModeY === '';
                         switch (backgroundSize[i]) {
                             case 'cover':
                                 if (dimension.width < bounds.width || dimension.height < bounds.height) {
@@ -9144,7 +9248,7 @@ var android = (function () {
                                 bottom = backgroundClip.bottom - backgroundClip.top;
                             }
                         }
-                        else if (width === 0 && height === 0 && dimension.width < node.bounds.width && dimension.height < node.bounds.height && canResizeHorizontal() && canResizeVertical()) {
+                        else if (width === 0 && height === 0 && dimension.width < bounds.width && dimension.height < bounds.height && canResizeHorizontal() && canResizeVertical()) {
                             width = dimension.width;
                             height = dimension.height;
                         }
@@ -9153,6 +9257,18 @@ var android = (function () {
                         }
                         if (height > 0) {
                             imageData.height = $css$b.formatPX(height);
+                        }
+                    }
+                    if (gravityAlign === undefined && tileMode !== 'repeat') {
+                        if (tileModeX !== '') {
+                            if (tileModeY === '' && gravityY !== '' && gravityY !== 'fill_vertical') {
+                                gravityAlign = gravityY;
+                                gravityY = '';
+                            }
+                        }
+                        else if (tileModeY !== '' && gravityX !== '' && gravityX !== 'fill_horizontal') {
+                            gravityAlign = gravityX;
+                            gravityX = '';
                         }
                     }
                     if (gravity === undefined) {
@@ -9171,19 +9287,16 @@ var android = (function () {
                                 gravity += (gravity !== '' ? '|' : '') + gravityY;
                             }
                         }
+                        if (gravityX === 'fill_horizontal') {
+                            gravityX = '';
+                        }
+                        if (gravityY === 'fill_vertical') {
+                            gravityY = '';
+                        }
                     }
-                    if (node.documentBody || tileMode === 'repeat' || tileModeX === 'repeat' || tileModeY === 'repeat') {
-                        if (node.documentBody) {
-                            if (gravity !== '') {
-                                if (!/fill(?!_)/.test(gravity)) {
-                                    gravity += '|fill';
-                                }
-                                imageData.gravity = gravity;
-                                gravity = '';
-                            }
-                            else {
-                                imageData.gravity = 'fill';
-                            }
+                    if (node.documentBody || tileMode === 'repeat' || tileModeX !== '' || tileModeY !== '' || gravityAlign) {
+                        if (gravityAlign) {
+                            imageData.gravity = gravityAlign;
                         }
                         imageData.bitmap = [{
                                 src,
@@ -9194,8 +9307,8 @@ var android = (function () {
                             }];
                     }
                     else {
-                        imageData.drawable = src;
                         imageData.gravity = gravity;
+                        imageData.drawable = src;
                         if (gravity === $const$h.CSS.CENTER || gravity.startsWith(STRING_ANDROID.CENTER_HORIZONTAL)) {
                             centerHorizontally = true;
                         }
@@ -9247,19 +9360,19 @@ var android = (function () {
                 }
                 if (imageData.drawable || imageData.bitmap || imageData.gradient) {
                     if (position.bottom !== 0) {
-                        imageData.bottom = $css$b.formatPX(getPercentOffset($const$h.CSS.BOTTOM, position, backgroundSize[i], node.bounds, dimension) + bottom);
+                        imageData.bottom = $css$b.formatPX(getPercentOffset($const$h.CSS.BOTTOM, position, backgroundSize[i], bounds, dimension) + bottom);
                         bottom = 0;
                     }
                     else if (position.top !== 0) {
-                        imageData.top = $css$b.formatPX(getPercentOffset($const$h.CSS.TOP, position, backgroundSize[i], node.bounds, dimension) + top);
+                        imageData.top = $css$b.formatPX(getPercentOffset($const$h.CSS.TOP, position, backgroundSize[i], bounds, dimension) + top);
                         top = 0;
                     }
                     if (position.right !== 0) {
-                        imageData.right = $css$b.formatPX(getPercentOffset($const$h.CSS.RIGHT, position, backgroundSize[i], node.bounds, dimension) + right);
+                        imageData.right = $css$b.formatPX(getPercentOffset($const$h.CSS.RIGHT, position, backgroundSize[i], bounds, dimension) + right);
                         right = 0;
                     }
                     else if (position.left !== 0) {
-                        imageData.left = $css$b.formatPX(getPercentOffset($const$h.CSS.LEFT, position, backgroundSize[i], node.bounds, dimension) + left);
+                        imageData.left = $css$b.formatPX(getPercentOffset($const$h.CSS.LEFT, position, backgroundSize[i], bounds, dimension) + left);
                         left = 0;
                     }
                     if (top !== 0) {
@@ -9277,7 +9390,7 @@ var android = (function () {
                     result.push(imageData);
                 }
             }
-            if (this.options.autoSizeBackgroundImage && overflowVertically && resizable && !node.is(CONTAINER_NODE.IMAGE) && !node.documentRoot && node.renderParent && !node.renderParent.tableElement) {
+            if (this.options.autoSizeBackgroundImage && overflowVertically && resizable && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE)) {
                 let imageWidth = 0;
                 let imageHeight = 0;
                 for (const image of imageDimensions) {
@@ -9301,14 +9414,15 @@ var android = (function () {
                         current = current.actualParent;
                     }
                 }
-                if ((!node.has($const$h.CSS.WIDTH, 2 /* LENGTH */, { map: 'initial', not: $const$h.CSS.PERCENT_100 }) && !(node.blockStatic && centerHorizontally) || !node.pageFlow) && (imageWidth === 0 || node.bounds.width < imageWidth)) {
-                    const width = node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0);
+                const bounds = node.bounds;
+                if ((!node.has($const$h.CSS.WIDTH, 2 /* LENGTH */, { map: 'initial', not: $const$h.CSS.PERCENT_100 }) && !(node.blockStatic && centerHorizontally) || !node.pageFlow) && (imageWidth === 0 || bounds.width < imageWidth) && node.renderParent && !node.renderParent.tableElement) {
+                    const width = bounds.width - (node.contentBox ? node.contentBoxWidth : 0);
                     if (width > 0) {
                         node.css($const$h.CSS.WIDTH, $css$b.formatPX(Math.ceil(width)), true);
                     }
                 }
-                if ((!node.has($const$h.CSS.HEIGHT, 2 /* LENGTH */, { map: 'initial', not: $const$h.CSS.PERCENT_100 }) || !node.pageFlow) && (imageHeight === 0 || node.bounds.height < imageHeight)) {
-                    const height = node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0);
+                if ((!node.has($const$h.CSS.HEIGHT, 2 /* LENGTH */, { map: 'initial', not: $const$h.CSS.PERCENT_100 }) || !node.pageFlow) && (imageHeight === 0 || bounds.height < imageHeight)) {
+                    const height = bounds.height - (node.contentBox ? node.contentBoxHeight : 0);
                     if (height > 0) {
                         node.css($const$h.CSS.HEIGHT, $css$b.formatPX(Math.ceil(height)), true);
                         if (node.marginBottom < 0) {
