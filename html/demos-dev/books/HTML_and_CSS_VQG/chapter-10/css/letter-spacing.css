@@ -1,0 +1,83 @@
+body {
+	background-color: #88b2d2;
+	font: 100% Geneva, Tahoma, Verdana, sans-serif;
+}
+
+h1,
+h2 {
+	/* Can't combine these into 
+	font shorthand unless you include 
+	font size with them in the shorthand. */
+	font-family: "Gill Sans", "Gill Sans MT", Calibri, sans-serif;
+	font-weight: normal;
+	letter-spacing: 7px; /* temporary for demo purposes */
+}
+
+h1 {
+	/* Can't combine these into
+	font shorthand unless you include 
+	font family with them in the shorthand. */
+	font-size: 2.1875em; /* 35px/16px */
+	line-height: 1.19318; /* I left this out of book just to keep example simple */
+}
+ 
+h2 {
+	background-color: #eaebef;
+	color: #7d717c;
+	font-size: 1.75em; /* 28px/16px */
+}
+
+em,
+a:link,
+.intro .subhead {
+	font-weight: bold;
+}
+
+.architect {
+	background: #fff;
+	padding: 1.5em 1.75em;
+}
+
+.intro {
+	background-color: #686a63;
+	color: #fff;
+	line-height: 1.45;
+	padding: 1px 1.875em .7em;
+}
+
+.intro .subhead {
+	font-size: 1.125em; /* 18px/16px */
+}
+
+.intro p {
+	font-size: 1.0625em; /* 17px/16px */
+}
+
+.project p {
+	/* Can't combine these into
+	font shorthand unless you include 
+	font family with them in the shorthand. */
+	font-size: .9375em; /* 15px/16px */
+	line-height: 1.65;
+}
+
+/* :::: Links :::: */
+a:link {
+	color: #e10000;
+}
+
+a:visited {
+	color: #b44f4f;
+}
+
+a:hover {
+	color: #f00;
+}
+
+.intro a {
+	color: #fdb09d;
+}
+
+.intro a:hover {
+	color: #fec4b6;
+}

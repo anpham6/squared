@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+    <title>Creating a Form</title>
+	<link rel="stylesheet" href="css/form.css" />
+	<script src="/node_modules/systemjs/dist/system.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../squared.js"></script>
+</head>
+<body>
+<main class="wrapper" role="main">
+	<h1>Create a New Account</h1>
+	
+	<form method="post">
+		<!-- START ACCOUNT FIELDS -->
+		 <fieldset>
+			<h2 class="hdr-account">Account</h2>
+
+			<div class="fields">
+				<p class="row">
+					<label for="first-name">First Name<span class="required">*</span>:</label>
+					<input type="text" id="first-name" name="first_name" class="field-large" required="required" aria-required="true" />
+				</p>
+				<p class="row">
+					<label for="last-name">Last Name:</label>
+					<input type="text" id="last-name" name="last_name" class="field-large" />
+				</p>
+				<p class="row">
+					<label for="email">Email:</label>
+					<input type="email" id="email" name="email" placeholder="yourname@example.com" class="field-large" />
+				</p>
+				<p class="row">
+					<label for="password">Password:</label>
+					<input type="password" id="password" name="password" />
+				</p>
+				<p class="row">
+					<label for="password2">Re-enter Password:</label>
+					<input type="password" id="password2" name="password2" />
+				</p>
+			</div>
+		</fieldset>
+		<!-- end account -->
+		
+		<!-- START ADDRESS FIELDS -->
+		<fieldset>
+			<h2 class="hdr-address">Address</h2>
+
+			<div class="fields">
+				<div class="row">
+					<label for="street-address">Street Address:</label>
+					<input type="text" id="street-address" name="street_address" class="field-large" />
+				</div>
+				<div class="row">
+					<label for="city">City:</label>
+					<input type="text" id="city" name="city" class="field-large" />
+				</div>
+				<div class="row">
+					<label for="state">State:</label>
+					<select id="state" name="state">
+						<option value="AL">Alabama</option>
+						<option value="AK">Alaska</option>
+						<option value="CA">California</option>
+						<option value="CO">Colorado</option>
+					</select>
+				</div>
+				<div class="row">
+					<label for="zip-code">ZIP Code:</label>
+					<input type="text" id="zip-code" name="zip_code" class="field-small" />
+				</div>
+			</div>
+		</fieldset>
+		<!-- end address -->
+		
+		<!-- START PUBLIC PROFILE FIELDS -->
+		<fieldset>
+			<h2 class="hdr-public-profile">Public Profile</h2>
+
+			<div class="fields">
+				<div class="row">
+					<label for="picture">Picture:</label>
+					<input type="file" id="picture" name="picture" />
+					<p class="instructions">Maximum size of 700k. JPG, GIF or PNG.</p>
+				</div>
+				<p class="row">
+					<label for="screen-name">Screen Name:</label>
+					<input type="text" id="screen-name" name="screen_name" class="field-medium" />
+				</p>
+				<div class="row">
+					<label for="website">Website URL:</label>
+					<input type="url" id="website" name="website" placeholder="http://www.example.com" class="field-large" />
+					<p class="instructions">Have a homepage or a blog? Put the address here, <br />beginning with <kbd>http://</kbd> or <kbd>https://</kbd>.</p>
+				</div>
+				<p class="row">
+					<label for="bio">Bio:</label>
+					<textarea id="bio" name="bio" cols="40" rows="5" class="field-large"></textarea>
+				</p>
+				<div class="row">
+					<fieldset class="radios">
+						<legend>Gender:</legend>
+						<p class="row">
+							<input type="radio" id="gender-male" name="gender" value="male" />
+							<label for="gender-male">Male</label>
+						</p>
+						<p class="row">
+							<input type="radio" id="gender-female" name="gender" value="female" />
+							<label for="gender-female">Female</label>
+						</p>
+					</fieldset>
+				</div>
+			</div>
+		</fieldset>
+		<!-- end public profile -->
+		
+		<!-- START EMAILS FIELDS -->
+		<fieldset>
+			<h2 class="hdr-emails">Emails</h2>
+			<div class="fields checkboxes">
+				<div class="row">
+					<input type="checkbox" id="email-ok-msg-from-users" name="email_signup[]" value="user-emails" />
+					<label for="email-ok-msg-from-users">It is okay to email me with messages from other users.</label>
+				</div>
+				<div class="row">
+					<input type="checkbox" id="email-ok-occasional-updates" name="email_signup[]" value="occasional-updates" />
+					<label for="email-ok-occasional-updates">It is okay to email me with occasional promotions about our other products.</label>
+				</div>    			
+			</div>
+		</fieldset>
+		<!-- end emails -->
+		
+		<input type="submit" value="Create Account" class="btn" />
+	</form>
+</main>
+</body>
+</html>

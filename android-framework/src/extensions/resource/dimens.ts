@@ -67,7 +67,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     }
 
     public afterFinalize() {
-        if (this.application.controllerHandler.hasAppendProcessing()) {
+        if (this.controller.hasAppendProcessing()) {
             for (const layout of this.application.layouts) {
                 let content = layout.content;
                 let match: RegExpExecArray | null;

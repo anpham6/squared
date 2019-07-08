@@ -40,7 +40,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     public processNode(node: T, parent: T) {
         const mainData: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const container = parent.layoutConstraint ? parent : (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, undefined, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
+            const container = parent.layoutConstraint ? parent : (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
             if (mainData.width) {
                 node.setLayoutWidth($const.CSS.PX_0);
                 container.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);

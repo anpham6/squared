@@ -1,4 +1,4 @@
-import { GridCellData, GridData } from '../../../@types/base/extension';
+import { GridCellData } from '../../../@types/base/extension';
 
 import Resource from '../resource';
 import View from '../view';
@@ -45,8 +45,8 @@ function transferData(parent: View, siblings: View[])  {
 export default class <T extends View> extends squared.base.extensions.Grid<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const mainData: GridData = node.data($c.EXT_NAME.GRID, $c.STRING_BASE.EXT_DATA);
-        if (mainData) {
+        const columnCount: number = node.data($c.EXT_NAME.GRID, 'columnCount');
+        if (columnCount) {
             const layout = new $LayoutUI(
                 parent,
                 node,
@@ -54,7 +54,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 $e.NODE_ALIGNMENT.AUTO_LAYOUT,
                 node.children as T[]
             );
-            layout.columnCount = mainData.columnCount;
+            layout.columnCount = columnCount;
             return {
                 output: this.application.renderNode(layout),
                 complete: true
@@ -64,13 +64,12 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const mainData: GridData = parent.data($c.EXT_NAME.GRID, $c.STRING_BASE.EXT_DATA);
         const cellData: GridCellData<T> = node.data($c.EXT_NAME.GRID, 'cellData');
-        if (mainData && cellData) {
+        if (cellData) {
             const siblings = cellData.siblings && cellData.siblings.slice(0);
             let layout: $LayoutUI<T> | undefined;
             if (siblings) {
-                const controller = <android.base.Controller<T>> this.application.controllerHandler;
+                const controller = <android.base.Controller<T>> this.controller;
                 siblings.unshift(node);
                 layout = controller.processLayoutHorizontal(
                     new $LayoutUI(
@@ -115,50 +114,56 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         return undefined;
     }
 
-    public postBaseLayout(node: T) {
+    public postConstraints(node: T) {
         if (node.css('borderCollapse') !== 'collapse') {
-            const mainData: GridData = node.data($c.EXT_NAME.GRID, $c.STRING_BASE.EXT_DATA);
-            if (mainData) {
+            const columnCount: number = node.data($c.EXT_NAME.GRID, 'columnCount');
+            if (columnCount) {
+                let paddingTop = 0;
+                let paddingRight = 0;
+                let paddingBottom = 0;
+                let paddingLeft = 0;
                 node.renderEach(item => {
                     const cellData: GridCellData<T> = item.data($c.EXT_NAME.GRID, 'cellData');
                     if (cellData) {
                         const parent = item.actualParent as T;
                         if (parent && !parent.visible) {
+                            const marginTop = parent.getBox($e.BOX_STANDARD.MARGIN_TOP)[0] !== 1 ? parent.marginTop : 0;
+                            const marginBottom = parent.getBox($e.BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1 ? parent.marginBottom : 0;
                             if (cellData.cellStart) {
-                                mainData.paddingTop = parent.paddingTop + parent.marginTop;
+                                paddingTop = marginTop + parent.paddingTop;
                             }
                             if (cellData.rowStart) {
-                                mainData.paddingLeft = Math.max(parent.marginLeft + parent.paddingLeft, mainData.paddingLeft);
+                                paddingLeft = Math.max(parent.marginLeft + parent.paddingLeft, paddingLeft);
                             }
                             if (cellData.rowEnd) {
-                                const heightBottom = parent.marginBottom + parent.paddingBottom + (cellData.cellEnd ? 0 : parent.marginTop + parent.paddingTop);
+                                const heightBottom = marginBottom + parent.paddingBottom + (cellData.cellEnd ? 0 : marginTop + parent.paddingTop);
                                 if (heightBottom > 0) {
                                     if (cellData.cellEnd) {
-                                        mainData.paddingBottom = heightBottom;
+                                        paddingBottom = heightBottom;
                                     }
                                     else {
-                                        const controller = <android.base.Controller<T>> this.application.controllerHandler;
+                                        const controller = <android.base.Controller<T>> this.controller;
                                         controller.addAfterOutsideTemplate(
                                             item.id,
                                             controller.renderSpace(
                                                 STRING_ANDROID.MATCH_PARENT,
                                                 `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_grid_space`, $css.formatPX(heightBottom))}`,
-                                                mainData.columnCount
+                                                columnCount
                                             ),
                                             false
                                         );
                                     }
                                 }
-                                mainData.paddingRight = Math.max(parent.marginRight + parent.paddingRight, mainData.paddingRight);
+                                paddingRight = Math.max(parent.marginRight + parent.paddingRight, paddingRight);
                             }
                         }
                     }
                 });
+                node.modifyBox($e.BOX_STANDARD.PADDING_TOP, paddingTop);
+                node.modifyBox($e.BOX_STANDARD.PADDING_RIGHT, paddingRight);
+                node.modifyBox($e.BOX_STANDARD.PADDING_BOTTOM, paddingBottom);
+                node.modifyBox($e.BOX_STANDARD.PADDING_LEFT, paddingLeft);
             }
-            node.modifyBox($e.BOX_STANDARD.PADDING_TOP, mainData.paddingTop);
-            node.modifyBox($e.BOX_STANDARD.PADDING_RIGHT, mainData.paddingRight);
-            node.modifyBox($e.BOX_STANDARD.PADDING_BOTTOM, mainData.paddingBottom);
-            node.modifyBox($e.BOX_STANDARD.PADDING_LEFT, mainData.paddingLeft);
         }
         if (!node.hasWidth) {
             let maxRight = Number.NEGATIVE_INFINITY;

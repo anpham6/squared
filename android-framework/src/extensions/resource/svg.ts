@@ -632,7 +632,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     public beforeParseDocument() {
         if ($SvgBuild) {
             $SvgBuild.setName();
-            this.application.controllerHandler.localSettings.svg.enabled = true;
+            this.controller.localSettings.svg.enabled = true;
         }
     }
 
@@ -680,7 +680,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             src = match[1];
         }
         if (src.toLowerCase().endsWith('.svg') || src.startsWith('data:image/svg+xml')) {
-            const fileAsset = this.application.resourceHandler.getRawData(src);
+            const fileAsset = this.resource.getRawData(src);
             if (fileAsset) {
                 parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;
                 parentElement.insertAdjacentHTML('beforeend', fileAsset.content);
@@ -717,7 +717,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         });
         svg.synchronize({
             keyTimeMode: this.SYNCHRONIZE_MODE,
-            framesPerSecond: this.application.controllerHandler.userSettings.framesPerSecond,
+            framesPerSecond: this.controller.userSettings.framesPerSecond,
             precision: this.options.floatPrecisionValue
         });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
@@ -1437,7 +1437,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     public afterParseDocument() {
-        this.application.controllerHandler.localSettings.svg.enabled = false;
+        this.controller.localSettings.svg.enabled = false;
     }
 
     private parseVectorData(group: SvgGroup, depth = 0) {
@@ -1508,7 +1508,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 else if ($SvgBuild.asImage(item)) {
                     if (!$SvgBuild.asPattern(group)) {
                         if (item.width === 0 || item.height === 0) {
-                            const image = this.application.resourceHandler.getImage(item.href);
+                            const image = this.resource.getImage(item.href);
                             if (image && image.width > 0 && image.height > 0) {
                                 item.width = image.width;
                                 item.height = image.height;

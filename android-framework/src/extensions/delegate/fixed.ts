@@ -76,7 +76,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {
         const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, mainData.children as T[]);
+            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[]);
             if (node.documentBody && (mainData.right || mainData.bottom)) {
                 container.cssApply({
                     width: $const.CSS.AUTO,

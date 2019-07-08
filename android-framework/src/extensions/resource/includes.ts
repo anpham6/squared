@@ -47,7 +47,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                 });
                 if (open && close) {
                     const application = this.application;
-                    const controller = application.controllerHandler;
+                    const controller = this.controller;
                     open.length = Math.min(open.length, close.length);
                     for (let i = open.length; i < close.length; i++) {
                         close.shift();

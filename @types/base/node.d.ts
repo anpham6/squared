@@ -12,6 +12,11 @@ export interface CachedValue<T> {
     svgElement?: boolean;
     inputElement?: boolean;
     naturalElement?: boolean;
+    textElement?: boolean;
+    tableElement?: boolean;
+    layoutElement?: boolean;
+    flexElement?: boolean;
+    gridElement?: boolean;
     pageFlow?: boolean;
     inlineFlow?: boolean;
     positionStatic?: boolean;

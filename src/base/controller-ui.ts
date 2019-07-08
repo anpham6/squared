@@ -16,7 +16,7 @@ const {
     xml: $xml
 } = squared.lib;
 
-const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
+const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && Math.abs(rect.left) >= rect.width || rect.top < 0 && Math.abs(rect.top) >= rect.height);
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
     public abstract readonly localSettings: ControllerUISettings;
@@ -162,14 +162,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 }
                 case 'BUTTON':
-                    setButtonStyle(setBorderStyle());
+                    setBorderStyle();
+                    setButtonStyle(false);
                     break;
                 case 'TEXTAREA':
                 case 'SELECT':
                     setBorderStyle();
                     break;
                 case 'BODY':
-                    if (styleMap.backgroundColor === undefined) {
+                    if (styleMap.backgroundColor === undefined || styleMap.backgroundColor === 'initial') {
                         styleMap.backgroundColor = 'rgb(255, 255, 255)';
                     }
                     break;

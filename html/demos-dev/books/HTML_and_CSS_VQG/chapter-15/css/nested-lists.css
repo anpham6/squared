@@ -1,0 +1,37 @@
+/* :::: Not shown in book - just a little font and spacing treatment :::: */
+body {
+	font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Verdana, Tahoma, sans-serif;
+}
+
+.hdg {
+	font-size: 1.25em;
+	margin-bottom: 0;
+}
+
+.hdg + ol { /* like h1 + ol */
+	margin-top: .5em;
+}
+
+
+/* :::: Code from book example :::: */
+/* Set markers */
+ol {
+	list-style-type: upper-roman;
+}
+
+ol ol {
+	list-style-type: upper-alpha;
+}
+
+ol ol ol {
+	list-style-type: decimal;
+}
+
+/* Set font sizing */
+ol li {
+	font-size: .875em;
+}
+
+li li {
+	font-size: 1em; /* prevent shrinking text! */
+}

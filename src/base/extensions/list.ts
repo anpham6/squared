@@ -79,15 +79,20 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
-        let i = 1;
+        const ordered = node.tagName === 'OL';
+        let i = ordered && (<HTMLOListElement> node.element).start || 1;
         node.each((item: T) => {
             const mainData = List.createDataAttribute();
             const value = item.css('listStyleType');
-            if (item.display === 'list-item' || value && value !== $const.CSS.NONE || hasSingleImage(item)) {
+            const listItem = item.display === 'list-item';
+            if (listItem || value && value !== $const.CSS.NONE || hasSingleImage(item)) {
                 if (item.has('listStyleImage')) {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
                 else {
+                    if (ordered && listItem && item.tagName === 'LI') {
+                        i = (<HTMLLIElement> item.element).value || i;
+                    }
                     let ordinal = $css.convertListStyle(value, i);
                     if (ordinal === '') {
                         switch (value) {
@@ -120,7 +125,9 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     }
                     mainData.ordinal = ordinal;
                 }
-                i++;
+                if (listItem) {
+                    i++;
+                }
             }
             item.data(EXT_NAME.LIST, STRING_BASE.EXT_DATA, mainData);
         });

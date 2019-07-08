@@ -25,7 +25,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         children?: T[])
     {
         super(children);
-        if (children) {
+        if (children && children.length) {
             this.init();
         }
     }

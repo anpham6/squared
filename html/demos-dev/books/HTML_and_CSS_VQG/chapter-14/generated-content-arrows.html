@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>With Generated Content</title>
+    <style>
+    /* NOTE: As you know, typically your CSS should be in an external style sheet. 
+    I embedded it here to simplify the example. */
+
+    body {
+        font: 100%/1.2 Georgia, "Times New Roman", serif;
+    }
+
+    p {
+        color: #363636;
+        line-height: 1.4;
+    }
+
+    a {
+        color: #1162A4;
+        text-decoration: none;
+    }
+
+    /* The generated content */
+    .more:after {
+        content: " »";
+    }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../squared.js"></script>
+</head>
+<body>
+
+<p>This area is one of the most tranquil spaces at the Villa. As I wandered around, enjoying shade provided by sycamore and laurel trees and serenaded by splashing water from two sculptural fountains, I couldn't help but think &hellip; <a href="victoria.html" class="more">Read More</a></p>
+
+</body>
+</html>

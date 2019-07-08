@@ -1,0 +1,41 @@
+body {
+    font-family: 'PTSans', sans-serif;
+    font-size: 100%;
+    line-height: 1.25;
+}
+
+em {
+    font-weight: bold;
+}
+
+/* Regular text */
+@font-face {
+    font-family: 'PTSans';
+    src: url('PTS55F-webfont.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Italic text */
+@font-face {
+    font-family: 'PTSans';
+    src: url('PTS56F-webfont.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* Bold text */
+@font-face {
+    font-family: 'PTSans';
+    src: url('PTS75F-webfont.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* Bold Italic text */
+@font-face {
+    font-family: 'PTSans';
+    src: url('PTS76F-webfont.ttf') format('truetype');
+    font-weight: bold;
+    font-style: italic;
+}

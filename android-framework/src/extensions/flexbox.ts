@@ -197,7 +197,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             if (mainData) {
                 const index = mainData.children.findIndex(item => item === node);
                 if (index !== -1) {
-                    const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
+                    const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent);
                     container.cssApply({
                         marginTop: $const.CSS.PX_0,
                         marginRight: $const.CSS.PX_0,
@@ -633,7 +633,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 case 'space-around':
                                     if (lengthB > 1) {
-                                        const controller = <android.base.Controller<T>> this.application.controllerHandler;
+                                        const controller = <android.base.Controller<T>> this.controller;
                                         segStart.constraint[orientation] = false;
                                         segEnd.constraint[orientation] = false;
                                         controller.addGuideline(segStart, node, orientation, true, false);

@@ -1,9 +1,9 @@
-import { GridCellData, GridData } from '../../../@types/base/extension';
+import { GridCellData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
-import { EXT_NAME, STRING_BASE } from '../lib/constant';
+import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const {
@@ -24,16 +24,6 @@ function getRowIndex(columns: NodeUI[][], target: NodeUI) {
 }
 
 export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataAttribute(columnCount = 0): GridData {
-        return {
-            paddingTop: 0,
-            paddingRight: 0,
-            paddingBottom: 0,
-            paddingLeft: 0,
-            columnCount
-        };
-    }
-
     public static createDataCellAttribute<T extends NodeUI>(): GridCellData<T> {
         return {
             rowSpan: 0,
@@ -85,11 +75,13 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         const nextMapX: ObjectIndex<T[]> = {};
         for (const row of node) {
             for (const column of row) {
-                const x = Math.floor(column.linear.left);
-                if (nextMapX[x] === undefined) {
-                    nextMapX[x] = [];
+                if ((column as T).visible) {
+                    const x = Math.floor(column.linear.left);
+                    if (nextMapX[x] === undefined) {
+                        nextMapX[x] = [];
+                    }
+                    nextMapX[x].push(column as T);
                 }
-                nextMapX[x].push(column as T);
             }
         }
         const nextCoordsX = Object.keys(nextMapX);
@@ -208,7 +200,6 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         }
         const columnCount = columns.length;
         if (columnCount > 1 && columns[0].length === node.length) {
-            const mainData = Grid.createDataAttribute(columnCount);
             const children: T[][] = [];
             const assigned = new Set<T>();
             for (let i = 0, count = 0; i < columnCount; i++) {
@@ -307,7 +298,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (siblings.length) {
                             cellData.block = true;
-                            cellData.columnSpan = mainData.columnCount;
+                            cellData.columnSpan = columnCount;
                             cellData.siblings = siblings;
                             group.length = 1;
                         }
@@ -326,7 +317,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 node.modifyBox(BOX_STANDARD.PADDING_BOTTOM);
                 node.modifyBox(BOX_STANDARD.PADDING_LEFT);
             }
-            node.data(EXT_NAME.GRID, STRING_BASE.EXT_DATA, mainData);
+            node.data(EXT_NAME.GRID, 'columnCount', columnCount);
         }
         return undefined;
     }

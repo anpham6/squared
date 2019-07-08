@@ -37,6 +37,7 @@ export enum CONTAINER_NODE {
     SVG,
     IMAGE,
     BUTTON,
+    PROGRESS,
     INLINE,
     LINE,
     SPACE,

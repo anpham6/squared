@@ -78,7 +78,8 @@ export const API_ANDROID: Customizations = {
             'layout_marginHorizontal': false,
             'layout_marginVertical': false,
             'paddingHorizontal': false,
-            'paddingVertical': false
+            'paddingVertical': false,
+            'tooltipText': false
         },
         assign: {}
     },

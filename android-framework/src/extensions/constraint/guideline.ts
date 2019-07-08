@@ -40,7 +40,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
     }
 
     public postBaseLayout(node: T) {
-        const controller = <android.base.Controller<T>> this.application.controllerHandler;
+        const controller = <android.base.Controller<T>> this.controller;
         const circlePosition = this.options.circlePosition;
         let anchor!: T;
         node.each((item: T) => {

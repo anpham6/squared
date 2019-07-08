@@ -1,0 +1,36 @@
+body {
+	font-family: sans-serif;
+}
+
+.hdg {
+	font-size: 1.5em;
+	margin-bottom: 0;
+}
+
+.hdg + ul {
+	margin-top: .4em;
+}
+
+ul {
+	/* turn off the default markers */
+	list-style: none;
+
+	/* remove indentation of list items */
+	margin-left: 0;
+	padding-left: 0;
+}
+
+li {
+	/* show image slightly down from top of item. */
+	/*	Note that the url to your image may be different depending on where you 
+		store your image relative to the location of your CSS file. Of course, 
+		your filename will probably be different than checkmark.png, too.
+	*/
+	background: url(../img/checkmark.png) no-repeat 0 .1em;
+	
+	/* make line tall enough to show full checkmark */
+	line-height: 1.8;
+
+	/* bump the text over to make room for the checkmark */
+	padding-left: 1.75em;
+}

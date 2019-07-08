@@ -50,7 +50,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             }
         }
         if (children.length > 1) {
-            const container = this.application.controllerHandler.createNodeGroup(node, children, parent, true);
+            const container = this.controller.createNodeGroup(node, children, parent, true);
             const linearX = $NodeUI.linearData(children).linearX;
             if (linearX) {
                 container.addAlign($e.NODE_ALIGNMENT.HORIZONTAL | $e.NODE_ALIGNMENT.SEGMENTED);

@@ -192,7 +192,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
             case NAVIGATION.ITEM:
                 parseDataSet(REGEXP_ITEM, element, options);
                 if (!options.android.icon) {
-                    const resource = <android.base.Resource<T>> this.application.resourceHandler;
+                    const resource = <android.base.Resource<T>> this.resource;
                     let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);
                     if (src !== '') {
                         options.android.icon = `@drawable/${src}`;

@@ -19,16 +19,14 @@ const {
 
 const ASSETS = Resource.ASSETS;
 const CACHE_PATTERN: ObjectMap<RegExp> = {
+    MEDIATEXT: /all|screen/,
     DATAURI: new RegExp(`(url\\("(${$regex.STRING.DATAURI})"\\)),?\\s*`, 'g')
 };
 let NodeConstructor!: Constructor<Node>;
 
 function parseConditionText(rule: string, value: string) {
     const match = new RegExp(`^@${rule}([^{]+)`).exec(value);
-    if (match) {
-        value = match[1].trim();
-    }
-    return value;
+    return match ? match[1].trim() : value;
 }
 
 async function getImageSvgAsync(value: string)  {
@@ -484,7 +482,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (let i = 0; i < length; i++) {
             const styleSheet = styleSheets[i];
             const mediaText = styleSheet.media.mediaText;
-            if (mediaText === '' || /(all|screen)/.test(mediaText)) {
+            if (mediaText === '' || CACHE_PATTERN.MEDIATEXT.test(mediaText)) {
                 applyStyleSheet(<CSSStyleSheet> styleSheet);
             }
         }
@@ -500,9 +498,9 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected applyStyleRule(item: CSSStyleRule) {
         const resource = this.resourceHandler;
         const sessionId = this.processing.sessionId;
+        const styleSheetHref = item.parentStyleSheet && item.parentStyleSheet.href || undefined;
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
-                const styleSheetHref = item.parentStyleSheet && item.parentStyleSheet.href || undefined;
                 const parseImageUrl = (styleMap: StringMap, attr: string) => {
                     const value = styleMap[attr];
                     if (value && value !== 'initial') {
@@ -555,11 +553,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                             for (const attr in styleMap) {
                                 const value = styleMap[attr];
                                 if (specificityData[attr] === undefined || specificity >= specificityData[attr]) {
+                                    specificityData[attr] = specificity;
                                     if (value === 'initial' && cssStyle.background !== '' && attr.startsWith('background')) {
                                         continue;
                                     }
                                     styleData[attr] = value;
-                                    specificityData[attr] = specificity;
                                 }
                             }
                         }
@@ -584,7 +582,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     CACHE_PATTERN.FONT_SRC = /\s*src:\s*([^;]+);/;
                     CACHE_PATTERN.FONT_STYLE = /\s*font-style:\s*(\w+)\s*;/;
                     CACHE_PATTERN.FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-                    CACHE_PATTERN.URL = /\s*(url|local)\(['"]([^'")]+)['"]\)\s*format\(['"](\w+)['"]\)\s*/;
+                    CACHE_PATTERN.URL = /\s*(url|local)\((?:['"]([^'")]+)['"]|([^)]+))\)\s*format\(['"]?(\w+)['"]?\)\s*/;
                 }
                 const match = CACHE_PATTERN.FONT_FACE.exec(item.cssText);
                 if (match) {
@@ -601,11 +599,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                             if (urlMatch) {
                                 let srcUrl: string | undefined;
                                 let srcLocal: string | undefined;
+                                const url = (urlMatch[2] || urlMatch[3]).trim();
                                 if (urlMatch[1] === 'url') {
-                                    srcUrl = $util.resolvePath(urlMatch[2].trim());
+                                    srcUrl = $util.resolvePath(url, styleSheetHref);
                                 }
                                 else {
-                                    srcLocal = urlMatch[2].trim();
+                                    srcLocal = url;
                                 }
                                 resource.addFont({
                                     fontFamily,
@@ -613,7 +612,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     fontStyle,
                                     srcUrl,
                                     srcLocal,
-                                    srcFormat: urlMatch[3].toLowerCase().trim()
+                                    srcFormat: urlMatch[4].toLowerCase().trim()
                                 });
                             }
                         }

@@ -430,7 +430,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
     return undefined;
 }
 
-export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number) {
+export function getBackgroundPosition(value: string, dimension: Dimension, imageDimension?: Dimension, fontSize?: number) {
     const orientation = value === CSS.CENTER ? [CSS.CENTER, CSS.CENTER] : value.split(' ');
     const result: BoxRectPosition = {
         static: true,
@@ -446,12 +446,19 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
         vertical: CSS.TOP,
         orientation
     };
+    function setImageOffset(position: string, horizontal: boolean, direction: string, directionAsPercent: string) {
+        if (imageDimension && /^[a-z]+|-?[\d.]+%$/.test(position)) {
+            const offset = Math.min(result[directionAsPercent], 1) * (horizontal ? imageDimension.width : imageDimension.height);
+            result[direction] -= offset;
+        }
+    }
     if (orientation.length === 2) {
         for (let i = 0; i < 2; i++) {
             const position = orientation[i];
+            const horizontal = i === 0;
             let direction: string;
             let offsetParent: number;
-            if (i === 0) {
+            if (horizontal) {
                 direction = CSS.LEFT;
                 offsetParent = dimension.width;
                 result.horizontal = position;
@@ -482,6 +489,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     result[directionAsPercent] = convertPercent(position, offsetParent, fontSize);
                     break;
             }
+            setImageOffset(position, horizontal, direction, directionAsPercent);
         }
     }
     else if (orientation.length === 4) {
@@ -499,8 +507,9 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                             result.horizontal = CSS.RIGHT;
                         case CSS.RIGHT:
                             result.right = location;
-                            result.left = dimension.width - location;
                             result.rightAsPercent = locationAsPercent;
+                            setImageOffset(position, true, 'right', 'rightAsPercent');
+                            result.left = dimension.width - result.right;
                             result.leftAsPercent = 1 - locationAsPercent;
                             break;
                         case CSS.START:
@@ -510,6 +519,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                             result.leftAsPercent = locationAsPercent;
                             break;
                     }
+                    setImageOffset(position, true, 'left', 'leftAsPercent');
                     break;
                 }
                 case 2:
@@ -520,14 +530,16 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     const locationAsPercent = convertPercent(position, dimension.height, fontSize);
                     if (result.vertical === CSS.BOTTOM) {
                         result.bottom = location;
-                        result.top = dimension.height - location;
                         result.bottomAsPercent = locationAsPercent;
+                        setImageOffset(position, false, 'bottom', 'bottomAsPercent');
+                        result.top = dimension.height - result.bottom;
                         result.topAsPercent = 1 - locationAsPercent;
                     }
                     else {
                         result.top = location;
                         result.topAsPercent = locationAsPercent;
                     }
+                    setImageOffset(position, false, 'top', 'topAsPercent');
                     break;
                 }
             }

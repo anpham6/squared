@@ -1,0 +1,15 @@
+body {
+	background: red;
+	padding: 20px;
+}
+
+img {
+	display: block;
+}
+
+.box {
+	background: #000; /* black */
+	opacity: .5; /* Makes it half (50%) as opaque as the default */
+	padding: 20px;
+	width: 420px;
+}

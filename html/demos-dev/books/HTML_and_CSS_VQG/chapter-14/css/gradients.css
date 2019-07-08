@@ -1,0 +1,159 @@
+body {
+	padding: 1.25em; /* 20px/16px, so 20px on each side */
+	font-size: 100%;
+}
+
+div {
+	float: left;
+	height: 150px;
+	margin: 10px;
+	width: 150px;
+}
+
+p {
+	color: #fff;
+	font: bold 1.25em/1 sans-serif; /* 20px/16px */
+	padding-top: 1.65em; /* 33px/16px */
+	text-align: center;
+}
+
+/*
+NOTE: The gradients below are in the standard CSS3 syntax. The browsers that 
+support them are Chrome 26+, Firefox 16+, IE 10+, and Opera 12.10+. 
+
+See gradients-with-browser-prefixes.css for the same gradient effects, 
+but with the vendor prefix code also included so the gradients will work 
+on several older browsers.
+
+A background with a "fallback" comment is the color that will show 
+in browsers that don't support the gradient syntax. You can use a background
+image as a fallback as well (either on its own or in combination with a color).
+For example, background: red url(gradient-image.jpg) no-repeat;.
+*/
+
+
+/* LINEAR GRADIENTS
+------------------------------------------ */
+/* :::: Vertical :::: */
+.vertical-down {
+	background: silver; /* fallback */
+
+	/* default gradient, so you don't need to specify "to bottom" before the colors */
+	background: linear-gradient(silver, black);
+}
+
+.vertical-up {
+	background: silver;
+	background: linear-gradient(to top, silver, black);
+}
+
+/* :::: Horizontal :::: */
+.horizontal-rt {
+	background: silver; /* fallback */
+	background: linear-gradient(to right, silver, black);
+}
+
+.horizontal-lt {
+	background: silver; /* fallback */
+	background: linear-gradient(to left, silver, black);
+}
+
+/* :::: Diagonal Angles :::: */
+/* Note: The figures on page 377 show aqua as the fallback color, but I've switched it
+to navy below because the white text will be easier to read on a navy background. */
+
+.angle-bot-rt {
+	background: navy; /* fallback */
+	background: linear-gradient(to bottom right, aqua, navy);
+}
+
+.angle-bot-lt {
+	background: navy; /* fallback */
+	background: linear-gradient(to bottom left, aqua, navy);
+}
+
+.angle-top-rt {
+	background: navy; /* fallback */
+	background: linear-gradient(to top right, aqua, navy);
+}
+
+.angle-top-lt {
+	background: navy; /* fallback */
+	background: linear-gradient(to top left, aqua, navy);
+}
+
+/* :::: Angles via Degrees :::: */
+.angle-120deg {
+	background: navy; /* fallback */
+	background: linear-gradient(120deg, aqua, navy);
+}
+
+.angle-290deg {
+	background: navy; /* fallback */
+	background: linear-gradient(290deg, aqua, navy);
+}
+
+
+/* RADIAL GRADIENTS
+------------------------------------------ */
+/* :::: Radial :::: */
+.radial p {
+	text-shadow: 0 0 3px #000;
+}
+
+.radial-center {
+	background: red; /* fallback */
+	background: radial-gradient(yellow, red); /* default */
+}
+
+.radial-top {
+	background: red; /* fallback */
+	background: radial-gradient(at top, yellow, red);
+}
+
+.radial-size-1 {
+	background: red; /* fallback */
+	background: radial-gradient(100px 50px, yellow, red);
+}
+
+.radial-size-2 {
+	background: red; /* fallback */
+	background: radial-gradient(70% 90% at bottom left, yellow, red);
+}
+
+.radial-various-1 {
+	background: red; /* fallback */
+	background: radial-gradient(closest-side at 70px 60px, yellow, lime, red);
+}
+
+.radial-various-2 {
+	background: red; /* fallback */
+	background: radial-gradient(30px 30px at 65% 70%, yellow, lime, red);
+}
+
+
+/* LINEAR GRADIENTS WITH COLOR STOPS
+------------------------------------------ */
+.color-stops div {
+	margin-bottom: 30px;
+}
+
+.color-stops p {
+	padding-top: 25px;
+	text-shadow: 0 0 3px #000;
+}
+
+.color-stops-2 p {
+	font-size: 18px;
+	line-height: 1.05;
+}
+
+.color-stops-1 {
+	background: green; /* fallback */
+	background: linear-gradient(yellow 10%, green);
+}
+
+.color-stops-2 {
+	background: green; /* fallback */
+	background: linear-gradient(to top right, yellow, green 70%, blue);
+}

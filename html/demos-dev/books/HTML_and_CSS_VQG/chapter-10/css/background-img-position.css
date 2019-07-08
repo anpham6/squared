@@ -1,0 +1,13 @@
+body {
+	background: #004 url(../img/ufo.png) no-repeat 170px 20px;
+	/* The shorthand above is the same as writing these individually:
+		background-color: #004;
+		background-image: url(../img/ufo.png);
+		background-repeat: no-repeat;
+		background-position: 170px 20px;
+	*/
+
+	color: greenyellow;
+	font: 1.1em sans-serif;
+	padding: .25em 0 1em 1em;
+}

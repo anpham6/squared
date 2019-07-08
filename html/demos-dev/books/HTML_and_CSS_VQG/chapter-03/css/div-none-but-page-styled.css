@@ -1,0 +1,170 @@
+body {
+	background: #fffff6;
+	color: #000;
+	font: 100% sans-serif;
+	margin: 0;
+	padding: 0;
+}
+
+article,
+aside,
+footer,
+header,
+main,
+nav, 
+section {
+	display: block;
+}
+
+main,
+aside {
+	float: left;
+}
+
+li,
+p {
+	font-family: georgia;
+}
+
+p {
+	font-size: 1.1em;
+}
+
+/* Links */
+a:link {
+	color: #A23729;
+	font-weight: bold;
+}
+
+a:visited {
+	color: #D1695C;
+	text-decoration: none;
+}
+
+a:hover {
+	color: #69180D;
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+
+/* TABLE OF CONTENTS
+---------------------------------- */
+.toc {
+	background: #DFDFDB;
+	border-bottom: 3px solid #BFBFBA;
+	margin-top: 0;
+	overflow: hidden;
+	padding: 16px 0 14px 42px;
+}
+
+.toc li {
+	float: left;
+	margin-right: 4em;
+}
+
+.toc a {
+	font-family: 'Roboto Slab', serif;
+	color: #450800;
+	font-size: .9375em;
+}
+
+
+/* MAIN PAGE CONTENT
+---------------------------------- */
+main {
+	padding: 0 15px 30px 35px;
+	width: 518px;
+}
+
+h1, 
+h2 {
+	color: #000;
+	font-family: 'Roboto Slab', serif;
+	font-weight: 400;
+	font-size: 1.75em;
+}
+
+h1 {
+	text-transform: uppercase;
+}
+
+h2 {
+	font-size: 1.5em;
+	font-variant: small-caps;
+}
+
+p {
+	font-size: 1.1em;
+	line-height: 1.6;
+	text-align: justify;
+}
+
+em {
+	font-weight: bold;
+}
+
+article p img {
+	border: 2px solid #333;
+	float: left;
+	margin-right: 20px;
+}
+
+
+/* SIDEBAR
+----------------------------------- */
+aside {
+	background: #DFDFDB;
+	border: 3px solid #BFBFBA;
+	margin-left: 18px;
+	margin-top: 89px;
+	padding: 0 15px 3px;
+	width: 201px;
+}
+
+aside h1 {
+	color: #444;
+	font-size: 1.1em;
+	margin-top: 7px;
+	padding-top: 8px;
+	text-transform: none;
+}
+
+aside ul {
+	margin-left: 0;
+	padding-left: 20px;
+}
+
+aside cite {
+	font-style: normal;
+}
+
+aside p,
+aside li {
+	color: #444;
+	font-size: .875em;
+}
+
+aside p {
+	line-height: 1.4;
+}
+
+aside li {
+	margin-bottom: .3em;
+}
+
+
+/* FOOTER
+---------------------------------- */
+footer {
+	background: #DFDFDB;
+	clear: both;
+	color: #444;
+	border-top: 2px solid #BFBFBA;
+	padding: 5px 10px 10px 35px;
+}
+
+footer p {
+	font-size: 1em;
+	margin: 0;
+}

@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Border Styles</title>
+	<style>
+	/* Demonstration of the various border styles available to you. 
+	CSS is embedded instead of in an external style sheet just to keep the demo simple. */
+
+	body {
+		font-family: sans-serif;
+		padding: 0 10px 0;
+	}
+
+	p {
+		border: 10px solid red;
+		padding: 15px;
+	}
+
+	p.ddd {
+		border-width: 4px;
+		border-style: dotted dashed double;
+	}
+
+	p.ridge {
+		border-style: ridge;
+		border-color: orange;
+	}
+
+	p.groove {
+		border-style: groove;
+		border-color: purple;
+	}
+
+	p.inset {
+		border-style: inset;
+		border-color: blue;
+	}
+
+	p.outset {
+		border-style: outset;
+		border-color: green;
+	}
+	</style>
+	<script src="/node_modules/systemjs/dist/system.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../squared.js"></script>
+</head>
+<body>
+	<p class="ddd">A 5px border from top, right, bottom, left: <br />dotted, dashed, double, solid.</p>
+	<p class="ridge">Here's a paragraph with a 10px ridge border.</p>
+	<p class="groove">Here's one with a 10px groove border.</p>
+	<p class="inset">And here's one with a 10px inset border.</p>
+	<p class="outset">And here's one with a 10px outset border.</p>
+</body>
+</html>

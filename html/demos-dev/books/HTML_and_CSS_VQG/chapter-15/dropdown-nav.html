@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Dropdown Navigation with Nested Lists</title>
+	<link rel="stylesheet" href="css/dropdown-nav.css" />
+	<script src="/node_modules/systemjs/dist/system.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../squared.js"></script>
+</head>
+<body>
+
+<header role="banner">
+	<!-- START NAVIGATION -->
+	<nav role="navigation">
+		<ul class="nav">
+			<li><a href="/">Home</a></li>
+			<li><a href="/products/">Products</a>
+				<ul class="submenu">
+					<li><a href="/products/phones.html">Phones</a></li>
+					<li><a href="/products/accessories.html">Accessories</a></li>
+				</ul>
+			</li>
+			<li><a href="/support/">Support</a>
+				<ul class="submenu">
+					<li><a href="/support/forum/">Community Forum</a></li>
+					<li><a href="/support/contact-us.html">Contact Us</a></li>
+					<li><a href="/support/how-to-guides.html">How-to Guides</a></li>				
+				</ul>
+			</li>
+			<li><a href="/about-us/">About Us</a></li>
+		</ul><!-- end ul with class="nav" -->
+	</nav>
+	<!-- end navigation -->
+</header>
+
+<main role="main">
+	<ol class="breadcrumb">
+		<li><a href="/">Home</a></li>
+		<li><a href="/products/">Products</a></li>
+		<li><a href="/products/phones.html">Phones</a></li>
+		<li>The Fone 7.0<sup>TM</sup></li>		
+	</ol>
+
+	<h1>The Fone 7.0 <sup>TM</sup></h1>
+	<p class="intro">We're proud to introduce our latest innovative device.</p> 
+
+	<p>You can make calls (it <em>is</em> a phone, after all), listen to music, record music, take photos, shoot video, edit songs, edit photos, edit video, chat with friends, browse the web, run apps, play games, crunch numbers, flip channels, open your garage door, bake a cake, read minds, levitate, see through walls, and more. It's not a smartphone. It's a SuperPhone.</p>
+
+	<p>In fact, the only thing it can't do is let Clark Kent crawl inside to don his cape.</p>
+
+	<p>We're saving that for 8.0.</p>
+</main>
+
+</body>
+</html>

@@ -52,10 +52,6 @@ export interface FlexboxData<T> {
     children: T[];
 }
 
-export interface GridData extends BoxPadding {
-    columnCount: number;
-}
-
 export interface GridCellData<T> {
     rowSpan: number;
     columnSpan: number;

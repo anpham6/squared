@@ -1,0 +1,61 @@
+body {
+	font: 100%/1.2 sans-serif;
+	padding: 5px 0 0 20px;
+}
+
+a {
+    color: #1162a4;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.documents {
+	list-style: none; /* turn off the bullets since we'll show icon instead */
+	margin-left: 0;
+	margin-top: 0;
+	padding-left: 0;
+}
+
+.documents li {
+	margin-top: .45em;
+}
+
+/* Each link in the HTML has this class */
+.icon {
+	display: inline-block;
+	line-height: 1.1;
+	font-size: .875em;
+	min-height: 16px; /* set to height of icon so it isn't cut off at all */
+	padding-left: 23px;
+	padding-top: 2px;
+
+	/* allows positioning the icon absolutely 
+	relative to elements with class="icon" in the HTML */
+	position: relative;
+}
+
+.icon:before {
+	background-image: url(../img/sprite.png);
+	content: " ";
+	display: block;
+	height: 16px; /* icon height */
+	left: 0; /* default. change this if want the icon to appear in different spot */
+	position: absolute;
+	width: 16px; /* icon width */
+	top: 0; /* default. change this if want the icon to appear in different spot */
+}
+
+/* Shift position of sprite image for any 
+document filename that ends with .xls */
+a[href$=".xls"]:before {
+	background-position: -17px 0;
+}
+
+/* Shift position of sprite image for any 
+document filename that ends with .docx */
+a[href$=".docx"]:before {
+	background-position: -34px 0;
+}

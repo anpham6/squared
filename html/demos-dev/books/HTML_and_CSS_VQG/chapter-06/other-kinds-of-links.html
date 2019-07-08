@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Creating Other Types of Links</title>
+	<style>
+	/* 
+      Normally I would put these rules in an external style sheet. 
+      I've placed them here to simplify the example.
+  	*/
+ 
+	h2 {
+		font-size: 1.2em;
+		margin-bottom: 0;
+	}
+
+	h2 + p {
+		margin-top: .5em;
+	}
+
+	.note {
+		background-color: #ddd;
+		padding: .25em 1em;
+	}
+	</style>
+	<script src="/node_modules/systemjs/dist/system.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../squared.js"></script>
+</head>
+<body>
+
+<article>
+	<h1>Other Types of Links</h1>
+	
+	<p>There are lots of different kinds of links that you can create on a webpage. Following are some examples.</p>
+	
+	<h2>Images</h2>
+	<p>You can link directly to <a href="img/blueflax.jpg">a photo</a> or even make links out of photos. For example, the following image is linked to a flowers photo gallery page. <a href="gallery-flowers.html" title="More flower images"><img src="img/blueflax.jpg" width="165" height="105" alt="Blue Flax" /></a></p>
+
+	<div class="note">
+		<p><strong>Note:</strong> I didn't include an actual page for <code>gallery-flowers.html</code>, so the two previous links to it are merely examples. If you click on either the text link or the linked image, the browser will say it can't find the page.</p> 
+
+		<p>Unrelated, you will notice that the paragraph text is separated by the image in an unattractive way at certain browser widths. Drag the bottom-right corner of your browser in and out to see what I mean. To avoid this, you could move the code for the linked image outside of the paragraph, placing it after the <code>&lt;/p&gt;</code>.</p>
+	</div>
+	
+	<h2>Other Assets</h2>
+	<p><a href="#">Listen to tickling of the ivories</a> (MP3, 1.3 MB) or <a href="#">watch a paddle steamer</a> (MP4, 2.4 MB). These link directly to the files (handy for downloading).</p>
+	
+	<h2>Email Addresses</h2>
+	<p>Send feedback to <a href="mailto:someone@somedomain.com">someone@somedomain.com</a>.</p>
+
+	<h2>Phone Numbers</h2>
+	<p>Call now for free things! <a href="tel:+18001234567">1 (800) 123-4567</a></p>
+</article>
+
+</body>
+</html>

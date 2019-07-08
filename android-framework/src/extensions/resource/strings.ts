@@ -4,6 +4,7 @@ import Resource from '../../resource';
 import View from '../../view';
 
 import { CONTAINER_ANDROID } from '../../lib/constant';
+import { BUILD_ANDROID } from '../../lib/enumeration';
 
 const {
     constant: $const,
@@ -23,6 +24,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
     public readonly eventOnly = true;
 
     public afterResources() {
+        const setTextValue = (node: T, attr: string, name: string, value: string) => {
+            name = Resource.addString(value, name, this.options.numberResourceValue);
+            if (name !== '') {
+                node.android(attr, this.options.numberResourceValue || !$util.isNumber(name) ? `@string/${name}` : name, false);
+            }
+        };
         for (const node of this.application.processing.cache) {
             if (node.hasResource($e.NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
@@ -42,12 +49,6 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     }
                     default: {
                         const valueString: StringValue = node.data(Resource.KEY_NAME, 'valueString');
-                        const setTextValue = (attr: string, name: string, value: string) => {
-                            name = Resource.addString(value, name, this.options.numberResourceValue);
-                            if (name !== '') {
-                                node.android(attr, this.options.numberResourceValue || !$util.isNumber(name) ? `@string/${name}` : name, false);
-                            }
-                        };
                         if (valueString) {
                             const name = valueString.key || valueString.value;
                             let value = valueString.value;
@@ -70,10 +71,15 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (node.css('fontVariant') === 'small-caps') {
-                                node.android('textAllCaps', 'true');
-                                const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
-                                if (fontStyle) {
-                                    fontStyle.fontSize = `${parseFloat(fontStyle.fontSize) * this.options.fontVariantSmallCapsReduction}px`;
+                                if (node.localSettings.targetAPI >= BUILD_ANDROID.LOLLIPOP) {
+                                    node.android('fontFeatureSettings', 'smcp');
+                                }
+                                else {
+                                    node.android('textAllCaps', 'true');
+                                    const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
+                                    if (fontStyle) {
+                                        fontStyle.fontSize = `${parseFloat(fontStyle.fontSize) * this.options.fontVariantSmallCapsReduction}px`;
+                                    }
                                 }
                             }
                             switch (node.css('textTransform')) {
@@ -87,16 +93,22 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     value = $util.capitalizeString(value);
                                     break;
                             }
-                            value = $xml.replaceCharacterData(value);
-                            for (const style of node.css('textDecorationLine').split(' ')) {
-                                switch (style) {
-                                    case 'underline':
-                                        value = `<u>${value}</u>`;
-                                        break;
-                                    case 'line-through':
-                                        value = `<strike>${value}</strike>`;
-                                        break;
+                            value = $xml.replaceCharacterData(value, true);
+                            const textDecorationLine = node.css('textDecorationLine');
+                            if (textDecorationLine !== 'none') {
+                                for (const style of textDecorationLine.split(' ')) {
+                                    switch (style) {
+                                        case 'underline':
+                                            value = `<u>${value}</u>`;
+                                            break;
+                                        case 'line-through':
+                                            value = `<strike>${value}</strike>`;
+                                            break;
+                                    }
                                 }
+                            }
+                            if (node.tagName === 'INS' && textDecorationLine.indexOf('line-through') === -1) {
+                                value = `<strike>${value}</strike>`;
                             }
                             let textIndent = 0;
                             if (node.blockDimension || node.display === 'table-cell') {
@@ -115,7 +127,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 const width = $dom.measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
                                 value = '&#160;'.repeat(Math.max(Math.floor(textIndent / width), 1)) + value;
                             }
-                            setTextValue('text', name, value);
+                            setTextValue(node, 'text', name, value);
                         }
                         if (node.inputElement) {
                             if (node.controlName === CONTAINER_ANDROID.EDIT_LIST) {
@@ -129,9 +141,15 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             }
                             const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
                             if (hintString) {
-                                setTextValue('hint', `${node.containerName.toLowerCase()}_hint`, hintString);
+                                setTextValue(node, 'hint', `${node.controlId.toLowerCase()}_hint`, hintString);
                             }
                         }
+                    }
+                }
+                if (node.styleElement) {
+                    const title = (<HTMLElement> node.element).title;
+                    if (title !== '') {
+                        setTextValue(node, 'tooltipText', `${node.controlId.toLowerCase()}_title`, title);
                     }
                 }
             }

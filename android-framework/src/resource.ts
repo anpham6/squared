@@ -198,7 +198,8 @@ export default class Resource<T extends android.base.View> extends squared.base.
         STORED.dimens = new Map();
         STORED.drawables = new Map();
         STORED.animators = new Map();
-        IMAGE_FORMAT = application.controllerHandler.localSettings.supported.imageFormat as string[];
+        this.controllerSettings = application.controllerHandler.localSettings;
+        IMAGE_FORMAT = this.controllerSettings.supported.imageFormat as string[];
     }
 
     public reset() {

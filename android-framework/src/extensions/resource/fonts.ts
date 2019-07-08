@@ -117,14 +117,14 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     public readonly eventOnly = true;
 
     public afterParseDocument() {
-        const resource = <android.base.Resource<T>> this.application.resourceHandler;
+        const resource = <android.base.Resource<T>> this.resource;
         const settings = resource.userSettings;
         const dpi = settings.resolutionDPI;
         const convertPixels = settings.convertPixels === 'dp';
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         for (const node of this.application.session.cache) {
-            if (node.visible && node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource($e.NODE_RESOURCE.FONT_STYLE)) {
+            if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource($e.NODE_RESOURCE.FONT_STYLE)) {
                 if (nameMap[node.containerName] === undefined) {
                     nameMap[node.containerName] = [];
                 }
@@ -149,18 +149,13 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     stored.fontFamily.replace(REGEXP_DOUBLEQUOTE, '').split($regex.XML.SEPARATOR).some((value, index, array) => {
                         value = $util.trimString(value, "'");
                         let fontFamily = value.toLowerCase();
+                        let customFont = false;
                         if (!this.options.disableFontAlias && FONTREPLACE_ANDROID[fontFamily]) {
                             fontFamily = this.options.systemDefaultFont || FONTREPLACE_ANDROID[fontFamily];
                         }
                         if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || !this.options.disableFontAlias && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
                             stored.fontFamily = fontFamily;
-                            if (stored.fontStyle === 'normal') {
-                                stored.fontStyle = '';
-                            }
-                            if (stored.fontWeight === '400' || node.localSettings.targetAPI < BUILD_ANDROID.OREO) {
-                                stored.fontWeight = '';
-                            }
-                            return true;
+                            customFont = true;
                         }
                         else if (stored.fontStyle && stored.fontWeight) {
                             let createFont = true;
@@ -183,8 +178,19 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 Resource.STORED.fonts.set(fontFamily, fonts);
                             }
                             stored.fontFamily = `@font/${fontFamily}`;
-                            stored.fontStyle = '';
-                            stored.fontWeight = '';
+                            customFont = true;
+                        }
+                        if (customFont) {
+                            const fontWeight = stored.fontWeight;
+                            if (stored.fontStyle === 'normal') {
+                                stored.fontStyle = '';
+                            }
+                            if (fontWeight === '400' || node.localSettings.targetAPI < BUILD_ANDROID.OREO) {
+                                stored.fontWeight = '';
+                            }
+                            else if (parseInt(fontWeight) > 500) {
+                                stored.fontStyle += (stored.fontStyle ? '|' : '') + 'bold';
+                            }
                             return true;
                         }
                         return false;
@@ -407,14 +413,22 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const node of this.application.session.cache) {
             const styles = nodeMap[node.id];
             if (styles && styles.length) {
-                if (styles.length > 1) {
-                    parentStyle.add(styles.join('.'));
-                    styles.shift();
+                switch (node.tagName) {
+                    case 'METER':
+                    case 'PROGRESS':
+                        node.attr('_', 'style', `@android:style/Widget.ProgressBar.Horizontal`);
+                        break;
+                    default:
+                        if (styles.length > 1) {
+                            parentStyle.add(styles.join('.'));
+                            styles.shift();
+                        }
+                        else {
+                            parentStyle.add(styles[0]);
+                        }
+                        node.attr('_', 'style', `@style/${styles.join('.')}`);
+                        break;
                 }
-                else {
-                    parentStyle.add(styles[0]);
-                }
-                node.attr('_', 'style', `@style/${styles.join('.')}`);
             }
         }
         for (const value of parentStyle) {

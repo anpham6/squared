@@ -1,0 +1,58 @@
+body {
+	background: #eee;
+	margin: 20px;
+}
+
+p {
+	color: #999;
+	font: bold 1.375em/1.2 sans-serif;
+	margin: 10px;
+}
+
+div {
+	background: #fff;
+	height: 160px;
+	float: left;
+	margin: 10px 50px 30px 0;
+	width: 160px;
+}
+
+.shadow {
+	-webkit-box-shadow: 4px 4px 5px #999;
+	box-shadow: 4px 4px 5px #999;
+}
+
+.shadow-negative {
+	-webkit-box-shadow: -4px -4px 5px #999;
+	box-shadow: -4px -4px 5px #999;
+}
+
+.shadow-spread {
+	-webkit-box-shadow: 4px 4px 5px 3px #999;
+	box-shadow: 4px 4px 5px 3px #999;
+}
+
+.shadow-offsets-0 {
+	-webkit-box-shadow: 0 0 9px 3px #999;
+	box-shadow: 0 0 9px 3px #999;
+}
+
+.inset-shadow {
+	-webkit-box-shadow: 2px 2px 10px #666 inset;
+	box-shadow: 2px 2px 10px #666 inset;
+}
+
+.multiple {
+	-webkit-box-shadow: 
+		2px 2px 10px rgba(255,0,0,.75), 
+		5px 5px 20px blue;
+
+	box-shadow: 
+		2px 2px 10px rgba(255,0,0,.75), 
+		5px 5px 20px blue;
+}
+
+.shadow-negative-spread {
+	-webkit-box-shadow: 0 20px 10px -11px #999;
+	box-shadow: 0 20px 10px -11px #999;
+}

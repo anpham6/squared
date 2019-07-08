@@ -1,5 +1,5 @@
 import { AppHandler, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
-import { GridCellData, GridData } from './base/extension';
+import { GridCellData } from './base/extension';
 import { AutoMargin, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
@@ -165,6 +165,7 @@ declare namespace base {
         cache: NodeList<T>;
         fileHandler?: File<T>;
         readonly userSettings: UserSettings;
+        controllerSettings: ControllerSettings;
         reset(): void;
         addImage(element: HTMLImageElement | undefined): void;
         getImage(src: string): ImageAsset | undefined;
@@ -181,6 +182,7 @@ declare namespace base {
 
     interface ResourceUI<T extends NodeUI> extends Resource<T> {
         readonly userSettings: UserUISettings;
+        controllerSettings: ControllerUISettings;
         finalize(layouts: FileAsset[]): void;
         writeRawImage(filename: string, base64: string): void;
         setBoxStyle(node: T): void;
@@ -202,6 +204,7 @@ declare namespace base {
 
     interface Extension<T extends Node> {
         application: Application<T>;
+        controller: Controller<T>;
         readonly framework: number;
         readonly name: string;
         readonly options: ExternalData;
@@ -218,6 +221,8 @@ declare namespace base {
 
     interface ExtensionUI<T extends NodeUI> extends Extension<T> {
         application: ApplicationUI<T>;
+        controller: ControllerUI<T>;
+        resource: ResourceUI<T>;
         tagNames: string[];
         readonly documentBase: boolean;
         readonly eventOnly: boolean;
@@ -459,8 +464,8 @@ declare namespace base {
     }
 
     class Node implements Node {
-        public static getPseudoElt(node: Node): string;
         public static copyTextStyle(node: Node, source: Node): void;
+        public static getPseudoElt(node: Node): string;
         constructor(id: number, sessionId?: string, element?: Element);
     }
 
@@ -493,6 +498,7 @@ declare namespace base {
         containerIndex: number;
         flexbox: Flexbox;
         localSettings: {};
+        fontSize: number;
         renderAs?: NodeUI;
         renderParent?: NodeUI;
         renderExtension?: Extension<NodeUI>[];
@@ -557,6 +563,7 @@ declare namespace base {
         resetBox(region: number, node?: NodeUI, fromParent?: boolean): void;
         transferBox(region: number, node: NodeUI): void;
         extractAttributes(depth: number): string;
+        setCacheValue(attr: string, value: any): void;
         cssSet(attr: string, value: string, cache?: boolean): string;
     }
 
@@ -587,7 +594,6 @@ declare namespace base {
         class External<T extends NodeUI> extends ExtensionUI<T> {}
         class Flexbox<T extends NodeUI> extends ExtensionUI<T> {}
         class Grid<T extends NodeUI> extends ExtensionUI<T> {
-            public static createDataAttribute(): GridData;
             public static createDataCellAttribute<T extends NodeUI>(): GridCellData<T>;
         }
         class List<T extends NodeUI> extends ExtensionUI<T> {}
@@ -708,7 +714,7 @@ declare namespace lib {
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
         function parseVar(element: HTMLElement | SVGElement, value: string): string | undefined;
         function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number | undefined;
-        function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number): BoxRectPosition;
+        function getBackgroundPosition(value: string, dimension: Dimension, imageDimension?: Dimension, fontSize?: number): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function resolveURL(value: string): string;
@@ -848,7 +854,7 @@ declare namespace lib {
         function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
         function applyTemplate(tagName: string, template: ExternalData, children: ExternalData[], depth?: number): string;
         function formatTemplate(value: string, closeEmpty?: boolean, startIndent?: number, char?: string): string;
-        function replaceCharacterData(value: string): string;
+        function replaceCharacterData(value: string, tab?: boolean): string;
     }
 }
 

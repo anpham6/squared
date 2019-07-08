@@ -1,0 +1,25 @@
+div {
+	background: #ff9;
+	border: 5px solid #326795;
+	float: left;
+	height: 150px;
+	margin: 10px;
+	width: 150px;
+}
+
+.example-1 {
+	/* Makes the radius of the top-left and bottom-right corners 10px and 
+	the top-right and bottom-left corners 20px */
+	border-radius: 10px 20px;
+}
+
+.example-2 {
+	/* Makes the radius of the top-left corner 20px, and all other corners 0 */
+	border-radius: 20px 0 0;
+}
+
+.example-3 {
+	/* Makes the radius of the top-left corner 10px, the top-right corner 20px, 
+	the bottom-right corner 0, and the bottom-left corner 30px */
+	border-radius: 10px 20px 0 30px;
+}

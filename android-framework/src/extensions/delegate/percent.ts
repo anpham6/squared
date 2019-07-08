@@ -29,7 +29,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public processNode(node: T, parent: T) {
-        const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
+        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent);
         if (node.percentWidth) {
             container.css('display', 'block');
             container.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);

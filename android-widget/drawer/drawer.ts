@@ -99,7 +99,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
                 $util.assignEmptyValue(options, $constA.STRING_ANDROID.APP, 'headerLayout', `@layout/${headerLayout}`);
             }
             if (menu !== '' || headerLayout !== '') {
-                const controller = <android.base.Controller<T>> this.application.controllerHandler;
+                const controller = <android.base.Controller<T>> this.controller;
                 $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'id', `${node.documentId}_navigation`);
                 $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'fitsSystemWindows', 'true');
                 $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, $constA.STRING_ANDROID.LAYOUT_GRAVITY, node.localizeString($const.CSS.LEFT));

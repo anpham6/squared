@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Real Italic vs. Faux Italic</title>
+	<style>
+	p {
+		font-size: 1.25em;
+	}
+
+	.font-1 { /* has real italic */
+		font-family: "Palatino Linotype";
+	}
+
+	.font-2 { /* doesn't have italic, so browser fakes it */
+		font-family: Geneva;
+	}
+
+	.italic {
+		font-style: italic;
+	}
+
+	hr {
+		border: 1px solid #ccc;
+	}
+	</style>
+	<script src="/node_modules/systemjs/dist/system.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../squared.js"></script>
+</head>
+<body>
+	<p class="font-1">Palatino Linotype sample text.</p>
+	<p class="font-1 italic">Palatino Linotype sample text (real italic).</p>
+
+	<hr />
+
+	<p class="font-2">Geneva sample text.</p>
+	<p class="font-2 italic">Geneva sample text (faux italic).</p>
+</body> 
+</html>

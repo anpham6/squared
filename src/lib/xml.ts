@@ -16,6 +16,7 @@ const REGEXP_FORMAT = {
     NBSP: /&nbsp;/g,
     AMP: /&/g
 };
+const TAB_SPACE = '&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;';
 
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
 
@@ -228,7 +229,7 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
     return output;
 }
 
-export function replaceCharacterData(value: string) {
+export function replaceCharacterData(value: string, tab = false) {
     value = value
         .replace(REGEXP_FORMAT.NBSP, '&#160;')
         .replace(ESCAPE.NONENTITY, '&amp;');
@@ -253,6 +254,15 @@ export function replaceCharacterData(value: string) {
             case '>':
                 char[i] = '&gt;';
                 valid = true;
+                break;
+            case '\t':
+                if (tab) {
+                    char[i] = TAB_SPACE;
+                    valid = true;
+                }
+                else {
+                    char[i] = ch;
+                }
                 break;
             case '\u0003':
                 char[i] = ' ';

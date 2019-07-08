@@ -26,7 +26,7 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
     public processNode(node: T, parent: T) {
         const mainData = <SpriteData> node.data($c.EXT_NAME.SPRITE, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const drawable = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
+            const drawable = (<android.base.Resource<T>> this.resource).addImageSrc(node.backgroundImage);
             if (drawable !== '') {
                 const container = this.application.createNode();
                 container.inherit(node, 'base', 'initial', 'styleMap');

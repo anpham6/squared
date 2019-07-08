@@ -129,7 +129,8 @@ export default class File<T extends android.base.View> extends squared.base.File
         result.push(
             $xml.replaceTab(
                 $xml.applyTemplate('resources', STRING_TMPL, data),
-                this.userSettings.insertSpaces
+                this.userSettings.insertSpaces,
+                true
             ),
             this.directory.string,
             'strings.xml'
@@ -151,7 +152,8 @@ export default class File<T extends android.base.View> extends squared.base.File
             result.push(
                 $xml.replaceTab(
                     $xml.applyTemplate('resources', STRINGARRAY_TMPL, data),
-                    this.userSettings.insertSpaces
+                    this.userSettings.insertSpaces,
+                    true
                 ),
                 this.directory.string,
                 'string_arrays.xml'

@@ -21,6 +21,11 @@ const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
+    public static copyTextStyle(node: T, source: T) {
+        Node.copyTextStyle(node, source);
+        node.fontSize = source.fontSize;
+    }
+
     public static outerRegion(node: T): BoxRect {
         let top = Number.POSITIVE_INFINITY;
         let right = Number.NEGATIVE_INFINITY;
@@ -700,6 +705,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 {
                     return NODE_TRAVERSE.VERTICAL;
                 }
+                else if (blockStatic && this.some(item => $util.aboveRange(item.linear.top, previous.linear.bottom))) {
+                    return NODE_TRAVERSE.FLOAT_BLOCK;
+                }
                 else if (this.blockDimension && checkBlockDimension(previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
@@ -948,6 +956,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return super.css(attr, value, cache);
     }
 
+    public setCacheValue(attr: string, value: any) {
+        this._cached[attr] = value;
+    }
+
     get element() {
         let element = this._element;
         if (element === null) {
@@ -982,24 +994,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._cached.containerName = value.toUpperCase();
     }
     get containerName() {
-        if (this._cached.containerName === undefined) {
+        let result = this._cached.containerName;
+        if (result === undefined) {
+            result = '';
             const element = <HTMLInputElement> this.element;
-            let value = '';
             if (element) {
                 if ($dom.isPlainText(element)) {
-                    value = 'PLAINTEXT';
+                    result = 'PLAINTEXT';
                 }
                 else if (element.tagName === 'INPUT') {
-                    value = `INPUT_${element.type}`;
+                    result = `INPUT_${element.type.toUpperCase()}`;
                 }
                 else {
-                    value = element.tagName;
+                    result = element.tagName.toUpperCase();
                 }
-                value = value.toUpperCase();
             }
-            this._cached.containerName = value;
+            this._cached.containerName = result;
         }
-        return this._cached.containerName;
+        return result;
     }
 
     get excludeSection() {
@@ -1174,7 +1186,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return null;
     }
 
-    get firstChild() {
+    get firstChild(): Node | null {
         return this.naturalChildren[0] || null;
     }
 
@@ -1194,24 +1206,37 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get textEmpty() {
-        if (this._cached.textEmpty === undefined) {
-            this._cached.textEmpty = this.styleElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '') && !this.imageElement && !this.svgElement;
+        let result = this._cached.textEmpty;
+        if (result === undefined) {
+            result = this.styleElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '' && !this.pseudoElement) && !this.imageElement && !this.svgElement;
+            this._cached.textEmpty = result;
         }
-        return this._cached.textEmpty;
+        return result;
     }
 
     get preserveWhiteSpace() {
-        if (this._cached.whiteSpace === undefined) {
-            this._cached.whiteSpace = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
+        let result = this._cached.whiteSpace;
+        if (result === undefined) {
+            result = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
+            this._cached.whiteSpace = result;
         }
-        return this._cached.whiteSpace;
+        return result;
     }
 
     get leftTopAxis() {
-        if (this._cached.leftTopAxis === undefined) {
+        let result = this._cached.leftTopAxis;
+        if (result === undefined) {
             const value = this.cssInitial('position');
-            this._cached.leftTopAxis = value === 'absolute' && this.absoluteParent === this.documentParent || value === 'fixed';
+            result = value === 'absolute' && this.absoluteParent === this.documentParent || value === 'fixed';
+            this._cached.leftTopAxis = result;
         }
-        return this._cached.leftTopAxis;
+        return result;
+    }
+
+    set fontSize(value) {
+        this._fontSize = value;
+    }
+    get fontSize() {
+        return super.fontSize;
     }
 }

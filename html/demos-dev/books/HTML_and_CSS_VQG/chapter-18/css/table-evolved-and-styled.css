@@ -1,0 +1,29 @@
+body {
+	font: 100% "Courier New", Courier, monospace;
+}
+
+table {
+	/* The default setting is border-collapse: separate;. By changing separate to collapse as shown below, the space between each table cell is removed. */
+	border-collapse: collapse;
+}
+
+caption {
+	font-size: .8125em;
+	font-weight: bold;
+	margin-bottom: .5em;
+}
+
+th,
+td {
+	font-size: .875em;
+	padding: .5em .75em;
+}
+
+td {
+	border: 1px solid #000;	
+}
+
+tfoot {
+	font-style: italic;
+	font-weight: bold;
+}

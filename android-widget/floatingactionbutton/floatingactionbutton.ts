@@ -30,7 +30,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
     }
 
     public processNode(node: T, parent: T) {
-        const resource = <android.base.Resource<T>> this.application.resourceHandler;
+        const resource = <android.base.Resource<T>> this.resource;
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;
         const options = $utilA.createViewAttribute(this.options[element.id]);

@@ -1,0 +1,171 @@
+body {
+	font: 100% arial, helvetica, sans-serif;
+	margin: 0;
+	padding: 2em;
+}
+
+header,
+main,
+nav {
+	display: block;
+}
+
+/*
+ Prevents sub and sup affecting line-height in all browsers:
+ 	gist.github.com/413930 
+ 
+ (Note: I modified the version from that URL.)
+*/
+sup {
+    font-size: 70%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+}
+
+sup {
+    top: -.75em;
+}
+ 
+h1 sup {
+    font-size: 35%;
+	left: -1%;
+}
+
+h1 sup {
+    top: -1.75em;
+}
+
+
+/* NAVIGATION
+------------------------------------------------ */
+.nav,
+.nav ul {
+	background: #000;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.nav {
+	min-height: 1.3em;
+ 	overflow: auto;
+	padding: 10px 10px 10px 16px;
+
+	/* 
+		Tools like css3please.com, which I used for the code that follows, 
+		help you generate CSS3 code. Try it out yourself!
+	*/
+  	-webkit-border-radius: 6px 6px 0 0; /* Android ≤ 1.6, iOS 1-3.2, Safari 3-4 */
+          border-radius: 6px 6px 0 0; /* Android 2.1+, Chrome, Firefox 4+, IE 9+, iOS 4+, Opera 10.50+, Safari 5+ */
+}
+
+.nav a {
+	color: #eee;
+	display: block;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+.nav li {
+	float: left; 				
+	width: 10em;
+}
+
+.nav li a:hover,
+.nav li:hover > a {
+	color: #aabadd;
+}
+
+/* :::: Navigation Submenus (the dropdowns) :::: */
+.nav .submenu {
+	margin-left: -10px;
+	padding: 10px 10px 15px;
+
+	left: -999em; /* hide a submenu offscreen by default so visitors don't see it */
+	position: absolute;
+	z-index: 1000;
+	
+	/* 
+		See note above about css3please.com.
+	*/
+  -webkit-border-radius: 0 0 8px 8px; /* Android ≤ 1.6, iOS 1-3.2, Safari 3-4 */
+          border-radius: 0 0 8px 8px; /* Android 2.1+, Chrome, Firefox 4+, IE 9+, iOS 4+, Opera 10.50+, Safari 5+ */
+}
+
+.nav li:hover .submenu {
+	display: block; /* for older versions of IE */
+	left: auto; /* show the submenu when user hovers over the parent li */
+	width: 10em;
+}
+
+.nav .submenu li {
+	float: none;
+	font-size: .875em;
+	margin-top: .5em;
+	width: auto;
+}
+
+
+/* CONTENT AREA
+------------------------------------------------ */
+main {
+	background: #eee;
+	border: 1px solid #000;
+	clear: left;
+	margin-top: 7px;
+	padding: 1em;
+
+	/* 
+		See note above about css3please.com.
+	*/
+  -webkit-border-radius: 0 0 8px 8px; /* Android ≤ 1.6, iOS 1-3.2, Safari 3-4 */
+          border-radius: 0 0 8px 8px; /* Android 2.1+, Chrome, Firefox 4+, IE 9+, iOS 4+, Opera 10.50+, Safari 5+ */
+}
+
+main h1 {
+	margin: 1em 0 0;
+	text-shadow: 1px 1px 3px #888; /* Chrome, Firefox 3.5+, IE 10+, Opera 9+, Safari 1+ */
+}
+
+main .intro {
+	font-size: 1.2em;
+}
+
+main p {
+	font-size: .875em;
+	line-height: 1.5;
+}
+
+main p:first-line {
+	font-size: 1.1em;
+	font-weight: bold;
+}
+
+/* :::: Breadcrumb Navigation :::: */
+.breadcrumb {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.breadcrumb li {
+	display: inline;
+	font-size: .8125em;
+	font-weight: bold;
+	padding: 5px 5px 0 0;
+}
+
+.breadcrumb li a {
+	color: #648dc7;
+	padding-right: 3px;
+}
+
+/* The next two rules use generated content. See "Effects with Generated Content" in Chapter 14 for more info. */
+.breadcrumb li:after {
+   content: " > ";
+}
+
+.breadcrumb li:last-child:after {
+   content: "";
+}

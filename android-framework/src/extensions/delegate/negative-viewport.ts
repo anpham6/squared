@@ -18,7 +18,7 @@ export default class NegativeViewport<T extends View> extends squared.base.Exten
     }
 
     public processNode(node: T, parent: T) {
-        const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
+        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent);
         return {
             parent: container,
             renderAs: container,

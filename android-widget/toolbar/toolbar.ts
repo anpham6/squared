@@ -64,8 +64,8 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
 
     public processNode(node: T, parent: T) {
         const application = this.application;
-        const controller = application.controllerHandler;
-        const resource = <android.base.Resource<T>> application.resourceHandler;
+        const controller = this.controller;
+        const resource = <android.base.Resource<T>> this.resource;
         const settings = <UserSettingsAndroid> application.userSettings;
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;
@@ -120,7 +120,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         else {
             $util.assignEmptyValue(toolbarOptions, $constA.STRING_ANDROID.APP, 'popupTheme', '@style/ThemeOverlay.AppCompat.Light');
             if (backgroundImage) {
-                const drawable = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
+                const drawable = (<android.base.Resource<T>> this.resource).addImageSrc(node.backgroundImage);
                 if (drawable !== '') {
                     $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, $constA.STRING_ANDROID.ANDROID, 'background', `@drawable/${drawable}`);
                     node.exclude($e.NODE_RESOURCE.IMAGE_SOURCE);
@@ -223,7 +223,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             node.render(target ? application.resolveTarget(target) : parent);
         }
         if (backgroundImage && hasCollapsingToolbar) {
-            const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(node.backgroundImage);
+            const src = (<android.base.Resource<T>> this.resource).addImageSrc(node.backgroundImage);
             if (src !== '') {
                 const backgroundImageOptions = $utilA.createViewAttribute(options.backgroundImage);
                 let scaleType = $const.CSS.CENTER;

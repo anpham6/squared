@@ -1,0 +1,45 @@
+body {
+	background: #000;
+	color: #fff;
+}
+
+h1 {
+	font-family: sans-serif;
+	font-size: 2.25em;
+	line-height: 1.1;
+	text-align: center;
+}
+
+/* NOTE: The background-image URLs are different below than 
+in the example shown in the book, because I've placed the images 
+in a sub-folder (called "img"), as is typical when organizing a site. 
+Also, I thought it would be helpful for you to see how to construct 
+your background-image URLs under these circumstances. Note that 
+the URLs are relative to where the style sheet lives, NOT the HTML page 
+that is displaying the image. */
+
+.night-sky {
+	background-color: navy; /* fallback color */
+	background-image: 
+ 	 	url(../img/ufo.png), 
+ 	 	url(../img/stars.png), 
+ 		url(../img/stars.png), 
+ 		url(../img/sky.png);
+
+	background-position: 
+ 	 	50% 102%, 
+ 	 	100% -150px, 
+ 	 	0 -150px, 
+ 	 	50% 100%;
+
+	background-repeat: 
+ 		no-repeat, 
+ 		no-repeat, 
+ 		no-repeat, 
+ 		repeat-x;
+
+	height: 300px;
+	margin: 25px auto 0; /* slightly different than book */
+	padding-top: 36px;
+	width: 75%;
+}

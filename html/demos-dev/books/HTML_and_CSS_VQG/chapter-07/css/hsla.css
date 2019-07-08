@@ -1,0 +1,28 @@
+/* Set repeating page background image, and default color, font, and size for all text. */
+body {
+	background: url(../img/bg-pattern.png);
+
+	/* Because of inheritance, these text styles cascade down to all text on a page unless overridden by styles elsewhere. */
+	color: #ff0; /* Hex yellow */
+	font-family: arial, helvetica, sans-serif;
+	font-size: 100%;
+}
+
+/* Solid background (not transparent) for all paragraphs unless given one of the classes below, with the exception of older versions of IE, which will show the hex color always. */
+p {
+	background-color: #3c8f00; /* for IE before IE9 */
+	background-color: hsl(95,100%,28%);
+	font-size: 2em;
+	padding: .5em;
+}
+
+/* 25% transparent */
+.test-1 {
+	background-color: hsla(95,100%,28%,.75);
+}
+
+/* 60% transparent */
+.test-2 {
+	background-color: hsla(95,100%,28%,.4);
+}
+

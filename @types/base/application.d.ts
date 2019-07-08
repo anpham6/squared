@@ -51,6 +51,10 @@ export interface ControllerUISettings extends ControllerSettings {
     style: {
         inputBorderColor: string;
         inputBackgroundColor: string;
+        meterForegroundColor?: string;
+        meterBackgroundColor?: string;
+        progressForegroundColor?: string;
+        progressBackgroundColor?: string;
     };
     precision: {
         standardFloat: number;
@@ -155,10 +159,7 @@ export interface FileAsset extends Asset {
     content: string;
 }
 
-export interface ImageAsset extends Asset {
-    width: number;
-    height: number;
-}
+export interface ImageAsset extends Asset, Dimension {}
 
 export interface RawAsset extends FileAsset, ImageAsset {
     base64?: string;

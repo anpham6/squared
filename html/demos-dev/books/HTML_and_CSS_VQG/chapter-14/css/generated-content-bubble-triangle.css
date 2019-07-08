@@ -1,0 +1,148 @@
+body {
+	font: 100%/1.2 Georgia, "Times New Roman", serif;
+	padding: 1em 1em 0;
+}
+
+/* Change box model behavior on all elements */
+* {
+  -webkit-box-sizing: border-box; /* Android ≤ 2.3, iOS ≤ 4 */
+     -moz-box-sizing: border-box; /* Firefox 1+ */
+          box-sizing: border-box; /* Chrome, IE 8+, Opera, Safari 5.1 */
+}
+
+.about h2,
+.mod h2 {
+    font-size: 0.875em;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 700;
+    /* In shorthand, the three lines above would be 
+    font: 700 .875em/1.2 'Open Sans', sans-serif;
+    */
+    margin-top: 2.571em;
+    text-transform: uppercase;
+}
+
+.mod h2 {
+    border-bottom: 1px solid #DBDBDB;
+    padding-bottom: 0.75em;
+}
+
+.sidebar {
+	width: 300px;
+}
+
+
+/* ABOUT
+--------------------------------- */
+.about {
+ 	background-color: #ededed; /* fallback */
+ 	background-image: linear-gradient(#fff, #ededed);
+ 	border: 1px solid #d0d0d0;
+ 	padding: 0.3125em 0.625em 0.625em;
+
+ 	-webkit-box-shadow: 0 0 3px #d0d0d0;
+ 	box-shadow: 0 0 3px #d0d0d0;
+}
+
+.about img {
+    border: 5px solid #bebebe;
+    display: block;
+    margin: 0 auto;
+}
+
+.about h2 {
+    margin-top: 11px;
+}
+
+.about p {
+	color: #555;
+    font-size: .8125em;
+    line-height: 1.5;
+}
+
+
+/* MAP
+--------------------------------- */
+.travels {
+	position: relative;
+}
+
+.map {
+    margin: 1.438em 0 0.813em;
+}
+
+/* Bubble containing list of cities */
+.cities {
+	background: #2B2B2B;
+	border-radius: 5px;
+	margin-left: -111px;
+ 	padding: .5em 0 .9375em .9375em;
+	position: absolute;
+	top: -75px;
+ 	width: 222px;
+}
+
+.cities li {
+	color: #dadada;
+	float: left;
+	font-size: .8125em;
+	line-height: 1.15;
+	margin-left: 12px;
+	margin-top: .4em;
+	width: 85px;
+}
+
+.cities li:nth-child(2n) {
+	margin-left: 18px;
+}
+
+/* Triangle under the bubble */
+.cities:after { 
+	border: solid transparent;
+	border-top-color: #2b2b2b;
+	border-width: 15px;
+	content: " "; /* blank space */
+	height: 0; 
+	left: 50%; /* centers it */
+	margin-left: -15px;
+	position: absolute;
+	top: 99.9%; /* makes it appear below bubble */
+	width: 0;
+}
+
+
+/* SHOW AND HIDE
+------------------------------------- */
+.map:hover {
+	cursor: pointer;
+}
+
+.cities {
+	left: -999em; /* hide by default by positioning off screen */
+}
+
+.map:focus + .cities,
+.map:hover + .cities {
+	left: 50%;
+}
+
+
+/* H5BP.com Clearfix
+--------------------------------- */
+.clearfix:before,
+.clearfix:after {
+  content: " ";
+  display: table;
+}
+
+.clearfix:after {
+  clear: both;
+}
+
+/*
+ * For IE 6/7 only
+ * Include this rule to trigger hasLayout and contain floats.
+ */
+.clearfix {
+  *zoom: 1;
+}

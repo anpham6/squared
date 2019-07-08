@@ -22,11 +22,14 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
         return null;
     }
 
-    public application!: squared.base.ApplicationUI<T>;
+    public controller!: squared.base.ControllerUI<T>;
+    public resource!: squared.base.ResourceUI<T>;
     public tagNames: string[];
     public readonly eventOnly = false;
     public readonly documentBase = false;
     public readonly cascadeAll = false;
+
+    protected _application!: squared.base.ApplicationUI<T>;
 
     constructor(
         name: string,
@@ -86,4 +89,13 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     public beforeBaseLayout() {}
     public beforeCascade() {}
     public afterFinalize() {}
+
+    set application(value) {
+        this._application = value;
+        this.controller = value.controllerHandler;
+        this.resource = value.resourceHandler;
+    }
+    get application() {
+        return this._application;
+    }
 }

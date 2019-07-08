@@ -1,0 +1,27 @@
+/* Example of Simple Styling of a Figure */
+
+body {
+	font-family: sans-serif;
+	font-size: 100%;
+}
+
+figure,
+figcaption b,
+img {
+	display: block;
+}
+
+img {
+	margin: 0 auto;
+}
+
+figure {
+	background: #eee;
+	border: 1px solid #ccc;
+	padding: 10px;
+	width: 203px;
+}
+
+figcaption {
+	font-size: .8125em;
+}

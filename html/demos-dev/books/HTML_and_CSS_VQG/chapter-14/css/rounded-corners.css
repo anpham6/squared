@@ -1,0 +1,27 @@
+div {
+	background: #999;
+	float: left;
+	height: 150px;
+	margin: 10px;
+	width: 150px;
+}
+
+.all-corners {
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+}
+
+.one-corner {
+	-webkit-border-top-left-radius: 75px;
+	border-top-left-radius: 75px;
+}
+
+.elliptical-corners {
+	-webkit-border-radius: 50px / 20px;
+	border-radius: 50px / 20px;
+}
+
+.circle {
+	-webkit-border-radius: 50%;
+	border-radius: 50%;
+}

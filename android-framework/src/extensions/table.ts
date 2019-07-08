@@ -34,22 +34,20 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     }
                     else {
                         const expand: boolean | undefined = data.expand;
-                        if (expand !== undefined) {
-                            if (expand) {
-                                const percent = $util.convertFloat(data.percent) / 100;
-                                if (percent > 0) {
-                                    item.setLayoutWidth($const.CSS.PX_0);
-                                    item.android('layout_columnWeight', $util.trimEnd(percent.toPrecision(3), '0'));
-                                    if (!requireWidth) {
-                                        requireWidth = !item.hasWidth;
-                                    }
+                        if (expand) {
+                            const percent = $util.convertFloat(data.percent) / 100;
+                            if (percent > 0) {
+                                item.setLayoutWidth($const.CSS.PX_0);
+                                item.android('layout_columnWeight', $util.trimEnd(percent.toPrecision(3), '0'));
+                                if (!requireWidth) {
+                                    requireWidth = !item.hasWidth;
                                 }
                             }
-                            else {
-                                item.android('layout_columnWeight', '0');
-                                if (item.textElement) {
-                                    item.android('ellipsize', 'end');
-                                }
+                        }
+                        else if (expand === false) {
+                            item.android('layout_columnWeight', '0');
+                            if (item.textElement && item.textContent.length > 1) {
+                                item.android('ellipsize', 'end');
                             }
                         }
                         if (data.downsized) {
@@ -60,9 +58,6 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                             else {
                                 if (item.hasPX($const.CSS.WIDTH) && item.actualWidth < item.bounds.width) {
                                     item.setLayoutWidth($css.formatPX(item.bounds.width));
-                                }
-                                else if (item.textElement) {
-                                    item.android('ellipsize', 'end');
                                 }
                             }
                         }
@@ -128,7 +123,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             }
             node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill');
             if (spaceSpan > 0) {
-                const controller = <android.base.Controller<T>> this.application.controllerHandler;
+                const controller = <android.base.Controller<T>> this.controller;
                 controller.addAfterOutsideTemplate(
                     node.id,
                     controller.renderSpace(STRING_ANDROID.WRAP_CONTENT, STRING_ANDROID.WRAP_CONTENT, spaceSpan),

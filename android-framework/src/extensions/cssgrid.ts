@@ -232,14 +232,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const data: CssGridDirectionData = mainData[direction];
                 const cellStart = cellData[`${direction}Start`];
                 const cellSpan = cellData[`${direction}Span`];
-                const dimensionA = $util.capitalize(dimension);
+                const horizontal = dimension === $const.CSS.WIDTH;
                 let size = 0;
                 let minSize = 0;
                 let fitContent = false;
                 let minUnitSize = 0;
                 let sizeWeight = 0;
                 if (data.unit.length && data.unit.every(value => value === $const.CSS.AUTO)) {
-                    if (dimension === $const.CSS.WIDTH) {
+                    if (horizontal) {
                         data.unit = new Array(data.unit.length).fill('1fr');
                     }
                     else {
@@ -270,7 +270,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             sizeWeight = 0;
                             break;
                         }
-                        else if (dimension === $const.CSS.WIDTH) {
+                        else if (horizontal) {
                             size = 0;
                             minSize = 0;
                             sizeWeight = 0.01;
@@ -279,7 +279,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                     else if (unit === 'min-content') {
                         if (!item.hasPX(dimension)) {
-                            item.android(`layout_${dimension}`, STRING_ANDROID.WRAP_CONTENT, false);
+                            if (horizontal) {
+                                item.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT, false);
+                            }
+                            else {
+                                item.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT, false);
+                            }
                             break;
                         }
                     }
@@ -289,7 +294,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         size = 0;
                     }
                     else if (unit.endsWith('fr')) {
-                        if (dimension === $const.CSS.WIDTH || node.hasHeight) {
+                        if (horizontal || node.hasHeight) {
                             sizeWeight += parseFloat(unit);
                             minSize = size;
                         }
@@ -333,6 +338,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         minSize = minUnitSize;
                     }
                 }
+                const dimensionA = $util.capitalize(dimension);
                 item.android(`layout_${direction}`, cellStart.toString());
                 if (cellSpan > 1) {
                     item.android(`layout_${direction}Span`, cellSpan.toString());
@@ -421,7 +427,22 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 target.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill_horizontal');
             }
             const [rowStart, rowSpan] = applyLayout(target, 'row', $const.CSS.HEIGHT);
-            if (mainData.alignContent === 'normal' && !parent.hasPX($const.CSS.HEIGHT) && rowSpan === 1 && mainData.rowSpanMultiple[rowStart] === true && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === $const.CSS.AUTO) && node.initial.bounds && node.bounds.height > node.initial.bounds.height) {
+            function checkRowSpan() {
+                if (mainData.rowSpanMultiple[rowStart] === true) {
+                    const row = $util.flatMultiArray<T>(mainData.rowData[rowStart]);
+                    const rowCount = mainData.rowData.length;
+                    for (const item of row) {
+                        if (item !== node) {
+                            const data: CssGridCellData = item.data($c.EXT_NAME.CSS_GRID, 'cellData');
+                            if (data && (rowStart === 0 || data.rowSpan < rowCount) && data.rowSpan > rowSpan) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            if (mainData.alignContent === 'normal' && !parent.hasPX($const.CSS.HEIGHT) && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === $const.CSS.AUTO) && node.initial.bounds && node.bounds.height > node.initial.bounds.height && checkRowSpan()) {
                 target.css('minHeight', $css.formatPX(node.actualHeight), true);
             }
             else if (!target.hasPX($const.CSS.HEIGHT) && !(mainData.row.length === 1 && mainData.alignContent === 'space-between')) {
@@ -449,7 +470,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (node.hasHeight && mainData.alignContent !== 'normal') {
                 setContentSpacing(mainData, node, mainData.alignContent, 'row');
                 if (mainData.rowWeight.length > 1) {
-                    const precision = this.application.controllerHandler.localSettings.precision.standardFloat;
+                    const precision = this.controller.localSettings.precision.standardFloat;
                     for (let i = 0; i < mainData.row.length; i++) {
                         if (mainData.rowWeight[i] > 0) {
                             const rowData = mainData.rowData[i];
@@ -488,7 +509,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public postOptimize(node: T) {
         const mainData: CssGridData<T> = node.data($c.EXT_NAME.CSS_GRID, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const controller = <android.base.Controller<T>> this.application.controllerHandler;
+            const controller = <android.base.Controller<T>> this.controller;
             const lastChild = Array.from(mainData.children)[mainData.children.size - 1];
             if (mainData.column.unit.length && mainData.column.unit.every(value => $css.isPercent(value))) {
                 const percentTotal = mainData.column.unit.reduce((a, b) => a + parseFloat(b), 0) + (mainData.column.gap * mainData.column.length * 100) / node.actualWidth;

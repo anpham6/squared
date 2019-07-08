@@ -55,7 +55,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         const mainData: ListData = node.data($c.EXT_NAME.LIST, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
             const application = this.application;
-            const controller = application.controllerHandler;
+            const controller = this.controller;
             let minWidth = node.marginLeft;
             let columnCount = 0;
             let adjustPadding = false;
@@ -118,7 +118,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 let image: string | undefined;
                 if (mainData.imageSrc !== '') {
                     if (mainData.imagePosition) {
-                        ({ top, left } = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize));
+                        ({ top, left } = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, this.resource.getImage(mainData.imageSrc), node.fontSize));
                         gravity = $const.CSS.LEFT;
                         if (node.marginLeft < 0) {
                             resetPadding = node.marginLeft;
@@ -135,7 +135,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         }
                         minWidth = 0;
                     }
-                    image = (<android.base.Resource<T>> application.resourceHandler).addImageSrc(mainData.imageSrc);
+                    image = (<android.base.Resource<T>> this.resource).addImageSrc(mainData.imageSrc);
                 }
                 if (gravity === $const.CSS.LEFT) {
                     minWidth += node.paddingLeft - left;
@@ -188,8 +188,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         ordinal.renderExclude = false;
                         node.modifyBox($e.BOX_STANDARD.PADDING_LEFT);
                     }
-                    ordinal.inherit(node, 'textStyle');
                     ordinal.depth = node.depth;
+                    ordinal.inherit(node, 'textStyle');
+                    if (mainData.ordinal && !mainData.ordinal.endsWith('.')) {
+                        ordinal.fontSize *= 0.75;
+                    }
                     ordinal.cssApply({
                         minWidth: minWidth > 0 ? $css.formatPX(minWidth) : '',
                         marginTop: node.marginTop !== 0 ? $css.formatPX(node.marginTop) : '',
@@ -197,7 +200,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         paddingTop: node.paddingTop > 0 && node.getBox($e.BOX_STANDARD.PADDING_TOP)[0] === 0 ? $css.formatPX(node.paddingTop) : '',
                         paddingRight: paddingRight > 0 && gravity === $const.CSS.RIGHT ? $css.formatPX(paddingRight) : '',
                         paddingLeft: paddingRight > 0 && gravity === $const.CSS.LEFT && (!image || mainData.imagePosition) ? $css.formatPX(paddingRight) : '',
-                        fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $css.formatPX(ordinal.toFloat('fontSize') * 0.75) : '',
                         lineHeight: node.lineHeight > 0 ? $css.formatPX(node.lineHeight) : ''
                     });
                     ordinal.apply(options);

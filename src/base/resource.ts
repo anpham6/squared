@@ -1,4 +1,4 @@
-import { ResourceAssetMap, UserSettings } from '../../@types/base/application';
+import { ControllerSettings, ResourceAssetMap, UserSettings } from '../../@types/base/application';
 
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
 
@@ -18,6 +18,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public fileHandler?: squared.base.File<T>;
     public abstract application: squared.base.Application<T>;
     public abstract cache: squared.base.NodeList<T>;
+    public abstract controllerSettings: ControllerSettings;
 
     public abstract get userSettings(): UserSettings;
 
@@ -58,7 +59,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public getFont(fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
         const font = Resource.ASSETS.fonts.get(fontFamily);
         if (font) {
-            const fontFormat = this.application.controllerHandler.localSettings.supported.fontFormat;
+            const fontFormat = this.controllerSettings.supported.fontFormat;
             return font.find(item => item.fontStyle === fontStyle && (fontWeight === undefined || item.fontWeight === parseInt(fontWeight)) && (fontFormat === '*' || fontFormat.includes(item.srcFormat)));
         }
         return undefined;
@@ -67,7 +68,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public addRawData(dataURI: string, mimeType: string, encoding: string, content: string, width = 0, height = 0) {
         mimeType = mimeType.toLowerCase();
         encoding = encoding.toLowerCase();
-        const imageFormat = this.application.controllerHandler.localSettings.supported.imageFormat;
+        const imageFormat = this.controllerSettings.supported.imageFormat;
         let base64: string | undefined;
         if (encoding === 'base64') {
             base64 = content;

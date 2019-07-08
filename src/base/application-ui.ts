@@ -210,7 +210,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public insertNode(element: Element, parent?: T) {
         if ($dom.isPlainText(element)) {
-            if ($xml.isPlainText(element.textContent as string) || $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
+            if ($xml.isPlainText(element.textContent as string) || parent && parent.preserveWhiteSpace && (parent.tagName !== 'PRE' || (<HTMLElement> parent.element).children.length === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode(element, false);
                 if (parent) {
@@ -467,8 +467,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (controller.preventNodeCascade(parentElement)) {
                 return node;
             }
-            const beforeElement = this.createPseduoElement(parentElement, '::before');
-            const afterElement = this.createPseduoElement(parentElement, '::after');
+            const sessionId = this.processing.sessionId;
+            const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId);
+            const afterElement = this.createPseduoElement(parentElement, '::after', sessionId);
             const childNodes = parentElement.childNodes;
             const length = childNodes.length;
             const children: T[] = new Array(length);
@@ -484,7 +485,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     child = this.insertNode(<HTMLElement> beforeElement);
                     if (child) {
                         node.innerBefore = child;
-                        child.inlineText = true;
+                        if (!child.textEmpty) {
+                            child.inlineText = true;
+                        }
                         inlineText = false;
                     }
                 }
@@ -492,7 +495,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     child = this.insertNode(<HTMLElement> afterElement);
                     if (child) {
                         node.innerAfter = child;
-                        child.inlineText = true;
+                        if (!child.textEmpty) {
+                            child.inlineText = true;
+                        }
                         inlineText = false;
                     }
                 }
@@ -505,7 +510,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     ApplicationUI.prioritizeExtensions(element, this.extensions).some(item => item.init(element));
                     if (!this.rootElements.has(element)) {
                         child = this.cascadeParentNode(element, depth + 1);
-                        if (child && !child.excluded) {
+                        if (child && (!child.excluded || child.tagName === 'WBR')) {
                             inlineText = false;
                         }
                     }
@@ -612,8 +617,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         node.inlineText = inlineText;
     }
 
-    protected createPseduoElement(element: HTMLElement, pseudoElt: string) {
-        const styleMap: StringMap = $session.getElementCache(element, `styleMap${pseudoElt}`, this.processing.sessionId);
+    protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
+        let styleMap: StringMap;
+        let nested = 0;
+        if (element.tagName === 'Q') {
+            styleMap = { content: pseudoElt === '::before' ? 'open-quote' : 'close-quote' };
+            let current = element.parentElement;
+            while (current && current.tagName === 'Q') {
+                nested++;
+                current = current.parentElement;
+            }
+        }
+        else {
+            styleMap = $session.getElementCache(element, `styleMap${pseudoElt}`, sessionId);
+        }
         if (styleMap && styleMap.content) {
             if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== $const.CSS.NONE)) {
                 let valid = true;
@@ -667,12 +684,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     break;
                 case 'open-quote':
                     if (pseudoElt === '::before') {
-                        content = '&quot;';
+                        content = nested % 2 === 0 ? '&quot;' : "'";
                     }
                     break;
                 case 'close-quote':
                     if (pseudoElt === '::after') {
-                        content = '&quot;';
+                        content = nested % 2 === 0 ? '&quot;' : "'";
                     }
                     break;
                 default:
@@ -726,7 +743,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     return undefined;
                                 }
                                 const getIncrementValue = (parent: Element) => {
-                                    const pseduoStyle: StringMap = $session.getElementCache(parent, `styleMap${pseudoElt}`, this.processing.sessionId);
+                                    const pseduoStyle: StringMap = $session.getElementCache(parent, `styleMap${pseudoElt}`, sessionId);
                                     if (pseduoStyle && pseduoStyle.counterIncrement) {
                                         return getCounterValue(pseduoStyle.counterIncrement);
                                     }
@@ -848,8 +865,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         pseudoElement.style[attr] = styleMap[attr];
                     }
                 }
-                $session.setElementCache(pseudoElement, 'pseudoElement', this.processing.sessionId, pseudoElt);
-                $session.setElementCache(pseudoElement, 'styleMap', this.processing.sessionId, styleMap);
+                $session.setElementCache(pseudoElement, 'pseudoElement', sessionId, pseudoElt);
+                $session.setElementCache(pseudoElement, 'styleMap', sessionId, styleMap);
                 return pseudoElement;
             }
         }

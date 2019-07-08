@@ -166,7 +166,7 @@ function adjustMinHeight(node: T, value: number) {
 }
 
 function setSingleLine(node: T) {
-    if (node.textElement) {
+    if (node.textElement && node.textContent.trim().indexOf(' ') !== -1) {
         node.android('maxLines', '1');
         node.android('ellipsize', $const.CSS.END);
     }
@@ -993,6 +993,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             }
+            else if (this.is(CONTAINER_NODE.TEXT) && this.textEmpty) {
+                return;
+            }
             const direction = new Set<string>();
             const stored = this.android(attr);
             if (stored !== '') {
@@ -1095,6 +1098,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public setBoxSpacing() {
+            const boxReset = this._boxReset;
+            const boxAdjustment = this._boxAdjustment;
             const setBoxModel = (attrs: string[], margin: boolean, unmergeable = false) => {
                 let top = 0;
                 let right = 0;
@@ -1102,7 +1107,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let left = 0;
                 for (let i = 0 ; i < 4; i++) {
                     const attr = attrs[i];
-                    let value = this._boxReset === undefined || this._boxReset[attr] === 0 ? this[attr] : 0;
+                    let value = boxReset === undefined || boxReset[attr] === 0 ? this[attr] : 0;
                     if (value !== 0 && attr === 'marginRight') {
                         if (value < 0) {
                             if (this.float === $const.CSS.RIGHT) {
@@ -1111,19 +1116,20 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         else if (this.inline) {
                             const boxRight = this.documentParent.box.right;
-                            if (Math.floor(this.bounds.right) > boxRight) {
-                                if (this.textElement && !this.onlyChild && !this.alignParent($const.CSS.LEFT)) {
+                            const boundsRight = this.bounds.right;
+                            if (Math.floor(boundsRight) > boxRight) {
+                                if (!this.onlyChild && !this.alignParent($const.CSS.LEFT)) {
                                     setSingleLine(this);
                                 }
                                 continue;
                             }
-                            else if (this.bounds.right + value > boxRight) {
-                                value = Math.max(0, boxRight - this.bounds.right);
+                            else if (boundsRight + value > boxRight) {
+                                value = Math.max(0, boxRight - boundsRight);
                             }
                         }
                     }
-                    if (this._boxAdjustment) {
-                        value += this._boxAdjustment[attr];
+                    if (boxAdjustment) {
+                        value += boxAdjustment[attr];
                     }
                     switch (i) {
                         case 0:
@@ -1236,6 +1242,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
+                if (this.naturalElement) {
+                    const opacity = this.css('opacity');
+                    if (opacity !== '1') {
+                        this.android('alpha', opacity);
+                    }
+                }
             }
             const indent = '\n' + '\t'.repeat(depth);
             let output = '';
@@ -1281,9 +1293,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (renderChildren.length > 1) {
                         const child = renderChildren[renderChildren.length - 1];
-                        if (child.textElement) {
-                            setSingleLine(child);
-                        }
+                        setSingleLine(child);
                     }
                 }
             }
@@ -1394,64 +1404,71 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             this._cached.renderExclude = value;
         }
         get renderExclude() {
-            if (this._cached.renderExclude === undefined) {
+            let result = this._cached.renderExclude;
+            if (result === undefined) {
                 if (this.styleElement && this.length === 0 && !this.imageElement) {
                     if (this.blockStatic || this.layoutVertical) {
-                        return this.contentBoxHeight === 0 && (this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0 || this.css($const.CSS.HEIGHT) === '0px' && this.css('overflow') === 'hidden');
+                        result = this.contentBoxHeight === 0 && (this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0 || this.css($const.CSS.HEIGHT) === '0px' && this.css('overflow') === 'hidden');
                     }
                     else {
-                        return this.bounds.width === 0 && this.contentBoxWidth === 0 && this.textEmpty && this.marginLeft <= 0 && this.marginRight <= 0;
+                        result = this.bounds.width === 0 && this.contentBoxWidth === 0 && this.textEmpty && this.marginLeft <= 0 && this.marginRight <= 0;
                     }
                 }
                 else {
-                    this._cached.renderExclude = false;
+                    result = false;
                 }
+                this._cached.renderExclude = result;
             }
-            return this._cached.renderExclude;
+            return result;
         }
 
         get baselineHeight() {
-            if (this._cached.baselineHeight === undefined) {
-                let height = 0;
+            let result = this._cached.baselineHeight;
+            if (result === undefined) {
+                result = 0;
                 if (!(this.plainText && this.multiline)) {
                     if (this.multiline && this.cssTry('white-space', 'nowrap')) {
-                        height = (<Element> this.element).getBoundingClientRect().height;
+                        result = (<Element> this.element).getBoundingClientRect().height;
                         this.cssFinally('white-space');
                     }
                     else if (this.hasHeight) {
-                        height = this.actualHeight;
+                        result = this.actualHeight;
                     }
                     else {
-                        height = this.bounds.height;
+                        result = this.bounds.height;
                     }
-                    if (this.has('lineHeight') && this.lineHeight > height) {
-                        height = this.lineHeight;
+                    if (this.has('lineHeight') && this.lineHeight > result) {
+                        result = this.lineHeight;
                     }
                     else if (this.inputElement) {
                         switch (this.controlName) {
                             case CONTAINER_ANDROID.BUTTON:
-                                height += 2;
+                                result += 2;
                                 break;
                             case CONTAINER_ANDROID.RADIO:
                             case CONTAINER_ANDROID.CHECKBOX:
-                                height += 8;
+                                result += 8;
                                 break;
                             case CONTAINER_ANDROID.SELECT:
-                                height += 4;
-                                height /= (<HTMLSelectElement> this.element).size || 1;
+                                result += 4;
+                                result /= (<HTMLSelectElement> this.element).size || 1;
                                 break;
                         }
                     }
+                    else if (this.is(CONTAINER_NODE.PROGRESS)) {
+                        result += 4;
+                    }
                 }
-                this._cached.baselineHeight = height;
+                this._cached.baselineHeight = result;
             }
-            return this._cached.baselineHeight;
+            return result;
         }
 
         get support() {
-            if (this._cached.support === undefined) {
+            let result = this._cached.support;
+            if (result === undefined) {
                 const maxWidth = this.textElement || this.imageOrSvgElement;
-                const support = <SupportAndroid> {
+                result = <SupportAndroid> {
                     container: {
                         positionRelative: this.layoutRelative || this.layoutConstraint
                     },
@@ -1459,11 +1476,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     maxHeight: maxWidth
                 };
                 if (this.containerType !== 0) {
-                    this._cached.support = support;
+                    this._cached.support = result;
                 }
-                return support;
             }
-            return <SupportAndroid> this._cached.support;
+            return <SupportAndroid> result;
         }
 
         get layoutWidth() {

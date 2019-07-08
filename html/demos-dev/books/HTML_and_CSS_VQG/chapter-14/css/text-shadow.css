@@ -1,0 +1,43 @@
+body {
+	background: #fff;
+	color: #222;
+	font: 100%/1.05 helvetica, sans-serif;
+	padding-top: 20px;
+}
+
+p {
+	color: #222; /* nearly black */
+	font-size: 4.5em;
+	font-weight: bold;
+	margin: 0 0 45px;
+}
+
+p:last-child {
+	margin: 0;
+}
+
+.basic {
+	text-shadow: 3px 3px #aaa;
+}
+
+/* uses negative offsets--you can mix positive and negative ones, too. */
+.basic-negative {
+	text-shadow: -4px -2px #ccc; /* a little lighter grey than #aaa */
+}
+
+.blur {
+	text-shadow: 2px 2px 10px grey;
+}
+
+.blur-inversed {
+	color: white;
+	text-shadow: 2px 2px 10px #000; /* black */
+}
+
+/* this example has two shadows, but you can include 
+more by separating each with a comma */
+.multiple {
+	text-shadow:
+		2px 2px white, 
+		6px 6px rgba(50,50,50,.25);
+}
