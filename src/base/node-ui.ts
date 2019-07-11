@@ -9,7 +9,6 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 type T = NodeUI;
 
 const {
-    constant: $const,
     css: $css,
     dom: $dom,
     math: $math,
@@ -37,10 +36,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             let actualBottom: number;
             let actualLeft: number;
             if (item.companion) {
-                actualTop = item.actualRect($const.CSS.TOP);
-                actualRight = item.actualRect($const.CSS.RIGHT);
-                actualBottom = item.actualRect($const.CSS.BOTTOM);
-                actualLeft = item.actualRect($const.CSS.LEFT);
+                actualTop = item.actualRect('top');
+                actualRight = item.actualRect('right');
+                actualBottom = item.actualRect('bottom');
+                actualLeft = item.actualRect('left');
             }
             else {
                 actualTop = item.linear.top;
@@ -135,10 +134,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         const previousFloat = [];
                         const clear = node.css('clear');
                         switch (clear) {
-                            case $const.CSS.LEFT:
+                            case 'left':
                                 previousFloat.push(clearable.left);
                                 break;
-                            case $const.CSS.RIGHT:
+                            case 'right':
                                 previousFloat.push(clearable.right);
                                 break;
                             case 'both':
@@ -200,7 +199,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             boxLeft = Math.min(boxLeft, node.linear.left);
                             boxRight = Math.max(boxRight, node.linear.right);
                             if (node.floating) {
-                                if (node.float === $const.CSS.LEFT) {
+                                if (node.float === 'left') {
                                     floatLeft = Math.max(floatLeft, node.linear.right);
                                 }
                                 else {
@@ -499,9 +498,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     if (node.autoMargin.horizontal || node.autoMargin.vertical) {
                         for (const attr of $css.BOX_MARGIN) {
-                            if (node.cssInitial(attr) === $const.CSS.AUTO) {
-                                this._styleMap[attr] = $const.CSS.AUTO;
-                                this._initial.styleMap[attr] = $const.CSS.AUTO;
+                            if (node.cssInitial(attr) === 'auto') {
+                                this._styleMap[attr] = 'auto';
+                                this._initial.styleMap[attr] = 'auto';
                             }
                         }
                     }
@@ -646,7 +645,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             if (this.textElement && cleared && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
                             }
-                            else if (siblings[0].float === $const.CSS.RIGHT) {
+                            else if (siblings[0].float === 'right') {
                                 if (siblings.length > 1) {
                                     let actualTop = top;
                                     if (this.multiline) {
@@ -662,7 +661,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                     }
                                     let maxBottom = Number.NEGATIVE_INFINITY;
                                     for (const item of siblings) {
-                                        if (item.float === $const.CSS.RIGHT && item.linear.bottom > maxBottom) {
+                                        if (item.float === 'right' && item.linear.bottom > maxBottom) {
                                             maxBottom = item.linear.bottom;
                                         }
                                     }
@@ -684,7 +683,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
             }
-            if (this.blockDimension && this.css($const.CSS.WIDTH) === $const.CSS.PERCENT_100 && !this.hasPX('maxWidth')) {
+            if (this.blockDimension && this.css('width') === '100%' && !this.hasPX('maxWidth')) {
                 return NODE_TRAVERSE.VERTICAL;
             }
             const parent = this.actualParent || this.documentParent;
@@ -700,12 +699,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     blockStatic && (!previous.floating || !previous.rightAligned && $util.withinRange(previous.linear.right, parent.box.right) || cleared && cleared.has(previous)) ||
                     previous.blockStatic ||
                     previous.autoMargin.leftRight ||
-                    previous.float === $const.CSS.LEFT && this.autoMargin.right ||
-                    previous.float === $const.CSS.RIGHT && this.autoMargin.left)
+                    previous.float === 'left' && this.autoMargin.right ||
+                    previous.float === 'right' && this.autoMargin.left)
                 {
                     return NODE_TRAVERSE.VERTICAL;
                 }
-                else if (blockStatic && this.some(item => $util.aboveRange(item.linear.top, previous.linear.bottom))) {
+                else if (previous.floating && blockStatic && this.some(item => item.floating && $util.aboveRange(item.linear.top, previous.linear.bottom))) {
                     return NODE_TRAVERSE.FLOAT_BLOCK;
                 }
                 else if (this.blockDimension && checkBlockDimension(previous)) {
@@ -889,12 +888,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public actualRect(direction: string, dimension = 'linear') {
         let node: T;
         switch (direction) {
-            case $const.CSS.TOP:
-            case $const.CSS.LEFT:
+            case 'top':
+            case 'left':
                 node = this.companion && !this.companion.visible && this.companion[dimension][direction] < this[dimension][direction] ? this.companion : this;
                 break;
-            case $const.CSS.RIGHT:
-            case $const.CSS.BOTTOM:
+            case 'right':
+            case 'bottom':
                 node = this.companion && !this.companion.visible && this.companion[dimension][direction] > this[dimension][direction] ? this.companion : this;
                 break;
             default:

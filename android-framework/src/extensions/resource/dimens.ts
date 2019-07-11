@@ -3,15 +3,13 @@ import { ResourceStoredMapAndroid } from '../../../../@types/android/application
 import Resource from '../../resource';
 import View from '../../view';
 
-import { STRING_ANDROID } from '../../lib/constant';
-
 const {
     regex: $regex,
     util: $util
 } = squared.lib;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-const NAMESPACE_ATTR = [STRING_ANDROID.ANDROID, STRING_ANDROID.APP];
+const NAMESPACE_ATTR = ['android', 'app'];
 const REGEXP_UNIT = /\dpx$/;
 const REGEXP_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/;
 

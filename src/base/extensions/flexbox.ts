@@ -6,10 +6,7 @@ import NodeUI from '../node-ui';
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
 
-const {
-    constant: $const,
-    util: $util
-} = squared.lib;
+const $util = squared.lib.util;
 
 export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute<T extends NodeUI>(node: T, children: T[]): FlexboxData<T> {
@@ -37,12 +34,12 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         const controller = this.controller;
         const [children, absolute] = node.partition((item: T) => item.pageFlow && !item.renderExclude) as [T[], T[]];
         const mainData = Flexbox.createDataAttribute(node, children);
-        if (node.cssTry('align-items', $const.CSS.START)) {
-            if (node.cssTry('justify-items', $const.CSS.START)) {
+        if (node.cssTry('align-items', 'start')) {
+            if (node.cssTry('justify-items', 'start')) {
                 for (const item of children) {
                     const bounds = item.initial.bounds;
-                    if (bounds && item.cssTry('align-self', $const.CSS.START)) {
-                        if (item.cssTry('justify-self', $const.CSS.START)) {
+                    if (bounds && item.cssTry('align-self', 'start')) {
+                        if (item.cssTry('justify-self', 'start')) {
                             if (item.cssTry('flex-grow', '0')) {
                                 if (item.cssTry('flex-shrink', '1')) {
                                     const rect = (<Element> item.element).getBoundingClientRect();
@@ -67,15 +64,15 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             let size: string;
             let method: string;
             if (mainData.directionRow) {
-                align = $const.CSS.TOP;
-                sort = $const.CSS.LEFT;
-                size = $const.CSS.RIGHT;
+                align = 'top';
+                sort = 'left';
+                size = 'right';
                 method = 'intersectY';
             }
             else {
-                align = $const.CSS.LEFT;
-                sort = $const.CSS.TOP;
-                size = $const.CSS.BOTTOM;
+                align = 'left';
+                sort = 'top';
+                size = 'bottom';
                 method = 'intersectX';
             }
             children.sort((a, b) => {

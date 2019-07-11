@@ -44,7 +44,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
             if (node.inlineWidth) {
                 for (const item of node) {
                     if (item.rightAligned) {
-                        node.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT, true);
+                        node.setLayoutWidth('match_parent', true);
                         break;
                     }
                 }
@@ -52,7 +52,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
             if (node.inlineHeight) {
                 for (const item of node) {
                     if (item.bottomAligned) {
-                        node.setLayoutHeight($constA.STRING_ANDROID.MATCH_PARENT, true);
+                        node.setLayoutHeight('match_parent', true);
                         break;
                     }
                 }

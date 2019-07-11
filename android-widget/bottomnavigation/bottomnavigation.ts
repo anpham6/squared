@@ -3,10 +3,7 @@ import { UserSettingsAndroid } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
-const {
-    constant: $const,
-    util: $util
-} = squared.lib;
+const $util = squared.lib.util;
 
 const {
     constant: $constA,
@@ -30,7 +27,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
 
     public processNode(node: T, parent: T) {
         const options = $utilA.createViewAttribute(this.options[node.elementId]);
-        $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'background', `?android:attr/windowBackground`);
+        $util.assignEmptyValue(options, 'android', 'background', `?android:attr/windowBackground`);
         const children = node.children;
         const length = children.length;
         for (let i = 5; i < length; i++) {
@@ -44,8 +41,8 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         node.exclude($e.NODE_RESOURCE.ASSET);
         node.render(parent);
         node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
-        node.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);
-        node.setLayoutHeight($constA.STRING_ANDROID.WRAP_CONTENT);
+        node.setLayoutWidth('match_parent');
+        node.setLayoutHeight('wrap_content');
         for (const item of node.cascade()) {
             this.addDescendant(item as T);
         }
@@ -63,17 +60,17 @@ export default class BottomNavigation<T extends android.base.View> extends squar
     public postBaseLayout(node: T) {
         const renderParent = node.renderParent as T;
         if (renderParent) {
-            if (!renderParent.hasPX($const.CSS.WIDTH)) {
-                renderParent.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);
+            if (!renderParent.hasPX('width')) {
+                renderParent.setLayoutWidth('match_parent');
             }
-            if (!renderParent.hasPX($const.CSS.HEIGHT)) {
-                renderParent.setLayoutHeight($constA.STRING_ANDROID.MATCH_PARENT);
+            if (!renderParent.hasPX('height')) {
+                renderParent.setLayoutHeight('match_parent');
             }
         }
         const menu = $util.optionalAsString(BottomNavigation.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
-            $util.assignEmptyValue(options, $constA.STRING_ANDROID.APP, 'menu', `@menu/${menu}`);
+            $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
             node.app('menu', options.app.menu);
         }
     }
@@ -81,7 +78,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
     private setStyleTheme() {
         const options = $utilA.createStyleAttribute(this.options.resource);
         $util.assignEmptyValue(options, 'name', (<UserSettingsAndroid> this.application.userSettings).manifestThemeName);
-        $util.assignEmptyValue(options, $constA.STRING_ANDROID.PARENT, 'Theme.AppCompat.Light.DarkActionBar');
+        $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
         $Resource.addTheme(options);
     }
 }

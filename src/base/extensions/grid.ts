@@ -7,7 +7,6 @@ import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const {
-    constant: $const,
     css: $css,
     util: $util
 } = squared.lib;
@@ -268,7 +267,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 let hasLength = true;
                 let hasPercent = false;
                 for (const item of group) {
-                    const width = item.css($const.CSS.WIDTH);
+                    const width = item.css('width');
                     if ($css.isPercent(width)) {
                         hasPercent = true;
                     }
@@ -307,7 +306,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 for (const item of group) {
                     item.parent = node;
                     if (!hasLength && item.percentWidth) {
-                        item.css($const.CSS.WIDTH, $css.formatPX(item.bounds.width));
+                        item.css('width', $css.formatPX(item.bounds.width));
                     }
                 }
             }

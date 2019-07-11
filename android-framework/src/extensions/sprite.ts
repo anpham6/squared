@@ -12,10 +12,7 @@ type SpriteData = {
     position: BoxRectPosition
 };
 
-const {
-    constant: $const,
-    css: $css
-} = squared.lib;
+const $css = squared.lib.css;
 
 const {
     constant: $c,
@@ -37,28 +34,28 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 node.exclude($e.NODE_RESOURCE.FONT_STYLE | $e.NODE_RESOURCE.BOX_STYLE);
                 node.cssApply({
                     position: 'static',
-                    top: $const.CSS.AUTO,
-                    right: $const.CSS.AUTO,
-                    bottom: $const.CSS.AUTO,
-                    left: $const.CSS.AUTO,
+                    top: 'auto',
+                    right: 'auto',
+                    bottom: 'auto',
+                    left: 'auto',
                     display: 'inline-block',
                     width: mainData.image.width > 0 ? $css.formatPX(mainData.image.width) : 'auto',
                     height: mainData.image.height > 0 ? $css.formatPX(mainData.image.height) : 'auto',
                     marginTop: $css.formatPX(mainData.position.top),
-                    marginRight: $const.CSS.PX_0,
-                    marginBottom: $const.CSS.PX_0,
+                    marginRight: '0px',
+                    marginBottom: '0px',
                     marginLeft: $css.formatPX(mainData.position.left),
-                    paddingTop: $const.CSS.PX_0,
-                    paddingRight: $const.CSS.PX_0,
-                    paddingBottom: $const.CSS.PX_0,
-                    paddingLeft: $const.CSS.PX_0,
-                    borderTopStyle: $const.CSS.NONE,
-                    borderRightStyle: $const.CSS.NONE,
-                    borderBottomStyle: $const.CSS.NONE,
-                    borderLeftStyle: $const.CSS.NONE,
-                    borderRadius: $const.CSS.PX_0,
-                    backgroundPositionX: $const.CSS.PX_0,
-                    backgroundPositionY: $const.CSS.PX_0,
+                    paddingTop: '0px',
+                    paddingRight: '0px',
+                    paddingBottom: '0px',
+                    paddingLeft: '0px',
+                    borderTopStyle: 'none',
+                    borderRightStyle: 'none',
+                    borderBottomStyle: 'none',
+                    borderLeftStyle: 'none',
+                    borderRadius: '0px',
+                    backgroundPositionX: '0px',
+                    backgroundPositionY: '0px',
                     backgroundColor: 'rgba(0, 0, 0, 0)'
                 });
                 node.unsetCache();

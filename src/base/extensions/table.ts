@@ -7,7 +7,6 @@ import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const {
-    constant: $const,
     css: $css,
     dom: $dom,
     math: $math,
@@ -56,7 +55,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
         }
-        const setBoundsWidth = (td: T) => td.css($const.CSS.WIDTH, $css.formatPX(td.bounds.width), true);
+        const setBoundsWidth = (td: T) => td.css('width', $css.formatPX(td.bounds.width), true);
         const thead: T[] = [];
         const tbody: T[] = [];
         const tfoot: T[] = [];
@@ -79,7 +78,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             section.hide();
         }
         inheritStyles(tfoot);
-        const [horizontal, vertical] = mainData.borderCollapse ? [0, 0] : $util.replaceMap<string, number>(node.css('borderSpacing').split(' '), (value, index) => node.parseUnit(value, index === 0 ? $const.CSS.WIDTH : $const.CSS.HEIGHT));
+        const [horizontal, vertical] = mainData.borderCollapse ? [0, 0] : $util.replaceMap<string, number>(node.css('borderSpacing').split(' '), (value, index) => node.parseUnit(value, index === 0 ? 'width' : 'height'));
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const colgroup = (<Element> node.element).querySelector('COLGROUP');
@@ -102,28 +101,28 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         columnIndex[col] += element.colSpan;
                     }
                 }
-                if (!td.hasPX($const.CSS.WIDTH)) {
-                    const width = $dom.getNamedItem(element, $const.CSS.WIDTH);
+                if (!td.hasPX('width')) {
+                    const width = $dom.getNamedItem(element, 'width');
                     if ($css.isPercent(width)) {
-                        td.css($const.CSS.WIDTH, width);
+                        td.css('width', width);
                     }
                     else if ($util.isNumber(width)) {
-                        td.css($const.CSS.WIDTH, $css.formatPX(parseFloat(width)));
+                        td.css('width', $css.formatPX(parseFloat(width)));
                     }
                 }
-                if (!td.hasPX($const.CSS.HEIGHT)) {
-                    const height = $dom.getNamedItem(element, $const.CSS.HEIGHT);
+                if (!td.hasPX('height')) {
+                    const height = $dom.getNamedItem(element, 'height');
                     if ($css.isPercent(height)) {
-                        td.css($const.CSS.HEIGHT, height);
+                        td.css('height', height);
                     }
                     else if ($util.isNumber(height)) {
-                        td.css($const.CSS.HEIGHT, $css.formatPX(parseFloat(height)));
+                        td.css('height', $css.formatPX(parseFloat(height)));
                     }
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     if (colgroup) {
                         const style = $css.getStyle(colgroup.children[columnIndex[i]]);
-                        if (style.backgroundImage && style.backgroundImage !== $const.CSS.NONE) {
+                        if (style.backgroundImage && style.backgroundImage !== 'none') {
                             td.css('backgroundImage', style.backgroundImage, true);
                         }
                         if (style.backgroundColor && !REGEXP_BACKGROUND.test(style.backgroundColor)) {
@@ -173,17 +172,17 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                     case 'TD':
                         if (!td.cssInitial('verticalAlign')) {
-                            td.css('verticalAlign', $const.CSS.MIDDLE, true);
+                            td.css('verticalAlign', 'middle', true);
                         }
                         break;
                 }
-                const columnWidth = td.cssInitial($const.CSS.WIDTH);
+                const columnWidth = td.cssInitial('width');
                 const m = columnIndex[i];
-                const reevaluate = mapWidth[m] === undefined || mapWidth[m] === $const.CSS.AUTO;
+                const reevaluate = mapWidth[m] === undefined || mapWidth[m] === 'auto';
                 if (i === 0 || reevaluate || !mainData.layoutFixed) {
-                    if (columnWidth === '' || columnWidth === $const.CSS.AUTO) {
+                    if (columnWidth === '' || columnWidth === 'auto') {
                         if (mapWidth[m] === undefined) {
-                            mapWidth[m] = columnWidth || $const.CSS.PX_0;
+                            mapWidth[m] = columnWidth || '0px';
                             mapBounds[m] = 0;
                         }
                         else if (i === rowCount - 1) {
@@ -218,9 +217,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             });
             columnCount = Math.max(columnCount, columnIndex[i]);
         }
-        if (node.hasPX($const.CSS.WIDTH, false) && mapWidth.some(value => $css.isPercent(value))) {
+        if (node.hasPX('width', false) && mapWidth.some(value => $css.isPercent(value))) {
             $util.replaceMap<string, string>(mapWidth, (value, index) => {
-                if (value === $const.CSS.AUTO && mapBounds[index] > 0) {
+                if (value === 'auto' && mapBounds[index] > 0) {
                     return $css.formatPX(mapBounds[index]);
                 }
                 return value;
@@ -231,7 +230,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             $util.replaceMap<string, string>(mapWidth, value => {
                 const percent = parseFloat(value);
                 if (percentTotal <= 0) {
-                    value = $const.CSS.PX_0;
+                    value = '0px';
                 }
                 else if (percentTotal - percent < 0) {
                     value = $css.formatPercent(percentTotal / 100);
@@ -244,19 +243,19 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
             if (node.hasWidth) {
                 if (width < node.width) {
-                    $util.replaceMap<string, string>(mapWidth, value => value !== $const.CSS.PX_0 ? `${(parseFloat(value) / width) * 100}%` : value);
+                    $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? `${(parseFloat(value) / width) * 100}%` : value);
                 }
                 else if (width > node.width) {
-                    node.css($const.CSS.WIDTH, $const.CSS.AUTO, true);
+                    node.css('width', 'auto', true);
                     if (!mainData.layoutFixed) {
                         for (const item of node.cascade()) {
-                            item.css($const.CSS.WIDTH, $const.CSS.AUTO, true);
+                            item.css('width', 'auto', true);
                         }
                     }
                 }
             }
-            if (mainData.layoutFixed && !node.hasPX($const.CSS.WIDTH)) {
-                node.css($const.CSS.WIDTH, $css.formatPX(node.bounds.width), true);
+            if (mainData.layoutFixed && !node.hasPX('width')) {
+                node.css('width', $css.formatPX(node.bounds.width), true);
             }
         }
         const mapPercent = mapWidth.reduce((a, b) => a + ($css.isPercent(b) ? parseFloat(b) : 0), 0);
@@ -264,7 +263,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             if (mainData.layoutFixed && mapWidth.reduce((a, b) => a + ($css.isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
                 return LAYOUT_TABLE.COMPRESS;
             }
-            else if (mapWidth.some(value => $css.isPercent(value)) || mapWidth.every(value => $css.isLength(value) && value !== $const.CSS.PX_0)) {
+            else if (mapWidth.some(value => $css.isPercent(value)) || mapWidth.every(value => $css.isLength(value) && value !== '0px')) {
                 return LAYOUT_TABLE.VARIABLE;
             }
             else if (mapWidth.every(value => value === mapWidth[0])) {
@@ -272,7 +271,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     mainData.expand = true;
                     return LAYOUT_TABLE.VARIABLE;
                 }
-                else if (mapWidth[0] === $const.CSS.AUTO) {
+                else if (mapWidth[0] === 'auto') {
                     if (node.hasWidth) {
                         return LAYOUT_TABLE.VARIABLE;
                     }
@@ -288,7 +287,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     return LAYOUT_TABLE.FIXED;
                 }
             }
-            if (mapWidth.every(value => value === $const.CSS.AUTO || $css.isLength(value) && value !== $const.CSS.PX_0)) {
+            if (mapWidth.every(value => value === 'auto' || $css.isLength(value) && value !== '0px')) {
                 if (!node.hasWidth) {
                     mainData.expand = true;
                 }
@@ -310,7 +309,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (!caption.cssInitial('textAlign')) {
-                caption.css('textAlign', $const.CSS.CENTER);
+                caption.css('textAlign', 'center');
             }
             caption.data(EXT_NAME.TABLE, 'cellData', { colSpan: columnCount });
             caption.parent = node;
@@ -332,13 +331,13 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 if (!td.has('verticalAlign')) {
-                    td.css('verticalAlign', $const.CSS.MIDDLE);
+                    td.css('verticalAlign', 'middle');
                 }
                 const columnWidth = mapWidth[columnIndex[i]];
                 if (columnWidth !== undefined) {
                     switch (mainData.layoutType) {
                         case LAYOUT_TABLE.VARIABLE:
-                            if (columnWidth === $const.CSS.AUTO) {
+                            if (columnWidth === 'auto') {
                                 if (mapPercent >= 1) {
                                     setBoundsWidth(td);
                                     data.exceed = !hasWidth;
@@ -370,18 +369,18 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             else {
-                                if (!td.hasPX($const.CSS.WIDTH) || td.percentWidth) {
+                                if (!td.hasPX('width') || td.percentWidth) {
                                     setBoundsWidth(td);
                                 }
                                 data.expand = false;
                             }
                             break;
                         case LAYOUT_TABLE.FIXED:
-                            td.css($const.CSS.WIDTH, $const.CSS.PX_0);
+                            td.css('width', '0px');
                             break;
                         case LAYOUT_TABLE.STRETCH:
-                            if (columnWidth === $const.CSS.AUTO) {
-                                td.css($const.CSS.WIDTH, $const.CSS.PX_0);
+                            if (columnWidth === 'auto') {
+                                td.css('width', '0px');
                             }
                             else {
                                 if (mainData.layoutFixed) {
@@ -456,10 +455,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             const next = tableFilled[i + 1][j];
                             if (next && next !== td && next.css('visibility') === 'visible') {
                                 if (td.borderBottomWidth >= next.borderTopWidth) {
-                                    next.css('borderTopWidth', $const.CSS.PX_0, true);
+                                    next.css('borderTopWidth', '0px', true);
                                 }
                                 else {
-                                    td.css('borderBottomWidth', $const.CSS.PX_0, true);
+                                    td.css('borderBottomWidth', '0px', true);
                                 }
                             }
                         }
@@ -491,10 +490,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             const next = tableFilled[i][j + 1];
                             if (next && next !== td && next.css('visibility') === 'visible') {
                                 if (td.borderRightWidth >= next.borderLeftWidth) {
-                                    next.css('borderLeftWidth', $const.CSS.PX_0, true);
+                                    next.css('borderLeftWidth', '0px', true);
                                 }
                                 else {
-                                    td.css('borderRightWidth', $const.CSS.PX_0, true);
+                                    td.css('borderRightWidth', '0px', true);
                                 }
                             }
                         }
@@ -515,10 +514,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             }
             if (hideTop || hideRight || hideBottom || hideLeft) {
                 node.cssApply({
-                    borderTopWidth: $const.CSS.PX_0,
-                    borderRightWidth: $const.CSS.PX_0,
-                    borderBottomWidth: $const.CSS.PX_0,
-                    borderLeftWidth: $const.CSS.PX_0
+                    borderTopWidth: '0px',
+                    borderRightWidth: '0px',
+                    borderBottomWidth: '0px',
+                    borderLeftWidth: '0px'
                 }, true);
             }
         }

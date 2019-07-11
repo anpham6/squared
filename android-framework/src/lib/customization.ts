@@ -5,22 +5,20 @@ import { BUILD_ANDROID } from './enumeration';
 
 import View from '../view';
 
-type Customizations = {
+interface Customizations {
     [index: number]: {
         android: ObjectMap<boolean | CustomizationResult>;
         assign: {
             [namespace: string]: ObjectMap<StringMap>;
         };
     };
-};
-type Deprecations = {
-    android: ObjectMap<CustomizationResult>;
-};
+}
 
-const {
-    constant: $const,
-    util: $util
-} = squared.lib;
+interface Deprecations {
+    android: ObjectMap<CustomizationResult>;
+}
+
+const $util = squared.lib.util;
 
 function substitute(result: {}, value: string, api?: number, minApi = 0) {
     if (!api || api >= minApi) {
@@ -164,7 +162,7 @@ export const API_ANDROID: Customizations = {
             'contextClickable': false,
             'drawableTint': false,
             'drawableTintMode': false,
-            'end': (result: {}) => substitute(result, $const.CSS.RIGHT),
+            'end': (result: {}) => substitute(result, 'right'),
             'extractNativeLibs': false,
             'fingerprintAuthDrawable': false,
             'fraction': false,
@@ -175,7 +173,7 @@ export const API_ANDROID: Customizations = {
             'numbersInnerTextColor': false,
             'scrollIndicators': false,
             'showForAllUsers': false,
-            'start': (result: {}) => substitute(result, $const.CSS.LEFT),
+            'start': (result: {}) => substitute(result, 'left'),
             'subtitleTextColor': false,
             'supportsAssist': false,
             'supportsLaunchVoiceAssistFromKeyguard': false,

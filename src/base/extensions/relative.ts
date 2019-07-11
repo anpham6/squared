@@ -6,7 +6,6 @@ import { STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const {
-    constant: $const,
     dom: $dom,
     util: $util
 } = squared.lib;
@@ -76,7 +75,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                     else {
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - unaligned[0].linear.top);
                                     }
-                                    item.css('verticalAlign', $const.CSS.PX_0, true);
+                                    item.css('verticalAlign', '0px', true);
                                 }
                             }
                             break;

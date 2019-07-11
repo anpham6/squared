@@ -1,7 +1,6 @@
 import { SvgMatrix, SvgPoint, SvgTransform } from '../../../@types/svg/object';
 
 const {
-    constant: $const,
     css: $css,
     dom: $dom,
     math: $math,
@@ -236,32 +235,32 @@ export const TRANSFORM = {
             }
             const positions = value.split(' ');
             if (positions.length === 1) {
-                positions.push($const.CSS.CENTER);
+                positions.push('center');
             }
             switch (positions[0]) {
-                case $const.CSS.PERCENT_0:
-                case $const.CSS.LEFT:
+                case '0%':
+                case 'left':
                     break;
-                case $const.CSS.PERCENT_100:
-                case $const.CSS.RIGHT:
+                case '100%':
+                case 'right':
                     result.x = width;
                     break;
-                case $const.CSS.CENTER:
-                    positions[0] = $const.CSS.PERCENT_50;
+                case 'center':
+                    positions[0] = '50%';
                 default:
                     setPosition('x', positions[0], width);
                     break;
             }
             switch (positions[1]) {
-                case $const.CSS.PERCENT_0:
-                case $const.CSS.TOP:
+                case '0%':
+                case 'top':
                     break;
-                case $const.CSS.PERCENT_100:
-                case $const.CSS.BOTTOM:
+                case '100%':
+                case 'bottom':
                     result.y = height;
                     break;
-                case $const.CSS.CENTER:
-                    positions[1] = $const.CSS.PERCENT_50;
+                case 'center':
+                    positions[1] = '50%';
                 default:
                     setPosition('y', positions[1], height);
                     break;

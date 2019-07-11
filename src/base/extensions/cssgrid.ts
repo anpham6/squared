@@ -19,7 +19,6 @@ type RepeatItem = {
 };
 
 const {
-    constant: $const,
     css: $css,
     regex: $regex,
     util: $util
@@ -134,8 +133,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         const cellsPerRow: number[] = [];
         const layout: GridLayout[] = [];
         let rowInvalid: ObjectIndex<boolean> = {};
-        mainData.row.gap = node.parseUnit(node.css('rowGap'), $const.CSS.HEIGHT, false);
-        mainData.column.gap = node.parseUnit(node.css('columnGap'), $const.CSS.WIDTH, false);
+        mainData.row.gap = node.parseUnit(node.css('rowGap'), 'height', false);
+        mainData.column.gap = node.parseUnit(node.css('columnGap'), 'width', false);
         function setDataRows(item: T, placement: number[]) {
             if (placement.every(value => value > 0)) {
                 for (let i = placement[horizontal ? 0 : 1] - 1; i < placement[horizontal ? 2 : 3] - 1; i++) {
@@ -158,7 +157,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             return false;
         }
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
-            if (value && value !== $const.CSS.NONE && value !== $const.CSS.AUTO) {
+            if (value && value !== 'none' && value !== 'auto') {
                 CACHE_PATTERN.NAMED.lastIndex = 0;
                 let match: RegExpMatchArray | null;
                 let i = 1;
@@ -202,7 +201,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         repeating.push({ unit: convertLength(node, namedMatch[2]), unitMin: convertLength(node, namedMatch[1]) });
                                     }
                                     else if ((namedMatch = CACHE_PATTERN.CELL_FIT_CONTENT.exec(subMatch[1])) !== null) {
-                                        repeating.push({ unit: convertLength(node, namedMatch[1]), unitMin: $const.CSS.PX_0 });
+                                        repeating.push({ unit: convertLength(node, namedMatch[1]), unitMin: '0px' });
                                     }
                                     else if ((namedMatch = CACHE_PATTERN.CELL_UNIT.exec(subMatch[1])) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[0]) });
@@ -239,12 +238,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         else if (match[1].startsWith('fit-content')) {
                             data.unit.push(convertLength(node, match[7]));
-                            data.unitMin.push($const.CSS.PX_0);
+                            data.unitMin.push('0px');
                             data.repeat.push(false);
                             i++;
                         }
                         else if (CACHE_PATTERN.UNIT.test(match[1])) {
-                            data.unit.push(match[1] === $const.CSS.AUTO ? $const.CSS.AUTO : convertLength(node, match[1]));
+                            data.unit.push(match[1] === 'auto' ? 'auto' : convertLength(node, match[1]));
                             data.unitMin.push('');
                             data.repeat.push(false);
                             i++;
@@ -278,22 +277,22 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 return 0;
             });
         }
-        if (!node.has('gridTemplateAreas') && node.every(item => item.css('gridRowStart') === $const.CSS.AUTO && item.css('gridColumnStart') === $const.CSS.AUTO)) {
+        if (!node.has('gridTemplateAreas') && node.every(item => item.css('gridRowStart') === 'auto' && item.css('gridColumnStart') === 'auto')) {
             let directionA: string;
             let directionB: string;
             let indexA: number;
             let indexB: number;
             let indexC: number;
             if (horizontal) {
-                directionA = $const.CSS.TOP;
-                directionB = $const.CSS.BOTTOM;
+                directionA = 'top';
+                directionB = 'bottom';
                 indexA = 2;
                 indexB = 1;
                 indexC = 3;
             }
             else {
-                directionA = $const.CSS.LEFT;
-                directionB = $const.CSS.RIGHT;
+                directionA = 'left';
+                directionB = 'right';
                 indexA = 3;
                 indexB = 0;
                 indexC = 2;
@@ -369,7 +368,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         else {
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
-                if (template !== $const.CSS.NONE) {
+                if (template !== 'none') {
                     const templateAreas = mainData.templateAreas;
                     $util.trimString(template.trim(), '"').split($regex.CHAR.SPACE).forEach((area, j) => {
                         if (area.charAt(0) !== '.') {
@@ -424,7 +423,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             if (match) {
                                 template = mainData.templateAreas[match[1]];
                                 if (template) {
-                                    if (match[2] === $const.CSS.START) {
+                                    if (match[2] === 'start') {
                                         switch (i) {
                                             case 0:
                                             case 2:
@@ -480,7 +479,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     let colStart: string[] | undefined;
                     for (let i = 0; i < 4; i++) {
                         const value = positions[i];
-                        if (value !== $const.CSS.AUTO && !placement[i] && !setPlacement(value, i)) {
+                        if (value !== 'auto' && !placement[i] && !setPlacement(value, i)) {
                             const data = mainData[i % 2 === 0 ? 'row' : 'column'];
                             const alias = value.split(' ');
                             if (alias.length === 1) {
@@ -533,7 +532,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
             if (data.autoFill || data.autoFit) {
                 if (data.unit.length === 0) {
-                    data.unit.push($const.CSS.AUTO);
+                    data.unit.push('auto');
                     data.unitMin.push('');
                     data.repeat.push(true);
                 }

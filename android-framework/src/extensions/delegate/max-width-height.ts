@@ -1,6 +1,6 @@
 import View from '../../view';
 
-import { CONTAINER_ANDROID, EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
+import { CONTAINER_ANDROID, EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
@@ -9,8 +9,6 @@ const {
     constant: $c,
     enumeration: $e
 } = squared.base.lib;
-
-const $const = squared.lib.constant;
 
 export interface MaxWidthHeightData {
     width: boolean;
@@ -42,8 +40,8 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         if (mainData) {
             const container = parent.layoutConstraint ? parent : (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
             if (mainData.width) {
-                node.setLayoutWidth($const.CSS.PX_0);
-                container.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
+                node.setLayoutWidth('0px');
+                container.setLayoutWidth('match_parent');
                 if (parent.layoutElement) {
                     node.autoMargin.horizontal = false;
                     node.autoMargin.left = false;
@@ -52,8 +50,8 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                 }
             }
             if (mainData.height) {
-                node.setLayoutHeight($const.CSS.PX_0);
-                container.setLayoutHeight(STRING_ANDROID.MATCH_PARENT);
+                node.setLayoutHeight('0px');
+                container.setLayoutHeight('match_parent');
                 if (parent.layoutElement) {
                     node.autoMargin.vertical = false;
                     node.autoMargin.top = false;

@@ -1,11 +1,9 @@
-import { STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import View from '../../view';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const $const = squared.lib.constant;
 const $e = squared.base.lib.enumeration;
 
 const isFlexible = (node: View) => !node.documentParent.layoutElement && !node.display.startsWith('table');
@@ -13,15 +11,15 @@ const isFlexible = (node: View) => !node.documentParent.layoutElement && !node.d
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T, parent: T) {
         if (node.pageFlow) {
-            if (node.has($const.CSS.WIDTH, $e.CSS_UNIT.PERCENT, { not: $const.CSS.PERCENT_100 }) && !parent.layoutConstraint && (
+            if (node.has('width', $e.CSS_UNIT.PERCENT, { not: '100%' }) && !parent.layoutConstraint && (
                     node.documentRoot ||
-                    node.hasPX($const.CSS.HEIGHT) ||
-                    (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX($const.CSS.WIDTH))
+                    node.hasPX('height') ||
+                    (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width'))
                ))
             {
                 return isFlexible(node);
             }
-            else if (node.has($const.CSS.HEIGHT, $e.CSS_UNIT.PERCENT, { not: $const.CSS.PERCENT_100 }) && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
+            else if (node.has('height', $e.CSS_UNIT.PERCENT, { not: '100%' }) && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
                 return isFlexible(node);
             }
         }
@@ -32,18 +30,18 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent);
         if (node.percentWidth) {
             container.css('display', 'block');
-            container.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
-            node.setLayoutWidth($const.CSS.PX_0);
+            container.setLayoutWidth('match_parent');
+            node.setLayoutWidth('0px');
         }
         else {
-            container.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
+            container.setLayoutWidth('wrap_content');
         }
         if (node.percentHeight) {
-            container.setLayoutHeight(STRING_ANDROID.MATCH_PARENT);
-            node.setLayoutHeight($const.CSS.PX_0);
+            container.setLayoutHeight('match_parent');
+            node.setLayoutHeight('0px');
         }
         else {
-            container.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
+            container.setLayoutHeight('wrap_content');
         }
         return {
             parent: container,

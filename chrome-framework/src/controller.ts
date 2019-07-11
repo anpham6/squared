@@ -3,7 +3,6 @@ import { ControllerSettings } from '../../@types/base/application';
 import View from './view';
 
 const {
-    constant: $const,
     dom: $dom,
     session: $session
 } = squared.lib;
@@ -47,8 +46,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',
-                float: $const.CSS.NONE,
-                clear: $const.CSS.NONE
+                float: 'none',
+                clear: 'none'
             });
         }
     }

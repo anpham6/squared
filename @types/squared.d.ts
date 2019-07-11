@@ -8,7 +8,6 @@ import * as $const from '../src/base/lib/constant';
 import * as $enum from '../src/base/lib/enumeration';
 
 import * as $client from '../src/lib/client';
-import * as $constant from '../src/lib/constant';
 import * as $css from '../src/lib/css';
 import * as $dom from '../src/lib/dom';
 import * as $regex from '../src/lib/regex';
@@ -670,10 +669,6 @@ declare namespace lib {
         function convertHSLA(value: RGBA): HSLA;
         function formatRGBA(value: RGBA): string;
         function formatHSLA(value: HSLA): string;
-    }
-
-    namespace constant {
-        export import CSS = $constant.CSS;
     }
 
     namespace client {

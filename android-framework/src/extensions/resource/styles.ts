@@ -3,7 +3,6 @@ import { ResourceStoredMapAndroid } from '../../../../@types/android/application
 import Resource from '../../resource';
 import View from '../../view';
 
-import { STRING_ANDROID } from '../../lib/constant';
 import { createStyleAttribute } from '../../lib/util';
 
 const {
@@ -31,7 +30,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     for (let i = 0; i < length; i++) {
                         const item = renderChildren[i] as T;
                         let found = false;
-                        for (const value of item.combine('_', STRING_ANDROID.ANDROID)) {
+                        for (const value of item.combine('_', 'android')) {
                             if (!found && value.startsWith('style=')) {
                                 if (i === 0) {
                                     style = value;

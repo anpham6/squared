@@ -6,10 +6,7 @@ import NodeUI from '../node-ui';
 import { EXT_NAME, STRING_BASE } from '../lib/constant';
 import { NODE_RESOURCE } from '../lib/enumeration';
 
-const {
-    constant: $const,
-    css: $css
-} = squared.lib;
+const $css = squared.lib.css;
 
 const hasSingleImage = (node: NodeUI) => node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
 
@@ -36,7 +33,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 let listType = 0;
                 for (let i = 0; i < length; i++) {
                     const item = children[i] as T;
-                    const listStyleType = item.css('listStyleType') !== $const.CSS.NONE;
+                    const listStyleType = item.css('listStyleType') !== 'none';
                     if (item.display === 'list-item' && (listStyleType || item.innerBefore)) {
                         listType++;
                     }
@@ -85,7 +82,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
             const mainData = List.createDataAttribute();
             const value = item.css('listStyleType');
             const listItem = item.display === 'list-item';
-            if (listItem || value && value !== $const.CSS.NONE || hasSingleImage(item)) {
+            if (listItem || value && value !== 'none' || hasSingleImage(item)) {
                 if (item.has('listStyleImage')) {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
@@ -109,7 +106,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                     src = item.backgroundImage;
                                     position = item.css('backgroundPosition');
                                 }
-                                if (src && src !== $const.CSS.NONE) {
+                                if (src && src !== 'none') {
                                     mainData.imageSrc = src;
                                     mainData.imagePosition = position;
                                     item.exclude(NODE_RESOURCE.IMAGE_SOURCE);

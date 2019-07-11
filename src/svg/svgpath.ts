@@ -22,7 +22,6 @@ interface DashGroup {
 }
 
 const {
-    constant: $const,
     dom: $dom,
     math: $math,
     util: $util
@@ -339,8 +338,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         else if (SVG.rect(element)) {
             let x = this.getBaseValue('x');
             let y = this.getBaseValue('y');
-            let width = this.getBaseValue($const.CSS.WIDTH);
-            let height = this.getBaseValue($const.CSS.HEIGHT);
+            let width = this.getBaseValue('width');
+            let height = this.getBaseValue('height');
             if (transforms && transforms.length) {
                 let points: SvgPoint[] = [
                     { x, y },
@@ -1025,8 +1024,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         else if (SVG.rect(element)) {
             this.setBaseValue('x');
             this.setBaseValue('y');
-            this.setBaseValue($const.CSS.WIDTH);
-            this.setBaseValue($const.CSS.HEIGHT);
+            this.setBaseValue('width');
+            this.setBaseValue('height');
         }
         else if (SVG.circle(element)) {
             this.setBaseValue('cx');

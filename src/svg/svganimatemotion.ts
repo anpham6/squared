@@ -7,7 +7,6 @@ import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 import { SVG, getPathLength, getAttribute, getTargetElement } from './lib/util';
 
 const {
-    constant: $const,
     css: $css,
     dom: $dom,
     math: $math,
@@ -16,7 +15,7 @@ const {
 
 export default class SvgAnimateMotion extends SvgAnimateTransform implements squared.svg.SvgAnimateMotion {
     public path = '';
-    public distance = $const.CSS.PERCENT_0;
+    public distance = '0%';
     public rotate = 'auto 0deg';
     public motionPathElement: SVGGeometryElement | null = null;
     public rotateData?: NumberValue[];
@@ -73,7 +72,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 this.distance = distance;
             }
             const rotate = getAttribute(element, 'offset-rotate', false);
-            if (rotate !== '' && rotate !== $const.CSS.AUTO) {
+            if (rotate !== '' && rotate !== 'auto') {
                 this.rotate = rotate;
             }
         }
@@ -304,7 +303,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         const angleFrom = $css.parseAngle(from.value.split(' ').pop() as string);
                         const angleTo = $css.parseAngle(to.value.split(' ').pop() as string);
                         if (from.value === to.value || angleFrom === angleTo) {
-                            if (from.value.startsWith($const.CSS.AUTO)) {
+                            if (from.value.startsWith('auto')) {
                                 if (angleFrom !== 0) {
                                     for (const item of timeRange) {
                                         item.rotate += angleFrom;
@@ -321,7 +320,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                             const offset = angleTo - angleFrom;
                             const length = timeRange.length;
                             const l = offset / length;
-                            if (from.value.startsWith($const.CSS.AUTO)) {
+                            if (from.value.startsWith('auto')) {
                                 for (let k = 0; k < length - 1; k++) {
                                     timeRange[k].rotate += angleFrom + (k * l);
                                 }

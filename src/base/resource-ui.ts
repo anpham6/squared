@@ -9,7 +9,6 @@ import { NODE_RESOURCE } from './lib/enumeration';
 const {
     client: $client,
     color: $color,
-    constant: $const,
     css: $css,
     math: $math,
     regex: $regex,
@@ -30,7 +29,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
         REGEXP_COLORSTOP.lastIndex = 0;
     }
     const radial = <RadialGradient> gradient;
-    const dimension = radial.horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT;
+    const dimension = radial.horizontal ? 'width' : 'height';
     const repeating = radial.repeating === true;
     const extent = repeating && gradient.type === 'radial' ? radial.radiusExtent / radial.radius : 1;
     const result: ColorStop[] = [];
@@ -295,14 +294,14 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     dimensions[1] = dimensions[0];
                 }
                 for (let i = 0; i < length; i++) {
-                    if (dimensions[i] === $const.CSS.AUTO) {
-                        dimensions[i] = $const.CSS.PERCENT_100;
+                    if (dimensions[i] === 'auto') {
+                        dimensions[i] = '100%';
                     }
                     if (i === 0) {
-                        width = node.parseUnit(dimensions[i], $const.CSS.WIDTH, false);
+                        width = node.parseUnit(dimensions[i], 'width', false);
                     }
                     else {
-                        height = node.parseUnit(dimensions[i], $const.CSS.HEIGHT, false);
+                        height = node.parseUnit(dimensions[i], 'height', false);
                     }
                 }
                 break;
@@ -385,7 +384,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             };
             const element = <HTMLElement> node.element;
             function setBorderStyle(attr: string, border: string[]) {
-                const style = node.css(border[0]) || $const.CSS.NONE;
+                const style = node.css(border[0]) || 'none';
                 let width = $css.formatPX(attr !== 'outline' ? node[border[1]] : $util.convertFloat(node.style[border[1]]));
                 let color = node.css(border[2]) || 'initial';
                 switch (color) {
@@ -397,7 +396,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         color = $css.getInheritedStyle(element, border[2]);
                         break;
                 }
-                if (style !== $const.CSS.NONE && width !== $const.CSS.PX_0) {
+                if (style !== 'none' && width !== '0px') {
                     if (width === '2px' && (style === 'inset' || style === 'outset')) {
                         width = '1px';
                     }
@@ -429,7 +428,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     };
                     break;
             }
-            if (node.css('borderRadius') !== $const.CSS.PX_0) {
+            if (node.css('borderRadius') !== '0px') {
                 const [A, B] = node.css('borderTopLeftRadius').split(' ');
                 const [C, D] = node.css('borderTopRightRadius').split(' ');
                 const [E, F] = node.css('borderBottomRightRadius').split(' ');
@@ -437,7 +436,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
                 const horizontal = node.actualWidth >= node.actualHeight;
                 if (borderRadius.every(radius => radius === borderRadius[0])) {
-                    if (borderRadius[0] === $const.CSS.PX_0 || borderRadius[0] === '') {
+                    if (borderRadius[0] === '0px' || borderRadius[0] === '') {
                         borderRadius.length = 0;
                     }
                     else {
@@ -446,7 +445,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 const length = borderRadius.length;
                 if (length) {
-                    const dimension = horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT;
+                    const dimension = horizontal ? 'width' : 'height';
                     for (let i = 0; i < length; i++) {
                         borderRadius[i] = node.convertPX(borderRadius[i], dimension, false);
                     }
@@ -484,7 +483,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     dimension,
                                     angle: parseAngle(direction)
                                 };
-                                conic.center = $css.getBackgroundPosition(position && position[2] || $const.CSS.CENTER, dimension, undefined, node.fontSize);
+                                conic.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, undefined, node.fontSize);
                                 conic.colorStops = parseColorStops(node, conic, match[4]);
                                 gradient = conic;
                                 break;
@@ -497,7 +496,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     horizontal: node.actualWidth <= node.actualHeight,
                                     dimension
                                 };
-                                radial.center = $css.getBackgroundPosition(position && position[2] || $const.CSS.CENTER, dimension, undefined, node.fontSize);
+                                radial.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, undefined, node.fontSize);
                                 radial.closestCorner = Number.POSITIVE_INFINITY;
                                 radial.farthestCorner = Number.NEGATIVE_INFINITY;
                                 let shape = 'ellipse';
@@ -512,7 +511,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                             let minRadius = Number.POSITIVE_INFINITY;
                                             const length = radiusXY.length;
                                             for (let j = 0; j < length; j++) {
-                                                const axisRadius = node.parseUnit(radiusXY[j], j === 0 ? $const.CSS.WIDTH : $const.CSS.HEIGHT, false);
+                                                const axisRadius = node.parseUnit(radiusXY[j], j === 0 ? 'width' : 'height', false);
                                                 if (axisRadius < minRadius) {
                                                     minRadius = axisRadius;
                                                 }

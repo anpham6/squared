@@ -11,7 +11,6 @@ import { createViewAttribute } from '../lib/util';
 import $LayoutUI = squared.base.LayoutUI;
 
 const {
-    constant: $const,
     css: $css,
     math: $math,
     util: $util
@@ -49,7 +48,7 @@ function getGridSize(mainData: CssGridData<View>, direction: string, node: View)
     const length = data.unit.length;
     let value = 0;
     if (length) {
-        const dimension = horizontal ? $const.CSS.WIDTH : $const.CSS.HEIGHT;
+        const dimension = horizontal ? 'width' : 'height';
         for (let i = 0; i < length; i++) {
             const unit = data.unit[i];
             if (unit.endsWith('px')) {
@@ -94,12 +93,12 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
             if (direction === 'column') {
                 MARGIN_START = $e.BOX_STANDARD.MARGIN_LEFT;
                 MARGIN_END = $e.BOX_STANDARD.MARGIN_RIGHT;
-                dimension = $const.CSS.WIDTH;
+                dimension = 'width';
             }
             else {
                 MARGIN_START = $e.BOX_STANDARD.MARGIN_TOP;
                 MARGIN_END = $e.BOX_STANDARD.MARGIN_BOTTOM;
-                dimension = $const.CSS.HEIGHT;
+                dimension = 'height';
             }
             const rowData = getRowData(mainData, direction);
             const itemCount = mainData[direction].length;
@@ -182,15 +181,15 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
         if (sizeTotal > 0) {
             const padding = direction === 'column' ? $e.BOX_STANDARD.PADDING_LEFT : $e.BOX_STANDARD.PADDING_TOP;
             switch (alignment) {
-                case $const.CSS.CENTER:
+                case 'center':
                     node.modifyBox(padding, Math.floor(sizeTotal / 2));
                     data.normal = false;
                     break;
-                case $const.CSS.RIGHT:
+                case 'right':
                     if (direction === 'row') {
                         break;
                     }
-                case $const.CSS.END:
+                case 'end':
                 case 'flex-end':
                     node.modifyBox(padding, sizeTotal);
                     data.normal = false;
@@ -232,13 +231,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const data: CssGridDirectionData = mainData[direction];
                 const cellStart = cellData[`${direction}Start`];
                 const cellSpan = cellData[`${direction}Span`];
-                const horizontal = dimension === $const.CSS.WIDTH;
+                const horizontal = dimension === 'width';
                 let size = 0;
                 let minSize = 0;
                 let fitContent = false;
                 let minUnitSize = 0;
                 let sizeWeight = 0;
-                if (data.unit.length && data.unit.every(value => value === $const.CSS.AUTO)) {
+                if (data.unit.length && data.unit.every(value => value === 'auto')) {
                     if (horizontal) {
                         data.unit = new Array(data.unit.length).fill('1fr');
                     }
@@ -263,7 +262,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             continue;
                         }
                     }
-                    if (unit === $const.CSS.AUTO || unit === 'max-content') {
+                    if (unit === 'auto' || unit === 'max-content') {
                         if (cellSpan < data.unit.length && (!parent.hasPX(dimension) || data.unit.some(value => $css.isLength(value)) || unit === 'max-content')) {
                             size = node.bounds[dimension];
                             minSize = 0;
@@ -280,10 +279,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     else if (unit === 'min-content') {
                         if (!item.hasPX(dimension)) {
                             if (horizontal) {
-                                item.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT, false);
+                                item.setLayoutWidth('wrap_content', false);
                             }
                             else {
-                                item.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT, false);
+                                item.setLayoutHeight('wrap_content', false);
                             }
                             break;
                         }
@@ -313,7 +312,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             minSize += gap;
                         }
                     }
-                    if (unitMin === $const.CSS.PX_0 && node.textElement) {
+                    if (unitMin === '0px' && node.textElement) {
                         fitContent = true;
                     }
                 }
@@ -348,9 +347,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (sizeWeight > 0) {
                     if (!item.hasPX(dimension)) {
-                        item.android(`layout_${dimension}`, $const.CSS.PX_0);
+                        item.android(`layout_${dimension}`, '0px');
                         item.android(`layout_${direction}Weight`, $math.truncate(sizeWeight, node.localSettings.floatPrecision));
-                        item.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
+                        item.mergeGravity('layout_gravity', direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
                     }
                 }
                 else if (size > 0) {
@@ -359,7 +358,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                     if (fitContent && !item.hasPX(`max${dimensionA}`)) {
                         item.css(`max${dimensionA}`, $css.formatPX(size), true);
-                        item.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
+                        item.mergeGravity('layout_gravity', direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
                     }
                     else if (!item.hasPX(dimension)) {
                         item.css(dimension, $css.formatPX(size), true);
@@ -378,35 +377,35 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 parent.appendTry(node, renderAs);
                 renderAs.render(parent);
                 node.transferBox($e.BOX_STANDARD.MARGIN, renderAs);
-                applyLayout(renderAs, 'column', $const.CSS.WIDTH);
-                applyLayout(renderAs, 'row', $const.CSS.HEIGHT);
+                applyLayout(renderAs, 'column', 'width');
+                applyLayout(renderAs, 'row', 'height');
                 let inlineWidth = false;
-                if (justifySelf.endsWith($const.CSS.START) || justifySelf.endsWith($const.CSS.LEFT) || justifySelf.endsWith('baseline')) {
-                    node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, $const.CSS.LEFT);
+                if (justifySelf.endsWith('start') || justifySelf.endsWith('left') || justifySelf.endsWith('baseline')) {
+                    node.mergeGravity('layout_gravity', 'left');
                     inlineWidth = true;
                 }
-                else if (justifySelf.endsWith($const.CSS.END) || justifySelf.endsWith($const.CSS.RIGHT)) {
-                    node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, $const.CSS.RIGHT);
+                else if (justifySelf.endsWith('end') || justifySelf.endsWith('right')) {
+                    node.mergeGravity('layout_gravity', 'right');
                     inlineWidth = true;
                 }
-                else if (justifySelf.endsWith($const.CSS.CENTER)) {
-                    node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, STRING_ANDROID.CENTER_HORIZONTAL);
+                else if (justifySelf.endsWith('center')) {
+                    node.mergeGravity('layout_gravity', STRING_ANDROID.CENTER_HORIZONTAL);
                     inlineWidth = true;
                 }
                 if (!node.hasWidth) {
-                    node.setLayoutWidth(inlineWidth ? STRING_ANDROID.WRAP_CONTENT : STRING_ANDROID.MATCH_PARENT, false);
+                    node.setLayoutWidth(inlineWidth ? 'wrap_content' : 'match_parent', false);
                 }
-                if (alignSelf.endsWith($const.CSS.START) || alignSelf.endsWith('baseline')) {
-                    node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, $const.CSS.TOP);
+                if (alignSelf.endsWith('start') || alignSelf.endsWith('baseline')) {
+                    node.mergeGravity('layout_gravity', 'top');
                 }
-                else if (alignSelf.endsWith($const.CSS.END)) {
-                    node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, $const.CSS.BOTTOM);
+                else if (alignSelf.endsWith('end')) {
+                    node.mergeGravity('layout_gravity', 'bottom');
                 }
-                else if (alignSelf.endsWith($const.CSS.CENTER)) {
-                    node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, STRING_ANDROID.CENTER_VERTICAL);
+                else if (alignSelf.endsWith('center')) {
+                    node.mergeGravity('layout_gravity', STRING_ANDROID.CENTER_VERTICAL);
                 }
                 else if (!node.hasHeight) {
-                    node.setLayoutHeight(STRING_ANDROID.MATCH_PARENT, false);
+                    node.setLayoutHeight('match_parent', false);
                 }
                 renderAs.innerWrapped = node;
                 node.outerWrapper = renderAs;
@@ -422,11 +421,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 );
             }
             const target = renderAs || node;
-            applyLayout(target, 'column', $const.CSS.WIDTH);
-            if (!target.hasPX($const.CSS.WIDTH)) {
-                target.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill_horizontal');
+            applyLayout(target, 'column', 'width');
+            if (!target.hasPX('width')) {
+                target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
-            const [rowStart, rowSpan] = applyLayout(target, 'row', $const.CSS.HEIGHT);
+            const [rowStart, rowSpan] = applyLayout(target, 'row', 'height');
             function checkRowSpan() {
                 if (mainData.rowSpanMultiple[rowStart] === true) {
                     const row = $util.flatMultiArray<T>(mainData.rowData[rowStart]);
@@ -442,12 +441,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 return false;
             }
-            if (mainData.alignContent === 'normal' && !parent.hasPX($const.CSS.HEIGHT) && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === $const.CSS.AUTO) && node.initial.bounds && node.bounds.height > node.initial.bounds.height && checkRowSpan()) {
+            if (mainData.alignContent === 'normal' && !parent.hasPX('height') && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === 'auto') && node.initial.bounds && node.bounds.height > node.initial.bounds.height && checkRowSpan()) {
                 target.css('minHeight', $css.formatPX(node.actualHeight), true);
             }
-            else if (!target.hasPX($const.CSS.HEIGHT) && !(mainData.row.length === 1 && mainData.alignContent === 'space-between')) {
+            else if (!target.hasPX('height') && !(mainData.row.length === 1 && mainData.alignContent === 'space-between')) {
                 if (!REGEXP_ALIGNSELF.test(mainData.alignItems)) {
-                    target.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill_vertical');
+                    target.mergeGravity('layout_gravity', 'fill_vertical');
                 }
                 if (mainData.alignContent === 'normal' && parent.hasHeight && mainData.rowSpanMultiple.length === 0) {
                     target.mergeGravity('layout_rowWeight', '1');
@@ -483,7 +482,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                             column = column.outerWrapper as T;
                                         }
                                         column.android('layout_rowWeight', $math.truncate(mainData.rowWeight[i], precision).toString());
-                                        column.setLayoutHeight($const.CSS.PX_0);
+                                        column.setLayoutHeight('0px');
                                     }
                                 }
                             }
@@ -491,15 +490,15 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
             }
-            if (mainData.column.normal && !mainData.column.unit.includes($const.CSS.AUTO)) {
+            if (mainData.column.normal && !mainData.column.unit.includes('auto')) {
                 const columnGap =  mainData.column.gap * (mainData.column.length - 1);
                 if (columnGap > 0) {
                     if (node.renderParent && !node.renderParent.hasAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT)) {
                         node.cssPX('minWidth', columnGap);
-                        node.cssPX($const.CSS.WIDTH, columnGap, false, true);
+                        node.cssPX('width', columnGap, false, true);
                     }
-                    if (!node.hasPX($const.CSS.WIDTH) && node.hasPX('maxWidth')) {
-                        node.css($const.CSS.WIDTH, $css.formatPX(node.actualWidth + columnGap), true);
+                    if (!node.hasPX('width') && node.hasPX('maxWidth')) {
+                        node.css('width', $css.formatPX(node.actualWidth + columnGap), true);
                     }
                 }
             }
@@ -520,7 +519,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             lastChild.id,
                             controller.renderSpace(
                                 $css.formatPercent((100 - percentTotal) / 100),
-                                STRING_ANDROID.WRAP_CONTENT,
+                                'wrap_content',
                                 0,
                                 0,
                                 createViewAttribute(undefined, {
@@ -545,7 +544,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             controller.addAfterOutsideTemplate(
                                 lastChild.id,
                                 controller.renderSpace(
-                                    STRING_ANDROID.WRAP_CONTENT,
+                                    'wrap_content',
                                     `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_row_gap_`, $css.formatPX(mainData.row.gap))}`,
                                     0,
                                     0,

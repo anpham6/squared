@@ -7,7 +7,6 @@ import { CONTAINER_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID } from '../../lib/enumeration';
 
 const {
-    constant: $const,
     css: $css,
     dom: $dom,
     util: $util,
@@ -52,7 +51,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         if (valueString) {
                             const name = valueString.key || valueString.value;
                             let value = valueString.value;
-                            if (node.naturalChild && node.alignParent($const.CSS.LEFT) && !(!node.plainText && node.preserveWhiteSpace || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
+                            if (node.naturalChild && node.alignParent('left') && !(!node.plainText && node.preserveWhiteSpace || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
                                 const textContent = node.textContent;
                                 let leadingSpace = 0;
                                 const length = textContent.length;
@@ -134,7 +133,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 const element = <HTMLInputElement> node.element;
                                 if (element.list) {
                                     this.createOptionArray(<HTMLSelectElement> element.list, node.controlId);
-                                    if (!node.hasPX($const.CSS.WIDTH)) {
+                                    if (!node.hasPX('width')) {
                                         node.css('width', $css.formatPX(Math.max(node.bounds.width, node.width)), true);
                                     }
                                 }

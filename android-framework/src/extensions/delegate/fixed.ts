@@ -2,13 +2,12 @@ import { MaxWidthHeightData } from './max-width-height';
 
 import View from '../../view';
 
-import { EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
+import { EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
 const {
-    constant: $const,
     util: $util
 } = squared.lib;
 
@@ -37,12 +36,12 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 let bottom = false;
                 for (const item of absolute) {
                     const fixed = item.css('position') === 'fixed';
-                    if (item.hasPX($const.CSS.LEFT)) {
+                    if (item.hasPX('left')) {
                         if (item.left >= 0 && item.left < paddingLeft) {
                             children.add(item);
                         }
                     }
-                    else if (item.hasPX($const.CSS.RIGHT) && item.right >= 0 && (fixed || item.right < paddingRight || node.documentBody && node.hasPX($const.CSS.WIDTH))) {
+                    else if (item.hasPX('right') && item.right >= 0 && (fixed || item.right < paddingRight || node.documentBody && node.hasPX('width'))) {
                         children.add(item);
                         right = true;
                     }
@@ -54,12 +53,12 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     else if (item.marginRight < 0 && (node.documentRoot || $util.aboveRange(item.linear.right, node.bounds.right))) {
                         children.add(item);
                     }
-                    if (item.hasPX($const.CSS.TOP)) {
+                    if (item.hasPX('top')) {
                         if (item.top >= 0 && item.top < paddingTop) {
                             children.add(item);
                         }
                     }
-                    else if (item.hasPX($const.CSS.BOTTOM) && item.bottom >= 0 && (fixed || item.bottom < paddingBottom || node.documentBody && node.hasPX($const.CSS.HEIGHT))) {
+                    else if (item.hasPX('bottom') && item.bottom >= 0 && (fixed || item.bottom < paddingBottom || node.documentBody && node.hasPX('height'))) {
                         children.add(item);
                         bottom = true;
                     }
@@ -79,32 +78,32 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[]);
             if (node.documentBody && (mainData.right || mainData.bottom)) {
                 container.cssApply({
-                    width: $const.CSS.AUTO,
-                    height: $const.CSS.AUTO,
+                    width: 'auto',
+                    height: 'auto',
                     display: 'block',
-                    float: $const.CSS.NONE
+                    float: 'none'
                 });
                 if (mainData.right) {
-                    container.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
+                    container.setLayoutWidth('match_parent');
                 }
                 if (mainData.bottom) {
-                    container.setLayoutHeight(STRING_ANDROID.MATCH_PARENT);
+                    container.setLayoutHeight('match_parent');
                 }
             }
             else if (!node.pageFlow) {
                 node.resetBox($e.BOX_STANDARD.MARGIN, container);
             }
             for (const item of mainData.children) {
-                if (item.hasPX($const.CSS.TOP)) {
+                if (item.hasPX('top')) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                 }
-                else if (item.hasPX($const.CSS.BOTTOM)) {
+                else if (item.hasPX('bottom')) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
                 }
-                if (item.hasPX($const.CSS.LEFT)) {
+                if (item.hasPX('left')) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
                 }
-                else if (item.hasPX($const.CSS.RIGHT)) {
+                else if (item.hasPX('right')) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
                 }
             }
@@ -114,15 +113,15 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 if (wrapped) {
                     if (maxWidthHeight.width) {
                         container.css('maxWidth', node.css('maxWidth'));
-                        container.setLayoutWidth($const.CSS.PX_0);
+                        container.setLayoutWidth('0px');
                         container.contentBoxWidth = node.contentBoxWidth;
-                        node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
+                        node.setLayoutWidth('wrap_content');
                     }
                     if (maxWidthHeight.height) {
                         container.css('maxHeight', node.css('maxHeight'));
-                        container.setLayoutHeight($const.CSS.PX_0);
+                        container.setLayoutHeight('0px');
                         container.contentBoxHeight = node.contentBoxHeight;
-                        node.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
+                        node.setLayoutHeight('wrap_content');
                     }
                 }
             }
@@ -147,10 +146,10 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     public postConstraints(node: T) {
         node.each((item: T) => {
             if (!item.constraint.horizontal) {
-                item.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
+                item.anchor('left', 'parent');
             }
             if (!item.constraint.vertical) {
-                item.anchor($const.CSS.TOP, STRING_ANDROID.PARENT);
+                item.anchor('top', 'parent');
             }
         });
     }

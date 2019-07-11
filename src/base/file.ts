@@ -1,9 +1,6 @@
 import { FileAsset, RawAsset, UserSettings } from '../../@types/base/application';
 
-const {
-    constant: $const,
-    util: $util
-} = squared.lib;
+const $util = squared.lib.util;
 
 export interface ExpressResult {
     success: boolean;
@@ -162,7 +159,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         const blob = new Blob([data], { type: mime || 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
         const element = document.createElement('a');
-        element.style.setProperty('display', $const.CSS.NONE);
+        element.style.setProperty('display', 'none');
         element.setAttribute('href', url);
         element.setAttribute('download', filename);
         if (!element.download) {

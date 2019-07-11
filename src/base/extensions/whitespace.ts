@@ -5,7 +5,6 @@ import { CSS_SPACING } from '../lib/constant';
 import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
 const {
-    constant: $const,
     css: $css,
     session: $session,
     util: $util
@@ -22,10 +21,10 @@ function setSpacingOffset(node: NodeUI, region: number, value: number) {
     let offset = 0 ;
     switch (region) {
         case BOX_STANDARD.MARGIN_LEFT:
-            offset = node.actualRect($const.CSS.LEFT) - value;
+            offset = node.actualRect('left') - value;
             break;
         case BOX_STANDARD.MARGIN_TOP:
-            offset = node.actualRect($const.CSS.TOP) - value;
+            offset = node.actualRect('top') - value;
             break;
     }
     if (offset > 0) {
@@ -292,7 +291,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                             else if (previous && previous.blockDimension && !previous.block && current.length === 0) {
                                 const offset = current.linear.top - previous.linear.bottom;
-                                if (Math.floor(offset) > 0 && current.ascend(item => item.hasPX($const.CSS.HEIGHT)).length === 0) {
+                                if (Math.floor(offset) > 0 && current.ascend(item => item.hasPX('height')).length === 0) {
                                     current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                 }
                             }
@@ -407,7 +406,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         if (!actualParent.documentRoot && actualParent.ascend(item => item.documentRoot, undefined, 'outerWrapper').length === 0 && previousSiblings.length) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
                             const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
-                            const offset = actualParent.box.bottom - rect[previousStart.lineBreak || previousStart.excluded ? $const.CSS.TOP : $const.CSS.BOTTOM];
+                            const offset = actualParent.box.bottom - rect[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
                             if (offset !== 0) {
                                 if (previousStart.rendered || actualParent.visibleStyle.background) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
@@ -419,7 +418,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                         else if (nextSiblings.length) {
                             const nextStart = nextSiblings[nextSiblings.length - 1];
-                            const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? $const.CSS.BOTTOM : $const.CSS.TOP] - actualParent.box.top;
+                            const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
                             if (offset !== 0) {
                                 if (nextStart.rendered || actualParent.visibleStyle.background) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
@@ -516,14 +515,14 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                     }
-                    if (!node.alignParent($const.CSS.LEFT)) {
+                    if (!node.alignParent('left')) {
                         let current = node;
                         while (true) {
                             const siblingsLeading = current.siblingsLeading;
                             if (siblingsLeading.length && !siblingsLeading.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
                                 const previousSibling = siblingsLeading[0] as T;
                                 if (previousSibling.inlineVertical) {
-                                    setSpacingOffset(node, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect($const.CSS.RIGHT));
+                                    setSpacingOffset(node, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
                                 }
                                 else if (previousSibling.floating) {
                                     current = previousSibling;

@@ -8,7 +8,6 @@ type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
 const {
     color: $color,
-    constant: $const,
     css: $css,
     regex: $regex,
     util: $util
@@ -170,7 +169,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 }
                 switch (attr) {
                     case 'stroke-dasharray':
-                        value = value !== $const.CSS.NONE ? $util.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ') : '';
+                        value = value !== 'none' ? $util.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ') : '';
                         break;
                     case 'stroke-dashoffset':
                     case 'stroke-width':
@@ -188,7 +187,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 case 'none':
                                 case 'transparent':
                                 case 'rgba(0, 0, 0, 0)':
-                                    this[attr] = $const.CSS.NONE;
+                                    this[attr] = 'none';
                                     break;
                                 case 'currentcolor':
                                     color = $color.parseColor(this.color || getAttribute(this.element, attr));
@@ -237,7 +236,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     return $css.parseUnit(value, $css.getFontSize(this.element));
                 }
                 else if ($css.isPercent(value)) {
-                    return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || $const.CSS.WIDTH]) * $util.convertFloat(value) / 100);
+                    return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * $util.convertFloat(value) / 100);
                 }
             }
             return $util.convertFloat(value);

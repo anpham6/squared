@@ -59,7 +59,7 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
         if (value && validator[attr]) {
             const match = validator[attr].exec(value);
             if (match) {
-                options[NAMESPACE_APP.includes(attr) ? $constA.STRING_ANDROID.APP : $constA.STRING_ANDROID.ANDROID][attr] = Array.from(new Set(match)).join('|');
+                options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
             }
         }
     }

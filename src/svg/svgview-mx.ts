@@ -16,7 +16,6 @@ interface AttributeData extends NumberValue {
 }
 
 const {
-    constant: $const,
     css: $css,
     dom: $dom,
     regex: $regex,
@@ -32,7 +31,7 @@ const ANIMATION_DEFAULT = {
     'animation-iteration-count': '1',
     'animation-play-state': 'running',
     'animation-direction': 'normal',
-    'animation-fill-mode': $const.CSS.NONE,
+    'animation-fill-mode': 'none',
     'animation-timing-function': 'ease'
 };
 
@@ -54,7 +53,7 @@ function parseAttribute(element: SVGElement, attr: string) {
 
 function isVisible(element: SVGElement) {
     const value = getAttribute(element, 'visibility');
-    return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display') !== $const.CSS.NONE;
+    return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display') !== 'none';
 }
 
 function sortAttribute(value: NumberValue[]) {
@@ -298,7 +297,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             delete attrMap['transform'];
                             delete attrMap['transform-origin'];
                         }
-                        if (getAttribute(element, 'offset-path') === $const.CSS.NONE) {
+                        if (getAttribute(element, 'offset-path') === 'none') {
                             delete attrMap['offset-distance'];
                             delete attrMap['offset-rotate'];
                         }
@@ -306,7 +305,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             const offsetRotate = attrMap['offset-rotate'];
                             if (attrMap['offset-distance'] || attrMap['rotate'] === undefined) {
                                 let rotate = getAttribute(element, 'offset-rotate', false);
-                                if (rotate === '' || rotate === $const.CSS.AUTO) {
+                                if (rotate === '' || rotate === 'auto') {
                                     rotate = 'auto 0deg';
                                 }
                                 sortAttribute(offsetRotate);
@@ -324,8 +323,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     previous.value = convertRotate(previous.value);
                                     item.value = convertRotate(item.value);
                                     if (previous.value.split(' ').pop() !== item.value.split(' ').pop()) {
-                                        const previousAuto = previous.value.startsWith($const.CSS.AUTO);
-                                        const auto = item.value.startsWith($const.CSS.AUTO);
+                                        const previousAuto = previous.value.startsWith('auto');
+                                        const auto = item.value.startsWith('auto');
                                         if (previousAuto && !auto || !previousAuto && auto) {
                                             const key = (previous.key + item.key) / 2;
                                             offsetRotate.splice(j++, 0, { key, value: previous.value });
@@ -342,7 +341,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     addAnimation(animate, delay, keyframeIndex);
                                     for (const item of offsetRotate) {
                                         let angle = $css.parseAngle(item.value.split(' ').pop() as string);
-                                        if (item.value.startsWith($const.CSS.AUTO)) {
+                                        if (item.value.startsWith('auto')) {
                                             angle += 90;
                                         }
                                         item.value = `${angle} 0 0`;
@@ -450,7 +449,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                             }
                                                             keyTimesData.push(keyTime);
                                                             valuesData.push(steps[1][k]);
-                                                            keySplinesData.push(KEYSPLINE_NAME[keySplines[j].indexOf($const.CSS.START) !== -1 ? 'step-start' : 'step-end']);
+                                                            keySplinesData.push(KEYSPLINE_NAME[keySplines[j].indexOf('start') !== -1 ? 'step-start' : 'step-end']);
                                                         }
                                                         continue;
                                                     }

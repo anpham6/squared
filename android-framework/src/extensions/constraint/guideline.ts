@@ -8,7 +8,6 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 import $LayoutUI = squared.base.LayoutUI;
 
 const {
-    constant: $const,
     css: $css,
     util: $util
 } = squared.lib;
@@ -45,11 +44,11 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
         let anchor!: T;
         node.each((item: T) => {
             if ($util.withinRange(item.linear.left, node.box.left)) {
-                item.anchor($const.CSS.LEFT, STRING_ANDROID.PARENT);
+                item.anchor('left', 'parent');
                 item.anchorStyle(STRING_ANDROID.HORIZONTAL);
             }
             if ($util.withinRange(item.linear.top, node.box.top)) {
-                item.anchor($const.CSS.TOP, STRING_ANDROID.PARENT);
+                item.anchor('top', 'parent');
                 item.anchorStyle(STRING_ANDROID.VERTICAL);
             }
             if (circlePosition) {

@@ -11,7 +11,6 @@ import ResourceUI from './resource-ui';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 const {
-    constant: $const,
     css: $css,
     dom: $dom,
     regex: $regex,
@@ -26,7 +25,7 @@ let NodeConstructor!: Constructor<NodeUI>;
 function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
     const element = document.createElement(tagName);
     element.className = '__squared.pseudo';
-    element.style.setProperty('display', $const.CSS.NONE);
+    element.style.setProperty('display', 'none');
     if (index >= 0 && index < parent.childNodes.length) {
         parent.insertBefore(element, parent.childNodes[index]);
     }
@@ -187,7 +186,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 let current = element.parentElement;
                 let valid = true;
                 while (current) {
-                    if ($css.getStyle(current).display === $const.CSS.NONE) {
+                    if ($css.getStyle(current).display === 'none') {
                         valid = false;
                         break;
                     }
@@ -343,17 +342,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (item.length) {
                         const textAlign = item.cssInitial('textAlign');
                         switch (textAlign) {
-                            case $const.CSS.CENTER:
-                            case $const.CSS.RIGHT:
-                            case $const.CSS.END:
-                                saveAlignment(element, item.id, 'text-align', $const.CSS.LEFT, textAlign);
+                            case 'center':
+                            case 'right':
+                            case 'end':
+                                saveAlignment(element, item.id, 'text-align', 'left', textAlign);
                                 break;
                         }
                     }
                     if (item.positionRelative) {
                         for (const attr of $css.BOX_POSITION) {
                             if (item.hasPX(attr)) {
-                                saveAlignment(element, item.id, attr, $const.CSS.AUTO, item.css(attr));
+                                saveAlignment(element, item.id, attr, 'auto', item.css(attr));
                                 resetBounds = true;
                             }
                         }
@@ -632,7 +631,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             styleMap = $session.getElementCache(element, `styleMap${pseudoElt}`, sessionId);
         }
         if (styleMap && styleMap.content) {
-            if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== $const.CSS.NONE)) {
+            if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
                 let valid = true;
                 for (const attr in styleMap) {
                     if (/(Width|Height)$/.test(attr) && $css.isLength(styleMap[attr], true) && $util.convertFloat(styleMap[attr]) !== 0) {
@@ -731,7 +730,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     styleName = match[8] || 'decimal';
                                 }
                                 function getCounterValue(name: string) {
-                                    if (name !== $const.CSS.NONE) {
+                                    if (name !== 'none') {
                                         CACHE_PATTERN.COUNTER_VALUE.lastIndex = 0;
                                         let counterMatch: RegExpExecArray | null;
                                         while ((counterMatch = CACHE_PATTERN.COUNTER_VALUE.exec(name)) !== null) {
@@ -1255,12 +1254,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const cleared = layout.cleared.get(node);
                 if (cleared) {
                     switch (cleared) {
-                        case $const.CSS.LEFT:
+                        case 'left':
                             if (!$util.hasBit(clearedFloat, 2)) {
                                 clearedFloat |= 2;
                             }
                             break;
-                        case $const.CSS.RIGHT:
+                        case 'right':
                             if (!$util.hasBit(clearedFloat, 4)) {
                                 clearedFloat |= 4;
                             }
@@ -1272,10 +1271,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             if (clearedFloat === 0) {
-                if (node.float === $const.CSS.RIGHT) {
+                if (node.float === 'right') {
                     rightAbove.push(node);
                 }
-                else if (node.float === $const.CSS.LEFT) {
+                else if (node.float === 'left') {
                     leftAbove.push(node);
                 }
                 else if (leftAbove.length || rightAbove.length) {
@@ -1297,7 +1296,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     inlineAbove.push(node);
                 }
             }
-            else if (node.float === $const.CSS.RIGHT) {
+            else if (node.float === 'right') {
                 if (clearedFloat === 4 || clearedFloat === 6) {
                     if (rightBelow === undefined) {
                         rightBelow = [];
@@ -1308,7 +1307,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     rightAbove.push(node);
                 }
             }
-            else if (node.float === $const.CSS.LEFT) {
+            else if (node.float === 'left') {
                 if (clearedFloat === 2 || clearedFloat === 6) {
                     if (leftBelow === undefined) {
                         leftBelow = [];
@@ -1532,7 +1531,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         if (floating.length) {
                             const floatgroup = controller.createNodeGroup(floating[0], floating, basegroup);
                             layoutGroup.add(NODE_ALIGNMENT.FLOAT);
-                            if (pageFlow.length === 0 && floating.every(item => item.float === $const.CSS.RIGHT)) {
+                            if (pageFlow.length === 0 && floating.every(item => item.float === 'right')) {
                                 layoutGroup.add(NODE_ALIGNMENT.RIGHT);
                             }
                             children.push(floatgroup);

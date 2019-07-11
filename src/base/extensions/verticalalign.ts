@@ -4,7 +4,6 @@ import NodeUI from '../node-ui';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const {
-    constant: $const,
     css: $css,
     util: $util
 } = squared.lib;
@@ -77,7 +76,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             if (item.baselineAltered) {
-                                item.css('verticalAlign', $const.CSS.PX_0, true);
+                                item.css('verticalAlign', '0px', true);
                             }
                         }
                     }

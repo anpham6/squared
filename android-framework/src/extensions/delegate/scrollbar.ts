@@ -5,16 +5,12 @@ import View from '../../view';
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-const {
-    constant: $const,
-    css: $css
-} = squared.lib;
-
+const $css = squared.lib.css;
 const $e = squared.base.lib.enumeration;
 
 export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T) {
-        return node.length > 0 && (node.overflowX && node.hasPX($const.CSS.WIDTH) || node.overflowY && node.hasHeight && node.hasPX($const.CSS.HEIGHT) || this.included(<HTMLElement> node.element));
+        return node.length > 0 && (node.overflowX && node.hasPX('width') || node.overflowY && node.hasHeight && node.hasPX('height') || this.included(<HTMLElement> node.element));
     }
 
     public processNode(node: T, parent: T) {
@@ -33,11 +29,11 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         }
         else {
             let overflowType = 0;
-            if (node.hasPX($const.CSS.WIDTH)) {
+            if (node.hasPX('width')) {
                 overflowType |= $e.NODE_ALIGNMENT.HORIZONTAL;
                 overflow.push(horizontalScroll);
             }
-            if (node.hasHeight && node.hasPX($const.CSS.HEIGHT)) {
+            if (node.hasHeight && node.hasPX('height')) {
                 overflowType |= $e.NODE_ALIGNMENT.VERTICAL;
                 overflow.push(verticalScroll);
             }
@@ -105,22 +101,22 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 const previous = scrollView[i - 1];
                 switch (item.controlName) {
                     case verticalScroll:
-                        node.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
+                        node.setLayoutHeight('wrap_content');
                         item.setLayoutHeight($css.formatPX(node.actualHeight));
                         item.android('scrollbars', STRING_ANDROID.VERTICAL);
                         item.cssApply({
-                            width: length === 1 && node.css('width') || $const.CSS.AUTO,
+                            width: length === 1 && node.css('width') || 'auto',
                             overflow: 'scroll visible',
                             overflowX: 'visible',
                             overflowY: 'scroll'
                         });
                         break;
                     case horizontalScroll:
-                        node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
+                        node.setLayoutWidth('wrap_content');
                         item.setLayoutWidth($css.formatPX(node.actualWidth));
                         item.android('scrollbars', STRING_ANDROID.HORIZONTAL);
                         item.cssApply({
-                            height: length === 1 && node.css('height') || $const.CSS.AUTO,
+                            height: length === 1 && node.css('height') || 'auto',
                             overflow: 'visible scroll',
                             overflowX: 'scroll',
                             overflowY: 'visible'

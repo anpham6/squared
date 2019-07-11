@@ -132,15 +132,8 @@ export const XMLNS_ANDROID = {
 };
 
 export const STRING_ANDROID = {
-    ANDROID: 'android',
-    APP: 'app',
     HORIZONTAL: 'horizontal',
     VERTICAL: 'vertical',
-    PARENT: 'parent',
-    GRAVITY: 'gravity',
-    LAYOUT_GRAVITY: 'layout_gravity',
-    MATCH_PARENT: 'match_parent',
-    WRAP_CONTENT: 'wrap_content',
     MARGIN: 'layout_margin',
     MARGIN_VERTICAL: 'layout_marginVertical',
     MARGIN_HORIZONTAL: 'layout_marginHorizontal',

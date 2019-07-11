@@ -4,7 +4,7 @@ import { FileOutputOptions } from '../../@types/android/resource';
 
 import Resource from './resource';
 
-import { STRING_ANDROID, XMLNS_ANDROID } from './lib/constant';
+import { XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID } from './lib/enumeration';
 import { convertLength } from './lib/util';
 
@@ -167,7 +167,7 @@ export default class File<T extends android.base.View> extends squared.base.File
         const result: string[] = [];
         if (STORED.fonts.size) {
             const settings = this.userSettings;
-            const xmlns = XMLNS_ANDROID[settings.targetAPI < BUILD_ANDROID.OREO ? STRING_ANDROID.APP : STRING_ANDROID.ANDROID];
+            const xmlns = XMLNS_ANDROID[settings.targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
             const pathname = this.directory.font;
             for (const [name, font] of Array.from(STORED.fonts.entries()).sort()) {
                 const data: ExternalData[] = [{

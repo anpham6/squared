@@ -3,13 +3,11 @@ import { GridCellData } from '../../../@types/base/extension';
 import Resource from '../resource';
 import View from '../view';
 
-import { STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
 const {
-    constant: $const,
     css: $css,
     util: $util
 } = squared.lib;
@@ -87,7 +85,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 else {
                     for (const item of siblings) {
                         if (item.percentWidth) {
-                            item.css($const.CSS.WIDTH, $css.formatPX(item.bounds.width), true);
+                            item.css('width', $css.formatPX(item.bounds.width), true);
                         }
                     }
                 }
@@ -100,7 +98,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 node.android('layout_columnSpan', cellData.columnSpan.toString());
             }
             if (node.display === 'table-cell') {
-                node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill');
+                node.mergeGravity('layout_gravity', 'fill');
             }
             if (layout) {
                 return {
@@ -146,7 +144,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                                         controller.addAfterOutsideTemplate(
                                             item.id,
                                             controller.renderSpace(
-                                                STRING_ANDROID.MATCH_PARENT,
+                                                'match_parent',
                                                 `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_grid_space`, $css.formatPX(heightBottom))}`,
                                                 columnCount
                                             ),
@@ -173,7 +171,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 item => maxRight = Math.max(maxRight, item.linear.right)
             );
             if ($util.withinRange(node.box.right, maxRight)) {
-                node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
+                node.setLayoutWidth('wrap_content');
             }
         }
     }

@@ -8,7 +8,6 @@ type NodeUI = squared.base.NodeUI;
 
 const {
     client: $client,
-    constant: $const,
     css: $css,
     dom: $dom,
     session: $session,
@@ -67,8 +66,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',
-                float: $const.CSS.NONE,
-                clear: $const.CSS.NONE
+                float: 'none',
+                clear: 'none'
             };
         }
         else {
@@ -99,7 +98,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
                 }
                 if (styleMap.textAlign === undefined) {
-                    styleMap.textAlign = $const.CSS.CENTER;
+                    styleMap.textAlign = 'center';
                 }
                 if (styleMap.padding === undefined && !$css.BOX_PADDING.some(attr => !!styleMap[attr])) {
                     styleMap.paddingTop = '2px';
@@ -176,7 +175,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 case 'FORM':
                     if (styleMap.marginTop === undefined) {
-                        styleMap.marginTop = $const.CSS.PX_0;
+                        styleMap.marginTop = '0px';
                     }
                     break;
                 case 'LI':
@@ -191,7 +190,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                 case 'IMG':
                     const setDimension = (attr: string, opposing: string) => {
-                        if (styleMap[attr] === undefined || styleMap[attr] === $const.CSS.AUTO) {
+                        if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
                             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                             if (match) {
                                 if ($css.isLength(match[1])) {
@@ -202,7 +201,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                 }
                             }
                             else if (element.tagName === 'IFRAME') {
-                                if (attr ===  $const.CSS.WIDTH) {
+                                if (attr ===  'width') {
                                     styleMap.width = '300px';
                                 }
                                 else {
@@ -220,8 +219,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             }
                         }
                     };
-                    setDimension($const.CSS.WIDTH, $const.CSS.HEIGHT);
-                    setDimension($const.CSS.HEIGHT, $const.CSS.WIDTH);
+                    setDimension('width', 'height');
+                    setDimension('height', 'width');
                     break;
             }
         }
@@ -322,9 +321,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 return true;
             }
             const style = $css.getStyle(element);
-            return element.tagName === 'IMG' && style.getPropertyValue('display') !== $const.CSS.NONE ||
-                rect.width > 0 && style.getPropertyValue('float') !== $const.CSS.NONE ||
-                style.getPropertyValue('clear') !== $const.CSS.NONE ||
+            return element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' ||
+                rect.width > 0 && style.getPropertyValue('float') !== 'none' ||
+                style.getPropertyValue('clear') !== 'none' ||
                 style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) ||
                 element.className === '__squared.pseudo';
         }
@@ -343,13 +342,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         if (node === actualParent.lastChild) {
                             let valid = false;
                             if (node.outsideX(actualParent.box)) {
-                                if (!actualParent.hasPX($const.CSS.WIDTH) || actualParent.css('overflowX') === 'hidden') {
+                                if (!actualParent.hasPX('width') || actualParent.css('overflowX') === 'hidden') {
                                     continue;
                                 }
                                 valid = true;
                             }
                             if (node.outsideY(actualParent.box)) {
-                                if (!actualParent.hasHeight && !actualParent.hasPX($const.CSS.HEIGHT) || actualParent.css('overflowY') === 'hidden') {
+                                if (!actualParent.hasHeight && !actualParent.hasPX('height') || actualParent.css('overflowY') === 'hidden') {
                                     continue;
                                 }
                                 valid = true;
@@ -380,7 +379,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             parent = absoluteParent;
                             if (node.positionAuto) {
                                 if (!node.siblingsLeading.some(item => item.multiline || item.excluded && !item.blockStatic)) {
-                                    node.cssApply({ display: 'inline-block', verticalAlign: $const.CSS.TOP }, true);
+                                    node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
                                 }
                                 else {
                                     node.positionAuto = false;
@@ -393,7 +392,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     if (!outside) {
                                         const overflowX = parent.css('overflowX') === 'hidden';
                                         const overflowY = parent.css('overflowY') === 'hidden';
-                                        if (overflowX && overflowY || node.cssInitial($const.CSS.TOP) === $const.CSS.PX_0 || node.cssInitial($const.CSS.RIGHT) === $const.CSS.PX_0 || node.cssInitial($const.CSS.BOTTOM) === $const.CSS.PX_0 || node.cssInitial($const.CSS.LEFT) === $const.CSS.PX_0) {
+                                        if (overflowX && overflowY || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
                                             break;
                                         }
                                         else {
@@ -402,13 +401,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             if (!overflowY && node.linear.top < Math.floor(parent.box.top) && (node.top < 0 || node.marginTop < 0)) {
                                                 outside = true;
                                             }
-                                            else if (outsideX && !node.hasPX($const.CSS.LEFT) && node.right > 0 || outsideY && !node.hasPX($const.CSS.TOP) && node.bottom !== 0) {
+                                            else if (outsideX && !node.hasPX('left') && node.right > 0 || outsideY && !node.hasPX('top') && node.bottom !== 0) {
                                                 outside = true;
                                             }
                                             else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent && parent.actualParent.documentBody) && (node.top > 0 || node.left > 0)) {
                                                 outside = true;
                                             }
-                                            else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.hasPX($const.CSS.LEFT) && node.right < 0 && node.linear.left >= parent.linear.right)) {
+                                            else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.hasPX('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
                                                 outside = true;
                                             }
                                             else if (!overflowX && !overflowY && !node.intersectX(parent.box) && !node.intersectY(parent.box)) {
@@ -442,7 +441,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             bounds.left += absoluteParent.left;
                             bounds.right += absoluteParent.left;
                         }
-                        else if (!absoluteParent.hasPX($const.CSS.LEFT) && absoluteParent.right !== 0) {
+                        else if (!absoluteParent.hasPX('left') && absoluteParent.right !== 0) {
                             bounds.left -= absoluteParent.right;
                             bounds.right -= absoluteParent.right;
                         }
@@ -450,7 +449,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             bounds.top += absoluteParent.top;
                             bounds.bottom += absoluteParent.top;
                         }
-                        else if (!absoluteParent.hasPX($const.CSS.TOP) && absoluteParent.bottom !== 0) {
+                        else if (!absoluteParent.hasPX('top') && absoluteParent.bottom !== 0) {
                             bounds.top -= absoluteParent.bottom;
                             bounds.bottom -= absoluteParent.bottom;
                         }

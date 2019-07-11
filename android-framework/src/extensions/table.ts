@@ -2,13 +2,11 @@ import { TableData } from '../../../@types/base/extension';
 
 import View from '../view';
 
-import { STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
 const {
-    constant: $const,
     css: $css,
     util: $util
 } = squared.lib;
@@ -28,8 +26,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 requireWidth = mainData.expand;
                 node.each((item: T) => {
                     const data = item.data($c.EXT_NAME.TABLE, 'cellData');
-                    if (item.css($const.CSS.WIDTH) === $const.CSS.PX_0) {
-                        item.setLayoutWidth($const.CSS.PX_0);
+                    if (item.css('width') === '0px') {
+                        item.setLayoutWidth('0px');
                         item.android('layout_columnWeight', ((<HTMLTableCellElement> item.element).colSpan || 1).toString());
                     }
                     else {
@@ -37,7 +35,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         if (expand) {
                             const percent = $util.convertFloat(data.percent) / 100;
                             if (percent > 0) {
-                                item.setLayoutWidth($const.CSS.PX_0);
+                                item.setLayoutWidth('0px');
                                 item.android('layout_columnWeight', $util.trimEnd(percent.toPrecision(3), '0'));
                                 if (!requireWidth) {
                                     requireWidth = !item.hasWidth;
@@ -52,11 +50,11 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         }
                         if (data.downsized) {
                             if (data.exceed) {
-                                item.setLayoutWidth($const.CSS.PX_0);
+                                item.setLayoutWidth('0px');
                                 item.android('layout_columnWeight', '0.01');
                             }
                             else {
-                                if (item.hasPX($const.CSS.WIDTH) && item.actualWidth < item.bounds.width) {
+                                if (item.hasPX('width') && item.actualWidth < item.bounds.width) {
                                     item.setLayoutWidth($css.formatPX(item.bounds.width));
                                 }
                             }
@@ -67,30 +65,30 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     }
                 });
                 if (requireWidth) {
-                    if (parent.hasPX($const.CSS.WIDTH) && $util.aboveRange(node.actualWidth, parent.actualWidth)) {
-                        node.setLayoutWidth(STRING_ANDROID.MATCH_PARENT);
+                    if (parent.hasPX('width') && $util.aboveRange(node.actualWidth, parent.actualWidth)) {
+                        node.setLayoutWidth('match_parent');
                     }
                     else {
-                        node.css($const.CSS.WIDTH, $css.formatPX(node.actualWidth), true);
+                        node.css('width', $css.formatPX(node.actualWidth), true);
                     }
                 }
             }
-            if (!requireWidth && node.hasPX($const.CSS.WIDTH) && node.actualWidth < Math.floor(node.bounds.width)) {
+            if (!requireWidth && node.hasPX('width') && node.actualWidth < Math.floor(node.bounds.width)) {
                 if (mainData.layoutFixed) {
-                    node.android($const.CSS.WIDTH, $css.formatPX(node.bounds.width), true);
+                    node.android('width', $css.formatPX(node.bounds.width), true);
                 }
                 else {
                     if (!node.hasPX('minWidth')) {
                         node.android('minWidth', $css.formatPX(node.actualWidth));
                     }
-                    node.css($const.CSS.WIDTH, $const.CSS.AUTO, true);
+                    node.css('width', 'auto', true);
                 }
             }
-            if (node.hasPX($const.CSS.HEIGHT) && node.actualHeight < Math.floor(node.bounds.height)) {
+            if (node.hasPX('height') && node.actualHeight < Math.floor(node.bounds.height)) {
                 if (!node.hasPX('minHeight')) {
                     node.android('minHeight', $css.formatPX(node.actualHeight));
                 }
-                node.css($const.CSS.HEIGHT, $const.CSS.AUTO, true);
+                node.css('height', 'auto', true);
             }
             const layout = new $LayoutUI(
                 parent,
@@ -121,12 +119,12 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             if (colSpan > 1) {
                 node.android('layout_columnSpan', colSpan.toString());
             }
-            node.mergeGravity(STRING_ANDROID.LAYOUT_GRAVITY, 'fill');
+            node.mergeGravity('layout_gravity', 'fill');
             if (spaceSpan > 0) {
                 const controller = <android.base.Controller<T>> this.controller;
                 controller.addAfterOutsideTemplate(
                     node.id,
-                    controller.renderSpace(STRING_ANDROID.WRAP_CONTENT, STRING_ANDROID.WRAP_CONTENT, spaceSpan),
+                    controller.renderSpace('wrap_content', 'wrap_content', spaceSpan),
                     false
                 );
             }
@@ -143,9 +141,9 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             if (node.bounds.width > layoutWidth) {
                 node.setLayoutWidth($css.formatPX(node.bounds.width));
             }
-            if (layoutWidth > 0 && node.cssInitial($const.CSS.WIDTH) === $const.CSS.AUTO && node.renderChildren.every(item => item.inlineWidth)) {
+            if (layoutWidth > 0 && node.cssInitial('width') === 'auto' && node.renderChildren.every(item => item.inlineWidth)) {
                 node.renderEach((item: T) => {
-                    item.setLayoutWidth($const.CSS.PX_0);
+                    item.setLayoutWidth('0px');
                     item.android('layout_columnWeight', '1');
                 });
             }

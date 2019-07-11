@@ -8,7 +8,7 @@ import View from '../../view';
 
 import { convertColorStops } from './background';
 
-import { STRING_ANDROID, XMLNS_ANDROID } from '../../lib/constant';
+import { XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID } from '../../lib/enumeration';
 import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';
 
@@ -136,7 +136,6 @@ interface AnimateGroup {
 }
 
 const {
-    constant: $const,
     css: $css,
     math: $math,
     regex: $regex,
@@ -657,10 +656,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                 }
                 if (!node.hasWidth) {
-                    node.setLayoutWidth(STRING_ANDROID.WRAP_CONTENT);
+                    node.setLayoutWidth('wrap_content');
                 }
                 if (!node.hasHeight) {
-                    node.setLayoutHeight(STRING_ANDROID.WRAP_CONTENT);
+                    node.setLayoutHeight('wrap_content');
                 }
                 if (node.baseline) {
                     node.android('baselineAlignBottom', 'true');
@@ -687,10 +686,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 if (parentElement.lastElementChild instanceof SVGSVGElement) {
                     element = parentElement.lastElementChild;
                     if (element.width.baseVal.value === 0) {
-                        element.setAttribute($const.CSS.WIDTH, node.actualWidth.toString());
+                        element.setAttribute('width', node.actualWidth.toString());
                     }
                     if (element.height.baseVal.value === 0) {
-                        element.setAttribute($const.CSS.HEIGHT, node.actualHeight.toString());
+                        element.setAttribute('height', node.actualHeight.toString());
                     }
                 }
             }
@@ -1398,8 +1397,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const scaleY = svg.height / svg.viewBox.height;
                 let x = image.getBaseValue('x', 0) * scaleX;
                 let y = image.getBaseValue('y', 0) * scaleY;
-                let width: number = image.getBaseValue($const.CSS.WIDTH, 0);
-                let height: number = image.getBaseValue($const.CSS.HEIGHT, 0);
+                let width: number = image.getBaseValue('width', 0);
+                let height: number = image.getBaseValue('height', 0);
                 const offset = getParentOffset(image.element, <SVGSVGElement> svg.element);
                 x += offset.x;
                 y += offset.y;
@@ -1632,7 +1631,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     case 'fill':
                     case 'stroke':
                         attr += 'Color';
-                        if (value !== $const.CSS.NONE && (attr === 'stroke' || result['aapt:attr'] === undefined)) {
+                        if (value !== 'none' && (attr === 'stroke' || result['aapt:attr'] === undefined)) {
                             const colorName = Resource.addColor(value);
                             if (colorName !== '') {
                                 value = `@color/${colorName}`;

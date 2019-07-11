@@ -1,5 +1,4 @@
 import { parseColor } from './color';
-import { CSS } from './constant';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { CSS as CSS_RX, STRING, UNIT, XML } from './regex';
 
@@ -29,7 +28,7 @@ const convertLength = (value: string, dimension: number, fontSize?: number) => i
 
 const convertPercent = (value: string, dimension: number, fontSize?: number) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
 
-export const BOX_POSITION = [CSS.TOP, CSS.RIGHT, CSS.BOTTOM, CSS.LEFT];
+export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
 export const BOX_BORDER = [
     ['borderTopStyle', 'borderTopWidth', 'borderTopColor'],
@@ -55,7 +54,7 @@ export function getStyle(element: Element | null, pseudoElt = '', cache = true):
         }
         return <CSSStyleDeclaration> { display: 'inline' };
     }
-    return <CSSStyleDeclaration> { display: CSS.NONE };
+    return <CSSStyleDeclaration> { display: 'none' };
 }
 
 export function getFontSize(element: Element | null) {
@@ -254,10 +253,10 @@ export function parseKeyframeRule(rules: CSSRuleList) {
                 percent = percent.trim();
                 switch (percent) {
                     case 'from':
-                        percent = CSS.PERCENT_0;
+                        percent = '0%';
                         break;
                     case 'to':
-                        percent = CSS.PERCENT_100;
+                        percent = '100%';
                         break;
                 }
                 result[percent] = {};
@@ -312,13 +311,13 @@ export function validMediaRule(value: string, fontSize?: number) {
                             const [width, height] = replaceMap<string, number>(rule.split('/'), ratio => parseInt(ratio));
                             valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
                             break;
-                        case CSS.WIDTH:
+                        case 'width':
                         case 'min-width':
                         case 'max-width':
-                        case CSS.HEIGHT:
+                        case 'height':
                         case 'min-height':
                         case 'max-height':
-                            valid = compareRange(operation, attr.indexOf(CSS.WIDTH) !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
+                            valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
                             break;
                         case 'orientation':
                             valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
@@ -431,7 +430,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
 }
 
 export function getBackgroundPosition(value: string, dimension: Dimension, imageDimension?: Dimension, fontSize?: number) {
-    const orientation = value === CSS.CENTER ? [CSS.CENTER, CSS.CENTER] : value.split(' ');
+    const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
     const result: BoxRectPosition = {
         static: true,
         top: 0,
@@ -442,8 +441,8 @@ export function getBackgroundPosition(value: string, dimension: Dimension, image
         leftAsPercent: 0,
         rightAsPercent: 0,
         bottomAsPercent: 0,
-        horizontal: CSS.LEFT,
-        vertical: CSS.TOP,
+        horizontal: 'left',
+        vertical: 'top',
         orientation
     };
     function setImageOffset(position: string, horizontal: boolean, direction: string, directionAsPercent: string) {
@@ -459,28 +458,28 @@ export function getBackgroundPosition(value: string, dimension: Dimension, image
             let direction: string;
             let offsetParent: number;
             if (horizontal) {
-                direction = CSS.LEFT;
+                direction = 'left';
                 offsetParent = dimension.width;
                 result.horizontal = position;
             }
             else {
-                direction = CSS.TOP;
+                direction = 'top';
                 offsetParent = dimension.height;
                 result.vertical = position;
             }
             const directionAsPercent = `${direction}AsPercent`;
             switch (position) {
-                case CSS.START:
-                    result.horizontal = CSS.LEFT;
+                case 'start':
+                    result.horizontal = 'left';
                     break;
-                case CSS.END:
-                    result.horizontal = CSS.RIGHT;
-                case CSS.RIGHT:
-                case CSS.BOTTOM:
+                case 'end':
+                    result.horizontal = 'right';
+                case 'right':
+                case 'bottom':
                     result[direction] = offsetParent;
                     result[directionAsPercent] = 1;
                     break;
-                case CSS.CENTER:
+                case 'center':
                     result[direction] = offsetParent / 2;
                     result[directionAsPercent] = 0.5;
                     break;
@@ -503,17 +502,17 @@ export function getBackgroundPosition(value: string, dimension: Dimension, image
                     const location = convertLength(position, dimension.width, fontSize);
                     const locationAsPercent = convertPercent(position, dimension.width, fontSize);
                     switch (result.horizontal) {
-                        case CSS.END:
-                            result.horizontal = CSS.RIGHT;
-                        case CSS.RIGHT:
+                        case 'end':
+                            result.horizontal = 'right';
+                        case 'right':
                             result.right = location;
                             result.rightAsPercent = locationAsPercent;
                             setImageOffset(position, true, 'right', 'rightAsPercent');
                             result.left = dimension.width - result.right;
                             result.leftAsPercent = 1 - locationAsPercent;
                             break;
-                        case CSS.START:
-                            result.horizontal = CSS.LEFT;
+                        case 'start':
+                            result.horizontal = 'left';
                         default:
                             result.left = location;
                             result.leftAsPercent = locationAsPercent;
@@ -528,7 +527,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, image
                 case 3: {
                     const location = convertLength(position, dimension.height, fontSize);
                     const locationAsPercent = convertPercent(position, dimension.height, fontSize);
-                    if (result.vertical === CSS.BOTTOM) {
+                    if (result.vertical === 'bottom') {
                         result.bottom = location;
                         result.bottomAsPercent = locationAsPercent;
                         setImageOffset(position, false, 'bottom', 'bottomAsPercent');
@@ -724,12 +723,12 @@ export function convertAngle(value: string, unit = 'deg') {
 export function convertPX(value: string, fontSize?: number) {
     if (value) {
         value = value.trim();
-        if (value.endsWith('px') || value.endsWith('%') || value === CSS.AUTO) {
+        if (value.endsWith('px') || value.endsWith('%') || value === 'auto') {
             return value;
         }
         return `${parseUnit(value, fontSize)}px`;
     }
-    return CSS.PX_0;
+    return '0px';
 }
 
 export function calculate(value: string, dimension = 0, fontSize?: number) {
@@ -914,7 +913,7 @@ export function formatPercent(value: string | number, round = true) {
     if (typeof value === 'string') {
         value = parseFloat(value);
         if (isNaN(value)) {
-            return CSS.PERCENT_0;
+            return '0%';
         }
     }
     value *= 100;

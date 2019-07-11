@@ -27,14 +27,13 @@ interface ForwardValue extends NumberValue<AnimateValue> {
 }
 
 const {
-    constant: $const,
     math: $math,
     regex: $regex,
     util: $util
 } = squared.lib;
 
 const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
-const RECT_ARGS = [$const.CSS.WIDTH, $const.CSS.HEIGHT, 'x', 'y'];
+const RECT_ARGS = ['width', 'height', 'x', 'y'];
 const POLYGON_ARGS = ['points'];
 const CIRCLE_ARGS = ['cx', 'cy', 'r'];
 const ELLIPSE_ARGS = ['cx', 'cy', 'rx', 'ry'];

@@ -4,8 +4,6 @@ import NodeUI from './node-ui';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
-const $const = squared.lib.constant;
-
 export default abstract class NodeGroupUI extends NodeUI {
     public init() {
         if (this.length) {
@@ -117,8 +115,8 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get float() {
         if (this._cached.float === undefined) {
-            this._cached.float = !this.floating ? $const.CSS.NONE
-                                                : this.hasAlign(NODE_ALIGNMENT.RIGHT) ? $const.CSS.RIGHT : $const.CSS.LEFT;
+            this._cached.float = !this.floating ? 'none'
+                                                : this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left';
         }
         return this._cached.float;
     }
