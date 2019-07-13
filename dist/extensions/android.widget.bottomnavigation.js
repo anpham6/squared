@@ -1,4 +1,4 @@
-/* android.widget 1.1.2
+/* android.widget 1.2.5
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,7 +6,7 @@ this.android.widget = this.android.widget || {};
 this.android.widget.bottomnavigation = (function () {
     'use strict';
 
-    const { constant: $const, util: $util } = squared.lib;
+    const $util = squared.lib.util;
     const { constant: $constA, enumeration: $enumA, util: $utilA } = android.lib;
     const $Resource = android.base.Resource;
     const $e = squared.base.lib.enumeration;
@@ -17,7 +17,7 @@ this.android.widget.bottomnavigation = (function () {
         }
         processNode(node, parent) {
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
-            $util.assignEmptyValue(options, $constA.STRING_ANDROID.ANDROID, 'background', `?android:attr/windowBackground`);
+            $util.assignEmptyValue(options, 'android', 'background', `?android:attr/windowBackground`);
             const children = node.children;
             const length = children.length;
             for (let i = 5; i < length; i++) {
@@ -31,8 +31,8 @@ this.android.widget.bottomnavigation = (function () {
             node.exclude($e.NODE_RESOURCE.ASSET);
             node.render(parent);
             node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
-            node.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);
-            node.setLayoutHeight($constA.STRING_ANDROID.WRAP_CONTENT);
+            node.setLayoutWidth('match_parent');
+            node.setLayoutHeight('wrap_content');
             for (const item of node.cascade()) {
                 this.addDescendant(item);
             }
@@ -46,27 +46,29 @@ this.android.widget.bottomnavigation = (function () {
                 complete: true
             };
         }
-        postBaseLayout(node) {
-            const renderParent = node.renderParent;
-            if (renderParent) {
-                if (!renderParent.hasPX($const.CSS.WIDTH)) {
-                    renderParent.setLayoutWidth($constA.STRING_ANDROID.MATCH_PARENT);
+        afterParseDocument() {
+            for (const node of this.subscribers) {
+                const renderParent = node.renderParent;
+                if (renderParent) {
+                    if (!renderParent.hasPX('width')) {
+                        renderParent.setLayoutWidth('match_parent');
+                    }
+                    if (!renderParent.hasPX('height')) {
+                        renderParent.setLayoutHeight('match_parent');
+                    }
                 }
-                if (!renderParent.hasPX($const.CSS.HEIGHT)) {
-                    renderParent.setLayoutHeight($constA.STRING_ANDROID.MATCH_PARENT);
+                const menu = $util.optionalAsString(BottomNavigation.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
+                if (menu !== '') {
+                    const options = $utilA.createViewAttribute(this.options[node.elementId]);
+                    $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
+                    node.app('menu', options.app.menu);
                 }
-            }
-            const menu = $util.optionalAsString(BottomNavigation.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
-            if (menu !== '') {
-                const options = $utilA.createViewAttribute(this.options[node.elementId]);
-                $util.assignEmptyValue(options, $constA.STRING_ANDROID.APP, 'menu', `@menu/${menu}`);
-                node.app('menu', options.app.menu);
             }
         }
         setStyleTheme() {
             const options = $utilA.createStyleAttribute(this.options.resource);
             $util.assignEmptyValue(options, 'name', this.application.userSettings.manifestThemeName);
-            $util.assignEmptyValue(options, $constA.STRING_ANDROID.PARENT, 'Theme.AppCompat.Light.DarkActionBar');
+            $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
             $Resource.addTheme(options);
         }
     }

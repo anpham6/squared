@@ -9,6 +9,7 @@ html/demos-dev/
 node_modules/
 src/
 temp/
+.DS_Store
 *.code-workspace
 package-lock.json
 rollup.config.*

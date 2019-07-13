@@ -1,6 +1,6 @@
 {
   "name": "android-framework",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Android framework module for use with squared.",
   "repository": {
     "type": "git",

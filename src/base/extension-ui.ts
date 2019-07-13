@@ -80,7 +80,6 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     public postBaseLayout(node: T) {}
     public postConstraints(node: T) {}
     public postOptimize(node: T) {}
-    public postBoxSpacing(node: T) {}
 
     public afterBaseLayout() {}
     public afterConstraints() {}

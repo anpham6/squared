@@ -4,6 +4,7 @@ export default class Resource<T extends chrome.base.View> extends squared.base.R
         public cache: squared.base.NodeList<T>)
     {
         super();
+        this.controllerSettings = application.controllerHandler.localSettings;
     }
 
     get userSettings() {

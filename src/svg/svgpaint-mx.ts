@@ -169,7 +169,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 }
                 switch (attr) {
                     case 'stroke-dasharray':
-                        value = value !== 'none' ? $util.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ') : '';
+                        value = value !== 'none' ? $util.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ', false) : '';
                         break;
                     case 'stroke-dashoffset':
                     case 'stroke-width':

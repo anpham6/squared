@@ -92,7 +92,8 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     value = $util.capitalizeString(value);
                                     break;
                             }
-                            value = $xml.replaceCharacterData(value, true);
+                            const tagName = node.tagName;
+                            value = $xml.replaceCharacterData(value, node.preserveWhiteSpace || tagName === 'CODE');
                             const textDecorationLine = node.css('textDecorationLine');
                             if (textDecorationLine !== 'none') {
                                 for (const style of textDecorationLine.split(' ')) {
@@ -106,7 +107,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     }
                                 }
                             }
-                            if (node.tagName === 'INS' && textDecorationLine.indexOf('line-through') === -1) {
+                            if (tagName === 'INS' && textDecorationLine.indexOf('line-through') === -1) {
                                 value = `<strike>${value}</strike>`;
                             }
                             let textIndent = 0;

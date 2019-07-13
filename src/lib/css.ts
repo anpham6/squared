@@ -398,7 +398,7 @@ export function parseVar(element: HTMLElement | SVGElement, value: string) {
     let match: RegExpMatchArray | null;
     while ((match = CSS_RX.VAR.exec(value)) !== null) {
         let propertyValue = style.getPropertyValue(match[1]).trim();
-        if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) !== undefined && parseColor(propertyValue) === undefined)) {
+        if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) && parseColor(propertyValue) === undefined)) {
             propertyValue = match[2];
         }
         if (propertyValue !== '') {
@@ -693,10 +693,10 @@ export function insertStyleSheetRule(value: string, index = 0) {
         style.appendChild(document.createTextNode(''));
     }
     document.head.appendChild(style);
-    const sheet = style.sheet;
-    if (sheet && typeof sheet['insertRule'] === 'function') {
+    const sheet = style.sheet as any;
+    if (sheet && typeof sheet.insertRule === 'function') {
         try {
-            (sheet as any).insertRule(value, index);
+            sheet.insertRule(value, index);
         }
         catch {
             return null;
@@ -722,11 +722,7 @@ export function convertAngle(value: string, unit = 'deg') {
 
 export function convertPX(value: string, fontSize?: number) {
     if (value) {
-        value = value.trim();
-        if (value.endsWith('px') || value.endsWith('%') || value === 'auto') {
-            return value;
-        }
-        return `${parseUnit(value, fontSize)}px`;
+        return value.endsWith('px') ? value : `${parseUnit(value, fontSize)}px`;
     }
     return '0px';
 }

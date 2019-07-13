@@ -30,6 +30,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             columnCount: 0,
             layoutFixed: node.css('tableLayout') === 'fixed',
             borderCollapse: node.css('borderCollapse') === 'collapse',
+            block: false,
             expand: false
         };
     }
@@ -101,27 +102,28 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         columnIndex[col] += element.colSpan;
                     }
                 }
+                const m = columnIndex[i];
                 if (!td.hasPX('width')) {
-                    const width = $dom.getNamedItem(element, 'width');
-                    if ($css.isPercent(width)) {
-                        td.css('width', width);
+                    const value = $dom.getNamedItem(element, 'width');
+                    if ($css.isPercent(value)) {
+                        td.css('width', value);
                     }
-                    else if ($util.isNumber(width)) {
-                        td.css('width', $css.formatPX(parseFloat(width)));
+                    else if ($util.isNumber(value)) {
+                        td.css('width', $css.formatPX(parseFloat(value)));
                     }
                 }
                 if (!td.hasPX('height')) {
-                    const height = $dom.getNamedItem(element, 'height');
-                    if ($css.isPercent(height)) {
-                        td.css('height', height);
+                    const value = $dom.getNamedItem(element, 'height');
+                    if ($css.isPercent(value)) {
+                        td.css('height', value);
                     }
-                    else if ($util.isNumber(height)) {
-                        td.css('height', $css.formatPX(parseFloat(height)));
+                    else if ($util.isNumber(value)) {
+                        td.css('height', $css.formatPX(parseFloat(value)));
                     }
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     if (colgroup) {
-                        const style = $css.getStyle(colgroup.children[columnIndex[i]]);
+                        const style = $css.getStyle(colgroup.children[m]);
                         if (style.backgroundImage && style.backgroundImage !== 'none') {
                             td.css('backgroundImage', style.backgroundImage, true);
                         }
@@ -177,8 +179,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         break;
                 }
                 const columnWidth = td.cssInitial('width');
-                const m = columnIndex[i];
                 const reevaluate = mapWidth[m] === undefined || mapWidth[m] === 'auto';
+                const width = td.bounds.width;
                 if (i === 0 || reevaluate || !mainData.layoutFixed) {
                     if (columnWidth === '' || columnWidth === 'auto') {
                         if (mapWidth[m] === undefined) {
@@ -187,23 +189,23 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         else if (i === rowCount - 1) {
                             if (reevaluate && mapBounds[m] === 0) {
-                                mapBounds[m] = td.bounds.width;
+                                mapBounds[m] = width;
                             }
                         }
                     }
                     else {
-                        const length = $css.isLength(mapWidth[m]);
                         const percent = $css.isPercent(columnWidth);
-                        if (reevaluate || td.bounds.width < mapBounds[m] || td.bounds.width === mapBounds[m] && (length && percent || percent && $css.isPercent(mapWidth[m]) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m]) || length && $css.isLength(columnWidth) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m]))) {
+                        const length = $css.isLength(mapWidth[m]);
+                        if (reevaluate || width < mapBounds[m] || width === mapBounds[m] && (length && percent || percent && $css.isPercent(mapWidth[m]) && td.parseUnit(columnWidth) >= td.parseUnit(mapWidth[m]) || length && $css.isLength(columnWidth) && td.parseUnit(columnWidth) > td.parseUnit(mapWidth[m]))) {
                             mapWidth[m] = columnWidth;
                         }
                         if (reevaluate || element.colSpan === 1) {
-                            mapBounds[m] = td.bounds.width;
+                            mapBounds[m] = width;
                         }
                     }
                 }
                 if (td.length || td.inlineText) {
-                    rowWidth[i] += td.bounds.width + horizontal;
+                    rowWidth[i] += width + horizontal;
                 }
                 if (spacingWidth > 0) {
                     td.modifyBox(BOX_STANDARD.MARGIN_LEFT, columnIndex[i] === 0 ? horizontal : spacingWidth);
@@ -225,19 +227,22 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 return value;
             });
         }
-        if (mapWidth.every(value => $css.isPercent(value)) && mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
-            let percentTotal = 100;
-            $util.replaceMap<string, string>(mapWidth, value => {
-                const percent = parseFloat(value);
-                if (percentTotal <= 0) {
-                    value = '0px';
-                }
-                else if (percentTotal - percent < 0) {
-                    value = $css.formatPercent(percentTotal / 100);
-                }
-                percentTotal -= percent;
-                return value;
-            });
+        if (mapWidth.every(value => $css.isPercent(value))) {
+            mainData.block = true;
+            if (mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
+                let percentTotal = 100;
+                $util.replaceMap<string, string>(mapWidth, value => {
+                    const percent = parseFloat(value);
+                    if (percentTotal <= 0) {
+                        value = '0px';
+                    }
+                    else if (percentTotal - percent < 0) {
+                        value = $css.formatPercent(percentTotal / 100);
+                    }
+                    percentTotal -= percent;
+                    return value;
+                });
+            }
         }
         else if (mapWidth.every(value => $css.isLength(value))) {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);

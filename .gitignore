@@ -3,5 +3,6 @@
 build/
 node_modules/
 temp/
+.DS_Store
 *.code-workspace
 package-lock.json

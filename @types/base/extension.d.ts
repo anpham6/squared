@@ -74,6 +74,7 @@ export interface TableData {
     layoutType: number;
     layoutFixed: boolean;
     borderCollapse: boolean;
+    block: boolean;
     expand: boolean;
     rowCount: number;
     columnCount: number;

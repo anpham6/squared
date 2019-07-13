@@ -618,7 +618,7 @@ export function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): 
     return result;
 }
 
-export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char = '\n', trailing = false): string {
+export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char = '\n', trailing = true): string {
     let result = '';
     const length = list.length;
     for (let i = 0; i < length; i++) {

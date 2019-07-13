@@ -1,4 +1,4 @@
-/* squared 1.2.4
+/* squared 1.2.5
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -638,7 +638,7 @@
         }
         return result;
     }
-    function joinMap(list, predicate, char = '\n', trailing = false) {
+    function joinMap(list, predicate, char = '\n', trailing = true) {
         let result = '';
         const length = list.length;
         for (let i = 0; i < length; i++) {
@@ -898,6 +898,187 @@
             return this._children.length;
         }
     }
+
+    const REGEXP_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
+    const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+    const REGEXP_TRUNCATECACHE = {};
+    function convertDecimalNotation(value) {
+        const match = REGEXP_DECIMALNOTATION.exec(value.toString());
+        if (match) {
+            return parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0';
+        }
+        return value.toString();
+    }
+    function minArray(list) {
+        return Math.min.apply(null, list);
+    }
+    function maxArray(list) {
+        return Math.max.apply(null, list);
+    }
+    function isEqual$1(valueA, valueB, precision = 5) {
+        const length = Math.floor(valueA).toString().length;
+        return valueA.toPrecision(length + precision) === valueB.toPrecision(length + precision);
+    }
+    function moreEqual(valueA, valueB, precision = 5) {
+        return valueA > valueB || isEqual$1(valueA, valueB, precision);
+    }
+    function lessEqual(valueA, valueB, precision = 5) {
+        return valueA < valueB || isEqual$1(valueA, valueB, precision);
+    }
+    function truncate(value, precision = 3) {
+        if (typeof value === 'string') {
+            value = parseFloat(value);
+        }
+        if (value === Math.floor(value)) {
+            return value.toString();
+        }
+        else if ((value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
+            return '0';
+        }
+        else {
+            const absolute = Math.abs(value);
+            let i = 1;
+            if (absolute >= 1) {
+                precision += 1;
+                while (absolute / Math.pow(10, i++) >= 1) {
+                    precision += 1;
+                }
+            }
+            else {
+                while (precision > 1 && absolute * Math.pow(10, i++) < 1) {
+                    precision -= 1;
+                }
+            }
+            return truncateTrailingZero(value.toPrecision(precision));
+        }
+    }
+    function truncateFraction(value) {
+        if (value !== Math.floor(value)) {
+            const match = REGEXP_TRUNCATE.exec(convertDecimalNotation(value));
+            if (match) {
+                if (match[2] === '') {
+                    return Math.round(value);
+                }
+                return parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
+            }
+        }
+        return value;
+    }
+    function truncateTrailingZero(value) {
+        const match = CHAR.TRAILINGZERO.exec(value);
+        return match ? value.substring(0, value.length - match[match[1] ? 2 : 0].length) : value;
+    }
+    function truncateString(value, precision = 3) {
+        if (REGEXP_TRUNCATECACHE[precision] === undefined) {
+            REGEXP_TRUNCATECACHE[precision] = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+        }
+        else {
+            REGEXP_TRUNCATECACHE[precision].lastIndex = 0;
+        }
+        let output = value;
+        let match;
+        while ((match = REGEXP_TRUNCATECACHE[precision].exec(value)) !== null) {
+            if (parseInt(match[2]) >= 5) {
+                match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
+            }
+            output = output.replace(match[0], truncateTrailingZero(match[1]));
+        }
+        return output;
+    }
+    function convertRadian(value) {
+        return value * Math.PI / 180;
+    }
+    function triangulate(a, b, clen) {
+        const c = 180 - a - b;
+        return [
+            (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(a)),
+            (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(b))
+        ];
+    }
+    function absoluteAngle(start, end) {
+        const x = end.x - start.x;
+        const y = end.y - start.y;
+        return Math.atan2(y, x) * 180 / Math.PI;
+    }
+    function relativeAngle(start, end, orientation = 90) {
+        let value = absoluteAngle(start, end) + orientation;
+        if (value < 0) {
+            value += 360;
+        }
+        return value;
+    }
+    function offsetAngleX(angle, value) {
+        return value * Math.sin(convertRadian(angle));
+    }
+    function offsetAngleY(angle, value) {
+        return value * Math.cos(convertRadian(angle)) * -1;
+    }
+    function clampRange(value, min = 0, max = 1) {
+        if (value < min) {
+            value = min;
+        }
+        else if (value > max) {
+            value = max;
+        }
+        return value;
+    }
+    function nextMultiple(values, minimum = 0, offset) {
+        const length = values.length;
+        if (length > 1) {
+            const increment = minArray(values);
+            if (offset && offset.length === length) {
+                for (let i = 0; i < offset.length; i++) {
+                    minimum = Math.max(minimum, offset[i] + values[i]);
+                }
+            }
+            else {
+                offset = undefined;
+                minimum = Math.max(minimum, increment);
+            }
+            let value = 0;
+            while (value < minimum) {
+                value += increment;
+            }
+            const start = offset ? offset[0] : 0;
+            let valid = false;
+            while (!valid) {
+                const total = start + value;
+                for (let i = 1; i < length; i++) {
+                    const multiple = values[i] + (offset ? offset[i] : 0);
+                    if (total % multiple === 0) {
+                        valid = true;
+                    }
+                    else {
+                        valid = false;
+                        value += increment;
+                        break;
+                    }
+                }
+            }
+            return start + value;
+        }
+        return values[0];
+    }
+
+    var math = /*#__PURE__*/Object.freeze({
+        minArray: minArray,
+        maxArray: maxArray,
+        isEqual: isEqual$1,
+        moreEqual: moreEqual,
+        lessEqual: lessEqual,
+        truncate: truncate,
+        truncateFraction: truncateFraction,
+        truncateTrailingZero: truncateTrailingZero,
+        truncateString: truncateString,
+        convertRadian: convertRadian,
+        triangulate: triangulate,
+        absoluteAngle: absoluteAngle,
+        relativeAngle: relativeAngle,
+        offsetAngleX: offsetAngleX,
+        offsetAngleY: offsetAngleY,
+        clampRange: clampRange,
+        nextMultiple: nextMultiple
+    });
 
     const STRING_HEX = '0123456789ABCDEF';
     const COLOR_CSS3 = [
@@ -2961,7 +3142,7 @@
         }
     ];
     const CACHE_COLORDATA = {};
-    const parseOpacity = (value) => parseFloat(value.trim() || '1') * 255;
+    const parseOpacity = (value) => clampRange(value) * 255;
     function findColorName(value) {
         for (const color of COLOR_CSS3) {
             if (color.key === value.toLowerCase()) {
@@ -3013,9 +3194,9 @@
         }
         return undefined;
     }
-    function parseColor(value, opacity = '1', transparency = false) {
+    function parseColor(value, opacity = 1, transparency = false) {
         if (value && (value !== 'transparent' || transparency)) {
-            if (CACHE_COLORDATA[value] && opacity === '1') {
+            if (CACHE_COLORDATA[value]) {
                 return CACHE_COLORDATA[value];
             }
             let key = '';
@@ -3047,7 +3228,7 @@
                     default:
                         const color = findColorName(value);
                         if (color) {
-                            rgba = color.rgb;
+                            rgba = Object.assign({}, color.rgb);
                             rgba.a = parseOpacity(opacity);
                             key = value;
                         }
@@ -3061,24 +3242,22 @@
                 if (CACHE_COLORDATA[valueAsRGBA]) {
                     return CACHE_COLORDATA[valueAsRGBA];
                 }
-                const alpha = rgba.a / 255;
+                opacity = rgba.a / 255;
+                value = `#${hexAsString}`;
                 const colorData = {
                     key,
-                    value: `#${hexAsString}`,
+                    value,
                     valueAsRGBA,
                     valueAsARGB: `#${alphaAsString + hexAsString}`,
                     rgba,
                     hsl: convertHSLA(rgba),
-                    opacity: alpha,
-                    semiopaque: alpha > 0 && alpha < 1,
-                    transparent: alpha === 0
+                    opacity,
+                    transparent: opacity === 0
                 };
-                if (opacity === '1') {
+                if (opacity === 1) {
                     CACHE_COLORDATA[value] = colorData;
                 }
-                else {
-                    CACHE_COLORDATA[valueAsRGBA] = colorData;
-                }
+                CACHE_COLORDATA[valueAsRGBA] = colorData;
                 return colorData;
             }
         }
@@ -3206,29 +3385,6 @@
         convertHSLA: convertHSLA,
         formatRGBA: formatRGBA,
         formatHSLA: formatHSLA
-    });
-
-    const CSS$1 = {
-        TOP: 'top',
-        RIGHT: 'right',
-        BOTTOM: 'bottom',
-        LEFT: 'left',
-        START: 'start',
-        END: 'end',
-        CENTER: 'center',
-        MIDDLE: 'middle',
-        PX_0: '0px',
-        PERCENT_0: '0%',
-        PERCENT_50: '50%',
-        PERCENT_100: '100%',
-        WIDTH: 'width',
-        HEIGHT: 'height',
-        AUTO: 'auto',
-        NONE: 'none'
-    };
-
-    var constant = /*#__PURE__*/Object.freeze({
-        CSS: CSS$1
     });
 
     function isPlatform(value) {
@@ -3559,7 +3715,7 @@
     }
     const convertLength = (value, dimension, fontSize) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
     const convertPercent = (value, dimension, fontSize) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
-    const BOX_POSITION = [CSS$1.TOP, CSS$1.RIGHT, CSS$1.BOTTOM, CSS$1.LEFT];
+    const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
     const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
     const BOX_BORDER = [
         ['borderTopStyle', 'borderTopWidth', 'borderTopColor'],
@@ -3584,7 +3740,7 @@
             }
             return { display: 'inline' };
         }
-        return { display: CSS$1.NONE };
+        return { display: 'none' };
     }
     function getFontSize(element) {
         return parseFloat(getStyle(element).getPropertyValue('font-size')) || undefined;
@@ -3775,10 +3931,10 @@
                     percent = percent.trim();
                     switch (percent) {
                         case 'from':
-                            percent = CSS$1.PERCENT_0;
+                            percent = '0%';
                             break;
                         case 'to':
-                            percent = CSS$1.PERCENT_100;
+                            percent = '100%';
                             break;
                     }
                     result[percent] = {};
@@ -3832,13 +3988,13 @@
                                 const [width, height] = replaceMap(rule.split('/'), ratio => parseInt(ratio));
                                 valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
                                 break;
-                            case CSS$1.WIDTH:
+                            case 'width':
                             case 'min-width':
                             case 'max-width':
-                            case CSS$1.HEIGHT:
+                            case 'height':
                             case 'min-height':
                             case 'max-height':
-                                valid = compareRange(operation, attr.indexOf(CSS$1.WIDTH) !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
+                                valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
                                 break;
                             case 'orientation':
                                 valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
@@ -3916,7 +4072,7 @@
         let match;
         while ((match = CSS.VAR.exec(value)) !== null) {
             let propertyValue = style.getPropertyValue(match[1]).trim();
-            if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) !== undefined && parseColor(propertyValue) === undefined)) {
+            if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) && parseColor(propertyValue) === undefined)) {
                 propertyValue = match[2];
             }
             if (propertyValue !== '') {
@@ -3945,8 +4101,8 @@
         }
         return undefined;
     }
-    function getBackgroundPosition(value, dimension, fontSize) {
-        const orientation = value === CSS$1.CENTER ? [CSS$1.CENTER, CSS$1.CENTER] : value.split(' ');
+    function getBackgroundPosition(value, dimension, imageDimension, fontSize) {
+        const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
         const result = {
             static: true,
             top: 0,
@@ -3957,38 +4113,45 @@
             leftAsPercent: 0,
             rightAsPercent: 0,
             bottomAsPercent: 0,
-            horizontal: CSS$1.LEFT,
-            vertical: CSS$1.TOP,
+            horizontal: 'left',
+            vertical: 'top',
             orientation
         };
+        function setImageOffset(position, horizontal, direction, directionAsPercent) {
+            if (imageDimension && /^[a-z]+|-?[\d.]+%$/.test(position)) {
+                const offset = Math.min(result[directionAsPercent], 1) * (horizontal ? imageDimension.width : imageDimension.height);
+                result[direction] -= offset;
+            }
+        }
         if (orientation.length === 2) {
             for (let i = 0; i < 2; i++) {
                 const position = orientation[i];
+                const horizontal = i === 0;
                 let direction;
                 let offsetParent;
-                if (i === 0) {
-                    direction = CSS$1.LEFT;
+                if (horizontal) {
+                    direction = 'left';
                     offsetParent = dimension.width;
                     result.horizontal = position;
                 }
                 else {
-                    direction = CSS$1.TOP;
+                    direction = 'top';
                     offsetParent = dimension.height;
                     result.vertical = position;
                 }
                 const directionAsPercent = `${direction}AsPercent`;
                 switch (position) {
-                    case CSS$1.START:
-                        result.horizontal = CSS$1.LEFT;
+                    case 'start':
+                        result.horizontal = 'left';
                         break;
-                    case CSS$1.END:
-                        result.horizontal = CSS$1.RIGHT;
-                    case CSS$1.RIGHT:
-                    case CSS$1.BOTTOM:
+                    case 'end':
+                        result.horizontal = 'right';
+                    case 'right':
+                    case 'bottom':
                         result[direction] = offsetParent;
                         result[directionAsPercent] = 1;
                         break;
-                    case CSS$1.CENTER:
+                    case 'center':
                         result[direction] = offsetParent / 2;
                         result[directionAsPercent] = 0.5;
                         break;
@@ -3997,6 +4160,7 @@
                         result[directionAsPercent] = convertPercent(position, offsetParent, fontSize);
                         break;
                 }
+                setImageOffset(position, horizontal, direction, directionAsPercent);
             }
         }
         else if (orientation.length === 4) {
@@ -4010,21 +4174,23 @@
                         const location = convertLength(position, dimension.width, fontSize);
                         const locationAsPercent = convertPercent(position, dimension.width, fontSize);
                         switch (result.horizontal) {
-                            case CSS$1.END:
-                                result.horizontal = CSS$1.RIGHT;
-                            case CSS$1.RIGHT:
+                            case 'end':
+                                result.horizontal = 'right';
+                            case 'right':
                                 result.right = location;
-                                result.left = dimension.width - location;
                                 result.rightAsPercent = locationAsPercent;
+                                setImageOffset(position, true, 'right', 'rightAsPercent');
+                                result.left = dimension.width - result.right;
                                 result.leftAsPercent = 1 - locationAsPercent;
                                 break;
-                            case CSS$1.START:
-                                result.horizontal = CSS$1.LEFT;
+                            case 'start':
+                                result.horizontal = 'left';
                             default:
                                 result.left = location;
                                 result.leftAsPercent = locationAsPercent;
                                 break;
                         }
+                        setImageOffset(position, true, 'left', 'leftAsPercent');
                         break;
                     }
                     case 2:
@@ -4033,16 +4199,18 @@
                     case 3: {
                         const location = convertLength(position, dimension.height, fontSize);
                         const locationAsPercent = convertPercent(position, dimension.height, fontSize);
-                        if (result.vertical === CSS$1.BOTTOM) {
+                        if (result.vertical === 'bottom') {
                             result.bottom = location;
-                            result.top = dimension.height - location;
                             result.bottomAsPercent = locationAsPercent;
+                            setImageOffset(position, false, 'bottom', 'bottomAsPercent');
+                            result.top = dimension.height - result.bottom;
                             result.topAsPercent = 1 - locationAsPercent;
                         }
                         else {
                             result.top = location;
                             result.topAsPercent = locationAsPercent;
                         }
+                        setImageOffset(position, false, 'top', 'topAsPercent');
                         break;
                     }
                 }
@@ -4194,7 +4362,7 @@
         }
         document.head.appendChild(style);
         const sheet = style.sheet;
-        if (sheet && typeof sheet['insertRule'] === 'function') {
+        if (sheet && typeof sheet.insertRule === 'function') {
             try {
                 sheet.insertRule(value, index);
             }
@@ -4220,13 +4388,9 @@
     }
     function convertPX(value, fontSize) {
         if (value) {
-            value = value.trim();
-            if (value.endsWith('px') || value.endsWith('%') || value === CSS$1.AUTO) {
-                return value;
-            }
-            return `${parseUnit(value, fontSize)}px`;
+            return value.endsWith('px') ? value : `${parseUnit(value, fontSize)}px`;
         }
-        return CSS$1.PX_0;
+        return '0px';
     }
     function calculate(value, dimension = 0, fontSize) {
         value = value.trim();
@@ -4406,7 +4570,7 @@
         if (typeof value === 'string') {
             value = parseFloat(value);
             if (isNaN(value)) {
-                return CSS$1.PERCENT_0;
+                return '0%';
             }
         }
         value *= 100;
@@ -4466,187 +4630,6 @@
         isPercent: isPercent
     });
 
-    const REGEXP_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
-    const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
-    const REGEXP_TRUNCATECACHE = {};
-    function convertDecimalNotation(value) {
-        const match = REGEXP_DECIMALNOTATION.exec(value.toString());
-        if (match) {
-            return parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0';
-        }
-        return value.toString();
-    }
-    function minArray(list) {
-        return Math.min.apply(null, list);
-    }
-    function maxArray(list) {
-        return Math.max.apply(null, list);
-    }
-    function isEqual$1(valueA, valueB, precision = 5) {
-        const length = Math.floor(valueA).toString().length;
-        return valueA.toPrecision(length + precision) === valueB.toPrecision(length + precision);
-    }
-    function moreEqual(valueA, valueB, precision = 5) {
-        return valueA > valueB || isEqual$1(valueA, valueB, precision);
-    }
-    function lessEqual(valueA, valueB, precision = 5) {
-        return valueA < valueB || isEqual$1(valueA, valueB, precision);
-    }
-    function truncate(value, precision = 3) {
-        if (typeof value === 'string') {
-            value = parseFloat(value);
-        }
-        if (value === Math.floor(value)) {
-            return value.toString();
-        }
-        else if ((value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
-            return '0';
-        }
-        else {
-            const absolute = Math.abs(value);
-            let i = 1;
-            if (absolute >= 1) {
-                precision += 1;
-                while (absolute / Math.pow(10, i++) >= 1) {
-                    precision += 1;
-                }
-            }
-            else {
-                while (precision > 1 && absolute * Math.pow(10, i++) < 1) {
-                    precision -= 1;
-                }
-            }
-            return truncateTrailingZero(value.toPrecision(precision));
-        }
-    }
-    function truncateFraction(value) {
-        if (value !== Math.floor(value)) {
-            const match = REGEXP_TRUNCATE.exec(convertDecimalNotation(value));
-            if (match) {
-                if (match[2] === '') {
-                    return Math.round(value);
-                }
-                return parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
-            }
-        }
-        return value;
-    }
-    function truncateTrailingZero(value) {
-        const match = CHAR.TRAILINGZERO.exec(value);
-        return match ? value.substring(0, value.length - match[match[1] ? 2 : 0].length) : value;
-    }
-    function truncateString(value, precision = 3) {
-        if (REGEXP_TRUNCATECACHE[precision] === undefined) {
-            REGEXP_TRUNCATECACHE[precision] = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
-        }
-        else {
-            REGEXP_TRUNCATECACHE[precision].lastIndex = 0;
-        }
-        let output = value;
-        let match;
-        while ((match = REGEXP_TRUNCATECACHE[precision].exec(value)) !== null) {
-            if (parseInt(match[2]) >= 5) {
-                match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
-            }
-            output = output.replace(match[0], truncateTrailingZero(match[1]));
-        }
-        return output;
-    }
-    function convertRadian(value) {
-        return value * Math.PI / 180;
-    }
-    function triangulate(a, b, clen) {
-        const c = 180 - a - b;
-        return [
-            (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(a)),
-            (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(b))
-        ];
-    }
-    function absoluteAngle(start, end) {
-        const x = end.x - start.x;
-        const y = end.y - start.y;
-        return Math.atan2(y, x) * 180 / Math.PI;
-    }
-    function relativeAngle(start, end, orientation = 90) {
-        let value = absoluteAngle(start, end) + orientation;
-        if (value < 0) {
-            value += 360;
-        }
-        return value;
-    }
-    function offsetAngleX(angle, value) {
-        return value * Math.sin(convertRadian(angle));
-    }
-    function offsetAngleY(angle, value) {
-        return value * Math.cos(convertRadian(angle)) * -1;
-    }
-    function clampRange(value, min = 0, max = 1) {
-        if (value < min) {
-            value = min;
-        }
-        else if (value > max) {
-            value = max;
-        }
-        return value;
-    }
-    function nextMultiple(values, minimum = 0, offset) {
-        const length = values.length;
-        if (length > 1) {
-            const increment = minArray(values);
-            if (offset && offset.length === length) {
-                for (let i = 0; i < offset.length; i++) {
-                    minimum = Math.max(minimum, offset[i] + values[i]);
-                }
-            }
-            else {
-                offset = undefined;
-                minimum = Math.max(minimum, increment);
-            }
-            let value = 0;
-            while (value < minimum) {
-                value += increment;
-            }
-            const start = offset ? offset[0] : 0;
-            let valid = false;
-            while (!valid) {
-                const total = start + value;
-                for (let i = 1; i < length; i++) {
-                    const multiple = values[i] + (offset ? offset[i] : 0);
-                    if (total % multiple === 0) {
-                        valid = true;
-                    }
-                    else {
-                        valid = false;
-                        value += increment;
-                        break;
-                    }
-                }
-            }
-            return start + value;
-        }
-        return values[0];
-    }
-
-    var math = /*#__PURE__*/Object.freeze({
-        minArray: minArray,
-        maxArray: maxArray,
-        isEqual: isEqual$1,
-        moreEqual: moreEqual,
-        lessEqual: lessEqual,
-        truncate: truncate,
-        truncateFraction: truncateFraction,
-        truncateTrailingZero: truncateTrailingZero,
-        truncateString: truncateString,
-        convertRadian: convertRadian,
-        triangulate: triangulate,
-        absoluteAngle: absoluteAngle,
-        relativeAngle: relativeAngle,
-        offsetAngleX: offsetAngleX,
-        offsetAngleY: offsetAngleY,
-        clampRange: clampRange,
-        nextMultiple: nextMultiple
-    });
-
     const REGEXP_INDENT = /^(\t+)(.*)$/;
     const REGEXP_FORMAT = {
         ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
@@ -4655,6 +4638,7 @@
         NBSP: /&nbsp;/g,
         AMP: /&/g
     };
+    const TAB_SPACE = '&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;';
     const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
     function isPlainText$1(value) {
         const length = value.length;
@@ -4676,7 +4660,7 @@
             if (indent === undefined) {
                 indent = char.repeat(depth);
             }
-            return joinMap(value.split('\n'), line => line !== '' ? indent + line : '', '\n', true);
+            return joinMap(value.split('\n'), line => line !== '' ? indent + line : '');
         }
         return value;
     }
@@ -4702,7 +4686,7 @@
                     return (match[1] || '') + '\t'.repeat(depth + (match[2].length - indent)) + match[3];
                 }
                 return line;
-            }, '\n', true);
+            });
         }
         return value;
     }
@@ -4858,7 +4842,7 @@
         }
         return output;
     }
-    function replaceCharacterData(value) {
+    function replaceCharacterData(value, tab = false) {
         value = value
             .replace(REGEXP_FORMAT.NBSP, '&#160;')
             .replace(ESCAPE.NONENTITY, '&amp;');
@@ -4883,6 +4867,15 @@
                 case '>':
                     char[i] = '&gt;';
                     valid = true;
+                    break;
+                case '\t':
+                    if (tab) {
+                        char[i] = TAB_SPACE;
+                        valid = true;
+                    }
+                    else {
+                        char[i] = ch;
+                    }
                     break;
                 case '\u0003':
                     char[i] = ' ';
@@ -5114,7 +5107,6 @@
             Container
         },
         color,
-        constant,
         client,
         css,
         dom,

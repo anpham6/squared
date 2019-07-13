@@ -236,7 +236,6 @@ declare namespace base {
         postBaseLayout(node: T): void;
         postConstraints(node: T): void;
         postOptimize(node: T): void;
-        postBoxSpacing(node: T): void;
         afterBaseLayout(): void;
         afterConstraints(): void;
         afterResources(): void;
@@ -445,7 +444,7 @@ declare namespace base {
         cssInitial(attr: string, modified?: boolean, computed?: boolean): string;
         cssAny(attr: string, ...values: string[]): boolean;
         cssInitialAny(attr: string, ...values: string[]): boolean;
-        cssAscend(attr: string, startChild?: boolean, dimension?: string): string;
+        cssAscend(attr: string, startSelf?: boolean): string;
         cssSort(attr: string, ascending?: boolean, duplicate?: boolean): Node[];
         cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
         cssSpecificity(attr: string): number;
@@ -661,7 +660,7 @@ declare namespace lib {
     namespace color {
         function findColorName(value: string): ColorResult | undefined;
         function findColorShade(value: string): ColorResult | undefined;
-        function parseColor(value: string, opacity?: string, transparency?: boolean): ColorData | undefined;
+        function parseColor(value: string, opacity?: number, transparency?: boolean): ColorData | undefined;
         function parseRGBA(value: string): RGBA | undefined;
         function reduceRGBA(value: RGBA, percent: number, cacheName?: string): ColorData | undefined;
         function getHexCode(...values: number[]): string;

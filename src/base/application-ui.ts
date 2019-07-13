@@ -120,9 +120,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         for (const ext of this.extensions) {
-            for (const node of ext.subscribers) {
-                ext.postBoxSpacing(node);
-            }
             ext.beforeCascade();
         }
         const baseTemplate = controller.localSettings.layout.baseTemplate;
@@ -300,7 +297,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public createNode(element?: Element, append = true, parent?: T, children?: T[]) {
-        const node = new NodeConstructor(this.nextId, this.processing.sessionId, element, this.controllerHandler.afterInsertNode) as T;
+        const processing = this.processing;
+        const node = new NodeConstructor(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode) as T;
         if (parent) {
             node.depth = parent.depth + 1;
         }
@@ -310,7 +308,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (append) {
-            this.processing.cache.append(node, children !== undefined);
+            processing.cache.append(node, children !== undefined);
         }
         return node;
     }
@@ -617,18 +615,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
-        let styleMap: StringMap;
+        const styleMap: StringMap = $session.getElementCache(element, `styleMap${pseudoElt}`, sessionId);
         let nested = 0;
         if (element.tagName === 'Q') {
-            styleMap = { content: pseudoElt === '::before' ? 'open-quote' : 'close-quote' };
-            let current = element.parentElement;
-            while (current && current.tagName === 'Q') {
-                nested++;
-                current = current.parentElement;
+            if (!styleMap.content) {
+                styleMap.content = $css.getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
             }
-        }
-        else {
-            styleMap = $session.getElementCache(element, `styleMap${pseudoElt}`, sessionId);
+            if (styleMap.content.endsWith('-quote')) {
+                let current = element.parentElement;
+                while (current && current.tagName === 'Q') {
+                    nested++;
+                    current = current.parentElement;
+                }
+            }
         }
         if (styleMap && styleMap.content) {
             if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {

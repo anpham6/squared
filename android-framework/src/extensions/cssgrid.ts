@@ -427,7 +427,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             const [rowStart, rowSpan] = applyLayout(target, 'row', 'height');
             function checkRowSpan() {
-                if (mainData.rowSpanMultiple[rowStart] === true) {
+                if (rowSpan === 1 && mainData.rowSpanMultiple[rowStart] === true) {
                     const row = $util.flatMultiArray<T>(mainData.rowData[rowStart]);
                     const rowCount = mainData.rowData.length;
                     for (const item of row) {

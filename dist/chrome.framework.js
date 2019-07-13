@@ -1,4 +1,4 @@
-/* chrome-framework 1.2.4
+/* chrome-framework 1.2.5
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -9,6 +9,7 @@ var chrome = (function () {
             super();
             this.application = application;
             this.cache = cache;
+            this.controllerSettings = application.controllerHandler.localSettings;
         }
         get userSettings() {
             return this.application.userSettings;
@@ -58,7 +59,7 @@ var chrome = (function () {
         }
     }
 
-    const { constant: $const, dom: $dom$1, session: $session } = squared.lib;
+    const { dom: $dom$1, session: $session } = squared.lib;
     class Controller extends squared.base.Controller {
         constructor(application, cache) {
             super();
@@ -91,8 +92,8 @@ var chrome = (function () {
                     position: 'static',
                     display: 'inline',
                     verticalAlign: 'baseline',
-                    float: $const.CSS.NONE,
-                    clear: $const.CSS.NONE
+                    float: 'none',
+                    clear: 'none'
                 });
             }
         }

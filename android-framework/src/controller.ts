@@ -129,7 +129,8 @@ function adjustBaseline(baseline: View, nodes: View[]) {
 
 function isLayoutBaselineAligned(node: View) {
     if (node.layoutHorizontal) {
-        return node.renderChildren.every(item => item.baseline);
+        const children = node.renderChildren;
+        return children.length && children.every(item => item.baseline && !item.baselineAltered && (!item.positionRelative || item.positionRelative && item.top === 0 && item.bottom === 0));
     }
     else if (node.layoutVertical) {
         const children = node.renderChildren;
@@ -725,6 +726,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         {
             node.hide();
             return { layout, next: true };
+        }
+        else if (style.background) {
+            layout.setType(CONTAINER_NODE.TEXT);
+            node.inlineText = true;
         }
         else {
             layout.setType(CONTAINER_NODE.FRAME);

@@ -33,7 +33,6 @@ interface ColorData extends StringValue {
     rgba: RGBA;
     hsl: HSL;
     opacity: number;
-    semiopaque: boolean;
     transparent: boolean;
 }
 

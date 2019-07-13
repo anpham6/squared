@@ -326,15 +326,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return false;
     }
 
-    public cssAscend(attr: string, startChild = false, dimension?: string) {
-        let current = startChild ? this : this.actualParent;
+    public cssAscend(attr: string, startSelf = false) {
+        let current = startSelf ? this : this.actualParent;
         let value: string;
         while (current) {
             value = current.cssInitial(attr);
             if (value !== '') {
-                if (dimension) {
-                    return current.convertPX(value, dimension);
-                }
                 return value;
             }
             if (current.documentBody) {
@@ -393,7 +390,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssTry(attr: string, value: string) {
         if (this.styleElement) {
-            const current = this.style.getPropertyValue(attr);
+            const current = $css.getStyle(this._element).getPropertyValue(attr);
             if (current !== value) {
                 const element = <HTMLElement> this._element;
                 element.style.setProperty(attr, value);

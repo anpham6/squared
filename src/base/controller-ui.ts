@@ -161,8 +161,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 }
                 case 'BUTTON':
-                    setBorderStyle();
-                    setButtonStyle(false);
+                    setButtonStyle(setBorderStyle());
                     break;
                 case 'TEXTAREA':
                 case 'SELECT':

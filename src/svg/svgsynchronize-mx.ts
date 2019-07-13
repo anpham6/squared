@@ -1786,7 +1786,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     if (repeatingResult || infiniteResult) {
                         this._removeAnimations(staggered);
                         const timeRange = Array.from(animateTimeRangeMap.entries());
-                        const synchronizedName = $util.joinMap(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-');
+                        const synchronizedName = $util.joinMap(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-', false);
                         for (const result of [repeatingResult, infiniteResult]) {
                             if (result) {
                                 const repeating = result === repeatingResult;

@@ -1,4 +1,4 @@
-/* android.widget 1.1.2
+/* android.widget 1.2.5
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -51,7 +51,7 @@ this.android.widget.menu = (function () {
             if (value && validator[attr]) {
                 const match = validator[attr].exec(value);
                 if (match) {
-                    options[NAMESPACE_APP.includes(attr) ? $constA.STRING_ANDROID.APP : $constA.STRING_ANDROID.ANDROID][attr] = Array.from(new Set(match)).join('|');
+                    options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
                 }
             }
         }
@@ -171,7 +171,7 @@ this.android.widget.menu = (function () {
                 case NAVIGATION.ITEM:
                     parseDataSet(REGEXP_ITEM, element, options);
                     if (!options.android.icon) {
-                        const resource = this.application.resourceHandler;
+                        const resource = this.resource;
                         let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);
                         if (src !== '') {
                             options.android.icon = `@drawable/${src}`;

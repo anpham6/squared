@@ -170,10 +170,10 @@ export default class Resource<T extends android.base.View> extends squared.base.
 
     public static addColor(color: ColorData | string | undefined, transparency = false) {
         if (typeof color === 'string') {
-            color = $color.parseColor(color, undefined, transparency);
+            color = $color.parseColor(color, 1, transparency);
         }
         if (color && (!color.transparent || transparency)) {
-            const keyName = color.semiopaque || color.transparent ? color.valueAsARGB : color.value;
+            const keyName = color.opacity < 1 ? color.valueAsARGB : color.value;
             let colorName = STORED.colors.get(keyName);
             if (colorName) {
                 return colorName;

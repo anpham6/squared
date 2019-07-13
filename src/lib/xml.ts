@@ -41,7 +41,7 @@ export function pushIndent(value: string, depth: number, char = '\t', indent?: s
         if (indent === undefined) {
             indent = char.repeat(depth);
         }
-        return joinMap(value.split('\n'), line => line !== '' ? indent + line : '', '\n', true);
+        return joinMap(value.split('\n'), line => line !== '' ? indent + line : '');
     }
     return value;
 }
@@ -69,7 +69,7 @@ export function replaceIndent(value: string, depth: number, pattern: RegExp) {
                 return (match[1] || '') + '\t'.repeat(depth + (match[2].length - indent)) + match[3];
             }
             return line;
-        }, '\n', true);
+        });
     }
     return value;
 }

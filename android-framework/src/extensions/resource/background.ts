@@ -58,7 +58,7 @@ const $e = squared.base.lib.enumeration;
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeStrokeData {
     const { style, color } = border;
     const width = roundFloat(border.width);
-    const result = getStrokeColor(Resource.addColor(color, true));
+    const result = getStrokeColor(color);
     switch (style) {
         case 'solid':
             break;
@@ -132,10 +132,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
             if (percent !== 1) {
                 const reduced = $color.reduceRGBA(rgba, percent, color.valueAsRGBA);
                 if (reduced) {
-                    const colorName = Resource.addColor(reduced, true);
-                    if (colorName !== '') {
-                        return getStrokeColor(colorName);
-                    }
+                    return getStrokeColor(reduced);
                 }
             }
     }
@@ -199,8 +196,8 @@ function getBorderRadius(radius?: string[]): StringMap | undefined {
 }
 
 function getBackgroundColor(value: string | undefined) {
-    const color = Resource.addColor(value);
-    return color !== '' ? { color: `@color/${color}` } : undefined;
+    const color = getColorValue(value, false);
+    return color !== '' ? { color } : undefined;
 }
 
 function isAlternatingBorder(value: string) {
@@ -336,10 +333,10 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
         result.item = convertColorStops(colorStops);
     }
     else {
-        result.startColor = `@color/${Resource.addColor(colorStops[0].color, true)}`;
-        result.endColor = `@color/${Resource.addColor(colorStops[colorStops.length - 1].color, true)}`;
+        result.startColor = getColorValue(colorStops[0].color);
+        result.endColor = getColorValue(colorStops[colorStops.length - 1].color);
         if (colorStops.length > 2) {
-            result.centerColor = `@color/${Resource.addColor(colorStops[Math.floor(colorStops.length / 2)].color, true)}`;
+            result.centerColor = getColorValue(colorStops[Math.floor(colorStops.length / 2)].color);
         }
     }
     return result;
@@ -394,7 +391,7 @@ function createLayerList(boxStyle: BoxStyle, images?: BackgroundImageData[], bor
         'xmlns:android': XMLNS_ANDROID.android,
         item: []
     }];
-    const solid = !borderOnly ? getBackgroundColor(boxStyle.backgroundColor) : undefined;
+    const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
     if (solid) {
         result[0].item.push({
             shape: {
@@ -437,7 +434,8 @@ function setBodyBackground(name: string, parent: string, value: string) {
         parent,
         items: {
             'android:windowBackground': value,
-            'android:windowFullscreen': 'true'
+            'android:windowFullscreen': 'true',
+            'android:fitsSystemWindows': 'true'
         }
     });
 }
@@ -450,9 +448,14 @@ function getIndentOffset(border: BorderAttribute) {
     return width;
 }
 
+function getColorValue(value: ColorData | string | undefined, transparency = true) {
+    const color = Resource.addColor(value, transparency);
+    return color !== '' ? `@color/${color}` : '';
+}
+
 const roundFloat = (value: string) => Math.round(parseFloat(value));
 
-const getStrokeColor = (value: string): ShapeStrokeData => ({ color: `@color/${value}`, dashWidth: '', dashGap: '' });
+const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
 
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
 
@@ -460,7 +463,7 @@ export function convertColorStops(list: ColorStop[], precision?: number) {
     const result: GradientColorStop[] = [];
     for (const stop of list) {
         result.push({
-            color: `@color/${Resource.addColor(stop.color, true)}`,
+            color: getColorValue(stop.color),
             offset: $math.truncate(stop.offset, precision)
         });
     }
@@ -483,7 +486,6 @@ export function drawRect(width: number, height: number, x = 0, y = 0, precision?
 
 export default class ResourceBackground<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceBackgroundOptions = {
-        autoSizeBackgroundImage: true,
         drawOutlineAsInsetBorder: true
     };
     public readonly eventOnly = true;
@@ -559,9 +561,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     setDrawableBackground(node, $xml.applyTemplate('layer-list', LAYERLIST_TMPL, layerListData));
                 }
                 else if (stored.backgroundColor) {
-                    let color = Resource.addColor(stored.backgroundColor);
+                    const color = getColorValue(stored.backgroundColor, false);
                     if (color !== '') {
-                        color = `@color/${color}`;
                         if (node.documentBody) {
                             setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
                         }
@@ -621,7 +622,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             else {
-                shapeData = createShapeData(stroke, !borderOnly ? getBackgroundColor(data.backgroundColor) : undefined, corners);
+                shapeData = createShapeData(stroke, !borderOnly && getBackgroundColor(data.backgroundColor), corners);
             }
         }
         else if (borderData) {
@@ -712,99 +713,102 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     }
 
     public getDrawableImages(node: T, data: BoxStyle) {
-        const bgImage = data.backgroundImage;
-        if (bgImage && node.hasResource($e.NODE_RESOURCE.IMAGE_SOURCE)) {
+        const backgroundImage = data.backgroundImage;
+        const extracted = node.extracted;
+        if ((backgroundImage || extracted) && node.hasResource($e.NODE_RESOURCE.IMAGE_SOURCE)) {
             const resource = <android.base.Resource<T>> this.resource;
             const result: BackgroundImageData[] = [];
             const { width: boundsWidth, height: boundsHeight } = node.bounds;
             const backgroundRepeat = data.backgroundRepeat.split($regex.XML.SEPARATOR);
             const backgroundPositionX = data.backgroundPositionX.split($regex.XML.SEPARATOR);
             const backgroundPositionY = data.backgroundPositionY.split($regex.XML.SEPARATOR);
-            const backgroundImage: (string | GradientTemplate)[] = [];
+            const images: (string | GradientTemplate)[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
             const imageDimensions: Undefined<Dimension>[] = [];
             let backgroundSize = data.backgroundSize.split($regex.XML.SEPARATOR);
-            let lengthImage = 0;
+            let length = 0;
             let resizable = true;
-            lengthImage = bgImage.length;
-            while (backgroundSize.length < lengthImage) {
-                backgroundSize = backgroundSize.concat(backgroundSize.slice(0));
-            }
-            backgroundSize.length = lengthImage;
-            const resourceInstance = this._resourceSvgInstance;
-            for (let i = 0, j = 0; i < lengthImage; i++) {
-                let value = bgImage[i];
-                let valid = false;
-                if (typeof value === 'string') {
-                    if (value !== 'initial') {
-                        if (resourceInstance) {
-                            const [parentElement, element] = resourceInstance.createSvgElement(node, value);
-                            if (parentElement && element) {
-                                const drawable = resourceInstance.createSvgDrawable(node, element);
-                                if (drawable !== '') {
-                                    backgroundImage[j] = drawable;
-                                    imageDimensions[j] = { width: element.width.baseVal.value, height: element.height.baseVal.value };
-                                    valid = true;
-                                }
-                                parentElement.removeChild(element);
-                            }
-                        }
-                        if (!valid) {
-                            const match = $regex.CSS.URL.exec(value);
-                            if (match) {
-                                if (match[1].startsWith('data:image')) {
-                                    const rawData = resource.getRawData(match[1]);
-                                    if (rawData && rawData.base64) {
-                                        backgroundImage[j] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));
-                                        imageDimensions[j] = { width: rawData.width, height: rawData.height };
-                                        resource.writeRawImage(rawData.filename, rawData.base64);
+            if (backgroundImage) {
+                length = backgroundImage.length;
+                while (backgroundSize.length < length) {
+                    backgroundSize = backgroundSize.concat(backgroundSize.slice(0));
+                }
+                backgroundSize.length = length;
+                const resourceInstance = this._resourceSvgInstance;
+                for (let i = 0, j = 0; i < length; i++) {
+                    let value = backgroundImage[i];
+                    let valid = false;
+                    if (typeof value === 'string') {
+                        if (value !== 'initial') {
+                            if (resourceInstance) {
+                                const [parentElement, element] = resourceInstance.createSvgElement(node, value);
+                                if (parentElement && element) {
+                                    const drawable = resourceInstance.createSvgDrawable(node, element);
+                                    if (drawable !== '') {
+                                        images[j] = drawable;
+                                        imageDimensions[j] = { width: element.width.baseVal.value, height: element.height.baseVal.value };
                                         valid = true;
                                     }
+                                    parentElement.removeChild(element);
                                 }
-                                else {
-                                    value = $util.resolvePath(match[1]);
-                                    backgroundImage[j] = Resource.addImage({ mdpi: value });
-                                    if (backgroundImage[j] !== '') {
-                                        imageDimensions[j] = resource.getImage(value);
-                                        valid = true;
+                            }
+                            if (!valid) {
+                                const match = $regex.CSS.URL.exec(value);
+                                if (match) {
+                                    if (match[1].startsWith('data:image')) {
+                                        const rawData = resource.getRawData(match[1]);
+                                        if (rawData && rawData.base64) {
+                                            images[j] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));
+                                            imageDimensions[j] = { width: rawData.width, height: rawData.height };
+                                            resource.writeRawImage(rawData.filename, rawData.base64);
+                                            valid = true;
+                                        }
+                                    }
+                                    else {
+                                        value = $util.resolvePath(match[1]);
+                                        images[j] = Resource.addImage({ mdpi: value });
+                                        if (images[j] !== '') {
+                                            imageDimensions[j] = resource.getImage(value);
+                                            valid = true;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                else if (value.colorStops.length > 1) {
-                    const gradient = createBackgroundGradient(value, node.localSettings.targetAPI);
-                    if (gradient) {
-                        backgroundImage[j] = gradient;
-                        imageDimensions[j] = value.dimension;
-                        valid = true;
+                    else if (value.colorStops.length > 1) {
+                        const gradient = createBackgroundGradient(value, node.localSettings.targetAPI);
+                        if (gradient) {
+                            images[j] = gradient;
+                            imageDimensions[j] = value.dimension;
+                            valid = true;
+                        }
+                    }
+                    if (valid) {
+                        const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
+                        const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
+                        backgroundPosition[j] = $css.getBackgroundPosition(`${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`, node.actualDimension, imageDimensions[j], node.fontSize);
+                        j++;
+                    }
+                    else {
+                        backgroundRepeat.splice(i, 1);
+                        backgroundSize.splice(i, 1);
+                        length--;
                     }
                 }
-                if (valid) {
-                    const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
-                    const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                    backgroundPosition[j] = $css.getBackgroundPosition(`${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`, node.actualDimension, imageDimensions[j], node.fontSize);
-                    j++;
-                }
-                else {
-                    backgroundRepeat.splice(i, 1);
-                    backgroundSize.splice(i, 1);
-                    lengthImage--;
-                }
             }
-            if (node.extracted) {
-                if (lengthImage === 0) {
+            if (extracted) {
+                if (length === 0) {
                     backgroundRepeat.length = 0;
                     backgroundSize.length = 0;
                 }
-                const extracted = node.extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'));
-                for (let i = 0, j = lengthImage; i < extracted.length; i++) {
-                    const image = extracted[i];
+                const embedded = extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'));
+                for (let i = 0, j = length; i < embedded.length; i++) {
+                    const image = embedded[i];
                     const element = <HTMLImageElement> image.element;
                     const src = resource.addImageSrc(element);
                     if (src !== '') {
-                        backgroundImage[j] = src;
+                        images[j] = src;
                         backgroundRepeat[j] = 'no-repeat';
                         backgroundSize[j] = `${image.actualWidth}px ${image.actualHeight}px`;
                         backgroundPosition[j] = $css.getBackgroundPosition(
@@ -818,11 +822,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
             }
-            lengthImage = backgroundImage.length;
+            length = images.length;
             let centerHorizontally = false;
-            let overflowVertically = false;
-            for (let i = lengthImage - 1; i >= 0; i--) {
-                const value = backgroundImage[i];
+            for (let i = length - 1; i >= 0; i--) {
+                const value = images[i];
                 if (!value) {
                     continue;
                 }
@@ -936,8 +939,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let tileMode = '';
                     let tileModeX = '';
                     let tileModeY = '';
+                    let gravityAlign = '';
                     let gravity: string | undefined;
-                    let gravityAlign: string | undefined;
+                    function resetTileModeX() {
+                        tileModeX = '';
+                        if (tileMode === 'repeat') {
+                            tileModeY = 'repeat';
+                            tileMode = '';
+                        }
+                    }
+                    function resetTileModeY() {
+                        tileModeY = '';
+                        if (tileMode === 'repeat') {
+                            tileModeX = 'repeat';
+                            tileMode = '';
+                        }
+                    }
                     switch (repeat) {
                         case 'repeat':
                             tileMode = 'repeat';
@@ -983,7 +1000,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             function resetX() {
                                 gravityAlign = gravityX;
                                 gravityX = '';
-                                tileModeY = 'disabled';
+                                tileModeX = 'disabled';
+                                if (gravityY === '') {
+                                    tileModeY = 'disabled';
+                                }
                             }
                             switch (gravityX) {
                                 case 'start':
@@ -1007,9 +1027,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         if (gravityY !== '' && tileModeX === 'repeat' && dimenHeight < boundsHeight) {
                             function resetY() {
-                                gravityAlign = (gravityAlign ? '|' : '') + gravityY;
+                                gravityAlign += (gravityAlign !== '' ? '|' : '') + gravityY;
                                 gravityY = '';
-                                tileModeX = 'disabled';
+                                tileModeY = 'disabled';
+                                if (gravityX === '') {
+                                    tileModeX = 'disabled';
+                                }
                             }
                             switch (gravityY) {
                                 case 'top':
@@ -1031,18 +1054,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         if (!node.blockStatic || node.hasWidth) {
                             if (dimenWidth + position.left >= boundsWidth) {
-                                tileModeX = '';
-                                if (tileMode === 'repeat') {
-                                    tileModeY = 'repeat';
-                                    tileMode = '';
-                                }
+                                resetTileModeX();
                             }
                             if (dimenHeight + position.top >= boundsHeight) {
-                                tileModeY = '';
-                                if (tileMode === 'repeat') {
-                                    tileModeX = 'repeat';
-                                    tileMode = '';
-                                }
+                                resetTileModeY();
                             }
                         }
                     }
@@ -1058,13 +1073,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         case 'auto 100%':
                             gravityX = 'fill_horizontal';
                             gravityY = 'fill_vertical';
-                            tileModeX = '';
-                            if (tileMode === 'repeat') {
-                                tileMode = '';
-                                tileModeY = 'repeat';
-                            }
-                            position.left = 0;
-                            position.top = 0;
                         case 'cover':
                             gravity = '';
                             tileMode = '';
@@ -1167,6 +1175,34 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             width = dimenWidth;
                             height = dimenHeight;
                         }
+                        if (resizable && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE)) {
+                            let fillX = false;
+                            let fillY = false;
+                            if (boundsWidth < dimenWidth && (!node.has('width', $e.CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) && !(node.blockStatic && centerHorizontally) || !node.pageFlow) && node.renderParent && !node.renderParent.tableElement) {
+                                width = boundsWidth - (node.contentBox ? node.contentBoxWidth : 0);
+                                fillX = true;
+                                resetTileModeX();
+                            }
+                            if (boundsHeight < dimenHeight && (!node.has('height', $e.CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) || !node.pageFlow)) {
+                                height = boundsHeight - (node.contentBox ? node.contentBoxHeight : 0);
+                                fillY = true;
+                                resetTileModeY();
+                            }
+                            if (fillX || fillY) {
+                                if (gravityAlign !== '') {
+                                    gravityAlign += '|';
+                                }
+                                if (fillX && fillY) {
+                                    gravityAlign += 'fill';
+                                }
+                                else if (fillX) {
+                                    gravityAlign += 'fill_horizontal';
+                                }
+                                else {
+                                    gravityAlign += 'fill_vertical';
+                                }
+                            }
+                        }
                         if (width > 0) {
                             imageData.width = $css.formatPX(width);
                         }
@@ -1174,21 +1210,29 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             imageData.height = $css.formatPX(height);
                         }
                     }
-                    if (gravityAlign === undefined && tileMode !== 'repeat') {
+                    if (gravityAlign === '' && tileMode !== 'repeat') {
                         if (tileModeX !== '') {
                             if (tileModeY === '' && gravityY !== '' && gravityY !== 'fill_vertical') {
                                 gravityAlign = gravityY;
                                 gravityY = '';
+                                tileModeX = '';
                             }
                         }
                         else if (tileModeY !== '' && gravityX !== '' && gravityX !== 'fill_horizontal') {
                             gravityAlign = gravityX;
                             gravityX = '';
+                            tileModeY = '';
                         }
                     }
                     if (gravity === undefined) {
                         if (gravityX === STRING_ANDROID.CENTER_HORIZONTAL && gravityY === STRING_ANDROID.CENTER_VERTICAL) {
-                            gravity = 'center';
+                            if (dimension && dimenWidth <= boundsWidth && dimenHeight <= boundsHeight) {
+                                gravityAlign += (gravityAlign !== '' ? '|' : '') + 'center';
+                                gravity = '';
+                            }
+                            else {
+                                gravity = 'center';
+                            }
                         }
                         else if (gravityX === 'fill_horizontal' && gravityY === 'fill_vertical') {
                             gravity = 'fill';
@@ -1199,7 +1243,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 gravity += gravityX;
                             }
                             if (gravityY !== '') {
-                                gravity += (gravity !== '' ? '|' : '') + gravityY;
+                                gravity += (gravity ? '|' : '') + gravityY;
                             }
                         }
                         if (gravityX === 'fill_horizontal') {
@@ -1228,7 +1272,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             centerHorizontally = true;
                         }
                     }
-                    overflowVertically = true;
                 }
                 else if (value.item) {
                     let width: number;
@@ -1308,50 +1351,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         imageData.left = $css.formatPX(left);
                     }
                     result.push(imageData);
-                }
-            }
-            if (this.options.autoSizeBackgroundImage && overflowVertically && resizable && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE)) {
-                let imageWidth = 0;
-                let imageHeight = 0;
-                for (const image of imageDimensions) {
-                    if (image) {
-                        if (image.width > imageWidth) {
-                            imageWidth = image.width;
-                        }
-                        if (image.height > imageHeight) {
-                            imageHeight = image.height;
-                        }
-                    }
-                }
-                if (imageWidth === 0) {
-                    let current = node;
-                    while (current) {
-                        if (current.hasWidth) {
-                            imageWidth = current.bounds.width;
-                        }
-                        if (current.hasHeight) {
-                            imageHeight = current.bounds.height;
-                        }
-                        if (imageWidth > 0 && imageHeight > 0 || current.documentBody || !current.pageFlow) {
-                            break;
-                        }
-                        current = current.actualParent as T;
-                    }
-                }
-                if ((!node.has('width', $e.CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) && !(node.blockStatic && centerHorizontally) || !node.pageFlow) && (imageWidth === 0 || boundsWidth < imageWidth) && node.renderParent && !node.renderParent.tableElement) {
-                    const width = boundsWidth - (node.contentBox ? node.contentBoxWidth : 0);
-                    if (width > 0) {
-                        node.css('width', $css.formatPX(Math.ceil(width)), true);
-                    }
-                }
-                if ((!node.has('height', $e.CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) || !node.pageFlow) && (imageHeight === 0 || boundsHeight < imageHeight)) {
-                    const height = boundsHeight - (node.contentBox ? node.contentBoxHeight : 0);
-                    if (height > 0) {
-                        node.css('height', $css.formatPX(Math.ceil(height)), true);
-                        if (node.marginBottom < 0) {
-                            node.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM);
-                        }
-                    }
                 }
             }
             return result;

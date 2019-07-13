@@ -2,9 +2,9 @@ import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } fr
 
 import Resource from './resource';
 
-type NodeUI = squared.base.NodeUI;
-
 import { NODE_RESOURCE } from './lib/enumeration';
+
+type NodeUI = squared.base.NodeUI;
 
 const {
     client: $client,
@@ -37,7 +37,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     let match: RegExpExecArray | null;
     let previousOffset = 0;
     while ((match = REGEXP_COLORSTOP.exec(value)) !== null) {
-        const color = $color.parseColor(match[1], '1', true);
+        const color = $color.parseColor(match[1], 1, true);
         if (color) {
             let offset = -1;
             if (gradient.type === 'conic') {
@@ -400,7 +400,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     if (width === '2px' && (style === 'inset' || style === 'outset')) {
                         width = '1px';
                     }
-                    const borderColor = $color.parseColor(color, '1', true);
+                    const borderColor = $color.parseColor(color, 1, true);
                     if (borderColor) {
                         boxStyle[attr] = <BorderAttribute> {
                             width,
@@ -648,7 +648,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     boxStyle.backgroundImage = images;
                 }
             }
-            const backgroundColor = node.documentParent.visible ? node.backgroundColor : node.css('backgroundColor');
+            let backgroundColor = node.backgroundColor;
+            if (backgroundColor === '' && !node.documentParent.visible) {
+                backgroundColor = node.css('backgroundColor');
+            }
             if (backgroundColor !== '') {
                 const color = $color.parseColor(backgroundColor);
                 boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
@@ -671,7 +674,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public setFontStyle(node: T) {
-        if (((node.textElement || node.inlineText) && (!node.textEmpty || !node.visibleStyle.background) || node.inputElement) && node.visible) {
+        if (((node.textElement || node.inlineText) && (!node.textEmpty || node.visibleStyle.background) || node.inputElement) && node.visible) {
             const color = $color.parseColor(node.css('color'));
             let fontWeight = node.css('fontWeight');
             if (!$util.isNumber(fontWeight)) {
@@ -717,8 +720,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             switch (element.type) {
                                 case 'radio':
                                 case 'checkbox':
-                                    if (node.companion && !node.companion.visible) {
-                                        value = node.companion.textContent;
+                                    const companion = node.companion;
+                                    if (companion && !companion.visible) {
+                                        value = companion.textContent.trim();
                                     }
                                     break;
                                 case 'submit':
@@ -794,7 +798,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 );
                                 trimming = true;
                             }
-                            else if (textContent.trim() === '' && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
+                            else if (node.naturalElements.length === 0 && textContent.trim() === '' && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                                 value = textContent;
                             }
                             break;
@@ -848,9 +852,11 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         node.data(ResourceUI.KEY_NAME, 'hintString', hint);
                     }
                 }
-                else if (node.inlineText && node.textContent) {
+                else if (node.inlineText) {
                     const value = node.textContent;
-                    node.data(ResourceUI.KEY_NAME, 'valueString', { key: value, value });
+                    if (value) {
+                        node.data(ResourceUI.KEY_NAME, 'valueString', { key: value, value });
+                    }
                 }
             }
         }

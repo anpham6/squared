@@ -57,21 +57,23 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         };
     }
 
-    public postBaseLayout(node: T) {
-        const renderParent = node.renderParent as T;
-        if (renderParent) {
-            if (!renderParent.hasPX('width')) {
-                renderParent.setLayoutWidth('match_parent');
+    public afterParseDocument() {
+        for (const node of this.subscribers) {
+            const renderParent = node.renderParent as T;
+            if (renderParent) {
+                if (!renderParent.hasPX('width')) {
+                    renderParent.setLayoutWidth('match_parent');
+                }
+                if (!renderParent.hasPX('height')) {
+                    renderParent.setLayoutHeight('match_parent');
+                }
             }
-            if (!renderParent.hasPX('height')) {
-                renderParent.setLayoutHeight('match_parent');
+            const menu = $util.optionalAsString(BottomNavigation.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
+            if (menu !== '') {
+                const options = $utilA.createViewAttribute(this.options[node.elementId]);
+                $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
+                node.app('menu', options.app.menu);
             }
-        }
-        const menu = $util.optionalAsString(BottomNavigation.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
-        if (menu !== '') {
-            const options = $utilA.createViewAttribute(this.options[node.elementId]);
-            $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
-            node.app('menu', options.app.menu);
         }
     }
 

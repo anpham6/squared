@@ -1,5 +1,7 @@
 import { CSS } from './regex';
 
+import { clampRange } from './math';
+
 const STRING_HEX = '0123456789ABCDEF';
 const COLOR_CSS3: ColorResult[] = [
     {
@@ -2063,7 +2065,7 @@ const COLOR_CSS3: ColorResult[] = [
 ];
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 
-const parseOpacity = (value: string) => parseFloat(value.trim() || '1') * 255;
+const parseOpacity = (value: number) => clampRange(value) * 255;
 
 export function findColorName(value: string) {
     for (const color of COLOR_CSS3) {
@@ -2118,9 +2120,9 @@ export function findColorShade(value: string) {
     return undefined;
 }
 
-export function parseColor(value: string, opacity = '1', transparency = false) {
+export function parseColor(value: string, opacity = 1, transparency = false) {
     if (value && (value !== 'transparent' || transparency)) {
-        if (CACHE_COLORDATA[value] && opacity === '1') {
+        if (CACHE_COLORDATA[value]) {
             return CACHE_COLORDATA[value];
         }
         let key = '';
@@ -2152,7 +2154,7 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
                 default:
                     const color = findColorName(value);
                     if (color) {
-                        rgba = <RGBA> color.rgb;
+                        rgba = <RGBA> { ...color.rgb };
                         rgba.a = parseOpacity(opacity);
                         key = value;
                     }
@@ -2166,24 +2168,22 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
             if (CACHE_COLORDATA[valueAsRGBA]) {
                 return CACHE_COLORDATA[valueAsRGBA];
             }
-            const alpha = rgba.a / 255;
+            opacity = rgba.a / 255;
+            value = `#${hexAsString}`;
             const colorData = <ColorData> {
                 key,
-                value: `#${hexAsString}`,
+                value,
                 valueAsRGBA,
                 valueAsARGB: `#${alphaAsString + hexAsString}`,
                 rgba,
                 hsl: convertHSLA(rgba),
-                opacity: alpha,
-                semiopaque: alpha > 0 && alpha < 1,
-                transparent: alpha === 0
+                opacity,
+                transparent: opacity === 0
             };
-            if (opacity === '1') {
+            if (opacity === 1) {
                 CACHE_COLORDATA[value] = colorData;
             }
-            else {
-                CACHE_COLORDATA[valueAsRGBA] = colorData;
-            }
+            CACHE_COLORDATA[valueAsRGBA] = colorData;
             return colorData;
         }
     }

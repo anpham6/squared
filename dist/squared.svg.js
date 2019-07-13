@@ -1,4 +1,4 @@
-/* squared.svg 1.2.4
+/* squared.svg 1.2.5
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -7,7 +7,7 @@
     (global = global || self, factory((global.squared = global.squared || {}, global.squared.svg = {})));
 }(this, function (exports) { 'use strict';
 
-    const { constant: $const, css: $css, dom: $dom, math: $math, regex: $regex, session: $session, util: $util, } = squared.lib;
+    const { css: $css, dom: $dom, math: $math, regex: $regex, session: $session, util: $util, } = squared.lib;
     const SHAPES = {
         path: 1,
         line: 2,
@@ -232,32 +232,32 @@
                 }
                 const positions = value.split(' ');
                 if (positions.length === 1) {
-                    positions.push($const.CSS.CENTER);
+                    positions.push('center');
                 }
                 switch (positions[0]) {
-                    case $const.CSS.PERCENT_0:
-                    case $const.CSS.LEFT:
+                    case '0%':
+                    case 'left':
                         break;
-                    case $const.CSS.PERCENT_100:
-                    case $const.CSS.RIGHT:
+                    case '100%':
+                    case 'right':
                         result.x = width;
                         break;
-                    case $const.CSS.CENTER:
-                        positions[0] = $const.CSS.PERCENT_50;
+                    case 'center':
+                        positions[0] = '50%';
                     default:
                         setPosition('x', positions[0], width);
                         break;
                 }
                 switch (positions[1]) {
-                    case $const.CSS.PERCENT_0:
-                    case $const.CSS.TOP:
+                    case '0%':
+                    case 'top':
                         break;
-                    case $const.CSS.PERCENT_100:
-                    case $const.CSS.BOTTOM:
+                    case '100%':
+                    case 'bottom':
                         result.y = height;
                         break;
-                    case $const.CSS.CENTER:
-                        positions[1] = $const.CSS.PERCENT_50;
+                    case 'center':
+                        positions[1] = '50%';
                     default:
                         setPosition('y', positions[1], height);
                         break;
@@ -1645,7 +1645,7 @@
         KEYSPLINE_NAME: KEYSPLINE_NAME
     });
 
-    const { color: $color, constant: $const$1, css: $css$3, dom: $dom$4, regex: $regex$2, util: $util$3 } = squared.lib;
+    const { color: $color, css: $css$3, dom: $dom$4, regex: $regex$2, util: $util$3 } = squared.lib;
     const invertControlPoint = (value) => parseFloat((1 - value).toPrecision(5));
     class SvgAnimate extends SvgAnimation {
         constructor(element, animationElement) {
@@ -1772,7 +1772,7 @@
                     const splitTimes = [];
                     const splitValues = [];
                     for (let i = 0; i <= stepSize; i++) {
-                        const offset = i === 0 && match[2] === $const$1.CSS.START ? 1 : 0;
+                        const offset = i === 0 && match[2] === 'start' ? 1 : 0;
                         const time = keyTimes[index] + keyTimeTotal * (i / stepSize);
                         const percent = (interval * (i + offset)) / 100;
                         const result = [];
@@ -1920,7 +1920,7 @@
         set delay(value) {
             super.delay = value;
             const animationElement = this.animationElement;
-            const end = animationElement && $dom$4.getNamedItem(animationElement, $const$1.CSS.END);
+            const end = animationElement && $dom$4.getNamedItem(animationElement, 'end');
             if (end) {
                 const endTime = $util$3.sortNumber($util$3.replaceMap(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0];
                 if (!isNaN(endTime) && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
@@ -2613,9 +2613,9 @@
         }
     }
 
-    const { constant: $const$2, math: $math$2, regex: $regex$3, util: $util$6 } = squared.lib;
+    const { math: $math$2, regex: $regex$3, util: $util$6 } = squared.lib;
     const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
-    const RECT_ARGS = [$const$2.CSS.WIDTH, $const$2.CSS.HEIGHT, 'x', 'y'];
+    const RECT_ARGS = ['width', 'height', 'x', 'y'];
     const POLYGON_ARGS = ['points'];
     const CIRCLE_ARGS = ['cx', 'cy', 'r'];
     const ELLIPSE_ARGS = ['cx', 'cy', 'rx', 'ry'];
@@ -4304,7 +4304,7 @@
                         if (repeatingResult || infiniteResult) {
                             this._removeAnimations(staggered);
                             const timeRange = Array.from(animateTimeRangeMap.entries());
-                            const synchronizedName = $util$6.joinMap(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-');
+                            const synchronizedName = $util$6.joinMap(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-', false);
                             for (const result of [repeatingResult, infiniteResult]) {
                                 if (result) {
                                     const repeating = result === repeatingResult;
@@ -4534,12 +4534,12 @@
         };
     };
 
-    const { constant: $const$3, css: $css$4, dom: $dom$6, math: $math$3, util: $util$7 } = squared.lib;
+    const { css: $css$4, dom: $dom$6, math: $math$3, util: $util$7 } = squared.lib;
     class SvgAnimateMotion extends SvgAnimateTransform {
         constructor(element, animationElement) {
             super(element, animationElement);
             this.path = '';
-            this.distance = $const$3.CSS.PERCENT_0;
+            this.distance = '0%';
             this.rotate = 'auto 0deg';
             this.motionPathElement = null;
             this.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
@@ -4588,7 +4588,7 @@
                     this.distance = distance;
                 }
                 const rotate = getAttribute(element, 'offset-rotate', false);
-                if (rotate !== '' && rotate !== $const$3.CSS.AUTO) {
+                if (rotate !== '' && rotate !== 'auto') {
                     this.rotate = rotate;
                 }
             }
@@ -4816,7 +4816,7 @@
                             const angleFrom = $css$4.parseAngle(from.value.split(' ').pop());
                             const angleTo = $css$4.parseAngle(to.value.split(' ').pop());
                             if (from.value === to.value || angleFrom === angleTo) {
-                                if (from.value.startsWith($const$3.CSS.AUTO)) {
+                                if (from.value.startsWith('auto')) {
                                     if (angleFrom !== 0) {
                                         for (const item of timeRange) {
                                             item.rotate += angleFrom;
@@ -4833,7 +4833,7 @@
                                 const offset = angleTo - angleFrom;
                                 const length = timeRange.length;
                                 const l = offset / length;
-                                if (from.value.startsWith($const$3.CSS.AUTO)) {
+                                if (from.value.startsWith('auto')) {
                                     for (let k = 0; k < length - 1; k++) {
                                         timeRange[k].rotate += angleFrom + (k * l);
                                     }
@@ -4998,7 +4998,7 @@
         }
     }
 
-    const { constant: $const$4, css: $css$5, dom: $dom$7, regex: $regex$4, util: $util$8 } = squared.lib;
+    const { css: $css$5, dom: $dom$7, regex: $regex$4, util: $util$8 } = squared.lib;
     const STRING_CUBICBEZIER = `cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)`;
     const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
     const KEYFRAME_MAP = $css$5.getKeyframeRules();
@@ -5008,7 +5008,7 @@
         'animation-iteration-count': '1',
         'animation-play-state': 'running',
         'animation-direction': 'normal',
-        'animation-fill-mode': $const$4.CSS.NONE,
+        'animation-fill-mode': 'none',
         'animation-timing-function': 'ease'
     };
     function parseAttribute(element, attr) {
@@ -5028,7 +5028,7 @@
     }
     function isVisible(element) {
         const value = getAttribute(element, 'visibility');
-        return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display') !== $const$4.CSS.NONE;
+        return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display') !== 'none';
     }
     function sortAttribute(value) {
         return value.sort((a, b) => {
@@ -5260,7 +5260,7 @@
                                 delete attrMap['transform'];
                                 delete attrMap['transform-origin'];
                             }
-                            if (getAttribute(element, 'offset-path') === $const$4.CSS.NONE) {
+                            if (getAttribute(element, 'offset-path') === 'none') {
                                 delete attrMap['offset-distance'];
                                 delete attrMap['offset-rotate'];
                             }
@@ -5268,7 +5268,7 @@
                                 const offsetRotate = attrMap['offset-rotate'];
                                 if (attrMap['offset-distance'] || attrMap['rotate'] === undefined) {
                                     let rotate = getAttribute(element, 'offset-rotate', false);
-                                    if (rotate === '' || rotate === $const$4.CSS.AUTO) {
+                                    if (rotate === '' || rotate === 'auto') {
                                         rotate = 'auto 0deg';
                                     }
                                     sortAttribute(offsetRotate);
@@ -5286,8 +5286,8 @@
                                         previous.value = convertRotate(previous.value);
                                         item.value = convertRotate(item.value);
                                         if (previous.value.split(' ').pop() !== item.value.split(' ').pop()) {
-                                            const previousAuto = previous.value.startsWith($const$4.CSS.AUTO);
-                                            const auto = item.value.startsWith($const$4.CSS.AUTO);
+                                            const previousAuto = previous.value.startsWith('auto');
+                                            const auto = item.value.startsWith('auto');
                                             if (previousAuto && !auto || !previousAuto && auto) {
                                                 const key = (previous.key + item.key) / 2;
                                                 offsetRotate.splice(j++, 0, { key, value: previous.value });
@@ -5304,7 +5304,7 @@
                                         addAnimation(animate, delay, keyframeIndex);
                                         for (const item of offsetRotate) {
                                             let angle = $css$5.parseAngle(item.value.split(' ').pop());
-                                            if (item.value.startsWith($const$4.CSS.AUTO)) {
+                                            if (item.value.startsWith('auto')) {
                                                 angle += 90;
                                             }
                                             item.value = `${angle} 0 0`;
@@ -5412,7 +5412,7 @@
                                                                 }
                                                                 keyTimesData.push(keyTime);
                                                                 valuesData.push(steps[1][k]);
-                                                                keySplinesData.push(KEYSPLINE_NAME[keySplines[j].indexOf($const$4.CSS.START) !== -1 ? 'step-start' : 'step-end']);
+                                                                keySplinesData.push(KEYSPLINE_NAME[keySplines[j].indexOf('start') !== -1 ? 'step-start' : 'step-end']);
                                                             }
                                                             continue;
                                                         }
@@ -5491,7 +5491,7 @@
         };
     };
 
-    const { client: $client, constant: $const$5 } = squared.lib;
+    const $client = squared.lib.client;
     function hasUnsupportedAccess(element) {
         if (element.tagName === 'svg') {
             if ($client.isUserAgent(8 /* FIREFOX */)) {
@@ -5519,8 +5519,8 @@
                 }
                 this.setBaseValue('x', x);
                 this.setBaseValue('y', y);
-                this.setBaseValue($const$5.CSS.WIDTH, width);
-                this.setBaseValue($const$5.CSS.HEIGHT, height);
+                this.setBaseValue('width', width);
+                this.setBaseValue('height', height);
             }
             _getElement() {
                 switch (this.element.tagName) {
@@ -5839,7 +5839,7 @@
         const length = stops.length;
         for (let i = 0; i < length; i++) {
             const item = stops[i];
-            const color = $color$1.parseColor($dom$8.getNamedItem(item, 'stop-color'), $dom$8.getNamedItem(item, 'stop-opacity'));
+            const color = $color$1.parseColor($dom$8.getNamedItem(item, 'stop-color'), $util$a.convertFloat($dom$8.getNamedItem(item, 'stop-opacity') || '1'));
             if (color) {
                 result.push({
                     color,
@@ -5936,7 +5936,7 @@
         }
     }
 
-    const { color: $color$2, constant: $const$6, css: $css$6, regex: $regex$5, util: $util$b } = squared.lib;
+    const { color: $color$2, css: $css$6, regex: $regex$5, util: $util$b } = squared.lib;
     const CACHE_PATTERN$1 = {
         url: $regex$5.CSS.URL
     };
@@ -6071,7 +6071,7 @@
                     }
                     switch (attr) {
                         case 'stroke-dasharray':
-                            value = value !== $const$6.CSS.NONE ? $util$b.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ') : '';
+                            value = value !== 'none' ? $util$b.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ', false) : '';
                             break;
                         case 'stroke-dashoffset':
                         case 'stroke-width':
@@ -6089,7 +6089,7 @@
                                     case 'none':
                                     case 'transparent':
                                     case 'rgba(0, 0, 0, 0)':
-                                        this[attr] = $const$6.CSS.NONE;
+                                        this[attr] = 'none';
                                         break;
                                     case 'currentcolor':
                                         color = $color$2.parseColor(this.color || getAttribute(this.element, attr));
@@ -6136,7 +6136,7 @@
                         return $css$6.parseUnit(value, $css$6.getFontSize(this.element));
                     }
                     else if ($css$6.isPercent(value)) {
-                        return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || $const$6.CSS.WIDTH]) * $util$b.convertFloat(value) / 100);
+                        return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * $util$b.convertFloat(value) / 100);
                     }
                 }
                 return $util$b.convertFloat(value);
@@ -6176,7 +6176,7 @@
         }
     }
 
-    const { constant: $const$7, util: $util$c } = squared.lib;
+    const $util$c = squared.lib.util;
     class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) {
         constructor(element, imageElement) {
             super(element);
@@ -6247,8 +6247,8 @@
             }
             this.setBaseValue('x', x);
             this.setBaseValue('y', y);
-            this.setBaseValue($const$7.CSS.WIDTH, width);
-            this.setBaseValue($const$7.CSS.HEIGHT, height);
+            this.setBaseValue('width', width);
+            this.setBaseValue('height', height);
         }
         set x(value) {
             super.x = value;
@@ -6324,7 +6324,7 @@
         }
     }
 
-    const { constant: $const$8, dom: $dom$9, math: $math$4, util: $util$d } = squared.lib;
+    const { dom: $dom$9, math: $math$4, util: $util$d } = squared.lib;
     function updatePathLocation(path, attr, x, y) {
         const commandA = path[0];
         const commandB = path[path.length - 1];
@@ -6627,8 +6627,8 @@
             else if (SVG.rect(element)) {
                 let x = this.getBaseValue('x');
                 let y = this.getBaseValue('y');
-                let width = this.getBaseValue($const$8.CSS.WIDTH);
-                let height = this.getBaseValue($const$8.CSS.HEIGHT);
+                let width = this.getBaseValue('width');
+                let height = this.getBaseValue('height');
                 if (transforms && transforms.length) {
                     let points = [
                         { x, y },
@@ -7309,8 +7309,8 @@
             else if (SVG.rect(element)) {
                 this.setBaseValue('x');
                 this.setBaseValue('y');
-                this.setBaseValue($const$8.CSS.WIDTH);
-                this.setBaseValue($const$8.CSS.HEIGHT);
+                this.setBaseValue('width');
+                this.setBaseValue('height');
             }
             else if (SVG.circle(element)) {
                 this.setBaseValue('cx');

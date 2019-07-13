@@ -8,7 +8,7 @@ export default abstract class Extension<T extends squared.base.Node> implements 
 
     protected _application!: squared.base.Application<T>;
 
-    constructor(
+    protected constructor(
         public readonly name: string,
         public readonly framework: number,
         options?: ExternalData)

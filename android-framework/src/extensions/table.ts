@@ -73,15 +73,20 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     }
                 }
             }
-            if (!requireWidth && node.hasPX('width') && node.actualWidth < Math.floor(node.bounds.width)) {
-                if (mainData.layoutFixed) {
-                    node.android('width', $css.formatPX(node.bounds.width), true);
-                }
-                else {
-                    if (!node.hasPX('minWidth')) {
-                        node.android('minWidth', $css.formatPX(node.actualWidth));
+            if (!requireWidth) {
+                if (node.hasPX('width') && node.actualWidth < Math.floor(node.bounds.width)) {
+                    if (mainData.layoutFixed) {
+                        node.android('width', $css.formatPX(node.bounds.width), true);
                     }
-                    node.css('width', 'auto', true);
+                    else {
+                        if (!node.hasPX('minWidth')) {
+                            node.android('minWidth', $css.formatPX(node.actualWidth));
+                        }
+                        node.css('width', 'auto', true);
+                    }
+                }
+                else if (mainData.block) {
+                    node.setLayoutWidth('match_parent');
                 }
             }
             if (node.hasPX('height') && node.actualHeight < Math.floor(node.bounds.height)) {
