@@ -294,14 +294,14 @@ export function validMediaRule(value: string, fontSize?: number) {
                 while ((subMatch = CACHE_PATTERN.MEDIA_CONDITION.exec(match[2])) !== null) {
                     const attr = subMatch[1];
                     let operation: string;
-                    if (subMatch[1].startsWith('min')) {
+                    if (attr.startsWith('min')) {
                         operation = '>=';
                     }
-                    else if (subMatch[1].startsWith('max')) {
+                    else if (attr.startsWith('max')) {
                         operation = '<=';
                     }
                     else {
-                        operation = match[2];
+                        operation = subMatch[2];
                     }
                     const rule = subMatch[3];
                     switch (attr) {
@@ -551,25 +551,24 @@ export function getBackgroundPosition(value: string, dimension: Dimension, image
 export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     const parentElement = <HTMLPictureElement> element.parentElement;
     const result: ImageSrcSet[] = [];
-    let srcset = element.srcset;
-    let sizes = element.sizes;
+    const src = element.src;
+    let { srcset, sizes } = element;
     if (parentElement && parentElement.tagName === 'PICTURE') {
         const children = parentElement.children;
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const source = <HTMLSourceElement> children[i];
             if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || isString(source.type) && mimeType && mimeType.includes((source.type.split('/').pop() as string).toLowerCase()))) {
-                srcset = source.srcset;
-                sizes = source.sizes;
+                ({ srcset, sizes} = source);
                 break;
             }
         }
     }
     if (srcset !== '') {
-        const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
+        const filepath = src.substring(0, src.lastIndexOf('/') + 1);
         const pattern = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
-        for (const src of srcset.split(XML.SEPARATOR)) {
-            const match = pattern.exec(src.trim());
+        for (const value of srcset.split(XML.SEPARATOR)) {
+            const match = pattern.exec(value.trim());
             if (match) {
                 let width = 0;
                 let pixelRatio = 0;
@@ -592,21 +591,27 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
             }
         }
         result.sort((a, b) => {
-            if (a.pixelRatio > 0 && b.pixelRatio > 0) {
-                if (a.pixelRatio !== b.pixelRatio) {
-                    return a.pixelRatio < b.pixelRatio ? -1 : 1;
+            const pxA = a.pixelRatio;
+            const pxB = b.pixelRatio;
+            if (pxA > 0 && pxB > 0) {
+                if (pxA !== pxB) {
+                    return pxA < pxB ? -1 : 1;
                 }
             }
-            else if (a.width > 0 && b.width > 0) {
-                if (a.width !== b.width) {
-                    return a.width < b.width ? -1 : 1;
+            else {
+                const widthA = a.width;
+                const widthB = b.width;
+                if (widthA > 0 && widthB > 0) {
+                    if (widthA !== widthB) {
+                        return widthA < widthB ? -1 : 1;
+                    }
                 }
             }
             return 0;
         });
     }
     if (result.length === 0) {
-        result.push({ src: element.src, pixelRatio: 1, width: 0 });
+        result.push({ src, pixelRatio: 1, width: 0 });
     }
     else if (result.length > 1 && isString(sizes)) {
         const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH}\\))?\\s*(.+)`);

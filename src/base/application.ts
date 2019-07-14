@@ -72,6 +72,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, cache) as unknown);
     }
 
+    public abstract insertNode(element: Element, parent?: T): T | undefined;
     public abstract afterCreateCache(element: HTMLElement): void;
     public abstract finalize(): void;
 
@@ -319,15 +320,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         if (append) {
             this.processing.cache.append(node, children !== undefined);
-        }
-        return node;
-    }
-
-    public insertNode(element: Element, parent?: T): T | undefined {
-        this.controllerHandler.applyDefaultStyles(element);
-        const node = this.createNode(element, false);
-        if (node.plainText) {
-            Node.copyTextStyle(node, parent as T);
         }
         return node;
     }

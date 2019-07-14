@@ -1,6 +1,7 @@
 import { CONTAINER_NODE } from './enumeration';
 
 export const EXT_ANDROID = {
+    DELEGATE_BACKGROUND: 'android.delegate.background',
     DELEGATE_FIXED: 'android.delegate.fixed',
     DELEGATE_MAXWIDTHHEIGHT: 'android.delegate.max-width-height',
     DELEGATE_NEGATIVEVIEWPORT: 'android.delegate.negative-viewport',

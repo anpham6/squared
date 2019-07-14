@@ -353,8 +353,13 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             else if ($css.isPercent(columnWidth)) {
-                                data.percent = columnWidth;
-                                data.expand = true;
+                                if (mainData.block) {
+                                    data.percent = columnWidth;
+                                    data.expand = true;
+                                }
+                                else {
+                                    setBoundsWidth(td);
+                                }
                             }
                             else if ($css.isLength(columnWidth) && parseInt(columnWidth) > 0) {
                                 if (td.bounds.width >= parseInt(columnWidth)) {

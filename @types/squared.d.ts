@@ -196,6 +196,7 @@ declare namespace base {
         public static insertStoredAsset(asset: string, name: string, value: any): string;
         public static getOptionArray(element: HTMLSelectElement, showDisabled?: boolean): (string[] | undefined)[];
         public static isBackgroundVisible(object: BoxStyle | undefined): boolean;
+        public static parseBackgroundImage(node: NodeUI): (string | Gradient)[] | undefined;
         public static getBackgroundSize<T extends NodeUI>(node: T, value: string): Dimension | undefined;
         public static isInheritedStyle<T extends NodeUI>(node: T, attr: string): boolean;
         public static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
@@ -429,7 +430,6 @@ declare namespace base {
         readonly center: Point;
         init(): void;
         saveAsInitial(overwrite?: boolean): void;
-        unsafe(name: string, unset?: boolean): any;
         data(name: string, attr: string, value?: any, overwrite?: boolean): any;
         unsetCache(...attrs: string[]): void;
         ascend(condition?: (item: Node) => boolean, parent?: Node, attr?: string): Node[];
@@ -457,12 +457,12 @@ declare namespace base {
         has(attr: string, checkType?: number, options?: {}): boolean;
         hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
         setBounds(cache?: boolean): void;
+        getTextStyle(): StringMap;
         querySelector(value: string): Node | null;
         querySelectorAll(value: string, resultCount?: number): Node[];
     }
 
     class Node implements Node {
-        public static copyTextStyle(node: Node, source: Node): void;
         public static getPseudoElt(node: Node): string;
         constructor(id: number, sessionId?: string, element?: Element);
     }
@@ -481,6 +481,7 @@ declare namespace base {
         controlName: string;
         documentParent: NodeUI;
         renderExclude: boolean;
+        element: Element | null;
         textContent: string;
         positionAuto: boolean;
         baseline: boolean;
@@ -537,6 +538,8 @@ declare namespace base {
         is(containerType: number): boolean;
         of(containerType: number, ...alignmentType: number[]): boolean;
         namespace(name: string): StringMap;
+        unsafe(name: string, value?: any): any;
+        unset(name: string): void;
         delete(name: string, ...attrs: string[]): void;
         apply(options: {}): void;
         addAlign(value: number): void;

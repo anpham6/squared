@@ -452,8 +452,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             bounds.top -= absoluteParent.bottom;
                             bounds.bottom -= absoluteParent.bottom;
                         }
-                        node.unsafe('box', true);
-                        node.unsafe('linear', true);
+                        node.unset('box');
+                        node.unset('linear');
                     }
                     let opacity = node.toFloat('opacity', false, 1);
                     let current = actualParent;

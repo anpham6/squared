@@ -1,7 +1,6 @@
 import { UserSettingsChrome } from '../../@types/chrome/application';
 
 import Resource from './resource';
-import View from './view';
 
 const $dom = squared.lib.dom;
 
@@ -23,7 +22,7 @@ export default class Application<T extends chrome.base.View> extends squared.bas
         }
         const node = this.createNode(element, false);
         if (node.plainText && parent) {
-            View.copyTextStyle(node, parent);
+            node.cssApply(parent.getTextStyle());
         }
         return node;
     }

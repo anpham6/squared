@@ -210,7 +210,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode(element, false);
                 if (parent) {
-                    NodeUI.copyTextStyle(node, parent);
+                    node.cssApply(parent.getTextStyle());
+                    node.fontSize = parent.fontSize;
                 }
                 return node;
             }
@@ -615,9 +616,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
-        const styleMap: StringMap = $session.getElementCache(element, `styleMap${pseudoElt}`, sessionId);
+        let styleMap: StringMap = $session.getElementCache(element, `styleMap${pseudoElt}`, sessionId);
         let nested = 0;
         if (element.tagName === 'Q') {
+            if (styleMap === undefined) {
+                styleMap = {};
+                $session.setElementCache(element, `styleMap${pseudoElt}`, sessionId, styleMap);
+            }
             if (!styleMap.content) {
                 styleMap.content = $css.getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
             }
