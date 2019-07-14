@@ -275,6 +275,199 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return object !== undefined && (!!object.backgroundImage || !!object.borderTop || !!object.borderRight || !!object.borderBottom || !!object.borderLeft);
     }
 
+    public static parseBackgroundImage(node: NodeUI) {
+        const backgroundImage = node.backgroundImage;
+        if (backgroundImage !== '') {
+            REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
+            const images: (string | Gradient)[] = [];
+            let match: RegExpExecArray | null;
+            let i = 0;
+            while ((match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) !== null) {
+                if (match[0] === 'initial' || match[0].startsWith('url')) {
+                    images.push(match[0]);
+                }
+                else {
+                    const repeating = match[1] === 'repeating';
+                    const type = match[2];
+                    const direction = match[3];
+                    const dimension = getBackgroundSize(node, i, node.css('backgroundSize')) || node.actualDimension;
+                    let gradient: Gradient | undefined;
+                    switch (type) {
+                        case 'conic': {
+                            const position = getGradientPosition(direction);
+                            const conic = <ConicGradient> {
+                                type,
+                                dimension,
+                                angle: parseAngle(direction)
+                            };
+                            conic.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, undefined, node.fontSize);
+                            conic.colorStops = parseColorStops(node, conic, match[4]);
+                            gradient = conic;
+                            break;
+                        }
+                        case 'radial': {
+                            const position = getGradientPosition(direction);
+                            const radial = <RadialGradient> {
+                                type,
+                                repeating,
+                                horizontal: node.actualWidth <= node.actualHeight,
+                                dimension
+                            };
+                            radial.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, undefined, node.fontSize);
+                            radial.closestCorner = Number.POSITIVE_INFINITY;
+                            radial.farthestCorner = Number.NEGATIVE_INFINITY;
+                            let shape = 'ellipse';
+                            if (position) {
+                                const radius = position[1] && position[1].trim();
+                                if (radius) {
+                                    if (radius.startsWith('circle')) {
+                                        shape = 'circle';
+                                    }
+                                    else {
+                                        const radiusXY = radius.split(' ');
+                                        let minRadius = Number.POSITIVE_INFINITY;
+                                        const length = radiusXY.length;
+                                        for (let j = 0; j < length; j++) {
+                                            const axisRadius = node.parseUnit(radiusXY[j], j === 0 ? 'width' : 'height', false);
+                                            if (axisRadius < minRadius) {
+                                                minRadius = axisRadius;
+                                            }
+                                        }
+                                        radial.radius = minRadius;
+                                        radial.radiusExtent = minRadius;
+                                        if (length === 1 || radiusXY[0] === radiusXY[1]) {
+                                            shape = 'circle';
+                                        }
+                                    }
+                                }
+                            }
+                            radial.shape = shape;
+                            for (const corner of [[0, 0], [dimension.width, 0], [dimension.width, dimension.height], [0, dimension.height]]) {
+                                const length = Math.round(Math.sqrt(Math.pow(Math.abs(corner[0] - radial.center.left), 2) + Math.pow(Math.abs(corner[1] - radial.center.top), 2)));
+                                if (length < radial.closestCorner) {
+                                    radial.closestCorner = length;
+                                }
+                                if (length > radial.farthestCorner) {
+                                    radial.farthestCorner = length;
+                                }
+                            }
+                            radial.closestSide = radial.center.top;
+                            radial.farthestSide = radial.center.top;
+                            for (const side of [dimension.width - radial.center.left, dimension.height - radial.center.top, radial.center.left]) {
+                                if (side < radial.closestSide) {
+                                    radial.closestSide = side;
+                                }
+                                if (side > radial.farthestSide) {
+                                    radial.farthestSide = side;
+                                }
+                            }
+                            if (!radial.radius && !radial.radiusExtent) {
+                                radial.radius = radial.farthestCorner;
+                                const extent = position && position[1] ? position[1].split(' ').pop() : '';
+                                switch (extent) {
+                                    case 'closest-corner':
+                                    case 'closest-side':
+                                    case 'farthest-side':
+                                        const length = radial[$util.convertCamelCase(extent)];
+                                        if (repeating) {
+                                            radial.radiusExtent = length;
+                                        }
+                                        else {
+                                            radial.radius = length;
+                                        }
+                                        break;
+                                    default:
+                                        radial.radiusExtent = radial.farthestCorner;
+                                        break;
+                                }
+                            }
+                            radial.colorStops = parseColorStops(node, radial, match[4]);
+                            gradient = radial;
+                            break;
+                        }
+                        case 'linear': {
+                            let angle = 180;
+                            switch (direction) {
+                                case 'to top':
+                                    angle = 360;
+                                    break;
+                                case 'to right top':
+                                    angle = 45;
+                                    break;
+                                case 'to right':
+                                    angle = 90;
+                                    break;
+                                case 'to right bottom':
+                                    angle = 135;
+                                    break;
+                                case 'to bottom':
+                                    break;
+                                case 'to left bottom':
+                                    angle = 225;
+                                    break;
+                                case 'to left':
+                                    angle = 270;
+                                    break;
+                                case 'to left top':
+                                    angle = 315;
+                                    break;
+                                default:
+                                    if (direction) {
+                                        angle = parseAngle(direction, 180) || 360;
+                                    }
+                                    break;
+                            }
+                            const linear = <LinearGradient> {
+                                type,
+                                repeating,
+                                horizontal: angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315,
+                                dimension,
+                                angle
+                            };
+                            linear.colorStops = parseColorStops(node, linear, match[4]);
+                            const width = dimension.width;
+                            const height = dimension.height;
+                            let x = $math.truncateFraction($math.offsetAngleX(angle, width));
+                            let y = $math.truncateFraction($math.offsetAngleY(angle, height));
+                            if (x !== width && y !== height && !$math.isEqual(Math.abs(x), Math.abs(y))) {
+                                let oppositeAngle: number;
+                                if (angle <= 90) {
+                                    oppositeAngle = $math.relativeAngle({ x: 0, y: height }, { x: width, y: 0 });
+                                }
+                                else if (angle <= 180) {
+                                    oppositeAngle = $math.relativeAngle({ x: 0, y: 0 }, { x: width, y: height });
+                                }
+                                else if (angle <= 270) {
+                                    oppositeAngle = $math.relativeAngle({ x: 0, y: 0 }, { x: -width, y: height });
+                                }
+                                else {
+                                    oppositeAngle = $math.relativeAngle({ x: 0, y: height }, { x: -width, y: 0 });
+                                }
+                                let a = Math.abs(oppositeAngle - angle);
+                                let b = 90 - a;
+                                const lenX = $math.triangulate(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
+                                x = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
+                                a = 90;
+                                b = 90 - angle;
+                                const lenY = $math.triangulate(a, b, x);
+                                y = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
+                            }
+                            linear.angleExtent = { x, y };
+                            gradient = linear;
+                            break;
+                        }
+                    }
+                    images.push(gradient || 'initial');
+                }
+                i++;
+            }
+            if (images.length) {
+                return images;
+            }
+        }
+        return undefined;
+    }
+
     public static getBackgroundSize(node: NodeUI, value: string): Dimension | undefined {
         let width = 0;
         let height = 0;
@@ -382,7 +575,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 backgroundPositionX: node.css('backgroundPositionX'),
                 backgroundPositionY: node.css('backgroundPositionY')
             };
-            const element = <HTMLElement> node.element;
             function setBorderStyle(attr: string, border: string[]) {
                 const style = node.css(border[0]) || 'none';
                 let width = $css.formatPX(attr !== 'outline' ? node[border[1]] : $util.convertFloat(node.style[border[1]]));
@@ -393,7 +585,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         break;
                     case 'inherit':
                     case 'currentcolor':
-                        color = $css.getInheritedStyle(element, border[2]);
+                        color = $css.getInheritedStyle(<HTMLElement> node.element, border[2]);
                         break;
                 }
                 if (style !== 'none' && width !== '0px') {
@@ -459,194 +651,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 setBorderStyle('borderLeft', $css.BOX_BORDER[3]);
             }
             setBorderStyle('outline', $css.BOX_BORDER[4]);
-            const backgroundImage = node.backgroundImage;
-            if (backgroundImage !== '' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
-                const images: (string | Gradient)[] = [];
-                let match: RegExpExecArray | null;
-                let i = 0;
-                while ((match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) !== null) {
-                    if (match[0] === 'initial' || match[0].startsWith('url')) {
-                        images.push(match[0]);
-                    }
-                    else {
-                        const repeating = match[1] === 'repeating';
-                        const type = match[2];
-                        const direction = match[3];
-                        const dimension = getBackgroundSize(node, i, boxStyle.backgroundSize) || node.actualDimension;
-                        let gradient: Gradient | undefined;
-                        switch (type) {
-                            case 'conic': {
-                                const position = getGradientPosition(direction);
-                                const conic = <ConicGradient> {
-                                    type,
-                                    dimension,
-                                    angle: parseAngle(direction)
-                                };
-                                conic.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, undefined, node.fontSize);
-                                conic.colorStops = parseColorStops(node, conic, match[4]);
-                                gradient = conic;
-                                break;
-                            }
-                            case 'radial': {
-                                const position = getGradientPosition(direction);
-                                const radial = <RadialGradient> {
-                                    type,
-                                    repeating,
-                                    horizontal: node.actualWidth <= node.actualHeight,
-                                    dimension
-                                };
-                                radial.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, undefined, node.fontSize);
-                                radial.closestCorner = Number.POSITIVE_INFINITY;
-                                radial.farthestCorner = Number.NEGATIVE_INFINITY;
-                                let shape = 'ellipse';
-                                if (position) {
-                                    const radius = position[1] && position[1].trim();
-                                    if (radius) {
-                                        if (radius.startsWith('circle')) {
-                                            shape = 'circle';
-                                        }
-                                        else {
-                                            const radiusXY = radius.split(' ');
-                                            let minRadius = Number.POSITIVE_INFINITY;
-                                            const length = radiusXY.length;
-                                            for (let j = 0; j < length; j++) {
-                                                const axisRadius = node.parseUnit(radiusXY[j], j === 0 ? 'width' : 'height', false);
-                                                if (axisRadius < minRadius) {
-                                                    minRadius = axisRadius;
-                                                }
-                                            }
-                                            radial.radius = minRadius;
-                                            radial.radiusExtent = minRadius;
-                                            if (length === 1 || radiusXY[0] === radiusXY[1]) {
-                                                shape = 'circle';
-                                            }
-                                        }
-                                    }
-                                }
-                                radial.shape = shape;
-                                for (const corner of [[0, 0], [dimension.width, 0], [dimension.width, dimension.height], [0, dimension.height]]) {
-                                    const length = Math.round(Math.sqrt(Math.pow(Math.abs(corner[0] - radial.center.left), 2) + Math.pow(Math.abs(corner[1] - radial.center.top), 2)));
-                                    if (length < radial.closestCorner) {
-                                        radial.closestCorner = length;
-                                    }
-                                    if (length > radial.farthestCorner) {
-                                        radial.farthestCorner = length;
-                                    }
-                                }
-                                radial.closestSide = radial.center.top;
-                                radial.farthestSide = radial.center.top;
-                                for (const side of [dimension.width - radial.center.left, dimension.height - radial.center.top, radial.center.left]) {
-                                    if (side < radial.closestSide) {
-                                        radial.closestSide = side;
-                                    }
-                                    if (side > radial.farthestSide) {
-                                        radial.farthestSide = side;
-                                    }
-                                }
-                                if (!radial.radius && !radial.radiusExtent) {
-                                    radial.radius = radial.farthestCorner;
-                                    const extent = position && position[1] ? position[1].split(' ').pop() : '';
-                                    switch (extent) {
-                                        case 'closest-corner':
-                                        case 'closest-side':
-                                        case 'farthest-side':
-                                            const length = radial[$util.convertCamelCase(extent)];
-                                            if (repeating) {
-                                                radial.radiusExtent = length;
-                                            }
-                                            else {
-                                                radial.radius = length;
-                                            }
-                                            break;
-                                        default:
-                                            radial.radiusExtent = radial.farthestCorner;
-                                            break;
-                                    }
-                                }
-                                radial.colorStops = parseColorStops(node, radial, match[4]);
-                                gradient = radial;
-                                break;
-                            }
-                            case 'linear': {
-                                let angle = 180;
-                                switch (direction) {
-                                    case 'to top':
-                                        angle = 360;
-                                        break;
-                                    case 'to right top':
-                                        angle = 45;
-                                        break;
-                                    case 'to right':
-                                        angle = 90;
-                                        break;
-                                    case 'to right bottom':
-                                        angle = 135;
-                                        break;
-                                    case 'to bottom':
-                                        break;
-                                    case 'to left bottom':
-                                        angle = 225;
-                                        break;
-                                    case 'to left':
-                                        angle = 270;
-                                        break;
-                                    case 'to left top':
-                                        angle = 315;
-                                        break;
-                                    default:
-                                        if (direction) {
-                                            angle = parseAngle(direction, 180) || 360;
-                                        }
-                                        break;
-                                }
-                                const linear = <LinearGradient> {
-                                    type,
-                                    repeating,
-                                    horizontal: angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315,
-                                    dimension,
-                                    angle
-                                };
-                                linear.colorStops = parseColorStops(node, linear, match[4]);
-                                const width = dimension.width;
-                                const height = dimension.height;
-                                let x = $math.truncateFraction($math.offsetAngleX(angle, width));
-                                let y = $math.truncateFraction($math.offsetAngleY(angle, height));
-                                if (x !== width && y !== height && !$math.isEqual(Math.abs(x), Math.abs(y))) {
-                                    let oppositeAngle: number;
-                                    if (angle <= 90) {
-                                        oppositeAngle = $math.relativeAngle({ x: 0, y: height }, { x: width, y: 0 });
-                                    }
-                                    else if (angle <= 180) {
-                                        oppositeAngle = $math.relativeAngle({ x: 0, y: 0 }, { x: width, y: height });
-                                    }
-                                    else if (angle <= 270) {
-                                        oppositeAngle = $math.relativeAngle({ x: 0, y: 0 }, { x: -width, y: height });
-                                    }
-                                    else {
-                                        oppositeAngle = $math.relativeAngle({ x: 0, y: height }, { x: -width, y: 0 });
-                                    }
-                                    let a = Math.abs(oppositeAngle - angle);
-                                    let b = 90 - a;
-                                    const lenX = $math.triangulate(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
-                                    x = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
-                                    a = 90;
-                                    b = 90 - angle;
-                                    const lenY = $math.triangulate(a, b, x);
-                                    y = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
-                                }
-                                linear.angleExtent = { x, y };
-                                gradient = linear;
-                                break;
-                            }
-                        }
-                        images.push(gradient || 'initial');
-                    }
-                    i++;
-                }
-                if (images.length) {
-                    boxStyle.backgroundImage = images;
-                }
+            if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node);
             }
             let backgroundColor = node.backgroundColor;
             if (backgroundColor === '' && !node.documentParent.visible) {

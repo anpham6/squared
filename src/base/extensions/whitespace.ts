@@ -79,8 +79,8 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                                 resetMargin(node, boxMargin);
                                 if (direction) {
                                     node.bounds.top = 0;
-                                    node.unsafe('box', true);
-                                    node.unsafe('linear', true);
+                                    node.unset('box');
+                                    node.unset('linear');
                                 }
                             }
                         }

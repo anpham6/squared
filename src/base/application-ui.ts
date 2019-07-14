@@ -205,12 +205,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public insertNode(element: Element, parent?: T) {
-        if ($dom.isPlainText(element)) {
+        if ($dom.isTextNode(element)) {
             if ($xml.isPlainText(element.textContent as string) || parent && parent.preserveWhiteSpace && (parent.tagName !== 'PRE' || (<HTMLElement> parent.element).children.length === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode(element, false);
                 if (parent) {
-                    NodeUI.copyTextStyle(node, parent);
+                    node.cssApply(parent.getTextStyle());
+                    node.fontSize = parent.fontSize;
                 }
                 return node;
             }
@@ -499,7 +500,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 else if (element.nodeName.charAt(0) === '#') {
-                    if ($dom.isPlainText(element)) {
+                    if ($dom.isTextNode(element)) {
                         child = this.insertNode(element, node);
                     }
                 }
@@ -615,9 +616,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
-        const styleMap: StringMap = $session.getElementCache(element, `styleMap${pseudoElt}`, sessionId);
+        let styleMap: StringMap = $session.getElementCache(element, `styleMap${pseudoElt}`, sessionId);
         let nested = 0;
         if (element.tagName === 'Q') {
+            if (styleMap === undefined) {
+                styleMap = {};
+                $session.setElementCache(element, `styleMap${pseudoElt}`, sessionId, styleMap);
+            }
             if (!styleMap.content) {
                 styleMap.content = $css.getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
             }
@@ -854,6 +859,24 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
                 if (tagName === 'img') {
                     (<HTMLImageElement> pseudoElement).src = content;
+                    const image = this.resourceHandler.getImage(content);
+                    if (image) {
+                        const { width, height } = image;
+                        if (width > 0) {
+                            const dimension = $css.formatPX(width);
+                            if (styleMap.width === undefined) {
+                                styleMap.width = dimension;
+                            }
+                            pseudoElement.style.width = dimension;
+                        }
+                        if (height > 0) {
+                            const dimension = $css.formatPX(height);
+                            if (styleMap.height === undefined) {
+                                styleMap.height = dimension;
+                            }
+                            pseudoElement.style.height = dimension;
+                        }
+                    }
                 }
                 else if (value !== '""') {
                     pseudoElement.innerText = content;

@@ -104,6 +104,7 @@ squared.settings = {
         'android.delegate.negative-viewport',
         'android.delegate.percent',
         'android.delegate.scrollbar',
+        'android.delegate.background',
         'android.delegate.radiogroup',
         'squared.external',
         'squared.substitute',

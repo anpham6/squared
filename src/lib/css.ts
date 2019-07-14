@@ -1,6 +1,6 @@
 import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
-import { CSS as CSS_RX, STRING, UNIT, XML } from './regex';
+import { CSS, STRING, UNIT, XML } from './regex';
 
 import { getElementCache, setElementCache } from './session';
 import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isString, replaceMap, resolvePath, spliceString } from './util';
@@ -74,7 +74,7 @@ export function parseSelectorText(value: string) {
         let separatorValue = value;
         let match: RegExpExecArray | null;
         let found = false;
-        while ((match = CSS_RX.SELECTOR_ATTR.exec(separatorValue)) !== null) {
+        while ((match = CSS.SELECTOR_ATTR.exec(separatorValue)) !== null) {
             const index = match.index;
             const length = match[0].length;
             separatorValue = (index > 0 ? separatorValue.substring(0, index) : '') + '_'.repeat(length) + separatorValue.substring(index + length);
@@ -105,10 +105,10 @@ export function parseSelectorText(value: string) {
 }
 
 export function getSpecificity(value: string) {
-    CSS_RX.SELECTOR_G.lastIndex = 0;
+    CSS.SELECTOR_G.lastIndex = 0;
     let result = 0;
     let match: RegExpExecArray | null;
-    while ((match = CSS_RX.SELECTOR_G.exec(value)) !== null) {
+    while ((match = CSS.SELECTOR_G.exec(value)) !== null) {
         let segment = match[1];
         if (segment.length === 1) {
             switch (segment.charAt(0)) {
@@ -126,7 +126,7 @@ export function getSpecificity(value: string) {
             segment = segment.substring(1);
         }
         let subMatch: RegExpExecArray | null;
-        while ((subMatch = CSS_RX.SELECTOR_ATTR.exec(segment)) !== null) {
+        while ((subMatch = CSS.SELECTOR_ATTR.exec(segment)) !== null) {
             if (subMatch[1]) {
                 result += 1;
             }
@@ -135,12 +135,12 @@ export function getSpecificity(value: string) {
             }
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        while ((subMatch = CSS_RX.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
+        while ((subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
             if (subMatch[0].startsWith(':not(')) {
                 if (subMatch[1]) {
-                    const lastIndex = CSS_RX.SELECTOR_G.lastIndex;
+                    const lastIndex = CSS.SELECTOR_G.lastIndex;
                     result += getSpecificity(subMatch[1]);
-                    CSS_RX.SELECTOR_G.lastIndex = lastIndex;
+                    CSS.SELECTOR_G.lastIndex = lastIndex;
                 }
             }
             else {
@@ -155,11 +155,11 @@ export function getSpecificity(value: string) {
             }
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        while ((subMatch = CSS_RX.SELECTOR_PSEUDO_ELEMENT.exec(segment)) !== null) {
+        while ((subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) !== null) {
             result += 1;
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        while ((subMatch = CSS_RX.SELECTOR_LABEL.exec(segment)) !== null) {
+        while ((subMatch = CSS.SELECTOR_LABEL.exec(segment)) !== null) {
             switch (subMatch[0].charAt(0)) {
                 case '#':
                     result += 100;
@@ -294,14 +294,14 @@ export function validMediaRule(value: string, fontSize?: number) {
                 while ((subMatch = CACHE_PATTERN.MEDIA_CONDITION.exec(match[2])) !== null) {
                     const attr = subMatch[1];
                     let operation: string;
-                    if (subMatch[1].startsWith('min')) {
+                    if (attr.startsWith('min')) {
                         operation = '>=';
                     }
-                    else if (subMatch[1].startsWith('max')) {
+                    else if (attr.startsWith('max')) {
                         operation = '<=';
                     }
                     else {
-                        operation = match[2];
+                        operation = subMatch[2];
                     }
                     const rule = subMatch[3];
                     switch (attr) {
@@ -396,7 +396,7 @@ export function getInheritedStyle(element: Element, attr: string, exclude?: RegE
 export function parseVar(element: HTMLElement | SVGElement, value: string) {
     const style = getStyle(element);
     let match: RegExpMatchArray | null;
-    while ((match = CSS_RX.VAR.exec(value)) !== null) {
+    while ((match = CSS.VAR.exec(value)) !== null) {
         let propertyValue = style.getPropertyValue(match[1]).trim();
         if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) && parseColor(propertyValue) === undefined)) {
             propertyValue = match[2];
@@ -418,7 +418,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
             const rect = (element instanceof SVGElement ? element : (element.parentElement || element)).getBoundingClientRect();
             attr = attr.toLowerCase();
             if (/^margin|padding|border/.test(attr)) {
-                dimension = Math.max(rect.width, rect.height);
+                dimension = rect.width;
             }
             else {
                 dimension = /top|bottom|height|vertical/.test(attr) || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
@@ -551,25 +551,24 @@ export function getBackgroundPosition(value: string, dimension: Dimension, image
 export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     const parentElement = <HTMLPictureElement> element.parentElement;
     const result: ImageSrcSet[] = [];
-    let srcset = element.srcset;
-    let sizes = element.sizes;
+    const src = element.src;
+    let { srcset, sizes } = element;
     if (parentElement && parentElement.tagName === 'PICTURE') {
         const children = parentElement.children;
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const source = <HTMLSourceElement> children[i];
             if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || isString(source.type) && mimeType && mimeType.includes((source.type.split('/').pop() as string).toLowerCase()))) {
-                srcset = source.srcset;
-                sizes = source.sizes;
+                ({ srcset, sizes} = source);
                 break;
             }
         }
     }
     if (srcset !== '') {
-        const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
+        const filepath = src.substring(0, src.lastIndexOf('/') + 1);
         const pattern = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
-        for (const src of srcset.split(XML.SEPARATOR)) {
-            const match = pattern.exec(src.trim());
+        for (const value of srcset.split(XML.SEPARATOR)) {
+            const match = pattern.exec(value.trim());
             if (match) {
                 let width = 0;
                 let pixelRatio = 0;
@@ -592,21 +591,27 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
             }
         }
         result.sort((a, b) => {
-            if (a.pixelRatio > 0 && b.pixelRatio > 0) {
-                if (a.pixelRatio !== b.pixelRatio) {
-                    return a.pixelRatio < b.pixelRatio ? -1 : 1;
+            const pxA = a.pixelRatio;
+            const pxB = b.pixelRatio;
+            if (pxA > 0 && pxB > 0) {
+                if (pxA !== pxB) {
+                    return pxA < pxB ? -1 : 1;
                 }
             }
-            else if (a.width > 0 && b.width > 0) {
-                if (a.width !== b.width) {
-                    return a.width < b.width ? -1 : 1;
+            else {
+                const widthA = a.width;
+                const widthB = b.width;
+                if (widthA > 0 && widthB > 0) {
+                    if (widthA !== widthB) {
+                        return widthA < widthB ? -1 : 1;
+                    }
                 }
             }
             return 0;
         });
     }
     if (result.length === 0) {
-        result.push({ src: element.src, pixelRatio: 1, width: 0 });
+        result.push({ src, pixelRatio: 1, width: 0 });
     }
     else if (result.length > 1 && isString(sizes)) {
         const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH}\\))?\\s*(.+)`);
@@ -618,7 +623,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                     continue;
                 }
                 if (match[4]) {
-                    const calcMatch = CSS_RX.CALC.exec(match[4]);
+                    const calcMatch = CSS.CALC.exec(match[4]);
                     if (calcMatch) {
                         width = calculate(calcMatch[1]) || 0;
                     }
@@ -683,7 +688,7 @@ export function convertListStyle(name: string, value: number, valueAsDefault = f
 }
 
 export function resolveURL(value: string) {
-    const match = CSS_RX.URL.exec(value);
+    const match = CSS.URL.exec(value);
     return match ? resolvePath(match[1]) : '';
 }
 
@@ -748,8 +753,12 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
         }
     }
     if (opened === closing.length) {
-        const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
-        const placeholder = /{(\d+)}/;
+        if (CACHE_PATTERN.CALCUATE_SYMBOL === undefined) {
+            CACHE_PATTERN.CALCUATE_SYMBOL = /(\s+[+\-]\s+|\s*[*/]\s*)/;
+            CACHE_PATTERN.CALCUATE_PLACEHOLDER = /{(\d+)}/;
+        }
+        const symbol = CACHE_PATTERN.CALCUATE_SYMBOL;
+        const placeholder = CACHE_PATTERN.CALCUATE_PLACEHOLDER;
         const equated: number[] = [];
         let index = 0;
         while (true) {
@@ -893,7 +902,7 @@ export function parseUnit(value: string, fontSize?: number) {
 
 export function parseAngle(value: string) {
     if (value) {
-        const match = CSS_RX.ANGLE.exec(value);
+        const match = CSS.ANGLE.exec(value);
         if (match) {
             return convertAngle(match[1], match[2]);
         }
@@ -921,15 +930,15 @@ export function isLength(value: string, percent = false) {
 }
 
 export function isCalc(value: string) {
-    return CSS_RX.CALC.test(value);
+    return CSS.CALC.test(value);
 }
 
 export function isCustomProperty(value: string) {
-    return CSS_RX.CUSTOM_PROPERTY.test(value);
+    return CSS.CUSTOM_PROPERTY.test(value);
 }
 
 export function isAngle(value: string) {
-    return CSS_RX.ANGLE.test(value);
+    return CSS.ANGLE.test(value);
 }
 
 export function isPercent(value: string) {

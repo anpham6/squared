@@ -41,7 +41,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public applyDefaultStyles(element: Element) {
-        if ($dom.isPlainText(element)) {
+        if ($dom.isTextNode(element)) {
             $session.setElementCache(element, 'styleMap', this.sessionId, {
                 position: 'static',
                 display: 'inline',

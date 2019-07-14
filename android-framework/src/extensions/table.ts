@@ -85,9 +85,6 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         node.css('width', 'auto', true);
                     }
                 }
-                else if (mainData.block) {
-                    node.setLayoutWidth('match_parent');
-                }
             }
             if (node.hasPX('height') && node.actualHeight < Math.floor(node.bounds.height)) {
                 if (!node.hasPX('minHeight')) {

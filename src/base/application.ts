@@ -72,6 +72,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, cache) as unknown);
     }
 
+    public abstract insertNode(element: Element, parent?: T): T | undefined;
     public abstract afterCreateCache(element: HTMLElement): void;
     public abstract finalize(): void;
 
@@ -323,15 +324,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    public insertNode(element: Element, parent?: T): T | undefined {
-        this.controllerHandler.applyDefaultStyles(element);
-        const node = this.createNode(element, false);
-        if (node.plainText) {
-            Node.copyTextStyle(node, parent as T);
-        }
-        return node;
-    }
-
     public toString() {
         return '';
     }
@@ -379,7 +371,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const element = <HTMLElement> childNodes[i];
                 let child: T | undefined;
                 if (element.nodeName.charAt(0) === '#') {
-                    if ($dom.isPlainText(element)) {
+                    if ($dom.isTextNode(element)) {
                         child = this.insertNode(element, node);
                     }
                 }
@@ -428,10 +420,8 @@ export default abstract class Application<T extends Node> implements squared.bas
             const length = childMap.length;
             for (let i = 0; i < length; i++) {
                 const key = i + offset;
-                if (queryMap[key] === undefined) {
-                    queryMap[key] = [];
-                }
-                queryMap[key] = queryMap[key].concat(childMap[i]);
+                const map = queryMap[key];
+                queryMap[key] = map ? map.concat(childMap[i]) : childMap[i];
             }
         }
     }

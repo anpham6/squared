@@ -30,7 +30,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             columnCount: 0,
             layoutFixed: node.css('tableLayout') === 'fixed',
             borderCollapse: node.css('borderCollapse') === 'collapse',
-            block: false,
             expand: false
         };
     }
@@ -124,11 +123,12 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     if (colgroup) {
                         const style = $css.getStyle(colgroup.children[m]);
+                        const backgroundColor = style.backgroundColor as string;
                         if (style.backgroundImage && style.backgroundImage !== 'none') {
                             td.css('backgroundImage', style.backgroundImage, true);
                         }
-                        if (style.backgroundColor && !REGEXP_BACKGROUND.test(style.backgroundColor)) {
-                            td.css('backgroundColor', style.backgroundColor, true);
+                        if (!REGEXP_BACKGROUND.test(backgroundColor)) {
+                            td.css('backgroundColor', backgroundColor, true);
                         }
                     }
                     else {
@@ -227,8 +227,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 return value;
             });
         }
+        let percentAll = false;
         if (mapWidth.every(value => $css.isPercent(value))) {
-            mainData.block = true;
             if (mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
                 let percentTotal = 100;
                 $util.replaceMap<string, string>(mapWidth, value => {
@@ -243,6 +243,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     return value;
                 });
             }
+            if (!node.hasWidth) {
+                mainData.expand = true;
+            }
+            percentAll = true;
         }
         else if (mapWidth.every(value => $css.isLength(value))) {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
@@ -268,7 +272,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             if (mainData.layoutFixed && mapWidth.reduce((a, b) => a + ($css.isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
                 return LAYOUT_TABLE.COMPRESS;
             }
-            else if (mapWidth.some(value => $css.isPercent(value)) || mapWidth.every(value => $css.isLength(value) && value !== '0px')) {
+            else if (mapWidth.length > 1 && mapWidth.some(value => $css.isPercent(value)) || mapWidth.every(value => $css.isLength(value) && value !== '0px')) {
                 return LAYOUT_TABLE.VARIABLE;
             }
             else if (mapWidth.every(value => value === mapWidth[0])) {
@@ -288,7 +292,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         return LAYOUT_TABLE.VARIABLE;
                     }
                 }
-                else if (node.hasWidth) {
+                else if (node.hasWidth || mapWidth.length === 1) {
                     return LAYOUT_TABLE.FIXED;
                 }
             }
@@ -353,8 +357,13 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             else if ($css.isPercent(columnWidth)) {
-                                data.percent = columnWidth;
-                                data.expand = true;
+                                if (percentAll) {
+                                    data.percent = columnWidth;
+                                    data.expand = true;
+                                }
+                                else {
+                                    setBoundsWidth(td);
+                                }
                             }
                             else if ($css.isLength(columnWidth) && parseInt(columnWidth) > 0) {
                                 if (td.bounds.width >= parseInt(columnWidth)) {

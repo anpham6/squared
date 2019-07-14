@@ -26,20 +26,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return node.pseudoElement ? $session.getElementCache(<Element> node.element, 'pseudoElement', node.sessionId) : '';
     }
 
-    public static copyTextStyle(node: T, source: T) {
-        node.cssApply({
-            fontFamily: source.css('fontFamily'),
-            fontSize: source.css('fontSize'),
-            fontWeight: source.css('fontWeight'),
-            fontStyle: source.css('fontStyle'),
-            color: source.css('color'),
-            whiteSpace: source.css('whiteSpace'),
-            textDecoration: source.css('textDecoration'),
-            textTransform: source.css('textTransform'),
-            wordSpacing: source.css('wordSpacing')
-        });
-    }
-
     public documentRoot = false;
     public depth = -1;
     public childIndex = Number.POSITIVE_INFINITY;
@@ -68,6 +54,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private _data = {};
     private _inlineText = false;
     private _dataset?: {};
+    private _textStyle?: StringMap;
 
     protected constructor(
         public readonly id: number,
@@ -117,15 +104,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._initial.box = $dom.assignRect(this.box);
         }
         this._initial.iteration++;
-    }
-
-    public unsafe(name: string, unset = false): any {
-        if (unset) {
-            delete this[`_${name}`];
-        }
-        else {
-            return this[`_${name}`];
-        }
     }
 
     public data(name: string, attr: string, value?: any, overwrite = true) {
@@ -210,6 +188,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         else {
             this._cached = {};
+            this._textStyle = undefined;
         }
     }
 
@@ -274,7 +253,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public css(attr: string, value?: string, cache = true): string {
-        if (this.styleElement && value) {
+        if (value && this.styleElement) {
             this.style[attr] = value;
             if (validateCssSet(value, this.style[attr])) {
                 this._styleMap[attr] = value;
@@ -1169,6 +1148,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
+    public getTextStyle() {
+        if (this._textStyle === undefined) {
+            this._textStyle = {
+                fontFamily: this.css('fontFamily'),
+                fontSize: this.css('fontSize'),
+                fontWeight: this.css('fontWeight'),
+                fontStyle: this.css('fontStyle'),
+                color: this.css('color'),
+                whiteSpace: this.css('whiteSpace'),
+                textDecoration: this.css('textDecoration'),
+                textTransform: this.css('textTransform'),
+                letterSpacing: this.css('letterSpacing'),
+                wordSpacing: this.css('wordSpacing')
+            };
+        }
+        return this._textStyle;
+    }
+
     private setDimension(attr: string, attrMin: string, attrMax: string) {
         const styleMap = this._styleMap;
         const baseValue = this.parseUnit(styleMap[attr], attr);
@@ -1217,7 +1214,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     private setBoxModel(dimension: 'box' | 'linear') {
-        const bounds: BoxRectDimension = this.unsafe(dimension);
+        const bounds = dimension === 'box' ? this._box : this._linear;
         if (bounds) {
             bounds.width = this.bounds.width;
             if (this.plainText) {
@@ -2234,7 +2231,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         while (current && current.id !== 0) {
                             const color = current.cssInitial('backgroundColor', true);
                             if (color !== '') {
-                                if (color === result && current.backgroundImage === '') {
+                                if (color === result && current.backgroundColor === '') {
                                     result = '';
                                 }
                                 break;

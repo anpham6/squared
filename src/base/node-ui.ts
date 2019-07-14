@@ -20,11 +20,6 @@ const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
-    public static copyTextStyle(node: T, source: T) {
-        Node.copyTextStyle(node, source);
-        node.fontSize = source.fontSize;
-    }
-
     public static outerRegion(node: T): BoxRect {
         let top = Number.POSITIVE_INFINITY;
         let right = Number.NEGATIVE_INFINITY;
@@ -395,6 +390,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this[`__${name}`] || {};
     }
 
+    public unsafe(name: string, value?: any): any {
+        if (value !== undefined) {
+            this[`_${name}`] =  value;
+        }
+        else {
+            return this[`_${name}`];
+        }
+    }
+
+    public unset(name: string) {
+        delete this[`_${name}`];
+    }
+
     public delete(name: string, ...attrs: string[]) {
         const obj = this[`__${name}`];
         if (obj) {
@@ -460,7 +468,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public inherit(node: T, ...modules: string[]) {
-        const initial = <InitialData<T>> node.unsafe('initial');
         for (const name of modules) {
             switch (name) {
                 case 'base':
@@ -479,10 +486,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         this.dir = actualParent.dir;
                     }
                     break;
-                case 'initial':
+                case 'initial': {
+                    const initial = <InitialData<T>> node.unsafe('initial');
                     $util.cloneObject(initial, this.initial);
                     break;
-                case 'alignment':
+                }
+                case 'alignment': {
+                    const initial = <InitialData<T>> node.unsafe('initial');
                     this.positionAuto = node.positionAuto;
                     for (const attr of INHERIT_ALIGNMENT) {
                         this._styleMap[attr] = node.css(attr);
@@ -505,11 +515,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                     }
                     break;
+                }
                 case 'styleMap':
                     $util.assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
                     break;
                 case 'textStyle':
-                    NodeUI.copyTextStyle(this, node);
+                    this.cssApply(node.getTextStyle());
+                    this.fontSize = node.fontSize;
                     break;
             }
         }
@@ -661,8 +673,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                     }
                                     let maxBottom = Number.NEGATIVE_INFINITY;
                                     for (const item of siblings) {
-                                        if (item.float === 'right' && item.linear.bottom > maxBottom) {
-                                            maxBottom = item.linear.bottom;
+                                        if (item.float === 'right' && item.bounds.bottom > maxBottom) {
+                                            maxBottom = item.bounds.bottom;
                                         }
                                     }
                                     if ($util.belowRange(actualTop, maxBottom)) {
@@ -998,7 +1010,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             result = '';
             const element = <HTMLInputElement> this.element;
             if (element) {
-                if ($dom.isPlainText(element)) {
+                if ($dom.isTextNode(element)) {
                     result = 'PLAINTEXT';
                 }
                 else if (element.tagName === 'INPUT') {

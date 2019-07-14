@@ -23,6 +23,7 @@ import WhiteSpace from './extensions/whitespace';
 
 import ConstraintGuideline from './extensions/constraint/guideline';
 
+import DelegateBackground from './extensions/delegate/background';
 import DelegateFixed from './extensions/delegate/fixed';
 import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
 import DelegateNegativeViewport from './extensions/delegate/negative-viewport';
@@ -93,6 +94,7 @@ const appBase: AppFramework<View> = {
             Guideline: ConstraintGuideline
         },
         delegate: {
+            Background: DelegateBackground,
             Fixed: DelegateFixed,
             MaxWidthHeight: DelegateMaxWidthHeight,
             NegativeViewport: DelegateNegativeViewport,
@@ -327,6 +329,7 @@ const appBase: AppFramework<View> = {
             [EN.WHITESPACE]: new WhiteSpace(EN.WHITESPACE, framework),
             [EN.ACCESSIBILITY]: new Accessibility(EN.ACCESSIBILITY, framework),
             [EA.CONSTRAINT_GUIDELINE]: new ConstraintGuideline(EA.CONSTRAINT_GUIDELINE, framework),
+            [EA.DELEGATE_BACKGROUND]: new DelegateBackground(EA.DELEGATE_BACKGROUND, framework),
             [EA.DELEGATE_FIXED]: new DelegateFixed(EA.DELEGATE_FIXED, framework),
             [EA.DELEGATE_MAXWIDTHHEIGHT]: new DelegateMaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, framework),
             [EA.DELEGATE_NEGATIVEVIEWPORT]: new DelegateNegativeViewport(EA.DELEGATE_NEGATIVEVIEWPORT, framework),

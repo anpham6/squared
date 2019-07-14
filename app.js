@@ -12,6 +12,7 @@ const request = require('request');
 
 const app = express();
 const port = process.env.PORT || 3000;
+const env = app.get('env');
 
 app.set('port', port);
 app.use(bodyParser.json({ limit: '100mb' }));
@@ -22,7 +23,7 @@ app.use('/dist', express.static(path.join(__dirname, 'dist')));
 app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
 app.use('/temp', express.static(path.join(__dirname, 'temp')));
 
-if (app.get('env') === 'development') {
+if (env === 'development') {
     app.use('/build', express.static(path.join(__dirname, 'build')));
     app.use('/demos-dev', express.static(path.join(__dirname, 'html/demos-dev')));
 }
@@ -326,4 +327,4 @@ app.get('/api/browser/download', (req, res) => {
     }
 });
 
-app.listen(port, () => console.log(`Express server listening on port ${port}`));
+app.listen(port, () => console.log(`${env.toUpperCase()}: Express server listening on port ${port}`));

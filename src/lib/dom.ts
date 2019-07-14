@@ -159,6 +159,6 @@ export function getNamedItem(element: Element, attr: string) {
     return '';
 }
 
-export function isPlainText(element: Element) {
+export function isTextNode(element: Element) {
     return element.nodeName === '#text';
 }
