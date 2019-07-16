@@ -37,6 +37,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected _box?: BoxRectDimension;
     protected _bounds?: BoxRectDimension;
     protected _linear?: BoxRectDimension;
+    protected _textBounds?: BoxRectDimension;
     protected _fontSize = 0;
 
     protected readonly _element: Element | null = null;
@@ -484,14 +485,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public setBounds(cache = true) {
         if (this.styleElement) {
-            this._bounds = $dom.assignRect($session.getClientRect(<Element> this._element, this.sessionId, cache), true);
+            this._bounds = $dom.assignRect($session.actualClientRect(<Element> this._element, this.sessionId, cache), true);
             if (this.documentBody && this.marginTop === 0) {
                 this._bounds.top = 0;
             }
         }
         else if (this.plainText) {
-            const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId, cache);
-            this._bounds = $dom.assignRect(rect, true);
+            const rect = $dom.getRangeClientRect(<Element> this._element);
+            const bounds = $dom.assignRect(rect, true);
+            this._bounds = bounds;
+            this._textBounds = bounds;
             this._cached.multiline = (rect.numberOfLines as number) > 0;
         }
         if (!cache) {
@@ -1493,6 +1496,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.tagName === '#text';
     }
 
+    get styleText() {
+        return this.naturalElement && this.inlineText;
+    }
+
     get lineBreak() {
         return this.tagName === 'BR';
     }
@@ -1943,8 +1950,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get inlineVertical() {
         let result = this._cached.inlineVertical;
         if (result === undefined) {
-            const value = this.display;
-            result = (value.startsWith('inline') || value === 'table-cell') && !this.floating && !this.plainText;
+            if (this.naturalElement) {
+                const value = this.display;
+                result = (value.startsWith('inline') || value === 'table-cell') && !this.floating && !this.plainText;
+            }
+            else {
+                result = false;
+            }
             this._cached.inlineVertical = result;
         }
         return result;
@@ -2197,10 +2209,34 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
+    set textBounds(value) {
+        if (value) {
+            this._textBounds = value;
+        }
+        else {
+            this._textBounds = undefined;
+        }
+    }
+    get textBounds() {
+        if (this.naturalChild && this._textBounds === undefined) {
+            this._textBounds = $session.actualTextRangeRect(<Element> this._element, this.sessionId);
+        }
+        return this._textBounds;
+    }
+
     get multiline() {
         let result = this._cached.multiline;
         if (result === undefined) {
-            result = this.plainText || this._element && this.inlineText && (this.inlineFlow || this.length === 0) ? ($session.getRangeClientRect(<Element> this._element, this.sessionId).numberOfLines as number) > 0 : false;
+            if (this.plainText) {
+                result = ($dom.getRangeClientRect(<Element> this._element).numberOfLines as number) > 0;
+            }
+            else if (this.styleText && (this.inlineFlow || this.naturalElements.length === 0)) {
+                const textBounds = this.textBounds;
+                result = textBounds ? (textBounds.numberOfLines as number) > 0 : false;
+            }
+            else {
+                result = false;
+            }
             this._cached.multiline = result;
         }
         return result;

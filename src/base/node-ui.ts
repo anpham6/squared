@@ -710,10 +710,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         if (this.plainText) {
                                             actualTop = bottom;
                                         }
-                                        else {
-                                            const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
-                                            if (rect.top > top) {
-                                                actualTop = rect.top;
+                                        else if (this.styleText) {
+                                            const textBounds = this.textBounds;
+                                            if (textBounds && textBounds.top > top) {
+                                                actualTop = textBounds.top;
                                             }
                                         }
                                     }
@@ -1033,7 +1033,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get naturalChild() {
-        return this._element !== null;
+        return this._element !== null && !!this._element.parentElement;
     }
 
     get pseudoElement() {

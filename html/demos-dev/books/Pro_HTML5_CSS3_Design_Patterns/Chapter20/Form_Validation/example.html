@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en"> 
+ <head><title>Form Validation</title>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="site.css"   media="all"    type="text/css" />
+  <link rel="stylesheet" href="page.css"   media="all"    type="text/css" />
+  <script src="/node_modules/systemjs/dist/system.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../../squared.js"></script>
+ </head>
+ 
+ <body>
+ 
+<h1>Form Validation</h1>
+
+<p>Please fill in form:</p>
+  <form method="post">
+    <label>Email: <input type="email" required></label>
+    <label>URL: <input type="url" required></label>
+    <label>Number: <input type="number" max="100" min="0" step="2" required></label>
+    <input id="submit" type="submit" value="Submit"></form>
+  </form>
+   
+ </body>
+</html>

@@ -121,7 +121,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
     if (node.multiline) {
         setMultiline(node, lineHeight, false);
     }
-    else if (node.length === 0 && (node.pageFlow || node.textContent.length)) {
+    else if ((node.renderChildren.length === 0 || node.inline) && (node.pageFlow || node.textContent.length)) {
         let offset = 0;
         let usePadding = true;
         if (node.styleElement && !inlineStyle && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
@@ -801,8 +801,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             width = this.parseUnit(this.css('maxWidth'));
                         }
                     }
-                    else if (!this.pageFlow && this.textElement && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && !/\n/.test(this.textContent)) {
-                        width = Math.ceil(this.bounds.width);
+                    else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace) {
+                        if (this.ascend(item => item.hasPX('width')).length > 0 || !/\n/.test(this.textContent)) {
+                            width = Math.ceil(this.bounds.width);
+                        }
                     }
                     if (width !== -1) {
                         this.android('maxWidth', $css.formatPX(width), false);
@@ -967,7 +969,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         return;
                     }
                     else if (renderParent.layoutRelative) {
-                        if (alignment === STRING_ANDROID.CENTER_HORIZONTAL && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
+                        if (alignment === STRING_ANDROID.CENTER_HORIZONTAL && this.alignSibling($c.STRING_BASE.LEFT_RIGHT) === '' && this.alignSibling($c.STRING_BASE.RIGHT_LEFT) === '') {
                             this.anchorDelete('left', 'right');
                             this.anchor('centerHorizontal', 'true');
                             return;
@@ -981,7 +983,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     break;
                                 case 'right':
                                 case 'end':
-                                    if (this.alignSibling('rightLeft') === '') {
+                                    if (this.alignSibling($c.STRING_BASE.RIGHT_LEFT) === '') {
                                         this.anchor('right', 'parent', false);
                                     }
                                     break;
@@ -990,12 +992,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     break;
                                 case 'left':
                                 case 'start':
-                                    if (this.alignSibling('leftRight') === '') {
+                                    if (this.alignSibling($c.STRING_BASE.LEFT_RIGHT) === '') {
                                         this.anchor('left', 'parent', false);
                                     }
                                     break;
                                 case STRING_ANDROID.CENTER_HORIZONTAL:
-                                    if (this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
+                                    if (this.alignSibling($c.STRING_BASE.LEFT_RIGHT) === '' && this.alignSibling($c.STRING_BASE.LEFT_RIGHT) === '') {
                                         this.anchorParent(STRING_ANDROID.HORIZONTAL, undefined, undefined, true);
                                     }
                                     break;
@@ -1312,50 +1314,64 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         private setLineHeight(renderParent: T) {
-            const lineHeight = this.lineHeight;
+            let lineHeight = this.lineHeight;
             if (lineHeight > 0) {
                 const hasOwnStyle = this.has('lineHeight');
                 if (this.multiline) {
                     setMultiline(this, lineHeight, hasOwnStyle);
                 }
-                else if (hasOwnStyle || this.renderChildren.length || renderParent.lineHeight === 0) {
-                    if (this.length === 0) {
-                        setMarginOffset(this, lineHeight, hasOwnStyle);
-                    }
-                    else if (this.renderChildren.length) {
-                        const horizontalRows = this.horizontalRows || [this.renderChildren];
-                        let previousMultiline = false;
-                        const length = horizontalRows.length;
-                        for (let i = 0; i < length; i++) {
-                            const row = horizontalRows[i] as T[];
-                            const nextRow = horizontalRows[i + 1];
-                            let nextMultiline = nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading);
-                            if (!nextMultiline && i < length - 1) {
-                                const nextBaseline = horizontalRows[i + 1].find(node => node.baselineActive);
-                                if (nextBaseline && nextBaseline.has('lineHeight')) {
-                                    nextMultiline = true;
-                                }
-                            }
-                            const baseline = row.find(node => node.baselineActive);
-                            const top = !previousMultiline && (i > 0 || length === 1) || row[0].lineBreakLeading;
-                            const bottom = !nextMultiline && (i < length - 1 || length === 1);
-                            if (baseline) {
-                                if (!baseline.has('lineHeight')) {
-                                    setMarginOffset(baseline, lineHeight, false, top, bottom);
-                                }
-                                else {
-                                    previousMultiline = true;
-                                    continue;
-                                }
+                else {
+                    const hasChildren = this.renderChildren.length > 0;
+                    if (hasOwnStyle || hasChildren || renderParent.lineHeight === 0) {
+                        if (!hasChildren) {
+                            setMarginOffset(this, lineHeight, hasOwnStyle);
+                        }
+                        else {
+                            if (this.inline) {
+                                this.renderEach(item => {
+                                    if (item.lineHeight > lineHeight) {
+                                        lineHeight = item.lineHeight;
+                                    }
+                                    item.setCacheValue('lineHeight', 0);
+                                });
+                                setMarginOffset(this, lineHeight, hasOwnStyle);
                             }
                             else {
-                                for (const node of row) {
-                                    if (node.length === 0 && !node.has('lineHeight') && !node.multiline && !node.baselineAltered) {
-                                        setMarginOffset(node, lineHeight, false, top, bottom);
+                                const horizontalRows = this.horizontalRows || [this.renderChildren];
+                                let previousMultiline = false;
+                                const length = horizontalRows.length;
+                                for (let i = 0; i < length; i++) {
+                                    const row = horizontalRows[i] as T[];
+                                    const nextRow = horizontalRows[i + 1];
+                                    let nextMultiline = nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading);
+                                    if (!nextMultiline && i < length - 1) {
+                                        const nextBaseline = horizontalRows[i + 1].find(node => node.baselineActive);
+                                        if (nextBaseline && nextBaseline.has('lineHeight')) {
+                                            nextMultiline = true;
+                                        }
                                     }
+                                    const baseline = row.find(node => node.baselineActive);
+                                    const top = !previousMultiline && (i > 0 || length === 1) || row[0].lineBreakLeading;
+                                    const bottom = !nextMultiline && (i < length - 1 || length === 1);
+                                    if (baseline) {
+                                        if (!baseline.has('lineHeight')) {
+                                            setMarginOffset(baseline, lineHeight, false, top, bottom);
+                                        }
+                                        else {
+                                            previousMultiline = true;
+                                            continue;
+                                        }
+                                    }
+                                    else {
+                                        for (const node of row) {
+                                            if (node.length === 0 && !node.has('lineHeight') && !node.multiline && !node.baselineAltered) {
+                                                setMarginOffset(node, lineHeight, false, top, bottom);
+                                            }
+                                        }
+                                    }
+                                    previousMultiline = row.length === 1 && row[0].multiline;
                                 }
                             }
-                            previousMultiline = row.length === 1 && row[0].multiline;
                         }
                     }
                 }

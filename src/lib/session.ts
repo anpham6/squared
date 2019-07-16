@@ -1,70 +1,54 @@
-import { assignRect, newBoxRectDimension } from './dom';
-import { withinRange } from './util';
+import { getStyle } from './css';
+import { getRangeClientRect } from './dom';
 
-export function getClientRect(element: Element, sessionId: string, cache = true) {
+export function actualClientRect(element: Element, sessionId: string, cache = true) {
     if (cache) {
-        const rect: ClientRect = getElementCache(element, 'boundingClientRect', sessionId);
+        const rect: ClientRect = getElementCache(element, 'clientRect', sessionId);
         if (rect) {
             return rect;
         }
     }
     const bounds = element.getBoundingClientRect();
-    setElementCache(element, 'boundingClientRect', sessionId, bounds);
+    setElementCache(element, 'clientRect', sessionId, bounds);
     return bounds;
 }
 
-export function getRangeClientRect(element: Element, sessionId: string, cache = true) {
+export function actualTextRangeRect(element: Element, sessionId: string, cache = true) {
     if (cache) {
-        const rect: ClientRect = getElementCache(element, 'rangeClientRect', sessionId);
+        const rect: ClientRect = getElementCache(element, 'textRangeRect', sessionId);
         if (rect) {
             return rect;
         }
     }
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    const clientRects = range.getClientRects();
-    let length = clientRects.length;
-    const domRect: ClientRect[] = [];
-    for (let i = 0; i < length; i++) {
-        const item = <ClientRect> clientRects.item(i);
-        if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
-            domRect.push(item);
-        }
-    }
-    let bounds: BoxRectDimension;
-    let maxTop = Number.NEGATIVE_INFINITY;
-    length = domRect.length;
-    if (length) {
-        bounds = assignRect(domRect[0]);
-        for (let i = 1 ; i < length; i++) {
-            const rect = domRect[i];
-            if (rect.left < bounds.left) {
-                bounds.left = rect.left;
-            }
-            if (rect.right > bounds.right) {
-                bounds.right = rect.right;
-            }
-            if (rect.top < bounds.top) {
-                bounds.top = rect.top;
-            }
-            if (rect.bottom > bounds.bottom) {
-                bounds.bottom = rect.bottom;
-            }
-            bounds.width += rect.width;
-            if (rect.top > maxTop) {
-                maxTop = rect.top;
+    const length = element.childElementCount;
+    let hidden: [HTMLElement, string][] | undefined;
+    if (length > 0) {
+        for (let i = 0; i < length; i++) {
+            const style = getStyle(element.children[i]);
+            if (style.getPropertyValue('visibility') !== 'visible') {
+                const position = style.getPropertyValue('position');
+                if (position === 'absolute' || position === 'fixed') {
+                    const display = style.getPropertyValue('display');
+                    if (display !== 'none') {
+                        const child = <HTMLElement> element.children[i];
+                        child.style.display = 'none';
+                        if (hidden === undefined) {
+                            hidden = [];
+                        }
+                        hidden.push([child, display]);
+                    }
+                }
             }
         }
-        bounds.height = bounds.bottom - bounds.top;
-        if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-            bounds.numberOfLines = domRect.length - 1;
+    }
+    const bounds = getRangeClientRect(element);
+    if (hidden) {
+        for (const item of hidden) {
+            item[0].style.display = item[1];
         }
     }
-    else {
-        bounds = newBoxRectDimension();
-    }
-    setElementCache(element, 'rangeClientRect', sessionId, bounds);
-    return <BoxRectDimension> bounds;
+    setElementCache(element, 'textRangeRect', sessionId, bounds);
+    return bounds;
 }
 
 export function setElementCache(element: Element, attr: string, sessionId: string, data: any) {

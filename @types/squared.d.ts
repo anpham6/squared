@@ -329,6 +329,7 @@ declare namespace base {
         style: CSSStyleDeclaration;
         parent?: Node;
         queryMap?: Node[][];
+        textBounds?: BoxRectDimension;
         readonly sessionId: string;
         readonly initial: InitialData<Node>;
         readonly box: BoxRectDimension;
@@ -385,6 +386,7 @@ declare namespace base {
         readonly inlineStatic: boolean;
         readonly inlineVertical: boolean;
         readonly plainText: boolean;
+        readonly styleText: boolean;
         readonly textContent: string;
         readonly lineBreak: boolean;
         readonly positionStatic: boolean;
@@ -697,7 +699,7 @@ declare namespace lib {
         export import BOX_MARGIN = $css.BOX_MARGIN;
         export import BOX_PADDING = $css.BOX_PADDING;
         export import BOX_BORDER = $css.BOX_BORDER;
-        function getStyle(element: Element | null, pseudoElt?: string, cache?: boolean): CSSStyleDeclaration;
+        function getStyle(element: Element | null, pseudoElt?: string): CSSStyleDeclaration;
         function getFontSize(element: Element | null): number | undefined;
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
@@ -736,6 +738,7 @@ declare namespace lib {
         function newBoxRectDimension(): BoxRectDimension;
         function newBoxModel(): BoxModel;
         function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
+        function getRangeClientRect(element: Element): BoxRectDimension;
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
         function getNamedItem(element: Element, attr: string): string;
@@ -775,8 +778,8 @@ declare namespace lib {
     }
 
     namespace session {
-        function getClientRect(element: Element, sessionId: string, cache?: boolean): ClientRect;
-        function getRangeClientRect(element: Element, sessionId: string, cache?: boolean): BoxRectDimension;
+        function actualClientRect(element: Element, sessionId: string, cache?: boolean): ClientRect;
+        function actualTextRangeRect(element: Element, sessionId: string, cache?: boolean): BoxRectDimension;
         function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
         function getElementCache(element: Element, attr: string, sessionId?: string): any;
         function deleteElementCache(element: Element, attr: string, sessionId: string): void;

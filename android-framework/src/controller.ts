@@ -1929,10 +1929,31 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             })();
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
             const cleared = $NodeUI.linearData(children, true).cleared;
-            const textIndent = node.blockDimension ? node.parseUnit(node.css('textIndent')) : 0;
             const centerAligned = node.cssInitial('textAlign') === 'center';
+            let textIndent = 0;
+            if (node.naturalElement) {
+                if (node.blockDimension) {
+                    textIndent = node.parseUnit(node.css('textIndent'));
+                }
+            }
+            else {
+                const parent = node.parent as T;
+                if (parent && parent.blockDimension && parent.children[0] === node) {
+                    const value = parent.css('textIndent');
+                    textIndent = node.parseUnit(value);
+                    if (textIndent !== 0) {
+                        if (textIndent < 0) {
+                            parent.setCacheValue('paddingLeft', Math.max(0, parent.paddingLeft + textIndent));
+                        }
+                        node.setCacheValue('blockDimension', true);
+                        node.css('textIndent', value);
+                        parent.css('textIndent', '0px');
+                    }
+                }
+            }
             let rowWidth = 0;
             let previousRowLeft: T | undefined;
+            let textIndentSpacing = false;
             $util.partitionArray(children, item => item.float !== 'right').forEach((seg, index) => {
                 const length = seg.length;
                 if (length === 0) {
@@ -1964,7 +1985,20 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let previous!: T;
                 for (let i = 0; i < length; i++) {
                     const item = seg[i];
-                    let alignSibling = leftAlign && leftForward ? $c.STRING_BASE.LEFT_RIGHT : $c.STRING_BASE.RIGHT_LEFT;
+                    let alignSibling: string;
+                    if (leftAlign && leftForward) {
+                        alignSibling = $c.STRING_BASE.LEFT_RIGHT;
+                        if (i === 0 && item.inline && Math.abs(textIndent) > item.actualWidth && item.float !== 'right') {
+                            textIndentSpacing = true;
+                            if (!item.floating) {
+                                item.setCacheValue('float', 'left');
+                                item.setCacheValue('floating', true);
+                            }
+                        }
+                    }
+                    else {
+                        alignSibling = $c.STRING_BASE.RIGHT_LEFT;
+                    }
                     if (!item.pageFlow) {
                         if (previous) {
                             item.anchor(alignSibling, previous.documentId);
@@ -1978,13 +2012,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         continue;
                     }
                     let bounds = item.bounds;
-                    if (item.naturalElement && item.inlineText && !item.hasPX('width')) {
-                        const rect = $session.getRangeClientRect(<Element> item.element, item.sessionId);
-                        if (rect.numberOfLines || rect.width < item.box.width) {
-                            bounds = rect;
-                            if (!item.multiline) {
-                                item.multiline = rect.numberOfLines ? rect.numberOfLines > 0 : false;
-                            }
+                    let siblings: Element[] | undefined;
+                    if (item.styleText && !item.hasPX('width')) {
+                        const textBounds = item.textBounds;
+                        if (textBounds && (textBounds.numberOfLines || textBounds.width < item.box.width)) {
+                            bounds = textBounds;
                         }
                     }
                     let multiline = item.multiline;
@@ -1992,7 +2024,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         multiline = false;
                     }
                     let anchored = true;
-                    let siblings: Element[] | undefined;
                     if (item.autoMargin.leftRight) {
                         item.anchor('centerHorizontal', 'true');
                     }
@@ -2009,7 +2040,25 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const items = rows[rows.length - 1];
                         let maxWidth = 0;
                         let baseWidth = 0;
-                        const checkFloatWrap = () => previous.floating && previous.alignParent('left') && (item.multiline || Math.floor(rowWidth + item.width) < boxWidth);
+                        function checkFloatWrap() {
+                            if (previous.floating && previous.alignParent('left') && (item.multiline || Math.floor(rowWidth + item.width) < boxWidth)) {
+                                return true;
+                            }
+                            else if (i === length - 1 && node.floating && item.textElement && !/\s|-/.test(item.textContent.trim())) {
+                                if (node.hasPX('width')) {
+                                    const width = node.css('width');
+                                    if (node.parseUnit(width) > node.parseUnit(node.css('minWidth'))) {
+                                        node.cssApply({
+                                            width: 'auto',
+                                            minWidth: width
+                                        }, true);
+                                    }
+                                }
+                                node.android('ellipsize', 'end');
+                                return true;
+                            }
+                            return false;
+                        }
                         const checkWrapWidth = () => {
                             baseWidth = rowWidth + item.marginLeft;
                             if (previousRowLeft && !items.includes(previousRowLeft)) {
@@ -2038,10 +2087,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         const viewGroup = item.nodeGroup && !item.hasAlign($e.NODE_ALIGNMENT.SEGMENTED);
                         let retainMultiline = false;
-                        siblings = !viewGroup && item.inlineVertical && previous.inlineVertical ? $dom.getElementsBetweenSiblings(previous.element, <Element> item.element, true) : undefined;
+                        siblings = item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? $dom.getElementsBetweenSiblings(previous.element, <Element> item.element, true) : undefined;
                         const startNewRow = () => {
                             if (previous.textElement) {
-                                if (i === 1 && siblings === undefined && item.plainText && !$regex.CHAR.TRAILINGSPACE.test(previous.textContent) && !$regex.CHAR.LEADINGSPACE.test(item.textContent)) {
+                                if (i === 1 && item.plainText && item.previousSibling === previous && !$regex.CHAR.TRAILINGSPACE.test(previous.textContent) && !$regex.CHAR.LEADINGSPACE.test(item.textContent)) {
                                     retainMultiline = true;
                                     return false;
                                 }
@@ -2055,9 +2104,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             else if (checkLineWrap) {
                                 checkWrapWidth();
                                 if (baseWidth > maxWidth) {
-                                    if (previous && previous.textElement) {
-                                        checkSingleLine(previous, false, previousMultiline);
-                                    }
                                     return true;
                                 }
                                 else if ($util.aboveRange(baseWidth, maxWidth) && !item.alignParent(alignParent)) {
@@ -2079,7 +2125,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => causesLineBreak(element, node.sessionId))))
                         {
                             if (leftForward) {
-                                if (previousRowLeft && item.linear.bottom <= previousRowLeft.bounds.bottom) {
+                                if (previousRowLeft && (item.linear.bottom <= previousRowLeft.bounds.bottom || textIndentSpacing)) {
                                     if (!anchored) {
                                         item.anchor(alignSibling, previousRowLeft.documentId);
                                     }
@@ -2147,9 +2193,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     let previousOffset = 0;
                     if (siblings && !siblings.some(element => !!$session.getElementAsNode(element, item.sessionId) || causesLineBreak(element, item.sessionId))) {
-                        const betweenStart = $session.getRangeClientRect(siblings[0], '0');
+                        const betweenStart = $dom.getRangeClientRect(siblings[0]);
                         if (!betweenStart.numberOfLines) {
-                            const betweenEnd = siblings.length > 1 ? $session.getRangeClientRect(siblings[siblings.length - 1], '0') : undefined;
+                            const betweenEnd = siblings.length > 1 ? $dom.getRangeClientRect(siblings[siblings.length - 1]) : undefined;
                             if (betweenEnd === undefined || !betweenEnd.numberOfLines) {
                                 previousOffset = betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
                             }
@@ -2160,6 +2206,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     previousMultiline = multiline;
                 }
             });
+            if (rowsLeft.length === 1 && textIndent < 0) {
+                node.setCacheValue('paddingLeft', Math.max(0, node.paddingLeft + textIndent));
+            }
         }
         if (rowsLeft.length > 1 || rowsRight && rowsRight.length > 1) {
             alignmentMultiLine = true;
@@ -2299,7 +2348,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     const itemEnd = items[items.length - 1];
                     if (itemEnd.textElement && !itemEnd.multiline && !checkSingleLine(itemEnd, false, false)) {
-                        itemEnd.android('maxLines', '1');
+                        const alignSibling = itemEnd.alignSibling($c.STRING_BASE.LEFT_RIGHT);
+                        if (alignSibling !== '') {
+                            for (const item of items) {
+                                if (item.documentId === alignSibling) {
+                                    if (item.float !== 'left') {
+                                        itemEnd.android('maxLines', '1');
+                                    }
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
                 else {

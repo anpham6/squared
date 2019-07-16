@@ -1,4 +1,4 @@
-import { spliceArray } from './util';
+import { spliceArray, withinRange } from './util';
 
 export const ELEMENT_BLOCK = [
     'ADDRESS',
@@ -89,6 +89,53 @@ export function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scroll
         }
     }
     return result;
+}
+
+export function getRangeClientRect(element: Element) {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const clientRects = range.getClientRects();
+    let length = clientRects.length;
+    const domRect: ClientRect[] = [];
+    for (let i = 0; i < length; i++) {
+        const item = <ClientRect> clientRects.item(i);
+        if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
+            domRect.push(item);
+        }
+    }
+    let bounds: BoxRectDimension;
+    let maxTop = Number.NEGATIVE_INFINITY;
+    length = domRect.length;
+    if (length) {
+        bounds = assignRect(domRect[0]);
+        for (let i = 1 ; i < length; i++) {
+            const rect = domRect[i];
+            if (rect.left < bounds.left) {
+                bounds.left = rect.left;
+            }
+            if (rect.right > bounds.right) {
+                bounds.right = rect.right;
+            }
+            if (rect.top < bounds.top) {
+                bounds.top = rect.top;
+            }
+            if (rect.bottom > bounds.bottom) {
+                bounds.bottom = rect.bottom;
+            }
+            bounds.width += rect.width;
+            if (rect.top > maxTop) {
+                maxTop = rect.top;
+            }
+        }
+        bounds.height = bounds.bottom - bounds.top;
+        if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
+            bounds.numberOfLines = domRect.length - 1;
+        }
+    }
+    else {
+        bounds = newBoxRectDimension();
+    }
+    return <BoxRectDimension> bounds;
 }
 
 export function removeElementsByClassName(className: string) {

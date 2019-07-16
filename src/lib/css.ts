@@ -2,7 +2,6 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { CSS, STRING, UNIT, XML } from './regex';
 
-import { getElementCache, setElementCache } from './session';
 import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isString, replaceMap, resolvePath, spliceString } from './util';
 
 type CSSKeyframesData = squared.lib.css.CSSKeyframesData;
@@ -39,17 +38,15 @@ export const BOX_BORDER = [
 ];
 export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
 
-export function getStyle(element: Element | null, pseudoElt = '', cache = true): CSSStyleDeclaration {
+export function getStyle(element: Element | null, pseudoElt = ''): CSSStyleDeclaration {
     if (element) {
-        if (cache) {
-            const style = getElementCache(element, 'style' + pseudoElt, '0');
-            if (style) {
-                return style;
-            }
+        const cached = element['__style' + pseudoElt];
+        if (cached) {
+            return cached;
         }
         if (hasComputedStyle(element)) {
             const style = getComputedStyle(element, pseudoElt);
-            setElementCache(element, 'style' + pseudoElt, '0', style);
+            element['__style' + pseudoElt] = style;
             return style;
         }
         return <CSSStyleDeclaration> { display: 'inline' };

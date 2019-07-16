@@ -153,6 +153,10 @@ export default abstract class NodeGroupUI extends NodeUI {
         return false;
     }
 
+    get styleText() {
+        return false;
+    }
+
     get multiline() {
         return false;
     }

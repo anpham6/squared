@@ -342,14 +342,14 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     function getMarginOffset() {
                         let offset: number;
                         if (below.lineHeight > 0 && below.cssTry('line-height', 'normal')) {
-                            offset = $session.getClientRect(<Element> below.element, below.sessionId).top - below.marginTop;
+                            offset = $session.actualClientRect(<Element> below.element, below.sessionId).top - below.marginTop;
                             below.cssFinally('line-height');
                         }
                         else {
                             offset = below.linear.top;
                         }
                         if (above.lineHeight > 0 && above.cssTry('line-height', 'normal')) {
-                            offset -= $session.getClientRect(<Element> above.element, above.sessionId).bottom + above.marginBottom;
+                            offset -= $session.actualClientRect(<Element> above.element, above.sessionId).bottom + above.marginBottom;
                             above.cssFinally('line-height');
                         }
                         else {

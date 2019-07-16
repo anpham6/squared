@@ -314,12 +314,16 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public visibleElement(element: Element) {
-        const rect = $session.getClientRect(element, this.sessionId);
+        const rect = $session.actualClientRect(element, this.sessionId);
         if (withinViewport(rect)) {
-            if (rect.width > 0 && rect.height > 0) {
-                return true;
-            }
             const style = $css.getStyle(element);
+            if (rect.width > 0 && rect.height > 0) {
+                if (style.getPropertyValue('visibility') === 'visible') {
+                    return true;
+                }
+                const position = style.getPropertyValue('position');
+                return position !== 'absolute' && position !== 'fixed';
+            }
             return element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' ||
                 rect.width > 0 && style.getPropertyValue('float') !== 'none' ||
                 style.getPropertyValue('clear') !== 'none' ||

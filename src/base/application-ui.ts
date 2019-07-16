@@ -368,10 +368,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (!resetBounds && direction.size) {
                 resetBounds = true;
             }
+            for (const item of this.processing.excluded) {
+                if (!item.pageFlow) {
+                    item.cssTry('display', 'none');
+                }
+            }
             (node.parent as T).setBounds();
             for (const item of CACHE) {
                 if (!item.pseudoElement) {
                     item.setBounds(preAlignment[item.id] === undefined && !resetBounds);
+                    if (node.styleText) {
+                        item.textBounds = $dom.getRangeClientRect(<Element> node.element);
+                    }
                 }
                 else {
                     const element = (item.actualParent as T).element;
@@ -392,11 +400,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         element.id = id;
                     }
                 }
+
             }
             for (const item of this.processing.excluded) {
                 if (!item.lineBreak) {
                     item.setBounds();
                     item.saveAsInitial();
+                }
+                if (!item.pageFlow) {
+                    item.cssFinally('display');
                 }
             }
             for (const item of CACHE) {
@@ -1305,10 +1317,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else if (leftAbove.length || rightAbove.length) {
                     let top = node.linear.top;
-                    if (node.textElement && !node.plainText) {
-                        const rect = $session.getRangeClientRect(<Element> node.element, node.sessionId);
-                        if (rect.top > top) {
-                            top = rect.top;
+                    if (node.styleText) {
+                        const textBounds = node.textBounds;
+                        if (textBounds && textBounds.top > top) {
+                            top = textBounds.top;
                         }
                     }
                     if (leftAbove.some(item => top >= item.linear.bottom) || rightAbove.some(item => top >= item.linear.bottom)) {
