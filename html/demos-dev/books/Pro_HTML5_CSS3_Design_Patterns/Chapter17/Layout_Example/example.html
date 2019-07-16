@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+		<title>Layout Example</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="site.css"   media="all" />
+    <link rel="stylesheet" href="page.css"   media="all" />
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+<div id="page">
+
+  <div id="preheader">
+    <p class="part1"><a href="#main">Skip to main content</a></p>
+    <p class="part2">Preheader message </p>
+  </div>
+
+  <div id="header"><div class="oi">
+
+    <div id="title"><h1>Layout Example</h1><div class="float-divider"></div>
+      <div class="menu">
+        <h3 class="menu-head" >Menu 1</h3> 
+        <ul class="dropdown hidden">
+         <li class="menu-item"><a href="#">menu item</a></li>
+         <li class="menu-item"><a href="#">menu item</a></li>
+         <li class="menu-item"><a href="#">menu item</a></li>
+         <li class="menu-item"><a href="#">menu item</a></li>
+        </ul>      
+      </div>
+      <div class="menu">
+        <h3 class="menu-head" >Menu 2</h3> 
+        <ul class="dropdown hidden">
+         <li class="menu-item"><a href="#">menu item</a></li>
+         <li class="menu-item"><a href="#">menu item</a></li>
+         <li class="menu-item"><a href="#">menu item</a></li>
+         <li class="menu-item"><a href="#">menu item</a></li>
+        </ul>      
+      </div>
+    </div> 
+       
+    <div id="search"><h3>Search:</h3> 
+     <form method="post" action="http://www.tipjar.com/cgi-bin/test">
+      <input type="text"   id="searchtext" name="searchtext" value="" size="32" />
+      <input type="submit" id="find" name="find" class="button" value="Search"  />
+     </form>
+     <p class="message">Search message</p>
+    </div>
+  <div class="float-divider"></div></div></div>
+
+  <div id="postheader">
+    <p class="breadcrumbs"><a href="#">Home</a> » <a href="#">Layouts</a> 
+       » Layout Example</p>
+    <p class="sequential"><a href="#">« Previous</a> | <a href="#">Next »</a></p>
+  </div>
+
+
+  <div id="body">
+
+    <div id="nav"><div class="oi"><h2 class="screenreader-only">Navigation</h2>
+
+      <div id="site-map" class="rollup section"><h3 class="rollup-trigger">Site Map</h3> 
+        <ul class="block">
+         <li><a href="http://www.cssdesignpatterns.com">cssDesignPatterns</a></li>
+         <li><a href="http://www.apress.com">apress.com</a></li>
+        </ul>
+        <p class="more"><a href="#">» More Links</a></p>
+      </div>
+      
+      <div id="links" class="rollup section"><h3 class="rollup-trigger">Links</h3> 
+        <ul class="block">
+         <li>&middot;&nbsp;<a href="#">Link1</a></li>
+         <li>&middot;&nbsp;<a href="#">Link2</a></li>
+         <li>&middot;&nbsp;<a href="#">Link3</a></li>
+         <li>&middot;&nbsp;<a href="#">Link4</a></li>
+        </ul>
+        <p class="more"><a href="#">» More Products</a></p>
+      </div>
+
+    </div></div>
+    
+    <div id="main"><div class="oi"><h2 class="screenreader-only">Main</h2>
+
+     <ul class="tabs">
+      <li class="selected"><h3 class="tab-label">Product 1</h3>
+       <div id="section1" class="tab-content"><div class="oi2">
+        <h4>Product 1 Content</h4>
+        <p>This is the message of tab 1. More message...                               I added more to this message to show how the tab automatically displays scrollbars when it exceeds the height and/or width of the tab container. Most of this text is not shown in the book to save room in the example. Note that Internet Explorer 6 has a bug that requires you to fix the width of this content. Also note that you add margins, border, and padding to the outside-in box rather than the tab so that the tab's scrollbar is located in the proper place.
+        </p></div></div></li>
+
+      <li><h3 class="tab-label">Product  2</h3>
+       <div id="section2" class="tab-content"><div class="oi2">
+        <h4>Product 2 Content</h4><p>This is the message of tab 2.</p></div></div></li>
+
+      <li><h3 class="tab-label">Product  3</h3>
+       <div id="section2" class="tab-content"><div class="oi2">
+        <h4>Product 3 Content</h4><p>This is the message of tab 3.</p></div></div></li>
+
+     </ul>
+    <div class="float-divider"></div></div></div>
+
+    <div id="extras"><div class="oi"><h2 class="screenreader-only">Extras</h2>
+
+      <div id="news" class="rollup section"><h3 class="rollup-trigger">News</h3> 
+        <p>Content: This is a good place for press releases and news.</p>
+        <p class="more"><a href="#">» More News</a></p>
+      </div>
+
+      <div id="about-us" class="rollup section"><h3 class="rollup-trigger">About us</h3> 
+        <p>Content: This is a good place for company information. </p>
+        <p class="more"><a href="#">» More About Us</a></p>
+      </div>
+    </div></div>
+
+  </div>
+  
+  
+  <div id="footer">
+    <ul class="inline">
+     <li><a href="http://www.apress.com">apress.com</a></li>
+    </ul>
+    <p class="copyright">Copyright &copy; 2011 Michael Bowers All rights reserved.</p>
+  </div>
+
+</div>
+
+
+
+
+
+
+
+</body>
+</html>

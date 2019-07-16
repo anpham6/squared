@@ -303,6 +303,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (parent) {
             node.depth = parent.depth + 1;
         }
+        if (element === undefined && parent && parent.naturalElement) {
+            node.actualParent = parent;
+        }
         if (children) {
             for (const item of children) {
                 item.parent = node;
@@ -687,12 +690,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     break;
                 case 'open-quote':
                     if (pseudoElt === '::before') {
-                        content = nested % 2 === 0 ? '&quot;' : "'";
+                        content = nested % 2 === 0 ? '&#8220;' : "&#8216;";
                     }
                     break;
                 case 'close-quote':
                     if (pseudoElt === '::after') {
-                        content = nested % 2 === 0 ? '&quot;' : "'";
+                        content = nested % 2 === 0 ? '&#8221;' : "&#8217;";
                     }
                     break;
                 default:
@@ -895,6 +898,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setBaseLayout(layoutName: string) {
+        const controller = this.controllerHandler;
         const processing = this.processing;
         const session = this.session;
         const CACHE = processing.cache;
@@ -1098,11 +1102,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         let layout: LayoutUI<T> | undefined;
                         let segEnd: T | undefined;
                         if (horizontal.length > 1) {
-                            layout = this.controllerHandler.processTraverseHorizontal(new LayoutUI(parentY, nodeY, 0, 0, horizontal), axisY);
+                            layout = controller.processTraverseHorizontal(new LayoutUI(parentY, nodeY, 0, 0, horizontal), axisY);
                             segEnd = horizontal[horizontal.length - 1];
                         }
                         else if (vertical.length > 1) {
-                            layout = this.controllerHandler.processTraverseVertical(new LayoutUI(parentY, nodeY, 0, 0, vertical), axisY);
+                            layout = controller.processTraverseVertical(new LayoutUI(parentY, nodeY, 0, 0, vertical), axisY);
                             segEnd = vertical[vertical.length - 1];
                             if (segEnd.horizontalAligned && segEnd !== axisY[length - 1]) {
                                 segEnd.addAlign(NODE_ALIGNMENT.EXTENDABLE);
@@ -1194,7 +1198,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
                         let layout = this.createLayoutControl(parentY, nodeY);
                         if (layout.containerType === 0) {
-                            const result = nodeY.length ? this.controllerHandler.processUnknownParent(layout) : this.controllerHandler.processUnknownChild(layout);
+                            const result = nodeY.length ? controller.processUnknownParent(layout) : controller.processUnknownChild(layout);
                             if (result.next === true) {
                                 continue;
                             }
@@ -1365,20 +1369,22 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             layout.add(NODE_ALIGNMENT.RIGHT);
         }
         if (inlineBelow.length) {
+            const { node, parent } = layout;
             if (inlineBelow.length > 1) {
                 inlineBelow[0].addAlign(NODE_ALIGNMENT.EXTENDABLE);
             }
-            inlineBelow.unshift(layout.node);
-            const parent = this.createNode(undefined, true, layout.parent, inlineBelow);
-            parent.actualParent = layout.parent;
+            inlineBelow.unshift(node);
+            const wrapper = this.createNode(undefined, true, parent, inlineBelow);
+            wrapper.containerName = node.containerName;
+            wrapper.inherit(node, 'boxStyle');
             this.addLayout(new LayoutUI(
-                layout.parent,
                 parent,
+                wrapper,
                 containerType,
-                alignmentType | (layout.parent.blockStatic ? NODE_ALIGNMENT.BLOCK : 0),
+                alignmentType | (parent.blockStatic ? NODE_ALIGNMENT.BLOCK : 0),
                 inlineBelow
             ));
-            layout.parent = parent;
+            layout.parent = wrapper;
         }
         if (inlineAbove.length) {
             layerIndex.push(inlineAbove);

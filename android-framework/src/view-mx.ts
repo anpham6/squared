@@ -334,8 +334,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 else if (renderParent.layoutRelative) {
-                    node.anchor(horizontal ? 'left' : 'top', 'true', overwrite);
-                    node.anchor(horizontal ? 'right' : 'bottom', 'true', overwrite);
+                    node.anchor(horizontal ? 'centerHorizontal' : 'centerVertical', 'true', overwrite);
                     return true;
                 }
             }
@@ -583,10 +582,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 const documentParent = this.documentParent;
                 let adjustViewBounds = false;
                 if (this.documentBody) {
-                    if (!this.hasWidth && this.renderChildren.some(node => node.alignParent('right'))) {
+                    if (this.css('width') === '100%' || this.css('minWidth') === '100%' || !this.hasWidth && this.renderChildren.some(node => node.alignParent('right'))) {
                         this.setLayoutWidth('match_parent', false);
                     }
-                    if (!this.hasHeight && this.renderChildren.some(node => node.alignParent('bottom'))) {
+                    if (this.css('height') === '100%' || this.css('minHeight') === '100%' || !this.hasHeight && this.renderChildren.some(node => node.alignParent('bottom'))) {
                         this.setLayoutHeight('match_parent', false);
                     }
                 }
@@ -894,8 +893,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (this.floating) {
                                 floating = this.float;
                             }
-                            if (floating !== '' && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
+                            if (floating !== '' && !renderParent.naturalElement && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
                                 renderParent.mergeGravity('layout_gravity', floating);
+                                floating = '';
                             }
                             if (this.centerAligned) {
                                 this.mergeGravity('layout_gravity', checkTextAlign('center'));
@@ -966,6 +966,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (isHorizontalAlign(alignment) && (this.blockWidth || renderParent.inlineWidth && this.onlyChild || !overwrite && this.outerWrapper && this.hasPX('maxWidth'))) {
                         return;
                     }
+                    else if (renderParent.layoutRelative) {
+                        if (alignment === STRING_ANDROID.CENTER_HORIZONTAL && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
+                            this.anchorDelete('left', 'right');
+                            this.anchor('centerHorizontal', 'true');
+                            return;
+                        }
+                    }
                     else if (renderParent.layoutConstraint) {
                         if (!renderParent.layoutHorizontal && !this.positioned) {
                             switch (alignment) {
@@ -974,17 +981,23 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     break;
                                 case 'right':
                                 case 'end':
-                                    this.anchor('right', 'parent', false);
+                                    if (this.alignSibling('rightLeft') === '') {
+                                        this.anchor('right', 'parent', false);
+                                    }
                                     break;
                                 case 'bottom':
                                     this.anchor('bottom', 'parent', false);
                                     break;
                                 case 'left':
                                 case 'start':
-                                    this.anchor('left', 'parent', false);
+                                    if (this.alignSibling('leftRight') === '') {
+                                        this.anchor('left', 'parent', false);
+                                    }
                                     break;
                                 case STRING_ANDROID.CENTER_HORIZONTAL:
-                                    this.anchorParent(STRING_ANDROID.HORIZONTAL, undefined, undefined, true);
+                                    if (this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
+                                        this.anchorParent(STRING_ANDROID.HORIZONTAL, undefined, undefined, true);
+                                    }
                                     break;
                             }
                         }

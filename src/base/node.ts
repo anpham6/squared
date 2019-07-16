@@ -1254,7 +1254,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     private convertBorderWidth(index: number) {
-        if (this.styleElement) {
+        if (!this.plainText) {
             const value = this.css($css.BOX_BORDER[index][0]);
             if (value !== 'none') {
                 const width = this.css($css.BOX_BORDER[index][1]);
@@ -2265,16 +2265,27 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get visibleStyle() {
         let result = this._cached.visibleStyle;
         if (result === undefined) {
-            const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-            const backgroundColor = this.backgroundColor !== '';
-            const backgroundImage = this.backgroundImage !== '';
-            result = {
-                background: borderWidth || backgroundImage || backgroundColor,
-                borderWidth,
-                backgroundImage,
-                backgroundColor,
-                backgroundRepeat: this.css('backgroundRepeat') !== 'no-repeat'
-            };
+            if (this.plainText) {
+                result = {
+                    background: false,
+                    borderWidth: false,
+                    backgroundImage: false,
+                    backgroundColor: false,
+                    backgroundRepeat: false
+                };
+            }
+            else {
+                const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
+                const backgroundColor = this.backgroundColor !== '';
+                const backgroundImage = this.backgroundImage !== '';
+                result = {
+                    background: borderWidth || backgroundImage || backgroundColor,
+                    borderWidth,
+                    backgroundImage,
+                    backgroundColor,
+                    backgroundRepeat: this.css('backgroundRepeat') !== 'no-repeat'
+                };
+            }
             this._cached.visibleStyle = result;
         }
         return result;

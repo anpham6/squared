@@ -467,7 +467,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public inherit(node: T, ...modules: string[]) {
+    public inherit(node: T, ...modules: ('base' | 'initial' | 'alignment' | 'styleMap' | 'textStyle' | 'boxStyle')[]) {
         for (const name of modules) {
             switch (name) {
                 case 'base':
@@ -522,6 +522,52 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 case 'textStyle':
                     this.cssApply(node.getTextStyle());
                     this.fontSize = node.fontSize;
+                    break;
+                case 'boxStyle':
+                    const backgroundColor = node.backgroundColor;
+                    const backgroundImage = node.backgroundImage;
+                    this.cssApply({
+                        backgroundColor,
+                        backgroundImage,
+                        backgroundRepeat: node.css('backgroundRepeat'),
+                        backgroundSize: node.css('backgroundSize'),
+                        backgroundPositionX: node.css('backgroundPositionX'),
+                        backgroundPositionY: node.css('backgroundPositionY'),
+                        backgroundClip: node.css('backgroundClip'),
+                        border: 'initial',
+                        borderRadius: 'initial',
+                        borderTopWidth: node.css('borderTopWidth'),
+                        borderBottomWidth: node.css('borderBottomWidth'),
+                        borderRightWidth: node.css('borderRightWidth'),
+                        borderLeftWidth: node.css('borderLeftWidth'),
+                        borderTopColor: node.css('borderTopColor'),
+                        borderBottomColor: node.css('borderBottomColor'),
+                        borderRightColor: node.css('borderRightColor'),
+                        borderLeftColor: node.css('borderLeftColor'),
+                        borderTopStyle: node.css('borderTopStyle'),
+                        borderBottomStyle: node.css('borderBottomStyle'),
+                        borderRightStyle: node.css('borderRightStyle'),
+                        borderLeftStyle: node.css('borderLeftStyle'),
+                        borderTopLeftRadius: node.css('borderTopLeftRadius'),
+                        borderTopRightRadius: node.css('borderTopRightRadius'),
+                        borderBottomRightRadius: node.css('borderBottomRightRadius'),
+                        borderBottomLeftRadius: node.css('borderBottomLeftRadius')
+                    }, true);
+                    this.setCacheValue('backgroundColor', backgroundColor);
+                    this.setCacheValue('backgroundImage', backgroundImage);
+                    node.cssApply({
+                        borderTopWidth: '0px',
+                        borderBottomWidth: '0px',
+                        borderRightWidth: '0px',
+                        borderLeftWidth: '0px',
+                        backgroundColor: 'transparent',
+                        backgroundImage: 'none',
+                        border: '0px none solid',
+                        borderRadius: '0px'
+                    }, true);
+                    node.setCacheValue('backgroundColor', '');
+                    node.setCacheValue('backgroundImage', '');
+                    node.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING, this);
                     break;
             }
         }

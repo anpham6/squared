@@ -770,8 +770,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (layout.same(node => node.float)) {
                 layout.setType(CONTAINER_NODE.CONSTRAINT, $e.NODE_ALIGNMENT.FLOAT);
             }
-            else {
+            else if (cleared.size) {
                 layout.renderType |= $e.NODE_ALIGNMENT.FLOAT | $e.NODE_ALIGNMENT.HORIZONTAL;
+            }
+            else {
+                layout.setType(layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $e.NODE_ALIGNMENT.VERTICAL);
             }
         }
         else if (floated.size && cleared.size) {
@@ -2087,10 +2090,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                     previousRowLeft = undefined;
                                 }
-                                if (centerAligned && items.length === 1 && !previous.blockStatic) {
-                                    previous.anchorDelete(alignParent);
-                                    previous.anchor('centerHorizontal', 'true');
-                                }
                                 anchored = true;
                             }
                             else {
@@ -2098,6 +2097,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     previousRowLeft = undefined;
                                 }
                                 previous.anchor(alignParent, 'true');
+                            }
+                            if (items.length === 1 && (previous.centerAligned || centerAligned && !previous.blockStatic)) {
+                                previous.anchorDelete(alignParent);
+                                previous.anchor('centerHorizontal', 'true');
                             }
                             if (textNewRow && multiline) {
                                 checkSingleLine(previous, checkLineWrap, false);

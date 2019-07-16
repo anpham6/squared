@@ -502,8 +502,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 drawable = `@drawable/${drawable}`;
                 if (node.documentBody) {
                     const style = node.visibleStyle;
-                    const backgroundRepeat = style.backgroundRepeat;
-                    if (node.blockStatic && (style.backgroundImage && backgroundRepeat || !node.has('width') && !node.has('maxWidth') && (backgroundRepeat || node.backgroundColor !== '' || node.css('backgroundSize') === 'cover'))) {
+                    if (style.backgroundImage && node.blockStatic && !node.has('width') && !node.has('maxWidth') && (style.backgroundRepeat || node.css('backgroundSize') === 'cover') || node.backgroundColor !== '') {
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
                         return;
                     }
