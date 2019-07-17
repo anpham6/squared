@@ -9,19 +9,21 @@ const $e = squared.base.lib.enumeration;
 const isFlexible = (node: View) => !node.documentParent.layoutElement && !node.display.startsWith('table');
 
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
+    public is(node: T) {
+        return node.pageFlow;
+    }
+
     public condition(node: T, parent: T) {
-        if (node.pageFlow) {
-            if (node.has('width', $e.CSS_UNIT.PERCENT, { not: '100%' }) && !parent.layoutConstraint && (
-                    node.documentRoot ||
-                    node.hasPX('height') ||
-                    (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width'))
-               ))
-            {
-                return isFlexible(node);
-            }
-            else if (node.has('height', $e.CSS_UNIT.PERCENT, { not: '100%' }) && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
-                return isFlexible(node);
-            }
+        if (node.has('width', $e.CSS_UNIT.PERCENT, { not: '100%' }) && !parent.layoutConstraint && (
+                node.documentRoot ||
+                node.hasPX('height') ||
+                (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width'))
+            ))
+        {
+            return isFlexible(node);
+        }
+        else if (node.has('height', $e.CSS_UNIT.PERCENT, { not: '100%' }) && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
+            return isFlexible(node);
         }
         return false;
     }

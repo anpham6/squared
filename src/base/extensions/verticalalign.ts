@@ -9,6 +9,10 @@ const {
 } = squared.lib;
 
 export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
+    public is() {
+        return true;
+    }
+
     public condition(node: T) {
         let valid = false;
         let alignable = 0;

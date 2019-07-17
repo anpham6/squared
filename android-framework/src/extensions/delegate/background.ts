@@ -14,30 +14,34 @@ const {
 
 const $e = squared.base.lib.enumeration;
 
-const isFullScreen = (node: View) => node.visibleStyle.borderWidth && (node.backgroundColor !== '' || (<HTMLBodyElement> node.element).scrollHeight < window.innerHeight) && node.css('height') !== '100%' && node.css('minHeight') !== '100%';
+const isFullScreen = (node: View) => node.visibleStyle.borderWidth && (node.backgroundColor !== '' || (<HTMLBodyElement> node.element).scrollHeight < window.innerHeight) && !node.hasPX('width') && !node.inline && node.css('height') !== '100%' && node.css('minHeight') !== '100%';
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
+    public readonly removeIs = true;
+
+    public is(node: T) {
+        return node.documentBody;
+    }
+
     public condition(node: T) {
-        if (node.documentBody) {
-            if (isFullScreen(node)) {
-                return true;
-            }
-            else {
-                const scrollHeight = (<HTMLBodyElement> node.element).scrollHeight;
-                const backgroundImage = $ResourceUI.parseBackgroundImage(node);
-                if (backgroundImage) {
-                    const backgroundRepeat = node.css('backgroundRepeat').split($regex.XML.SEPARATOR);
-                    for (let i = 0; i < backgroundImage.length; i++) {
-                        const image = backgroundImage[i];
-                        if (typeof image === 'string' && image.startsWith('url(')) {
-                            const repeat = backgroundRepeat[i];
-                            if (repeat !== 'repeat' && repeat !== 'repeat-y') {
-                                const asset = <ImageAsset> (this.resource.getRawData(image) || this.resource.getImage($css.resolveURL(image)));
-                                if (asset) {
-                                    const height = asset.height;
-                                    if (height > 0 && height < scrollHeight) {
-                                        return true;
-                                    }
+        if (isFullScreen(node)) {
+            return true;
+        }
+        else {
+            const scrollHeight = (<HTMLBodyElement> node.element).scrollHeight;
+            const backgroundImage = $ResourceUI.parseBackgroundImage(node);
+            if (backgroundImage) {
+                const backgroundRepeat = node.css('backgroundRepeat').split($regex.XML.SEPARATOR);
+                for (let i = 0; i < backgroundImage.length; i++) {
+                    const image = backgroundImage[i];
+                    if (typeof image === 'string' && image.startsWith('url(')) {
+                        const repeat = backgroundRepeat[i];
+                        if (repeat !== 'repeat' && repeat !== 'repeat-y') {
+                            const asset = <ImageAsset> (this.resource.getRawData(image) || this.resource.getImage($css.resolveURL(image)));
+                            if (asset) {
+                                const height = asset.height;
+                                if (height > 0 && height < scrollHeight) {
+                                    return true;
                                 }
                             }
                         }
@@ -69,17 +73,20 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             container.setLayoutHeight('match_parent');
         }
         const backgroundImage = node.backgroundImage;
-        container.cssApply({
-            backgroundImage,
-            backgroundSize,
-            backgroundRepeat: node.css('backgroundRepeat'),
-            backgroundPositionX: node.css('backgroundPositionX'),
-            backgroundPositionY: node.css('backgroundPositionY'),
-            backgroundClip: node.css('backgroundClip'),
-            border: '0px none solid',
-            borderRadius: '0px'
-        });
-        container.setCacheValue('backgroundImage', backgroundImage);
+        if (backgroundImage !== '') {
+            container.cssApply({
+                backgroundImage,
+                backgroundSize,
+                backgroundRepeat: node.css('backgroundRepeat'),
+                backgroundPositionX: node.css('backgroundPositionX'),
+                backgroundPositionY: node.css('backgroundPositionY'),
+                backgroundClip: node.css('backgroundClip'),
+                border: '0px none solid',
+                borderRadius: '0px'
+            });
+            container.setCacheValue('backgroundImage', backgroundImage);
+            node.setCacheValue('backgroundImage', '');
+        }
         if (fullScreen) {
             const backgroundColor = node.backgroundColor;
             if (backgroundColor !== '') {
@@ -89,10 +96,9 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                 node.setCacheValue('backgroundColor', '');
             }
         }
+        node.unsetCache('visibleStyle');
         container.unsetCache('visibleStyle');
         container.unsafe('excludeResource', $e.NODE_RESOURCE.BOX_SPACING);
-        node.setCacheValue('backgroundImage', '');
-        node.unsetCache('visibleStyle');
         return {
             parent: container,
             renderAs: container,

@@ -109,8 +109,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         };
     }
 
+    public is(node: T) {
+        return node.gridElement;
+    }
+
     public condition(node: T) {
-        return node.gridElement && node.length > 0;
+        return node.length > 0;
     }
 
     public processNode(node: T) {

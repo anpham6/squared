@@ -29,8 +29,12 @@ function outsideX(node: View, parent: View) {
 }
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
+    public is(node: T) {
+        return this.application.userSettings.supportNegativeLeftTop && !node.documentRoot && node.css('overflowX') !== 'hidden';
+    }
+
     public condition(node: T) {
-        return this.application.userSettings.supportNegativeLeftTop && !node.documentRoot && node.css('overflowX') !== 'hidden' && node.some((item: T) => outsideX(item, node));
+        return node.some((item: T) => outsideX(item, node));
     }
 
     public processNode(node: T, parent: T) {

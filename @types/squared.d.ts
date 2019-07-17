@@ -227,6 +227,8 @@ declare namespace base {
         readonly documentBase: boolean;
         readonly eventOnly: boolean;
         readonly cascadeAll: boolean;
+        readonly removeIs: boolean;
+        readonly removeCondition: boolean;
         included(element: HTMLElement): boolean;
         init(element: HTMLElement): boolean;
         is(node: T): boolean;

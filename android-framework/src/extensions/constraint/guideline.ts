@@ -19,6 +19,10 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
         circlePosition: false
     };
 
+    public is() {
+        return true;
+    }
+
     public condition(node: T) {
         return this.included(<HTMLElement> node.element) && node.length > 0;
     }

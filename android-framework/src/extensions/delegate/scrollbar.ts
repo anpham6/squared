@@ -9,8 +9,12 @@ const $css = squared.lib.css;
 const $e = squared.base.lib.enumeration;
 
 export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {
+    public is(node: T) {
+        return node.length > 0;
+    }
+
     public condition(node: T) {
-        return node.length > 0 && (node.overflowX && node.hasPX('width') || node.overflowY && node.hasHeight && node.hasPX('height') || this.included(<HTMLElement> node.element));
+        return node.overflowX && node.hasPX('width') || node.overflowY && node.hasHeight && node.hasPX('height') || this.included(<HTMLElement> node.element);
     }
 
     public processNode(node: T, parent: T) {

@@ -26,8 +26,12 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         };
     }
 
+    public is(node: T) {
+        return node.flexElement;
+    }
+
     public condition(node: T) {
-        return node.flexElement && node.length > 0;
+        return node.length > 0;
     }
 
     public processNode(node: T) {

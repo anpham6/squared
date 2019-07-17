@@ -804,7 +804,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 );
                                 trimming = true;
                             }
-                            else if (node.naturalElements.length === 0 && textContent.trim() === '' && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
+                            else if (node.naturalElements.length === 0 && textContent && textContent.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                                 value = textContent;
                             }
                             break;

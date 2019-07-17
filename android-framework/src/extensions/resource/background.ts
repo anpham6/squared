@@ -502,80 +502,88 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 drawable = `@drawable/${drawable}`;
                 if (node.documentBody) {
                     const style = node.visibleStyle;
-                    if (style.backgroundImage && node.blockStatic && !node.has('width') && !node.has('maxWidth') && (style.backgroundRepeat || node.css('backgroundSize') === 'cover') || node.backgroundColor !== '') {
+                    if (node.blockStatic && !node.hasPX('width') && !node.hasPX('maxWidth') && (style.backgroundImage && style.backgroundRepeat || node.backgroundColor !== '')) {
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
                         return;
                     }
-                    const parent = node.parent as T;
-                    if (!parent.visible) {
-                        const background = parent.android('background');
-                        if (background !== '') {
-                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, background);
-                        }
-                    }
+                    setHtmlBackground(node);
                 }
                 node.android('background', drawable, false);
+            }
+        }
+        function setHtmlBackground(node: T) {
+            const parent = node.actualParent as T;
+            if (!parent.visible) {
+                const background = parent.android('background');
+                if (background !== '') {
+                    setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, background);
+                }
             }
         }
         const drawOutline = this.options.drawOutlineAsInsetBorder;
         for (const node of application.processing.cache) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
-            if (stored && node.hasResource($e.NODE_RESOURCE.BOX_STYLE)) {
-                if (node.inputElement) {
-                    const companion = node.companion;
-                    if (companion && !companion.visible && companion.tagName === 'LABEL') {
-                        const style: BoxStyle = companion.data(Resource.KEY_NAME, 'boxStyle');
-                        if (style && style.backgroundColor) {
-                            stored.backgroundColor = style.backgroundColor;
+            if (stored) {
+                if (node.hasResource($e.NODE_RESOURCE.BOX_STYLE)) {
+                    if (node.inputElement) {
+                        const companion = node.companion;
+                        if (companion && !companion.visible && companion.tagName === 'LABEL') {
+                            const style: BoxStyle = companion.data(Resource.KEY_NAME, 'boxStyle');
+                            if (style && style.backgroundColor) {
+                                stored.backgroundColor = style.backgroundColor;
+                            }
                         }
                     }
-                }
-                let [shapeData, layerListData] = this.getDrawableBorder(
-                    stored,
-                    [stored.borderTop, stored.borderRight, stored.borderBottom, stored.borderLeft],
-                    stored.border,
-                    this.getDrawableImages(node, stored),
-                    drawOutline && stored.outline ? getIndentOffset(stored.outline) : 0,
-                    false
-                );
-                const emptyBackground = shapeData === undefined && layerListData === undefined;
-                if (stored.outline && (drawOutline || emptyBackground)) {
-                    const outline = stored.outline;
-                    const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(
+                    let [shapeData, layerListData] = this.getDrawableBorder(
                         stored,
-                        [outline, outline, outline, outline],
-                        emptyBackground ? outline : undefined
+                        [stored.borderTop, stored.borderRight, stored.borderBottom, stored.borderLeft],
+                        stored.border,
+                        this.getDrawableImages(node, stored),
+                        drawOutline && stored.outline ? getIndentOffset(stored.outline) : 0,
+                        false
                     );
-                    if (emptyBackground) {
-                        shapeData = outlineShapeData;
-                        layerListData = outlineLayerListData;
-                    }
-                    else if (layerListData && outlineLayerListData) {
-                        layerListData[0].item = layerListData[0].item.concat(outlineLayerListData[0].item);
-                    }
-                }
-                if (shapeData) {
-                    setDrawableBackground(node, $xml.applyTemplate('shape', SHAPE_TMPL, shapeData));
-                }
-                else if (layerListData) {
-                    setDrawableBackground(node, $xml.applyTemplate('layer-list', LAYERLIST_TMPL, layerListData));
-                }
-                else if (stored.backgroundColor) {
-                    const color = getColorValue(stored.backgroundColor, false);
-                    if (color !== '') {
-                        if (node.documentBody) {
-                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
+                    const emptyBackground = shapeData === undefined && layerListData === undefined;
+                    if (stored.outline && (drawOutline || emptyBackground)) {
+                        const outline = stored.outline;
+                        const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(
+                            stored,
+                            [outline, outline, outline, outline],
+                            emptyBackground ? outline : undefined
+                        );
+                        if (emptyBackground) {
+                            shapeData = outlineShapeData;
+                            layerListData = outlineLayerListData;
                         }
-                        else {
-                            const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
-                            if (fontStyle) {
-                                fontStyle.backgroundColor = stored.backgroundColor;
+                        else if (layerListData && outlineLayerListData) {
+                            layerListData[0].item = layerListData[0].item.concat(outlineLayerListData[0].item);
+                        }
+                    }
+                    if (shapeData) {
+                        setDrawableBackground(node, $xml.applyTemplate('shape', SHAPE_TMPL, shapeData));
+                    }
+                    else if (layerListData) {
+                        setDrawableBackground(node, $xml.applyTemplate('layer-list', LAYERLIST_TMPL, layerListData));
+                    }
+                    else if (stored.backgroundColor) {
+                        const color = getColorValue(stored.backgroundColor, false);
+                        if (color !== '') {
+                            if (node.documentBody) {
+                                setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
                             }
                             else {
-                                node.android('background', color, false);
+                                const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
+                                if (fontStyle) {
+                                    fontStyle.backgroundColor = stored.backgroundColor;
+                                }
+                                else {
+                                    node.android('background', color, false);
+                                }
                             }
                         }
                     }
+                }
+                else if (node.documentBody) {
+                    setHtmlBackground(node);
                 }
             }
         }
@@ -1065,15 +1073,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         case '100% 100%':
                         case '100% auto':
                         case 'auto 100%':
+                        case 'cover':
+                            gravity = 'fill';
                             gravityX = 'fill_horizontal';
                             gravityY = 'fill_vertical';
-                        case 'cover':
-                            gravity = '';
                             tileMode = '';
                             tileModeX = '';
                             tileModeY = '';
                             position.left = 0;
                             position.top = 0;
+                            if (node.documentBody) {
+                                node.visibleStyle.backgroundRepeat = true;
+                            }
                             break;
                         default:
                             size.split(' ').forEach((dimen, index) => {

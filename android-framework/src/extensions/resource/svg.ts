@@ -160,6 +160,7 @@ const INTERPOLATOR_ANDROID = {
     linear: '@android:anim/linear_interpolator',
     overshoot: '@android:anim/overshoot_interpolator'
 };
+const PATH_ATTRIBUTES = ['name', 'value', 'fill', 'stroke', 'fillPattern', 'fillRule', 'strokeWidth', 'fillOpacity', 'strokeOpacity',  'strokeLinecap', 'strokeLinejoin', 'strokeLineJoin', 'strokeMiterlimit'];
 
 if ($constS) {
     Object.assign(INTERPOLATOR_ANDROID, {
@@ -1619,9 +1620,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         }
         const opacity = getOuterOpacity(target);
         const useTarget = $SvgBuild.asUse(target);
-        for (let attr in path) {
-            let value = useTarget ? target[attr] || path[attr] : path[attr];
-            if ($util.isString(value)) {
+        for (let attr of PATH_ATTRIBUTES) {
+            let value = useTarget && target[attr] || path[attr];
+            if (value) {
                 switch (attr) {
                     case 'name':
                         break;
@@ -1629,9 +1630,20 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         attr = 'pathData';
                         break;
                     case 'fill':
+                        attr = 'fillColor';
+                        if (value !== 'none' && result['aapt:attr'] === undefined) {
+                            const colorName = Resource.addColor(value);
+                            if (colorName !== '') {
+                                value = `@color/${colorName}`;
+                            }
+                        }
+                        else {
+                            continue;
+                        }
+                        break;
                     case 'stroke':
-                        attr += 'Color';
-                        if (value !== 'none' && (attr === 'stroke' || result['aapt:attr'] === undefined)) {
+                        attr = 'strokeColor';
+                        if (value !== 'none') {
                             const colorName = Resource.addColor(value);
                             if (colorName !== '') {
                                 value = `@color/${colorName}`;
@@ -1721,6 +1733,12 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
                 result[attr] = value;
             }
+        }
+        if (!result.strokeWidth) {
+            result.strokeColor = '';
+        }
+        else if (!result.strokeColor) {
+            result.strokeWidth = '';
         }
         const replaceMap = new Map<number, FillReplace>();
         const transformResult: $SvgAnimate[] = [];

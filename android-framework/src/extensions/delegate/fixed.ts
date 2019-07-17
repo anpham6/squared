@@ -23,50 +23,52 @@ export interface FixedData {
 }
 
 export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
+    public is(node: T) {
+        return node.naturalElement && (node.documentBody || node.contentBoxWidth > 0 || node.contentBoxHeight > 0);
+    }
+
     public condition(node: T) {
-        if (node.naturalElement && (node.documentBody || node.contentBoxWidth > 0 || node.contentBoxHeight > 0)) {
-            const absolute = node.filter((item: T) => !item.pageFlow && item.leftTopAxis && item.left >= 0 && item.right >= 0) as T[];
-            if (absolute.length) {
-                const paddingTop = node.paddingTop + (node.documentBody ? node.marginTop : 0);
-                const paddingRight = node.paddingRight + (node.documentBody ? node.marginRight : 0);
-                const paddingBottom = node.paddingBottom + (node.documentBody ? node.marginBottom : 0);
-                const paddingLeft = node.paddingLeft + (node.documentBody ? node.marginLeft : 0);
-                const children = new Set<T>();
-                let right = false;
-                let bottom = false;
-                for (const item of absolute) {
-                    const fixed = item.css('position') === 'fixed';
-                    if (item.hasPX('left')) {
-                        if (item.left >= 0 && item.left < paddingLeft) {
-                            children.add(item);
-                        }
-                    }
-                    else if (item.hasPX('right') && item.right >= 0 && (fixed || item.right < paddingRight || node.documentBody && node.hasPX('width'))) {
+        const absolute = node.filter((item: T) => !item.pageFlow && item.leftTopAxis && item.left >= 0 && item.right >= 0) as T[];
+        if (absolute.length) {
+            const paddingTop = node.paddingTop + (node.documentBody ? node.marginTop : 0);
+            const paddingRight = node.paddingRight + (node.documentBody ? node.marginRight : 0);
+            const paddingBottom = node.paddingBottom + (node.documentBody ? node.marginBottom : 0);
+            const paddingLeft = node.paddingLeft + (node.documentBody ? node.marginLeft : 0);
+            const children = new Set<T>();
+            let right = false;
+            let bottom = false;
+            for (const item of absolute) {
+                const fixed = item.css('position') === 'fixed';
+                if (item.hasPX('left')) {
+                    if (item.left >= 0 && item.left < paddingLeft) {
                         children.add(item);
-                        right = true;
-                    }
-                    else if (!item.rightAligned) {
-                        if (item.marginLeft < 0 && (node.documentRoot || $util.belowRange(item.linear.left, node.bounds.left))) {
-                            children.add(item);
-                        }
-                    }
-                    else if (item.marginRight < 0 && (node.documentRoot || $util.aboveRange(item.linear.right, node.bounds.right))) {
-                        children.add(item);
-                    }
-                    if (item.hasPX('top')) {
-                        if (item.top >= 0 && item.top < paddingTop) {
-                            children.add(item);
-                        }
-                    }
-                    else if (item.hasPX('bottom') && item.bottom >= 0 && (fixed || item.bottom < paddingBottom || node.documentBody && node.hasPX('height'))) {
-                        children.add(item);
-                        bottom = true;
                     }
                 }
-                if (children.size) {
-                    node.data(EXT_ANDROID.DELEGATE_FIXED, $c.STRING_BASE.EXT_DATA, <FixedData> { children: Array.from(children), right, bottom });
-                    return true;
+                else if (item.hasPX('right') && item.right >= 0 && (fixed || item.right < paddingRight || node.documentBody && node.hasPX('width'))) {
+                    children.add(item);
+                    right = true;
                 }
+                else if (!item.rightAligned) {
+                    if (item.marginLeft < 0 && (node.documentRoot || $util.belowRange(item.linear.left, node.bounds.left))) {
+                        children.add(item);
+                    }
+                }
+                else if (item.marginRight < 0 && (node.documentRoot || $util.aboveRange(item.linear.right, node.bounds.right))) {
+                    children.add(item);
+                }
+                if (item.hasPX('top')) {
+                    if (item.top >= 0 && item.top < paddingTop) {
+                        children.add(item);
+                    }
+                }
+                else if (item.hasPX('bottom') && item.bottom >= 0 && (fixed || item.bottom < paddingBottom || node.documentBody && node.hasPX('height'))) {
+                    children.add(item);
+                    bottom = true;
+                }
+            }
+            if (children.size) {
+                node.data(EXT_ANDROID.DELEGATE_FIXED, $c.STRING_BASE.EXT_DATA, <FixedData> { children: Array.from(children), right, bottom });
+                return true;
             }
         }
         return false;

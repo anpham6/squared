@@ -11,8 +11,12 @@ const {
 } = squared.lib;
 
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
-    public condition(node: T) {
+    public is(node: T) {
         return node.positionRelative || node.toFloat('verticalAlign', true) !== 0;
+    }
+
+    public condition() {
+        return true;
     }
 
     public processNode() {

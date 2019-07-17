@@ -17,20 +17,22 @@ export interface MaxWidthHeightData {
 }
 
 export default class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {
+    public is(node: T) {
+        return !node.inputElement;
+    }
+
     public condition(node: T, parent: T) {
-        if (!node.inputElement) {
-            let width = false;
-            let height = false;
-            if (!node.support.maxWidth && !isNaN(node.width) && node.hasPX('maxWidth') && !parent.hasAlign($e.NODE_ALIGNMENT.COLUMN)) {
-                width = true;
-            }
-            if (!node.support.maxHeight && !isNaN(node.height) && node.hasPX('maxHeight') && parent.hasHeight) {
-                height = true;
-            }
-            if (width || height) {
-                node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, $c.STRING_BASE.EXT_DATA, <MaxWidthHeightData> { width, height });
-                return true;
-            }
+        let width = false;
+        let height = false;
+        if (!node.support.maxWidth && !isNaN(node.width) && node.hasPX('maxWidth') && !parent.hasAlign($e.NODE_ALIGNMENT.COLUMN)) {
+            width = true;
+        }
+        if (!node.support.maxHeight && !isNaN(node.height) && node.hasPX('maxHeight') && parent.hasHeight) {
+            height = true;
+        }
+        if (width || height) {
+            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, $c.STRING_BASE.EXT_DATA, <MaxWidthHeightData> { width, height });
+            return true;
         }
         return false;
     }

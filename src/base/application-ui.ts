@@ -1173,35 +1173,51 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (nodeY.styleElement) {
+                            const prioritized = ApplicationUI.prioritizeExtensions(<HTMLElement> nodeY.element, extensions);
                             let next = false;
-                            ApplicationUI.prioritizeExtensions(<HTMLElement> nodeY.element, extensions).some((item: ExtensionUI<T>) => {
-                                if (item.is(nodeY) && item.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(item))) {
-                                    const result = item.processNode(nodeY, parentY);
-                                    if (result) {
-                                        if (result.output) {
-                                            this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
+                            function removeExtension(item: ExtensionUI<T>) {
+                                const index = extensions.indexOf(item);
+                                if (index !== -1) {
+                                    extensions.splice(index, 1);
+                                }
+                            }
+                            for (const item of prioritized) {
+                                if (item.is(nodeY)) {
+                                    if (item.removeIs) {
+                                        removeExtension(item);
+                                    }
+                                    if (item.condition(nodeY, parentY)) {
+                                        if (item.removeCondition) {
+                                            removeExtension(item);
                                         }
-                                        if (result.renderAs && result.outputAs) {
-                                            this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
-                                        }
-                                        if (result.parent) {
-                                            parentY = result.parent as T;
-                                        }
-                                        if (result.output && result.include !== false || result.include === true) {
-                                            if (nodeY.renderExtension === undefined) {
-                                                nodeY.renderExtension = [];
+                                        if (descendant === undefined || !descendant.includes(item)) {
+                                            const result = item.processNode(nodeY, parentY);
+                                            if (result) {
+                                                if (result.output) {
+                                                    this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
+                                                }
+                                                if (result.renderAs && result.outputAs) {
+                                                    this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
+                                                }
+                                                if (result.parent) {
+                                                    parentY = result.parent as T;
+                                                }
+                                                if (result.output && result.include !== false || result.include === true) {
+                                                    if (nodeY.renderExtension === undefined) {
+                                                        nodeY.renderExtension = [];
+                                                    }
+                                                    nodeY.renderExtension.push(item);
+                                                    item.subscribers.add(nodeY);
+                                                }
+                                                next = result.next === true;
+                                                if (result.complete || next) {
+                                                    break;
+                                                }
                                             }
-                                            nodeY.renderExtension.push(item);
-                                            item.subscribers.add(nodeY);
-                                        }
-                                        next = result.next === true;
-                                        if (result.complete || next) {
-                                            return true;
                                         }
                                     }
                                 }
-                                return false;
-                            });
+                            }
                             if (next) {
                                 continue;
                             }

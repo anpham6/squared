@@ -11,8 +11,12 @@ const $e = squared.base.lib.enumeration;
 const getInputName = (element: HTMLInputElement) => element.name ? element.name.trim() : '';
 
 export default class RadioGroup<T extends View> extends squared.base.ExtensionUI<T> {
+    public is(node: T) {
+        return node.is(CONTAINER_NODE.RADIO);
+    }
+
     public condition(node: T) {
-        return node.is(CONTAINER_NODE.RADIO) && getInputName(<HTMLInputElement> node.element) !== '' && !node.positioned;
+        return getInputName(<HTMLInputElement> node.element) !== '' && !node.positioned;
     }
 
     public processNode(node: T, parent: T) {

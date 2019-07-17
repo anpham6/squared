@@ -28,6 +28,8 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     public readonly eventOnly = false;
     public readonly documentBase = false;
     public readonly cascadeAll = false;
+    public readonly removeIs = false;
+    public readonly removeCondition = false;
 
     protected _application!: squared.base.ApplicationUI<T>;
 

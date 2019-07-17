@@ -8,6 +8,10 @@ import { EXT_NAME, STRING_BASE } from '../lib/constant';
 const $css = squared.lib.css;
 
 export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
+    public is() {
+        return true;
+    }
+
     public condition(node: T) {
         const backgroundImage = node.backgroundImage;
         if (backgroundImage !== '' && node.hasWidth && node.hasHeight && node.length === 0 && (this.included(<HTMLElement> node.element) || !node.dataset.use)) {
