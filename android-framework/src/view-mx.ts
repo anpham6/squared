@@ -136,6 +136,10 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
             adjustMinHeight(node, lineHeight);
             return;
         }
+        else if (node.plainText && (node.bounds.numberOfLines as number) > 1) {
+            node.android('minHeight', $css.formatPX(node.actualHeight / (node.bounds.numberOfLines as number)));
+            node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
+        }
         else {
             offset = (lineHeight - node.actualHeight) / 2;
         }
@@ -164,10 +168,12 @@ function adjustMinHeight(node: T, value: number) {
     }
 }
 
-function setSingleLine(node: T) {
-    if (node.textElement && node.textContent.trim().indexOf(' ') !== -1) {
+function setSingleLine(node: T, ellipsize = false) {
+    if (node.textElement && !node.multiline) {
         node.android('maxLines', '1');
-        node.android('ellipsize', 'end');
+        if (ellipsize && node.textContent.trim().indexOf(' ') !== -1) {
+            node.android('ellipsize', 'end');
+        }
     }
 }
 
@@ -1133,7 +1139,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             const boundsRight = this.bounds.right;
                             if (Math.floor(boundsRight) > boxRight) {
                                 if (!this.onlyChild && !this.alignParent('left')) {
-                                    setSingleLine(this);
+                                    setSingleLine(this, true);
                                 }
                                 continue;
                             }
@@ -1281,10 +1287,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         private alignLayout(renderParent: T) {
             if (this.layoutLinear) {
-                const renderChildren = this.renderChildren;
+                const children = this.renderChildren;
                 if (this.layoutVertical) {
                     if (!renderParent.layoutVertical && !renderParent.layoutFrame && !this.documentRoot && !this.hasAlign($e.NODE_ALIGNMENT.TOP)) {
-                        let firstChild = renderChildren[0];
+                        let firstChild = children[0];
                         if (firstChild.baseline) {
                             if (firstChild.renderChildren.length) {
                                 firstChild = firstChild.renderChildren[0] as T;
@@ -1296,18 +1302,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 else {
-                    if (renderChildren.some(node => node.floating) && !renderChildren.some(node => node.imageElement && node.baseline)) {
+                    if (children.some(node => node.floating) && !children.some(node => node.imageElement && node.baseline)) {
                         this.android('baselineAligned', 'false');
                     }
                     else {
-                        const baseline = squared.base.NodeUI.baseline(renderChildren, true);
+                        const baseline = squared.base.NodeUI.baseline(children, true);
                         if (baseline && (baseline.textElement || baseline.inputElement)) {
-                            this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
+                            this.android('baselineAlignedChildIndex', children.indexOf(baseline).toString());
                         }
                     }
-                    if (renderChildren.length > 1) {
-                        const child = renderChildren[renderChildren.length - 1];
-                        setSingleLine(child);
+                    const length = children.length;
+                    for (let i = 1; i < length; i++) {
+                        setSingleLine(children[i], i === length - 1);
                     }
                 }
             }
@@ -1454,7 +1460,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             let result = this._cached.baselineHeight;
             if (result === undefined) {
                 result = 0;
-                if (!(this.plainText && this.multiline)) {
+                if (this.plainText) {
+                    result = this.bounds.height / (this.bounds.numberOfLines || 1);
+                }
+                else {
                     if (this.multiline && this.cssTry('white-space', 'nowrap')) {
                         result = (<Element> this.element).getBoundingClientRect().height;
                         this.cssFinally('white-space');

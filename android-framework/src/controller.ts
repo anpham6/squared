@@ -140,8 +140,8 @@ function isLayoutBaselineAligned(node: View) {
     return false;
 }
 
-function checkSingleLine(node: View, nowrap: boolean, multiline: boolean) {
-    if (node.textElement && !node.hasPX('width') && (!node.multiline || multiline) && (nowrap || node.textContent.trim().indexOf(' ') !== -1)) {
+function checkSingleLine(node: View, nowrap: boolean) {
+    if (node.textElement && !node.hasPX('width') && !node.multiline && (nowrap || node.textContent.trim().indexOf(' ') !== -1)) {
         const parent = node.actualParent as View;
         if (!parent.preserveWhiteSpace && parent.tagName !== 'CODE') {
             node.android('maxLines', '1');
@@ -1981,14 +1981,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     rowsRight = [];
                     rows = rowsRight;
                 }
-                let previousMultiline = false;
                 let previous!: T;
                 for (let i = 0; i < length; i++) {
                     const item = seg[i];
                     let alignSibling: string;
                     if (leftAlign && leftForward) {
                         alignSibling = $c.STRING_BASE.LEFT_RIGHT;
-                        if (i === 0 && item.inline && Math.abs(textIndent) > item.actualWidth && item.float !== 'right') {
+                        if (i === 0 && item.inline && Math.abs(textIndent) > item.actualWidth && item.float !== 'right' && !item.positionRelative) {
                             textIndentSpacing = true;
                             if (!item.floating) {
                                 item.setCacheValue('float', 'left');
@@ -2015,13 +2014,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     let siblings: Element[] | undefined;
                     if (item.styleText && !item.hasPX('width')) {
                         const textBounds = item.textBounds;
-                        if (textBounds && (textBounds.numberOfLines || textBounds.width < item.box.width)) {
+                        if (textBounds && (textBounds.numberOfLines || Math.ceil(textBounds.width) < item.box.width)) {
                             bounds = textBounds;
                         }
                     }
                     let multiline = item.multiline;
                     if (multiline && Math.floor(bounds.width) <= boxWidth) {
                         multiline = false;
+                        item.multiline = false;
                     }
                     let anchored = true;
                     if (item.autoMargin.leftRight) {
@@ -2041,7 +2041,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         let maxWidth = 0;
                         let baseWidth = 0;
                         function checkFloatWrap() {
-                            if (previous.floating && previous.alignParent('left') && (item.multiline || Math.floor(rowWidth + item.width) < boxWidth)) {
+                            if (previous.floating && previous.alignParent('left') && (multiline || Math.floor(rowWidth + item.width) < boxWidth)) {
                                 return true;
                             }
                             else if (i === length - 1 && node.floating && item.textElement && !/\s|-/.test(item.textContent.trim())) {
@@ -2094,7 +2094,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     retainMultiline = true;
                                     return false;
                                 }
-                                else if (checkLineWrap && previousMultiline && (previous.bounds.width >= boxWidth || Resource.hasLineBreak(previous, false, true))) {
+                                else if (checkLineWrap && previous.multiline && (previous.bounds.width >= boxWidth || Resource.hasLineBreak(previous, false, true))) {
                                     return true;
                                 }
                             }
@@ -2102,14 +2102,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 return false;
                             }
                             else if (checkLineWrap) {
-                                checkWrapWidth();
-                                if (baseWidth > maxWidth) {
-                                    return true;
-                                }
-                                else if ($util.aboveRange(baseWidth, maxWidth) && !item.alignParent(alignParent)) {
-                                    checkSingleLine(item, true, multiline);
-                                }
-                                if (multiline && Resource.hasLineBreak(item) || item.preserveWhiteSpace && $regex.CHAR.LEADINGNEWLINE.test(item.textContent)) {
+                                if (checkWrapWidth() && baseWidth > maxWidth ||
+                                    multiline && Resource.hasLineBreak(item) ||
+                                    item.preserveWhiteSpace && $regex.CHAR.LEADINGNEWLINE.test(item.textContent))
+                                {
                                     return true;
                                 }
                             }
@@ -2119,10 +2115,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (textNewRow ||
                             viewGroup ||
                             $util.aboveRange(item.linear.top, previous.linear.bottom) && (item.blockStatic || item.floating && previous.float === item.float) ||
-                            previous.autoMargin.horizontal ||
-                            cleared.has(item) ||
                             !item.textElement && !checkFloatWrap() && checkWrapWidth() && Math.floor(baseWidth) > maxWidth ||
-                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => causesLineBreak(element, node.sessionId))))
+                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => causesLineBreak(element, node.sessionId))) ||
+                            previous.autoMargin.horizontal ||
+                            cleared.has(item))
                         {
                             if (leftForward) {
                                 if (previousRowLeft && (item.linear.bottom <= previousRowLeft.bounds.bottom || textIndentSpacing)) {
@@ -2149,7 +2145,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 previous.anchor('centerHorizontal', 'true');
                             }
                             if (textNewRow && multiline) {
-                                checkSingleLine(previous, checkLineWrap, false);
+                                checkSingleLine(previous, checkLineWrap);
                             }
                             rowWidth = Math.min(0, textNewRow && !previous.multiline && multiline && !cleared.has(item) ? item.linear.right - node.box.right : 0);
                             rows.push([item]);
@@ -2166,7 +2162,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     previous.anchor(alignSibling, item.documentId);
                                 }
                             }
-                            if (!previous.floating && !retainMultiline && item.multiline && !item.hasPX('width')) {
+                            if (!previous.floating && !retainMultiline && multiline && !item.hasPX('width')) {
                                 multiline = false;
                                 item.multiline = false;
                             }
@@ -2203,7 +2199,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     rowWidth += previousOffset + item.marginLeft + bounds.width + item.marginRight;
                     previous = item;
-                    previousMultiline = multiline;
                 }
             });
             if (rowsLeft.length === 1 && textIndent < 0) {
@@ -2347,7 +2342,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     const itemEnd = items[items.length - 1];
-                    if (itemEnd.textElement && !itemEnd.multiline && !checkSingleLine(itemEnd, false, false)) {
+                    if (itemEnd.textElement && !itemEnd.multiline && !checkSingleLine(itemEnd, false)) {
                         const alignSibling = itemEnd.alignSibling($c.STRING_BASE.LEFT_RIGHT);
                         if (alignSibling !== '') {
                             for (const item of items) {

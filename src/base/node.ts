@@ -493,6 +493,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         else if (this.plainText) {
             const rect = $dom.getRangeClientRect(<Element> this._element);
             const bounds = $dom.assignRect(rect, true);
+            bounds.numberOfLines = rect.numberOfLines;
             this._bounds = bounds;
             this._textBounds = bounds;
             this._cached.multiline = (rect.numberOfLines as number) > 0;

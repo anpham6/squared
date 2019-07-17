@@ -64,16 +64,24 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         item.android('maxLines', '1');
                     }
                 });
-                if (requireWidth) {
-                    if (parent.hasPX('width') && $util.aboveRange(node.actualWidth, parent.actualWidth)) {
-                        node.setLayoutWidth('match_parent');
+            }
+            else {
+                node.each((item: T) => {
+                    if (item.has('width', $e.CSS_UNIT.PERCENT)) {
+                        item.setLayoutWidth('wrap_content');
+                        requireWidth = true;
                     }
-                    else {
-                        node.css('width', $css.formatPX(node.actualWidth), true);
-                    }
+                });
+            }
+            if (requireWidth) {
+                if (parent.hasPX('width') && $util.aboveRange(node.actualWidth, parent.actualWidth)) {
+                    node.setLayoutWidth('match_parent');
+                }
+                else {
+                    node.css('width', $css.formatPX(node.actualWidth), true);
                 }
             }
-            if (!requireWidth) {
+            else {
                 if (node.hasPX('width') && node.actualWidth < Math.floor(node.bounds.width)) {
                     if (mainData.layoutFixed) {
                         node.android('width', $css.formatPX(node.bounds.width), true);

@@ -1,4 +1,4 @@
-/* squared 1.2.5
+/* squared 1.2.6
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -3392,13 +3392,11 @@
         if (typeof value === 'string') {
             return platform.indexOf(value.toLowerCase()) !== -1;
         }
-        else {
-            if (hasBit(value, 4 /* MAC */) && /mac|iphone|ipad/.test(platform)) {
-                return true;
-            }
-            else if (hasBit(value, 2 /* WINDOWS */) && /windows/.test(platform)) {
-                return true;
-            }
+        else if (hasBit(value, 4 /* MAC */) && /mac|iphone|ipad/.test(platform)) {
+            return true;
+        }
+        else if (hasBit(value, 2 /* WINDOWS */) && platform.indexOf('windows') !== -1) {
+            return true;
         }
         return false;
     }
@@ -3442,262 +3440,6 @@
         getDeviceDPI: getDeviceDPI
     });
 
-    const ELEMENT_BLOCK = [
-        'ADDRESS',
-        'ARTICLE',
-        'ASIDE',
-        'BLOCKQUOTE',
-        'DD',
-        'DETAILS',
-        'DIALOG',
-        'DIV',
-        'DL',
-        'DT',
-        'FIELDSET',
-        'FIGCAPTION',
-        'FIGURE',
-        'FOOTER',
-        'FORM',
-        'H1',
-        'H2',
-        'H3',
-        'H4',
-        'H5',
-        'H6',
-        'HEADER',
-        'HGROUP',
-        'HR',
-        'LI',
-        'MAIN',
-        'NAV',
-        'OL',
-        'P',
-        'PRE',
-        'SECTION',
-        'TABLE',
-        'UL'
-    ];
-    function newBoxRect() {
-        return {
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0
-        };
-    }
-    function newBoxRectDimension() {
-        return {
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: 0,
-            height: 0
-        };
-    }
-    function newBoxModel() {
-        return {
-            marginTop: 0,
-            marginRight: 0,
-            marginBottom: 0,
-            marginLeft: 0,
-            paddingTop: 0,
-            paddingRight: 0,
-            paddingBottom: 0,
-            paddingLeft: 0
-        };
-    }
-    function assignRect(rect, scrollPosition = false) {
-        const result = {
-            top: rect.top,
-            right: rect.right,
-            bottom: rect.bottom,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height
-        };
-        if (scrollPosition) {
-            if (window.scrollY !== 0) {
-                result.top += window.scrollY;
-                result.bottom += window.scrollY;
-            }
-            if (window.scrollX !== 0) {
-                result.left += window.scrollX;
-                result.right += window.scrollX;
-            }
-        }
-        return result;
-    }
-    function removeElementsByClassName(className) {
-        for (const element of Array.from(document.getElementsByClassName(className))) {
-            if (element.parentElement) {
-                element.parentElement.removeChild(element);
-            }
-        }
-    }
-    function getElementsBetweenSiblings(elementStart, elementEnd, whiteSpace = false) {
-        if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
-            const parent = elementEnd.parentElement;
-            if (parent) {
-                let startIndex = elementStart ? -1 : 0;
-                let endIndex = -1;
-                const elements = Array.from(parent.childNodes);
-                const length = elements.length;
-                for (let i = 0; i < length; i++) {
-                    if (elements[i] === elementStart) {
-                        startIndex = i;
-                    }
-                    if (elements[i] === elementEnd) {
-                        endIndex = i;
-                    }
-                }
-                if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
-                    const result = elements.slice(Math.min(startIndex, endIndex) + 1, Math.max(startIndex, endIndex));
-                    if (whiteSpace) {
-                        spliceArray(result, element => element.nodeName === '#comment');
-                    }
-                    else {
-                        spliceArray(result, element => element.nodeName.charAt(0) === '#' && (element.nodeName !== 'text' || !!element.textContent && element.textContent.trim() === ''));
-                    }
-                    return result.length ? result : undefined;
-                }
-            }
-        }
-        return undefined;
-    }
-    function createElement(parent, tagName, attrs) {
-        const element = document.createElement(tagName);
-        for (const attr in attrs) {
-            element.style.setProperty(attr, attrs[attr]);
-        }
-        parent.appendChild(element);
-        return element;
-    }
-    function measureTextWidth(value, fontFamily, fontSize) {
-        if (fontFamily && fontSize) {
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            if (context) {
-                context.font = `${fontSize}px ${fontFamily}`;
-                return context.measureText(value).width;
-            }
-        }
-        return 0;
-    }
-    function getNamedItem(element, attr) {
-        const item = element.attributes.getNamedItem(attr);
-        if (item) {
-            return item.value.trim();
-        }
-        return '';
-    }
-    function isPlainText(element) {
-        return element.nodeName === '#text';
-    }
-
-    var dom = /*#__PURE__*/Object.freeze({
-        ELEMENT_BLOCK: ELEMENT_BLOCK,
-        newBoxRect: newBoxRect,
-        newBoxRectDimension: newBoxRectDimension,
-        newBoxModel: newBoxModel,
-        assignRect: assignRect,
-        removeElementsByClassName: removeElementsByClassName,
-        getElementsBetweenSiblings: getElementsBetweenSiblings,
-        createElement: createElement,
-        measureTextWidth: measureTextWidth,
-        getNamedItem: getNamedItem,
-        isPlainText: isPlainText
-    });
-
-    function getClientRect(element, sessionId, cache = true) {
-        if (cache) {
-            const rect = getElementCache(element, 'boundingClientRect', sessionId);
-            if (rect) {
-                return rect;
-            }
-        }
-        const bounds = element.getBoundingClientRect();
-        setElementCache(element, 'boundingClientRect', sessionId, bounds);
-        return bounds;
-    }
-    function getRangeClientRect(element, sessionId, cache = true) {
-        if (cache) {
-            const rect = getElementCache(element, 'rangeClientRect', sessionId);
-            if (rect) {
-                return rect;
-            }
-        }
-        const range = document.createRange();
-        range.selectNodeContents(element);
-        const clientRects = range.getClientRects();
-        let length = clientRects.length;
-        const domRect = [];
-        for (let i = 0; i < length; i++) {
-            const item = clientRects.item(i);
-            if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
-                domRect.push(item);
-            }
-        }
-        let bounds;
-        let maxTop = Number.NEGATIVE_INFINITY;
-        length = domRect.length;
-        if (length) {
-            bounds = assignRect(domRect[0]);
-            for (let i = 1; i < length; i++) {
-                const rect = domRect[i];
-                if (rect.left < bounds.left) {
-                    bounds.left = rect.left;
-                }
-                if (rect.right > bounds.right) {
-                    bounds.right = rect.right;
-                }
-                if (rect.top < bounds.top) {
-                    bounds.top = rect.top;
-                }
-                if (rect.bottom > bounds.bottom) {
-                    bounds.bottom = rect.bottom;
-                }
-                bounds.width += rect.width;
-                if (rect.top > maxTop) {
-                    maxTop = rect.top;
-                }
-            }
-            bounds.height = bounds.bottom - bounds.top;
-            if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-                bounds.numberOfLines = domRect.length - 1;
-            }
-        }
-        else {
-            bounds = newBoxRectDimension();
-        }
-        setElementCache(element, 'rangeClientRect', sessionId, bounds);
-        return bounds;
-    }
-    function setElementCache(element, attr, sessionId, data) {
-        element[`__${attr}::${sessionId}`] = data;
-    }
-    function getElementCache(element, attr, sessionId) {
-        if (!sessionId) {
-            sessionId = element['__sessionId::0'];
-        }
-        return element[`__${attr}::${sessionId}`];
-    }
-    function deleteElementCache(element, attr, sessionId) {
-        delete element[`__${attr}::${sessionId}`];
-    }
-    function getElementAsNode(element, sessionId) {
-        return getElementCache(element, 'node', sessionId) || undefined;
-    }
-
-    var session = /*#__PURE__*/Object.freeze({
-        getClientRect: getClientRect,
-        getRangeClientRect: getRangeClientRect,
-        setElementCache: setElementCache,
-        getElementCache: getElementCache,
-        deleteElementCache: deleteElementCache,
-        getElementAsNode: getElementAsNode
-    });
-
     const CACHE_PATTERN = {};
     function compareRange(operation, unit, range) {
         switch (operation) {
@@ -3725,17 +3467,15 @@
         ['outlineStyle', 'outlineWidth', 'outlineColor']
     ];
     const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
-    function getStyle(element, pseudoElt = '', cache = true) {
+    function getStyle(element, pseudoElt = '') {
         if (element) {
-            if (cache) {
-                const style = getElementCache(element, 'style' + pseudoElt, '0');
-                if (style) {
-                    return style;
-                }
+            const cached = element['__style' + pseudoElt];
+            if (cached) {
+                return cached;
             }
             if (hasComputedStyle(element)) {
                 const style = getComputedStyle(element, pseudoElt);
-                setElementCache(element, 'style' + pseudoElt, '0', style);
+                element['__style' + pseudoElt] = style;
                 return style;
             }
             return { display: 'inline' };
@@ -3971,14 +3711,14 @@
                     while ((subMatch = CACHE_PATTERN.MEDIA_CONDITION.exec(match[2])) !== null) {
                         const attr = subMatch[1];
                         let operation;
-                        if (subMatch[1].startsWith('min')) {
+                        if (attr.startsWith('min')) {
                             operation = '>=';
                         }
-                        else if (subMatch[1].startsWith('max')) {
+                        else if (attr.startsWith('max')) {
                             operation = '<=';
                         }
                         else {
-                            operation = match[2];
+                            operation = subMatch[2];
                         }
                         const rule = subMatch[3];
                         switch (attr) {
@@ -4091,7 +3831,7 @@
                 const rect = (element instanceof SVGElement ? element : (element.parentElement || element)).getBoundingClientRect();
                 attr = attr.toLowerCase();
                 if (/^margin|padding|border/.test(attr)) {
-                    dimension = Math.max(rect.width, rect.height);
+                    dimension = rect.width;
                 }
                 else {
                     dimension = /top|bottom|height|vertical/.test(attr) || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
@@ -4222,25 +3962,24 @@
     function getSrcSet(element, mimeType) {
         const parentElement = element.parentElement;
         const result = [];
-        let srcset = element.srcset;
-        let sizes = element.sizes;
+        const src = element.src;
+        let { srcset, sizes } = element;
         if (parentElement && parentElement.tagName === 'PICTURE') {
             const children = parentElement.children;
             const length = children.length;
             for (let i = 0; i < length; i++) {
                 const source = children[i];
                 if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || isString(source.type) && mimeType && mimeType.includes(source.type.split('/').pop().toLowerCase()))) {
-                    srcset = source.srcset;
-                    sizes = source.sizes;
+                    ({ srcset, sizes } = source);
                     break;
                 }
             }
         }
         if (srcset !== '') {
-            const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
+            const filepath = src.substring(0, src.lastIndexOf('/') + 1);
             const pattern = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
-            for (const src of srcset.split(XML.SEPARATOR)) {
-                const match = pattern.exec(src.trim());
+            for (const value of srcset.split(XML.SEPARATOR)) {
+                const match = pattern.exec(value.trim());
                 if (match) {
                     let width = 0;
                     let pixelRatio = 0;
@@ -4263,21 +4002,27 @@
                 }
             }
             result.sort((a, b) => {
-                if (a.pixelRatio > 0 && b.pixelRatio > 0) {
-                    if (a.pixelRatio !== b.pixelRatio) {
-                        return a.pixelRatio < b.pixelRatio ? -1 : 1;
+                const pxA = a.pixelRatio;
+                const pxB = b.pixelRatio;
+                if (pxA > 0 && pxB > 0) {
+                    if (pxA !== pxB) {
+                        return pxA < pxB ? -1 : 1;
                     }
                 }
-                else if (a.width > 0 && b.width > 0) {
-                    if (a.width !== b.width) {
-                        return a.width < b.width ? -1 : 1;
+                else {
+                    const widthA = a.width;
+                    const widthB = b.width;
+                    if (widthA > 0 && widthB > 0) {
+                        if (widthA !== widthB) {
+                            return widthA < widthB ? -1 : 1;
+                        }
                     }
                 }
                 return 0;
             });
         }
         if (result.length === 0) {
-            result.push({ src: element.src, pixelRatio: 1, width: 0 });
+            result.push({ src, pixelRatio: 1, width: 0 });
         }
         else if (result.length > 1 && isString(sizes)) {
             const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH}\\))?\\s*(.+)`);
@@ -4413,8 +4158,12 @@
             }
         }
         if (opened === closing.length) {
-            const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
-            const placeholder = /{(\d+)}/;
+            if (CACHE_PATTERN.CALCUATE_SYMBOL === undefined) {
+                CACHE_PATTERN.CALCUATE_SYMBOL = /(\s+[+\-]\s+|\s*[*/]\s*)/;
+                CACHE_PATTERN.CALCUATE_PLACEHOLDER = /{(\d+)}/;
+            }
+            const symbol = CACHE_PATTERN.CALCUATE_SYMBOL;
+            const placeholder = CACHE_PATTERN.CALCUATE_PLACEHOLDER;
             const equated = [];
             let index = 0;
             while (true) {
@@ -4630,6 +4379,293 @@
         isPercent: isPercent
     });
 
+    const ELEMENT_BLOCK = [
+        'ADDRESS',
+        'ARTICLE',
+        'ASIDE',
+        'BLOCKQUOTE',
+        'DD',
+        'DETAILS',
+        'DIALOG',
+        'DIV',
+        'DL',
+        'DT',
+        'FIELDSET',
+        'FIGCAPTION',
+        'FIGURE',
+        'FOOTER',
+        'FORM',
+        'H1',
+        'H2',
+        'H3',
+        'H4',
+        'H5',
+        'H6',
+        'HEADER',
+        'HGROUP',
+        'HR',
+        'LI',
+        'MAIN',
+        'NAV',
+        'OL',
+        'P',
+        'PRE',
+        'SECTION',
+        'TABLE',
+        'UL'
+    ];
+    function newBoxRect() {
+        return {
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+        };
+    }
+    function newBoxRectDimension() {
+        return {
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: 0,
+            height: 0
+        };
+    }
+    function newBoxModel() {
+        return {
+            marginTop: 0,
+            marginRight: 0,
+            marginBottom: 0,
+            marginLeft: 0,
+            paddingTop: 0,
+            paddingRight: 0,
+            paddingBottom: 0,
+            paddingLeft: 0
+        };
+    }
+    function assignRect(rect, scrollPosition = false) {
+        const result = {
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height
+        };
+        if (scrollPosition) {
+            if (window.scrollY !== 0) {
+                result.top += window.scrollY;
+                result.bottom += window.scrollY;
+            }
+            if (window.scrollX !== 0) {
+                result.left += window.scrollX;
+                result.right += window.scrollX;
+            }
+        }
+        return result;
+    }
+    function getRangeClientRect(element) {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const clientRects = range.getClientRects();
+        let length = clientRects.length;
+        const domRect = [];
+        for (let i = 0; i < length; i++) {
+            const item = clientRects.item(i);
+            if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
+                domRect.push(item);
+            }
+        }
+        let bounds;
+        let maxTop = Number.NEGATIVE_INFINITY;
+        length = domRect.length;
+        if (length) {
+            bounds = assignRect(domRect[0]);
+            for (let i = 1; i < length; i++) {
+                const rect = domRect[i];
+                if (rect.left < bounds.left) {
+                    bounds.left = rect.left;
+                }
+                if (rect.right > bounds.right) {
+                    bounds.right = rect.right;
+                }
+                if (rect.top < bounds.top) {
+                    bounds.top = rect.top;
+                }
+                if (rect.bottom > bounds.bottom) {
+                    bounds.bottom = rect.bottom;
+                }
+                bounds.width += rect.width;
+                if (rect.top > maxTop) {
+                    maxTop = rect.top;
+                }
+            }
+            bounds.height = bounds.bottom - bounds.top;
+            if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
+                bounds.numberOfLines = domRect.length - 1;
+            }
+        }
+        else {
+            bounds = newBoxRectDimension();
+        }
+        return bounds;
+    }
+    function removeElementsByClassName(className) {
+        for (const element of Array.from(document.getElementsByClassName(className))) {
+            if (element.parentElement) {
+                element.parentElement.removeChild(element);
+            }
+        }
+    }
+    function getElementsBetweenSiblings(elementStart, elementEnd, whiteSpace = false) {
+        if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
+            const parent = elementEnd.parentElement;
+            if (parent) {
+                let startIndex = elementStart ? -1 : 0;
+                let endIndex = -1;
+                const elements = Array.from(parent.childNodes);
+                const length = elements.length;
+                for (let i = 0; i < length; i++) {
+                    if (elements[i] === elementStart) {
+                        startIndex = i;
+                    }
+                    if (elements[i] === elementEnd) {
+                        endIndex = i;
+                    }
+                }
+                if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
+                    const result = elements.slice(Math.min(startIndex, endIndex) + 1, Math.max(startIndex, endIndex));
+                    if (whiteSpace) {
+                        spliceArray(result, element => element.nodeName === '#comment');
+                    }
+                    else {
+                        spliceArray(result, element => element.nodeName.charAt(0) === '#' && (element.nodeName !== 'text' || !!element.textContent && element.textContent.trim() === ''));
+                    }
+                    return result.length ? result : undefined;
+                }
+            }
+        }
+        return undefined;
+    }
+    function createElement(parent, tagName, attrs) {
+        const element = document.createElement(tagName);
+        for (const attr in attrs) {
+            element.style.setProperty(attr, attrs[attr]);
+        }
+        parent.appendChild(element);
+        return element;
+    }
+    function measureTextWidth(value, fontFamily, fontSize) {
+        if (fontFamily && fontSize) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            if (context) {
+                context.font = `${fontSize}px ${fontFamily}`;
+                return context.measureText(value).width;
+            }
+        }
+        return 0;
+    }
+    function getNamedItem(element, attr) {
+        const item = element.attributes.getNamedItem(attr);
+        if (item) {
+            return item.value.trim();
+        }
+        return '';
+    }
+    function isTextNode(element) {
+        return element.nodeName === '#text';
+    }
+
+    var dom = /*#__PURE__*/Object.freeze({
+        ELEMENT_BLOCK: ELEMENT_BLOCK,
+        newBoxRect: newBoxRect,
+        newBoxRectDimension: newBoxRectDimension,
+        newBoxModel: newBoxModel,
+        assignRect: assignRect,
+        getRangeClientRect: getRangeClientRect,
+        removeElementsByClassName: removeElementsByClassName,
+        getElementsBetweenSiblings: getElementsBetweenSiblings,
+        createElement: createElement,
+        measureTextWidth: measureTextWidth,
+        getNamedItem: getNamedItem,
+        isTextNode: isTextNode
+    });
+
+    function actualClientRect(element, sessionId, cache = true) {
+        if (cache) {
+            const rect = getElementCache(element, 'clientRect', sessionId);
+            if (rect) {
+                return rect;
+            }
+        }
+        const bounds = element.getBoundingClientRect();
+        setElementCache(element, 'clientRect', sessionId, bounds);
+        return bounds;
+    }
+    function actualTextRangeRect(element, sessionId, cache = true) {
+        if (cache) {
+            const rect = getElementCache(element, 'textRangeRect', sessionId);
+            if (rect) {
+                return rect;
+            }
+        }
+        const length = element.childElementCount;
+        let hidden;
+        if (length > 0) {
+            for (let i = 0; i < length; i++) {
+                const style = getStyle(element.children[i]);
+                if (style.getPropertyValue('visibility') !== 'visible') {
+                    const position = style.getPropertyValue('position');
+                    if (position === 'absolute' || position === 'fixed') {
+                        const display = style.getPropertyValue('display');
+                        if (display !== 'none') {
+                            const child = element.children[i];
+                            child.style.display = 'none';
+                            if (hidden === undefined) {
+                                hidden = [];
+                            }
+                            hidden.push([child, display]);
+                        }
+                    }
+                }
+            }
+        }
+        const bounds = getRangeClientRect(element);
+        if (hidden) {
+            for (const item of hidden) {
+                item[0].style.display = item[1];
+            }
+        }
+        setElementCache(element, 'textRangeRect', sessionId, bounds);
+        return bounds;
+    }
+    function setElementCache(element, attr, sessionId, data) {
+        element[`__${attr}::${sessionId}`] = data;
+    }
+    function getElementCache(element, attr, sessionId) {
+        if (!sessionId) {
+            sessionId = element['__sessionId::0'];
+        }
+        return element[`__${attr}::${sessionId}`];
+    }
+    function deleteElementCache(element, attr, sessionId) {
+        delete element[`__${attr}::${sessionId}`];
+    }
+    function getElementAsNode(element, sessionId) {
+        return getElementCache(element, 'node', sessionId) || undefined;
+    }
+
+    var session = /*#__PURE__*/Object.freeze({
+        actualClientRect: actualClientRect,
+        actualTextRangeRect: actualTextRangeRect,
+        setElementCache: setElementCache,
+        getElementCache: getElementCache,
+        deleteElementCache: deleteElementCache,
+        getElementAsNode: getElementAsNode
+    });
+
     const REGEXP_INDENT = /^(\t+)(.*)$/;
     const REGEXP_FORMAT = {
         ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
@@ -4640,7 +4676,7 @@
     };
     const TAB_SPACE = '&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;';
     const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
-    function isPlainText$1(value) {
+    function isPlainText(value) {
         const length = value.length;
         for (let i = 0; i < length; i++) {
             switch (value.charCodeAt(i)) {
@@ -4895,7 +4931,7 @@
 
     var xml = /*#__PURE__*/Object.freeze({
         STRING_XMLENCODING: STRING_XMLENCODING,
-        isPlainText: isPlainText$1,
+        isPlainText: isPlainText,
         pushIndent: pushIndent,
         pushIndentArray: pushIndentArray,
         replaceIndent: replaceIndent,

@@ -1,4 +1,4 @@
-/* chrome-framework 1.2.5
+/* chrome-framework 1.2.6
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -16,17 +16,6 @@ var chrome = (function () {
         }
     }
 
-    class View extends squared.base.Node {
-        constructor(id, sessionId, element, afterInit) {
-            super(id, sessionId, element);
-            this._cached = {};
-            this.init();
-            if (afterInit) {
-                afterInit(this);
-            }
-        }
-    }
-
     const $dom = squared.lib.dom;
     const ASSETS = Resource.ASSETS;
     class Application extends squared.base.Application {
@@ -37,7 +26,7 @@ var chrome = (function () {
         }
         finalize() { }
         insertNode(element, parent) {
-            if ($dom.isPlainText(element)) {
+            if ($dom.isTextNode(element)) {
                 if (this.userSettings.excludePlainText) {
                     return undefined;
                 }
@@ -45,7 +34,7 @@ var chrome = (function () {
             }
             const node = this.createNode(element, false);
             if (node.plainText && parent) {
-                View.copyTextStyle(node, parent);
+                node.cssApply(parent.getTextStyle());
             }
             return node;
         }
@@ -87,7 +76,7 @@ var chrome = (function () {
             this._elementMap.clear();
         }
         applyDefaultStyles(element) {
-            if ($dom$1.isPlainText(element)) {
+            if ($dom$1.isTextNode(element)) {
                 $session.setElementCache(element, 'styleMap', this.sessionId, {
                     position: 'static',
                     display: 'inline',
@@ -338,6 +327,17 @@ var chrome = (function () {
         }
         get application() {
             return this.resource.application;
+        }
+    }
+
+    class View extends squared.base.Node {
+        constructor(id, sessionId, element, afterInit) {
+            super(id, sessionId, element);
+            this._cached = {};
+            this.init();
+            if (afterInit) {
+                afterInit(this);
+            }
         }
     }
 
