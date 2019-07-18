@@ -10,8 +10,6 @@ const settings: UserSettingsAndroid = {
         'android.delegate.scrollbar',
         'android.delegate.background',
         'android.delegate.radiogroup',
-        'squared.external',
-        'squared.substitute',
         'squared.sprite',
         'squared.css-grid',
         'squared.flexbox',

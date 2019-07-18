@@ -29,7 +29,7 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
     const reloading = framework !== undefined;
     if (framework !== value) {
         const appBase = cached ? value.cached() : value.create();
-        if (framework === undefined) {
+        if (!reloading) {
             Object.assign(appBase.userSettings, settings);
         }
         settings = appBase.userSettings;

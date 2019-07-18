@@ -9,13 +9,9 @@ const {
     util: $utilA
 } = android.lib;
 
-const {
-    constant: $c,
-    enumeration: $e
-} = squared.base.lib;
-
 const $Resource = android.base.Resource;
 const $util = squared.lib.util;
+const $e = squared.base.lib.enumeration;
 
 const REGEXP_ITEM = {
     id: /^@\+id\/\w+$/,
@@ -91,7 +87,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         tagNames?: string[])
     {
         super(name, framework, options, tagNames);
-        this.require($c.EXT_NAME.EXTERNAL, true);
+        this.require($constA.EXT_ANDROID.EXTERNAL, true);
     }
 
     public init(element: HTMLElement) {

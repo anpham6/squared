@@ -17,13 +17,11 @@ import ResourceUI from './resource-ui';
 
 import Accessibility from './extensions/accessibility';
 import CssGrid from './extensions/cssgrid';
-import External from './extensions/external';
 import Flexbox from './extensions/flexbox';
 import Grid from './extensions/grid';
 import List from './extensions/list';
 import Relative from './extensions/relative';
 import Sprite from './extensions/sprite';
-import Substitute from './extensions/substitute';
 import Table from './extensions/table';
 import VerticalAlign from './extensions/verticalalign';
 import WhiteSpace from './extensions/whitespace';
@@ -34,13 +32,11 @@ import * as enumeration from './lib/enumeration';
 const extensions = {
     Accessibility,
     CssGrid,
-    External,
     Flexbox,
     Grid,
     List,
     Relative,
     Sprite,
-    Substitute,
     Table,
     VerticalAlign,
     WhiteSpace

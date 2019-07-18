@@ -20,12 +20,8 @@ const {
     util: $utilA
 } = android.lib;
 
-const {
-    constant: $c,
-    enumeration: $e
-} = squared.base.lib;
-
 const $Resource = android.base.Resource;
+const $e = squared.base.lib.enumeration;
 
 const PREFIX_MENU = 'ic_menu_';
 
@@ -46,8 +42,8 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             const length = children.length;
             for (let i = 0; i < length; i++) {
                 const item = <HTMLElement> children[i];
-                if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
-                    item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
+                if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $constA.EXT_ANDROID.EXTERNAL)) {
+                    item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $constA.EXT_ANDROID.EXTERNAL;
                     break;
                 }
             }

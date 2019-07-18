@@ -117,13 +117,13 @@ declare namespace base {
 declare namespace extensions {
     class Accessibility<T extends View> extends squared.base.extensions.Accessibility<T> {}
     class CssGrid<T extends View> extends squared.base.extensions.CssGrid<T> {}
-    class External<T extends View> extends squared.base.extensions.External<T> {}
+    class External<T extends View> extends squared.base.ExtensionUI<T> {}
     class Flexbox<T extends View> extends squared.base.extensions.Flexbox<T> {}
     class Grid<T extends View> extends squared.base.extensions.Grid<T> {}
     class List<T extends View> extends squared.base.extensions.List<T> {}
     class Relative<T extends View> extends squared.base.extensions.Relative<T> {}
     class Sprite<T extends View> extends squared.base.extensions.Sprite<T> {}
-    class Substitute<T extends View> extends squared.base.extensions.Substitute<T> {}
+    class Substitute<T extends View> extends squared.base.ExtensionUI<T> {}
     class Table<T extends View> extends squared.base.extensions.Table<T> {}
     class VerticalAlign<T extends View> extends squared.base.extensions.VerticalAlign<T> {}
     class WhiteSpace<T extends View> extends squared.base.extensions.WhiteSpace<T> {}

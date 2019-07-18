@@ -316,8 +316,6 @@ const appBase: AppFramework<View> = {
         application.resourceHandler.setFileHandler(file);
         userSettings = { ...SETTINGS };
         Object.assign(application.builtInExtensions, {
-            [EN.EXTERNAL]: new External(EN.EXTERNAL, framework),
-            [EN.SUBSTITUTE]: new Substitute(EN.SUBSTITUTE, framework),
             [EN.SPRITE]: new Sprite(EN.SPRITE, framework),
             [EN.CSS_GRID]: new CssGrid(EN.CSS_GRID, framework),
             [EN.FLEXBOX]: new Flexbox(EN.FLEXBOX, framework),
@@ -328,6 +326,8 @@ const appBase: AppFramework<View> = {
             [EN.VERTICAL_ALIGN]: new VerticalAlign(EN.VERTICAL_ALIGN, framework),
             [EN.WHITESPACE]: new WhiteSpace(EN.WHITESPACE, framework),
             [EN.ACCESSIBILITY]: new Accessibility(EN.ACCESSIBILITY, framework),
+            [EA.EXTERNAL]: new External(EA.EXTERNAL, framework),
+            [EA.SUBSTITUTE]: new Substitute(EA.SUBSTITUTE, framework),
             [EA.CONSTRAINT_GUIDELINE]: new ConstraintGuideline(EA.CONSTRAINT_GUIDELINE, framework),
             [EA.DELEGATE_BACKGROUND]: new DelegateBackground(EA.DELEGATE_BACKGROUND, framework),
             [EA.DELEGATE_FIXED]: new DelegateFixed(EA.DELEGATE_FIXED, framework),

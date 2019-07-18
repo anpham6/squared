@@ -228,7 +228,6 @@ declare namespace base {
         readonly eventOnly: boolean;
         readonly cascadeAll: boolean;
         readonly removeIs: boolean;
-        readonly removeCondition: boolean;
         included(element: HTMLElement): boolean;
         init(element: HTMLElement): boolean;
         is(node: T): boolean;
@@ -596,7 +595,6 @@ declare namespace base {
     namespace extensions {
         class Accessibility<T extends NodeUI> extends ExtensionUI<T> {}
         class CssGrid<T extends NodeUI> extends ExtensionUI<T> {}
-        class External<T extends NodeUI> extends ExtensionUI<T> {}
         class Flexbox<T extends NodeUI> extends ExtensionUI<T> {}
         class Grid<T extends NodeUI> extends ExtensionUI<T> {
             public static createDataCellAttribute<T extends NodeUI>(): GridCellData<T>;
@@ -604,7 +602,6 @@ declare namespace base {
         class List<T extends NodeUI> extends ExtensionUI<T> {}
         class Relative<T extends NodeUI> extends ExtensionUI<T> {}
         class Sprite<T extends NodeUI> extends ExtensionUI<T> {}
-        class Substitute<T extends NodeUI> extends ExtensionUI<T> {}
         class Table<T extends NodeUI> extends ExtensionUI<T> {}
         class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {}
         class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {}

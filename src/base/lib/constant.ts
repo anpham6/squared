@@ -22,13 +22,11 @@ export const CSS_SPACING = new Map<number, string>([
 export const EXT_NAME = {
     ACCESSIBILITY: 'squared.accessibility',
     CSS_GRID: 'squared.css-grid',
-    EXTERNAL: 'squared.external',
     FLEXBOX: 'squared.flexbox',
     GRID: 'squared.grid',
     LIST: 'squared.list',
     RELATIVE: 'squared.relative',
     SPRITE: 'squared.sprite',
-    SUBSTITUTE: 'squared.substitute',
     TABLE: 'squared.table',
     VERTICAL_ALIGN: 'squared.verticalalign',
     WHITESPACE: 'squared.whitespace'

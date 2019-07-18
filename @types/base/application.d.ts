@@ -118,6 +118,7 @@ export interface ExtensionResult<T extends NodeUI> {
     complete?: boolean;
     next?: boolean;
     include?: boolean;
+    remove?: boolean;
 }
 
 export interface LayoutType {

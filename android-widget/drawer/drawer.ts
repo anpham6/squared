@@ -14,12 +14,8 @@ const {
     util: $utilA
 } = android.lib;
 
-const {
-    constant: $c,
-    enumeration: $e
-} = squared.base.lib;
-
 const $Resource = android.base.Resource;
+const $e = squared.base.lib.enumeration;
 
 export default class Drawer<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     public readonly documentBase = true;
@@ -31,7 +27,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         tagNames?: string[])
     {
         super(name, framework, options, tagNames);
-        this.require($c.EXT_NAME.EXTERNAL, true);
+        this.require($constA.EXT_ANDROID.EXTERNAL, true);
         this.require(WIDGET_NAME.MENU);
         this.require(WIDGET_NAME.COORDINATOR);
     }
@@ -43,8 +39,8 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             if (length) {
                 for (let i = 0; i < length; i++) {
                     const item = <HTMLElement> children[i];
-                    if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
-                        item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
+                    if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $constA.EXT_ANDROID.EXTERNAL)) {
+                        item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $constA.EXT_ANDROID.EXTERNAL;
                     }
                 }
                 this.application.rootElements.add(element);
@@ -82,7 +78,8 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
                 node,
                 controlName: $constA.SUPPORT_ANDROID.DRAWER
             },
-            complete: true
+            complete: true,
+            remove: true
         };
     }
 
@@ -90,7 +87,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         for (const node of this.subscribers) {
             const options = $utilA.createViewAttribute(this.options.navigationView);
             const menu = $util.optionalAsString(Drawer.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
-            const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $c.EXT_NAME.EXTERNAL), 'dataset.layoutName');
+            const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $constA.EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
             if (menu !== '') {
                 $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
             }

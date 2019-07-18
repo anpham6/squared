@@ -500,13 +500,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             let drawable = Resource.insertStoredAsset('drawables', `${node.containerName.toLowerCase()}_${node.controlId}`, value);
             if (drawable !== '') {
                 drawable = `@drawable/${drawable}`;
-                if (node.documentBody) {
-                    const style = node.visibleStyle;
-                    if (node.blockStatic && !node.hasPX('width') && !node.hasPX('maxWidth') && (style.backgroundImage && style.backgroundRepeat || node.backgroundColor !== '')) {
+                if (node.documentBody && !setHtmlBackground(node)) {
+                    if (node.backgroundColor !== '' || node.visibleStyle.backgroundImage && node.visibleStyle.backgroundRepeat) {
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
                         return;
                     }
-                    setHtmlBackground(node);
                 }
                 node.android('background', drawable, false);
             }
@@ -517,8 +515,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const background = parent.android('background');
                 if (background !== '') {
                     setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, background);
+                    return true;
                 }
             }
+            return false;
         }
         const drawOutline = this.options.drawOutlineAsInsetBorder;
         for (const node of application.processing.cache) {

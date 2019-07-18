@@ -37,7 +37,7 @@ function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public static prioritizeExtensions<T extends NodeUI>(element: HTMLElement, extensions: ExtensionUI<T>[]) {
-        if (element.dataset.use && extensions.length) {
+        if (element.dataset.use) {
             const included = element.dataset.use.split($regex.XML.SEPARATOR);
             const result: ExtensionUI<T>[] = [];
             const untagged: ExtensionUI<T>[] = [];
@@ -915,8 +915,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const session = this.session;
         const CACHE = processing.cache;
         const documentRoot = processing.node as T;
-        const extensions = $util.filterArray(this.extensions, item => !item.eventOnly);
+        const extensionMap = this.session.extensionMap;
         const mapY = new Map<number, Map<number, T>>();
+        let extensions = $util.filterArray(this.extensions, item => !item.eventOnly);
         function setMapY(depth: number, id: number, node: T) {
             const index = mapY.get(depth) || new Map<number, T>();
             mapY.set(depth, index.set(id, node));
@@ -961,6 +962,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const axisY = parent.duplicate() as T[];
                 const floatContainer = parent.floatContainer;
                 const length = axisY.length;
+                const renderExtension = <ExtensionUI<T>[] | undefined> parent.renderExtension;
                 let cleared!: Map<T, string>;
                 if (floatContainer) {
                     cleared = <Map<T, string>> NodeUI.linearData(parent.naturalElements as T[], true).cleared;
@@ -1143,10 +1145,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
-                        const descendant = <ExtensionUI<T>[]> this.session.extensionMap.get(nodeY.id);
-                        let combined = parent.renderExtension && <ExtensionUI<T>[]> parent.renderExtension.slice(0);
+                        const descendant = <ExtensionUI<T>[]> extensionMap.get(nodeY.id);
+                        let combined: ExtensionUI<T>[] | undefined;
                         if (descendant) {
-                            combined = combined ? combined.concat(descendant) : descendant.slice(0);
+                            combined = renderExtension ? renderExtension.concat(descendant) : descendant;
+                        }
+                        else {
+                            combined = renderExtension;
                         }
                         if (combined) {
                             let next = false;
@@ -1178,6 +1183,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             function removeExtension(item: ExtensionUI<T>) {
                                 const index = extensions.indexOf(item);
                                 if (index !== -1) {
+                                    extensions = extensions.slice(0);
                                     extensions.splice(index, 1);
                                 }
                             }
@@ -1186,33 +1192,31 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (item.removeIs) {
                                         removeExtension(item);
                                     }
-                                    if (item.condition(nodeY, parentY)) {
-                                        if (item.removeCondition) {
-                                            removeExtension(item);
-                                        }
-                                        if (descendant === undefined || !descendant.includes(item)) {
-                                            const result = item.processNode(nodeY, parentY);
-                                            if (result) {
-                                                if (result.output) {
-                                                    this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
+                                    if (item.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(item))) {
+                                        const result = item.processNode(nodeY, parentY);
+                                        if (result) {
+                                            if (result.output) {
+                                                this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
+                                            }
+                                            if (result.renderAs && result.outputAs) {
+                                                this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
+                                            }
+                                            if (result.parent) {
+                                                parentY = result.parent as T;
+                                            }
+                                            if (result.output && result.include !== false || result.include === true) {
+                                                if (nodeY.renderExtension === undefined) {
+                                                    nodeY.renderExtension = [];
                                                 }
-                                                if (result.renderAs && result.outputAs) {
-                                                    this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
-                                                }
-                                                if (result.parent) {
-                                                    parentY = result.parent as T;
-                                                }
-                                                if (result.output && result.include !== false || result.include === true) {
-                                                    if (nodeY.renderExtension === undefined) {
-                                                        nodeY.renderExtension = [];
-                                                    }
-                                                    nodeY.renderExtension.push(item);
-                                                    item.subscribers.add(nodeY);
-                                                }
-                                                next = result.next === true;
-                                                if (result.complete || next) {
-                                                    break;
-                                                }
+                                                nodeY.renderExtension.push(item);
+                                                item.subscribers.add(nodeY);
+                                            }
+                                            if (result.remove) {
+                                                removeExtension(item);
+                                            }
+                                            next = result.next === true;
+                                            if (result.complete || next) {
+                                                break;
                                             }
                                         }
                                     }

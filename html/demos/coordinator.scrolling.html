@@ -95,6 +95,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             squared.setFramework(android);
+            squared.include('android.substitute');
             squared.configure('android.widget.toolbar', { // optional: default configuration is provided
                 toolbar_demo: {
                     self: {
@@ -157,8 +158,8 @@
             <button id="fab_menu" data-use="android.widget.floatingactionbutton" data-target="squared_ui"></button>
         </div>
         <div
-            data-use="squared.substitute"
-            data-squared-substitute-tag="android.support.v4.widget.NestedScrollView"
+            data-use="android.substitute"
+            data-android-substitute-tag="android.support.v4.widget.NestedScrollView"
             data-android-attr-app="layout_behavior::@string/appbar_scrolling_view_behavior"
             data-android-include="coordinator_content" data-android-include-end="true"
             style="padding: 20px;">

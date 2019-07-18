@@ -12,7 +12,18 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
             return true;
         }
         else {
-            if ((ext.framework === 0 || $util.hasBit(ext.framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
+            const framework = ext.framework;
+            if (framework > 0) {
+                for (const item of ext.dependencies) {
+                    if (item.preload && this.retrieve(item.name) === null) {
+                        const extension = this.application.builtInExtensions[item.name];
+                        if (extension) {
+                            this.include(extension);
+                        }
+                    }
+                }
+            }
+            if ((framework === 0 || $util.hasBit(framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
                 ext.application = application;
                 application.extensions.push(ext);
                 return true;

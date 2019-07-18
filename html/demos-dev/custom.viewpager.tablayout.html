@@ -102,7 +102,7 @@
                                 appBar: {}
                             }
                         });
-                        squared.configure('squared.substitute', {
+                        squared.include('android.substitute', {
                             viewpager_demo: {
                                 android: {
                                     layout_height: 'match_parent'
@@ -143,9 +143,9 @@
                     <img src="../demos/images/icons8-browse-page-24.png" />
                 </div>
             </nav>
-            <ul data-use="squared.substitute"
-                data-squared-substitute-tag="android.support.design.widget.TabLayout"
-                data-squared-substitute-tag-child="android.support.design.widget.TabItem"
+            <ul data-use="android.substitute"
+                data-android-substitute-tag="android.support.design.widget.TabLayout"
+                data-android-substitute-tag-child="android.support.design.widget.TabItem"
                 data-target-module="appBar"
                 data-exclude-resource-child="BOX_STYLE | BOX_SPACING | FONT_STYLE">
                 <li>TAB 1</li>
@@ -154,11 +154,11 @@
             </ul>
         </div>
         <div id="viewpager_demo"
-            data-use="squared.substitute"
-            data-squared-substitute-tag="android.support.v4.view.ViewPager"
+            data-use="android.substitute"
+            data-android-substitute-tag="android.support.v4.view.ViewPager"
             data-exclude-section="DOM_TRAVERSE"
             data-exclude-resource="BOX_STYLE | FONT_STYLE">
-            <div style="padding: 20px;" data-use="squared.external" data-filename="fragment_main.xml">
+            <div style="padding: 20px;" data-use="android.external" data-filename="fragment_main.xml">
                 <h3>title</h3>
                 <div class="content">
                     content content content content content content content content content content
