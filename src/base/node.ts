@@ -2163,7 +2163,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.overflow;
         if (result === undefined) {
             result = 0;
-            if (this.styleElement && !this.documentBody) {
+            if (this.htmlElement && !this.inputElement && !this.imageElement && this.tagName !== 'HR' && !this.documentBody) {
                 const element = <HTMLElement> this._element;
                 const overflowX = this.css('overflowX');
                 const overflowY = this.css('overflowY');

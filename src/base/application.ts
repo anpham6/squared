@@ -175,16 +175,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                         ASSETS.images.set(uri, { width: image.width, height: image.height, uri });
                     }
                 });
-                element.querySelectorAll('svg image').forEach((image: SVGImageElement) => {
-                    const uri = $util.resolvePath(image.href.baseVal);
-                    if (uri !== '') {
-                        ASSETS.images.set(uri, {
-                            width: image.width.baseVal.value,
-                            height: image.height.baseVal.value,
-                            uri
-                        });
-                    }
-                });
             }
             for (const image of ASSETS.images.values()) {
                 if (image.uri) {
@@ -227,18 +217,16 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         for (const element of this.rootElements) {
             element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                if (image.tagName === 'IMG') {
-                    if (image.src.toLowerCase().endsWith('.svg')) {
-                        if (preloadImages) {
-                            images.push(image.src);
-                        }
+                if (image.src.toLowerCase().endsWith('.svg')) {
+                    if (preloadImages) {
+                        images.push(image.src);
                     }
-                    else if (image.complete) {
-                        resource.addImage(image);
-                    }
-                    else if (preloadImages) {
-                        images.push(image);
-                    }
+                }
+                else if (image.complete) {
+                    resource.addImage(image);
+                }
+                else if (preloadImages) {
+                    images.push(image);
                 }
             });
         }
@@ -489,8 +477,12 @@ export default abstract class Application<T extends Node> implements squared.bas
         const resource = this.resourceHandler;
         const sessionId = this.processing.sessionId;
         const styleSheetHref = item.parentStyleSheet && item.parentStyleSheet.href || undefined;
+        const cssText = item.cssText;
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
+                const cssStyle = item.style;
+                const fromRule: string[] = [];
+                const important: ObjectMap<boolean> = {};
                 const parseImageUrl = (styleMap: StringMap, attr: string) => {
                     const value = styleMap[attr];
                     if (value && value !== 'initial') {
@@ -514,10 +506,86 @@ export default abstract class Application<T extends Node> implements squared.bas
                         styleMap[attr] = result;
                     }
                 };
-                const fromRule: string[] = [];
-                const cssStyle = item.style;
                 for (const attr of Array.from(cssStyle)) {
                     fromRule.push($util.convertCamelCase(attr));
+                }
+                if (cssText.indexOf('!important') !== -1) {
+                    if (CACHE_PATTERN.IMPORTANT === undefined) {
+                        CACHE_PATTERN.IMPORTANT = /\s*([a-z\-]+):.*?!important;/g;
+                    }
+                    else {
+                        CACHE_PATTERN.IMPORTANT.lastIndex = 0;
+                    }
+                    let match: RegExpExecArray | null;
+                    while ((match = CACHE_PATTERN.IMPORTANT.exec(cssText)) !== null) {
+                        const attr = $util.convertCamelCase(match[1]);
+                        switch (attr) {
+                            case 'margin':
+                                important.marginTop = true;
+                                important.marginRight = true;
+                                important.marginBottom = true;
+                                important.marginLeft = true;
+                                break;
+                            case 'padding':
+                                important.paddingTop = true;
+                                important.paddingRight = true;
+                                important.paddingBottom = true;
+                                important.paddingLeft = true;
+                                break;
+                            case 'background':
+                                important.backgroundColor = true;
+                                important.backgroundImage = true;
+                                important.backgroundSize = true;
+                                important.backgroundRepeat = true;
+                                important.backgroundPositionX = true;
+                                important.backgroundPositionY = true;
+                                break;
+                            case 'backgroundPosition':
+                                important.backgroundPositionX = true;
+                                important.backgroundPositionY = true;
+                                break;
+                            case 'border':
+                                important.borderTopStyle = true;
+                                important.borderRightStyle = true;
+                                important.borderBottomStyle = true;
+                                important.borderLeftStyle = true;
+                                important.borderTopWidth = true;
+                                important.borderRightWidth = true;
+                                important.borderBottomWidth = true;
+                                important.borderLeftWidth = true;
+                                important.borderTopColor = true;
+                                important.borderRightColor = true;
+                                important.borderBottomColor = true;
+                                important.borderLeftColor = true;
+                                break;
+                            case 'borderStyle':
+                                important.borderTopStyle = true;
+                                important.borderRightStyle = true;
+                                important.borderBottomStyle = true;
+                                important.borderLeftStyle = true;
+                                break;
+                            case 'borderWidth':
+                                important.borderTopWidth = true;
+                                important.borderRightWidth = true;
+                                important.borderBottomWidth = true;
+                                important.borderLeftWidth = true;
+                                break;
+                            case 'borderColor':
+                                important.borderTopColor = true;
+                                important.borderRightColor = true;
+                                important.borderBottomColor = true;
+                                important.borderLeftColor = true;
+                                break;
+                            case 'font':
+                                important.fontFamily = true;
+                                important.fontStyle = true;
+                                important.fontSize = true;
+                                important.fontWeight = true;
+                                important.lineHeight = true;
+                                break;
+                        }
+                        important[attr] = true;
+                    }
                 }
                 for (const selectorText of $css.parseSelectorText(item.selectorText)) {
                     const specificity = $css.getSpecificity(selectorText);
@@ -542,8 +610,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                             const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, sessionId) || {};
                             for (const attr in styleMap) {
                                 const value = styleMap[attr];
-                                if (specificityData[attr] === undefined || specificity >= specificityData[attr]) {
-                                    specificityData[attr] = specificity;
+                                const revisedSpecificity = specificity + (important[attr] ? 1000 : 0);
+                                if (specificityData[attr] === undefined || revisedSpecificity >= specificityData[attr]) {
+                                    specificityData[attr] = revisedSpecificity;
                                     if (value === 'initial' && cssStyle.background !== '' && attr.startsWith('background')) {
                                         continue;
                                     }
@@ -554,7 +623,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         else {
                             const specificityData: ObjectMap<number> = {};
                             for (const attr in styleMap) {
-                                specificityData[attr] = specificity;
+                                specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                             }
                             $session.setElementCache(element, `style${targetElt}`, '0', style);
                             $session.setElementCache(element, 'sessionId', '0', sessionId);
@@ -574,7 +643,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     CACHE_PATTERN.FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
                     CACHE_PATTERN.URL = /\s*(url|local)\((?:['"]([^'")]+)['"]|([^)]+))\)\s*format\(['"]?(\w+)['"]?\)\s*/;
                 }
-                const match = CACHE_PATTERN.FONT_FACE.exec(item.cssText);
+                const match = CACHE_PATTERN.FONT_FACE.exec(cssText);
                 if (match) {
                     const familyMatch = CACHE_PATTERN.FONT_FAMILY.exec(match[1]);
                     const srcMatch = CACHE_PATTERN.FONT_SRC.exec(match[1]);

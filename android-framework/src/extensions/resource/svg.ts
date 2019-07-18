@@ -1507,14 +1507,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
                 else if ($SvgBuild.asImage(item)) {
                     if (!$SvgBuild.asPattern(group)) {
-                        if (item.width === 0 || item.height === 0) {
-                            const image = this.resource.getImage(item.href);
-                            if (image && image.width > 0 && image.height > 0) {
-                                item.width = image.width;
-                                item.height = image.height;
-                                item.setRect();
-                            }
-                        }
                         item.extract(this.options.transformExclude.image);
                         this.IMAGE_DATA.push(item);
                     }

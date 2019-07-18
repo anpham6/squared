@@ -18,15 +18,7 @@ function setMinHeight(node: NodeUI, offset: number) {
 }
 
 function setSpacingOffset(node: NodeUI, region: number, value: number) {
-    let offset = 0 ;
-    switch (region) {
-        case BOX_STANDARD.MARGIN_LEFT:
-            offset = node.actualRect('left') - value;
-            break;
-        case BOX_STANDARD.MARGIN_TOP:
-            offset = node.actualRect('top') - value;
-            break;
-    }
+    const offset = node.actualRect(region === BOX_STANDARD.MARGIN_TOP ? 'top' : 'left') - value;
     if (offset > 0) {
         (node.renderAs || node.outerWrapper || node).modifyBox(region, offset);
     }
@@ -204,92 +196,98 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     if (i > 0 && isBlockElement(current, false)) {
                         const previousSiblings = current.previousSiblings({ floating: false });
-                        if (previousSiblings.length) {
-                            const previous = previousSiblings.find(item => !item.floating) as T;
-                            if (isBlockElement(previous, true)) {
-                                let marginBottom = previous.marginBottom;
-                                let marginTop = current.marginTop;
-                                if (previous.excluded && !current.excluded) {
-                                    const offset = Math.min(marginBottom, previous.marginTop);
-                                    if (offset < 0) {
-                                        const top = Math.abs(offset) >= marginTop ? undefined : offset;
-                                        current.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
-                                        if (current.companion) {
-                                            current.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
-                                        }
-                                        processed.add(previous.id);
+                        const previous = previousSiblings.find(item => item.float !== 'right') as T;
+                        if (isBlockElement(previous, true)) {
+                            let marginBottom = previous.marginBottom;
+                            let marginTop = current.marginTop;
+                            if (previous.excluded && !current.excluded) {
+                                const offset = Math.min(marginBottom, previous.marginTop);
+                                if (offset < 0) {
+                                    const top = Math.abs(offset) >= marginTop ? undefined : offset;
+                                    current.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
+                                    if (current.companion) {
+                                        current.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
                                     }
+                                    processed.add(previous.id);
                                 }
-                                else if (!previous.excluded && current.excluded) {
-                                    const offset = Math.min(marginTop, current.marginBottom);
-                                    if (offset < 0) {
-                                        previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) >= marginBottom ? undefined : offset);
-                                        processed.add(current.id);
-                                    }
+                            }
+                            else if (!previous.excluded && current.excluded) {
+                                const offset = Math.min(marginTop, current.marginBottom);
+                                if (offset < 0) {
+                                    previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) >= marginBottom ? undefined : offset);
+                                    processed.add(current.id);
                                 }
-                                else {
-                                    let inherit = previous;
-                                    let inheritTop = false;
-                                    let inheritBottom = false;
-                                    while (validAboveChild(inherit)) {
-                                        const bottomChild = inherit.lastChild as T;
-                                        if (isBlockElement(bottomChild, true) && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
-                                            const childBottom = bottomChild.marginBottom;
-                                            resetMargin(bottomChild, BOX_STANDARD.MARGIN_BOTTOM);
-                                            if (childBottom > marginBottom) {
-                                                marginBottom = childBottom;
-                                                previous.setCacheValue('marginBottom', marginBottom);
-                                                inheritBottom = true;
-                                            }
-                                            else if (childBottom === 0 && marginBottom === 0) {
-                                                inherit = bottomChild;
-                                                continue;
-                                            }
+                            }
+                            else {
+                                let inherit = previous;
+                                let inheritedTop = false;
+                                let inheritedBottom = false;
+                                while (validAboveChild(inherit)) {
+                                    const bottomChild = inherit.lastChild as T;
+                                    if (isBlockElement(bottomChild, true) && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
+                                        const childBottom = bottomChild.marginBottom;
+                                        resetMargin(bottomChild, BOX_STANDARD.MARGIN_BOTTOM);
+                                        if (childBottom > marginBottom) {
+                                            marginBottom = childBottom;
+                                            previous.setCacheValue('marginBottom', marginBottom);
+                                            inheritedBottom = true;
                                         }
-                                        break;
+                                        else if (childBottom === 0 && marginBottom === 0) {
+                                            inherit = bottomChild;
+                                            continue;
+                                        }
                                     }
-                                    inherit = current;
-                                    while (validBelowChild(inherit)) {
-                                        const topChild = inherit.firstChild as T;
-                                        if (isBlockElement(topChild, false) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
-                                            const childTop = topChild.marginTop;
-                                            resetMargin(topChild, BOX_STANDARD.MARGIN_TOP);
-                                            if (childTop > marginTop) {
-                                                marginTop = childTop;
-                                                current.setCacheValue('marginTop', marginTop);
-                                                inheritTop = true;
-                                            }
-                                            else if (childTop === 0 && marginTop === 0) {
-                                                inherit = topChild;
-                                                continue;
-                                            }
+                                    break;
+                                }
+                                inherit = current;
+                                while (validBelowChild(inherit)) {
+                                    const topChild = inherit.firstChild as T;
+                                    if (isBlockElement(topChild, false) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
+                                        const childTop = topChild.marginTop;
+                                        resetMargin(topChild, BOX_STANDARD.MARGIN_TOP);
+                                        if (childTop > marginTop) {
+                                            marginTop = childTop;
+                                            current.setCacheValue('marginTop', marginTop);
+                                            inheritedTop = true;
                                         }
-                                        break;
+                                        else if (childTop === 0 && marginTop === 0) {
+                                            inherit = topChild;
+                                            continue;
+                                        }
                                     }
-                                    if (marginBottom > 0) {
-                                        if (marginTop > 0) {
-                                            if (!$util.hasBit(current.overflow, NODE_ALIGNMENT.BLOCK) && !$util.hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
-                                                if (marginTop <= marginBottom) {
-                                                    if (inheritTop) {
-                                                        current.setCacheValue('marginTop', 0);
-                                                    }
-                                                    resetMargin(current, BOX_STANDARD.MARGIN_TOP);
+                                    break;
+                                }
+                                if (marginBottom > 0) {
+                                    if (marginTop > 0) {
+                                        if (!$util.hasBit(current.overflow, NODE_ALIGNMENT.BLOCK) && !$util.hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
+                                            if (marginTop <= marginBottom) {
+                                                if (inheritedTop) {
+                                                    current.setCacheValue('marginTop', 0);
                                                 }
-                                                else {
-                                                    if (inheritBottom) {
-                                                        previous.setCacheValue('marginBottom', 0);
-                                                    }
-                                                    resetMargin(previous, BOX_STANDARD.MARGIN_BOTTOM);
+                                                resetMargin(current, BOX_STANDARD.MARGIN_TOP);
+                                            }
+                                            else {
+                                                if (inheritedBottom) {
+                                                    previous.setCacheValue('marginBottom', 0);
                                                 }
+                                                resetMargin(previous, BOX_STANDARD.MARGIN_BOTTOM);
                                             }
                                         }
-                                        else if (previous.bounds.height === 0) {
-                                            resetMargin(previous, BOX_STANDARD.MARGIN_BOTTOM);
-                                        }
+                                    }
+                                    else if (previous.bounds.height === 0) {
+                                        resetMargin(previous, BOX_STANDARD.MARGIN_BOTTOM);
                                     }
                                 }
                             }
-                            else if (previous && previous.blockDimension && !previous.block && current.length === 0) {
+                        }
+                        else if (previous) {
+                            if (previous.floating) {
+                                const offset = previous.linear.bottom - current.linear.top;
+                                if (offset > 0) {
+                                    current.modifyBox(BOX_STANDARD.MARGIN_TOP, -offset, false);
+                                }
+                            }
+                            else if (previous.blockDimension && !previous.block && current.length === 0) {
                                 const offset = current.linear.top - previous.linear.bottom;
                                 if (Math.floor(offset) > 0 && current.ascend(item => item.hasPX('height')).length === 0) {
                                     current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);

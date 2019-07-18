@@ -1128,24 +1128,29 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 for (let i = 0 ; i < 4; i++) {
                     const attr = attrs[i];
                     let value = boxReset === undefined || boxReset[attr] === 0 ? this[attr] : 0;
-                    if (value !== 0 && attr === 'marginRight') {
-                        if (value < 0) {
-                            if (this.float === 'right') {
-                                value = 0;
+                    if (value !== 0) {
+                        if (attr === 'marginRight') {
+                            if (value < 0) {
+                                if (this.float === 'right' && $util.aboveRange(this.linear.right, this.documentParent.box.right)) {
+                                    value = 0;
+                                }
+                            }
+                            else if (this.inline) {
+                                const outer = this.documentParent.box.right;
+                                const inner = this.bounds.right;
+                                if (Math.floor(inner) > outer) {
+                                    if (!this.onlyChild && !this.alignParent('left')) {
+                                        setSingleLine(this, true);
+                                    }
+                                    continue;
+                                }
+                                else if (inner + value > outer) {
+                                    value = $math.clampRange(outer - inner, 0, value);
+                                }
                             }
                         }
-                        else if (this.inline) {
-                            const boxRight = this.documentParent.box.right;
-                            const boundsRight = this.bounds.right;
-                            if (Math.floor(boundsRight) > boxRight) {
-                                if (!this.onlyChild && !this.alignParent('left')) {
-                                    setSingleLine(this, true);
-                                }
-                                continue;
-                            }
-                            else if (boundsRight + value > boxRight) {
-                                value = Math.max(0, boxRight - boundsRight);
-                            }
+                        else if (value < 0 && attr === 'marginBottom' && !this.blockStatic) {
+                            value = 0;
                         }
                     }
                     if (boxAdjustment) {
@@ -1474,7 +1479,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else {
                         result = this.bounds.height;
                     }
-                    if (this.has('lineHeight') && this.lineHeight > result) {
+                    if (this.naturalElement && this.lineHeight > result) {
                         result = this.lineHeight;
                     }
                     else if (this.inputElement) {
