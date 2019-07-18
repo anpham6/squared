@@ -37,6 +37,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T) {
         const mainData = Table.createDataAttribute(node);
         let table: T[] = [];
+        const thead: T[] = [];
+        const tbody: T[] = [];
+        const tfoot: T[] = [];
         function setAutoWidth(td: T, data: ExternalData) {
             data.percent = `${Math.round((td.bounds.width / node.box.width) * 100)}%`;
             data.expand = true;
@@ -56,9 +59,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             }
         }
         const setBoundsWidth = (td: T) => td.css('width', $css.formatPX(td.bounds.width), true);
-        const thead: T[] = [];
-        const tbody: T[] = [];
-        const tfoot: T[] = [];
         node.each((item: T) => {
             switch (item.tagName) {
                 case 'THEAD':
@@ -333,8 +333,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const children = tr.duplicate() as T[];
             for (const td of children) {
                 const element = <HTMLTableCellElement> td.element;
-                const rowSpan = element.rowSpan;
-                const colSpan = element.colSpan;
+                const { rowSpan, colSpan } = element;
                 const data: ExternalData = { rowSpan, colSpan };
                 for (let k = 0; k < rowSpan - 1; k++)  {
                     const l = (i + 1) + k;
@@ -428,7 +427,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 td.parent = node;
             }
             if (columnIndex[i] < columnCount) {
-                const td = children[children.length - 1];
+                const td = children.pop() as T;
                 const data: ExternalData = td.data(EXT_NAME.TABLE, 'cellData');
                 if (data) {
                     data.spaceSpan = columnCount - columnIndex[i];

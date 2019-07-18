@@ -2549,20 +2549,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     set dir(value) {
         this._cached.dir = value;
     }
-    get dir() {
+    get dir(): string {
         let result = this._cached.dir;
         if (result === undefined) {
-            result = '';
-            if (this.naturalElement) {
-                result = (<HTMLElement> this._element).dir;
-            }
-            else {
+            result = this.naturalElement ? (<HTMLElement> this._element).dir : '';
+            if (result === '') {
                 let current = this.actualParent;
-                while (current && !current.naturalElement) {
+                while (current && result === '') {
+                    result = current.dir;
                     current = current.actualParent;
-                }
-                if (current) {
-                    result = (<HTMLElement> current.element).dir;
                 }
             }
             this._cached.dir = result;
