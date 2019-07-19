@@ -89,7 +89,7 @@ function setAutoMargin(node: T) {
     return false;
 }
 
-function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
+function setMultiline(node: T, lineHeight: number, overwrite: boolean, autoPadding: boolean) {
     if (node.localSettings.targetAPI >= BUILD_ANDROID.PIE) {
         node.android('lineHeight', $css.formatPX(lineHeight), overwrite);
     }
@@ -99,10 +99,10 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
             node.android('lineSpacingExtra', $css.formatPX(offset), overwrite);
         }
     }
-    if (node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
+    if (autoPadding && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
         if (node.cssTry('white-space', 'nowrap')) {
             const offset = (lineHeight - (<Element> node.element).getBoundingClientRect().height) / 2;
-            if (Math.floor(offset) > 0) {
+            if (Math.round(offset) > 0) {
                 node.modifyBox($e.BOX_STANDARD.PADDING_TOP, Math.round(offset));
                 if (!node.blockStatic) {
                     node.modifyBox($e.BOX_STANDARD.PADDING_BOTTOM, Math.floor(offset));
@@ -115,35 +115,37 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
 }
 
 function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top = true, bottom = true) {
-    if (node.is(CONTAINER_NODE.IMAGE) || node.actualHeight === 0) {
+    if (node.imageOrSvgElement || node.actualHeight === 0) {
         return;
     }
     if (node.multiline) {
-        setMultiline(node, lineHeight, false);
+        setMultiline(node, lineHeight, false, true);
     }
     else if ((node.renderChildren.length === 0 || node.inline) && (node.pageFlow || node.textContent.length)) {
         let offset = 0;
         let usePadding = true;
         if (node.styleElement && !inlineStyle && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
             if (node.cssTry('white-space', 'nowrap')) {
-                offset = (lineHeight - ((<Element> node.element).getBoundingClientRect().height || node.actualHeight)) / 2;
+                offset = (lineHeight - (<Element> node.element).getBoundingClientRect().height) / 2;
                 usePadding = false;
                 node.cssFinally('white-space');
             }
             node.cssFinally('line-height');
         }
-        else if (inlineStyle && node.inlineText && !node.inline) {
-            adjustMinHeight(node, lineHeight);
+        else if (inlineStyle && !node.inline && node.inlineText) {
+            setMinHeight(node, lineHeight);
+            setMultiline(node, lineHeight, false, false);
             return;
         }
         else if (node.plainText && (node.bounds.numberOfLines as number) > 1) {
-            node.android('minHeight', $css.formatPX(node.actualHeight / (node.bounds.numberOfLines as number)));
+            node.android('minHeight', $css.formatPX(node.bounds.height / (node.bounds.numberOfLines as number)));
             node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
+            return;
         }
         else {
-            offset = (lineHeight - node.actualHeight) / 2;
+            offset = (lineHeight - node.bounds.height) / 2;
         }
-        if (Math.floor(offset) > 0) {
+        if (Math.round(offset) > 0) {
             const boxPadding = usePadding && node.textElement && !node.plainText && !inlineStyle;
             if (top) {
                 node.modifyBox(boxPadding ? $e.BOX_STANDARD.PADDING_TOP : $e.BOX_STANDARD.MARGIN_TOP, Math.round(offset));
@@ -154,26 +156,17 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
         }
     }
     else if (inlineStyle && (!node.hasHeight || lineHeight > node.height) && (node.layoutHorizontal && node.horizontalRows === undefined || node.hasAlign($e.NODE_ALIGNMENT.SINGLE))) {
-        adjustMinHeight(node, lineHeight);
+        setMinHeight(node, lineHeight);
     }
 }
 
-function adjustMinHeight(node: T, value: number) {
+function setMinHeight(node: T, value: number) {
     if (node.inlineText) {
         value += node.contentBoxHeight;
         node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL, false);
     }
     if (value > node.height) {
         node.android('minHeight', $css.formatPX(value));
-    }
-}
-
-function setSingleLine(node: T, ellipsize = false) {
-    if (node.textElement && !node.multiline) {
-        node.android('maxLines', '1');
-        if (ellipsize && node.textContent.trim().indexOf(' ') !== -1) {
-            node.android('ellipsize', 'end');
-        }
     }
 }
 
@@ -402,6 +395,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     const attr = LAYOUT_ANDROID.relativeParent[position];
                     if (attr) {
                         return node.android(this.localizeString(attr)) === 'true' || node.android(attr) === 'true';
+                    }
+                }
+                else if (renderParent.layoutLinear) {
+                    const children = renderParent.renderChildren;
+                    switch (position) {
+                        case 'left':
+                            return renderParent.layoutHorizontal && node === children[0];
+                        case 'top':
+                            return renderParent.layoutVertical && node === children[0];
                     }
                 }
             }
@@ -1129,28 +1131,37 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     const attr = attrs[i];
                     let value = boxReset === undefined || boxReset[attr] === 0 ? this[attr] : 0;
                     if (value !== 0) {
-                        if (attr === 'marginRight') {
-                            if (value < 0) {
-                                if (this.float === 'right' && $util.aboveRange(this.linear.right, this.documentParent.box.right)) {
+                        switch (attr) {
+                            case 'marginRight': {
+                                if (value < 0) {
+                                    if (this.float === 'right' && $util.aboveRange(this.linear.right, this.documentParent.box.right)) {
+                                        value = 0;
+                                    }
+                                }
+                                else if (this.inline) {
+                                    const outer = this.documentParent.box.right;
+                                    const inner = this.bounds.right;
+                                    if (Math.floor(inner) > outer) {
+                                        if (!this.onlyChild && !this.alignParent('left')) {
+                                            this.setSingleLine(true);
+                                        }
+                                        continue;
+                                    }
+                                    else if (inner + value > outer) {
+                                        value = $math.clampRange(outer - inner, 0, value);
+                                    }
+                                }
+                                break;
+                            }
+                            case 'marginBottom':
+                                if (value < 0 && this.pageFlow && !this.blockStatic) {
                                     value = 0;
                                 }
-                            }
-                            else if (this.inline) {
-                                const outer = this.documentParent.box.right;
-                                const inner = this.bounds.right;
-                                if (Math.floor(inner) > outer) {
-                                    if (!this.onlyChild && !this.alignParent('left')) {
-                                        setSingleLine(this, true);
-                                    }
-                                    continue;
-                                }
-                                else if (inner + value > outer) {
-                                    value = $math.clampRange(outer - inner, 0, value);
-                                }
-                            }
-                        }
-                        else if (value < 0 && attr === 'marginBottom' && !this.blockStatic) {
-                            value = 0;
+                                break;
+                            case 'paddingTop':
+                            case 'paddingBottom':
+                                value = this.actualPadding(attr, value);
+                                break;
                         }
                     }
                     if (boxAdjustment) {
@@ -1244,6 +1255,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             setBoxModel($css.BOX_PADDING, false);
         }
 
+        public setSingleLine(ellipsize = false) {
+            if (this.textElement && this.naturalChild) {
+                const parent = this.actualParent as View;
+                if (!parent.preserveWhiteSpace && parent.tagName !== 'CODE' && (!this.multiline || parent.css('whiteSpace') === 'nowrap')) {
+                    this.android('maxLines', '1');
+                }
+                if (ellipsize && this.textContent.trim().length > 1) {
+                    this.android('ellipsize', 'end');
+                }
+            }
+        }
+
         public extractAttributes(depth: number) {
             if (this.dir === 'rtl' && !this.imageOrSvgElement) {
                 if (this.textElement) {
@@ -1292,21 +1315,25 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         private alignLayout(renderParent: T) {
             if (this.layoutLinear) {
-                const children = this.renderChildren;
                 if (this.layoutVertical) {
                     if (!renderParent.layoutVertical && !renderParent.layoutFrame && !this.documentRoot && !this.hasAlign($e.NODE_ALIGNMENT.TOP)) {
-                        let firstChild = children[0];
-                        if (firstChild.baseline) {
-                            if (firstChild.renderChildren.length) {
-                                firstChild = firstChild.renderChildren[0] as T;
+                        let children = this.renderChildren;
+                        let firstChild: T | undefined;
+                        do {
+                            firstChild = children[0];
+                            if (firstChild && firstChild.naturalChild) {
+                                break;
                             }
-                            if (firstChild.baseline && (firstChild.textElement || firstChild.inputElement)) {
-                                this.android('baselineAlignedChildIndex', '0');
-                            }
+                            children = firstChild.renderChildren as T[];
+                        }
+                        while (children.length);
+                        if (firstChild.baseline && (firstChild.textElement || firstChild.inputElement)) {
+                            this.android('baselineAlignedChildIndex', '0');
                         }
                     }
                 }
                 else {
+                    const children = this.renderChildren;
                     if (children.some(node => node.floating) && !children.some(node => node.imageElement && node.baseline)) {
                         this.android('baselineAligned', 'false');
                     }
@@ -1318,7 +1345,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     const length = children.length;
                     for (let i = 1; i < length; i++) {
-                        setSingleLine(children[i], i === length - 1);
+                        children[i].setSingleLine(i === length - 1);
                     }
                 }
             }
@@ -1329,7 +1356,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (lineHeight > 0) {
                 const hasOwnStyle = this.has('lineHeight');
                 if (this.multiline) {
-                    setMultiline(this, lineHeight, hasOwnStyle);
+                    setMultiline(this, lineHeight, hasOwnStyle, true);
                 }
                 else {
                     const hasChildren = this.renderChildren.length > 0;
@@ -1450,7 +1477,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         result = this.contentBoxHeight === 0 && (this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0 || this.css('height') === '0px' && this.css('overflow') === 'hidden');
                     }
                     else {
-                        result = this.bounds.width === 0 && this.contentBoxWidth === 0 && this.textEmpty && this.marginLeft <= 0 && this.marginRight <= 0;
+                        result = this.bounds.width === 0 && this.contentBoxWidth === 0 && this.textEmpty && !this.visibleStyle.background && this.marginLeft <= 0 && this.marginRight <= 0;
                     }
                 }
                 else {

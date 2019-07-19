@@ -16,6 +16,8 @@ import * as $xml from '../src/lib/xml';
 import * as $svg_const from '../src/svg/lib/constant';
 import * as $svg_util from '../src/svg/lib/util';
 
+type ExtensionRequest = base.Extension<base.Node> | string;
+
 declare class PromiseResult {
     public then(resolve: () => void): void;
 }
@@ -24,11 +26,11 @@ declare const settings: UserSettings;
 declare const system: FunctionMap<any>;
 declare function setFramework(value: {}, cached?: boolean): void;
 declare function parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
-declare function include(value: {} | string, options?: {}): boolean;
-declare function includeAsync(value: {} | string, options?: {}): boolean;
-declare function exclude(value: {} | string): boolean;
+declare function include(value: ExtensionRequest, options?: {}): boolean;
+declare function includeAsync(value: ExtensionRequest | string, options?: {}): boolean;
+declare function exclude(value: ExtensionRequest | string): boolean;
+declare function configure(value: ExtensionRequest | string, options: {}): boolean;
 declare function retrieve(value: string): {} | null;
-declare function configure(value: {} | string, options: {}): boolean;
 declare function ready(): boolean;
 declare function close(): void;
 declare function reset(): void;
@@ -306,9 +308,9 @@ declare namespace base {
         readonly unknownAligned: boolean;
         readonly visible: T[];
         init(): void;
-        setType(containerType: number, alignmentType?: number): void;
+        setType(value: LayoutType): void;
+        setContainerType(containerType: number, alignmentType?: number): void;
         hasAlign(value: number): boolean;
-        reset(): void;
         add(value: number): number;
         delete(value: number): number;
     }
@@ -425,6 +427,8 @@ declare namespace base {
         readonly actualDimension: Dimension;
         readonly firstChild: Node | null;
         readonly lastChild: Node | null;
+        readonly firstStaticChild: Node | null;
+        readonly lastStaticChild: Node | null;
         readonly previousSibling: Node | null;
         readonly nextSibling: Node | null;
         readonly previousElementSibling: Node | null;
@@ -559,6 +563,7 @@ declare namespace base {
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
         renderFilter(predicate: IteratorPredicate<NodeUI, boolean>): NodeUI[];
         actualRect(direction: string, dimension?: string): number;
+        actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
         previousSiblings(options?: SiblingOptions): NodeUI[];
         nextSiblings(options?: SiblingOptions): NodeUI[];

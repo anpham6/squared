@@ -15,6 +15,7 @@ import * as xml from './lib/xml';
 type Node = squared.base.Node;
 type Application = squared.base.Application<Node>;
 type Extension = squared.base.Extension<Node>;
+type ExtensionRequest = Extension | string;
 
 const extensionsAsync = new Set<Extension>();
 const optionsAsync = new Map<string, ExternalData>();
@@ -65,7 +66,7 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
     }
 }
 
-export function parseDocument(...elements: (string | HTMLElement)[]): squared.PromiseResult {
+export function parseDocument(...elements: (HTMLElement | string)[]): squared.PromiseResult {
     if (main) {
         if (settings.handleExtensionsAsync) {
             for (const item of extensionsAsync) {
@@ -94,7 +95,7 @@ export function parseDocument(...elements: (string | HTMLElement)[]): squared.Pr
     return new PromiseResult();
 }
 
-export function include(value: any, options?: {}) {
+export function include(value: ExtensionRequest, options?: {}) {
     if (main) {
         if (typeof value === 'string') {
             value = value.trim();
@@ -110,7 +111,7 @@ export function include(value: any, options?: {}) {
     return false;
 }
 
-export function includeAsync(value: any, options?: {}) {
+export function includeAsync(value: ExtensionRequest, options?: {}) {
     if (include(value, options)) {
         return true;
     }
@@ -123,9 +124,16 @@ export function includeAsync(value: any, options?: {}) {
     return false;
 }
 
-export function exclude(value: any) {
+export function exclude(value: ExtensionRequest) {
     if (main) {
-        if (value instanceof squared.base.Extension) {
+        if (typeof value === 'string') {
+            value = value.trim();
+            const extension = main.extensionManager.retrieve(value);
+            if (extension) {
+                return main.extensionManager.exclude(extension);
+            }
+        }
+        else if (value instanceof squared.base.Extension) {
             if (extensionsAsync.has(value)) {
                 extensionsAsync.delete(value);
                 main.extensionManager.exclude(value);
@@ -135,24 +143,13 @@ export function exclude(value: any) {
                 return main.extensionManager.exclude(value);
             }
         }
-        else if (typeof value === 'string') {
-            value = value.trim();
-            const extension = main.extensionManager.retrieve(value);
-            if (extension) {
-                return main.extensionManager.exclude(extension);
-            }
-        }
     }
     return false;
 }
 
-export function configure(value: any, options: {}) {
+export function configure(value: ExtensionRequest, options: {}) {
     if (util.isPlainObject(options)) {
-        if (value instanceof squared.base.Extension) {
-            Object.assign(value.options, options);
-            return true;
-        }
-        else if (typeof value === 'string') {
+        if (typeof value === 'string') {
             if (main) {
                 value = value.trim();
                 const extension = main.extensionManager.retrieve(value) || Array.from(extensionsAsync).find(item => item.name === value);
@@ -167,6 +164,10 @@ export function configure(value: any, options: {}) {
                     }
                 }
             }
+        }
+        else if (value instanceof squared.base.Extension) {
+            Object.assign(value.options, options);
+            return true;
         }
     }
     return false;

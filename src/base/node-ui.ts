@@ -19,6 +19,8 @@ const {
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 
+const canCascadeChildren = (node: T) => node.naturalElements.length && !node.layoutElement && !node.tableElement;
+
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static outerRegion(node: T): BoxRect {
         let top = Number.POSITIVE_INFINITY;
@@ -99,14 +101,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (!$math.isEqual(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
                 }
-                else if (a.inputElement && b.inputElement && a.containerType !== b.containerType) {
-                    return a.containerType > b.containerType ? -1 : 1;
-                }
-                else if (a.bounds.bottom > b.bounds.bottom) {
-                    return -1;
-                }
-                else if (a.bounds.bottom < b.bounds.bottom) {
-                    return 1;
+                else {
+                    if (a.textElement && b.textElement) {
+                        if (!a.plainText && b.plainText) {
+                            return -1;
+                        }
+                        else if (a.plainText && !b.plainText) {
+                            return 1;
+                        }
+                    }
+                    else if (a.inputElement && b.inputElement && a.containerType !== b.containerType) {
+                        return a.containerType > b.containerType ? -1 : 1;
+                    }
+                    if (a.bounds.bottom > b.bounds.bottom) {
+                        return -1;
+                    }
+                    else if (a.bounds.bottom < b.bounds.bottom) {
+                        return 1;
+                    }
                 }
                 return 0;
             });
@@ -960,6 +972,39 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return node[dimension][direction] as number;
     }
 
+    public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
+        let reset = false;
+        if (canCascadeChildren(this)) {
+            function cascade(children: T[]) {
+                let valid = false;
+                for (const item of children) {
+                    if (item.blockStatic) {
+                        return false;
+                    }
+                    else if (item.inlineStatic) {
+                        if (item.has('lineHeight') && item.lineHeight > item.bounds.height) {
+                            return false;
+                        }
+                        else if (item[attr] >= value) {
+                            valid = true;
+                        }
+                        else if (canCascadeChildren(item)) {
+                            if (!cascade(item.naturalElements as T[])) {
+                                return false;
+                            }
+                            else {
+                                valid = true;
+                            }
+                        }
+                    }
+                }
+                return valid;
+            }
+            reset = cascade(this.naturalElements as T[]);
+        }
+        return reset ? 0 : value;
+    }
+
     public cloneBase(node: T) {
         node.localSettings = this.localSettings;
         node.alignmentType = this.alignmentType;
@@ -1033,7 +1078,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get naturalChild() {
-        return this._element !== null && !!this._element.parentElement;
+        return this._element !== null && this._element.parentElement !== null;
     }
 
     get pseudoElement() {
@@ -1265,7 +1310,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textEmpty() {
         let result = this._cached.textEmpty;
         if (result === undefined) {
-            result = this.styleElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '' && !this.pseudoElement) && !this.imageElement && !this.svgElement;
+            result = this.styleElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '') && !this.imageElement && !this.svgElement;
             this._cached.textEmpty = result;
         }
         return result;

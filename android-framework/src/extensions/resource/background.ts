@@ -100,9 +100,24 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                 }
             }
             else {
-                const grayScale = rgba.r !== 0 && rgba.r === rgba.g && rgba.g === rgba.b;
-                if (style === 'inset' || grayScale && style === 'groove' || !grayScale && style === 'ridge') {
+                const grayScale = rgba.r === rgba.g && rgba.g === rgba.b;
+                let offset = 0;
+                if (style === 'ridge') {
                     halfSize = !halfSize;
+                    offset += 0.25;
+                }
+                else if (style === 'groove') {
+                    offset += 0.25;
+                }
+                else {
+                    if (grayScale) {
+                        if (style === 'inset') {
+                            halfSize = !halfSize;
+                        }
+                    }
+                    else if (style === 'outset') {
+                        halfSize = !halfSize;
+                    }
                 }
                 if (halfSize) {
                     switch (direction) {
@@ -120,12 +135,12 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                     case 0:
                     case 3:
                         if (grayScale) {
-                            percent = 0.5;
+                            percent = 0.5 + offset;
                         }
                         break;
                     case 1:
                     case 2:
-                        percent = grayScale ? 0.8 : -0.75;
+                        percent = grayScale ? 0.75 + offset : -0.75;
                         break;
                 }
             }
@@ -1046,20 +1061,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     break;
                             }
                         }
-                        if (!node.blockStatic || node.hasWidth) {
-                            if (dimenWidth + position.left >= boundsWidth) {
-                                tileModeX = '';
-                                if (tileMode === 'repeat') {
-                                    tileModeY = 'repeat';
-                                    tileMode = '';
-                                }
-                            }
-                            if (dimenHeight + position.top >= boundsHeight) {
-                                tileModeY = '';
-                                if (tileMode === 'repeat') {
-                                    tileModeX = 'repeat';
-                                    tileMode = '';
-                                }
+                        if (dimenWidth + position.left >= boundsWidth && (!node.blockStatic || node.hasPX('width', false))) {
+                            tileModeX = '';
+                            if (tileMode === 'repeat') {
+                                tileModeY = 'repeat';
+                                tileMode = '';
                             }
                         }
                     }

@@ -33,12 +33,12 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (layout.linearY) {
                 layout.rowCount = node.length;
                 layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
-                layout.setType(CONTAINER_NODE.GRID, $e.NODE_ALIGNMENT.AUTO_LAYOUT);
+                layout.setContainerType(CONTAINER_NODE.GRID, $e.NODE_ALIGNMENT.AUTO_LAYOUT);
             }
             else if (layout.linearX || layout.singleRowAligned) {
                 layout.rowCount = 1;
                 layout.columnCount = layout.length;
-                layout.setType(CONTAINER_NODE.LINEAR, $e.NODE_ALIGNMENT.HORIZONTAL);
+                layout.setContainerType(CONTAINER_NODE.LINEAR, $e.NODE_ALIGNMENT.HORIZONTAL);
             }
             if (layout.containerType !== 0) {
                 return {
@@ -55,6 +55,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         if (mainData) {
             const application = this.application;
             const controller = this.controller;
+            const firstChild = parent.firstStaticChild === node;
             let minWidth = node.marginLeft;
             let columnCount = 0;
             let adjustPadding = false;
@@ -64,7 +65,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 columnCount = $util.convertInt(parent.android('columnCount'));
                 adjustPadding = true;
             }
-            else if (parent.item(0) === node) {
+            else if (firstChild) {
                 adjustPadding = true;
             }
             if (adjustPadding) {
@@ -84,10 +85,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 else {
                     if (layoutOrdinal.singleRowAligned) {
-                        layoutOrdinal.setType(CONTAINER_NODE.RELATIVE, $e.NODE_ALIGNMENT.HORIZONTAL);
+                        layoutOrdinal.setContainerType(CONTAINER_NODE.RELATIVE, $e.NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
-                        layoutOrdinal.setType(CONTAINER_NODE.CONSTRAINT, $e.NODE_ALIGNMENT.UNKNOWN);
+                        layoutOrdinal.setContainerType(CONTAINER_NODE.CONSTRAINT, $e.NODE_ALIGNMENT.UNKNOWN);
                     }
                     layoutOrdinal.retain(ordinal.children as T[]);
                 }
@@ -152,7 +153,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         ordinal.id,
                         controller.renderNodeStatic(
                             CONTAINER_ANDROID.SPACE,
-                            createViewAttribute(undefined, { minWidth: `@dimen/${Resource.insertStoredAsset('dimens', `${node.tagName.toLowerCase()}_space_`, $css.formatPX(minWidth))}` })
+                            createViewAttribute(undefined, { minWidth: `@dimen/${Resource.insertStoredAsset('dimens', `${node.tagName.toLowerCase()}_space_indent`, $css.formatPX(minWidth))}` })
                         ),
                         false
                     );

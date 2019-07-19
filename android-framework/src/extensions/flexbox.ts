@@ -167,7 +167,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 layout.containerType = CONTAINER_NODE.CONSTRAINT;
             }
             else {
-                layout.setType(CONTAINER_NODE.LINEAR, mainData.directionColumn ? $e.NODE_ALIGNMENT.HORIZONTAL : $e.NODE_ALIGNMENT.VERTICAL);
+                layout.setContainerType(CONTAINER_NODE.LINEAR, mainData.directionColumn ? $e.NODE_ALIGNMENT.HORIZONTAL : $e.NODE_ALIGNMENT.VERTICAL);
             }
             return {
                 output: this.application.renderNode(layout),

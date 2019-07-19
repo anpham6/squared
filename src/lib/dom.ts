@@ -104,10 +104,10 @@ export function getRangeClientRect(element: Element) {
         }
     }
     let bounds: BoxRectDimension;
-    let maxTop = Number.NEGATIVE_INFINITY;
     length = domRect.length;
     if (length) {
         bounds = assignRect(domRect[0]);
+        let numberOfLines = 1;
         for (let i = 1 ; i < length; i++) {
             const rect = domRect[i];
             if (rect.left < bounds.left) {
@@ -119,17 +119,17 @@ export function getRangeClientRect(element: Element) {
             if (rect.top < bounds.top) {
                 bounds.top = rect.top;
             }
+            else if (rect.top >= bounds.bottom) {
+                numberOfLines++;
+            }
             if (rect.bottom > bounds.bottom) {
                 bounds.bottom = rect.bottom;
             }
             bounds.width += rect.width;
-            if (rect.top > maxTop) {
-                maxTop = rect.top;
-            }
         }
         bounds.height = bounds.bottom - bounds.top;
-        if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-            bounds.numberOfLines = domRect.length - 1;
+        if (numberOfLines > 1) {
+            bounds.numberOfLines = numberOfLines;
         }
     }
     else {

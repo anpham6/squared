@@ -96,16 +96,21 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 node.resetBox($e.BOX_STANDARD.MARGIN, container);
             }
             for (const item of mainData.children) {
+                const autoMargin = item.autoMargin;
+                let top = false;
+                let left = false;
                 if (item.hasPX('top')) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
+                    top = true;
                 }
-                else if (item.hasPX('bottom')) {
+                if (item.hasPX('bottom') && (!top || autoMargin.top || autoMargin.topBottom)) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
                 }
                 if (item.hasPX('left')) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
+                    left = true;
                 }
-                else if (item.hasPX('right')) {
+                if (item.hasPX('right') && (!left || autoMargin.left || autoMargin.leftRight)) {
                     item.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
                 }
             }

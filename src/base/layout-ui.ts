@@ -1,3 +1,5 @@
+import { LayoutType } from '../../@types/base/application';
+
 import NodeUI from './node-ui';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
@@ -78,28 +80,11 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         }
     }
 
-    public reset(parent?: T, node?: T) {
-        this.containerType = 0;
-        this.alignmentType = 0;
-        this.rowCount = 0;
-        this.columnCount = 0;
-        this.renderType = 0;
-        this.renderIndex = -1;
-        this.itemCount = 0;
-        this._linearX = undefined;
-        this._linearY = undefined;
-        this._floated = undefined;
-        this._cleared = undefined;
-        if (parent) {
-            this.parent = parent;
-        }
-        if (node) {
-            this.node = node;
-        }
-        this.clear();
+    public setType(value: LayoutType) {
+        this.setContainerType(value.containerType, value.alignmentType);
     }
 
-    public setType(containerType: number, alignmentType?: number) {
+    public setContainerType(containerType: number, alignmentType?: number) {
         this.containerType = containerType;
         if (alignmentType) {
             this.add(alignmentType);
@@ -148,9 +133,10 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     get singleRowAligned() {
         if (this._singleRow === undefined) {
-            if (this.length) {
+            const length = this.length;
+            if (length) {
                 this._singleRow = true;
-                if (this.length > 1) {
+                if (length > 1) {
                     let previousBottom = Number.POSITIVE_INFINITY;
                     for (const node of this.children) {
                         if (node.multiline || node.blockStatic) {

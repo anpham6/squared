@@ -496,7 +496,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             bounds.numberOfLines = rect.numberOfLines;
             this._bounds = bounds;
             this._textBounds = bounds;
-            this._cached.multiline = (rect.numberOfLines as number) > 0;
+            this._cached.multiline = (rect.numberOfLines as number) > 1;
         }
         if (!cache) {
             this._box = undefined;
@@ -1302,37 +1302,37 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             let paddingEnd = this.toFloat('paddingInlineEnd');
             if (paddingStart > 0 || paddingEnd > 0) {
                 if (this.css('writingMode') === 'vertical-rl') {
-                    if (this.dir === 'ltr') {
-                        if (attr !== 'paddingTop') {
+                    if (this.dir === 'rtl') {
+                        if (attr !== 'paddingBottom') {
                             paddingStart = 0;
                         }
-                        if (attr !== 'paddingBottom') {
+                        if (attr !== 'paddingTop') {
                             paddingEnd = 0;
                         }
                     }
                     else {
-                        if (attr !== 'paddingBottom') {
+                        if (attr !== 'paddingTop') {
                             paddingStart = 0;
                         }
-                        if (attr !== 'paddingTop') {
+                        if (attr !== 'paddingBottom') {
                             paddingEnd = 0;
                         }
                     }
                 }
                 else {
-                    if (this.dir === 'ltr') {
-                        if (attr !== 'paddingLeft') {
+                    if (this.dir === 'rtl') {
+                        if (attr !== 'paddingRight') {
                             paddingStart = 0;
                         }
-                        if (attr !== 'paddingRight') {
+                        if (attr !== 'paddingLeft') {
                             paddingEnd = 0;
                         }
                     }
                     else {
-                        if (attr !== 'paddingRight') {
+                        if (attr !== 'paddingLeft') {
                             paddingStart = 0;
                         }
-                        if (attr !== 'paddingLeft') {
+                        if (attr !== 'paddingRight') {
                             paddingEnd = 0;
                         }
                     }
@@ -1845,23 +1845,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get paddingTop() {
         let result = this._cached.paddingTop;
         if (result === undefined) {
-            const value = this.convertBox('paddingTop', false);
-            if (this.length && value > 0 && !this.layoutElement) {
-                let top = 0;
-                for (const node of this.children) {
-                    if (node.inline && !node.has('lineHeight')) {
-                        top = Math.max(top, node.paddingTop);
-                    }
-                    else {
-                        top = 0;
-                        break;
-                    }
-                }
-                result = Math.max(0, value - top);
-            }
-            else {
-                result = this.inlineStatic && !this.visibleStyle.background ? 0 : value;
-            }
+            result = this.convertBox('paddingTop', false);
             this._cached.paddingTop = result;
         }
         return result;
@@ -1877,23 +1861,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get paddingBottom() {
         let result = this._cached.paddingBottom;
         if (result === undefined) {
-            const value = this.convertBox('paddingBottom', false);
-            if (this.length && value > 0 && !this.layoutElement) {
-                let bottom = 0;
-                for (const node of this.children) {
-                    if (node.inline && !node.has('lineHeight')) {
-                        bottom = Math.max(bottom, node.paddingBottom);
-                    }
-                    else {
-                        bottom = 0;
-                        break;
-                    }
-                }
-                result = Math.max(0, value - bottom);
-            }
-            else {
-                result = this.inlineStatic && !this.visibleStyle.background ? 0 : value;
-            }
+            result = this.convertBox('paddingBottom', false);
             this._cached.paddingBottom = result;
         }
         return result;
@@ -2229,11 +2197,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.multiline;
         if (result === undefined) {
             if (this.plainText) {
-                result = ($dom.getRangeClientRect(<Element> this._element).numberOfLines as number) > 0;
+                result = ($dom.getRangeClientRect(<Element> this._element).numberOfLines as number) > 1;
             }
             else if (this.styleText && (this.inlineFlow || this.naturalElements.length === 0)) {
                 const textBounds = this.textBounds;
-                result = textBounds ? (textBounds.numberOfLines as number) > 0 : false;
+                result = textBounds ? (textBounds.numberOfLines as number) > 1 : false;
             }
             else {
                 result = false;
@@ -2479,6 +2447,26 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const children = this.naturalElements;
         const length = children.length;
         return length ? children[length - 1] : null;
+    }
+
+    get firstStaticChild() {
+        for (const node of this.naturalChildren) {
+            if (node.pageFlow) {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    get lastStaticChild() {
+        const children = this.naturalChildren;
+        for (let i = children.length - 1; i >= 0; i--) {
+            const node = children[i];
+            if (node.pageFlow) {
+                return node;
+            }
+        }
+        return null;
     }
 
     get previousSibling() {

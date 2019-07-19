@@ -1396,7 +1396,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             rightSub = rightAbove;
         }
         const { containerType, alignmentType } = controller.containerTypeVertical;
-        const verticalMargin = controller.containerTypeVerticalMargin;
         if (rightAbove.length + (rightBelow ? rightBelow.length : 0) === layout.length) {
             layout.add(NODE_ALIGNMENT.RIGHT);
         }
@@ -1427,7 +1426,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (rightSub) {
             layerIndex.push(rightSub);
         }
-        layout.setType(verticalMargin.containerType, verticalMargin.alignmentType);
+        layout.setType(controller.containerTypeVerticalMargin);
         layout.itemCount = layerIndex.length;
         layout.add(NODE_ALIGNMENT.BLOCK);
         for (const item of layerIndex) {
@@ -1472,15 +1471,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     group.node.innerWrapped = seg[0];
                     seg[0].outerWrapper = group.node;
                     if (seg[0].percentWidth) {
-                        const percent = controller.containerTypePercent;
-                        group.setType(percent.containerType, percent.alignmentType);
+                        group.setType(controller.containerTypePercent);
                     }
                     else {
-                        group.setType(containerType, alignmentType);
+                        group.setContainerType(containerType, alignmentType);
                     }
                 }
                 else if (group.linearY || group.unknownAligned) {
-                    group.setType(containerType, alignmentType | (group.unknownAligned ? NODE_ALIGNMENT.UNKNOWN : 0));
+                    group.setContainerType(containerType, alignmentType | (group.unknownAligned ? NODE_ALIGNMENT.UNKNOWN : 0));
                 }
                 else {
                     controller.processLayoutHorizontal(group);

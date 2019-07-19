@@ -44,9 +44,6 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         }
                         else if (expand === false) {
                             item.android('layout_columnWeight', '0');
-                            if (item.textElement && item.textContent.length > 1) {
-                                item.android('ellipsize', 'end');
-                            }
                         }
                         if (data.downsized) {
                             if (data.exceed) {
@@ -60,9 +57,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                             }
                         }
                     }
-                    if (item.textElement && item.textContent.length > 1 && !/[\s\n\-]/.test(item.textContent.trim())) {
-                        item.android('maxLines', '1');
-                    }
+                    item.setSingleLine(true);
                 });
             }
             else {

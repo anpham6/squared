@@ -104,6 +104,7 @@ declare namespace base {
         combine(...objs: string[]): string[];
         setLayoutWidth(value: string, overwrite?: boolean): void;
         setLayoutHeight(value: string, overwrite?: boolean): void;
+        setSingleLine(ellipsize?: boolean): void;
     }
 
     class View implements View {

@@ -53,7 +53,7 @@
                 android:layout_width="match_parent" />
             <LinearLayout
                 android:id="@+id/linearlayout_1"
-                android:baselineAlignedChildIndex="0"
+                android:baselineAlignedChildIndex="1"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/label_layout_margin_end"
                 android:layout_width="@dimen/label_layout_width"
@@ -69,13 +69,16 @@
                     android:id="@+id/textview_18"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
+                    android:maxLines="1"
                     android:text="@string/add"
                     style="@style/A" />
                 <TextView
                     android:id="@+id/textview_19"
+                    android:ellipsize="end"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol85484"
+                    android:maxLines="1"
+                    android:text="@string/__symbol10196"
                     style="@style/Plaintext" />
             </LinearLayout>
             <LinearLayout
@@ -216,7 +219,7 @@
                 android:layout_width="match_parent" />
             <LinearLayout
                 android:id="@+id/linearlayout_3"
-                android:baselineAlignedChildIndex="0"
+                android:baselineAlignedChildIndex="1"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/label_layout_margin_end"
                 android:layout_width="@dimen/label_layout_width"
@@ -232,13 +235,16 @@
                     android:id="@+id/textview_21"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
+                    android:maxLines="1"
                     android:text="@string/add"
                     style="@style/A" />
                 <TextView
                     android:id="@+id/textview_22"
+                    android:ellipsize="end"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol85484"
+                    android:maxLines="1"
+                    android:text="@string/__symbol10196"
                     style="@style/Plaintext" />
             </LinearLayout>
             <RelativeLayout
@@ -671,7 +677,7 @@
                 android:layout_width="match_parent" />
             <LinearLayout
                 android:id="@+id/linearlayout_4"
-                android:baselineAlignedChildIndex="0"
+                android:baselineAlignedChildIndex="1"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/label_layout_margin_end"
                 android:layout_width="@dimen/label_layout_width"
@@ -687,13 +693,16 @@
                     android:id="@+id/textview_24"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
+                    android:maxLines="1"
                     android:text="@string/add"
                     style="@style/A" />
                 <TextView
                     android:id="@+id/textview_25"
+                    android:ellipsize="end"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol85484"
+                    android:maxLines="1"
+                    android:text="@string/__symbol10196"
                     style="@style/Plaintext" />
             </LinearLayout>
             <RelativeLayout
@@ -826,7 +835,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol85484">):</string>
+    <string name="__symbol10196">):</string>
     <string name="active">Active:</string>
     <string name="add"><u>Add</u></string>
     <string name="all">All</string>
@@ -1113,7 +1122,7 @@
     <dimen name="input_button_padding_horizontal">7dp</dimen>
     <dimen name="input_button_padding_top">3dp</dimen>
     <dimen name="input_checkbox_layout_margin_end">3dp</dimen>
-    <dimen name="input_checkbox_layout_margin_start">6dp</dimen>
+    <dimen name="input_checkbox_layout_margin_start">7dp</dimen>
     <dimen name="input_checkbox_layout_margin_vertical">3dp</dimen>
     <dimen name="input_radio_layout_margin_horizontal">3dp</dimen>
     <dimen name="input_radio_layout_margin_vertical">3dp</dimen>
