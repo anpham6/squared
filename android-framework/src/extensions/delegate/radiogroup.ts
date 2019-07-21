@@ -64,9 +64,6 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 container.addAlign($e.NODE_ALIGNMENT.VERTICAL);
                 container.android('orientation', STRING_ANDROID.VERTICAL);
             }
-            if (parent.layoutConstraint) {
-                container.companion = node;
-            }
             container.setControlType(CONTAINER_ANDROID.RADIOGROUP, CONTAINER_NODE.LINEAR);
             container.inherit(node, 'alignment');
             if (container.baseline) {

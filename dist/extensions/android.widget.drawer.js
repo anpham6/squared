@@ -1,4 +1,4 @@
-/* android.widget 1.2.5
+/* android.widget 1.2.7
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -8,13 +8,13 @@ this.android.widget.drawer = (function () {
 
     const { session: $session, util: $util } = squared.lib;
     const { constant: $constA, enumeration: $enumA, util: $utilA } = android.lib;
-    const { constant: $c, enumeration: $e } = squared.base.lib;
     const $Resource = android.base.Resource;
+    const $e = squared.base.lib.enumeration;
     class Drawer extends squared.base.ExtensionUI {
         constructor(name, framework, options, tagNames) {
             super(name, framework, options, tagNames);
             this.documentBase = true;
-            this.require($c.EXT_NAME.EXTERNAL, true);
+            this.require($constA.EXT_ANDROID.EXTERNAL, true);
             this.require("android.widget.menu" /* MENU */);
             this.require("android.widget.coordinator" /* COORDINATOR */);
         }
@@ -25,8 +25,8 @@ this.android.widget.drawer = (function () {
                 if (length) {
                     for (let i = 0; i < length; i++) {
                         const item = children[i];
-                        if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
-                            item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
+                        if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $constA.EXT_ANDROID.EXTERNAL)) {
+                            item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $constA.EXT_ANDROID.EXTERNAL;
                         }
                     }
                     this.application.rootElements.add(element);
@@ -63,14 +63,15 @@ this.android.widget.drawer = (function () {
                     node,
                     controlName: $constA.SUPPORT_ANDROID.DRAWER
                 },
-                complete: true
+                complete: true,
+                remove: true
             };
         }
         afterParseDocument() {
             for (const node of this.subscribers) {
                 const options = $utilA.createViewAttribute(this.options.navigationView);
                 const menu = $util.optionalAsString(Drawer.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
-                const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $c.EXT_NAME.EXTERNAL), 'dataset.layoutName');
+                const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $constA.EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
                 if (menu !== '') {
                     $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
                 }

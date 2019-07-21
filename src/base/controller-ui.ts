@@ -310,7 +310,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public includeElement(element: Element) {
-        return !this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && !this.localSettings.unsupported.tagName.has(`${element.tagName}:${(<HTMLInputElement> element).type}`) || (<HTMLElement> element).contentEditable === 'true';
+        return !(this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && this.localSettings.unsupported.tagName.has(`${element.tagName}:${(<HTMLInputElement> element).type}`)) || (<HTMLElement> element).contentEditable === 'true';
     }
 
     public visibleElement(element: Element) {

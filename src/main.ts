@@ -2,8 +2,8 @@ import { AppFramework, UserSettings } from '../@types/base/application';
 
 import Container from './lib/base/container';
 
-import * as color from './lib/color';
 import * as client from './lib/client';
+import * as color from './lib/color';
 import * as css from './lib/css';
 import * as dom from './lib/dom';
 import * as math from './lib/math';
@@ -236,8 +236,8 @@ const lib = {
     base: {
         Container
     },
-    color,
     client,
+    color,
     css,
     dom,
     math,

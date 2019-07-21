@@ -448,6 +448,8 @@ function setColumnVertical(partition: View[][], lastRow: boolean, previousRow?: 
     }
 }
 
+const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && $regex.CHAR.LEADINGNEWLINE.test(node.textContent);
+
 const getRelativeVertical = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative || !item.pageFlow && item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
@@ -550,6 +552,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 'LINK',
                 'OPTION',
                 'INPUT:hidden',
+                'COLGROUP',
                 'MAP',
                 'AREA',
                 'SOURCE',
@@ -1887,27 +1890,30 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const parent = node.actualParent as T;
                         if (parent) {
                             if (parent === renderParent && parent.blockStatic && node.naturalElement && node.inlineStatic) {
-                                return parent.box.width - (node.linear.left - parent.box.left);
+                                const box = parent.box;
+                                return box.width - (node.linear.left - box.left);
                             }
                             else if (parent.floatContainer) {
                                 const { containerType, alignmentType } = this.containerTypeVerticalMargin;
                                 const container = node.ascend((item: T) => item.of(containerType, alignmentType), parent, 'renderParent');
                                 if (container.length) {
+                                    const box = node.box;
                                     let leftOffset = 0;
                                     let rightOffset = 0;
                                     for (const item of parent.naturalElements as T[]) {
-                                        if (item.floating && !children.includes(item) && node.intersectY(item.linear)) {
+                                        const linear = item.linear;
+                                        if (item.floating && !children.includes(item) && node.intersectY(linear)) {
                                             if (item.float === 'left') {
-                                                if (Math.floor(item.linear.right) > node.box.left) {
-                                                    leftOffset = Math.max(leftOffset, item.linear.right - node.box.left);
+                                                if (Math.floor(linear.right) > box.left) {
+                                                    leftOffset = Math.max(leftOffset, linear.right - box.left);
                                                 }
                                             }
-                                            else if (item.float === 'right' && node.box.right > Math.ceil(item.linear.left)) {
-                                                rightOffset = Math.max(rightOffset, node.box.right - item.linear.left);
+                                            else if (item.float === 'right' && box.right > Math.ceil(linear.left)) {
+                                                rightOffset = Math.max(rightOffset, box.right - linear.left);
                                             }
                                         }
                                     }
-                                    return node.box.width - leftOffset - rightOffset;
+                                    return box.width - leftOffset - rightOffset;
                                 }
                             }
                         }
@@ -2006,7 +2012,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     let multiline = item.multiline;
-                    if (multiline && Math.floor(bounds.width) <= boxWidth && !item.hasPX('width')) {
+                    if (multiline && Math.floor(bounds.width) <= boxWidth && !item.hasPX('width') && !isMultiline(item)) {
                         multiline = false;
                         item.multiline = false;
                     }
@@ -2093,11 +2099,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 return false;
                             }
                             else if (checkLineWrap) {
-                                if (checkWrapWidth() && baseWidth > maxWidth ||
-                                    item.plainText && (multiline || Resource.hasLineBreak(item, false, true) || item.preserveWhiteSpace && $regex.CHAR.LEADINGNEWLINE.test(item.textContent)))
-                                {
-                                    return true;
-                                }
+                                return checkWrapWidth() && baseWidth > maxWidth || multiline && item.plainText || isMultiline(item);
                             }
                             return false;
                         };

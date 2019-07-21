@@ -1789,13 +1789,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get marginBottom() {
         let result = this._cached.marginBottom;
         if (result === undefined) {
-            if (this.inlineStatic) {
-                result = 0;
-            }
-            else {
-                const value = this.convertBox('marginBottom', true);
-                result = this.bounds.height === 0 && !this.overflowY && value > 0 ? 0 : value;
-            }
+            result = this.inlineStatic ? 0 : this.convertBox('marginBottom', true);
             this._cached.marginBottom = result;
         }
         return result;

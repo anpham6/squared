@@ -146,9 +146,6 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             }
             const outer = scrollView.pop() as T;
             node.parent = outer;
-            if (parent.layoutConstraint) {
-                outer.companion = node;
-            }
             node.overflow = 0;
             node.resetBox($e.BOX_STANDARD.MARGIN);
             node.exclude($e.NODE_RESOURCE.BOX_STYLE);

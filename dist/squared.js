@@ -1,4 +1,4 @@
-/* squared 1.2.6
+/* squared 1.2.7
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -898,6 +898,59 @@
             return this._children.length;
         }
     }
+
+    function isPlatform(value) {
+        const platform = navigator.platform.toLowerCase();
+        if (typeof value === 'string') {
+            return platform.indexOf(value.toLowerCase()) !== -1;
+        }
+        else if (hasBit(value, 4 /* MAC */) && /mac|iphone|ipad/.test(platform)) {
+            return true;
+        }
+        else if (hasBit(value, 2 /* WINDOWS */) && platform.indexOf('windows') !== -1) {
+            return true;
+        }
+        return false;
+    }
+    function isUserAgent(value) {
+        if (typeof value === 'string') {
+            const name = value.toUpperCase();
+            value = 0;
+            if (name.indexOf('CHROME') !== -1) {
+                value |= 2 /* CHROME */;
+            }
+            if (name.indexOf('SAFARI') !== -1) {
+                value |= 4 /* SAFARI */;
+            }
+            if (name.indexOf('FIREFOX') !== -1) {
+                value |= 8 /* FIREFOX */;
+            }
+            if (name.indexOf('EDGE') !== -1) {
+                value |= 16 /* EDGE */;
+            }
+        }
+        const userAgent = navigator.userAgent;
+        let client = 2 /* CHROME */;
+        if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
+            client = 4 /* SAFARI */;
+        }
+        else if (userAgent.indexOf('Firefox') !== -1) {
+            client = 8 /* FIREFOX */;
+        }
+        else if (userAgent.indexOf('Edge') !== -1) {
+            client = 16 /* EDGE */;
+        }
+        return hasBit(value, client);
+    }
+    function getDeviceDPI() {
+        return window.devicePixelRatio * 96;
+    }
+
+    var client = /*#__PURE__*/Object.freeze({
+        isPlatform: isPlatform,
+        isUserAgent: isUserAgent,
+        getDeviceDPI: getDeviceDPI
+    });
 
     const REGEXP_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
     const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
@@ -3387,59 +3440,6 @@
         formatHSLA: formatHSLA
     });
 
-    function isPlatform(value) {
-        const platform = navigator.platform.toLowerCase();
-        if (typeof value === 'string') {
-            return platform.indexOf(value.toLowerCase()) !== -1;
-        }
-        else if (hasBit(value, 4 /* MAC */) && /mac|iphone|ipad/.test(platform)) {
-            return true;
-        }
-        else if (hasBit(value, 2 /* WINDOWS */) && platform.indexOf('windows') !== -1) {
-            return true;
-        }
-        return false;
-    }
-    function isUserAgent(value) {
-        if (typeof value === 'string') {
-            const name = value.toUpperCase();
-            value = 0;
-            if (name.indexOf('CHROME') !== -1) {
-                value |= 2 /* CHROME */;
-            }
-            if (name.indexOf('SAFARI') !== -1) {
-                value |= 4 /* SAFARI */;
-            }
-            if (name.indexOf('FIREFOX') !== -1) {
-                value |= 8 /* FIREFOX */;
-            }
-            if (name.indexOf('EDGE') !== -1) {
-                value |= 16 /* EDGE */;
-            }
-        }
-        const userAgent = navigator.userAgent;
-        let client = 2 /* CHROME */;
-        if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
-            client = 4 /* SAFARI */;
-        }
-        else if (userAgent.indexOf('Firefox') !== -1) {
-            client = 8 /* FIREFOX */;
-        }
-        else if (userAgent.indexOf('Edge') !== -1) {
-            client = 16 /* EDGE */;
-        }
-        return hasBit(value, client);
-    }
-    function getDeviceDPI() {
-        return window.devicePixelRatio * 96;
-    }
-
-    var client = /*#__PURE__*/Object.freeze({
-        isPlatform: isPlatform,
-        isUserAgent: isUserAgent,
-        getDeviceDPI: getDeviceDPI
-    });
-
     const CACHE_PATTERN = {};
     function compareRange(operation, unit, range) {
         switch (operation) {
@@ -4478,10 +4478,10 @@
             }
         }
         let bounds;
-        let maxTop = Number.NEGATIVE_INFINITY;
         length = domRect.length;
         if (length) {
             bounds = assignRect(domRect[0]);
+            let numberOfLines = 1;
             for (let i = 1; i < length; i++) {
                 const rect = domRect[i];
                 if (rect.left < bounds.left) {
@@ -4493,17 +4493,17 @@
                 if (rect.top < bounds.top) {
                     bounds.top = rect.top;
                 }
+                else if (rect.top >= bounds.bottom) {
+                    numberOfLines++;
+                }
                 if (rect.bottom > bounds.bottom) {
                     bounds.bottom = rect.bottom;
                 }
                 bounds.width += rect.width;
-                if (rect.top > maxTop) {
-                    maxTop = rect.top;
-                }
             }
             bounds.height = bounds.bottom - bounds.top;
-            if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-                bounds.numberOfLines = domRect.length - 1;
+            if (numberOfLines > 1) {
+                bounds.numberOfLines = numberOfLines;
             }
         }
         else {
@@ -4952,7 +4952,7 @@
         const reloading = framework !== undefined;
         if (framework !== value) {
             const appBase = cached ? value.cached() : value.create();
-            if (framework === undefined) {
+            if (!reloading) {
                 Object.assign(appBase.userSettings, exports.settings);
             }
             exports.settings = appBase.userSettings;
@@ -5044,7 +5044,14 @@
     }
     function exclude(value) {
         if (main) {
-            if (value instanceof squared.base.Extension) {
+            if (typeof value === 'string') {
+                value = value.trim();
+                const extension = main.extensionManager.retrieve(value);
+                if (extension) {
+                    return main.extensionManager.exclude(extension);
+                }
+            }
+            else if (value instanceof squared.base.Extension) {
                 if (extensionsAsync.has(value)) {
                     extensionsAsync.delete(value);
                     main.extensionManager.exclude(value);
@@ -5054,23 +5061,12 @@
                     return main.extensionManager.exclude(value);
                 }
             }
-            else if (typeof value === 'string') {
-                value = value.trim();
-                const extension = main.extensionManager.retrieve(value);
-                if (extension) {
-                    return main.extensionManager.exclude(extension);
-                }
-            }
         }
         return false;
     }
     function configure(value, options) {
         if (isPlainObject(options)) {
-            if (value instanceof squared.base.Extension) {
-                Object.assign(value.options, options);
-                return true;
-            }
-            else if (typeof value === 'string') {
+            if (typeof value === 'string') {
                 if (main) {
                     value = value.trim();
                     const extension = main.extensionManager.retrieve(value) || Array.from(extensionsAsync).find(item => item.name === value);
@@ -5085,6 +5081,10 @@
                         }
                     }
                 }
+            }
+            else if (value instanceof squared.base.Extension) {
+                Object.assign(value.options, options);
+                return true;
             }
         }
         return false;
@@ -5142,8 +5142,8 @@
         base: {
             Container
         },
-        color,
         client,
+        color,
         css,
         dom,
         math,

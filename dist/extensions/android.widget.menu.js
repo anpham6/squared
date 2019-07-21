@@ -1,4 +1,4 @@
-/* android.widget 1.2.5
+/* android.widget 1.2.7
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -7,9 +7,9 @@ this.android.widget.menu = (function () {
     'use strict';
 
     const { constant: $constA, enumeration: $enumA, util: $utilA } = android.lib;
-    const { constant: $c, enumeration: $e } = squared.base.lib;
     const $Resource = android.base.Resource;
     const $util = squared.lib.util;
+    const $e = squared.base.lib.enumeration;
     const REGEXP_ITEM = {
         id: /^@\+id\/\w+$/,
         title: /^.+$/,
@@ -74,7 +74,7 @@ this.android.widget.menu = (function () {
         constructor(name, framework, options, tagNames) {
             super(name, framework, options, tagNames);
             this.cascadeAll = true;
-            this.require($c.EXT_NAME.EXTERNAL, true);
+            this.require($constA.EXT_ANDROID.EXTERNAL, true);
         }
         init(element) {
             if (this.included(element)) {

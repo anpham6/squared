@@ -338,6 +338,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     protected _documentParent?: T;
     protected _controlName?: string;
+    protected _boxRegister?: ObjectMap<Set<T>>;
     protected abstract _namespaces: string[];
     protected abstract _boxAdjustment?: BoxModel;
     protected abstract _boxReset?: BoxModel;
@@ -807,7 +808,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         while (element) {
             const node = $session.getElementAsNode<T>(element, this.sessionId);
             if (node) {
-                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded) {
+                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
                     result.push(node);
                 }
                 else if (node.pageFlow && !node.excluded) {
@@ -847,7 +848,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         while (element) {
             const node = $session.getElementAsNode<T>(element, this.sessionId);
             if (node) {
-                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded) {
+                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
                     result.push(node);
                 }
                 else if (node.pageFlow && !node.excluded) {
@@ -893,6 +894,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     else {
                         this._boxAdjustment[attr] += offset;
+                    }
+                }
+                if (this._boxRegister) {
+                    const nodes = this._boxRegister[region];
+                    if (nodes) {
+                        for (const node of nodes) {
+                            node.modifyBox(region, offset, negative);
+                        }
                     }
                 }
             }
@@ -955,21 +964,39 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public actualRect(direction: string, dimension = 'linear') {
-        let node: T;
-        switch (direction) {
-            case 'top':
-            case 'left':
-                node = this.companion && !this.companion.visible && this.companion[dimension][direction] < this[dimension][direction] ? this.companion : this;
-                break;
-            case 'right':
-            case 'bottom':
-                node = this.companion && !this.companion.visible && this.companion[dimension][direction] > this[dimension][direction] ? this.companion : this;
-                break;
-            default:
-                return NaN;
+    public registerBox(region: number, node?: T) {
+        if (this._boxRegister === undefined) {
+            this._boxRegister = {};
         }
-        return node[dimension][direction] as number;
+        const register = this._boxRegister;
+        if (register[region] === undefined) {
+            register[region] = new Set();
+        }
+        if (node) {
+            register[region].add(node);
+        }
+        return register[region];
+    }
+
+    public actualRect(direction: string, dimension = 'linear') {
+        if (this.inputElement) {
+            const companion = this.companion;
+            let node: T;
+            switch (direction) {
+                case 'top':
+                case 'left':
+                    node = companion && !companion.visible && companion[dimension][direction] < this[dimension][direction] ? companion : this;
+                    break;
+                case 'right':
+                case 'bottom':
+                    node = companion && !companion.visible && companion[dimension][direction] > this[dimension][direction] ? companion : this;
+                    break;
+                default:
+                    return NaN;
+            }
+            return node[dimension][direction] as number;
+        }
+        return this[dimension][direction] as number;
     }
 
     public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
@@ -1310,7 +1337,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textEmpty() {
         let result = this._cached.textEmpty;
         if (result === undefined) {
-            result = this.styleElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '') && !this.imageElement && !this.svgElement;
+            result = this.styleElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '') && !this.imageElement && !this.svgElement && this.tagName !== 'HR';
             this._cached.textEmpty = result;
         }
         return result;

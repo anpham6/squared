@@ -571,6 +571,7 @@ declare namespace base {
         getBox(region: number): [number, number];
         resetBox(region: number, node?: NodeUI, fromParent?: boolean): void;
         transferBox(region: number, node: NodeUI): void;
+        registerBox(region: number, node?: NodeUI): Set<NodeUI>;
         extractAttributes(depth: number): string;
         setCacheValue(attr: string, value: any): void;
         cssSet(attr: string, value: string, cache?: boolean): string;

@@ -1061,13 +1061,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     break;
                             }
                         }
-                        if (dimenWidth + position.left >= boundsWidth && (!node.blockStatic || node.hasPX('width', false))) {
-                            tileModeX = '';
-                            if (tileMode === 'repeat') {
-                                tileModeY = 'repeat';
-                                tileMode = '';
-                            }
-                        }
                     }
                     switch (size) {
                         case 'auto':
@@ -1094,7 +1087,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             break;
                         default:
                             size.split(' ').forEach((dimen, index) => {
-                                if (dimen !== 'auto' && dimen !== '100%') {
+                                if (dimen === '100%') {
+                                    if (index === 0) {
+                                        gravityX = 'fill_horizontal';
+                                    }
+                                    else {
+                                        gravityY = 'fill_vertical';
+                                    }
+                                }
+                                else if (dimen !== 'auto') {
                                     if (index === 0) {
                                         width = node.parseUnit(dimen, 'width', false);
                                     }
@@ -1102,13 +1103,24 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         height = node.parseUnit(dimen, 'height', false);
                                     }
                                 }
-                                else {
-                                    gravityX = index === 0 ? 'fill_horizontal' : 'fill_vertical';
-                                }
                             });
                             break;
                     }
                     if (dimension) {
+                        if (dimenWidth + position.left >= boundsWidth && (!node.blockStatic || node.hasPX('width', false))) {
+                            tileModeX = '';
+                            if (tileMode === 'repeat') {
+                                tileModeY = 'repeat';
+                                tileMode = '';
+                            }
+                        }
+                        if (dimenHeight + position.top >= boundsHeight && !node.documentBody && !node.has('height', $e.CSS_UNIT.PERCENT)) {
+                            tileModeY = '';
+                            if (tileMode === 'repeat') {
+                                tileModeX = 'repeat';
+                                tileMode = '';
+                            }
+                        }
                         const canResizeHorizontal = () => gravityX !== 'fill_horizontal' && tileMode !== 'repeat' && tileModeX === '';
                         const canResizeVertical = () => gravityY !== 'fill_vertical' && tileMode !== 'repeat' && tileModeY === '';
                         switch (size) {

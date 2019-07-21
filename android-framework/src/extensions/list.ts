@@ -78,6 +78,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             }
             const container = node.length === 0 ? controller.createNodeGroup(node, [node], parent) : node;
             let ordinal = !mainData.ordinal ? node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
+            let register = false;
             if (ordinal) {
                 const layoutOrdinal = new $LayoutUI(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
@@ -227,7 +228,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             controlName: ordinal.controlName
                         }
                     );
-                    node.companion = ordinal;
+                    register = true;
                 }
             }
             ordinal.positioned = true;
@@ -251,12 +252,15 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     node.addAlign($e.NODE_ALIGNMENT.TOP);
                 }
             }
-            if (container !== node) {
+            if (node !== container) {
                 if (node.marginTop !== 0) {
                     container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.marginTop);
                     node.modifyBox($e.BOX_STANDARD.MARGIN_TOP);
                     node.outerWrapper = container;
                     container.innerWrapped = node;
+                    if (register) {
+                        container.registerBox($e.BOX_STANDARD.MARGIN_TOP, ordinal);
+                    }
                 }
                 return {
                     parent: container,
@@ -269,6 +273,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         container.children as T[]
                     ))
                 };
+            }
+            else if (register) {
+                node.registerBox($e.BOX_STANDARD.MARGIN_TOP, ordinal);
             }
         }
         return undefined;

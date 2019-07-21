@@ -1,4 +1,4 @@
-/* android.widget 1.2.5
+/* android.widget 1.2.7
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -8,8 +8,8 @@ this.android.widget.toolbar = (function () {
 
     const { css: $css, session: $session, util: $util } = squared.lib;
     const { constant: $constA, enumeration: $enumA, util: $utilA } = android.lib;
-    const { constant: $c, enumeration: $e } = squared.base.lib;
     const $Resource = android.base.Resource;
+    const $e = squared.base.lib.enumeration;
     const PREFIX_MENU = 'ic_menu_';
     class Toolbar extends squared.base.ExtensionUI {
         constructor(name, framework, options, tagNames) {
@@ -22,8 +22,8 @@ this.android.widget.toolbar = (function () {
                 const length = children.length;
                 for (let i = 0; i < length; i++) {
                     const item = children[i];
-                    if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $c.EXT_NAME.EXTERNAL)) {
-                        item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $c.EXT_NAME.EXTERNAL;
+                    if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $constA.EXT_ANDROID.EXTERNAL)) {
+                        item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $constA.EXT_ANDROID.EXTERNAL;
                         break;
                     }
                 }
