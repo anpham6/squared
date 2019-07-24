@@ -552,7 +552,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let [shapeData, layerListData] = this.getDrawableBorder(
                         stored,
                         [stored.borderTop, stored.borderRight, stored.borderBottom, stored.borderLeft],
-                        stored.border,
+                        undefined,
                         this.getDrawableImages(node, stored),
                         drawOutline && stored.outline ? getIndentOffset(stored.outline) : 0,
                         false
@@ -562,8 +562,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         const outline = stored.outline;
                         const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(
                             stored,
-                            [outline, outline, outline, outline],
-                            emptyBackground ? outline : undefined
+                            [],
+                            outline
                         );
                         if (emptyBackground) {
                             shapeData = outlineShapeData;
@@ -605,26 +605,41 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         this._resourceSvgInstance = undefined;
     }
 
-    public getDrawableBorder(data: BoxStyle, borders: (BorderAttribute | undefined)[], border?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = true) {
+    public getDrawableBorder(data: BoxStyle, borders: (BorderAttribute | undefined)[], outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = true) {
         const borderVisible: boolean[] = [];
         const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
         const indentOffset = indentWidth > 0 ? $css.formatPX(indentWidth) : '';
         let borderStyle = true;
+        let borderAll = true;
+        let border: BorderAttribute | undefined;
         let borderData: BorderAttribute | undefined;
         let shapeData: ExternalData[] | undefined;
         let layerListData: ExternalData[] | undefined;
-        for (let i = 0; i < 4; i++) {
-            const item = borders[i];
-            if (item) {
-                if (borderStyle && borderData) {
-                    borderStyle = $util.isEqual(borderData, item);
+        if (borders.length) {
+            for (let i = 0; i < 4; i++) {
+                const item = borders[i];
+                if (item) {
+                    if (borderStyle && borderData) {
+                        borderStyle = $util.isEqual(borderData, item);
+                        if (!borderStyle) {
+                            borderAll = false;
+                        }
+                    }
+                    borderData = item;
+                    borderVisible[i] = true;
                 }
-                borderData = item;
-                borderVisible[i] = true;
+                else {
+                    borderVisible[i] = false;
+                    borderAll = false;
+                }
             }
-            else {
-                borderVisible[i] = false;
-            }
+        }
+        else if (outline) {
+            border = outline;
+            borderData = outline;
+        }
+        if (borderAll) {
+            border = borderData;
         }
         if (border && !isAlternatingBorder(border.style) && !(border.style === 'double' && parseInt(border.width) > 1) || borderData === undefined && (corners || images && images.length)) {
             const stroke = border ? getBorderStroke(border) : false;

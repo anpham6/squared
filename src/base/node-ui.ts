@@ -350,7 +350,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
     private _renderAs?: T;
-    private _textContent?: string;
 
     public abstract setControlType(viewName: string, containerType?: number): void;
     public abstract setLayout(width?: number, height?: number): void;
@@ -480,7 +479,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public inherit(node: T, ...modules: ('base' | 'initial' | 'alignment' | 'styleMap' | 'textStyle' | 'boxStyle')[]) {
+    public inherit(node: T, ...modules: string[]) {
         for (const name of modules) {
             switch (name) {
                 case 'base':
@@ -500,30 +499,31 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     break;
                 case 'initial': {
-                    const initial = <InitialData<T>> node.unsafe('initial');
-                    $util.cloneObject(initial, this.initial);
+                    $util.cloneObject(<InitialData<T>> node.unsafe('initial'), this.initial);
                     break;
                 }
                 case 'alignment': {
-                    const initial = <InitialData<T>> node.unsafe('initial');
+                    const nodeStyleMap = <InitialData<T>> node.unsafe('initial').styleMap;
+                    const styleMap = this._styleMap;
+                    const initialStyleMap = this._initial.styleMap;
                     this.positionAuto = node.positionAuto;
                     for (const attr of INHERIT_ALIGNMENT) {
-                        this._styleMap[attr] = node.css(attr);
-                        this._initial.styleMap[attr] = initial.styleMap[attr];
+                        styleMap[attr] = node.css(attr);
+                        initialStyleMap[attr] = nodeStyleMap[attr];
                     }
                     if (!this.positionStatic) {
                         for (const attr of $css.BOX_POSITION) {
                             if (node.hasPX(attr)) {
-                                this._styleMap[attr] = node.css(attr);
+                                styleMap[attr] = node.css(attr);
                             }
-                            this._initial.styleMap[attr] = initial.styleMap[attr];
+                            initialStyleMap[attr] = nodeStyleMap[attr];
                         }
                     }
                     if (node.autoMargin.horizontal || node.autoMargin.vertical) {
                         for (const attr of $css.BOX_MARGIN) {
                             if (node.cssInitial(attr) === 'auto') {
-                                this._styleMap[attr] = 'auto';
-                                this._initial.styleMap[attr] = 'auto';
+                                styleMap[attr] = 'auto';
+                                initialStyleMap[attr] = 'auto';
                             }
                         }
                     }
@@ -913,7 +913,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return attr ? [this._boxReset ? this._boxReset[attr] : 0, this._boxAdjustment ? this._boxAdjustment[attr] : 0] : [0, 0];
     }
 
-    public resetBox(region: number, node?: T, fromParent = false) {
+    public resetBox(region: number, node?: T) {
         if (this._boxReset === undefined) {
             this._boxReset = $dom.newBoxModel();
         }
@@ -922,14 +922,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             for (let i = 0; i < 4; i++) {
                 if (boxReset[attrs[i]] === 0) {
                     boxReset[attrs[i]] = 1;
-                    const attr = CSS_SPACING.get(CSS_SPACING_KEYS[i + start]) as string;
-                    const value = this[attr];
-                    if (node && value !== 0) {
-                        if (!node.naturalChild && node[attr] === 0) {
-                            node.css(attr, $css.formatPX(value), true);
-                        }
-                        else {
-                            node.modifyBox(CSS_SPACING_KEYS[i + (fromParent ? 0 : 4)], value);
+                    if (node) {
+                        const key = CSS_SPACING_KEYS[i + start];
+                        const attr = CSS_SPACING.get(key) as string;
+                        const value = this[attr];
+                        if (value !== 0) {
+                            if (!node.naturalChild && node[attr] === 0) {
+                                node.css(attr, $css.formatPX(value), true);
+                            }
+                            else {
+                                node.modifyBox(key, value);
+                            }
+                            this.registerBox(key, node);
                         }
                     }
                 }
@@ -944,13 +948,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public transferBox(region: number, node: T) {
+        if (this._boxAdjustment === undefined) {
+            this._boxAdjustment = $dom.newBoxModel();
+        }
         const boxAdjustment = this._boxAdjustment;
         if (boxAdjustment) {
             const applyReset = (attrs: string[], start: number) => {
                 for (let i = 0; i < 4; i++) {
                     const value: number = boxAdjustment[attrs[i]];
                     if (value > 0) {
-                        node.modifyBox(CSS_SPACING_KEYS[i + start], value, false);
+                        const key = CSS_SPACING_KEYS[i + start];
+                        node.modifyBox(key, value, false);
+                        this.registerBox(key, node);
                         boxAdjustment[attrs[i]] = 0;
                     }
                 }
@@ -1000,8 +1009,21 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
+        let node = this as T;
+        while (!node.naturalChild) {
+            const innerWrapped = node.innerWrapped as T;
+            if (innerWrapped) {
+                node = innerWrapped;
+                if (node.naturalChild && node.getBox(attr === 'paddingTop' ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM)[0] !== 1) {
+                    return value;
+                }
+            }
+            else {
+                return value;
+            }
+        }
         let reset = false;
-        if (canCascadeChildren(this)) {
+        if (canCascadeChildren(node)) {
             function cascade(children: T[]) {
                 let valid = false;
                 for (const item of children) {
@@ -1027,7 +1049,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 return valid;
             }
-            reset = cascade(this.naturalElements as T[]);
+            reset = cascade(node.naturalElements as T[]);
         }
         return reset ? 0 : value;
     }
@@ -1212,10 +1234,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     set textContent(value: string) {
-        this._textContent = value;
+        this._cached.textContent = value;
     }
     get textContent() {
-        return this._textContent || super.textContent;
+        let result = this._cached.textContent;
+        if (result === undefined) {
+            result = this.inlineText && this._element || this.plainText ? (<Element> this._element).textContent as string : '';
+            this._cached.textContent = result;
+        }
+        return result;
     }
 
     set overflow(value: number) {

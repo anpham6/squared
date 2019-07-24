@@ -2114,7 +2114,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get textContent() {
-        return this.htmlElement || this.plainText ? (<Element> this._element).textContent as string : '';
+        let result = this._cached.textContent;
+        if (result === undefined) {
+            result = !this.svgElement ? (<Element> this._element).textContent as string : '';
+            this._cached.textContent = result;
+        }
+        return result;
     }
 
     get src() {

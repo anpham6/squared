@@ -85,15 +85,13 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     container = this.application.createNode(<HTMLElement> node.element);
                     container.inherit(node, 'base', 'initial', 'styleMap');
                     parent.appendTry(node, container);
-                    container.innerWrapped = node;
-                    node.outerWrapper = container;
                 }
                 else {
                     container = this.application.createNode();
                     container.inherit(node, 'base');
                     container.exclude($e.NODE_RESOURCE.BOX_STYLE);
-                    scrollView[0].outerWrapper = container;
-                    container.innerWrapped = scrollView[0];
+                    scrollView[0].innerWrapped = container;
+                    container.outerWrapper = scrollView[0];
                 }
                 container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
                 container.exclude($e.NODE_RESOURCE.ASSET);
@@ -102,7 +100,6 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             }
             for (let i = 0; i < length; i++) {
                 const item = scrollView[i];
-                const previous = scrollView[i - 1];
                 switch (item.controlName) {
                     case verticalScroll:
                         node.setLayoutHeight('wrap_content');
@@ -131,7 +128,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     item.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);
                 }
                 else {
-                    item.render(previous);
+                    item.render(scrollView[i - 1]);
                 }
                 item.unsetCache();
                 this.application.addLayoutTemplate(
@@ -144,12 +141,14 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     }
                 );
             }
-            const outer = scrollView.pop() as T;
-            node.parent = outer;
             node.overflow = 0;
-            node.resetBox($e.BOX_STANDARD.MARGIN);
             node.exclude($e.NODE_RESOURCE.BOX_STYLE);
-            return { parent: node.parent as T };
+            node.resetBox($e.BOX_STANDARD.MARGIN, scrollView[0]);
+            parent = scrollView.pop() as T;
+            parent.innerWrapped = node;
+            node.parent = parent;
+            node.outerWrapper = parent;
+            return { parent };
         }
         return undefined;
     }

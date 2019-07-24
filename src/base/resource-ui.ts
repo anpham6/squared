@@ -662,19 +662,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 const color = $color.parseColor(backgroundColor);
                 boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
             }
-            if (boxStyle.borderTop && boxStyle.borderRight && boxStyle.borderBottom && boxStyle.borderLeft) {
-                let valid = true;
-                for (const attr in boxStyle.borderTop) {
-                    const value = boxStyle.borderTop[attr];
-                    if (value !== boxStyle.borderRight[attr] || value !== boxStyle.borderBottom[attr] || value !== boxStyle.borderLeft[attr]) {
-                        valid = false;
-                        break;
-                    }
-                }
-                if (valid) {
-                    boxStyle.border = boxStyle.borderTop;
-                }
-            }
             node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
         }
     }

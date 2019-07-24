@@ -205,6 +205,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _boxAdjustment?: BoxModel;
         protected _boxReset?: BoxModel;
 
+        private _requireDocumentId = false;
         private _containerType = 0;
         private __android: StringMap = {};
         private __app: StringMap = {};
@@ -472,26 +473,20 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public combine(...objs: string[]) {
             const result: string[] = [];
-            let id: string | undefined;
+            const all = objs.length === 0;
             for (const value of this._namespaces) {
-                if (objs.length === 0 || objs.includes(value)) {
+                if (all || objs.includes(value)) {
                     const obj: StringMap = this[`__${value}`];
                     if (obj) {
                         for (const attr in obj) {
-                            const item = (value !== '_' ? `${value}:` : '') + `${attr}="${obj[attr]}"`;
-                            if (attr === 'id') {
-                                id = item;
-                            }
-                            else {
-                                result.push(item);
-                            }
+                            result.push((value !== '_' ? `${value}:` : '') + `${attr}="${obj[attr]}"`);
                         }
                     }
                 }
             }
             result.sort((a, b) => a > b ? 1 : -1);
-            if (id) {
-                result.unshift(id);
+            if (this._requireDocumentId) {
+                result.unshift(`android:id="@+id/${this.controlId}"`);
             }
             return result;
         }
@@ -563,13 +558,19 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (this.controlId === '') {
                 let name: string | undefined;
                 if (this.styleElement) {
-                    name = validateString(this.elementId || $dom.getNamedItem(<HTMLElement> this.element, 'name'));
+                    const elementId = this.elementId;
+                    if (elementId !== '') {
+                        name = validateString(elementId);
+                        this._requireDocumentId = true;
+                    }
+                    else {
+                        name = validateString($dom.getNamedItem(<HTMLElement> this.element, 'name'));
+                    }
                     if (name === 'parent' || RESERVED_JAVA.includes(name)) {
                         name = `_${name}`;
                     }
                 }
                 this.controlId = $util.convertWord(squared.base.ResourceUI.generateId('android', name || $util.fromLastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
-                this.android('id', this.documentId);
             }
         }
 
@@ -1099,8 +1100,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public applyCustomizations(overwrite = true) {
-            const setCustomization = (build: ExternalData, tagName: string) => {
-                const assign = build.assign[tagName];
+            const setCustomization = (build: ExternalData, name: string) => {
+                const assign = build.assign[name];
                 if (assign) {
                     for (const obj in assign) {
                         const data = assign[obj];
@@ -1110,12 +1111,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             };
-            setCustomization(API_ANDROID[0], this.tagName);
-            setCustomization(API_ANDROID[0], this.controlName);
+            const tagName = this.tagName;
+            const controlName = this.controlName;
+            setCustomization(API_ANDROID[0], tagName);
+            setCustomization(API_ANDROID[0], controlName);
             const api = API_ANDROID[this.localSettings.targetAPI];
             if (api) {
-                setCustomization(api, this.tagName);
-                setCustomization(api, this.controlName);
+                setCustomization(api, tagName);
+                setCustomization(api, controlName);
             }
         }
 
@@ -1129,7 +1132,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let left = 0;
                 for (let i = 0 ; i < 4; i++) {
                     const attr = attrs[i];
-                    let value = boxReset === undefined || boxReset[attr] === 0 ? this[attr] : 0;
+                    let value: number = boxReset === undefined || boxReset[attr] === 0 ? this[attr] : 0;
                     if (value !== 0) {
                         switch (attr) {
                             case 'marginRight': {
@@ -1417,6 +1420,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get documentId() {
+            this._requireDocumentId = true;
             return this.controlId ? `@+id/${this.controlId}` : '';
         }
 

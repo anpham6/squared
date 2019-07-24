@@ -1158,11 +1158,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             for (const ext of combined) {
                                 const result = ext.processChild(nodeY, parentY);
                                 if (result) {
-                                    if (result.output) {
-                                        this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
+                                    const { output, renderAs, outputAs } = result;
+                                    if (output) {
+                                        this.addLayoutTemplate(result.parentAs || parentY, nodeY, output);
                                     }
-                                    if (result.renderAs && result.outputAs) {
-                                        this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
+                                    if (renderAs && outputAs) {
+                                        this.addLayoutTemplate(parentY, renderAs, outputAs);
                                     }
                                     if (result.parent) {
                                         parentY = result.parent;
@@ -1195,16 +1196,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (item.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(item))) {
                                         const result = item.processNode(nodeY, parentY);
                                         if (result) {
-                                            if (result.output) {
-                                                this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
+                                            const { output, renderAs, outputAs, include } = result;
+                                            if (output) {
+                                                this.addLayoutTemplate(result.parentAs || parentY, nodeY, output);
                                             }
-                                            if (result.renderAs && result.outputAs) {
-                                                this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
+                                            if (renderAs && outputAs) {
+                                                this.addLayoutTemplate(parentY, renderAs, outputAs);
                                             }
                                             if (result.parent) {
                                                 parentY = result.parent as T;
                                             }
-                                            if (result.output && result.include !== false || result.include === true) {
+                                            if (output && include !== false || include) {
                                                 if (nodeY.renderExtension === undefined) {
                                                     nodeY.renderExtension = [];
                                                 }
@@ -1408,6 +1410,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const wrapper = this.createNode(undefined, true, parent, inlineBelow);
             wrapper.containerName = node.containerName;
             wrapper.inherit(node, 'boxStyle');
+            wrapper.innerWrapped = node;
+            node.outerWrapper = wrapper;
             this.addLayout(new LayoutUI(
                 parent,
                 wrapper,

@@ -2099,7 +2099,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 return false;
                             }
                             else if (checkLineWrap) {
-                                return checkWrapWidth() && baseWidth > maxWidth || multiline && item.plainText || isMultiline(item);
+                                if (checkWrapWidth() && baseWidth > maxWidth) {
+                                    return true;
+                                }
+                                else {
+                                    const actualParent = item.actualParent as T;
+                                    if (actualParent && actualParent.tagName !== 'CODE') {
+                                        return multiline && item.plainText || isMultiline(item);
+                                    }
+                                }
                             }
                             return false;
                         };
