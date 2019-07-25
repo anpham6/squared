@@ -47,101 +47,103 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         break;
                     }
                     default: {
-                        const valueString: StringValue = node.data(Resource.KEY_NAME, 'valueString');
-                        if (valueString) {
-                            const name = valueString.key || valueString.value;
-                            let value = valueString.value;
-                            if (node.naturalChild && node.alignParent('left') && !(!node.plainText && node.preserveWhiteSpace || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
-                                const textContent = node.textContent;
-                                let leadingSpace = 0;
-                                const length = textContent.length;
-                                for (let i = 0; i < length; i++) {
-                                    switch (textContent.charCodeAt(i)) {
-                                        case 160:
-                                            leadingSpace++;
-                                        case 32:
-                                            continue;
-                                        default:
-                                            break;
+                        if (!node.layoutFrame) {
+                            const valueString: StringValue = node.data(Resource.KEY_NAME, 'valueString');
+                            if (valueString) {
+                                const name = valueString.key || valueString.value;
+                                let value = valueString.value;
+                                if (node.naturalChild && node.alignParent('left') && !(!node.plainText && node.preserveWhiteSpace || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
+                                    const textContent = node.textContent;
+                                    let leadingSpace = 0;
+                                    const length = textContent.length;
+                                    for (let i = 0; i < length; i++) {
+                                        switch (textContent.charCodeAt(i)) {
+                                            case 160:
+                                                leadingSpace++;
+                                            case 32:
+                                                continue;
+                                            default:
+                                                break;
+                                        }
+                                    }
+                                    if (leadingSpace === 0) {
+                                        value = value.replace(/^(\s|&#160;)+/, '');
                                     }
                                 }
-                                if (leadingSpace === 0) {
-                                    value = value.replace(/^(\s|&#160;)+/, '');
-                                }
-                            }
-                            if (node.css('fontVariant') === 'small-caps') {
-                                if (node.localSettings.targetAPI >= BUILD_ANDROID.LOLLIPOP) {
-                                    node.android('fontFeatureSettings', 'smcp');
-                                }
-                                else {
-                                    node.android('textAllCaps', 'true');
-                                    const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
-                                    if (fontStyle) {
-                                        fontStyle.fontSize = `${parseFloat(fontStyle.fontSize) * this.options.fontVariantSmallCapsReduction}px`;
+                                if (node.css('fontVariant') === 'small-caps') {
+                                    if (node.localSettings.targetAPI >= BUILD_ANDROID.LOLLIPOP) {
+                                        node.android('fontFeatureSettings', 'smcp');
+                                    }
+                                    else {
+                                        node.android('textAllCaps', 'true');
+                                        const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
+                                        if (fontStyle) {
+                                            fontStyle.fontSize = `${parseFloat(fontStyle.fontSize) * this.options.fontVariantSmallCapsReduction}px`;
+                                        }
                                     }
                                 }
-                            }
-                            switch (node.css('textTransform')) {
-                                case 'uppercase':
-                                    node.android('textAllCaps', 'true');
-                                    break;
-                                case 'lowercase':
-                                    value = $util.lowerCaseString(value);
-                                    break;
-                                case 'capitalize':
-                                    value = $util.capitalizeString(value);
-                                    break;
-                            }
-                            const tagName = node.tagName;
-                            value = $xml.replaceCharacterData(value, node.preserveWhiteSpace || tagName === 'CODE');
-                            const textDecorationLine = node.css('textDecorationLine');
-                            if (textDecorationLine !== 'none') {
-                                for (const style of textDecorationLine.split(' ')) {
-                                    switch (style) {
-                                        case 'underline':
-                                            value = `<u>${value}</u>`;
-                                            break;
-                                        case 'line-through':
-                                            value = `<strike>${value}</strike>`;
-                                            break;
+                                switch (node.css('textTransform')) {
+                                    case 'uppercase':
+                                        node.android('textAllCaps', 'true');
+                                        break;
+                                    case 'lowercase':
+                                        value = $util.lowerCaseString(value);
+                                        break;
+                                    case 'capitalize':
+                                        value = $util.capitalizeString(value);
+                                        break;
+                                }
+                                const tagName = node.tagName;
+                                value = $xml.replaceCharacterData(value, node.preserveWhiteSpace || tagName === 'CODE');
+                                const textDecorationLine = node.css('textDecorationLine');
+                                if (textDecorationLine !== 'none') {
+                                    for (const style of textDecorationLine.split(' ')) {
+                                        switch (style) {
+                                            case 'underline':
+                                                value = `<u>${value}</u>`;
+                                                break;
+                                            case 'line-through':
+                                                value = `<strike>${value}</strike>`;
+                                                break;
+                                        }
                                     }
                                 }
-                            }
-                            if (tagName === 'INS' && textDecorationLine.indexOf('line-through') === -1) {
-                                value = `<strike>${value}</strike>`;
-                            }
-                            let textIndent = 0;
-                            if (node.blockDimension || node.display === 'table-cell') {
-                                textIndent = node.parseUnit(node.css('textIndent'));
-                                if (textIndent + node.bounds.width < 0) {
-                                    value = '';
+                                if (tagName === 'INS' && textDecorationLine.indexOf('line-through') === -1) {
+                                    value = `<strike>${value}</strike>`;
                                 }
-                            }
-                            if (textIndent === 0) {
-                                const parent = node.actualParent;
-                                if (parent && (parent.blockDimension || parent.display === 'table-cell') && node === parent.firstChild) {
-                                    textIndent = parent.parseUnit(parent.css('textIndent'));
-                                }
-                            }
-                            if (textIndent > 0) {
-                                const width = $dom.measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
-                                value = '&#160;'.repeat(Math.max(Math.floor(textIndent / width), 1)) + value;
-                            }
-                            setTextValue(node, 'text', name, value);
-                        }
-                        if (node.inputElement) {
-                            if (node.controlName === CONTAINER_ANDROID.EDIT_LIST) {
-                                const element = <HTMLInputElement> node.element;
-                                if (element.list) {
-                                    this.createOptionArray(<HTMLSelectElement> element.list, node.controlId);
-                                    if (!node.hasPX('width')) {
-                                        node.css('width', $css.formatPX(Math.max(node.bounds.width, node.width)), true);
+                                let textIndent = 0;
+                                if (node.blockDimension || node.display === 'table-cell') {
+                                    textIndent = node.parseUnit(node.css('textIndent'));
+                                    if (textIndent + node.bounds.width < 0) {
+                                        value = '';
                                     }
                                 }
+                                if (textIndent === 0) {
+                                    const parent = node.actualParent;
+                                    if (parent && (parent.blockDimension || parent.display === 'table-cell') && node === parent.firstChild) {
+                                        textIndent = parent.parseUnit(parent.css('textIndent'));
+                                    }
+                                }
+                                if (textIndent > 0) {
+                                    const width = $dom.measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
+                                    value = '&#160;'.repeat(Math.max(Math.floor(textIndent / width), 1)) + value;
+                                }
+                                setTextValue(node, 'text', name, value);
                             }
-                            const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
-                            if (hintString) {
-                                setTextValue(node, 'hint', `${node.controlId.toLowerCase()}_hint`, hintString);
+                            if (node.inputElement) {
+                                if (node.controlName === CONTAINER_ANDROID.EDIT_LIST) {
+                                    const element = <HTMLInputElement> node.element;
+                                    if (element.list) {
+                                        this.createOptionArray(<HTMLSelectElement> element.list, node.controlId);
+                                        if (!node.hasPX('width')) {
+                                            node.css('width', $css.formatPX(Math.max(node.bounds.width, node.width)), true);
+                                        }
+                                    }
+                                }
+                                const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
+                                if (hintString) {
+                                    setTextValue(node, 'hint', `${node.controlId.toLowerCase()}_hint`, hintString);
+                                }
                             }
                         }
                     }

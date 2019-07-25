@@ -351,7 +351,6 @@ export default abstract class Application<T extends Node> implements squared.bas
             const length = childNodes.length;
             const children: T[] = new Array(length);
             const elements: T[] = new Array(parentElement.childElementCount);
-            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap && parentElement.childElementCount ? [[]] : undefined;
             let inlineText = true;
             let j = 0;
             let k = 0;
@@ -367,10 +366,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                     child = this.cascadeParentNode(element, depth + 1);
                     if (child) {
                         elements[k++] = child;
-                        if (queryMap) {
-                            queryMap[0].push(child);
-                            this.appendQueryMap(queryMap, depth, child);
-                        }
                         CACHE.append(child);
                         inlineText = false;
                     }
@@ -394,24 +389,32 @@ export default abstract class Application<T extends Node> implements squared.bas
             node.naturalChildren = children;
             node.naturalElements = elements;
             node.inlineText = inlineText;
-            if (queryMap && queryMap[0].length) {
-                node.queryMap = queryMap;
+            if (this.userSettings.createQuerySelectorMap && k > 0) {
+                node.queryMap = this.createQueryMap(elements, k);
             }
         }
         return node;
     }
 
-    protected appendQueryMap(queryMap: T[][], depth: number, item: T) {
-        const childMap = item.queryMap as T[][];
-        if (childMap) {
-            const offset = item.depth - depth;
-            const length = childMap.length;
-            for (let i = 0; i < length; i++) {
-                const key = i + offset;
-                const map = queryMap[key];
-                queryMap[key] = map ? map.concat(childMap[i]) : childMap[i];
+    protected createQueryMap(elements: T[], length: number) {
+        const result: T[][] = [elements];
+        for (let i = 0; i < length; i++) {
+            const childMap = elements[i].queryMap as T[][];
+            if (childMap) {
+                const lengthA = childMap.length;
+                for (let j = 0; j < lengthA; j++) {
+                    const k = j + 1;
+                    const map = result[k];
+                    if (map) {
+                        result[k] = map.concat(childMap[j]);
+                    }
+                    else {
+                        result[k] = childMap[j];
+                    }
+                }
             }
         }
+        return result;
     }
 
     protected setStyleMap() {

@@ -170,9 +170,9 @@ function isBlockElement(node: NodeUI | null, direction?: boolean): boolean {
 
 const canResetChild = (node: NodeUI) => !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
 
-const validAboveChild = (node: NodeUI) => node.paddingBottom === 0 && node.borderBottomWidth === 0 && canResetChild(node);
+const validAboveChild = (node: NodeUI) => !node.hasPX('height') && node.paddingBottom === 0 && node.borderBottomWidth === 0 && canResetChild(node);
 
-const validBelowChild = (node: NodeUI) => node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node);
+const validBelowChild = (node: NodeUI) => !node.hasPX('height') && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node);
 
 export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public afterBaseLayout() {

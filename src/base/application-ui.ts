@@ -487,7 +487,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const length = childNodes.length;
             const children: T[] = new Array(length);
             const elements: T[] = new Array(parentElement.childElementCount);
-            const queryMap: T[][] | undefined = this.userSettings.createQuerySelectorMap && parentElement.childElementCount ? [[]] : undefined;
             let inlineText = true;
             let j = 0;
             let k = 0;
@@ -538,10 +537,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     if (child) {
                         elements[k++] = child;
-                        if (queryMap) {
-                            queryMap[0].push(child);
-                            this.appendQueryMap(queryMap, depth, child);
-                        }
                     }
                 }
                 if (child) {
@@ -554,8 +549,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.naturalChildren = children;
             node.naturalElements = elements;
             this.cacheNodeChildren(node, children, inlineText);
-            if (queryMap && queryMap[0].length) {
-                node.queryMap = queryMap;
+            if (this.userSettings.createQuerySelectorMap && k > 0) {
+                node.queryMap = this.createQueryMap(elements, k);
             }
         }
         return node;

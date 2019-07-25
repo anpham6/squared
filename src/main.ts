@@ -174,7 +174,7 @@ export function configure(value: ExtensionRequest, options: {}) {
 }
 
 export function retrieve(value: string) {
-    return main && main.extensionManager.retrieve(value);
+    return main ? main.extensionManager.retrieve(value) : null;
 }
 
 export function reset() {

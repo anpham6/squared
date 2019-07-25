@@ -617,9 +617,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 segment = $util.spliceString(segment, subMatch.index, subMatch[0].length);
                             }
                         }
-                        if (selectors.length > 0 || pseudoList === undefined) {
-                            offset++;
-                        }
                         selectors.push({
                             all,
                             tagName,
@@ -630,6 +627,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             notList,
                             attrList
                         });
+                        offset++;
                         adjacent = undefined;
                     }
                 }
@@ -696,7 +694,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         }
                                         break;
                                     case ':checked':
-                                        if (node.inputElement) {
+                                        if (tagName === 'INPUT') {
                                             if (!(<HTMLInputElement> node.element).checked) {
                                                 return false;
                                             }
@@ -711,27 +709,31 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         }
                                         break;
                                     case ':enabled':
-                                        if ((<HTMLInputElement> node.element).disabled) {
+                                        if (!node.inputElement || (<HTMLInputElement> node.element).disabled) {
                                             return false;
                                         }
                                         break;
                                     case ':disabled':
-                                        if (!(<HTMLInputElement> node.element).disabled) {
+                                        if (!node.inputElement || !(<HTMLInputElement> node.element).disabled) {
                                             return false;
                                         }
                                         break;
-                                    case ':read-only':
-                                        if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' || !(<HTMLInputElement> node.element).readOnly) {
+                                    case ':read-only': {
+                                        const element = <HTMLInputElement | HTMLTextAreaElement> node.element;
+                                        if (element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && !element.readOnly) {
                                             return false;
                                         }
                                         break;
-                                    case ':read-write':
-                                        if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' || (<HTMLInputElement> node.element).readOnly) {
+                                    }
+                                    case ':read-write': {
+                                        const element = <HTMLInputElement | HTMLTextAreaElement> node.element;
+                                        if (!element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && element.readOnly) {
                                             return false;
                                         }
                                         break;
+                                    }
                                     case ':required':
-                                        if (!(node.inputElement && (<HTMLInputElement> node.element).required) && tagName !== 'BUTTON') {
+                                        if (!node.inputElement || tagName === 'BUTTON' || !(<HTMLInputElement> node.element).required) {
                                             return false;
                                         }
                                         break;
@@ -740,6 +742,63 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             return false;
                                         }
                                         break;
+                                    case ':placeholder-shown': {
+                                        if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && (<HTMLInputElement | HTMLTextAreaElement> node.element).placeholder)) {
+                                            return false;
+                                        }
+                                        break;
+                                    }
+                                    case ':default': {
+                                        switch (tagName) {
+                                            case 'INPUT': {
+                                                const element = <HTMLInputElement> node.element;
+                                                const type = element.type;
+                                                if (type === 'radio' || type === 'checkbox') {
+                                                    if (!element.checked) {
+                                                        return false;
+                                                    }
+                                                }
+                                                else {
+                                                    return false;
+                                                }
+                                                break;
+                                            }
+                                            case 'OPTION':
+                                                if ((<HTMLOptionElement> node.element).attributes['selected'] === undefined) {
+                                                    return false;
+                                                }
+                                                break;
+                                            case 'BUTTON':
+                                                const form = node.ascend(item => item.tagName === 'FORM')[0] as T;
+                                                if (form) {
+                                                    const element = node.element;
+                                                    let valid = false;
+                                                    const children = (<HTMLFormElement> form.element).querySelectorAll('*');
+                                                    const lengthA = children.length;
+                                                    for (let j = 0; j < lengthA; j++) {
+                                                        const item = <HTMLInputElement> children[i];
+                                                        if (item.tagName === 'BUTTON') {
+                                                            valid = element === item;
+                                                            break;
+                                                        }
+                                                        else if (item.tagName === 'INPUT') {
+                                                            const type = item.type;
+                                                            if (type === 'submit' || type === 'image') {
+                                                                valid = element === item;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                    if (!valid) {
+                                                        return false;
+                                                    }
+                                                }
+                                                break;
+                                            default:
+                                                return false;
+                                        }
+                                        break;
+                                    }
                                     case ':in-range':
                                     case ':out-of-range': {
                                         if (tagName === 'INPUT') {
@@ -833,8 +892,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         break;
                                     case ':link':
                                     case ':visited':
+                                    case ':any-link':
                                     case ':hover':
                                     case ':focus':
+                                    case ':focus-within':
                                     case ':valid':
                                     case ':invalid': {
                                         const element = node.element;

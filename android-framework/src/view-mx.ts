@@ -1421,7 +1421,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         get documentId() {
             this._requireDocumentId = true;
-            return this.controlId ? `@+id/${this.controlId}` : '';
+            return this.controlId ? `@id/${this.controlId}` : '';
         }
 
         get anchorTarget(): T {
