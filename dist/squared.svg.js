@@ -1,4 +1,4 @@
-/* squared.svg 1.2.7
+/* squared.svg 1.2.8
    https://github.com/anpham6/squared */
 
 (function (global, factory) {

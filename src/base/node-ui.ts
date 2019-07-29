@@ -1239,7 +1239,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textContent() {
         let result = this._cached.textContent;
         if (result === undefined) {
-            result = this.inlineText && this._element || this.plainText ? (<Element> this._element).textContent as string : '';
+            result = this.naturalChild && this._element ? (<Element> this._element).textContent as string : '';
             this._cached.textContent = result;
         }
         return result;

@@ -1,4 +1,4 @@
-/* squared 1.2.7
+/* squared 1.2.8
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -5090,7 +5090,7 @@
         return false;
     }
     function retrieve(value) {
-        return main && main.extensionManager.retrieve(value);
+        return main ? main.extensionManager.retrieve(value) : null;
     }
     function reset() {
         if (main) {

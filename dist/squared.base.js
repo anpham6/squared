@@ -1,4 +1,4 @@
-/* squared.base 1.2.7
+/* squared.base 1.2.8
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -453,7 +453,6 @@
                 const length = childNodes.length;
                 const children = new Array(length);
                 const elements = new Array(parentElement.childElementCount);
-                const queryMap = this.userSettings.createQuerySelectorMap && parentElement.childElementCount ? [[]] : undefined;
                 let inlineText = true;
                 let j = 0;
                 let k = 0;
@@ -469,10 +468,6 @@
                         child = this.cascadeParentNode(element, depth + 1);
                         if (child) {
                             elements[k++] = child;
-                            if (queryMap) {
-                                queryMap[0].push(child);
-                                this.appendQueryMap(queryMap, depth, child);
-                            }
                             CACHE.append(child);
                             inlineText = false;
                         }
@@ -496,23 +491,31 @@
                 node.naturalChildren = children;
                 node.naturalElements = elements;
                 node.inlineText = inlineText;
-                if (queryMap && queryMap[0].length) {
-                    node.queryMap = queryMap;
+                if (this.userSettings.createQuerySelectorMap && k > 0) {
+                    node.queryMap = this.createQueryMap(elements, k);
                 }
             }
             return node;
         }
-        appendQueryMap(queryMap, depth, item) {
-            const childMap = item.queryMap;
-            if (childMap) {
-                const offset = item.depth - depth;
-                const length = childMap.length;
-                for (let i = 0; i < length; i++) {
-                    const key = i + offset;
-                    const map = queryMap[key];
-                    queryMap[key] = map ? map.concat(childMap[i]) : childMap[i];
+        createQueryMap(elements, length) {
+            const result = [elements];
+            for (let i = 0; i < length; i++) {
+                const childMap = elements[i].queryMap;
+                if (childMap) {
+                    const lengthA = childMap.length;
+                    for (let j = 0; j < lengthA; j++) {
+                        const k = j + 1;
+                        const map = result[k];
+                        if (map) {
+                            result[k] = map.concat(childMap[j]);
+                        }
+                        else {
+                            result[k] = childMap[j];
+                        }
+                    }
                 }
             }
+            return result;
         }
         setStyleMap() {
             let warning = false;
@@ -1700,9 +1703,6 @@
                                     segment = $util$4.spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
                             }
-                            if (selectors.length > 0 || pseudoList === undefined) {
-                                offset++;
-                            }
                             selectors.push({
                                 all,
                                 tagName,
@@ -1713,6 +1713,7 @@
                                 notList,
                                 attrList
                             });
+                            offset++;
                             adjacent = undefined;
                         }
                     }
@@ -1779,7 +1780,7 @@
                                             }
                                             break;
                                         case ':checked':
-                                            if (node.inputElement) {
+                                            if (tagName === 'INPUT') {
                                                 if (!node.element.checked) {
                                                     return false;
                                                 }
@@ -1794,27 +1795,31 @@
                                             }
                                             break;
                                         case ':enabled':
-                                            if (node.element.disabled) {
+                                            if (!node.inputElement || node.element.disabled) {
                                                 return false;
                                             }
                                             break;
                                         case ':disabled':
-                                            if (!node.element.disabled) {
+                                            if (!node.inputElement || !node.element.disabled) {
                                                 return false;
                                             }
                                             break;
-                                        case ':read-only':
-                                            if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' || !node.element.readOnly) {
+                                        case ':read-only': {
+                                            const element = node.element;
+                                            if (element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && !element.readOnly) {
                                                 return false;
                                             }
                                             break;
-                                        case ':read-write':
-                                            if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' || node.element.readOnly) {
+                                        }
+                                        case ':read-write': {
+                                            const element = node.element;
+                                            if (!element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && element.readOnly) {
                                                 return false;
                                             }
                                             break;
+                                        }
                                         case ':required':
-                                            if (!(node.inputElement && node.element.required) && tagName !== 'BUTTON') {
+                                            if (!node.inputElement || tagName === 'BUTTON' || !node.element.required) {
                                                 return false;
                                             }
                                             break;
@@ -1823,6 +1828,63 @@
                                                 return false;
                                             }
                                             break;
+                                        case ':placeholder-shown': {
+                                            if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && node.element.placeholder)) {
+                                                return false;
+                                            }
+                                            break;
+                                        }
+                                        case ':default': {
+                                            switch (tagName) {
+                                                case 'INPUT': {
+                                                    const element = node.element;
+                                                    const type = element.type;
+                                                    if (type === 'radio' || type === 'checkbox') {
+                                                        if (!element.checked) {
+                                                            return false;
+                                                        }
+                                                    }
+                                                    else {
+                                                        return false;
+                                                    }
+                                                    break;
+                                                }
+                                                case 'OPTION':
+                                                    if (node.element.attributes['selected'] === undefined) {
+                                                        return false;
+                                                    }
+                                                    break;
+                                                case 'BUTTON':
+                                                    const form = node.ascend(item => item.tagName === 'FORM')[0];
+                                                    if (form) {
+                                                        const element = node.element;
+                                                        let valid = false;
+                                                        const children = form.element.querySelectorAll('*');
+                                                        const lengthA = children.length;
+                                                        for (let j = 0; j < lengthA; j++) {
+                                                            const item = children[i];
+                                                            if (item.tagName === 'BUTTON') {
+                                                                valid = element === item;
+                                                                break;
+                                                            }
+                                                            else if (item.tagName === 'INPUT') {
+                                                                const type = item.type;
+                                                                if (type === 'submit' || type === 'image') {
+                                                                    valid = element === item;
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                        if (!valid) {
+                                                            return false;
+                                                        }
+                                                    }
+                                                    break;
+                                                default:
+                                                    return false;
+                                            }
+                                            break;
+                                        }
                                         case ':in-range':
                                         case ':out-of-range': {
                                             if (tagName === 'INPUT') {
@@ -1916,8 +1978,10 @@
                                             break;
                                         case ':link':
                                         case ':visited':
+                                        case ':any-link':
                                         case ':hover':
                                         case ':focus':
+                                        case ':focus-within':
                                         case ':valid':
                                         case ':invalid': {
                                             const element = node.element;
@@ -3128,7 +3192,12 @@
             return this.toInt('zIndex');
         }
         get textContent() {
-            return this.htmlElement || this.plainText ? this._element.textContent : '';
+            let result = this._cached.textContent;
+            if (result === undefined) {
+                result = !this.svgElement ? this._element.textContent : '';
+                this._cached.textContent = result;
+            }
+            return result;
         }
         get src() {
             return this.htmlElement && this._element.src || '';
@@ -4042,30 +4111,31 @@
                         }
                         break;
                     case 'initial': {
-                        const initial = node.unsafe('initial');
-                        $util$5.cloneObject(initial, this.initial);
+                        $util$5.cloneObject(node.unsafe('initial'), this.initial);
                         break;
                     }
                     case 'alignment': {
-                        const initial = node.unsafe('initial');
+                        const nodeStyleMap = node.unsafe('initial').styleMap;
+                        const styleMap = this._styleMap;
+                        const initialStyleMap = this._initial.styleMap;
                         this.positionAuto = node.positionAuto;
                         for (const attr of INHERIT_ALIGNMENT) {
-                            this._styleMap[attr] = node.css(attr);
-                            this._initial.styleMap[attr] = initial.styleMap[attr];
+                            styleMap[attr] = node.css(attr);
+                            initialStyleMap[attr] = nodeStyleMap[attr];
                         }
                         if (!this.positionStatic) {
                             for (const attr of $css$2.BOX_POSITION) {
                                 if (node.hasPX(attr)) {
-                                    this._styleMap[attr] = node.css(attr);
+                                    styleMap[attr] = node.css(attr);
                                 }
-                                this._initial.styleMap[attr] = initial.styleMap[attr];
+                                initialStyleMap[attr] = nodeStyleMap[attr];
                             }
                         }
                         if (node.autoMargin.horizontal || node.autoMargin.vertical) {
                             for (const attr of $css$2.BOX_MARGIN) {
                                 if (node.cssInitial(attr) === 'auto') {
-                                    this._styleMap[attr] = 'auto';
-                                    this._initial.styleMap[attr] = 'auto';
+                                    styleMap[attr] = 'auto';
+                                    initialStyleMap[attr] = 'auto';
                                 }
                             }
                         }
@@ -4433,7 +4503,7 @@
             const attr = CSS_SPACING.get(region);
             return attr ? [this._boxReset ? this._boxReset[attr] : 0, this._boxAdjustment ? this._boxAdjustment[attr] : 0] : [0, 0];
         }
-        resetBox(region, node, fromParent = false) {
+        resetBox(region, node) {
             if (this._boxReset === undefined) {
                 this._boxReset = $dom$2.newBoxModel();
             }
@@ -4442,14 +4512,18 @@
                 for (let i = 0; i < 4; i++) {
                     if (boxReset[attrs[i]] === 0) {
                         boxReset[attrs[i]] = 1;
-                        const attr = CSS_SPACING.get(CSS_SPACING_KEYS[i + start]);
-                        const value = this[attr];
-                        if (node && value !== 0) {
-                            if (!node.naturalChild && node[attr] === 0) {
-                                node.css(attr, $css$2.formatPX(value), true);
-                            }
-                            else {
-                                node.modifyBox(CSS_SPACING_KEYS[i + (fromParent ? 0 : 4)], value);
+                        if (node) {
+                            const key = CSS_SPACING_KEYS[i + start];
+                            const attr = CSS_SPACING.get(key);
+                            const value = this[attr];
+                            if (value !== 0) {
+                                if (!node.naturalChild && node[attr] === 0) {
+                                    node.css(attr, $css$2.formatPX(value), true);
+                                }
+                                else {
+                                    node.modifyBox(key, value);
+                                }
+                                this.registerBox(key, node);
                             }
                         }
                     }
@@ -4463,13 +4537,18 @@
             }
         }
         transferBox(region, node) {
+            if (this._boxAdjustment === undefined) {
+                this._boxAdjustment = $dom$2.newBoxModel();
+            }
             const boxAdjustment = this._boxAdjustment;
             if (boxAdjustment) {
                 const applyReset = (attrs, start) => {
                     for (let i = 0; i < 4; i++) {
                         const value = boxAdjustment[attrs[i]];
                         if (value > 0) {
-                            node.modifyBox(CSS_SPACING_KEYS[i + start], value, false);
+                            const key = CSS_SPACING_KEYS[i + start];
+                            node.modifyBox(key, value, false);
+                            this.registerBox(key, node);
                             boxAdjustment[attrs[i]] = 0;
                         }
                     }
@@ -4516,8 +4595,21 @@
             return this[dimension][direction];
         }
         actualPadding(attr, value) {
+            let node = this;
+            while (!node.naturalChild) {
+                const innerWrapped = node.innerWrapped;
+                if (innerWrapped) {
+                    node = innerWrapped;
+                    if (node.naturalChild && node.getBox(attr === 'paddingTop' ? 32 /* PADDING_TOP */ : 128 /* PADDING_BOTTOM */)[0] !== 1) {
+                        return value;
+                    }
+                }
+                else {
+                    return value;
+                }
+            }
             let reset = false;
-            if (canCascadeChildren(this)) {
+            if (canCascadeChildren(node)) {
                 function cascade(children) {
                     let valid = false;
                     for (const item of children) {
@@ -4543,7 +4635,7 @@
                     }
                     return valid;
                 }
-                reset = cascade(this.naturalElements);
+                reset = cascade(node.naturalElements);
             }
             return reset ? 0 : value;
         }
@@ -4705,10 +4797,15 @@
             return super.contentBoxHeight;
         }
         set textContent(value) {
-            this._textContent = value;
+            this._cached.textContent = value;
         }
         get textContent() {
-            return this._textContent || super.textContent;
+            let result = this._cached.textContent;
+            if (result === undefined) {
+                result = this.naturalChild && this._element ? this._element.textContent : '';
+                this._cached.textContent = result;
+            }
+            return result;
         }
         set overflow(value) {
             if (value === 0 || value === 16 /* VERTICAL */ || value === 8 /* HORIZONTAL */ || value === (8 /* HORIZONTAL */ | 16 /* VERTICAL */)) {
@@ -5420,7 +5517,6 @@
                 const length = childNodes.length;
                 const children = new Array(length);
                 const elements = new Array(parentElement.childElementCount);
-                const queryMap = this.userSettings.createQuerySelectorMap && parentElement.childElementCount ? [[]] : undefined;
                 let inlineText = true;
                 let j = 0;
                 let k = 0;
@@ -5471,10 +5567,6 @@
                         }
                         if (child) {
                             elements[k++] = child;
-                            if (queryMap) {
-                                queryMap[0].push(child);
-                                this.appendQueryMap(queryMap, depth, child);
-                            }
                         }
                     }
                     if (child) {
@@ -5487,8 +5579,8 @@
                 node.naturalChildren = children;
                 node.naturalElements = elements;
                 this.cacheNodeChildren(node, children, inlineText);
-                if (queryMap && queryMap[0].length) {
-                    node.queryMap = queryMap;
+                if (this.userSettings.createQuerySelectorMap && k > 0) {
+                    node.queryMap = this.createQueryMap(elements, k);
                 }
             }
             return node;
@@ -6083,11 +6175,12 @@
                                 for (const ext of combined) {
                                     const result = ext.processChild(nodeY, parentY);
                                     if (result) {
-                                        if (result.output) {
-                                            this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
+                                        const { output, renderAs, outputAs } = result;
+                                        if (output) {
+                                            this.addLayoutTemplate(result.parentAs || parentY, nodeY, output);
                                         }
-                                        if (result.renderAs && result.outputAs) {
-                                            this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
+                                        if (renderAs && outputAs) {
+                                            this.addLayoutTemplate(parentY, renderAs, outputAs);
                                         }
                                         if (result.parent) {
                                             parentY = result.parent;
@@ -6120,16 +6213,17 @@
                                         if (item.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(item))) {
                                             const result = item.processNode(nodeY, parentY);
                                             if (result) {
-                                                if (result.output) {
-                                                    this.addLayoutTemplate(result.parentAs || parentY, nodeY, result.output);
+                                                const { output, renderAs, outputAs, include } = result;
+                                                if (output) {
+                                                    this.addLayoutTemplate(result.parentAs || parentY, nodeY, output);
                                                 }
-                                                if (result.renderAs && result.outputAs) {
-                                                    this.addLayoutTemplate(parentY, result.renderAs, result.outputAs);
+                                                if (renderAs && outputAs) {
+                                                    this.addLayoutTemplate(parentY, renderAs, outputAs);
                                                 }
                                                 if (result.parent) {
                                                     parentY = result.parent;
                                                 }
-                                                if (result.output && result.include !== false || result.include === true) {
+                                                if (output && include !== false || include) {
                                                     if (nodeY.renderExtension === undefined) {
                                                         nodeY.renderExtension = [];
                                                     }
@@ -6330,6 +6424,8 @@
                 const wrapper = this.createNode(undefined, true, parent, inlineBelow);
                 wrapper.containerName = node.containerName;
                 wrapper.inherit(node, 'boxStyle');
+                wrapper.innerWrapped = node;
+                node.outerWrapper = wrapper;
                 this.addLayout(new LayoutUI(parent, wrapper, containerType, alignmentType | (parent.blockStatic ? 64 /* BLOCK */ : 0), inlineBelow));
                 layout.parent = wrapper;
             }
@@ -7988,19 +8084,6 @@
                 if (backgroundColor !== '') {
                     const color = $color.parseColor(backgroundColor);
                     boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
-                }
-                if (boxStyle.borderTop && boxStyle.borderRight && boxStyle.borderBottom && boxStyle.borderLeft) {
-                    let valid = true;
-                    for (const attr in boxStyle.borderTop) {
-                        const value = boxStyle.borderTop[attr];
-                        if (value !== boxStyle.borderRight[attr] || value !== boxStyle.borderBottom[attr] || value !== boxStyle.borderLeft[attr]) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    if (valid) {
-                        boxStyle.border = boxStyle.borderTop;
-                    }
                 }
                 node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
             }
@@ -10623,8 +10706,8 @@
         return false;
     }
     const canResetChild = (node) => !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
-    const validAboveChild = (node) => node.paddingBottom === 0 && node.borderBottomWidth === 0 && canResetChild(node);
-    const validBelowChild = (node) => node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node);
+    const validAboveChild = (node) => !node.hasPX('height') && node.paddingBottom === 0 && node.borderBottomWidth === 0 && canResetChild(node);
+    const validBelowChild = (node) => !node.hasPX('height') && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node);
     class WhiteSpace extends ExtensionUI {
         afterBaseLayout() {
             const processed = new Set();
