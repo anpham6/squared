@@ -2007,7 +2007,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     let siblings: Element[] | undefined;
                     if (item.styleText && !item.hasPX('width')) {
                         const textBounds = item.textBounds;
-                        if (textBounds && ((textBounds.numberOfLines as number) > 1 || Math.ceil(textBounds.width) < item.box.width)) {
+                        if (textBounds && (<number> textBounds.numberOfLines > 1 || Math.ceil(textBounds.width) < item.box.width)) {
                             bounds = textBounds;
                         }
                     }

@@ -137,8 +137,8 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
             setMultiline(node, lineHeight, false, false);
             return;
         }
-        else if (node.plainText && (node.bounds.numberOfLines as number) > 1) {
-            node.android('minHeight', $css.formatPX(node.bounds.height / (node.bounds.numberOfLines as number)));
+        else if (node.plainText && <number> node.bounds.numberOfLines > 1) {
+            node.android('minHeight', $css.formatPX(node.bounds.height / <number> node.bounds.numberOfLines));
             node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
             return;
         }

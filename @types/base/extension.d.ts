@@ -3,7 +3,7 @@ export interface AccessibilityOptions {
 }
 
 export interface CssGridData<T> {
-    children: Set<T>;
+    children: T[];
     row: CssGridDirectionData;
     column: CssGridDirectionData;
     emptyRows: Array<Undefined<number[]>>;

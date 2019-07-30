@@ -19,6 +19,17 @@ const CACHE_PATTERN = {
     LANG: /^:lang\(\s*(.+)\s*\)$/
 };
 
+function getFormElement(element: HTMLElement) {
+    let result = element.parentElement;
+    while (result) {
+        if (result.tagName === 'FORM') {
+            return result;
+        }
+        result = result.parentElement;
+    }
+    return null;
+}
+
 const validateCssSet = (value: string, styleValue: string) => value === styleValue || $css.isLength(value, true) && styleValue.endsWith('px');
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
@@ -493,10 +504,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         else if (this.plainText) {
             const rect = $dom.getRangeClientRect(<Element> this._element);
             const bounds = $dom.assignRect(rect, true);
-            bounds.numberOfLines = rect.numberOfLines;
+            const numberOfLines = rect.numberOfLines as number;
+            bounds.numberOfLines = numberOfLines;
             this._bounds = bounds;
             this._textBounds = bounds;
-            this._cached.multiline = (rect.numberOfLines as number) > 1;
+            this._cached.multiline = numberOfLines > 1;
         }
         if (!cache) {
             this._box = undefined;
@@ -752,14 +764,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         switch (tagName) {
                                             case 'INPUT': {
                                                 const element = <HTMLInputElement> node.element;
-                                                const type = element.type;
-                                                if (type === 'radio' || type === 'checkbox') {
-                                                    if (!element.checked) {
+                                                switch (element.type) {
+                                                    case 'radio':
+                                                    case 'checkbox':
+                                                        if (!element.checked) {
+                                                            return false;
+                                                        }
+                                                        break;
+                                                    default:
                                                         return false;
-                                                    }
-                                                }
-                                                else {
-                                                    return false;
                                                 }
                                                 break;
                                             }
@@ -768,12 +781,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                     return false;
                                                 }
                                                 break;
-                                            case 'BUTTON':
-                                                const form = node.ascend(item => item.tagName === 'FORM')[0] as T;
+                                            case 'BUTTON': {
+                                                const element = <HTMLElement> node.element;
+                                                const form = getFormElement(element);
                                                 if (form) {
-                                                    const element = node.element;
                                                     let valid = false;
-                                                    const children = (<HTMLFormElement> form.element).querySelectorAll('*');
+                                                    const children = form.querySelectorAll('*');
                                                     const lengthA = children.length;
                                                     for (let j = 0; j < lengthA; j++) {
                                                         const item = <HTMLInputElement> children[i];
@@ -794,6 +807,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                     }
                                                 }
                                                 break;
+                                            }
                                             default:
                                                 return false;
                                         }
@@ -839,17 +853,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                         return false;
                                                     }
                                                     else if (element.name) {
-                                                        let form = element.parentElement;
-                                                        while (form) {
-                                                            if (form.tagName === 'FORM') {
-                                                                break;
-                                                            }
-                                                            form = form.parentElement;
-                                                        }
-                                                        const children = (form || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
+                                                        const children = (getFormElement(element) || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
                                                         const lengthA = children.length;
                                                         for (let j = 0; j < lengthA; j++) {
-                                                            if ((<HTMLInputElement> children.item(j)).checked) {
+                                                            if ((<HTMLInputElement> children[j]).checked) {
                                                                 return false;
                                                             }
                                                         }
@@ -2257,11 +2264,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.multiline;
         if (result === undefined) {
             if (this.plainText) {
-                result = ($dom.getRangeClientRect(<Element> this._element).numberOfLines as number) > 1;
+                result = <number> $dom.getRangeClientRect(<Element> this._element).numberOfLines > 1;
             }
             else if (this.styleText && (this.inlineFlow || this.naturalElements.length === 0)) {
                 const textBounds = this.textBounds;
-                result = textBounds ? (textBounds.numberOfLines as number) > 1 : false;
+                result = textBounds ? <number> textBounds.numberOfLines > 1 : false;
             }
             else {
                 result = false;
@@ -2468,10 +2475,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get naturalChildren() {
         if (this._naturalChildren === undefined) {
             if (this.naturalElement) {
+                const sessionId = this.sessionId;
                 const children: T[] = [];
                 let i = 0;
                 (<HTMLElement> this._element).childNodes.forEach((child: Element) => {
-                    const node = $session.getElementAsNode<T>(child, this.sessionId);
+                    const node = $session.getElementAsNode<T>(child, sessionId);
                     if (node) {
                         node.childIndex = i++;
                         children.push(node);
@@ -2574,8 +2582,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             result = {};
             if (this.styleElement) {
-                const element = <Element> this._element;
-                const attributes = element.attributes;
+                const attributes = (<Element> this._element).attributes;
                 const length = attributes.length;
                 for (let i = 0; i < length; i++) {
                     const attr = <Attr> attributes.item(i);
@@ -2614,9 +2621,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get center(): Point {
+        const bounds = this.bounds;
         return {
-            x: (this.bounds.left + this.bounds.right) / 2,
-            y: (this.bounds.top + this.bounds.bottom) / 2
+            x: (bounds.left + bounds.right) / 2,
+            y: (bounds.top + bounds.bottom) / 2
         };
     }
 
