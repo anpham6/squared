@@ -19,10 +19,10 @@ type ExtensionRequest = Extension | string;
 
 const extensionsAsync = new Set<Extension>();
 const optionsAsync = new Map<string, ExternalData>();
+const settings = <UserSettings> {};
+const system = <FunctionMap<any>> {};
 let main: Application;
 let framework: AppFramework<Node>;
-let settings = <UserSettings> {};
-let system = <FunctionMap<any>> {};
 
 const checkMain = () => !!main && !main.initializing && main.length > 0;
 
@@ -33,11 +33,10 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
         if (!reloading) {
             Object.assign(appBase.userSettings, settings);
         }
-        settings = appBase.userSettings;
+        Object.assign(settings, appBase.userSettings);
         main = appBase.application;
         main.userSettings = settings;
-        const builtInExtensions = main.builtInExtensions;
-        const extensions = main.extensions;
+        const { builtInExtensions, extensions } = main;
         function includeExtension(extension: Extension) {
             if (!extensions.includes(extension)) {
                 extension.application = <Application> main;
@@ -45,21 +44,27 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
             }
         }
         extensions.length = 0;
-        for (const namespace of settings.builtInExtensions) {
+        for (let namespace of settings.builtInExtensions) {
             const extension = builtInExtensions[namespace];
             if (extension) {
                 includeExtension(extension);
             }
             else {
+                namespace += '.';
                 for (const name in builtInExtensions) {
-                    if (name.startsWith(`${namespace}.`)) {
+                    if (name.startsWith(namespace)) {
                         includeExtension(builtInExtensions[name]);
                     }
                 }
             }
         }
         framework = value;
-        system = value.system;
+        if (reloading) {
+            for (const attr of Object.keys(system)) {
+                delete system[attr];
+            }
+        }
+        Object.assign(system, value.system);
     }
     if (reloading) {
         reset();
@@ -128,9 +133,10 @@ export function exclude(value: ExtensionRequest) {
     if (main) {
         if (typeof value === 'string') {
             value = value.trim();
-            const extension = main.extensionManager.retrieve(value);
+            const extensionManager = main.extensionManager;
+            const extension = extensionManager.retrieve(value);
             if (extension) {
-                return main.extensionManager.exclude(extension);
+                return extensionManager.exclude(extension);
             }
         }
         else if (value instanceof squared.base.Extension) {
@@ -152,7 +158,7 @@ export function configure(value: ExtensionRequest, options: {}) {
         if (typeof value === 'string') {
             if (main) {
                 value = value.trim();
-                const extension = main.extensionManager.retrieve(value) || Array.from(extensionsAsync).find(item => item.name === value);
+                const extension = main.extensionManager.retrieve(value) || util.findSet(extensionsAsync, item => item.name === value);
                 if (extension) {
                     Object.assign(extension.options, options);
                     return true;

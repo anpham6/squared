@@ -28,9 +28,7 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     }
 
     public afterCreateCache() {
-        if (this.processing.node) {
-            (<chrome.base.Controller<T>> this.controllerHandler).cacheElementList(this.processing.cache);
-        }
+        (<chrome.base.Controller<T>> this.controllerHandler).cacheElementList(this.processing.cache);
     }
 
     get length() {

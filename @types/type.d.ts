@@ -6,7 +6,7 @@ type Optional<T> = { [P in keyof T]?: T[P]; };
 
 type Constructor<T> = new(...args: any[]) => T;
 
-type IteratorPredicate<T, U> = (item: T, index: number, array: T[]) => U;
+type IteratorPredicate<T, U, V = T[]> = (item: T, index: number, array: V) => U;
 type BindGeneric<T, U> = (item: T, ...args: any[]) => U;
 
 type FunctionType<T> = (...args: any[]) => T;

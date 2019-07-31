@@ -18,10 +18,15 @@ const {
 } = squared.lib;
 
 const ASSETS = Resource.ASSETS;
-const CACHE_PATTERN: ObjectMap<RegExp> = {
-    MEDIATEXT: /all|screen/,
-    DATAURI: new RegExp(`(url\\("(${$regex.STRING.DATAURI})"\\)),?\\s*`, 'g')
-};
+const REGEXP_MEDIATEXT = /all|screen/;
+const REGEXP_DATAURI = new RegExp(`(url\\("(${$regex.STRING.DATAURI})"\\)),?\\s*`, 'g');
+let REGEXP_IMPORTANT!: RegExp;
+let REGEXP_FONT_FACE!: RegExp;
+let REGEXP_FONT_FAMILY!: RegExp;
+let REGEXP_FONT_SRC!: RegExp;
+let REGEXP_FONT_STYLE!: RegExp;
+let REGEXP_FONT_WEIGHT!: RegExp;
+let REGEXP_URL!: RegExp;
 let NodeConstructor!: Constructor<Node>;
 
 function parseConditionText(rule: string, value: string) {
@@ -184,9 +189,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                     else if (image.width === 0 && image.height === 0) {
                         const element = document.createElement('img');
                         element.src = image.uri;
-                        if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
-                            image.width = element.naturalWidth;
-                            image.height = element.naturalHeight;
+                        const width = element.naturalWidth;
+                        const height = element.naturalHeight;
+                        if (width > 0 && height > 0) {
+                            image.width = width;
+                            image.height = height;
                         }
                         else {
                             documentRoot.appendChild(element);
@@ -200,12 +207,14 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (data.mimeType && data.mimeType.startsWith('image/') && !data.mimeType.endsWith('svg+xml')) {
                 const element = document.createElement('img');
                 element.src = `data:${data.mimeType};` + (data.base64 ? `base64,${data.base64}` : data.content);
-                if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
-                    data.width = element.naturalWidth;
-                    data.height = element.naturalHeight;
+                const width = element.naturalWidth;
+                const height = element.naturalHeight;
+                if (width > 0 && height > 0) {
+                    data.width = width;
+                    data.height = height;
                     ASSETS.images.set(uri, {
-                        width: data.width,
-                        height: data.height,
+                        width,
+                        height,
                         uri: data.filename
                     });
                 }
@@ -463,7 +472,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (let i = 0; i < length; i++) {
             const styleSheet = styleSheets[i];
             const mediaText = styleSheet.media.mediaText;
-            if (mediaText === '' || CACHE_PATTERN.MEDIATEXT.test(mediaText)) {
+            if (mediaText === '' || REGEXP_MEDIATEXT.test(mediaText)) {
                 applyStyleSheet(<CSSStyleSheet> styleSheet);
             }
         }
@@ -489,10 +498,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const parseImageUrl = (styleMap: StringMap, attr: string) => {
                     const value = styleMap[attr];
                     if (value && value !== 'initial') {
-                        CACHE_PATTERN.DATAURI.lastIndex = 0;
+                        REGEXP_DATAURI.lastIndex = 0;
                         let result = value;
                         let match: RegExpExecArray | null;
-                        while ((match = CACHE_PATTERN.DATAURI.exec(value)) !== null) {
+                        while ((match = REGEXP_DATAURI.exec(value)) !== null) {
                             if (match[3] && match[4]) {
                                 resource.addRawData(match[2], match[3], match[4], match[5]);
                             }
@@ -513,14 +522,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                     fromRule.push($util.convertCamelCase(attr));
                 }
                 if (cssText.indexOf('!important') !== -1) {
-                    if (CACHE_PATTERN.IMPORTANT === undefined) {
-                        CACHE_PATTERN.IMPORTANT = /\s*([a-z\-]+):.*?!important;/g;
+                    if (REGEXP_IMPORTANT === undefined) {
+                        REGEXP_IMPORTANT = /\s*([a-z\-]+):.*?!important;/g;
                     }
                     else {
-                        CACHE_PATTERN.IMPORTANT.lastIndex = 0;
+                        REGEXP_IMPORTANT.lastIndex = 0;
                     }
                     let match: RegExpExecArray | null;
-                    while ((match = CACHE_PATTERN.IMPORTANT.exec(cssText)) !== null) {
+                    while ((match = REGEXP_IMPORTANT.exec(cssText)) !== null) {
                         const attr = $util.convertCamelCase(match[1]);
                         switch (attr) {
                             case 'margin':
@@ -638,26 +647,26 @@ export default abstract class Application<T extends Node> implements squared.bas
                 break;
             }
             case CSSRule.FONT_FACE_RULE: {
-                if (CACHE_PATTERN.FONT_FACE === undefined) {
-                    CACHE_PATTERN.FONT_FACE = /\s*@font-face\s*{([^}]+)}\s*/;
-                    CACHE_PATTERN.FONT_FAMILY = /\s*font-family:[^\w]*([^'";]+)/;
-                    CACHE_PATTERN.FONT_SRC = /\s*src:\s*([^;]+);/;
-                    CACHE_PATTERN.FONT_STYLE = /\s*font-style:\s*(\w+)\s*;/;
-                    CACHE_PATTERN.FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-                    CACHE_PATTERN.URL = /\s*(url|local)\((?:['"]([^'")]+)['"]|([^)]+))\)\s*format\(['"]?(\w+)['"]?\)\s*/;
+                if (REGEXP_FONT_FACE === undefined) {
+                    REGEXP_FONT_FACE = /\s*@font-face\s*{([^}]+)}\s*/;
+                    REGEXP_FONT_FAMILY = /\s*font-family:[^\w]*([^'";]+)/;
+                    REGEXP_FONT_SRC = /\s*src:\s*([^;]+);/;
+                    REGEXP_FONT_STYLE = /\s*font-style:\s*(\w+)\s*;/;
+                    REGEXP_FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
+                    REGEXP_URL = /\s*(url|local)\((?:['"]([^'")]+)['"]|([^)]+))\)\s*format\(['"]?(\w+)['"]?\)\s*/;
                 }
-                const match = CACHE_PATTERN.FONT_FACE.exec(cssText);
+                const match = REGEXP_FONT_FACE.exec(cssText);
                 if (match) {
-                    const familyMatch = CACHE_PATTERN.FONT_FAMILY.exec(match[1]);
-                    const srcMatch = CACHE_PATTERN.FONT_SRC.exec(match[1]);
+                    const familyMatch = REGEXP_FONT_FAMILY.exec(match[1]);
+                    const srcMatch = REGEXP_FONT_SRC.exec(match[1]);
                     if (familyMatch && srcMatch) {
-                        const styleMatch = CACHE_PATTERN.FONT_STYLE.exec(match[1]);
-                        const weightMatch = CACHE_PATTERN.FONT_WEIGHT.exec(match[1]);
+                        const styleMatch = REGEXP_FONT_STYLE.exec(match[1]);
+                        const weightMatch = REGEXP_FONT_WEIGHT.exec(match[1]);
                         const fontFamily = familyMatch[1].trim();
                         const fontStyle = styleMatch ? styleMatch[1].toLowerCase() : 'normal';
                         const fontWeight = weightMatch ? parseInt(weightMatch[1]) : 400;
                         for (const value of srcMatch[1].split($regex.XML.SEPARATOR)) {
-                            const urlMatch = CACHE_PATTERN.URL.exec(value);
+                            const urlMatch = REGEXP_URL.exec(value);
                             if (urlMatch) {
                                 let srcUrl: string | undefined;
                                 let srcLocal: string | undefined;

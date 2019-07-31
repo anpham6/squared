@@ -834,6 +834,7 @@ declare namespace lib {
         function belowRange(a: number, b: number, offset?: number): boolean;
         function assignEmptyProperty(dest: {}, source: {}): {};
         function assignEmptyValue(dest: {}, ...attrs: string[]): void;
+        function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): T | undefined;
         function sortNumber(values: number[], ascending?: boolean): number[];
         function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
         function flatArray<T>(list: any[]): T[];

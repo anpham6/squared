@@ -446,6 +446,16 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
     }
 }
 
+export function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>) {
+    let i = 0;
+    for (const item of list) {
+        if (predicate(item, i++, list)) {
+            return item;
+        }
+    }
+    return undefined;
+}
+
 export function sortNumber(values: number[], ascending = true) {
     return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
 }
