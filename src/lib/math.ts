@@ -80,15 +80,17 @@ export function truncateTrailingZero(value: string) {
 }
 
 export function truncateString(value: string, precision = 3) {
-    if (REGEXP_TRUNCATECACHE[precision] === undefined) {
-        REGEXP_TRUNCATECACHE[precision] = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+    let pattern = REGEXP_TRUNCATECACHE[precision];
+    if (pattern === undefined) {
+        pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+        REGEXP_TRUNCATECACHE[precision] = pattern;
     }
     else {
-        REGEXP_TRUNCATECACHE[precision].lastIndex = 0;
+        pattern.lastIndex = 0;
     }
     let output = value;
     let match: RegExpExecArray | null;
-    while ((match = REGEXP_TRUNCATECACHE[precision].exec(value)) !== null) {
+    while ((match = pattern.exec(value)) !== null) {
         if (parseInt(match[2]) >= 5) {
             match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
         }

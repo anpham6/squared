@@ -15,7 +15,7 @@ import * as xml from './lib/xml';
 type Node = squared.base.Node;
 type Application = squared.base.Application<Node>;
 type Extension = squared.base.Extension<Node>;
-type ExtensionRequest = Extension | string;
+type ExtensionRequest = Extension | string | null;
 
 const extensionsAsync = new Set<Extension>();
 const optionsAsync = new Map<string, ExternalData>();
@@ -74,8 +74,9 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
 export function parseDocument(...elements: (HTMLElement | string)[]): squared.PromiseResult {
     if (main) {
         if (settings.handleExtensionsAsync) {
+            const extensionManager = main.extensionManager;
             for (const item of extensionsAsync) {
-                main.extensionManager.include(item);
+                extensionManager.include(item);
             }
             for (const [name, options] of optionsAsync.entries()) {
                 configure(name, options);
@@ -131,23 +132,13 @@ export function includeAsync(value: ExtensionRequest, options?: {}) {
 
 export function exclude(value: ExtensionRequest) {
     if (main) {
+        const extensionManager = main.extensionManager;
         if (typeof value === 'string') {
-            value = value.trim();
-            const extensionManager = main.extensionManager;
-            const extension = extensionManager.retrieve(value);
-            if (extension) {
-                return extensionManager.exclude(extension);
-            }
+            value = extensionManager.retrieve(value.trim());
         }
-        else if (value instanceof squared.base.Extension) {
-            if (extensionsAsync.has(value)) {
-                extensionsAsync.delete(value);
-                main.extensionManager.exclude(value);
-                return true;
-            }
-            else {
-                return main.extensionManager.exclude(value);
-            }
+        if (value instanceof squared.base.Extension) {
+            extensionsAsync.delete(value);
+            return extensionManager.exclude(value);
         }
     }
     return false;
@@ -208,7 +199,7 @@ export function copyToDisk(value: string, callback?: CallbackResult) {
     }
 }
 
-export function appendToArchive(value?: string) {
+export function appendToArchive(value: string) {
     if (checkMain() && util.isString(value)) {
         if (!main.closed) {
             main.finalize();

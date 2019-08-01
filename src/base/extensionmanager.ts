@@ -16,7 +16,7 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
             if (framework > 0) {
                 for (const item of ext.dependencies) {
                     if (item.preload && this.retrieve(item.name) === null) {
-                        const extension = this.application.builtInExtensions[item.name];
+                        const extension = application.builtInExtensions[item.name];
                         if (extension) {
                             this.include(extension);
                         }

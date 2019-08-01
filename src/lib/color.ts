@@ -2164,17 +2164,17 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
         if (rgba && (rgba.a > 0 || transparency)) {
             const hexAsString = getHexCode(rgba.r, rgba.g, rgba.b);
             const alphaAsString = getHexCode(rgba.a);
-            const valueAsRGBA = `#${hexAsString + alphaAsString}`;
+            const valueAsRGBA = '#' + hexAsString + alphaAsString;
             if (CACHE_COLORDATA[valueAsRGBA]) {
                 return CACHE_COLORDATA[valueAsRGBA];
             }
             opacity = rgba.a / 255;
-            value = `#${hexAsString}`;
+            value = '#' + hexAsString;
             const colorData = <ColorData> {
                 key,
                 value,
                 valueAsRGBA,
-                valueAsARGB: `#${alphaAsString + hexAsString}`,
+                valueAsARGB: '#' + alphaAsString + hexAsString,
                 rgba,
                 hsl: convertHSLA(rgba),
                 opacity,
@@ -2229,7 +2229,7 @@ export function getHexCode(...values: number[]) {
 }
 
 export function convertHex(value: RGBA) {
-    return `#${getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '')}`;
+    return '#' + getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '');
 }
 
 export function parseRGBA(value: string) {

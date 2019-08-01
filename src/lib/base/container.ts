@@ -8,7 +8,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public [Symbol.iterator]() {
-        const data: IteratorResult<T> = { done: false, value: undefined as any };
+        const data = <IteratorResult<T>> { done: false };
         const list = this._children;
         const length = list.length;
         let i = 0;

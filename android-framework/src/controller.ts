@@ -2082,7 +2082,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         const viewGroup = item.nodeGroup && !item.hasAlign($e.NODE_ALIGNMENT.SEGMENTED);
                         let retainMultiline = false;
-                        siblings = item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? $dom.getElementsBetweenSiblings(previous.element, <Element> item.element, true) : undefined;
+                        siblings = item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? $dom.getElementsBetweenSiblings(previous.element, <Element> item.element) : undefined;
                         const startNewRow = () => {
                             if (previous.textElement) {
                                 if (i === 1 && item.plainText && item.previousSibling === previous && !$regex.CHAR.TRAILINGSPACE.test(previous.textContent) && !$regex.CHAR.LEADINGSPACE.test(item.textContent)) {

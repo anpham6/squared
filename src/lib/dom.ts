@@ -1,4 +1,4 @@
-import { spliceArray, withinRange } from './util';
+import { withinRange } from './util';
 
 export const ELEMENT_BLOCK = [
     'ADDRESS',
@@ -140,47 +140,58 @@ export function getRangeClientRect(element: Element) {
 
 export function removeElementsByClassName(className: string) {
     for (const element of Array.from(document.getElementsByClassName(className))) {
-        if (element.parentElement) {
-            element.parentElement.removeChild(element);
+        const parentElement = element.parentElement;
+        if (parentElement) {
+            parentElement.removeChild(element);
         }
     }
 }
 
-export function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace = false) {
+export function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element) {
+    const result: Element[] = [];
     if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
         const parent = elementEnd.parentElement;
         if (parent) {
             let startIndex = elementStart ? -1 : 0;
             let endIndex = -1;
-            const elements = <Element[]> Array.from(parent.childNodes);
-            const length = elements.length;
+            const childNodes = parent.childNodes;
+            const length = childNodes.length;
             for (let i = 0; i < length; i++) {
-                if (elements[i] === elementStart) {
-                    startIndex = i;
-                }
-                if (elements[i] === elementEnd) {
+                const element = childNodes[i];
+                if (element === elementEnd) {
                     endIndex = i;
+                    if (startIndex !== -1) {
+                        break;
+                    }
+                }
+                else if (element === elementStart) {
+                    startIndex = i;
+                    if (endIndex !== -1) {
+                        break;
+                    }
                 }
             }
-            if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
-                const result = elements.slice(Math.min(startIndex, endIndex) + 1, Math.max(startIndex, endIndex));
-                if (whiteSpace) {
-                    spliceArray(result, element => element.nodeName === '#comment');
+            if (startIndex !== -1 && endIndex !== -1) {
+                const minIndex = Math.min(startIndex, endIndex);
+                const maxIndex = Math.max(startIndex, endIndex);
+                for (let i = minIndex; i <= maxIndex; i++) {
+                    const element = childNodes[i];
+                    const nodeName = element.nodeName;
+                    if (nodeName.charAt(0) !== '#' || nodeName === '#text') {
+                        result.push(<Element> element);
+                    }
                 }
-                else {
-                    spliceArray(result, element => element.nodeName.charAt(0) === '#' && (element.nodeName !== 'text' || !!element.textContent && element.textContent.trim() === ''));
-                }
-                return result.length ? result : undefined;
             }
         }
     }
-    return undefined;
+    return result;
 }
 
 export function createElement(parent: HTMLElement, tagName: string, attrs: StringMap) {
     const element = document.createElement(tagName);
+    const style = element.style;
     for (const attr in attrs) {
-        element.style.setProperty(attr, attrs[attr]);
+        style.setProperty(attr, attrs[attr]);
     }
     parent.appendChild(element);
     return element;
@@ -200,10 +211,7 @@ export function measureTextWidth(value: string, fontFamily: string, fontSize: nu
 
 export function getNamedItem(element: Element, attr: string) {
     const item = element.attributes.getNamedItem(attr);
-    if (item) {
-        return item.value.trim();
-    }
-    return '';
+    return item ? item.value.trim() : '';
 }
 
 export function isTextNode(element: Element) {

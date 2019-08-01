@@ -183,7 +183,7 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
             tag: match[1],
             closing: !!match[2],
             tagName: match[3],
-            value: match[4].trim() === '' ? '' : match[4]
+            value: match[4].trim()
         });
     }
     let output = '';
