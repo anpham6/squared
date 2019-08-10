@@ -464,7 +464,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, image
                 offsetParent = dimension.height;
                 result.vertical = position;
             }
-            const directionAsPercent = `${direction}AsPercent`;
+            const directionAsPercent = direction + 'AsPercent';
             switch (position) {
                 case 'start':
                     result.horizontal = 'left';
@@ -724,7 +724,7 @@ export function convertAngle(value: string, unit = 'deg') {
 
 export function convertPX(value: string, fontSize?: number) {
     if (value) {
-        return value.endsWith('px') ? value : `${parseUnit(value, fontSize)}px`;
+        return value.endsWith('px') ? value : parseUnit(value, fontSize) + 'px';
     }
     return '0px';
 }
@@ -836,7 +836,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                             equated[index] = seg[0];
                             const hash = `{${index++}}`;
                             const remaining = closing[i] + 1;
-                            value = value.substring(0, j) + `${hash + ' '.repeat(remaining - (j + hash.length))}` + value.substring(remaining);
+                            value = value.substring(0, j) + hash + ' '.repeat(remaining - (j + hash.length)) + value.substring(remaining);
                             closing.splice(i--, 1);
                         }
                     }
@@ -908,7 +908,7 @@ export function parseAngle(value: string) {
 }
 
 export function formatPX(value: number) {
-    return `${Math.round(value) || 0}px`;
+    return (Math.round(value) || 0) + 'px';
 }
 
 export function formatPercent(value: string | number, round = true) {
@@ -919,7 +919,7 @@ export function formatPercent(value: string | number, round = true) {
         }
     }
     value *= 100;
-    return `${round ? Math.round(value) : value}%`;
+    return (round ? Math.round(value) : value) + '%';
 }
 
 export function isLength(value: string, percent = false) {

@@ -22,7 +22,7 @@ const {
     util: $util
 } = squared.lib;
 
-const STRING_CUBICBEZIER = `cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)`;
+const STRING_CUBICBEZIER = 'cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)';
 const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
 const KEYFRAME_MAP = $css.getKeyframeRules();
 const ANIMATION_DEFAULT = {
@@ -72,7 +72,7 @@ function convertRotate(value: string) {
     else if (value.startsWith('reverse ')) {
         const angle = value.split(' ')[1];
         if ($css.isAngle(angle)) {
-            return `auto ${180 + $css.parseAngle(angle)}deg`;
+            return 'auto ' + (180 + $css.parseAngle(angle)) + 'deg';
         }
         return 'auto 0deg';
     }
@@ -183,7 +183,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         const delay = SvgAnimation.convertClockTime(cssData['animation-delay'][i]);
                         const iterationCount = cssData['animation-iteration-count'][i];
                         const fillMode = cssData['animation-fill-mode'][i];
-                        const keyframeIndex = `${animationName[i]}_${i}`;
+                        const keyframeIndex = animationName[i] + '_' + i;
                         const attributes: string[] = [];
                         let includeKeySplines = true;
                         groupOrdering.push({
@@ -237,11 +237,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         switch (item.type) {
                                             case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                                                 name = 'translate';
-                                                value = `${m.e} ${m.f}`;
+                                                value = m.e + ' ' + m.f;
                                                 break;
                                             case SVGTransform.SVG_TRANSFORM_SCALE:
                                                 name = 'scale';
-                                                value = `${m.a} ${m.d} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
+                                                value = m.a + ' ' + m.d + ' ' + (origin ? origin.x + ' ' + origin.y : '0 0');
                                                 if (origin && (transform.key !== 0 || origin.x !== 0 || origin.y !== 0)) {
                                                     transformOrigin = {
                                                         x: origin.x * (1 - m.a),
@@ -251,7 +251,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                 break;
                                             case SVGTransform.SVG_TRANSFORM_ROTATE:
                                                 name = 'rotate';
-                                                value = `${item.angle} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
+                                                value = item.angle + ' ' + (origin ? origin.x + ' ' + origin.y : '0 0');
                                                 break;
                                             case SVGTransform.SVG_TRANSFORM_SKEWX:
                                                 name = 'skewX';
@@ -344,7 +344,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         if (item.value.startsWith('auto')) {
                                             angle += 90;
                                         }
-                                        item.value = `${angle} 0 0`;
+                                        item.value = angle + '0 0';
                                     }
                                     attrMap['rotate'] = offsetRotate;
                                     delete attrMap['offset-rotate'];
@@ -458,7 +458,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             }
                                             else {
                                                 const match = new RegExp(STRING_CUBICBEZIER).exec(keySplines[j]);
-                                                keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
+                                                keySplines[j] = match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : KEYSPLINE_NAME.ease;
                                             }
                                             keySplinesData.push(keySplines[j]);
                                         }

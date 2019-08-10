@@ -22,7 +22,7 @@ const {
 } = squared.base.lib;
 
 const REGEXP_ALIGNSELF = /(start|end|center|baseline)/;
-const REGEXP_JUSTIFYSELF = /(start|end|center|baseline|left|right)/;
+const REGEXP_JUSTIFYSELF = /(left|right)/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
@@ -247,11 +247,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
                 for (let i = 0, j = 0; i < cellSpan; i++) {
-                    const min = unitMin[cellStart + i];
+                    const k = cellStart + i;
+                    const min = unitMin[k];
                     if (min !== '') {
                         minUnitSize += parent.parseUnit(min);
                     }
-                    let value = unit[cellStart + i];
+                    let value = unit[k];
                     if (!value) {
                         const auto = data.auto;
                         if (auto[j]) {
@@ -528,7 +529,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const columnCount = column.length;
                 const percent = unit.reduce((a, b) => a + parseFloat(b), 0) + (column.gap * columnCount * 100) / node.actualWidth;
                 if (percent < 100) {
-                    const columnGap = `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_column_gap`, $css.formatPX(column.gap))}`;
+                    const columnGap = '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_cssgrid_column_gap', $css.formatPX(column.gap));
                     const lengthA = mainData.row.length;
                     for (let i = 0; i < lengthA; i++) {
                         controller.addAfterOutsideTemplate(
@@ -555,7 +556,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             for (let i = 0; i < length; i++) {
                 const row = emptyRows[i];
                 if (row) {
-                    const rowGap = `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_row_gap`, $css.formatPX(mainData.row.gap))}`;
+                    const rowGap = '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_cssgrid_row_gap', $css.formatPX(mainData.row.gap));
                     const lengthA = row.length;
                     for (let j = 0; j < lengthA; j++) {
                         if (row[j] === 1) {

@@ -156,7 +156,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     data = { pathname: 'generated/base64', filename, base64 };
                 }
                 else if (content && mimeType) {
-                    data = { pathname: `generated/${mimeType}`, filename, content };
+                    data = { pathname: 'generated/' + mimeType, filename, content };
                 }
                 if (this.validFile(data)) {
                     data.mimeType = mimeType;

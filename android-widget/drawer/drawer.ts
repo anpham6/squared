@@ -40,7 +40,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
                 for (let i = 0; i < length; i++) {
                     const item = <HTMLElement> children[i];
                     if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $constA.EXT_ANDROID.EXTERNAL)) {
-                        item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $constA.EXT_ANDROID.EXTERNAL;
+                        item.dataset.use = (item.dataset.use ? item.dataset.use + ', ' : '') + $constA.EXT_ANDROID.EXTERNAL;
                     }
                 }
                 this.application.rootElements.add(element);
@@ -89,14 +89,14 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             const menu = $util.optionalAsString(Drawer.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
             const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $constA.EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
             if (menu !== '') {
-                $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
+                $util.assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
             }
             if (headerLayout !== '') {
-                $util.assignEmptyValue(options, 'app', 'headerLayout', `@layout/${headerLayout}`);
+                $util.assignEmptyValue(options, 'app', 'headerLayout', '@layout/' + headerLayout);
             }
             if (menu !== '' || headerLayout !== '') {
                 const controller = <android.base.Controller<T>> this.controller;
-                $util.assignEmptyValue(options, 'android', 'id', `${node.documentId}_navigation`);
+                $util.assignEmptyValue(options, 'android', 'id', node.documentId + '_navigation');
                 $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                 $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
                 controller.addAfterInsideTemplate(

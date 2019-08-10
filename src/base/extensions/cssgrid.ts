@@ -798,13 +798,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             if (children.length === node.length) {
                 const data = mainData.rowData;
                 const rowCount = data.length;
-                mainData.row.length = rowCount;
-                mainData.column.length = columnCount;
                 const modified = new Set<T>();
                 const rowHeight = new Array(rowCount);
                 const rowWeight = new Array(rowCount);
                 const columnGap = mainData.column.gap;
                 const rowGap = mainData.row.gap;
+                mainData.row.length = rowCount;
+                mainData.column.length = columnCount;
                 mainData.rowHeight = rowHeight;
                 mainData.rowWeight = rowWeight;
                 for (let i = 0; i < rowCount; i++) {

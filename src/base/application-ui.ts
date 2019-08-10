@@ -387,7 +387,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         const id = element.id;
                         let styleElement: HTMLElement | undefined;
                         if (item.pageFlow) {
-                            element.id = `id_${Math.round(Math.random() * new Date().getTime())}`;
+                            element.id = 'id_' + Math.round(Math.random() * new Date().getTime());
                             styleElement = $css.insertStyleSheetRule(`#${element.id + NodeUI.getPseudoElt(item)} { display: none !important; }`);
                         }
                         if (item.cssTry('display', item.display)) {
@@ -435,10 +435,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public afterCreateCache(element: HTMLElement) {
         const dataset = element.dataset;
-        const filename = dataset.filename && dataset.filename.replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
+        const filename = dataset.filename && dataset.filename.replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '') || element.id || 'document_' + this.length;
         const iteration = (dataset.iteration ? $util.convertInt(dataset.iteration) : -1) + 1;
         dataset.iteration = iteration.toString();
-        dataset.layoutName = $util.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
+        dataset.layoutName = $util.convertWord(iteration > 1 ? filename + '_' + iteration : filename, true);
         this.setBaseLayout(dataset.layoutName);
         this.setConstraints();
         this.setResources();
@@ -459,7 +459,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public toString() {
-        return this._layouts.length ? this._layouts[0].content : '';
+        const layouts = this._layouts;
+        return layouts.length ? layouts[0].content : '';
     }
 
     protected cascadeParentNode(parentElement: HTMLElement, depth = 0) {
@@ -468,8 +469,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.depth = depth;
             if (depth === 0) {
                 this.processing.cache.append(node);
+                const extensionManager = this.extensionManager;
                 for (const name of node.extensions) {
-                    const ext = <ExtensionUI<T>> this.extensionManager.retrieve(name);
+                    const ext = <ExtensionUI<T>> extensionManager.retrieve(name);
                     if (ext && ext.cascadeAll) {
                         this._cascadeAll = true;
                         break;
@@ -626,12 +628,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
-        let styleMap: StringMap = $session.getElementCache(element, `styleMap${pseudoElt}`, sessionId);
+        let styleMap: StringMap = $session.getElementCache(element, 'styleMap' + pseudoElt, sessionId);
         let nested = 0;
         if (element.tagName === 'Q') {
             if (styleMap === undefined) {
                 styleMap = {};
-                $session.setElementCache(element, `styleMap${pseudoElt}`, sessionId, styleMap);
+                $session.setElementCache(element, 'styleMap' + pseudoElt, sessionId, styleMap);
             }
             if (!styleMap.content) {
                 styleMap.content = $css.getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
@@ -756,7 +758,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     return undefined;
                                 }
                                 const getIncrementValue = (parent: Element) => {
-                                    const pseduoStyle: StringMap = $session.getElementCache(parent, `styleMap${pseudoElt}`, sessionId);
+                                    const pseduoStyle: StringMap = $session.getElementCache(parent, 'styleMap' + pseudoElt, sessionId);
                                     if (pseduoStyle && pseduoStyle.counterIncrement) {
                                         return getCounterValue(pseduoStyle.counterIncrement);
                                     }

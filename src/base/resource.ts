@@ -51,9 +51,10 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     }
 
     public addFont(data: CSSFontFaceData) {
-        const fonts = Resource.ASSETS.fonts.get(data.fontFamily) || [];
-        fonts.push(data);
-        Resource.ASSETS.fonts.set(data.fontFamily, fonts);
+        const fonts = Resource.ASSETS.fonts;
+        const items = fonts.get(data.fontFamily) || [];
+        items.push(data);
+        fonts.set(data.fontFamily, items);
     }
 
     public getFont(fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
@@ -97,7 +98,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         else {
             for (const extension of imageFormat) {
                 if (mimeType.indexOf(extension) !== -1) {
-                    if (dataURI.endsWith(`.${extension}`)) {
+                    if (dataURI.endsWith('.' + extension)) {
                         filename = $util.fromLastIndexOf(dataURI, '/');
                     }
                     else {

@@ -26,7 +26,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
         const setTextValue = (node: T, attr: string, name: string, value: string) => {
             name = Resource.addString(value, name, this.options.numberResourceValue);
             if (name !== '') {
-                node.android(attr, this.options.numberResourceValue || !$util.isNumber(name) ? `@string/${name}` : name, false);
+                node.android(attr, this.options.numberResourceValue || !$util.isNumber(name) ? '@string/' + name : name, false);
             }
         };
         for (const node of this.application.processing.cache) {
@@ -35,7 +35,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     case 'SELECT': {
                         const arrayName = this.createOptionArray(<HTMLSelectElement> node.element, node.controlId);
                         if (arrayName !== '') {
-                            node.android('entries', `@array/${arrayName}`);
+                            node.android('entries', '@array/' + arrayName);
                         }
                         break;
                     }
@@ -78,7 +78,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         node.android('textAllCaps', 'true');
                                         const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
                                         if (fontStyle) {
-                                            fontStyle.fontSize = `${parseFloat(fontStyle.fontSize) * this.options.fontVariantSmallCapsReduction}px`;
+                                            fontStyle.fontSize = (parseFloat(fontStyle.fontSize) * this.options.fontVariantSmallCapsReduction) + 'px';
                                         }
                                     }
                                 }
@@ -100,16 +100,16 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     for (const style of textDecorationLine.split(' ')) {
                                         switch (style) {
                                             case 'underline':
-                                                value = `<u>${value}</u>`;
+                                                value = '<u>' + value + '</u>';
                                                 break;
                                             case 'line-through':
-                                                value = `<strike>${value}</strike>`;
+                                                value = '<strike>' + value + '</strike>';
                                                 break;
                                         }
                                     }
                                 }
                                 if (tagName === 'INS' && textDecorationLine.indexOf('line-through') === -1) {
-                                    value = `<strike>${value}</strike>`;
+                                    value = '<strike>' + value + '</strike>';
                                 }
                                 let textIndent = 0;
                                 if (node.blockDimension || node.display === 'table-cell') {
@@ -142,7 +142,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                                 const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
                                 if (hintString) {
-                                    setTextValue(node, 'hint', `${node.controlId.toLowerCase()}_hint`, hintString);
+                                    setTextValue(node, 'hint', node.controlId.toLowerCase() + '_hint', hintString);
                                 }
                             }
                         }
@@ -151,7 +151,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 if (node.styleElement) {
                     const title = (<HTMLElement> node.element).title;
                     if (title !== '') {
-                        setTextValue(node, 'tooltipText', `${node.controlId.toLowerCase()}_title`, title);
+                        setTextValue(node, 'tooltipText', node.controlId.toLowerCase() + '_title', title);
                     }
                 }
             }
@@ -171,13 +171,13 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 for (let value of resourceArray) {
                     value = Resource.addString($xml.replaceCharacterData(value), '', this.options.numberResourceValue);
                     if (value !== '') {
-                        result.push(`@string/${value}`);
+                        result.push('@string/' + value);
                     }
                 }
             }
         }
         if (result && result.length) {
-            return Resource.insertStoredAsset('arrays', `${controlId}_array`, result);
+            return Resource.insertStoredAsset('arrays', controlId + '_array', result);
         }
         return '';
     }

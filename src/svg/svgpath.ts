@@ -693,7 +693,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         }
                         return valueArray;
                     }
-                    const getFromToValue = (item?: SvgStrokeDash) => item ? `${item.start} ${item.end}` : '1 1';
+                    const getFromToValue = (item?: SvgStrokeDash) => item ? item.start + ' ' + item.end : '1 1';
                     let setDashLength: Undefined<(index: number) => void> = (index: number) => {
                         let offset = valueOffset;
                         const length = sorted.length;

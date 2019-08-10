@@ -37,7 +37,7 @@ function getBaseValue(element: SVGElement, ...attrs: string[]) {
     for (const attr of attrs) {
         if (element[attr]) {
             result[attr] = element[attr].baseVal.value;
-            result[`${attr}AsString`] = element[attr].baseVal.valueAsString;
+            result[attr + 'AsString'] = element[attr].baseVal.valueAsString;
         }
     }
     return result;
@@ -92,7 +92,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     private setDefinitions(item: SVGElement) {
         item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element: SVGElement) => {
             if (element.id) {
-                const id = `#${element.id}`;
+                const id = '#' + element.id;
                 if (SVG.clipPath(element)) {
                     this.definitions.clipPath.set(id, element);
                 }

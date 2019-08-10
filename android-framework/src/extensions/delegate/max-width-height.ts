@@ -45,20 +45,22 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                 node.setLayoutWidth('0px');
                 container.setLayoutWidth('match_parent');
                 if (parent.layoutElement) {
-                    node.autoMargin.horizontal = false;
-                    node.autoMargin.left = false;
-                    node.autoMargin.right = false;
-                    node.autoMargin.leftRight = false;
+                    const autoMargin = node.autoMargin;
+                    autoMargin.horizontal = false;
+                    autoMargin.left = false;
+                    autoMargin.right = false;
+                    autoMargin.leftRight = false;
                 }
             }
             if (mainData.height) {
                 node.setLayoutHeight('0px');
                 container.setLayoutHeight('match_parent');
                 if (parent.layoutElement) {
-                    node.autoMargin.vertical = false;
-                    node.autoMargin.top = false;
-                    node.autoMargin.bottom = false;
-                    node.autoMargin.topBottom = false;
+                    const autoMargin = node.autoMargin;
+                    autoMargin.vertical = false;
+                    autoMargin.top = false;
+                    autoMargin.bottom = false;
+                    autoMargin.topBottom = false;
                 }
             }
             mainData.container = container;

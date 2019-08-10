@@ -123,7 +123,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             else {
                 NAME_GRAPHICS.set(tagName, ++index);
-                return `${tagName}_${index}`;
+                return tagName + '_' + index;
             }
         }
         else {
@@ -179,7 +179,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static drawPolygon(values: Point[] | DOMPoint[], precision?: number) {
-        return values.length ? `${SvgBuild.drawPolyline(values, precision)} Z` : '';
+        return values.length ? SvgBuild.drawPolyline(values, precision) + 'Z' : '';
     }
 
     public static drawPolyline(values: Point[] | DOMPoint[], precision?: number) {

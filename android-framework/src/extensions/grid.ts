@@ -145,7 +145,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                                             item.id,
                                             controller.renderSpace(
                                                 'match_parent',
-                                                `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_grid_space`, $css.formatPX(heightBottom))}`,
+                                                '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_grid_space', $css.formatPX(heightBottom)),
                                                 columnCount
                                             ),
                                             false

@@ -178,7 +178,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 for (let i = 0; i < columns.length; i++) {
-                    if (columns[i] && columns[i].length) {
+                    const column = columns[i];
+                    if (column && column.length) {
                         columnEnd.push(columnRight[i]);
                     }
                     else {
@@ -203,9 +204,10 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             const assigned = new Set<T>();
             for (let i = 0, count = 0; i < columnCount; i++) {
                 let spacer = 0;
-                for (let j = 0, start = 0; j < columns[i].length; j++) {
-                    const item = columns[i][j];
-                    const rowCount = columns[i].length;
+                const column = columns[i];
+                for (let j = 0, start = 0; j < column.length; j++) {
+                    const item = column[j];
+                    const rowCount = column.length;
                     if (children[j] === undefined) {
                         children[j] = [];
                     }
@@ -224,9 +226,9 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (columnSpan === 1) {
                             for (let k = j + 1; k < rowCount; k++) {
-                                if ((columns[i][k] as any).spacer === 1) {
+                                if ((column[k] as any).spacer === 1) {
                                     rowSpan++;
-                                    (columns[i][k] as any).spacer = 2;
+                                    (column[k] as any).spacer = 2;
                                 }
                                 else {
                                     break;

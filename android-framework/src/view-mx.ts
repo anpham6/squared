@@ -124,7 +124,11 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
     else if ((node.renderChildren.length === 0 || node.inline) && (node.pageFlow || node.textContent.length)) {
         let offset = 0;
         let usePadding = true;
-        if (node.styleElement && !inlineStyle && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
+        if (inlineStyle && !node.inline && node.inlineText) {
+            setMinHeight(node, lineHeight);
+            setMultiline(node, lineHeight, false, false);
+        }
+        else if (!inlineStyle && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
             if (node.cssTry('white-space', 'nowrap')) {
                 offset = (lineHeight - (<Element> node.element).getBoundingClientRect().height) / 2;
                 usePadding = false;
@@ -132,18 +136,16 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
             }
             node.cssFinally('line-height');
         }
-        else if (inlineStyle && !node.inline && node.inlineText) {
-            setMinHeight(node, lineHeight);
-            setMultiline(node, lineHeight, false, false);
-            return;
-        }
-        else if (node.plainText && <number> node.bounds.numberOfLines > 1) {
-            node.android('minHeight', $css.formatPX(node.bounds.height / <number> node.bounds.numberOfLines));
-            node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
-            return;
-        }
         else {
-            offset = (lineHeight - node.bounds.height) / 2;
+            const bounds = node.bounds;
+            if (node.plainText && <number> bounds.numberOfLines > 1) {
+                node.android('minHeight', $css.formatPX(bounds.height / <number> bounds.numberOfLines));
+                node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
+                return;
+            }
+            else {
+                offset = (lineHeight - bounds.height) / 2;
+            }
         }
         if (Math.round(offset) > 0) {
             const boxPadding = usePadding && node.textElement && !node.plainText && !inlineStyle;
@@ -476,10 +478,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const all = objs.length === 0;
             for (const value of this._namespaces) {
                 if (all || objs.includes(value)) {
-                    const obj: StringMap = this[`__${value}`];
+                    const obj: StringMap = this['__' + value];
                     if (obj) {
                         for (const attr in obj) {
-                            result.push((value !== '_' ? `${value}:` : '') + `${attr}="${obj[attr]}"`);
+                            result.push((value !== '_' ? value + ':' : '') + `${attr}="${obj[attr]}"`);
                         }
                     }
                 }
@@ -527,7 +529,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     Object.assign(node.unsafe('boxAdjustment'), this._boxAdjustment);
                 }
                 for (const name of this._namespaces) {
-                    const obj: StringMap = this[`__${name}`];
+                    const obj: StringMap = this['__' + name];
                     for (const attr in obj) {
                         node.attr(name, attr, name === 'android' && attr === 'id' ? node.documentId : obj[attr]);
                     }
@@ -567,7 +569,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         name = validateString($dom.getNamedItem(<HTMLElement> this.element, 'name'));
                     }
                     if (name === 'parent' || RESERVED_JAVA.includes(name)) {
-                        name = `_${name}`;
+                        name = '_' + name;
                     }
                 }
                 this.controlId = $util.convertWord(squared.base.ResourceUI.generateId('android', name || $util.fromLastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
@@ -615,7 +617,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     layoutWidth = 'match_parent';
                                 }
                                 else {
-                                    this.app(`layout_constraintWidth_percent`, $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
+                                    this.app('layout_constraintWidth_percent', $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
                                     layoutWidth = '0px';
                                 }
                                 adjustViewBounds = true;
@@ -1035,8 +1037,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     result = checkTextAlign(direction.values().next().value);
                 default:
                     function checkMergable(value: string) {
-                        const horizontal = `${value}_horizontal`;
-                        const vertical = `${value}_vertical`;
+                        const horizontal = value + '_horizontal';
+                        const vertical = value + '_vertical';
                         if (direction.has(value) || direction.has(horizontal) && direction.has(vertical)) {
                             direction.delete(horizontal);
                             direction.delete(vertical);
@@ -1071,7 +1073,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 break;
                         }
                     }
-                    result = x !== '' && y !== '' ? `${x}|${y}` : x || y;
+                    result = x !== '' && y !== '' ? x + '|' + y : x || y;
                     if (z !== '') {
                         result += (result !== '' ? '|' : '') + z;
                     }
@@ -1420,8 +1422,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get documentId() {
-            this._requireDocumentId = true;
-            return this.controlId ? `@id/${this.controlId}` : '';
+            if (this.controlId) {
+                this._requireDocumentId = true;
+                return '@id' + this.controlId;
+            }
+            return '';
         }
 
         get anchorTarget(): T {

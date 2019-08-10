@@ -83,7 +83,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const setBorderStyle = () => {
                 if (styleMap.border === undefined && checkBorderAttribute(0)) {
                     const inputBorderColor = this.localSettings.style.inputBorderColor;
-                    styleMap.border = `outset 1px ${inputBorderColor}`;
+                    styleMap.border = 'outset 1px ' + inputBorderColor;
                     for (let i = 0; i < 4; i++) {
                         styleMap[$css.BOX_BORDER[i][0]] = 'outset';
                         styleMap[$css.BOX_BORDER[i][1]] = '1px';
@@ -193,7 +193,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                             if (match) {
                                 if ($css.isLength(match[1])) {
-                                    styleMap[attr] = `${match[1]}px`;
+                                    styleMap[attr] = match[1] + 'px';
                                 }
                                 else if ($css.isPercent(match[1])) {
                                     styleMap[attr] = match[1];
@@ -208,7 +208,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                 }
                             }
                             else if (styleMap[opposing] && $css.isLength(styleMap[opposing])) {
-                                const attrMax = `max${$util.capitalize(attr)}`;
+                                const attrMax = 'max' + $util.capitalize(attr);
                                 if (styleMap[attrMax] === undefined || !$css.isPercent(attrMax)) {
                                     const image = this.application.resourceHandler.getImage((<HTMLImageElement> element).src);
                                     if (image && image.width > 0 && image.height > 0) {
@@ -310,7 +310,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public includeElement(element: Element) {
-        return !(this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && this.localSettings.unsupported.tagName.has(`${element.tagName}:${(<HTMLInputElement> element).type}`)) || (<HTMLElement> element).contentEditable === 'true';
+        return !(this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && this.localSettings.unsupported.tagName.has(element.tagName + ':' + (<HTMLInputElement> element).type)) || (<HTMLElement> element).contentEditable === 'true';
     }
 
     public visibleElement(element: Element) {

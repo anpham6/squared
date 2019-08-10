@@ -203,8 +203,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     if (i > 0 && isBlockElement(current, false)) {
                         const previousSiblings = current.previousSiblings({ floating: false });
-                        if (previousSiblings.length) {
-                            const previous = previousSiblings[previousSiblings.length - 1];
+                        const lengthA = previousSiblings.length;
+                        if (lengthA) {
+                            const previous = previousSiblings[lengthA - 1];
                             let inheritedTop = false;
                             if (isBlockElement(previous, true)) {
                                 let marginBottom = previous.marginBottom;

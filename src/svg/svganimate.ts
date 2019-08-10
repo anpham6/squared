@@ -90,7 +90,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                                 SvgAnimate.getSplitValue(current.rgba.b, next.rgba.b, percent)
                             );
                             const a = $color.getHexCode(SvgAnimate.getSplitValue(current.rgba.a, next.rgba.a, percent));
-                            result.push(`#${rgb + (a !== 'FF' ? a : '')}`);
+                            result.push('#' + (rgb + (a !== 'FF' ? a : '')));
                             break;
                         }
                         case 'points': {
@@ -98,7 +98,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             for (let j = 0; j < length; j++) {
                                 const current = <Point> currentValue[j];
                                 const next = <Point> nextValue[j];
-                                result.push(`${SvgAnimate.getSplitValue(current.x, next.x, percent)},${SvgAnimate.getSplitValue(current.y, next.y, percent)}`);
+                                result.push(SvgAnimate.getSplitValue(current.x, next.x, percent) + ',' + SvgAnimate.getSplitValue(current.y, next.y, percent));
                             }
                             break;
                         }
@@ -453,7 +453,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 for (let i = this._keySplines.length - 1; i >= 0; i--) {
                     const points = $util.replaceMap<string, number>(this._keySplines[i].split(' '), pt => parseFloat(pt));
                     if (points.length === 4) {
-                        keySplines.push(`${invertControlPoint(points[2])} ${invertControlPoint(points[3])} ${invertControlPoint(points[0])} ${invertControlPoint(points[1])}`);
+                        keySplines.push(invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1]));
                     }
                     else {
                         keySplines.push(KEYSPLINE_NAME.linear);

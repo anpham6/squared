@@ -574,7 +574,7 @@ const getItemTime = (delay: number, duration: number, keyTimes: number[], iterat
 
 const getEllipsePoints = (values: number[]): SvgPoint[] => [{ x: values[0], y: values[1], rx: values[2], ry: values[values.length - 1] }];
 
-const convertToString = (value: AnimateValue) => Array.isArray(value) ? $util.objectMap<Point, string>(value, pt => `${pt.x},${pt.y}`).join(' ') : value.toString();
+const convertToString = (value: AnimateValue) => Array.isArray(value) ? $util.objectMap<Point, string>(value, pt => pt.x + ',' + pt.y).join(' ') : value.toString();
 
 const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => $util.hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE);
 
@@ -1911,7 +1911,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 const x = data.get('x') as number || 0;
                                                 const y = data.get('y') as number || 0;
                                                 animate.keyTimes.push(keyTime);
-                                                animate.values.push(this.parent ? `${this.parent.refitX(x)} ${this.parent.refitX(y)}` : `${x} ${y}`);
+                                                animate.values.push(this.parent ? this.parent.refitX(x) + ' ' + this.parent.refitX(y) : x + ' ' + y);
                                             }
                                             object = animate;
                                         }
@@ -1975,7 +1975,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 animate.values = $util.objectMap<TimelineValue, string>([dataFrom, dataTo], data => {
                                                     const x = data.get('x') as number || 0;
                                                     const y = data.get('y') as number || 0;
-                                                    return this.parent ? `${this.parent.refitX(x)} ${this.parent.refitX(y)}` : `${x} ${y}`;
+                                                    return this.parent ? this.parent.refitX(x) + ' ' + this.parent.refitX(y) : x + ' ' + y;
                                                 });
                                                 value += i;
                                                 object = animate;

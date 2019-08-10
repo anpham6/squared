@@ -18,7 +18,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 node.documentRoot ||
                 node.hasPX('height') ||
                 (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width'))
-            ))
+           ))
         {
             return isFlexible(node);
         }

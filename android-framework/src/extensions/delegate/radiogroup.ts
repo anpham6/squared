@@ -27,11 +27,12 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         const radioButton: T[] = [];
         parent.each((item: T) => {
             let remove: T | undefined;
-            if (item.renderAs) {
-                if (item.renderAs !== node) {
+            const renderAs = item.renderAs as T;
+            if (renderAs) {
+                if (renderAs !== node) {
                     remove = item;
                 }
-                item = item.renderAs as T;
+                item = renderAs;
             }
             if (item.is(CONTAINER_NODE.RADIO) && !item.rendered && getInputName(<HTMLInputElement> item.element) === inputName) {
                 children.push(item);

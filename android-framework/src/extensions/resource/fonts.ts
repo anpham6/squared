@@ -121,6 +121,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const settings = resource.userSettings;
         const dpi = settings.resolutionDPI;
         const convertPixels = settings.convertPixels === 'dp';
+        const { fonts, styles } = STORED;
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         for (const node of this.application.session.cache) {
@@ -173,11 +174,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                             fontFamily = $util.convertWord(fontFamily);
                             if (createFont) {
-                                const fonts = Resource.STORED.fonts.get(fontFamily) || {};
-                                fonts[value + '|' + stored.fontStyle + '|' + stored.fontWeight] = FONTWEIGHT_ANDROID[stored.fontWeight] || stored.fontWeight;
-                                Resource.STORED.fonts.set(fontFamily, fonts);
+                                const fontData = fonts.get(fontFamily) || {};
+                                fontData[value + '|' + stored.fontStyle + '|' + stored.fontWeight] = FONTWEIGHT_ANDROID[stored.fontWeight] || stored.fontWeight;
+                                fonts.set(fontFamily, fontData);
                             }
-                            stored.fontFamily = `@font/${fontFamily}`;
+                            stored.fontFamily = '@font/' + fontFamily;
                             customFont = true;
                         }
                         if (customFont) {
@@ -219,7 +220,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         const style: SharedAttributes = {};
         for (const tag in groupMap) {
-            style[tag] = {};
+            const styleTag = {};
+            style[tag] = styleTag;
             const sorted = $util.filterArray(groupMap[tag], item => item !== undefined).sort((a, b) => {
                 let maxA = 0;
                 let maxB = 0;
@@ -247,8 +249,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (sorted.length === 1) {
                     const data = sorted[0];
                     for (const attr in data) {
-                        if (data[attr].length) {
-                            style[tag][attr] = data[attr];
+                        const item = data[attr];
+                        if (item.length) {
+                            styleTag[attr] = item;
                         }
                     }
                     sorted.length = 0;
@@ -324,19 +327,19 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                             for (const attr in filtered) {
                                 deleteStyleAttribute(sorted, attr, filtered[attr]);
-                                style[tag][attr] = filtered[attr];
+                                styleTag[attr] = filtered[attr];
                             }
                             for (const attr in combined) {
                                 const attrs = Array.from(combined[attr]).sort().join(';');
                                 const ids = $util.objectMap<string, number>(attr.split($regex.XML.SEPARATOR), value => parseInt(value));
                                 deleteStyleAttribute(sorted, attrs, ids);
-                                style[tag][attrs] = ids;
+                                styleTag[attrs] = ids;
                             }
                         }
                     }
                     const shared = Object.keys(styleKey);
                     if (shared.length) {
-                        style[tag][shared.join(';')] = styleKey[shared[0]];
+                        styleTag[shared.join(';')] = styleKey[shared[0]];
                     }
                     $util.spliceArray(sorted, item => {
                         for (const attr in item) {
@@ -354,9 +357,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const nodeMap: NodeStyleMap = {};
         const parentStyle = new Set<string>();
         for (const tag in style) {
-            const tagData = style[tag];
+            const styleTag = style[tag];
             const styleData: StyleAttribute[] = [];
-            for (const attrs in tagData) {
+            for (const attrs in styleTag) {
                 const items: StringValue[] = [];
                 for (const value of attrs.split(';')) {
                     const match = $regex.XML.ATTRIBUTE.exec(value);
@@ -368,7 +371,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     name: '',
                     parent: '',
                     items,
-                    ids: tagData[attrs]
+                    ids: styleTag[attrs]
                 });
             }
             styleData.sort((a, b) => {
@@ -394,7 +397,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             });
             const lengthA = styleData.length;
             for (let i = 0; i < lengthA; i++) {
-                styleData[i].name = $util.capitalize(tag) + (i > 0 ? `_${i}` : '');
+                styleData[i].name = $util.capitalize(tag) + (i > 0 ? '_' + i : '');
             }
             resourceMap[tag] = styleData;
         }
@@ -411,22 +414,22 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             }
         }
         for (const node of this.application.session.cache) {
-            const styles = nodeMap[node.id];
-            if (styles && styles.length) {
+            const styleData = nodeMap[node.id];
+            if (styleData && styleData.length) {
                 switch (node.tagName) {
                     case 'METER':
                     case 'PROGRESS':
-                        node.attr('_', 'style', `@android:style/Widget.ProgressBar.Horizontal`);
+                        node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
                         break;
                     default:
-                        if (styles.length > 1) {
-                            parentStyle.add(styles.join('.'));
-                            styles.shift();
+                        if (styleData.length > 1) {
+                            parentStyle.add(styleData.join('.'));
+                            styleData.shift();
                         }
                         else {
-                            parentStyle.add(styles[0]);
+                            parentStyle.add(styleData[0]);
                         }
-                        node.attr('_', 'style', `@style/${styles.join('.')}`);
+                        node.attr('_', 'style', '@style/' + styleData.join('.'));
                         break;
                 }
             }
@@ -445,8 +448,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             if (array.length === 1) {
                                 items = <StringValue[]> styleData.items;
                             }
-                            else if (!STORED.styles.has(tag)) {
-                                STORED.styles.set(tag, { name: tag, parent: '', items: styleData.items });
+                            else if (!styles.has(tag)) {
+                                styles.set(tag, { name: tag, parent: '', items: styleData.items });
                             }
                         }
                         else {
@@ -471,11 +474,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             });
             if (items) {
                 if (styleName.length === 0) {
-                    STORED.styles.set(parent, { name: parent, parent: '', items });
+                    styles.set(parent, { name: parent, parent: '', items });
                 }
                 else {
                     const name = styleName.join('.');
-                    STORED.styles.set(name, { name, parent, items });
+                    styles.set(name, { name, parent, items });
                 }
             }
         }

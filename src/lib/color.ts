@@ -2192,7 +2192,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
 
 export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
     if (cacheName) {
-        cacheName = `${cacheName}_${percent}`;
+        cacheName = cacheName + '_' + percent;
         if (CACHE_COLORDATA[cacheName]) {
             return CACHE_COLORDATA[cacheName];
         }

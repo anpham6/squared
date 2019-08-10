@@ -100,12 +100,7 @@ export default class File<T extends android.base.View> extends squared.base.File
         if (copyTo || archiveTo) {
             let assets: FileAsset[] = [];
             for (const name in result) {
-                if (name === 'image') {
-                    assets = assets.concat(getImageAssets(result[name]));
-                }
-                else {
-                    assets = assets.concat(getFileAssets(result[name]));
-                }
+                assets = assets.concat(name === 'image' ? getImageAssets(result[name]) : getFileAssets(result[name]));
             }
             if (copyTo) {
                 this.copying(copyTo, assets, callback);
@@ -178,16 +173,16 @@ export default class File<T extends android.base.View> extends squared.base.File
                     const [fontFamily, fontStyle, fontWeight] = attr.split('|');
                     let fontName = name;
                     if (fontStyle === 'normal') {
-                        fontName += fontWeight === '400' ? '_normal' : `_${font[attr]}`;
+                        fontName += fontWeight === '400' ? '_normal' : '_' + font[attr];
                     }
                     else {
-                        fontName += `_${fontStyle}`;
+                        fontName += '_' + fontStyle;
                         if (fontWeight !== '400') {
-                            fontName += `_${font[attr]}`;
+                            fontName += '_' + font[attr];
                         }
                     }
                     data[0].font.push({
-                        font: `@font/${fontName}`,
+                        font: '@font/' + fontName,
                         fontStyle,
                         fontWeight
                     });
@@ -207,7 +202,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                 if (settings.targetAPI < BUILD_ANDROID.OREO) {
                     output = output.replace(/\s+android:/g, ' app:');
                 }
-                result.push(output, pathname, `${name}.xml`);
+                result.push(output, pathname, name + '.xml');
             }
             this.checkFileAssets(result, options);
         }
@@ -262,22 +257,24 @@ export default class File<T extends android.base.View> extends squared.base.File
             );
         }
         if (STORED.themes.size) {
+            const manifestThemeName = settings.manifestThemeName;
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of STORED.themes.entries()) {
                 const data: ExternalData[] = [{ style: [] }];
                 for (const [themeName, themeData] of theme.entries()) {
+                    const items = themeData.items;
                     const item: ItemValue[] = [];
-                    for (const name in themeData.items) {
-                        item.push({ name, innerText: themeData.items[name] });
+                    for (const name in items) {
+                        item.push({ name, innerText: items[name] });
                     }
-                    if (!appTheme[filename] || themeName !== settings.manifestThemeName || item.length) {
+                    if (!appTheme[filename] || themeName !== manifestThemeName || item.length) {
                         data[0].style.push({
                             name: themeName,
                             parent: themeData.parent,
                             item
                         });
                     }
-                    if (themeName === settings.manifestThemeName) {
+                    if (themeName === manifestThemeName) {
                         appTheme[filename] = true;
                     }
                 }
@@ -338,7 +335,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                         settings.insertSpaces
                     ),
                     directory,
-                    `${name}.xml`
+                    name + '.xml'
                 );
             }
             this.checkFileAssets(result, options);
@@ -355,8 +352,8 @@ export default class File<T extends android.base.View> extends squared.base.File
                     for (const dpi in images) {
                         result.push(
                             images[dpi],
-                            `${directory}-${dpi}`,
-                            `${name}.${$util.fromLastIndexOf(images[dpi], '.')}`
+                            directory + '-' + dpi,
+                            name + '.' + $util.fromLastIndexOf(images[dpi], '.')
                         );
                     }
                 }
@@ -364,7 +361,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                     result.push(
                         images.mdpi,
                         directory,
-                        `${name}.${$util.fromLastIndexOf(images.mdpi, '.')}`
+                        name + '.' + $util.fromLastIndexOf(images.mdpi, '.')
                     );
                 }
             }
@@ -389,7 +386,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                 result.push(
                     $xml.replaceTab(value, settings.insertSpaces),
                     'res/anim',
-                    `${name}.xml`
+                    name + '.xml'
                 );
             }
             this.checkFileAssets(result, options);
@@ -407,7 +404,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                 const layout = assets[i];
                 result[layout.filename] = [layout.content];
                 if (archiveTo) {
-                    layouts.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : `${layout.filename}.xml`, layout.content));
+                    layouts.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : layout.filename + '.xml', layout.content));
                 }
             }
             if (copyTo) {
@@ -424,7 +421,7 @@ export default class File<T extends android.base.View> extends squared.base.File
         const result: FileAsset[] = [];
         const length = assets.length;
         for (let i = 0; i < length; i++) {
-            result.push(createFileAsset(assets[i].pathname, i === 0 ? this.userSettings.outputMainFileName : `${assets[i].filename}.xml`, assets[i].content));
+            result.push(createFileAsset(assets[i].pathname, i === 0 ? this.userSettings.outputMainFileName : assets[i].filename + '.xml', assets[i].content));
         }
         return result.concat(
             getFileAssets(this.resourceStringToXml()),

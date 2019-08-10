@@ -41,13 +41,14 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const tbody: T[] = [];
         const tfoot: T[] = [];
         function setAutoWidth(td: T, data: ExternalData) {
-            data.percent = `${Math.round((td.bounds.width / node.box.width) * 100)}%`;
+            data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
             data.expand = true;
         }
         function inheritStyles(section: T[]) {
             if (section.length) {
                 for (const item of section[0].cascade() as T[]) {
-                    if (item.tagName === 'TH' || item.tagName === 'TD') {
+                    const tagName = item.tagName;
+                    if (tagName === 'TH' || tagName === 'TD') {
                         item.inherit(section[0], 'styleMap');
                         item.unsetCache('visibleStyle');
                     }
@@ -145,11 +146,14 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 switch (td.tagName) {
                     case 'TH': {
                         function setBorderStyle(attr: string) {
+                            const cssStyle = attr + 'Style';
+                            const cssColor = attr + 'Color';
+                            const cssWidth = attr + 'Width';
                             td.ascend(undefined, node).some(item => {
-                                if (item.has(`${attr}Style`)) {
-                                    td.css(`${attr}Style`, item.css(`${attr}Style`));
-                                    td.css(`${attr}Color`, item.css(`${attr}Color`));
-                                    td.css(`${attr}Width`, item.css(`${attr}Width`), true);
+                                if (item.has(cssStyle)) {
+                                    td.css(cssStyle, item.css(cssStyle));
+                                    td.css(cssColor, item.css(cssColor));
+                                    td.css(cssWidth, item.css(cssWidth, true));
                                     td.css('border', 'inherit');
                                     return true;
                                 }
@@ -252,7 +256,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
             if (node.hasWidth) {
                 if (width < node.width) {
-                    $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? `${(parseFloat(value) / width) * 100}%` : value);
+                    $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto', true);
@@ -330,105 +334,107 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         columnIndex = new Array(rowCount).fill(0);
         for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
-            const children = tr.duplicate() as T[];
-            for (const td of children) {
-                const element = <HTMLTableCellElement> td.element;
-                const { rowSpan, colSpan } = element;
-                const data: ExternalData = { rowSpan, colSpan };
-                for (let k = 0; k < rowSpan - 1; k++)  {
-                    const l = (i + 1) + k;
-                    if (columnIndex[l] !== undefined) {
-                        columnIndex[l] += colSpan;
+            let lastChild: T | undefined;
+            for (const td of tr.children as T[]) {
+                if (td.tagName === 'TD') {
+                    const element = <HTMLTableCellElement> td.element;
+                    const { rowSpan, colSpan } = element;
+                    const data: ExternalData = { rowSpan, colSpan };
+                    for (let k = 0; k < rowSpan - 1; k++)  {
+                        const l = (i + 1) + k;
+                        if (columnIndex[l] !== undefined) {
+                            columnIndex[l] += colSpan;
+                        }
                     }
-                }
-                if (!td.has('verticalAlign')) {
-                    td.css('verticalAlign', 'middle');
-                }
-                const columnWidth = mapWidth[columnIndex[i]];
-                if (columnWidth) {
-                    switch (mainData.layoutType) {
-                        case LAYOUT_TABLE.NONE:
-                            break;
-                        case LAYOUT_TABLE.VARIABLE:
-                            if (columnWidth === 'auto') {
-                                if (mapPercent >= 1) {
-                                    setBoundsWidth(td);
-                                    data.exceed = !hasWidth;
-                                    data.downsized = true;
+                    if (!td.has('verticalAlign')) {
+                        td.css('verticalAlign', 'middle');
+                    }
+                    const columnWidth = mapWidth[columnIndex[i]];
+                    if (columnWidth) {
+                        switch (mainData.layoutType) {
+                            case LAYOUT_TABLE.NONE:
+                                break;
+                            case LAYOUT_TABLE.VARIABLE:
+                                if (columnWidth === 'auto') {
+                                    if (mapPercent >= 1) {
+                                        setBoundsWidth(td);
+                                        data.exceed = !hasWidth;
+                                        data.downsized = true;
+                                    }
+                                    else {
+                                        setAutoWidth(td, data);
+                                    }
+                                }
+                                else if ($css.isPercent(columnWidth)) {
+                                    if (percentAll) {
+                                        data.percent = columnWidth;
+                                        data.expand = true;
+                                    }
+                                    else {
+                                        setBoundsWidth(td);
+                                    }
+                                }
+                                else if ($css.isLength(columnWidth) && parseInt(columnWidth) > 0) {
+                                    if (td.bounds.width >= parseInt(columnWidth)) {
+                                        setBoundsWidth(td);
+                                        data.expand = false;
+                                        data.downsized = false;
+                                    }
+                                    else {
+                                        if (mainData.layoutFixed) {
+                                            setAutoWidth(td, data);
+                                            data.downsized = true;
+                                        }
+                                        else {
+                                            setBoundsWidth(td);
+                                            data.expand = false;
+                                        }
+                                    }
                                 }
                                 else {
-                                    setAutoWidth(td, data);
-                                }
-                            }
-                            else if ($css.isPercent(columnWidth)) {
-                                if (percentAll) {
-                                    data.percent = columnWidth;
-                                    data.expand = true;
-                                }
-                                else {
-                                    setBoundsWidth(td);
-                                }
-                            }
-                            else if ($css.isLength(columnWidth) && parseInt(columnWidth) > 0) {
-                                if (td.bounds.width >= parseInt(columnWidth)) {
-                                    setBoundsWidth(td);
+                                    if (!td.hasPX('width') || td.percentWidth) {
+                                        setBoundsWidth(td);
+                                    }
                                     data.expand = false;
-                                    data.downsized = false;
+                                }
+                                break;
+                            case LAYOUT_TABLE.FIXED:
+                                td.css('width', '0px');
+                                break;
+                            case LAYOUT_TABLE.STRETCH:
+                                if (columnWidth === 'auto') {
+                                    td.css('width', '0px');
                                 }
                                 else {
                                     if (mainData.layoutFixed) {
-                                        setAutoWidth(td, data);
                                         data.downsized = true;
                                     }
                                     else {
                                         setBoundsWidth(td);
-                                        data.expand = false;
                                     }
+                                    data.expand = false;
                                 }
-                            }
-                            else {
-                                if (!td.hasPX('width') || td.percentWidth) {
-                                    setBoundsWidth(td);
+                                break;
+                            case LAYOUT_TABLE.COMPRESS:
+                                if (!$css.isLength(columnWidth)) {
+                                    td.hide();
                                 }
-                                data.expand = false;
-                            }
-                            break;
-                        case LAYOUT_TABLE.FIXED:
-                            td.css('width', '0px');
-                            break;
-                        case LAYOUT_TABLE.STRETCH:
-                            if (columnWidth === 'auto') {
-                                td.css('width', '0px');
-                            }
-                            else {
-                                if (mainData.layoutFixed) {
-                                    data.downsized = true;
-                                }
-                                else {
-                                    setBoundsWidth(td);
-                                }
-                                data.expand = false;
-                            }
-                            break;
-                        case LAYOUT_TABLE.COMPRESS:
-                            if (!$css.isLength(columnWidth)) {
-                                td.hide();
-                            }
-                            break;
+                                break;
+                        }
                     }
-                }
-                columnIndex[i] += colSpan;
-                for (let k = 0; k < rowSpan; k++) {
-                    for (let l = 0; l < colSpan; l++) {
-                        tableFilled[i + k].push(td);
+                    columnIndex[i] += colSpan;
+                    for (let k = 0; k < rowSpan; k++) {
+                        for (let l = 0; l < colSpan; l++) {
+                            tableFilled[i + k].push(td);
+                        }
                     }
+                    td.data(EXT_NAME.TABLE, 'cellData', data);
+                    td.parent = node;
+                    lastChild = td;
                 }
-                td.data(EXT_NAME.TABLE, 'cellData', data);
-                td.parent = node;
             }
-            if (columnIndex[i] < columnCount) {
-                const td = children.pop() as T;
-                const data: ExternalData = td.data(EXT_NAME.TABLE, 'cellData');
+            if (lastChild && columnIndex[i] < columnCount) {
+                const data: ExternalData = lastChild.data(EXT_NAME.TABLE, 'cellData');
                 if (data) {
                     data.spaceSpan = columnCount - columnIndex[i];
                 }

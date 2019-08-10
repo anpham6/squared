@@ -22,19 +22,21 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
     }
 
     public processNode(node: T, parent: T) {
-        const data = $css.getDataSet(<HTMLElement> node.element, this.name);
-        const tag = data.tag;
-        if (tag) {
+        const name = this.name;
+        const data = $css.getDataSet(<HTMLElement> node.element, name);
+        const controlName = data.tag;
+        if (controlName) {
             node.containerType = node.blockStatic ? CONTAINER_NODE.BLOCK : CONTAINER_NODE.INLINE;
-            node.setControlType(tag);
+            node.setControlType(controlName);
             node.render(parent);
             const tagChild = data.tagChild;
             if (tagChild) {
                 node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
                 node.each(item => {
                     if (item.styleElement) {
-                        item.dataset.use = this.name;
-                        item.dataset.androidSubstituteTag = tagChild;
+                        const dataset = item.dataset;
+                        dataset.use = name;
+                        dataset.androidSubstituteTag = tagChild;
                     }
                 });
             }
@@ -42,7 +44,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
                 output: <NodeXmlTemplate<T>> {
                     type: $e.NODE_TEMPLATE.XML,
                     node,
-                    controlName: data.tag
+                    controlName
                 }
             };
         }

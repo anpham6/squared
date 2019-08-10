@@ -147,8 +147,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         }
         else {
             if (children.some(item => item.flexbox.order !== 0)) {
-                const c = mainData.directionReverse ? -1 : 1;
-                const d = mainData.directionReverse ? 1 : -1;
+                const [c, d] = mainData.directionReverse ? [-1, 1] : [1, -1];
                 children.sort((a, b) => {
                     if (a.flexbox.order === b.flexbox.order) {
                         return 0;

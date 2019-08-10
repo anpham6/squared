@@ -39,7 +39,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     break;
                 default:
                     if ($util.isNumber(rotate)) {
-                        this.rotate = `${$util.convertFloat(rotate)}deg`;
+                        this.rotate = $util.convertFloat(rotate) + 'deg';
                     }
                     break;
             }
@@ -390,7 +390,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     get values() {
         this.setOffsetPath();
         if (this._offsetPath) {
-            return $util.objectMap<SvgOffsetPath, string>(this._offsetPath, item => `${item.value.x} ${item.value.y}`);
+            return $util.objectMap<SvgOffsetPath, string>(this._offsetPath, item => item.value.x + ' ' + item.value.y);
         }
         return super.values;
     }

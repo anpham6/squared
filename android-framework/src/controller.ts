@@ -1112,7 +1112,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (node.hasResource($e.NODE_RESOURCE.IMAGE_SOURCE)) {
                     const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(element, '', imageSet);
                     if (src !== '') {
-                        node.android('src', `@drawable/${src}`);
+                        node.android('src', '@drawable/' + src);
                     }
                 }
                 if (percentWidth !== -1 || percentHeight !== -1) {
@@ -1348,8 +1348,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!node.hasHeight) {
                     node.css('height', $css.formatPX(node.bounds.height), true);
                 }
-                node.android('progressTint', `@color/${Resource.addColor(foregroundColor)}`);
-                node.android('progressBackgroundTint', `@color/${Resource.addColor(backgroundColor)}`);
+                node.android('progressTint', '@color/' + Resource.addColor(foregroundColor));
+                node.android('progressBackgroundTint', '@color/' + Resource.addColor(backgroundColor));
                 node.inlineText = false;
                 break;
             }
@@ -1380,7 +1380,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (match) {
                         const color = Resource.addColor($color.parseColor(match[1]));
                         if (color !== '') {
-                            node.android('shadowColor', `@color/${color}`);
+                            node.android('shadowColor', '@color/' + color);
                             node.android('shadowDx', $math.truncate($css.parseUnit(match[2], node.fontSize) * 2));
                             node.android('shadowDy', $math.truncate($css.parseUnit(match[3], node.fontSize) * 2));
                             node.android('shadowRadius', match[4] ? $math.truncate(Math.max($css.parseUnit(match[4], node.fontSize), 1)) : '1');
@@ -1647,7 +1647,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         resourceValue = location.toString();
                     }
                     else {
-                        resourceValue = `@dimen/${Resource.insertStoredAsset('dimens', `constraint_guideline_${!opposite ? LT : RB}`, $css.formatPX(location))}`;
+                        resourceValue = '@dimen/' + Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposite ? LT : RB), $css.formatPX(location));
                     }
                     const options = createViewAttribute(
                         undefined,
@@ -1751,9 +1751,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         while (++i < nodes.length) {
             const node = nodes[i];
             const constraint = node.constraint;
+            const current = constraint.current;
             if (!constraint.horizontal) {
-                for (const attr in constraint.current) {
-                    const position = constraint.current[attr];
+                for (const attr in current) {
+                    const position = current[attr];
                     if (position.horizontal && horizontal.some(item => item.documentId === position.documentId)) {
                         constraint.horizontal = true;
                         horizontal.push(node);
@@ -1763,8 +1764,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             if (!constraint.vertical) {
-                for (const attr in constraint.current) {
-                    const position = constraint.current[attr];
+
+                for (const attr in current) {
+                    const position = current[attr];
                     if (!position.horizontal && vertical.some(item => item.documentId === position.documentId)) {
                         constraint.vertical = true;
                         vertical.push(node);
@@ -1993,8 +1995,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     if (!item.pageFlow) {
                         if (previous) {
-                            item.anchor(alignSibling, previous.documentId);
-                            item.anchor('top', previous.documentId);
+                            const documentId = previous.documentId;
+                            item.anchor(alignSibling, documentId);
+                            item.anchor('top', documentId);
                         }
                         else {
                             item.anchor(alignParent, 'true');
@@ -2401,6 +2404,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const textBaseline = $NodeUI.baseline(children, true);
         const reverse = node.hasAlign($e.NODE_ALIGNMENT.RIGHT);
         const textBottom = getTextBottom(children)[0];
+        const documentId = baseline ? baseline.documentId : '';
         const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
         let bias = 0;
         switch (node.cssAscend('textAlign', true)) {
@@ -2494,7 +2498,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     alignTop = true;
                                 }
                                 else {
-                                    item.anchor('baseline', baseline.documentId);
+                                    item.anchor('baseline', documentId);
                                 }
                                 break;
                             default:
@@ -2508,7 +2512,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     else if (item.plainText && baseline) {
-                        item.anchor('baseline', baseline.documentId);
+                        item.anchor('baseline', documentId);
                     }
                     else {
                         item.anchorParent(STRING_ANDROID.VERTICAL, 'packed');

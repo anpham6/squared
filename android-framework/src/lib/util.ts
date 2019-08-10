@@ -96,8 +96,8 @@ export function getXmlNs(value: string) {
 export function getRootNs(value: string) {
     let output = '';
     for (const namespace in XMLNS_ANDROID) {
-        if (value.indexOf(`${namespace}:`) !== -1) {
-            output += `\n\t${getXmlNs(namespace)}`;
+        if (value.indexOf(namespace + ':') !== -1) {
+            output += '\n\t' + getXmlNs(namespace);
         }
     }
     return output;

@@ -179,7 +179,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     case 'stroke':
                         const url = getAttributeURL(value);
                         if (url !== '') {
-                            this[`${attr}Pattern`] = url;
+                            this[attr + 'Pattern'] = url;
                         }
                         else {
                             let color: ColorData | undefined;

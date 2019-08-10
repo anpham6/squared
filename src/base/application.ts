@@ -206,7 +206,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (const [uri, data] of ASSETS.rawData.entries()) {
             if (data.mimeType && data.mimeType.startsWith('image/') && !data.mimeType.endsWith('svg+xml')) {
                 const element = document.createElement('img');
-                element.src = `data:${data.mimeType};` + (data.base64 ? `base64,${data.base64}` : data.content);
+                element.src = 'data:' + data.mimeType + ';' + (data.base64 ? 'base64,' + data.base64 : data.content);
                 const width = element.naturalWidth;
                 const height = element.naturalHeight;
                 if (width > 0 && height > 0) {
@@ -269,7 +269,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             })
             .catch((error: Event) => {
                 const message = error.target ? (<HTMLImageElement> error.target).src : error['message'];
-                if (!this.userSettings.showErrorMessages || !$util.isString(message) || confirm(`FAIL: ${message}`)) {
+                if (!this.userSettings.showErrorMessages || !$util.isString(message) || confirm('FAIL: ' + message)) {
                     resume();
                 }
             });
@@ -462,7 +462,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     alert('CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' +
                           'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
                           'See the README for more detailed instructions.\n\n' +
-                          `${item.href}\n\n${error}`);
+                          item.href + '\n\n' + error);
                     warning = true;
                 }
             }
@@ -615,8 +615,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                         parseImageUrl(styleMap, 'backgroundImage');
                         parseImageUrl(styleMap, 'listStyleImage');
                         parseImageUrl(styleMap, 'content');
-                        const attrStyle = `styleMap${targetElt}`;
-                        const attrSpecificity = `styleSpecificity${targetElt}`;
+                        const attrStyle = 'styleMap' + targetElt;
+                        const attrSpecificity = 'styleSpecificity' + targetElt;
                         const styleData: StringMap = $session.getElementCache(element, attrStyle, sessionId);
                         if (styleData) {
                             const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, sessionId) || {};
@@ -637,7 +637,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             for (const attr in styleMap) {
                                 specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                             }
-                            $session.setElementCache(element, `style${targetElt}`, '0', style);
+                            $session.setElementCache(element, 'style' + targetElt, '0', style);
                             $session.setElementCache(element, 'sessionId', '0', sessionId);
                             $session.setElementCache(element, attrStyle, sessionId, styleMap);
                             $session.setElementCache(element, attrSpecificity, sessionId, specificityData);

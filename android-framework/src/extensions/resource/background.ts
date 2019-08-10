@@ -177,15 +177,15 @@ function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = fal
 
 function getBorderRadius(radius?: string[]): StringMap | undefined {
     if (radius) {
-        const lengthA = radius.length;
-        if (lengthA === 1) {
+        const length = radius.length;
+        if (length === 1) {
             return { radius: radius[0] };
         }
         else {
             let corners: string[];
-            if (lengthA === 8) {
+            if (length === 8) {
                 corners = [];
-                for (let i = 0; i < lengthA; i += 2) {
+                for (let i = 0; i < length; i += 2) {
                     corners.push($css.formatPX((parseFloat(radius[i]) + parseFloat(radius[i + 1])) / 2));
                 }
             }
@@ -198,7 +198,7 @@ function getBorderRadius(radius?: string[]): StringMap | undefined {
             const lengthB = corners.length;
             for (let i = 0; i < lengthB; i++) {
                 if (corners[i] !== '0px') {
-                    result[`${boxModel[i]}Radius`] = corners[i];
+                    result[boxModel[i] + 'Radius'] = corners[i];
                     valid = true;
                 }
             }
@@ -268,7 +268,7 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
 function checkBackgroundPosition(value: string, adjacent: string, fallback: string) {
     const initial = value === 'initial' || value === 'unset';
     if (value.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
-        return $regex.CHAR.LOWERCASE.test(value) ? `${initial ? fallback : value} 0px` : `${fallback} ${value}`;
+        return $regex.CHAR.LOWERCASE.test(value) ? (initial ? fallback : value) + ' 0px' : fallback + ' ' + value;
     }
     else if (initial) {
         return '0px';
@@ -277,12 +277,13 @@ function checkBackgroundPosition(value: string, adjacent: string, fallback: stri
 }
 
 function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIPOP, precision?: number) {
+    const type = gradient.type;
     const result: GradientTemplate = {
-        type: gradient.type,
+        type,
         item: false
     };
     const hasStop = api >= BUILD_ANDROID.LOLLIPOP;
-    switch (gradient.type) {
+    switch (type) {
         case 'conic': {
             const conic = <ConicGradient> gradient;
             const center = conic.center;
@@ -465,7 +466,7 @@ function getIndentOffset(border: BorderAttribute) {
 
 function getColorValue(value: ColorData | string | undefined, transparency = true) {
     const color = Resource.addColor(value, transparency);
-    return color !== '' ? `@color/${color}` : '';
+    return color !== '' ? '@color/' + color : '';
 }
 
 const roundFloat = (value: string) => Math.round(parseFloat(value));
@@ -473,6 +474,8 @@ const roundFloat = (value: string) => Math.round(parseFloat(value));
 const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
 
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
+
+const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     const result: GradientColorStop[] = [];
@@ -512,9 +515,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         const settings = <UserSettingsAndroid> application.userSettings;
         this._resourceSvgInstance = this.controller.localSettings.svg.enabled ? <ResourceSvg<T>> application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
         function setDrawableBackground(node: T, value: string) {
-            let drawable = Resource.insertStoredAsset('drawables', `${node.containerName.toLowerCase()}_${node.controlId}`, value);
+            let drawable = Resource.insertStoredAsset('drawables', node.containerName.toLowerCase() + '_' + node.controlId, value);
             if (drawable !== '') {
-                drawable = `@drawable/${drawable}`;
+                drawable = '@drawable/' + drawable;
                 if (node.documentBody && !setHtmlBackground(node)) {
                     if (node.backgroundColor !== '' || node.visibleStyle.backgroundImage && node.visibleStyle.backgroundRepeat) {
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
@@ -825,7 +828,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (valid) {
                         const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
                         const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                        backgroundPosition[j] = $css.getBackgroundPosition(`${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`, node.actualDimension, imageDimensions[j], node.fontSize);
+                        backgroundPosition[j] = $css.getBackgroundPosition(checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'), node.actualDimension, imageDimensions[j], node.fontSize);
                         j++;
                     }
                     else {
@@ -848,9 +851,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (src !== '') {
                         images[j] = src;
                         backgroundRepeat[j] = 'no-repeat';
-                        backgroundSize[j] = `${image.actualWidth}px ${image.actualHeight}px`;
+                        backgroundSize[j] = getPixelUnit(image.actualWidth, image.actualHeight);
                         backgroundPosition[j] = $css.getBackgroundPosition(
-                            image.containerName === 'INPUT_IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left + node.borderLeftWidth}px ${image.bounds.top - node.bounds.top + node.borderTopWidth}px`,
+                            image.containerName === 'INPUT_IMAGE' ? getPixelUnit(0, 0) : getPixelUnit(image.bounds.left - node.bounds.left + node.borderLeftWidth, image.bounds.top - node.bounds.top + node.borderTopWidth),
                             node.actualDimension,
                             image.bounds,
                             node.fontSize
@@ -899,7 +902,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         position[dirB] = 0;
                     }
-                    const src = `@drawable/${value}`;
+                    const src = '@drawable/' + value;
                     const repeat = backgroundRepeat[i];
                     const repeating = repeat === 'repeat';
                     let gravityX = '';
@@ -1337,7 +1340,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     const src = Resource.insertStoredAsset(
                         'drawables',
-                        `${node.containerName.toLowerCase()}_${node.controlId}_gradient_${i + 1}`,
+                        `${node.controlId}_gradient_${i + 1}`,
                         $xml.applyTemplate('vector', VECTOR_TMPL, [{
                             'xmlns:android': XMLNS_ANDROID.android,
                             'xmlns:aapt': XMLNS_ANDROID.aapt,
@@ -1355,7 +1358,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }])
                     );
                     if (src !== '') {
-                        imageData.drawable = `@drawable/${src}`;
+                        imageData.drawable = '@drawable/' + src;
                         if (position.static) {
                             imageData.gravity = 'fill';
                         }

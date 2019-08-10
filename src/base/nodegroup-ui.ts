@@ -33,7 +33,8 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     public nextSiblings(options?: SiblingOptions) {
-        const node = <NodeUI> this._initial.children[this._initial.children.length - 1];
+        const children = this._initial.children;
+        const node = <NodeUI> children[children.length - 1];
         return node ? node.nextSiblings(options) : [];
     }
 

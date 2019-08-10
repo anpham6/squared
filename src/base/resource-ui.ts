@@ -207,7 +207,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         const prefix = name;
         let i = start;
         if (start === 1) {
-            name += `_${i.toString()}`;
+            name += '_' + i;
         }
         const previous = this.ASSETS.ids.get(section) || [];
         do {
@@ -216,7 +216,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 break;
             }
             else {
-                name = `${prefix}_${(++i).toString()}`;
+                name = prefix + '_' + ++i;
             }
         }
         while (true);
@@ -230,13 +230,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             let result = this.getStoredName(asset, value);
             if (result === '') {
                 if ($util.isNumber(name)) {
-                    name = `__${name}`;
+                    name = '__' + name;
                 }
                 let i = 0;
                 do {
                     result = name;
                     if (i > 0) {
-                        result += `_${i}`;
+                        result += '_' + i;
                     }
                     if (!stored.has(result)) {
                         stored.set(result, value);

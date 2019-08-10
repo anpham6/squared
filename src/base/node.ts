@@ -371,7 +371,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssSpecificity(attr: string) {
         if (this.styleElement) {
             const element = <Element> this._element;
-            const data: ObjectMap<number> = $session.getElementCache(this.pseudoElement ? <Element> element.parentElement : element, `styleSpecificity${Node.getPseudoElt(this)}`, this.sessionId);
+            const data: ObjectMap<number> = $session.getElementCache(this.pseudoElement ? <Element> element.parentElement : element, 'styleSpecificity' + Node.getPseudoElt(this), this.sessionId);
             if (data) {
                 return data[attr] || 0;
             }
@@ -441,7 +441,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public convertPX(value: string, dimension = 'width', parent = true) {
-        return value.endsWith('px') ? value : `${Math.round(this.parseUnit(value, dimension, parent))}px`;
+        return value.endsWith('px') ? value : Math.round(this.parseUnit(value, dimension, parent)) + 'px';
     }
 
     public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[] | boolean>) {
@@ -881,7 +881,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         }
                                         else {
                                             const element = <HTMLAnchorElement> node.element;
-                                            if (!(location.hash === `#${element.id}` || tagName === 'A' && location.hash === `#${element.name}`)) {
+                                            if (!(location.hash === '#' + element.id || tagName === 'A' && location.hash === '#' + element.name)) {
                                                 return false;
                                             }
                                         }
@@ -906,7 +906,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     case ':valid':
                                     case ':invalid': {
                                         const element = node.element;
-                                        const children = (<HTMLElement> parent.element).querySelectorAll(`:scope > ${pseudo}`);
+                                        const children = (<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo);
                                         let valid = false;
                                         const lengthA = children.length;
                                         for (let j = 0; j < lengthA; j++) {
@@ -1098,7 +1098,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 }
                                                 break;
                                             case '|':
-                                                if (actualValue !== attr.value && !actualValue.startsWith(`${attr.value}-`)) {
+                                                if (actualValue !== attr.value && !actualValue.startsWith(attr.value + '-')) {
                                                     return false;
                                                 }
                                                 break;
@@ -1262,7 +1262,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     if (size !== '') {
                         value = this.parseUnit(size, attr);
                         if (value > 0) {
-                            this.css(attr, $css.isPercent(size) ? size : `${size}px`);
+                            this.css(attr, $css.isPercent(size) ? size : size + 'px');
                         }
                     }
                     break;
@@ -1768,7 +1768,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     break;
                 case 'inherit':
-                    const position = this._element && this._element.parentElement ? $css.getInheritedStyle(this._element.parentElement, 'position') : '';
+                    const element = this._element;
+                    const position = element && element.parentElement ? $css.getInheritedStyle(element.parentElement, 'position') : '';
                     result = position !== '' && !(position === 'absolute' || position === 'fixed');
                     break;
                 default:

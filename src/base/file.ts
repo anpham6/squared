@@ -165,9 +165,10 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (!element.download) {
             element.setAttribute('target', '_blank');
         }
-        document.body.appendChild(element);
+        const body = document.body;
+        body.appendChild(element);
         element.click();
-        document.body.removeChild(element);
+        body.removeChild(element);
         setTimeout(() => window.URL.revokeObjectURL(url), 1);
     }
 
@@ -202,10 +203,10 @@ export default abstract class File<T extends squared.base.Node> implements squar
             if (assets.length) {
                 const settings = this.userSettings;
                 fetch(
-                    `/api/assets/copy` +
-                    `?to=${encodeURIComponent(directory.trim())}` +
-                    `&directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
-                    `&timeout=${settings.outputArchiveTimeout}`, {
+                    '/api/assets/copy' +
+                    '?to=' + encodeURIComponent(directory.trim()) +
+                    '&directory=' + encodeURIComponent($util.trimString(settings.outputDirectory, '/')) +
+                    '&timeout=' + settings.outputArchiveTimeout, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                         body: JSON.stringify(assets)
@@ -218,13 +219,13 @@ export default abstract class File<T extends squared.base.Node> implements squar
                             callback(result);
                         }
                         if (result.system && this.userSettings.showErrorMessages) {
-                            alert(`${result.application}\n\n${result.system}`);
+                            alert(result.application + '\n\n' + result.system);
                         }
                     }
                 })
                 .catch(err => {
                     if (this.userSettings.showErrorMessages) {
-                        alert(`ERROR: ${err}`);
+                        alert('ERROR: ' + err);
                     }
                 });
             }
@@ -240,12 +241,12 @@ export default abstract class File<T extends squared.base.Node> implements squar
             if (assets.length) {
                 const settings = this.userSettings;
                 fetch(
-                    `/api/assets/archive` +
-                    `?filename=${encodeURIComponent(filename.trim())}` +
-                    `&directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
-                    `&format=${settings.outputArchiveFormat}` +
-                    (appendTo ? `&append_to=${encodeURIComponent(appendTo.trim())}` : '') +
-                    `&timeout=${settings.outputArchiveTimeout}`, {
+                    '/api/assets/archive' +
+                    '?filename=' + encodeURIComponent(filename.trim()) +
+                    '&directory=' + encodeURIComponent($util.trimString(settings.outputDirectory, '/')) +
+                    '&format=' + settings.outputArchiveFormat +
+                    (appendTo ? '&append_to=' + encodeURIComponent(appendTo.trim()) : '') +
+                    '&timeout=' + settings.outputArchiveTimeout, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                         body: JSON.stringify(assets)
@@ -256,18 +257,18 @@ export default abstract class File<T extends squared.base.Node> implements squar
                     if (result) {
                         const zipname = result.zipname;
                         if (zipname) {
-                            fetch(`/api/browser/download?filename=${encodeURIComponent(zipname)}`)
+                            fetch('/api/browser/download?filename=' + encodeURIComponent(zipname))
                                 .then((response: Response) => response.blob())
                                 .then((blob: Blob) => File.downloadFile(blob, $util.fromLastIndexOf(zipname, '/')));
                         }
                         else if (result.system && this.userSettings.showErrorMessages) {
-                            alert(`${result.application}\n\n${result.system}`);
+                            alert(result.application + '\n\n' + result.system);
                         }
                     }
                 })
                 .catch(err => {
                     if (this.userSettings.showErrorMessages) {
-                        alert(`ERROR: ${err}`);
+                        alert('ERROR: ' + err);
                     }
                 });
             }

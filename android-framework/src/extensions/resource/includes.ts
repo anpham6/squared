@@ -22,14 +22,15 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                 let open: NodeRenderIndex[] | undefined;
                 let close: NodeRenderIndex[] | undefined;
                 node.renderEach((item: T, index) => {
-                    const name = item.dataset.androidInclude;
-                    const closing = item.dataset.androidIncludeEnd === 'true';
+                    const dataset = item.dataset;
+                    const name = dataset.androidInclude;
+                    const closing = dataset.androidIncludeEnd === 'true';
                     if (name || closing) {
                         const data: NodeRenderIndex = {
                             item,
                             name,
                             index,
-                            merge: item.dataset.androidIncludeMerge === 'true'
+                            merge: dataset.androidIncludeMerge === 'true'
                         };
                         if (name) {
                             if (open === undefined) {
@@ -67,7 +68,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 node.renderTemplates[openData.index] = <NodeIncludeTemplate<T>> {
                                     type: $e.NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
-                                    content: controller.renderNodeStatic('include', { layout: `@layout/${openData.name}` }, '', ''),
+                                    content: controller.renderNodeStatic('include', { layout: '@layout/' + openData.name }, '', ''),
                                     indent: true
                                 };
                                 if (!merge && !openData.item.documentRoot) {

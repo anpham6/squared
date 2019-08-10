@@ -43,7 +43,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             for (let i = 0; i < length; i++) {
                 const item = <HTMLElement> children[i];
                 if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $constA.EXT_ANDROID.EXTERNAL)) {
-                    item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $constA.EXT_ANDROID.EXTERNAL;
+                    item.dataset.use = (item.dataset.use ? item.dataset.use + ', ' : '') + $constA.EXT_ANDROID.EXTERNAL;
                     break;
                 }
             }
@@ -82,13 +82,13 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 if (dataset.navigationIcon) {
                     const src = resource.addImageSrc(<HTMLImageElement> item, PREFIX_MENU);
                     if (src !== '') {
-                        $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', `@drawable/${src}`);
+                        $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', '@drawable/' + src);
                     }
                 }
                 if (dataset.collapseIcon) {
                     const src = resource.addImageSrc(<HTMLImageElement> item, PREFIX_MENU);
                     if (src !== '') {
-                        $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', `@drawable/${src}`);
+                        $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', '@drawable/' + src);
                     }
                 }
             }
@@ -125,7 +125,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 if (app.popupTheme) {
                     popupOverlay = app.popupTheme.replace('@style/', '');
                 }
-                app.popupTheme = `@style/${settings.manifestThemeName}.PopupOverlay`;
+                app.popupTheme = '@style/' + settings.manifestThemeName + '.PopupOverlay';
             }
         }
         else {
@@ -138,14 +138,14 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         let appBarNode: T | undefined;
         let collapsingToolbarNode: T | undefined;
         if (hasAppBar) {
-            $util.assignEmptyValue(appBarOptions, 'android', 'id', `${node.documentId}_appbar`);
+            $util.assignEmptyValue(appBarOptions, 'android', 'id', node.documentId + '_appbar');
             $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $css.formatPX(node.actualHeight) : 'wrap_content');
             $util.assignEmptyValue(appBarOptions, 'android', 'fitsSystemWindows', 'true');
             if (hasMenu) {
                 if (appBarOptions.android.theme) {
                     appBarOverlay = appBarOptions.android.theme;
                 }
-                appBarOptions.android.theme = `@style/${settings.manifestThemeName}.AppBarOverlay`;
+                appBarOptions.android.theme = '@style/' + settings.manifestThemeName + '.AppBarOverlay';
                 node.data(WIDGET_NAME.TOOLBAR, 'themeData', <ToolbarThemeData> { appBarOverlay, popupOverlay });
             }
             else {
@@ -158,7 +158,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             }
             appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
             if (hasCollapsingToolbar) {
-                $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', `${node.documentId}_collapsingtoolbar`);
+                $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId + '_collapsingtoolbar');
                 $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
                 if (!backgroundImage) {
                     $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'contentScrim', '?attr/colorPrimary');
@@ -221,8 +221,8 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                                 scaleType = 'matrix';
                                 break;
                         }
-                        $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', `${node.documentId}_image`);
-                        $util.assignEmptyValue(backgroundImageOptions, 'android', 'src', `@drawable/${src}`);
+                        $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId + '_image');
+                        $util.assignEmptyValue(backgroundImageOptions, 'android', 'src', '@drawable/' + src);
                         $util.assignEmptyValue(backgroundImageOptions, 'android', 'scaleType', scaleType);
                         $util.assignEmptyValue(backgroundImageOptions, 'android', 'fitsSystemWindows', 'true');
                         $util.assignEmptyValue(backgroundImageOptions, 'app', 'layout_collapseMode', 'parallax');
@@ -283,7 +283,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         const menu = $util.optionalAsString(Toolbar.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
             const toolbarOptions = $utilA.createViewAttribute(this.options[node.elementId] && this.options[node.elementId].self);
-            $util.assignEmptyValue(toolbarOptions, 'app', 'menu', `@menu/${menu}`);
+            $util.assignEmptyValue(toolbarOptions, 'app', 'menu', '@menu/' + menu);
             node.app('menu', toolbarOptions.app.menu);
         }
         const themeData: ToolbarThemeData = node.data(WIDGET_NAME.TOOLBAR, 'themeData');

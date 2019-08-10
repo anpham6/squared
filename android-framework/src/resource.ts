@@ -27,7 +27,7 @@ function formatObject(obj: {}, numberAlias = false) {
                         if (!value.startsWith('@string/')) {
                             value = Resource.addString(value, '', numberAlias);
                             if (value !== '') {
-                                obj[attr] = `@string/${value}`;
+                                obj[attr] = '@string/' + value;
                                 continue;
                             }
                         }
@@ -37,7 +37,7 @@ function formatObject(obj: {}, numberAlias = false) {
                         if ($regex.COMPONENT.PROTOCOL.test(value)) {
                             value = Resource.addImage({ mdpi: value });
                             if (value !== '') {
-                                obj[attr] = `@drawable/${value}`;
+                                obj[attr] = '@drawable/' + value;
                                 continue;
                             }
                         }
@@ -47,7 +47,7 @@ function formatObject(obj: {}, numberAlias = false) {
                 if (color) {
                     const colorName = Resource.addColor(color);
                     if (colorName !== '') {
-                        obj[attr] = `@color/${colorName}`;
+                        obj[attr] = '@color/' + colorName;
                     }
                 }
             }
@@ -75,14 +75,16 @@ export default class Resource<T extends android.base.View> extends squared.base.
 
     public static addTheme(...values: StyleAttribute[]) {
         for (const theme of values) {
-            const path = theme.output && $util.isString(theme.output.path) ? theme.output.path.trim() : 'res/values';
-            const file = theme.output && $util.isString(theme.output.file) ? theme.output.file.trim() : 'themes.xml';
-            const filename = `${$util.trimString(path.trim(), '/')}/${$util.trimString(file.trim(), '/')}`;
-            const storedFile = STORED.themes.get(filename) || new Map<string, StyleAttribute>();
+            const output = theme.output;
+            const themes = STORED.themes;
+            const path = output && $util.isString(output.path) ? output.path.trim() : 'res/values';
+            const file = output && $util.isString(output.file) ? output.file.trim() : 'themes.xml';
+            const filename = $util.trimString(path.trim(), '/') + '/' + $util.trimString(file.trim(), '/');
+            const storedFile = themes.get(filename) || new Map<string, StyleAttribute>();
             let appTheme = '';
             if (theme.name === '' || theme.name.charAt(0) === '.') {
                 found: {
-                    for (const data of STORED.themes.values()) {
+                    for (const data of themes.values()) {
                         for (const style of data.values()) {
                             if (style.name) {
                                 appTheme = style.name;
@@ -109,7 +111,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
             else {
                 storedFile.set(theme.name, theme);
             }
-            STORED.themes.set(filename, storedFile);
+            themes.set(filename, storedFile);
         }
     }
 
@@ -120,7 +122,8 @@ export default class Resource<T extends android.base.View> extends squared.base.
             }
             const numeric = $util.isNumber(value);
             if (!numeric || numberAlias) {
-                for (const [resourceName, resourceValue] of STORED.strings.entries()) {
+                const strings = STORED.strings;
+                for (const [resourceName, resourceValue] of strings.entries()) {
                     if (resourceValue === value) {
                         return resourceName;
                     }
@@ -137,15 +140,15 @@ export default class Resource<T extends android.base.View> extends squared.base.
                 }
                 name = name.toLowerCase();
                 if (numeric || $regex.CHAR.LEADINGNUMBER.test(name) || RESERVED_JAVA.includes(name)) {
-                    name = `__${name}`;
+                    name = '__' + name;
                 }
                 else if (name === '') {
-                    name = `__symbol${Math.ceil(Math.random() * 100000)}`;
+                    name = '__symbol' + Math.ceil(Math.random() * 100000);
                 }
-                if (STORED.strings.has(name)) {
+                if (strings.has(name)) {
                     name = Resource.generateId('string', name);
                 }
-                STORED.strings.set(name, value);
+                strings.set(name, value);
             }
             return name;
         }

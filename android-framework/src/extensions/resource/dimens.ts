@@ -28,6 +28,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public readonly eventOnly = true;
 
     public beforeCascade() {
+        const dimens = STORED.dimens;
         const groups: ObjectMapNested<T[]> = {};
         for (const node of this.application.session.cache) {
             if (node.visible) {
@@ -54,27 +55,28 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             const group = groups[containerName];
             for (const name in group) {
                 const [namespace, attr, value] = name.split($regex.XML.SEPARATOR);
-                const key = getResourceName(STORED.dimens, `${getDisplayName(containerName)}_${$util.convertUnderscore(attr)}`, value);
+                const key = getResourceName(dimens, getDisplayName(containerName) + '_' + $util.convertUnderscore(attr), value);
                 const data = group[name];
                 for (const node of data) {
-                    node[namespace](attr, `@dimen/${key}`);
+                    node[namespace](attr, '@dimen/' + key);
                 }
-                STORED.dimens.set(key, value);
+                dimens.set(key, value);
             }
         }
     }
 
     public afterFinalize() {
         if (this.controller.hasAppendProcessing()) {
+            const dimens = STORED.dimens;
             for (const layout of this.application.layouts) {
                 let content = layout.content;
                 let match: RegExpExecArray | null;
                 while ((match = REGEXP_UNIT_ATTR.exec(content)) !== null) {
                     if (match[1] !== 'text') {
                         const value = match[2];
-                        const key = getResourceName(STORED.dimens, `custom_${$util.convertUnderscore(match[1])}`, value);
-                        STORED.dimens.set(key, value);
-                        content = content.replace(match[0], match[0].replace(match[2], `@dimen/${key}`));
+                        const key = getResourceName(dimens, 'custom_' + $util.convertUnderscore(match[1]), value);
+                        dimens.set(key, value);
+                        content = content.replace(match[0], match[0].replace(match[2], '@dimen/' + key));
                     }
                 }
                 layout.content = content;

@@ -27,7 +27,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
 
     public processNode(node: T, parent: T) {
         const options = $utilA.createViewAttribute(this.options[node.elementId]);
-        $util.assignEmptyValue(options, 'android', 'background', `?android:attr/windowBackground`);
+        $util.assignEmptyValue(options, 'android', 'background', '?android:attr/windowBackground');
         const children = node.children;
         const length = children.length;
         for (let i = 5; i < length; i++) {
@@ -71,7 +71,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
             const menu = $util.optionalAsString(BottomNavigation.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
             if (menu !== '') {
                 const options = $utilA.createViewAttribute(this.options[node.elementId]);
-                $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
+                $util.assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
                 node.app('menu', options.app.menu);
             }
         }

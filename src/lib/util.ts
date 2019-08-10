@@ -312,10 +312,11 @@ export function optionalAsBoolean(obj: UndefNull<object>, value: string): boolea
 
 export function resolvePath(value: string, href?: string) {
     if (!COMPONENT.PROTOCOL.test(value)) {
-        let pathname = (href && href.replace(location.origin, '') || location.pathname).split('/');
+        const origin = location.origin;
+        let pathname = (href && href.replace(origin, '') || location.pathname).split('/');
         pathname.pop();
         if (value.charAt(0) === '/') {
-            value = location.origin + value;
+            value = origin + value;
         }
         else {
             if (value.startsWith('../')) {
@@ -330,10 +331,10 @@ export function resolvePath(value: string, href?: string) {
                     }
                 }
                 pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
-                value = location.origin + pathname.join('/');
+                value = origin + pathname.join('/');
             }
             else {
-                value = location.origin + pathname.join('/') + '/' + value;
+                value = origin + pathname.join('/') + '/' + value;
             }
         }
     }

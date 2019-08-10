@@ -71,11 +71,12 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
 
     public addDescendant(node: T) {
         const map = this.application.session.extensionMap;
-        const extensions = map.get(node.id) || [];
+        const id = node.id;
+        const extensions = map.get(id) || [];
         if (!extensions.includes(this)) {
             extensions.push(this);
         }
-        map.set(node.id, extensions);
+        map.set(id, extensions);
     }
 
     public postBaseLayout(node: T) {}

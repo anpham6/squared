@@ -34,7 +34,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         const target = node.dataset.target;
         const options = $utilA.createViewAttribute(this.options[element.id]);
         const colorName = $Resource.addColor($color.parseColor(node.css('backgroundColor'), node.toFloat('opacity', true, 1)));
-        $util.assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
+        $util.assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? '@color/' + colorName : '?attr/colorAccent');
         if (!node.hasProcedure($e.NODE_PROCEDURE.ACCESSIBILITY)) {
             $util.assignEmptyValue(options, 'android', 'focusable', 'false');
         }
@@ -53,7 +53,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                 break;
         }
         if (src !== '') {
-            $util.assignEmptyValue(options, 'app', 'srcCompat', `@drawable/${src}`);
+            $util.assignEmptyValue(options, 'app', 'srcCompat', '@drawable/' + src);
         }
         node.setControlType($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, $enumA.CONTAINER_NODE.BUTTON);
         node.exclude($e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET);

@@ -26,17 +26,18 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public item(index?: number, value?: T): T | undefined {
+        const children = this._children;
         if (index !== undefined) {
             if (value !== undefined) {
-                if (index >= 0 && index < this._children.length) {
-                    this._children[index] = value;
+                if (index >= 0 && index < children.length) {
+                    children[index] = value;
                     return value;
                 }
                 return undefined;
             }
-            return this._children[index];
+            return children[index];
         }
-        return this._children[this._children.length - 1];
+        return children[children.length - 1];
     }
 
     public append(item: T) {

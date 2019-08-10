@@ -190,57 +190,57 @@ const appBase: AppFramework<View> = {
         },
         saveLayoutAllXml(filename?: string) {
             if (checkApplication(application)) {
-                file.layoutAllToXml({ assets: application.layouts, archiveTo: filename || `${userSettings.outputArchiveName}-layouts` });
+                file.layoutAllToXml({ assets: application.layouts, archiveTo: filename || userSettings.outputArchiveName + '-layouts' });
             }
         },
         saveResourceAllXml(filename?: string) {
             if (checkApplication(application)) {
-                file.resourceAllToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-resources` });
+                file.resourceAllToXml({ archiveTo: filename || userSettings.outputArchiveName + '-resources' });
             }
         },
         saveResourceStringXml(filename?: string) {
             if (checkApplication(application)) {
-                file.resourceStringToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-string` });
+                file.resourceStringToXml({ archiveTo: filename || userSettings.outputArchiveName + '-string' });
             }
         },
         saveResourceArrayXml(filename?: string) {
             if (checkApplication(application)) {
-                file.resourceStringArrayToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-array` });
+                file.resourceStringArrayToXml({ archiveTo: filename || userSettings.outputArchiveName + '-array' });
             }
         },
         saveResourceFontXml(filename?: string) {
             if (checkApplication(application)) {
-                file.resourceFontToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-font` });
+                file.resourceFontToXml({ archiveTo: filename || userSettings.outputArchiveName + '-font' });
             }
         },
         saveResourceColorXml(filename?: string) {
             if (checkApplication(application)) {
-                file.resourceColorToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-color` });
+                file.resourceColorToXml({ archiveTo: filename || userSettings.outputArchiveName + '-color' });
             }
         },
         saveResourceStyleXml(filename?: string) {
             if (checkApplication(application)) {
-                file.resourceStyleToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-style` });
+                file.resourceStyleToXml({ archiveTo: filename || userSettings.outputArchiveName + '-style' });
             }
         },
         saveResourceDimenXml(filename?: string) {
             if (checkApplication(application)) {
-                file.resourceDimenToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-dimen` });
+                file.resourceDimenToXml({ archiveTo: filename || userSettings.outputArchiveName + '-dimen' });
             }
         },
         saveResourceDrawableXml(filename?: string) {
             if (checkApplication(application)) {
-                file.resourceDrawableToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-drawable` });
+                file.resourceDrawableToXml({ archiveTo: filename || userSettings.outputArchiveName + '-drawable' });
             }
         },
         saveResourceDrawableImageXml(filename?: string) {
             if (checkApplication(application)) {
-                file.resourceDrawableImageToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-drawable-image` });
+                file.resourceDrawableImageToXml({ archiveTo: filename || userSettings.outputArchiveName + '-drawable-image' });
             }
         },
         saveResourceAnimXml(filename?: string) {
             if (checkApplication(application)) {
-                file.resourceAnimToXml({ archiveTo: filename || `${userSettings.outputArchiveName}-anim` });
+                file.resourceAnimToXml({ archiveTo: filename || userSettings.outputArchiveName + '-anim' });
             }
         },
         writeLayoutAllXml() {

@@ -378,14 +378,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public attr(name: string, attr: string, value?: string, overwrite = true): string {
-        let obj = this[`__${name}`];
+        let obj = this['__' + name];
         if (value) {
             if (obj === undefined) {
                 if (!this._namespaces.includes(name)) {
                     this._namespaces.push(name);
                 }
                 obj = {};
-                this[`__${name}`] = obj;
+                this['__' + name] = obj;
             }
             if (!overwrite && obj[attr]) {
                 return '';
@@ -399,24 +399,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public namespace(name: string): StringMap {
-        return this[`__${name}`] || {};
+        return this['__' + name] || {};
     }
 
     public unsafe(name: string, value?: any): any {
         if (value !== undefined) {
-            this[`_${name}`] =  value;
+            this['__' + name] =  value;
         }
         else {
-            return this[`_${name}`];
+            return this['__' + name];
         }
     }
 
     public unset(name: string) {
-        delete this[`_${name}`];
+        delete this['__' + name];
     }
 
     public delete(name: string, ...attrs: string[]) {
-        const obj = this[`__${name}`];
+        const obj = this['__' + name];
         if (obj) {
             for (const attr of attrs) {
                 if (attr.indexOf('*') !== -1) {
@@ -632,8 +632,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const parseExclusions = (attr: string, enumeration: {}) => {
                 let exclude = this.dataset[attr] || '';
                 let offset = 0;
-                if (parent && parent.dataset[`${attr}Child`]) {
-                    exclude += (exclude !== '' ? '|' : '') + parent.dataset[`${attr}Child`];
+                if (parent && parent.dataset[attr + 'Child']) {
+                    exclude += (exclude !== '' ? '|' : '') + parent.dataset[attr + 'Child'];
                 }
                 if (exclude !== '') {
                     for (let name of exclude.split('|')) {
@@ -1154,7 +1154,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     result = 'PLAINTEXT';
                 }
                 else if (element.tagName === 'INPUT') {
-                    result = `INPUT_${element.type.toUpperCase()}`;
+                    result = 'INPUT_' + element.type.toUpperCase();
                 }
                 else {
                     result = element.tagName.toUpperCase();

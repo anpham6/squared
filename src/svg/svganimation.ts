@@ -160,7 +160,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 }
             }
             if (!$util.isString(this.baseValue) && this.animationElement) {
-                this.baseValue = $util.optionalAsString(this.animationElement.parentElement, `${value}.baseVal.valueAsString`);
+                this.baseValue = $util.optionalAsString(this.animationElement.parentElement, value + '.baseVal.valueAsString');
                 if ($css.isLength(this.baseValue)) {
                     this.baseValue = $css.parseUnit(this.baseValue, $css.getFontSize(this.animationElement.parentElement)).toString();
                 }

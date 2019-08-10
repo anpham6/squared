@@ -47,12 +47,13 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                 let minTop = Number.POSITIVE_INFINITY;
                 let baseline: T | undefined;
                 for (const item of children) {
-                    if (item.inlineVertical && item.linear.top <= minTop) {
-                        if (item.linear.top < minTop) {
+                    const top = item.linear.top;
+                    if (item.inlineVertical && top <= minTop) {
+                        if (top < minTop) {
                             aboveBaseline.length = 0;
                         }
                         aboveBaseline.push(item);
-                        minTop = item.linear.top;
+                        minTop = top;
                     }
                     if (item.baselineActive) {
                         baseline = item;

@@ -148,13 +148,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 const options = createViewAttribute();
                 ordinal = application.createNode();
-                ordinal.containerName = `${node.containerName}_ORDINAL`;
+                ordinal.containerName = node.containerName + '_ORDINAL';
                 if (inside) {
                     controller.addBeforeOutsideTemplate(
                         ordinal.id,
                         controller.renderNodeStatic(
                             CONTAINER_ANDROID.SPACE,
-                            createViewAttribute(undefined, { minWidth: `@dimen/${Resource.insertStoredAsset('dimens', `${node.tagName.toLowerCase()}_space_indent`, $css.formatPX(minWidth))}` })
+                            createViewAttribute(undefined, { minWidth: '@dimen/' + Resource.insertStoredAsset('dimens', node.tagName.toLowerCase() + '_space_indent', $css.formatPX(minWidth)) })
                         ),
                         false
                     );
@@ -170,7 +170,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (image) {
                         ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
                         Object.assign(options.android, {
-                            src: `@drawable/${image}`,
+                            src: '@drawable/' + image,
                             scaleType: !inside && gravity === 'right' ? 'fitEnd' : 'fitStart',
                             baselineAlignBottom: adjustPadding ? 'true' : ''
                         });

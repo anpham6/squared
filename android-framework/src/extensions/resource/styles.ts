@@ -79,13 +79,13 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                     break;
                                 }
                             }
-                            if (style === '' || !name.startsWith(`${style}.`)) {
+                            if (style === '' || !name.startsWith(style + '.')) {
                                 name = (style !== '' ? style + '.' : '') + $util.capitalize(node.controlId);
                                 styles[name] = common;
                                 styleCache[name] = commonString;
                             }
                             for (const item of renderChildren) {
-                                item.attr('_', 'style', `@style/${name}`);
+                                item.attr('_', 'style', '@style/' + name);
                             }
                         }
                     }
