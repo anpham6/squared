@@ -1,4 +1,4 @@
-/* squared 1.2.8
+/* squared 1.2.9
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -357,10 +357,11 @@
     }
     function resolvePath(value, href) {
         if (!COMPONENT.PROTOCOL.test(value)) {
-            let pathname = (href && href.replace(location.origin, '') || location.pathname).split('/');
+            const origin = location.origin;
+            let pathname = (href && href.replace(origin, '') || location.pathname).split('/');
             pathname.pop();
             if (value.charAt(0) === '/') {
-                value = location.origin + value;
+                value = origin + value;
             }
             else {
                 if (value.startsWith('../')) {
@@ -375,10 +376,10 @@
                         }
                     }
                     pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
-                    value = location.origin + pathname.join('/');
+                    value = origin + pathname.join('/');
                 }
                 else {
-                    value = location.origin + pathname.join('/') + '/' + value;
+                    value = origin + pathname.join('/') + '/' + value;
                 }
             }
         }
@@ -477,6 +478,15 @@
                 }
             }
         }
+    }
+    function findSet(list, predicate) {
+        let i = 0;
+        for (const item of list) {
+            if (predicate(item, i++, list)) {
+                return item;
+            }
+        }
+        return undefined;
     }
     function sortNumber(values, ascending = true) {
         return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
@@ -703,6 +713,7 @@
         belowRange: belowRange,
         assignEmptyProperty: assignEmptyProperty,
         assignEmptyValue: assignEmptyValue,
+        findSet: findSet,
         sortNumber: sortNumber,
         sortArray: sortArray,
         flatArray: flatArray,
@@ -724,7 +735,7 @@
             this._children = children || [];
         }
         [Symbol.iterator]() {
-            const data = { done: false, value: undefined };
+            const data = { done: false };
             const list = this._children;
             const length = list.length;
             let i = 0;
@@ -741,17 +752,18 @@
             };
         }
         item(index, value) {
+            const children = this._children;
             if (index !== undefined) {
                 if (value !== undefined) {
-                    if (index >= 0 && index < this._children.length) {
-                        this._children[index] = value;
+                    if (index >= 0 && index < children.length) {
+                        children[index] = value;
                         return value;
                     }
                     return undefined;
                 }
-                return this._children[index];
+                return children[index];
             }
-            return this._children[this._children.length - 1];
+            return children[children.length - 1];
         }
         append(item) {
             this._children.push(item);
@@ -1022,15 +1034,17 @@
         return match ? value.substring(0, value.length - match[match[1] ? 2 : 0].length) : value;
     }
     function truncateString(value, precision = 3) {
-        if (REGEXP_TRUNCATECACHE[precision] === undefined) {
-            REGEXP_TRUNCATECACHE[precision] = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+        let pattern = REGEXP_TRUNCATECACHE[precision];
+        if (pattern === undefined) {
+            pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+            REGEXP_TRUNCATECACHE[precision] = pattern;
         }
         else {
-            REGEXP_TRUNCATECACHE[precision].lastIndex = 0;
+            pattern.lastIndex = 0;
         }
         let output = value;
         let match;
-        while ((match = REGEXP_TRUNCATECACHE[precision].exec(value)) !== null) {
+        while ((match = pattern.exec(value)) !== null) {
             if (parseInt(match[2]) >= 5) {
                 match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
             }
@@ -3291,17 +3305,17 @@
             if (rgba && (rgba.a > 0 || transparency)) {
                 const hexAsString = getHexCode(rgba.r, rgba.g, rgba.b);
                 const alphaAsString = getHexCode(rgba.a);
-                const valueAsRGBA = `#${hexAsString + alphaAsString}`;
+                const valueAsRGBA = '#' + hexAsString + alphaAsString;
                 if (CACHE_COLORDATA[valueAsRGBA]) {
                     return CACHE_COLORDATA[valueAsRGBA];
                 }
                 opacity = rgba.a / 255;
-                value = `#${hexAsString}`;
+                value = '#' + hexAsString;
                 const colorData = {
                     key,
                     value,
                     valueAsRGBA,
-                    valueAsARGB: `#${alphaAsString + hexAsString}`,
+                    valueAsARGB: '#' + alphaAsString + hexAsString,
                     rgba,
                     hsl: convertHSLA(rgba),
                     opacity,
@@ -3318,7 +3332,7 @@
     }
     function reduceRGBA(value, percent, cacheName) {
         if (cacheName) {
-            cacheName = `${cacheName}_${percent}`;
+            cacheName = cacheName + '_' + percent;
             if (CACHE_COLORDATA[cacheName]) {
                 return CACHE_COLORDATA[cacheName];
             }
@@ -3351,7 +3365,7 @@
         return output;
     }
     function convertHex(value) {
-        return `#${getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '')}`;
+        return '#' + getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '');
     }
     function parseRGBA(value) {
         value = value.replace(/#/g, '').trim();
@@ -3879,7 +3893,7 @@
                     offsetParent = dimension.height;
                     result.vertical = position;
                 }
-                const directionAsPercent = `${direction}AsPercent`;
+                const directionAsPercent = direction + 'AsPercent';
                 switch (position) {
                     case 'start':
                         result.horizontal = 'left';
@@ -4133,7 +4147,7 @@
     }
     function convertPX(value, fontSize) {
         if (value) {
-            return value.endsWith('px') ? value : `${parseUnit(value, fontSize)}px`;
+            return value.endsWith('px') ? value : parseUnit(value, fontSize) + 'px';
         }
         return '0px';
     }
@@ -4244,7 +4258,7 @@
                                 equated[index] = seg[0];
                                 const hash = `{${index++}}`;
                                 const remaining = closing[i] + 1;
-                                value = value.substring(0, j) + `${hash + ' '.repeat(remaining - (j + hash.length))}` + value.substring(remaining);
+                                value = value.substring(0, j) + hash + ' '.repeat(remaining - (j + hash.length)) + value.substring(remaining);
                                 closing.splice(i--, 1);
                             }
                         }
@@ -4313,7 +4327,7 @@
         return 0;
     }
     function formatPX(value) {
-        return `${Math.round(value) || 0}px`;
+        return (Math.round(value) || 0) + 'px';
     }
     function formatPercent(value, round = true) {
         if (typeof value === 'string') {
@@ -4323,7 +4337,7 @@
             }
         }
         value *= 100;
-        return `${round ? Math.round(value) : value}%`;
+        return (round ? Math.round(value) : value) + '%';
     }
     function isLength(value, percent = false) {
         return UNIT.LENGTH.test(value) || percent && isPercent(value);
@@ -4513,45 +4527,56 @@
     }
     function removeElementsByClassName(className) {
         for (const element of Array.from(document.getElementsByClassName(className))) {
-            if (element.parentElement) {
-                element.parentElement.removeChild(element);
+            const parentElement = element.parentElement;
+            if (parentElement) {
+                parentElement.removeChild(element);
             }
         }
     }
-    function getElementsBetweenSiblings(elementStart, elementEnd, whiteSpace = false) {
+    function getElementsBetweenSiblings(elementStart, elementEnd) {
+        const result = [];
         if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
             const parent = elementEnd.parentElement;
             if (parent) {
                 let startIndex = elementStart ? -1 : 0;
                 let endIndex = -1;
-                const elements = Array.from(parent.childNodes);
-                const length = elements.length;
+                const childNodes = parent.childNodes;
+                const length = childNodes.length;
                 for (let i = 0; i < length; i++) {
-                    if (elements[i] === elementStart) {
-                        startIndex = i;
-                    }
-                    if (elements[i] === elementEnd) {
+                    const element = childNodes[i];
+                    if (element === elementEnd) {
                         endIndex = i;
+                        if (startIndex !== -1) {
+                            break;
+                        }
+                    }
+                    else if (element === elementStart) {
+                        startIndex = i;
+                        if (endIndex !== -1) {
+                            break;
+                        }
                     }
                 }
-                if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
-                    const result = elements.slice(Math.min(startIndex, endIndex) + 1, Math.max(startIndex, endIndex));
-                    if (whiteSpace) {
-                        spliceArray(result, element => element.nodeName === '#comment');
+                if (startIndex !== -1 && endIndex !== -1) {
+                    const minIndex = Math.min(startIndex, endIndex);
+                    const maxIndex = Math.max(startIndex, endIndex);
+                    for (let i = minIndex; i <= maxIndex; i++) {
+                        const element = childNodes[i];
+                        const nodeName = element.nodeName;
+                        if (nodeName.charAt(0) !== '#' || nodeName === '#text') {
+                            result.push(element);
+                        }
                     }
-                    else {
-                        spliceArray(result, element => element.nodeName.charAt(0) === '#' && (element.nodeName !== 'text' || !!element.textContent && element.textContent.trim() === ''));
-                    }
-                    return result.length ? result : undefined;
                 }
             }
         }
-        return undefined;
+        return result;
     }
     function createElement(parent, tagName, attrs) {
         const element = document.createElement(tagName);
+        const style = element.style;
         for (const attr in attrs) {
-            element.style.setProperty(attr, attrs[attr]);
+            style.setProperty(attr, attrs[attr]);
         }
         parent.appendChild(element);
         return element;
@@ -4569,10 +4594,7 @@
     }
     function getNamedItem(element, attr) {
         const item = element.attributes.getNamedItem(attr);
-        if (item) {
-            return item.value.trim();
-        }
-        return '';
+        return item ? item.value.trim() : '';
     }
     function isTextNode(element) {
         return element.nodeName === '#text';
@@ -4833,7 +4855,7 @@
                 tag: match[1],
                 closing: !!match[2],
                 tagName: match[3],
-                value: match[4].trim() === '' ? '' : match[4]
+                value: match[4].trim()
             });
         }
         let output = '';
@@ -4943,23 +4965,22 @@
 
     const extensionsAsync = new Set();
     const optionsAsync = new Map();
+    const settings = {};
+    const system = {};
     let main;
     let framework;
-    exports.settings = {};
-    exports.system = {};
     const checkMain = () => !!main && !main.initializing && main.length > 0;
     function setFramework(value, cached = false) {
         const reloading = framework !== undefined;
         if (framework !== value) {
             const appBase = cached ? value.cached() : value.create();
             if (!reloading) {
-                Object.assign(appBase.userSettings, exports.settings);
+                Object.assign(appBase.userSettings, settings);
             }
-            exports.settings = appBase.userSettings;
+            Object.assign(settings, appBase.userSettings);
             main = appBase.application;
-            main.userSettings = exports.settings;
-            const builtInExtensions = main.builtInExtensions;
-            const extensions = main.extensions;
+            main.userSettings = settings;
+            const { builtInExtensions, extensions } = main;
             function includeExtension(extension) {
                 if (!extensions.includes(extension)) {
                     extension.application = main;
@@ -4967,21 +4988,27 @@
                 }
             }
             extensions.length = 0;
-            for (const namespace of exports.settings.builtInExtensions) {
+            for (let namespace of settings.builtInExtensions) {
                 const extension = builtInExtensions[namespace];
                 if (extension) {
                     includeExtension(extension);
                 }
                 else {
+                    namespace += '.';
                     for (const name in builtInExtensions) {
-                        if (name.startsWith(`${namespace}.`)) {
+                        if (name.startsWith(namespace)) {
                             includeExtension(builtInExtensions[name]);
                         }
                     }
                 }
             }
             framework = value;
-            exports.system = value.system;
+            if (reloading) {
+                for (const attr of Object.keys(system)) {
+                    delete system[attr];
+                }
+            }
+            Object.assign(system, value.system);
         }
         if (reloading) {
             reset();
@@ -4989,9 +5016,10 @@
     }
     function parseDocument(...elements) {
         if (main) {
-            if (exports.settings.handleExtensionsAsync) {
+            if (settings.handleExtensionsAsync) {
+                const extensionManager = main.extensionManager;
                 for (const item of extensionsAsync) {
-                    main.extensionManager.include(item);
+                    extensionManager.include(item);
                 }
                 for (const [name, options] of optionsAsync.entries()) {
                     configure(name, options);
@@ -5002,12 +5030,12 @@
             if (!main.closed) {
                 return main.parseDocument(...elements);
             }
-            else if (!exports.settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
+            else if (!settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
                 main.reset();
                 return main.parseDocument(...elements);
             }
         }
-        else if (exports.settings.showErrorMessages) {
+        else if (settings.showErrorMessages) {
             alert('ERROR: Framework not installed.');
         }
         const PromiseResult = class {
@@ -5036,7 +5064,7 @@
         }
         else if (value instanceof squared.base.Extension) {
             extensionsAsync.add(value);
-            if (exports.settings.handleExtensionsAsync) {
+            if (settings.handleExtensionsAsync) {
                 return true;
             }
         }
@@ -5044,22 +5072,13 @@
     }
     function exclude(value) {
         if (main) {
+            const extensionManager = main.extensionManager;
             if (typeof value === 'string') {
-                value = value.trim();
-                const extension = main.extensionManager.retrieve(value);
-                if (extension) {
-                    return main.extensionManager.exclude(extension);
-                }
+                value = extensionManager.retrieve(value.trim());
             }
-            else if (value instanceof squared.base.Extension) {
-                if (extensionsAsync.has(value)) {
-                    extensionsAsync.delete(value);
-                    main.extensionManager.exclude(value);
-                    return true;
-                }
-                else {
-                    return main.extensionManager.exclude(value);
-                }
+            if (value instanceof squared.base.Extension) {
+                extensionsAsync.delete(value);
+                return extensionManager.exclude(value);
             }
         }
         return false;
@@ -5069,14 +5088,14 @@
             if (typeof value === 'string') {
                 if (main) {
                     value = value.trim();
-                    const extension = main.extensionManager.retrieve(value) || Array.from(extensionsAsync).find(item => item.name === value);
+                    const extension = main.extensionManager.retrieve(value) || findSet(extensionsAsync, item => item.name === value);
                     if (extension) {
                         Object.assign(extension.options, options);
                         return true;
                     }
                     else {
                         optionsAsync.set(value, options);
-                        if (exports.settings.handleExtensionsAsync) {
+                        if (settings.handleExtensionsAsync) {
                             return true;
                         }
                     }
@@ -5169,6 +5188,8 @@
     exports.saveAllToDisk = saveAllToDisk;
     exports.saveToArchive = saveToArchive;
     exports.setFramework = setFramework;
+    exports.settings = settings;
+    exports.system = system;
     exports.toString = toString;
 
     Object.defineProperty(exports, '__esModule', { value: true });

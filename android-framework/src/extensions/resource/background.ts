@@ -562,18 +562,23 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     );
                     const emptyBackground = shapeData === undefined && layerListData === undefined;
                     if (stored.outline && (drawOutline || emptyBackground)) {
-                        const outline = stored.outline;
                         const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(
                             stored,
                             [],
-                            outline
+                            stored.outline
                         );
-                        if (emptyBackground) {
-                            shapeData = outlineShapeData;
-                            layerListData = outlineLayerListData;
+                        if (outlineShapeData) {
+                            if (shapeData === undefined) {
+                                shapeData = outlineShapeData;
+                            }
                         }
-                        else if (layerListData && outlineLayerListData) {
-                            layerListData[0].item = layerListData[0].item.concat(outlineLayerListData[0].item);
+                        else if (outlineLayerListData) {
+                            if (layerListData) {
+                                layerListData[0].item = layerListData[0].item.concat(outlineLayerListData[0].item);
+                            }
+                            else {
+                                layerListData = outlineLayerListData;
+                            }
                         }
                     }
                     if (shapeData) {

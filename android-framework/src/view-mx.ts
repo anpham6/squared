@@ -1422,9 +1422,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get documentId() {
-            if (this.controlId) {
+            const controlId = this.controlId;
+            if (controlId) {
                 this._requireDocumentId = true;
-                return '@id' + this.controlId;
+                return '@id/' + controlId;
             }
             return '';
         }

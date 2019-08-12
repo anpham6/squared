@@ -1,4 +1,4 @@
-/* android.widget 1.2.8
+/* android.widget 1.2.9
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -17,7 +17,7 @@ this.android.widget.bottomnavigation = (function () {
         }
         processNode(node, parent) {
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
-            $util.assignEmptyValue(options, 'android', 'background', `?android:attr/windowBackground`);
+            $util.assignEmptyValue(options, 'android', 'background', '?android:attr/windowBackground');
             const children = node.children;
             const length = children.length;
             for (let i = 5; i < length; i++) {
@@ -60,7 +60,7 @@ this.android.widget.bottomnavigation = (function () {
                 const menu = $util.optionalAsString(BottomNavigation.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
                 if (menu !== '') {
                     const options = $utilA.createViewAttribute(this.options[node.elementId]);
-                    $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
+                    $util.assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
                     node.app('menu', options.app.menu);
                 }
             }

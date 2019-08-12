@@ -1,4 +1,4 @@
-/* squared.base 1.2.8
+/* squared.base 1.2.9
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -57,9 +57,10 @@
             return Resource.ASSETS.images.get(src);
         }
         addFont(data) {
-            const fonts = Resource.ASSETS.fonts.get(data.fontFamily) || [];
-            fonts.push(data);
-            Resource.ASSETS.fonts.set(data.fontFamily, fonts);
+            const fonts = Resource.ASSETS.fonts;
+            const items = fonts.get(data.fontFamily) || [];
+            items.push(data);
+            fonts.set(data.fontFamily, items);
         }
         getFont(fontFamily, fontStyle = 'normal', fontWeight) {
             const font = Resource.ASSETS.fonts.get(fontFamily);
@@ -101,7 +102,7 @@
             else {
                 for (const extension of imageFormat) {
                     if (mimeType.indexOf(extension) !== -1) {
-                        if (dataURI.endsWith(`.${extension}`)) {
+                        if (dataURI.endsWith('.' + extension)) {
                             filename = $util.fromLastIndexOf(dataURI, '/');
                         }
                         else {
@@ -148,10 +149,15 @@
 
     const { css: $css, dom: $dom, regex: $regex$1, session: $session, util: $util$1 } = squared.lib;
     const ASSETS = Resource.ASSETS;
-    const CACHE_PATTERN = {
-        MEDIATEXT: /all|screen/,
-        DATAURI: new RegExp(`(url\\("(${$regex$1.STRING.DATAURI})"\\)),?\\s*`, 'g')
-    };
+    const REGEXP_MEDIATEXT = /all|screen/;
+    const REGEXP_DATAURI = new RegExp(`(url\\("(${$regex$1.STRING.DATAURI})"\\)),?\\s*`, 'g');
+    let REGEXP_IMPORTANT;
+    let REGEXP_FONT_FACE;
+    let REGEXP_FONT_FAMILY;
+    let REGEXP_FONT_SRC;
+    let REGEXP_FONT_STYLE;
+    let REGEXP_FONT_WEIGHT;
+    let REGEXP_URL;
     let NodeConstructor;
     function parseConditionText(rule, value) {
         const match = new RegExp(`^@${rule}([^{]+)`).exec(value);
@@ -291,9 +297,11 @@
                         else if (image.width === 0 && image.height === 0) {
                             const element = document.createElement('img');
                             element.src = image.uri;
-                            if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
-                                image.width = element.naturalWidth;
-                                image.height = element.naturalHeight;
+                            const width = element.naturalWidth;
+                            const height = element.naturalHeight;
+                            if (width > 0 && height > 0) {
+                                image.width = width;
+                                image.height = height;
                             }
                             else {
                                 documentRoot.appendChild(element);
@@ -306,13 +314,15 @@
             for (const [uri, data] of ASSETS.rawData.entries()) {
                 if (data.mimeType && data.mimeType.startsWith('image/') && !data.mimeType.endsWith('svg+xml')) {
                     const element = document.createElement('img');
-                    element.src = `data:${data.mimeType};` + (data.base64 ? `base64,${data.base64}` : data.content);
-                    if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
-                        data.width = element.naturalWidth;
-                        data.height = element.naturalHeight;
+                    element.src = 'data:' + data.mimeType + ';' + (data.base64 ? 'base64,' + data.base64 : data.content);
+                    const width = element.naturalWidth;
+                    const height = element.naturalHeight;
+                    if (width > 0 && height > 0) {
+                        data.width = width;
+                        data.height = height;
                         ASSETS.images.set(uri, {
-                            width: data.width,
-                            height: data.height,
+                            width,
+                            height,
                             uri: data.filename
                         });
                     }
@@ -367,7 +377,7 @@
                 })
                     .catch((error) => {
                     const message = error.target ? error.target.src : error['message'];
-                    if (!this.userSettings.showErrorMessages || !$util$1.isString(message) || confirm(`FAIL: ${message}`)) {
+                    if (!this.userSettings.showErrorMessages || !$util$1.isString(message) || confirm('FAIL: ' + message)) {
                         resume();
                     }
                 });
@@ -553,7 +563,7 @@
                         alert('CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' +
                             'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
                             'See the README for more detailed instructions.\n\n' +
-                            `${item.href}\n\n${error}`);
+                            item.href + '\n\n' + error);
                         warning = true;
                     }
                 }
@@ -563,7 +573,7 @@
             for (let i = 0; i < length; i++) {
                 const styleSheet = styleSheets[i];
                 const mediaText = styleSheet.media.mediaText;
-                if (mediaText === '' || CACHE_PATTERN.MEDIATEXT.test(mediaText)) {
+                if (mediaText === '' || REGEXP_MEDIATEXT.test(mediaText)) {
                     applyStyleSheet(styleSheet);
                 }
             }
@@ -587,10 +597,10 @@
                     const parseImageUrl = (styleMap, attr) => {
                         const value = styleMap[attr];
                         if (value && value !== 'initial') {
-                            CACHE_PATTERN.DATAURI.lastIndex = 0;
+                            REGEXP_DATAURI.lastIndex = 0;
                             let result = value;
                             let match;
-                            while ((match = CACHE_PATTERN.DATAURI.exec(value)) !== null) {
+                            while ((match = REGEXP_DATAURI.exec(value)) !== null) {
                                 if (match[3] && match[4]) {
                                     resource.addRawData(match[2], match[3], match[4], match[5]);
                                 }
@@ -611,14 +621,14 @@
                         fromRule.push($util$1.convertCamelCase(attr));
                     }
                     if (cssText.indexOf('!important') !== -1) {
-                        if (CACHE_PATTERN.IMPORTANT === undefined) {
-                            CACHE_PATTERN.IMPORTANT = /\s*([a-z\-]+):.*?!important;/g;
+                        if (REGEXP_IMPORTANT === undefined) {
+                            REGEXP_IMPORTANT = /\s*([a-z\-]+):.*?!important;/g;
                         }
                         else {
-                            CACHE_PATTERN.IMPORTANT.lastIndex = 0;
+                            REGEXP_IMPORTANT.lastIndex = 0;
                         }
                         let match;
-                        while ((match = CACHE_PATTERN.IMPORTANT.exec(cssText)) !== null) {
+                        while ((match = REGEXP_IMPORTANT.exec(cssText)) !== null) {
                             const attr = $util$1.convertCamelCase(match[1]);
                             switch (attr) {
                                 case 'margin':
@@ -704,8 +714,8 @@
                             parseImageUrl(styleMap, 'backgroundImage');
                             parseImageUrl(styleMap, 'listStyleImage');
                             parseImageUrl(styleMap, 'content');
-                            const attrStyle = `styleMap${targetElt}`;
-                            const attrSpecificity = `styleSpecificity${targetElt}`;
+                            const attrStyle = 'styleMap' + targetElt;
+                            const attrSpecificity = 'styleSpecificity' + targetElt;
                             const styleData = $session.getElementCache(element, attrStyle, sessionId);
                             if (styleData) {
                                 const specificityData = $session.getElementCache(element, attrSpecificity, sessionId) || {};
@@ -726,7 +736,7 @@
                                 for (const attr in styleMap) {
                                     specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                                 }
-                                $session.setElementCache(element, `style${targetElt}`, '0', style);
+                                $session.setElementCache(element, 'style' + targetElt, '0', style);
                                 $session.setElementCache(element, 'sessionId', '0', sessionId);
                                 $session.setElementCache(element, attrStyle, sessionId, styleMap);
                                 $session.setElementCache(element, attrSpecificity, sessionId, specificityData);
@@ -736,26 +746,26 @@
                     break;
                 }
                 case CSSRule.FONT_FACE_RULE: {
-                    if (CACHE_PATTERN.FONT_FACE === undefined) {
-                        CACHE_PATTERN.FONT_FACE = /\s*@font-face\s*{([^}]+)}\s*/;
-                        CACHE_PATTERN.FONT_FAMILY = /\s*font-family:[^\w]*([^'";]+)/;
-                        CACHE_PATTERN.FONT_SRC = /\s*src:\s*([^;]+);/;
-                        CACHE_PATTERN.FONT_STYLE = /\s*font-style:\s*(\w+)\s*;/;
-                        CACHE_PATTERN.FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-                        CACHE_PATTERN.URL = /\s*(url|local)\((?:['"]([^'")]+)['"]|([^)]+))\)\s*format\(['"]?(\w+)['"]?\)\s*/;
+                    if (REGEXP_FONT_FACE === undefined) {
+                        REGEXP_FONT_FACE = /\s*@font-face\s*{([^}]+)}\s*/;
+                        REGEXP_FONT_FAMILY = /\s*font-family:[^\w]*([^'";]+)/;
+                        REGEXP_FONT_SRC = /\s*src:\s*([^;]+);/;
+                        REGEXP_FONT_STYLE = /\s*font-style:\s*(\w+)\s*;/;
+                        REGEXP_FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
+                        REGEXP_URL = /\s*(url|local)\((?:['"]([^'")]+)['"]|([^)]+))\)\s*format\(['"]?(\w+)['"]?\)\s*/;
                     }
-                    const match = CACHE_PATTERN.FONT_FACE.exec(cssText);
+                    const match = REGEXP_FONT_FACE.exec(cssText);
                     if (match) {
-                        const familyMatch = CACHE_PATTERN.FONT_FAMILY.exec(match[1]);
-                        const srcMatch = CACHE_PATTERN.FONT_SRC.exec(match[1]);
+                        const familyMatch = REGEXP_FONT_FAMILY.exec(match[1]);
+                        const srcMatch = REGEXP_FONT_SRC.exec(match[1]);
                         if (familyMatch && srcMatch) {
-                            const styleMatch = CACHE_PATTERN.FONT_STYLE.exec(match[1]);
-                            const weightMatch = CACHE_PATTERN.FONT_WEIGHT.exec(match[1]);
+                            const styleMatch = REGEXP_FONT_STYLE.exec(match[1]);
+                            const weightMatch = REGEXP_FONT_WEIGHT.exec(match[1]);
                             const fontFamily = familyMatch[1].trim();
                             const fontStyle = styleMatch ? styleMatch[1].toLowerCase() : 'normal';
                             const fontWeight = weightMatch ? parseInt(weightMatch[1]) : 400;
                             for (const value of srcMatch[1].split($regex$1.XML.SEPARATOR)) {
-                                const urlMatch = CACHE_PATTERN.URL.exec(value);
+                                const urlMatch = REGEXP_URL.exec(value);
                                 if (urlMatch) {
                                     let srcUrl;
                                     let srcLocal;
@@ -841,7 +851,7 @@
                 if (framework > 0) {
                     for (const item of ext.dependencies) {
                         if (item.preload && this.retrieve(item.name) === null) {
-                            const extension = this.application.builtInExtensions[item.name];
+                            const extension = application.builtInExtensions[item.name];
                             if (extension) {
                                 this.include(extension);
                             }
@@ -1060,9 +1070,10 @@
             if (!element.download) {
                 element.setAttribute('target', '_blank');
             }
-            document.body.appendChild(element);
+            const body = document.body;
+            body.appendChild(element);
             element.click();
-            document.body.removeChild(element);
+            body.removeChild(element);
             setTimeout(() => window.URL.revokeObjectURL(url), 1);
         }
         addAsset(data) {
@@ -1084,10 +1095,10 @@
                 assets = assets.concat(this.assets);
                 if (assets.length) {
                     const settings = this.userSettings;
-                    fetch(`/api/assets/copy` +
-                        `?to=${encodeURIComponent(directory.trim())}` +
-                        `&directory=${encodeURIComponent($util$3.trimString(settings.outputDirectory, '/'))}` +
-                        `&timeout=${settings.outputArchiveTimeout}`, {
+                    fetch('/api/assets/copy' +
+                        '?to=' + encodeURIComponent(directory.trim()) +
+                        '&directory=' + encodeURIComponent($util$3.trimString(settings.outputDirectory, '/')) +
+                        '&timeout=' + settings.outputArchiveTimeout, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                         body: JSON.stringify(assets)
@@ -1099,13 +1110,13 @@
                                 callback(result);
                             }
                             if (result.system && this.userSettings.showErrorMessages) {
-                                alert(`${result.application}\n\n${result.system}`);
+                                alert(result.application + '\n\n' + result.system);
                             }
                         }
                     })
                         .catch(err => {
                         if (this.userSettings.showErrorMessages) {
-                            alert(`ERROR: ${err}`);
+                            alert('ERROR: ' + err);
                         }
                     });
                 }
@@ -1119,12 +1130,12 @@
                 assets = assets.concat(this.assets);
                 if (assets.length) {
                     const settings = this.userSettings;
-                    fetch(`/api/assets/archive` +
-                        `?filename=${encodeURIComponent(filename.trim())}` +
-                        `&directory=${encodeURIComponent($util$3.trimString(settings.outputDirectory, '/'))}` +
-                        `&format=${settings.outputArchiveFormat}` +
-                        (appendTo ? `&append_to=${encodeURIComponent(appendTo.trim())}` : '') +
-                        `&timeout=${settings.outputArchiveTimeout}`, {
+                    fetch('/api/assets/archive' +
+                        '?filename=' + encodeURIComponent(filename.trim()) +
+                        '&directory=' + encodeURIComponent($util$3.trimString(settings.outputDirectory, '/')) +
+                        '&format=' + settings.outputArchiveFormat +
+                        (appendTo ? '&append_to=' + encodeURIComponent(appendTo.trim()) : '') +
+                        '&timeout=' + settings.outputArchiveTimeout, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                         body: JSON.stringify(assets)
@@ -1134,18 +1145,18 @@
                         if (result) {
                             const zipname = result.zipname;
                             if (zipname) {
-                                fetch(`/api/browser/download?filename=${encodeURIComponent(zipname)}`)
+                                fetch('/api/browser/download?filename=' + encodeURIComponent(zipname))
                                     .then((response) => response.blob())
                                     .then((blob) => File.downloadFile(blob, $util$3.fromLastIndexOf(zipname, '/')));
                             }
                             else if (result.system && this.userSettings.showErrorMessages) {
-                                alert(`${result.application}\n\n${result.system}`);
+                                alert(result.application + '\n\n' + result.system);
                             }
                         }
                     })
                         .catch(err => {
                         if (this.userSettings.showErrorMessages) {
-                            alert(`ERROR: ${err}`);
+                            alert('ERROR: ' + err);
                         }
                     });
                 }
@@ -1157,12 +1168,22 @@
     }
 
     const { css: $css$1, dom: $dom$1, regex: $regex$2, session: $session$1, util: $util$4 } = squared.lib;
-    const CACHE_PATTERN$1 = {
+    const CACHE_PATTERN = {
         BACKGROUND: /\s*(url\(.+?\))\s*/,
         NTH_CHILD_OFTYPE: /^:nth(-last)?-(child|of-type)\((.+)\)$/,
         NTH_CHILD_OFTYPE_VALUE: /^(-)?(\d+)?n\s*([+\-]\d+)?$/,
         LANG: /^:lang\(\s*(.+)\s*\)$/
     };
+    function getFormElement(element) {
+        let result = element.parentElement;
+        while (result) {
+            if (result.tagName === 'FORM') {
+                return result;
+            }
+            result = result.parentElement;
+        }
+        return null;
+    }
     const validateCssSet = (value, styleValue) => value === styleValue || $css$1.isLength(value, true) && styleValue.endsWith('px');
     class Node extends squared.lib.base.Container {
         constructor(id, sessionId = '0', element) {
@@ -1457,7 +1478,7 @@
         cssSpecificity(attr) {
             if (this.styleElement) {
                 const element = this._element;
-                const data = $session$1.getElementCache(this.pseudoElement ? element.parentElement : element, `styleSpecificity${Node.getPseudoElt(this)}`, this.sessionId);
+                const data = $session$1.getElementCache(this.pseudoElement ? element.parentElement : element, 'styleSpecificity' + Node.getPseudoElt(this), this.sessionId);
                 if (data) {
                     return data[attr] || 0;
                 }
@@ -1521,7 +1542,7 @@
             return 0;
         }
         convertPX(value, dimension = 'width', parent = true) {
-            return value.endsWith('px') ? value : `${Math.round(this.parseUnit(value, dimension, parent))}px`;
+            return value.endsWith('px') ? value : Math.round(this.parseUnit(value, dimension, parent)) + 'px';
         }
         has(attr, checkType = 0, options) {
             const value = (options && options.map === 'initial' ? this._initial.styleMap : this._styleMap)[attr];
@@ -1581,10 +1602,11 @@
             else if (this.plainText) {
                 const rect = $dom$1.getRangeClientRect(this._element);
                 const bounds = $dom$1.assignRect(rect, true);
-                bounds.numberOfLines = rect.numberOfLines;
+                const numberOfLines = rect.numberOfLines;
+                bounds.numberOfLines = numberOfLines;
                 this._bounds = bounds;
                 this._textBounds = bounds;
-                this._cached.multiline = rect.numberOfLines > 1;
+                this._cached.multiline = numberOfLines > 1;
             }
             if (!cache) {
                 this._box = undefined;
@@ -1838,14 +1860,15 @@
                                             switch (tagName) {
                                                 case 'INPUT': {
                                                     const element = node.element;
-                                                    const type = element.type;
-                                                    if (type === 'radio' || type === 'checkbox') {
-                                                        if (!element.checked) {
+                                                    switch (element.type) {
+                                                        case 'radio':
+                                                        case 'checkbox':
+                                                            if (!element.checked) {
+                                                                return false;
+                                                            }
+                                                            break;
+                                                        default:
                                                             return false;
-                                                        }
-                                                    }
-                                                    else {
-                                                        return false;
                                                     }
                                                     break;
                                                 }
@@ -1854,12 +1877,12 @@
                                                         return false;
                                                     }
                                                     break;
-                                                case 'BUTTON':
-                                                    const form = node.ascend(item => item.tagName === 'FORM')[0];
+                                                case 'BUTTON': {
+                                                    const element = node.element;
+                                                    const form = getFormElement(element);
                                                     if (form) {
-                                                        const element = node.element;
                                                         let valid = false;
-                                                        const children = form.element.querySelectorAll('*');
+                                                        const children = form.querySelectorAll('*');
                                                         const lengthA = children.length;
                                                         for (let j = 0; j < lengthA; j++) {
                                                             const item = children[i];
@@ -1880,6 +1903,7 @@
                                                         }
                                                     }
                                                     break;
+                                                }
                                                 default:
                                                     return false;
                                             }
@@ -1925,17 +1949,10 @@
                                                             return false;
                                                         }
                                                         else if (element.name) {
-                                                            let form = element.parentElement;
-                                                            while (form) {
-                                                                if (form.tagName === 'FORM') {
-                                                                    break;
-                                                                }
-                                                                form = form.parentElement;
-                                                            }
-                                                            const children = (form || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
+                                                            const children = (getFormElement(element) || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
                                                             const lengthA = children.length;
                                                             for (let j = 0; j < lengthA; j++) {
-                                                                if (children.item(j).checked) {
+                                                                if (children[j].checked) {
                                                                     return false;
                                                                 }
                                                             }
@@ -1960,7 +1977,7 @@
                                             }
                                             else {
                                                 const element = node.element;
-                                                if (!(location.hash === `#${element.id}` || tagName === 'A' && location.hash === `#${element.name}`)) {
+                                                if (!(location.hash === '#' + element.id || tagName === 'A' && location.hash === '#' + element.name)) {
                                                     return false;
                                                 }
                                             }
@@ -1985,7 +2002,7 @@
                                         case ':valid':
                                         case ':invalid': {
                                             const element = node.element;
-                                            const children = parent.element.querySelectorAll(`:scope > ${pseudo}`);
+                                            const children = parent.element.querySelectorAll(':scope > ' + pseudo);
                                             let valid = false;
                                             const lengthA = children.length;
                                             for (let j = 0; j < lengthA; j++) {
@@ -2000,7 +2017,7 @@
                                             break;
                                         }
                                         default: {
-                                            let match = CACHE_PATTERN$1.NTH_CHILD_OFTYPE.exec(pseudo);
+                                            let match = CACHE_PATTERN.NTH_CHILD_OFTYPE.exec(pseudo);
                                             if (match) {
                                                 const placement = match[3].trim();
                                                 let children = parent.naturalElements;
@@ -2027,7 +2044,7 @@
                                                                 }
                                                                 break;
                                                             default:
-                                                                const subMatch = CACHE_PATTERN$1.NTH_CHILD_OFTYPE_VALUE.exec(placement);
+                                                                const subMatch = CACHE_PATTERN.NTH_CHILD_OFTYPE_VALUE.exec(placement);
                                                                 if (subMatch) {
                                                                     const modifier = $util$4.convertInt(subMatch[3]);
                                                                     if (subMatch[2]) {
@@ -2075,7 +2092,7 @@
                                                 }
                                             }
                                             else {
-                                                match = CACHE_PATTERN$1.LANG.exec(pseudo);
+                                                match = CACHE_PATTERN.LANG.exec(pseudo);
                                                 if (match) {
                                                     const attributes = node.attributes;
                                                     if (attributes['lang'] && match[1].toLowerCase() === attributes['lang'].toLowerCase()) {
@@ -2177,7 +2194,7 @@
                                                     }
                                                     break;
                                                 case '|':
-                                                    if (actualValue !== attr.value && !actualValue.startsWith(`${attr.value}-`)) {
+                                                    if (actualValue !== attr.value && !actualValue.startsWith(attr.value + '-')) {
                                                         return false;
                                                     }
                                                     break;
@@ -2338,7 +2355,7 @@
                         if (size !== '') {
                             value = this.parseUnit(size, attr);
                             if (value > 0) {
-                                this.css(attr, $css$1.isPercent(size) ? size : `${size}px`);
+                                this.css(attr, $css$1.isPercent(size) ? size : size + 'px');
                             }
                         }
                         break;
@@ -2808,7 +2825,8 @@
                         }
                         break;
                     case 'inherit':
-                        const position = this._element && this._element.parentElement ? $css$1.getInheritedStyle(this._element.parentElement, 'position') : '';
+                        const element = this._element;
+                        const position = element && element.parentElement ? $css$1.getInheritedStyle(element.parentElement, 'position') : '';
                         result = position !== '' && !(position === 'absolute' || position === 'fixed');
                         break;
                     default:
@@ -3326,7 +3344,7 @@
                     result = value;
                 }
                 else {
-                    const match = CACHE_PATTERN$1.BACKGROUND.exec(this.css('background'));
+                    const match = CACHE_PATTERN.BACKGROUND.exec(this.css('background'));
                     result = match ? match[1] : '';
                 }
                 this._cached.backgroundImage = result;
@@ -3466,10 +3484,11 @@
         get naturalChildren() {
             if (this._naturalChildren === undefined) {
                 if (this.naturalElement) {
+                    const sessionId = this.sessionId;
                     const children = [];
                     let i = 0;
                     this._element.childNodes.forEach((child) => {
-                        const node = $session$1.getElementAsNode(child, this.sessionId);
+                        const node = $session$1.getElementAsNode(child, sessionId);
                         if (node) {
                             node.childIndex = i++;
                             children.push(node);
@@ -3562,8 +3581,7 @@
             if (result === undefined) {
                 result = {};
                 if (this.styleElement) {
-                    const element = this._element;
-                    const attributes = element.attributes;
+                    const attributes = this._element.attributes;
                     const length = attributes.length;
                     for (let i = 0; i < length; i++) {
                         const attr = attributes.item(i);
@@ -3599,9 +3617,10 @@
             return result;
         }
         get center() {
+            const bounds = this.bounds;
             return {
-                x: (this.bounds.left + this.bounds.right) / 2,
-                y: (this.bounds.top + this.bounds.bottom) / 2
+                x: (bounds.left + bounds.right) / 2,
+                y: (bounds.top + bounds.bottom) / 2
             };
         }
         get extensions() {
@@ -4000,14 +4019,14 @@
             return this.containerType === containerType && alignmentType.some(value => this.hasAlign(value));
         }
         attr(name, attr, value, overwrite = true) {
-            let obj = this[`__${name}`];
+            let obj = this['__' + name];
             if (value) {
                 if (obj === undefined) {
                     if (!this._namespaces.includes(name)) {
                         this._namespaces.push(name);
                     }
                     obj = {};
-                    this[`__${name}`] = obj;
+                    this['__' + name] = obj;
                 }
                 if (!overwrite && obj[attr]) {
                     return '';
@@ -4019,22 +4038,22 @@
                 return obj && obj[attr] || '';
             }
         }
-        namespace(name) {
-            return this[`__${name}`] || {};
-        }
         unsafe(name, value) {
             if (value !== undefined) {
-                this[`_${name}`] = value;
+                this['_' + name] = value;
             }
             else {
-                return this[`_${name}`];
+                return this['_' + name];
             }
         }
         unset(name) {
-            delete this[`_${name}`];
+            delete this['_' + name];
+        }
+        namespace(name) {
+            return this['__' + name] || {};
         }
         delete(name, ...attrs) {
-            const obj = this[`__${name}`];
+            const obj = this['__' + name];
             if (obj) {
                 for (const attr of attrs) {
                     if (attr.indexOf('*') !== -1) {
@@ -4236,8 +4255,8 @@
                 const parseExclusions = (attr, enumeration) => {
                     let exclude = this.dataset[attr] || '';
                     let offset = 0;
-                    if (parent && parent.dataset[`${attr}Child`]) {
-                        exclude += (exclude !== '' ? '|' : '') + parent.dataset[`${attr}Child`];
+                    if (parent && parent.dataset[attr + 'Child']) {
+                        exclude += (exclude !== '' ? '|' : '') + parent.dataset[attr + 'Child'];
                     }
                     if (exclude !== '') {
                         for (let name of exclude.split('|')) {
@@ -4730,7 +4749,7 @@
                         result = 'PLAINTEXT';
                     }
                     else if (element.tagName === 'INPUT') {
-                        result = `INPUT_${element.type.toUpperCase()}`;
+                        result = 'INPUT_' + element.type.toUpperCase();
                     }
                     else {
                         result = element.tagName.toUpperCase();
@@ -5086,7 +5105,7 @@
     }
 
     const { css: $css$3, dom: $dom$3, regex: $regex$3, session: $session$3, util: $util$7, xml: $xml } = squared.lib;
-    const CACHE_PATTERN$2 = {};
+    const CACHE_PATTERN$1 = {};
     let NodeConstructor$1;
     function createPseudoElement(parent, tagName = 'span', index = -1) {
         const element = document.createElement(tagName);
@@ -5422,7 +5441,7 @@
                             const id = element.id;
                             let styleElement;
                             if (item.pageFlow) {
-                                element.id = `id_${Math.round(Math.random() * new Date().getTime())}`;
+                                element.id = 'id_' + Math.round(Math.random() * new Date().getTime());
                                 styleElement = $css$3.insertStyleSheetRule(`#${element.id + NodeUI.getPseudoElt(item)} { display: none !important; }`);
                             }
                             if (item.cssTry('display', item.display)) {
@@ -5468,10 +5487,10 @@
         }
         afterCreateCache(element) {
             const dataset = element.dataset;
-            const filename = dataset.filename && dataset.filename.replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
+            const filename = dataset.filename && dataset.filename.replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '') || element.id || 'document_' + this.length;
             const iteration = (dataset.iteration ? $util$7.convertInt(dataset.iteration) : -1) + 1;
             dataset.iteration = iteration.toString();
-            dataset.layoutName = $util$7.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
+            dataset.layoutName = $util$7.convertWord(iteration > 1 ? filename + '_' + iteration : filename, true);
             this.setBaseLayout(dataset.layoutName);
             this.setConstraints();
             this.setResources();
@@ -5490,7 +5509,8 @@
             return undefined;
         }
         toString() {
-            return this._layouts.length ? this._layouts[0].content : '';
+            const layouts = this._layouts;
+            return layouts.length ? layouts[0].content : '';
         }
         cascadeParentNode(parentElement, depth = 0) {
             const node = this.insertNode(parentElement);
@@ -5498,8 +5518,9 @@
                 node.depth = depth;
                 if (depth === 0) {
                     this.processing.cache.append(node);
+                    const extensionManager = this.extensionManager;
                     for (const name of node.extensions) {
-                        const ext = this.extensionManager.retrieve(name);
+                        const ext = extensionManager.retrieve(name);
                         if (ext && ext.cascadeAll) {
                             this._cascadeAll = true;
                             break;
@@ -5654,12 +5675,12 @@
             node.inlineText = inlineText;
         }
         createPseduoElement(element, pseudoElt, sessionId) {
-            let styleMap = $session$3.getElementCache(element, `styleMap${pseudoElt}`, sessionId);
+            let styleMap = $session$3.getElementCache(element, 'styleMap' + pseudoElt, sessionId);
             let nested = 0;
             if (element.tagName === 'Q') {
                 if (styleMap === undefined) {
                     styleMap = {};
-                    $session$3.setElementCache(element, `styleMap${pseudoElt}`, sessionId, styleMap);
+                    $session$3.setElementCache(element, 'styleMap' + pseudoElt, sessionId, styleMap);
                 }
                 if (!styleMap.content) {
                     styleMap.content = $css$3.getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
@@ -5746,16 +5767,16 @@
                             }
                         }
                         else {
-                            if (CACHE_PATTERN$2.COUNTER === undefined) {
-                                CACHE_PATTERN$2.COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
-                                CACHE_PATTERN$2.COUNTER_VALUE = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
+                            if (CACHE_PATTERN$1.COUNTER === undefined) {
+                                CACHE_PATTERN$1.COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
+                                CACHE_PATTERN$1.COUNTER_VALUE = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
                             }
                             else {
-                                CACHE_PATTERN$2.COUNTER.lastIndex = 0;
+                                CACHE_PATTERN$1.COUNTER.lastIndex = 0;
                             }
                             let found = false;
                             let match;
-                            while ((match = CACHE_PATTERN$2.COUNTER.exec(value)) !== null) {
+                            while ((match = CACHE_PATTERN$1.COUNTER.exec(value)) !== null) {
                                 if (match[1]) {
                                     content += $dom$3.getNamedItem(element, match[1].trim());
                                 }
@@ -5773,9 +5794,9 @@
                                     }
                                     function getCounterValue(name) {
                                         if (name !== 'none') {
-                                            CACHE_PATTERN$2.COUNTER_VALUE.lastIndex = 0;
+                                            CACHE_PATTERN$1.COUNTER_VALUE.lastIndex = 0;
                                             let counterMatch;
-                                            while ((counterMatch = CACHE_PATTERN$2.COUNTER_VALUE.exec(name)) !== null) {
+                                            while ((counterMatch = CACHE_PATTERN$1.COUNTER_VALUE.exec(name)) !== null) {
                                                 if (counterMatch[1] === counterName) {
                                                     return parseInt(counterMatch[2]);
                                                 }
@@ -5784,7 +5805,7 @@
                                         return undefined;
                                     }
                                     const getIncrementValue = (parent) => {
-                                        const pseduoStyle = $session$3.getElementCache(parent, `styleMap${pseudoElt}`, sessionId);
+                                        const pseduoStyle = $session$3.getElementCache(parent, 'styleMap' + pseudoElt, sessionId);
                                         if (pseduoStyle && pseduoStyle.counterIncrement) {
                                             return getCounterValue(pseduoStyle.counterIncrement);
                                         }
@@ -6739,7 +6760,7 @@
                 const setBorderStyle = () => {
                     if (styleMap.border === undefined && checkBorderAttribute(0)) {
                         const inputBorderColor = this.localSettings.style.inputBorderColor;
-                        styleMap.border = `outset 1px ${inputBorderColor}`;
+                        styleMap.border = 'outset 1px ' + inputBorderColor;
                         for (let i = 0; i < 4; i++) {
                             styleMap[$css$4.BOX_BORDER[i][0]] = 'outset';
                             styleMap[$css$4.BOX_BORDER[i][1]] = '1px';
@@ -6849,7 +6870,7 @@
                                 const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                                 if (match) {
                                     if ($css$4.isLength(match[1])) {
-                                        styleMap[attr] = `${match[1]}px`;
+                                        styleMap[attr] = match[1] + 'px';
                                     }
                                     else if ($css$4.isPercent(match[1])) {
                                         styleMap[attr] = match[1];
@@ -6864,7 +6885,7 @@
                                     }
                                 }
                                 else if (styleMap[opposing] && $css$4.isLength(styleMap[opposing])) {
-                                    const attrMax = `max${$util$8.capitalize(attr)}`;
+                                    const attrMax = 'max' + $util$8.capitalize(attr);
                                     if (styleMap[attrMax] === undefined || !$css$4.isPercent(attrMax)) {
                                         const image = this.application.resourceHandler.getImage(element.src);
                                         if (image && image.width > 0 && image.height > 0) {
@@ -6956,7 +6977,7 @@
             return this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined;
         }
         includeElement(element) {
-            return !(this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && this.localSettings.unsupported.tagName.has(`${element.tagName}:${element.type}`)) || element.contentEditable === 'true';
+            return !(this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && this.localSettings.unsupported.tagName.has(element.tagName + ':' + element.type)) || element.contentEditable === 'true';
         }
         visibleElement(element) {
             const rect = $session$4.actualClientRect(element, this.sessionId);
@@ -7285,11 +7306,12 @@
         }
         addDescendant(node) {
             const map = this.application.session.extensionMap;
-            const extensions = map.get(node.id) || [];
+            const id = node.id;
+            const extensions = map.get(id) || [];
             if (!extensions.includes(this)) {
                 extensions.push(this);
             }
-            map.set(node.id, extensions);
+            map.set(id, extensions);
         }
         postBaseLayout(node) { }
         postConstraints(node) { }
@@ -7342,7 +7364,8 @@
             return node ? node.previousSiblings(options) : [];
         }
         nextSiblings(options) {
-            const node = this._initial.children[this._initial.children.length - 1];
+            const children = this._initial.children;
+            const node = children[children.length - 1];
             return node ? node.nextSiblings(options) : [];
         }
         get block() {
@@ -7649,7 +7672,7 @@
             const prefix = name;
             let i = start;
             if (start === 1) {
-                name += `_${i.toString()}`;
+                name += '_' + i;
             }
             const previous = this.ASSETS.ids.get(section) || [];
             do {
@@ -7658,7 +7681,7 @@
                     break;
                 }
                 else {
-                    name = `${prefix}_${(++i).toString()}`;
+                    name = prefix + '_' + ++i;
                 }
             } while (true);
             this.ASSETS.ids.set(section, previous);
@@ -7670,13 +7693,13 @@
                 let result = this.getStoredName(asset, value);
                 if (result === '') {
                     if ($util$a.isNumber(name)) {
-                        name = `__${name}`;
+                        name = '__' + name;
                     }
                     let i = 0;
                     do {
                         result = name;
                         if (i > 0) {
-                            result += `_${i}`;
+                            result += '_' + i;
                         }
                         if (!stored.has(result)) {
                             stored.set(result, value);
@@ -8341,7 +8364,7 @@
                                 if (sibling && sibling.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
                                     const labelElement = sibling.element;
                                     const labelParent = sibling.documentParent.tagName === 'LABEL' ? sibling.documentParent : undefined;
-                                    if (element.id && element.id === labelElement.htmlFor) {
+                                    if (element.id === labelElement.htmlFor && element.id) {
                                         node.companion = sibling;
                                     }
                                     else if (sibling.textElement && labelParent) {
@@ -8381,24 +8404,25 @@
     const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
     const STRING_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
     const STRING_NAMED = '\\[([\\w\\-\\s]+)\\]';
-    const CACHE_PATTERN$3 = {};
+    const CACHE_PATTERN$2 = {};
     function repeatUnit(data, dimension) {
+        const repeat = data.repeat;
         const unitPX = [];
         const unitRepeat = [];
         const lengthA = dimension.length;
         for (let i = 0; i < lengthA; i++) {
-            if (data.repeat[i]) {
+            if (repeat[i]) {
                 unitRepeat.push(dimension[i]);
             }
             else {
                 unitPX.push(dimension[i]);
             }
         }
-        const result = [];
         const lengthB = data.length;
         const lengthC = lengthB - unitPX.length;
+        const result = new Array(lengthB);
         for (let i = 0; i < lengthB; i++) {
-            if (data.repeat[i]) {
+            if (repeat[i]) {
                 for (let j = 0, k = 0; j < lengthC; i++, j++, k++) {
                     if (k === unitRepeat.length) {
                         k = 0;
@@ -8407,7 +8431,7 @@
                 }
                 break;
             }
-            else if (unitPX.length) {
+            else {
                 result[i] = unitPX.shift();
             }
         }
@@ -8424,12 +8448,12 @@
     }
     const convertLength = (node, value) => $css$7.isLength(value) ? node.convertPX(value) : value;
     class CssGrid extends ExtensionUI {
-        static createDataAttribute(alignItems = '', alignContent = '', justifyItems = '', justifyContent = '') {
+        static createDataAttribute(alignItems, alignContent, justifyItems, justifyContent) {
             return {
-                children: new Set(),
+                children: [],
                 rowData: [],
-                rowHeight: [],
-                rowWeight: [],
+                rowHeight: undefined,
+                rowWeight: undefined,
                 rowSpanMultiple: [],
                 templateAreas: {},
                 row: CssGrid.createDataRowAttribute(),
@@ -8463,11 +8487,11 @@
             return node.length > 0;
         }
         processNode(node) {
-            if (CACHE_PATTERN$3.UNIT === undefined) {
-                CACHE_PATTERN$3.UNIT = new RegExp(`^(${STRING_UNIT})$`);
-                CACHE_PATTERN$3.NAMED = new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
-                CACHE_PATTERN$3.REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
-                CACHE_PATTERN$3.STARTEND = /^([\w\-]+)-(start|end)$/;
+            if (CACHE_PATTERN$2.UNIT === undefined) {
+                CACHE_PATTERN$2.UNIT = new RegExp(`^(${STRING_UNIT})$`);
+                CACHE_PATTERN$2.NAMED = new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+                CACHE_PATTERN$2.REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+                CACHE_PATTERN$2.STARTEND = /^([\w\-]+)-(start|end)$/;
             }
             const mainData = CssGrid.createDataAttribute(node.css('alignItems'), node.css('alignContent'), node.css('justifyItems'), node.css('justifyContent'));
             const gridAutoFlow = node.css('gridAutoFlow');
@@ -8482,18 +8506,20 @@
             function setDataRows(item, placement) {
                 if (placement.every(value => value > 0)) {
                     for (let i = placement[horizontal ? 0 : 1] - 1; i < placement[horizontal ? 2 : 3] - 1; i++) {
-                        if (rowData[i] === undefined) {
-                            rowData[i] = [];
+                        let data = rowData[i];
+                        if (data === undefined) {
+                            data = [];
+                            rowData[i] = data;
                         }
                         for (let j = placement[horizontal ? 1 : 0] - 1; j < placement[horizontal ? 3 : 2] - 1; j++) {
                             if (cellsPerRow[i] === undefined) {
                                 cellsPerRow[i] = 0;
                             }
-                            if (rowData[i][j] === undefined) {
-                                rowData[i][j] = [];
+                            if (data[j] === undefined) {
+                                data[j] = [];
                                 cellsPerRow[i]++;
                             }
-                            rowData[i][j].push(item);
+                            data[j].push(item);
                         }
                     }
                     return true;
@@ -8502,12 +8528,13 @@
             }
             [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
                 if (value && value !== 'none' && value !== 'auto') {
-                    CACHE_PATTERN$3.NAMED.lastIndex = 0;
+                    CACHE_PATTERN$2.NAMED.lastIndex = 0;
+                    const data = index === 0 ? mainData.row : mainData.column;
+                    const { name, repeat, unit, unitMin } = data;
                     let match;
                     let i = 1;
-                    while ((match = CACHE_PATTERN$3.NAMED.exec(value)) !== null) {
+                    while ((match = CACHE_PATTERN$2.NAMED.exec(value)) !== null) {
                         if (index < 2) {
-                            const data = mainData[index === 0 ? 'row' : 'column'];
                             if (match[1].startsWith('repeat')) {
                                 let iterations = 1;
                                 switch (match[2]) {
@@ -8522,32 +8549,32 @@
                                         break;
                                 }
                                 if (iterations > 0) {
-                                    if (CACHE_PATTERN$3.CELL_UNIT === undefined) {
-                                        CACHE_PATTERN$3.CELL_UNIT = new RegExp('[\\d.]+[a-z%]+|auto|max-content|min-content');
-                                        CACHE_PATTERN$3.CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
-                                        CACHE_PATTERN$3.CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
-                                        CACHE_PATTERN$3.CELL_NAMED = new RegExp('\\[([\\w\\-\\s]+)\\]');
+                                    if (CACHE_PATTERN$2.CELL_UNIT === undefined) {
+                                        CACHE_PATTERN$2.CELL_UNIT = new RegExp('[\\d.]+[a-z%]+|auto|max-content|min-content');
+                                        CACHE_PATTERN$2.CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
+                                        CACHE_PATTERN$2.CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
+                                        CACHE_PATTERN$2.CELL_NAMED = new RegExp('\\[([\\w\\-\\s]+)\\]');
                                     }
                                     else {
-                                        CACHE_PATTERN$3.REPEAT.lastIndex = 0;
+                                        CACHE_PATTERN$2.REPEAT.lastIndex = 0;
                                     }
                                     const repeating = [];
                                     let subMatch;
-                                    while ((subMatch = CACHE_PATTERN$3.REPEAT.exec(match[3])) !== null) {
+                                    while ((subMatch = CACHE_PATTERN$2.REPEAT.exec(match[3])) !== null) {
                                         let namedMatch;
-                                        if ((namedMatch = CACHE_PATTERN$3.CELL_NAMED.exec(subMatch[1])) !== null) {
-                                            if (data.name[namedMatch[1]] === undefined) {
-                                                data.name[namedMatch[1]] = [];
+                                        if ((namedMatch = CACHE_PATTERN$2.CELL_NAMED.exec(subMatch[1])) !== null) {
+                                            if (name[namedMatch[1]] === undefined) {
+                                                name[namedMatch[1]] = [];
                                             }
                                             repeating.push({ name: namedMatch[1] });
                                         }
-                                        else if ((namedMatch = CACHE_PATTERN$3.CELL_MINMAX.exec(subMatch[1])) !== null) {
+                                        else if ((namedMatch = CACHE_PATTERN$2.CELL_MINMAX.exec(subMatch[1])) !== null) {
                                             repeating.push({ unit: convertLength(node, namedMatch[2]), unitMin: convertLength(node, namedMatch[1]) });
                                         }
-                                        else if ((namedMatch = CACHE_PATTERN$3.CELL_FIT_CONTENT.exec(subMatch[1])) !== null) {
+                                        else if ((namedMatch = CACHE_PATTERN$2.CELL_FIT_CONTENT.exec(subMatch[1])) !== null) {
                                             repeating.push({ unit: convertLength(node, namedMatch[1]), unitMin: '0px' });
                                         }
-                                        else if ((namedMatch = CACHE_PATTERN$3.CELL_UNIT.exec(subMatch[1])) !== null) {
+                                        else if ((namedMatch = CACHE_PATTERN$2.CELL_UNIT.exec(subMatch[1])) !== null) {
                                             repeating.push({ unit: convertLength(node, namedMatch[0]) });
                                         }
                                     }
@@ -8555,12 +8582,12 @@
                                         for (let j = 0; j < iterations; j++) {
                                             for (const item of repeating) {
                                                 if (item.name) {
-                                                    data.name[item.name].push(i);
+                                                    name[item.name].push(i);
                                                 }
                                                 else if (item.unit) {
-                                                    data.unit.push(item.unit);
-                                                    data.unitMin.push(item.unitMin || '');
-                                                    data.repeat.push(true);
+                                                    unit.push(item.unit);
+                                                    unitMin.push(item.unitMin || '');
+                                                    repeat.push(true);
                                                     i++;
                                                 }
                                             }
@@ -8569,32 +8596,32 @@
                                 }
                             }
                             else if (match[1].charAt(0) === '[') {
-                                if (data.name[match[4]] === undefined) {
-                                    data.name[match[4]] = [];
+                                if (name[match[4]] === undefined) {
+                                    name[match[4]] = [];
                                 }
-                                data.name[match[4]].push(i);
+                                name[match[4]].push(i);
                             }
                             else if (match[1].startsWith('minmax')) {
-                                data.unit.push(convertLength(node, match[6]));
-                                data.unitMin.push(convertLength(node, match[5]));
-                                data.repeat.push(false);
+                                unit.push(convertLength(node, match[6]));
+                                unitMin.push(convertLength(node, match[5]));
+                                repeat.push(false);
                                 i++;
                             }
                             else if (match[1].startsWith('fit-content')) {
-                                data.unit.push(convertLength(node, match[7]));
-                                data.unitMin.push('0px');
-                                data.repeat.push(false);
+                                unit.push(convertLength(node, match[7]));
+                                unitMin.push('0px');
+                                repeat.push(false);
                                 i++;
                             }
-                            else if (CACHE_PATTERN$3.UNIT.test(match[1])) {
-                                data.unit.push(match[1] === 'auto' ? 'auto' : convertLength(node, match[1]));
-                                data.unitMin.push('');
-                                data.repeat.push(false);
+                            else if (CACHE_PATTERN$2.UNIT.test(match[1])) {
+                                unit.push(match[1] === 'auto' ? 'auto' : convertLength(node, match[1]));
+                                unitMin.push('');
+                                repeat.push(false);
                                 i++;
                             }
                         }
                         else {
-                            mainData[index === 2 ? 'row' : 'column'].auto.push(node.convertPX(match[1]));
+                            (index === 2 ? mainData.row : mainData.column).auto.push(node.convertPX(match[1]));
                         }
                     }
                 }
@@ -8715,9 +8742,10 @@
                         const templateAreas = mainData.templateAreas;
                         $util$b.trimString(template.trim(), '"').split($regex$5.CHAR.SPACE).forEach((area, j) => {
                             if (area.charAt(0) !== '.') {
-                                if (templateAreas[area]) {
-                                    templateAreas[area].rowSpan = (i - templateAreas[area].rowStart) + 1;
-                                    templateAreas[area].columnSpan = (j - templateAreas[area].columnStart) + 1;
+                                const templateArea = templateAreas[area];
+                                if (templateArea) {
+                                    templateArea.rowSpan = (i - templateArea.rowStart) + 1;
+                                    templateArea.columnSpan = (j - templateArea.columnStart) + 1;
                                 }
                                 else {
                                     templateAreas[area] = {
@@ -8762,7 +8790,7 @@
                                 }
                             }
                             else {
-                                const match = CACHE_PATTERN$3.STARTEND.exec(name);
+                                const match = CACHE_PATTERN$2.STARTEND.exec(name);
                                 if (match) {
                                     template = mainData.templateAreas[match[1]];
                                     if (template) {
@@ -8866,37 +8894,40 @@
                 });
             }
             {
-                const data = mainData[horizontal ? 'column' : 'row'];
-                data.length = Math.max(1, data.unit.length);
+                const data = horizontal ? mainData.column : mainData.row;
+                let unit = data.unit;
+                let length = Math.max(1, unit.length);
                 for (const item of layout) {
                     if (item) {
-                        data.length = Math.max(data.length, horizontal ? item.columnSpan : item.rowSpan, item.placement[horizontal ? 1 : 0] || 0, (item.placement[horizontal ? 3 : 2] || 0) - 1);
+                        length = Math.max(length, horizontal ? item.columnSpan : item.rowSpan, item.placement[horizontal ? 1 : 0] || 0, (item.placement[horizontal ? 3 : 2] || 0) - 1);
                     }
                 }
+                data.length = length;
                 if (data.autoFill || data.autoFit) {
-                    if (data.unit.length === 0) {
-                        data.unit.push('auto');
+                    if (unit.length === 0) {
+                        unit.push('auto');
                         data.unitMin.push('');
                         data.repeat.push(true);
                     }
-                    data.unit = repeatUnit(data, data.unit);
+                    unit = repeatUnit(data, unit);
+                    data.unit = unit;
                     data.unitMin = repeatUnit(data, data.unitMin);
                 }
                 let percent = 1;
                 let fr = 0;
-                for (const unit of data.unit) {
-                    if ($css$7.isPercent(unit)) {
-                        percent -= parseFloat(unit) / 100;
+                for (const px of unit) {
+                    if ($css$7.isPercent(px)) {
+                        percent -= parseFloat(px) / 100;
                     }
-                    else if (unit.endsWith('fr')) {
-                        fr += parseFloat(unit);
+                    else if (px.endsWith('fr')) {
+                        fr += parseFloat(px);
                     }
                 }
                 if (percent > 0 && fr > 0) {
-                    const length = data.unit.length;
-                    for (let i = 0; i < length; i++) {
-                        if (data.unit[i].endsWith('fr')) {
-                            data.unit[i] = percent * (parseFloat(data.unit[i]) / fr) + 'fr';
+                    const lengthA = unit.length;
+                    for (let i = 0; i < lengthA; i++) {
+                        if (unit[i].endsWith('fr')) {
+                            unit[i] = percent * (parseFloat(unit[i]) / fr) + 'fr';
                         }
                     }
                 }
@@ -8988,20 +9019,21 @@
                         const l = PLACEMENT[rowA] - 1;
                         const m = PLACEMENT[rowB] - 1;
                         for (let i = l; i < m; i++) {
-                            if (rowData[i] === undefined) {
+                            const data = rowData[i];
+                            if (data === undefined) {
                                 available.push([[0, -1]]);
                             }
-                            else if (getColumnTotal(rowData[i]) + COLUMN_SPAN <= COLUMN_COUNT) {
+                            else if (getColumnTotal(data) + COLUMN_SPAN <= COLUMN_COUNT) {
                                 const range = [];
                                 let span = 0;
                                 for (let j = 0, k = -1; j < COLUMN_COUNT; j++) {
-                                    if (rowData[i][j] === undefined) {
+                                    if (data[j] === undefined) {
                                         if (k === -1) {
                                             k = j;
                                         }
                                         span++;
                                     }
-                                    if (rowData[i][j] || j === COLUMN_COUNT - 1) {
+                                    if (data[j] || j === COLUMN_COUNT - 1) {
                                         if (span >= COLUMN_SPAN) {
                                             range.push([k, k + span]);
                                         }
@@ -9051,12 +9083,13 @@
                             }
                         }
                     }
-                    if (PLACEMENT[rowA] && PLACEMENT[colA]) {
-                        placement[rowA] = PLACEMENT[rowA];
+                    const ROW_A = PLACEMENT[rowA];
+                    if (ROW_A && PLACEMENT[colA]) {
+                        placement[rowA] = ROW_A;
                         placement[colA] = PLACEMENT[colA];
                     }
-                    else if (PLACEMENT[rowA]) {
-                        rowInvalid[PLACEMENT[rowA] - 1] = true;
+                    else if (ROW_A) {
+                        rowInvalid[ROW_A - 1] = true;
                     }
                 }
                 if (!placement[rowB]) {
@@ -9084,54 +9117,61 @@
                     }
                 }
             });
-            if (rowData.length) {
+            const lengthC = rowData.length;
+            if (lengthC) {
                 if (horizontal) {
                     mainData.rowData = rowData;
                 }
                 else {
-                    const lengthB = rowData.length;
-                    for (let i = 0; i < lengthB; i++) {
-                        const lengthC = rowData[i].length;
-                        for (let j = 0; j < lengthC; j++) {
+                    for (let i = 0; i < lengthC; i++) {
+                        const data = rowData[i];
+                        const lengthD = data.length;
+                        for (let j = 0; j < lengthD; j++) {
                             if (mainData.rowData[j] === undefined) {
                                 mainData.rowData[j] = [];
                             }
-                            mainData.rowData[j][i] = rowData[i][j];
+                            mainData.rowData[j][i] = data[j];
                         }
                     }
                 }
-                const unitTotal = mainData[horizontal ? 'row' : 'column'].unitTotal;
+                const unitTotal = (horizontal ? mainData.row : mainData.column).unitTotal;
                 const children = mainData.children;
                 let columnCount = 0;
-                for (const row of mainData.rowData) {
-                    const lengthC = row.length;
-                    columnCount = Math.max(lengthC, columnCount);
-                    for (let i = 0; i < lengthC; i++) {
-                        const column = row[i];
+                for (const data of mainData.rowData) {
+                    const lengthD = data.length;
+                    columnCount = Math.max(lengthD, columnCount);
+                    for (let i = 0; i < lengthD; i++) {
+                        const column = data[i];
                         if (unitTotal[i] === undefined) {
                             unitTotal[i] = 0;
                         }
                         if (column) {
                             let maxDimension = 0;
                             for (const item of column) {
-                                if (!children.has(item)) {
+                                if (!children.includes(item)) {
                                     maxDimension = Math.max(maxDimension, horizontal ? item.bounds.height : item.bounds.width);
+                                    children.push(item);
                                 }
-                                children.add(item);
                             }
                             unitTotal[i] += maxDimension;
                         }
                     }
                 }
-                if (children.size === node.length) {
-                    const rowCount = mainData.rowData.length;
+                if (children.length === node.length) {
+                    const data = mainData.rowData;
+                    const rowCount = data.length;
+                    const modified = new Set();
+                    const rowHeight = new Array(rowCount);
+                    const rowWeight = new Array(rowCount);
+                    const columnGap = mainData.column.gap;
+                    const rowGap = mainData.row.gap;
                     mainData.row.length = rowCount;
                     mainData.column.length = columnCount;
-                    const modified = new Set();
-                    const rowHeight = mainData.rowHeight;
+                    mainData.rowHeight = rowHeight;
+                    mainData.rowWeight = rowWeight;
                     for (let i = 0; i < rowCount; i++) {
-                        rowHeight.push(0);
-                        const row = mainData.rowData[i];
+                        rowHeight[i] = 0;
+                        const row = data[i];
                         for (let j = 0; j < columnCount; j++) {
                             const column = row[j];
                             if (column) {
@@ -9141,10 +9181,10 @@
                                         const x = j + cellData.columnSpan - 1;
                                         const y = i + cellData.rowSpan - 1;
                                         if (x < columnCount - 1) {
-                                            item.modifyBox(4 /* MARGIN_RIGHT */, mainData.column.gap);
+                                            item.modifyBox(4 /* MARGIN_RIGHT */, columnGap);
                                         }
                                         if (y < rowCount - 1) {
-                                            item.modifyBox(8 /* MARGIN_BOTTOM */, mainData.row.gap);
+                                            item.modifyBox(8 /* MARGIN_BOTTOM */, rowGap);
                                         }
                                         if (cellData.rowSpan === 1) {
                                             rowHeight[i] = Math.max(rowHeight[i], item.bounds.height);
@@ -9155,12 +9195,11 @@
                             }
                         }
                     }
-                    const rowWeight = mainData.rowWeight;
-                    const lengthC = rowHeight.length;
-                    for (let i = 0; i < lengthC; i++) {
-                        rowWeight[i] = rowHeight[i] / node.actualHeight;
+                    const actualHeight = node.actualHeight;
+                    for (let i = 0; i < rowCount; i++) {
+                        rowWeight[i] = rowHeight[i] / actualHeight;
                     }
-                    node.retain(Array.from(children));
+                    node.retain(children);
                     node.cssSort('zIndex');
                     if (node.cssTry('display', 'block')) {
                         node.each((item) => {
@@ -9317,8 +9356,7 @@
             }
             else {
                 if (children.some(item => item.flexbox.order !== 0)) {
-                    const c = mainData.directionReverse ? -1 : 1;
-                    const d = mainData.directionReverse ? 1 : -1;
+                    const [c, d] = mainData.directionReverse ? [-1, 1] : [1, -1];
                     children.sort((a, b) => {
                         if (a.flexbox.order === b.flexbox.order) {
                             return 0;
@@ -9505,7 +9543,8 @@
                         }
                     }
                     for (let i = 0; i < columns.length; i++) {
-                        if (columns[i] && columns[i].length) {
+                        const column = columns[i];
+                        if (column && column.length) {
                             columnEnd.push(columnRight[i]);
                         }
                         else {
@@ -9530,9 +9569,10 @@
                 const assigned = new Set();
                 for (let i = 0, count = 0; i < columnCount; i++) {
                     let spacer = 0;
-                    for (let j = 0, start = 0; j < columns[i].length; j++) {
-                        const item = columns[i][j];
-                        const rowCount = columns[i].length;
+                    const column = columns[i];
+                    for (let j = 0, start = 0; j < column.length; j++) {
+                        const item = column[j];
+                        const rowCount = column.length;
                         if (children[j] === undefined) {
                             children[j] = [];
                         }
@@ -9551,9 +9591,9 @@
                             }
                             if (columnSpan === 1) {
                                 for (let k = j + 1; k < rowCount; k++) {
-                                    if (columns[i][k].spacer === 1) {
+                                    if (column[k].spacer === 1) {
                                         rowSpan++;
-                                        columns[i][k].spacer = 2;
+                                        column[k].spacer = 2;
                                     }
                                     else {
                                         break;
@@ -9787,10 +9827,7 @@
             if (renderParent) {
                 const verticalAlign = $util$e.convertFloat(node.verticalAlign);
                 let target = node;
-                let top = node.top;
-                let right = node.right;
-                let bottom = node.bottom;
-                let left = node.left;
+                let { top, right, bottom, left } = node;
                 if (renderParent.support.container.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                     const application = this.application;
                     target = node.clone(this.application.nextId, true, true);
@@ -9928,7 +9965,7 @@
                     const dimension = node.actualDimension;
                     const backgroundPositionX = node.css('backgroundPositionX');
                     const backgroundPositionY = node.css('backgroundPositionY');
-                    const position = $css$a.getBackgroundPosition(`${backgroundPositionX} ${backgroundPositionY}`, dimension, undefined, node.fontSize);
+                    const position = $css$a.getBackgroundPosition(backgroundPositionX + ' ' + backgroundPositionY, dimension, undefined, node.fontSize);
                     const x = (position.left < 0 || pattern.test(backgroundPositionX)) && image.width > dimension.width;
                     const y = (position.top < 0 || pattern.test(backgroundPositionY)) && image.height > dimension.height;
                     if ((x || y) && (x || position.left === 0) && (y || position.top === 0)) {
@@ -9961,13 +9998,14 @@
             const tbody = [];
             const tfoot = [];
             function setAutoWidth(td, data) {
-                data.percent = `${Math.round((td.bounds.width / node.box.width) * 100)}%`;
+                data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
                 data.expand = true;
             }
             function inheritStyles(section) {
                 if (section.length) {
                     for (const item of section[0].cascade()) {
-                        if (item.tagName === 'TH' || item.tagName === 'TD') {
+                        const tagName = item.tagName;
+                        if (tagName === 'TH' || tagName === 'TD') {
                             item.inherit(section[0], 'styleMap');
                             item.unsetCache('visibleStyle');
                         }
@@ -10065,11 +10103,14 @@
                     switch (td.tagName) {
                         case 'TH': {
                             function setBorderStyle(attr) {
+                                const cssStyle = attr + 'Style';
+                                const cssColor = attr + 'Color';
+                                const cssWidth = attr + 'Width';
                                 td.ascend(undefined, node).some(item => {
-                                    if (item.has(`${attr}Style`)) {
-                                        td.css(`${attr}Style`, item.css(`${attr}Style`));
-                                        td.css(`${attr}Color`, item.css(`${attr}Color`));
-                                        td.css(`${attr}Width`, item.css(`${attr}Width`), true);
+                                    if (item.has(cssStyle)) {
+                                        td.css(cssStyle, item.css(cssStyle));
+                                        td.css(cssColor, item.css(cssColor));
+                                        td.css(cssWidth, item.css(cssWidth, true));
                                         td.css('border', 'inherit');
                                         return true;
                                     }
@@ -10172,7 +10213,7 @@
                 const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
                 if (node.hasWidth) {
                     if (width < node.width) {
-                        $util$f.replaceMap(mapWidth, value => value !== '0px' ? `${(parseFloat(value) / width) * 100}%` : value);
+                        $util$f.replaceMap(mapWidth, value => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
                     }
                     else if (width > node.width) {
                         node.css('width', 'auto', true);
@@ -10250,8 +10291,8 @@
             columnIndex = new Array(rowCount).fill(0);
             for (let i = 0; i < rowCount; i++) {
                 const tr = table[i];
-                const children = tr.duplicate();
-                for (const td of children) {
+                let lastChild;
+                for (const td of tr.duplicate()) {
                     const element = td.element;
                     const { rowSpan, colSpan } = element;
                     const data = { rowSpan, colSpan };
@@ -10345,10 +10386,10 @@
                     }
                     td.data(EXT_NAME.TABLE, 'cellData', data);
                     td.parent = node;
+                    lastChild = td;
                 }
-                if (columnIndex[i] < columnCount) {
-                    const td = children.pop();
-                    const data = td.data(EXT_NAME.TABLE, 'cellData');
+                if (lastChild && columnIndex[i] < columnCount) {
+                    const data = lastChild.data(EXT_NAME.TABLE, 'cellData');
                     if (data) {
                         data.spaceSpan = columnCount - columnIndex[i];
                     }
@@ -10502,12 +10543,13 @@
                     let minTop = Number.POSITIVE_INFINITY;
                     let baseline;
                     for (const item of children) {
-                        if (item.inlineVertical && item.linear.top <= minTop) {
-                            if (item.linear.top < minTop) {
+                        const top = item.linear.top;
+                        if (item.inlineVertical && top <= minTop) {
+                            if (top < minTop) {
                                 aboveBaseline.length = 0;
                             }
                             aboveBaseline.push(item);
-                            minTop = item.linear.top;
+                            minTop = top;
                         }
                         if (item.baselineActive) {
                             baseline = item;
@@ -10737,8 +10779,9 @@
                         }
                         if (i > 0 && isBlockElement(current, false)) {
                             const previousSiblings = current.previousSiblings({ floating: false });
-                            if (previousSiblings.length) {
-                                const previous = previousSiblings[previousSiblings.length - 1];
+                            const lengthA = previousSiblings.length;
+                            if (lengthA) {
+                                const previous = previousSiblings[lengthA - 1];
                                 let inheritedTop = false;
                                 if (isBlockElement(previous, true)) {
                                     let marginBottom = previous.marginBottom;

@@ -1,4 +1,4 @@
-/* android.widget 1.2.8
+/* android.widget 1.2.9
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -26,7 +26,7 @@ this.android.widget.drawer = (function () {
                     for (let i = 0; i < length; i++) {
                         const item = children[i];
                         if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $constA.EXT_ANDROID.EXTERNAL)) {
-                            item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $constA.EXT_ANDROID.EXTERNAL;
+                            item.dataset.use = (item.dataset.use ? item.dataset.use + ', ' : '') + $constA.EXT_ANDROID.EXTERNAL;
                         }
                     }
                     this.application.rootElements.add(element);
@@ -73,14 +73,14 @@ this.android.widget.drawer = (function () {
                 const menu = $util.optionalAsString(Drawer.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
                 const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $constA.EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
                 if (menu !== '') {
-                    $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
+                    $util.assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
                 }
                 if (headerLayout !== '') {
-                    $util.assignEmptyValue(options, 'app', 'headerLayout', `@layout/${headerLayout}`);
+                    $util.assignEmptyValue(options, 'app', 'headerLayout', '@layout/' + headerLayout);
                 }
                 if (menu !== '' || headerLayout !== '') {
                     const controller = this.controller;
-                    $util.assignEmptyValue(options, 'android', 'id', `${node.documentId}_navigation`);
+                    $util.assignEmptyValue(options, 'android', 'id', node.documentId + '_navigation');
                     $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                     $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
                     controller.addAfterInsideTemplate(node.id, controller.renderNodeStatic($constA.SUPPORT_ANDROID.NAVIGATION_VIEW, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'match_parent'));

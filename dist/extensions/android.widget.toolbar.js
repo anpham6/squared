@@ -1,4 +1,4 @@
-/* android.widget 1.2.8
+/* android.widget 1.2.9
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -23,7 +23,7 @@ this.android.widget.toolbar = (function () {
                 for (let i = 0; i < length; i++) {
                     const item = children[i];
                     if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $constA.EXT_ANDROID.EXTERNAL)) {
-                        item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $constA.EXT_ANDROID.EXTERNAL;
+                        item.dataset.use = (item.dataset.use ? item.dataset.use + ', ' : '') + $constA.EXT_ANDROID.EXTERNAL;
                         break;
                     }
                 }
@@ -61,13 +61,13 @@ this.android.widget.toolbar = (function () {
                     if (dataset.navigationIcon) {
                         const src = resource.addImageSrc(item, PREFIX_MENU);
                         if (src !== '') {
-                            $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', `@drawable/${src}`);
+                            $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', '@drawable/' + src);
                         }
                     }
                     if (dataset.collapseIcon) {
                         const src = resource.addImageSrc(item, PREFIX_MENU);
                         if (src !== '') {
-                            $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', `@drawable/${src}`);
+                            $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', '@drawable/' + src);
                         }
                     }
                 }
@@ -104,7 +104,7 @@ this.android.widget.toolbar = (function () {
                     if (app.popupTheme) {
                         popupOverlay = app.popupTheme.replace('@style/', '');
                     }
-                    app.popupTheme = `@style/${settings.manifestThemeName}.PopupOverlay`;
+                    app.popupTheme = '@style/' + settings.manifestThemeName + '.PopupOverlay';
                 }
             }
             else {
@@ -117,14 +117,14 @@ this.android.widget.toolbar = (function () {
             let appBarNode;
             let collapsingToolbarNode;
             if (hasAppBar) {
-                $util.assignEmptyValue(appBarOptions, 'android', 'id', `${node.documentId}_appbar`);
+                $util.assignEmptyValue(appBarOptions, 'android', 'id', node.documentId + '_appbar');
                 $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $css.formatPX(node.actualHeight) : 'wrap_content');
                 $util.assignEmptyValue(appBarOptions, 'android', 'fitsSystemWindows', 'true');
                 if (hasMenu) {
                     if (appBarOptions.android.theme) {
                         appBarOverlay = appBarOptions.android.theme;
                     }
-                    appBarOptions.android.theme = `@style/${settings.manifestThemeName}.AppBarOverlay`;
+                    appBarOptions.android.theme = '@style/' + settings.manifestThemeName + '.AppBarOverlay';
                     node.data("android.widget.toolbar" /* TOOLBAR */, 'themeData', { appBarOverlay, popupOverlay });
                 }
                 else {
@@ -137,7 +137,7 @@ this.android.widget.toolbar = (function () {
                 }
                 appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
                 if (hasCollapsingToolbar) {
-                    $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', `${node.documentId}_collapsingtoolbar`);
+                    $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId + '_collapsingtoolbar');
                     $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
                     if (!backgroundImage) {
                         $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'contentScrim', '?attr/colorPrimary');
@@ -196,8 +196,8 @@ this.android.widget.toolbar = (function () {
                                     scaleType = 'matrix';
                                     break;
                             }
-                            $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', `${node.documentId}_image`);
-                            $util.assignEmptyValue(backgroundImageOptions, 'android', 'src', `@drawable/${src}`);
+                            $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId + '_image');
+                            $util.assignEmptyValue(backgroundImageOptions, 'android', 'src', '@drawable/' + src);
                             $util.assignEmptyValue(backgroundImageOptions, 'android', 'scaleType', scaleType);
                             $util.assignEmptyValue(backgroundImageOptions, 'android', 'fitsSystemWindows', 'true');
                             $util.assignEmptyValue(backgroundImageOptions, 'app', 'layout_collapseMode', 'parallax');
@@ -248,7 +248,7 @@ this.android.widget.toolbar = (function () {
             const menu = $util.optionalAsString(Toolbar.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
             if (menu !== '') {
                 const toolbarOptions = $utilA.createViewAttribute(this.options[node.elementId] && this.options[node.elementId].self);
-                $util.assignEmptyValue(toolbarOptions, 'app', 'menu', `@menu/${menu}`);
+                $util.assignEmptyValue(toolbarOptions, 'app', 'menu', '@menu/' + menu);
                 node.app('menu', toolbarOptions.app.menu);
             }
             const themeData = node.data("android.widget.toolbar" /* TOOLBAR */, 'themeData');

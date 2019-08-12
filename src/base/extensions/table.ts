@@ -335,103 +335,101 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
             let lastChild: T | undefined;
-            for (const td of tr.children as T[]) {
-                if (td.tagName === 'TD') {
-                    const element = <HTMLTableCellElement> td.element;
-                    const { rowSpan, colSpan } = element;
-                    const data: ExternalData = { rowSpan, colSpan };
-                    for (let k = 0; k < rowSpan - 1; k++)  {
-                        const l = (i + 1) + k;
-                        if (columnIndex[l] !== undefined) {
-                            columnIndex[l] += colSpan;
-                        }
+            for (const td of tr.duplicate() as T[]) {
+                const element = <HTMLTableCellElement> td.element;
+                const { rowSpan, colSpan } = element;
+                const data: ExternalData = { rowSpan, colSpan };
+                for (let k = 0; k < rowSpan - 1; k++)  {
+                    const l = (i + 1) + k;
+                    if (columnIndex[l] !== undefined) {
+                        columnIndex[l] += colSpan;
                     }
-                    if (!td.has('verticalAlign')) {
-                        td.css('verticalAlign', 'middle');
-                    }
-                    const columnWidth = mapWidth[columnIndex[i]];
-                    if (columnWidth) {
-                        switch (mainData.layoutType) {
-                            case LAYOUT_TABLE.NONE:
-                                break;
-                            case LAYOUT_TABLE.VARIABLE:
-                                if (columnWidth === 'auto') {
-                                    if (mapPercent >= 1) {
-                                        setBoundsWidth(td);
-                                        data.exceed = !hasWidth;
-                                        data.downsized = true;
-                                    }
-                                    else {
-                                        setAutoWidth(td, data);
-                                    }
-                                }
-                                else if ($css.isPercent(columnWidth)) {
-                                    if (percentAll) {
-                                        data.percent = columnWidth;
-                                        data.expand = true;
-                                    }
-                                    else {
-                                        setBoundsWidth(td);
-                                    }
-                                }
-                                else if ($css.isLength(columnWidth) && parseInt(columnWidth) > 0) {
-                                    if (td.bounds.width >= parseInt(columnWidth)) {
-                                        setBoundsWidth(td);
-                                        data.expand = false;
-                                        data.downsized = false;
-                                    }
-                                    else {
-                                        if (mainData.layoutFixed) {
-                                            setAutoWidth(td, data);
-                                            data.downsized = true;
-                                        }
-                                        else {
-                                            setBoundsWidth(td);
-                                            data.expand = false;
-                                        }
-                                    }
+                }
+                if (!td.has('verticalAlign')) {
+                    td.css('verticalAlign', 'middle');
+                }
+                const columnWidth = mapWidth[columnIndex[i]];
+                if (columnWidth) {
+                    switch (mainData.layoutType) {
+                        case LAYOUT_TABLE.NONE:
+                            break;
+                        case LAYOUT_TABLE.VARIABLE:
+                            if (columnWidth === 'auto') {
+                                if (mapPercent >= 1) {
+                                    setBoundsWidth(td);
+                                    data.exceed = !hasWidth;
+                                    data.downsized = true;
                                 }
                                 else {
-                                    if (!td.hasPX('width') || td.percentWidth) {
-                                        setBoundsWidth(td);
-                                    }
-                                    data.expand = false;
+                                    setAutoWidth(td, data);
                                 }
-                                break;
-                            case LAYOUT_TABLE.FIXED:
-                                td.css('width', '0px');
-                                break;
-                            case LAYOUT_TABLE.STRETCH:
-                                if (columnWidth === 'auto') {
-                                    td.css('width', '0px');
+                            }
+                            else if ($css.isPercent(columnWidth)) {
+                                if (percentAll) {
+                                    data.percent = columnWidth;
+                                    data.expand = true;
+                                }
+                                else {
+                                    setBoundsWidth(td);
+                                }
+                            }
+                            else if ($css.isLength(columnWidth) && parseInt(columnWidth) > 0) {
+                                if (td.bounds.width >= parseInt(columnWidth)) {
+                                    setBoundsWidth(td);
+                                    data.expand = false;
+                                    data.downsized = false;
                                 }
                                 else {
                                     if (mainData.layoutFixed) {
+                                        setAutoWidth(td, data);
                                         data.downsized = true;
                                     }
                                     else {
                                         setBoundsWidth(td);
+                                        data.expand = false;
                                     }
-                                    data.expand = false;
                                 }
-                                break;
-                            case LAYOUT_TABLE.COMPRESS:
-                                if (!$css.isLength(columnWidth)) {
-                                    td.hide();
+                            }
+                            else {
+                                if (!td.hasPX('width') || td.percentWidth) {
+                                    setBoundsWidth(td);
                                 }
-                                break;
-                        }
+                                data.expand = false;
+                            }
+                            break;
+                        case LAYOUT_TABLE.FIXED:
+                            td.css('width', '0px');
+                            break;
+                        case LAYOUT_TABLE.STRETCH:
+                            if (columnWidth === 'auto') {
+                                td.css('width', '0px');
+                            }
+                            else {
+                                if (mainData.layoutFixed) {
+                                    data.downsized = true;
+                                }
+                                else {
+                                    setBoundsWidth(td);
+                                }
+                                data.expand = false;
+                            }
+                            break;
+                        case LAYOUT_TABLE.COMPRESS:
+                            if (!$css.isLength(columnWidth)) {
+                                td.hide();
+                            }
+                            break;
                     }
-                    columnIndex[i] += colSpan;
-                    for (let k = 0; k < rowSpan; k++) {
-                        for (let l = 0; l < colSpan; l++) {
-                            tableFilled[i + k].push(td);
-                        }
-                    }
-                    td.data(EXT_NAME.TABLE, 'cellData', data);
-                    td.parent = node;
-                    lastChild = td;
                 }
+                columnIndex[i] += colSpan;
+                for (let k = 0; k < rowSpan; k++) {
+                    for (let l = 0; l < colSpan; l++) {
+                        tableFilled[i + k].push(td);
+                    }
+                }
+                td.data(EXT_NAME.TABLE, 'cellData', data);
+                td.parent = node;
+                lastChild = td;
             }
             if (lastChild && columnIndex[i] < columnCount) {
                 const data: ExternalData = lastChild.data(EXT_NAME.TABLE, 'cellData');

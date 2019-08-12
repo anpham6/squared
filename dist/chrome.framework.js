@@ -1,4 +1,4 @@
-/* chrome-framework 1.2.8
+/* chrome-framework 1.2.9
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -39,9 +39,7 @@ var chrome = (function () {
             return node;
         }
         afterCreateCache() {
-            if (this.processing.node) {
-                this.controllerHandler.cacheElementList(this.processing.cache);
-            }
+            this.controllerHandler.cacheElementList(this.processing.cache);
         }
         get length() {
             return ASSETS.images.size + ASSETS.rawData.size + ASSETS.fonts.size;
@@ -93,8 +91,9 @@ var chrome = (function () {
             this._elementMap.set(node.element, node);
         }
         cacheElementList(list) {
+            const elementMap = this._elementMap;
             for (const node of list) {
-                this._elementMap.set(node.element, node);
+                elementMap.set(node.element, node);
             }
         }
         get elementMap() {
@@ -243,7 +242,7 @@ var chrome = (function () {
                         data = { pathname: 'generated/base64', filename, base64 };
                     }
                     else if (content && mimeType) {
-                        data = { pathname: `generated/${mimeType}`, filename, content };
+                        data = { pathname: 'generated/' + mimeType, filename, content };
                     }
                     if (this.validFile(data)) {
                         data.mimeType = mimeType;
@@ -539,27 +538,27 @@ var chrome = (function () {
             },
             saveHtmlPage(filename, name) {
                 if (file) {
-                    file.archiving(filename || `${userSettings.outputArchiveName}-html`, file.getHtmlPage(name));
+                    file.archiving((filename || userSettings.outputArchiveName) + '-html', file.getHtmlPage(name));
                 }
             },
             saveScriptAssets(filename) {
                 if (file) {
-                    file.archiving(filename || `${userSettings.outputArchiveName}-script`, file.getScriptAssets());
+                    file.archiving((filename || userSettings.outputArchiveName) + '-script', file.getScriptAssets());
                 }
             },
             saveLinkAssets(filename, rel) {
                 if (file) {
-                    file.archiving(filename || `${userSettings.outputArchiveName}-link`, file.getLinkAssets(rel));
+                    file.archiving((filename || userSettings.outputArchiveName) + '-link', file.getLinkAssets(rel));
                 }
             },
             saveImageAssets(filename) {
                 if (file) {
-                    file.archiving(filename || `${userSettings.outputArchiveName}-image`, file.getImageAssets());
+                    file.archiving((filename || userSettings.outputArchiveName) + '-image', file.getImageAssets());
                 }
             },
             saveFontAssets(filename) {
                 if (file) {
-                    file.archiving(filename || `${userSettings.outputArchiveName}-font`, file.getFontAssets());
+                    file.archiving((filename || userSettings.outputArchiveName) + '-font', file.getFontAssets());
                 }
             }
         },

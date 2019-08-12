@@ -1,4 +1,4 @@
-/* squared.svg 1.2.8
+/* squared.svg 1.2.9
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -558,7 +558,7 @@
                 }
                 else {
                     NAME_GRAPHICS.set(tagName, ++index);
-                    return `${tagName}_${index}`;
+                    return tagName + '_' + index;
                 }
             }
             else {
@@ -609,7 +609,7 @@
             return `M${cx},${cy} a${rx},${ry},0,0,1,${radius},0 a${rx},${ry},0,0,1,-${radius},0`;
         }
         static drawPolygon(values, precision) {
-            return values.length ? `${SvgBuild.drawPolyline(values, precision)} Z` : '';
+            return values.length ? SvgBuild.drawPolyline(values, precision) + 'Z' : '';
         }
         static drawPolyline(values, precision) {
             let result = 'M';
@@ -1553,7 +1553,7 @@
                     }
                 }
                 if (!$util$2.isString(this.baseValue) && this.animationElement) {
-                    this.baseValue = $util$2.optionalAsString(this.animationElement.parentElement, `${value}.baseVal.valueAsString`);
+                    this.baseValue = $util$2.optionalAsString(this.animationElement.parentElement, value + '.baseVal.valueAsString');
                     if ($css$2.isLength(this.baseValue)) {
                         this.baseValue = $css$2.parseUnit(this.baseValue, $css$2.getFontSize(this.animationElement.parentElement)).toString();
                     }
@@ -1783,7 +1783,7 @@
                                 const next = nextValue[0];
                                 const rgb = $color.getHexCode(SvgAnimate.getSplitValue(current.rgba.r, next.rgba.r, percent), SvgAnimate.getSplitValue(current.rgba.g, next.rgba.g, percent), SvgAnimate.getSplitValue(current.rgba.b, next.rgba.b, percent));
                                 const a = $color.getHexCode(SvgAnimate.getSplitValue(current.rgba.a, next.rgba.a, percent));
-                                result.push(`#${rgb + (a !== 'FF' ? a : '')}`);
+                                result.push('#' + (rgb + (a !== 'FF' ? a : '')));
                                 break;
                             }
                             case 'points': {
@@ -1791,7 +1791,7 @@
                                 for (let j = 0; j < length; j++) {
                                     const current = currentValue[j];
                                     const next = nextValue[j];
-                                    result.push(`${SvgAnimate.getSplitValue(current.x, next.x, percent)},${SvgAnimate.getSplitValue(current.y, next.y, percent)}`);
+                                    result.push(SvgAnimate.getSplitValue(current.x, next.x, percent) + ',' + SvgAnimate.getSplitValue(current.y, next.y, percent));
                                 }
                                 break;
                             }
@@ -2052,7 +2052,7 @@
                     for (let i = this._keySplines.length - 1; i >= 0; i--) {
                         const points = $util$3.replaceMap(this._keySplines[i].split(' '), pt => parseFloat(pt));
                         if (points.length === 4) {
-                            keySplines.push(`${invertControlPoint(points[2])} ${invertControlPoint(points[3])} ${invertControlPoint(points[0])} ${invertControlPoint(points[1])}`);
+                            keySplines.push(invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1]));
                         }
                         else {
                             keySplines.push(KEYSPLINE_NAME.linear);
@@ -2347,7 +2347,7 @@
             return item.iterationCount === 'infinite' ? Number.POSITIVE_INFINITY : item.delay + item.duration * parseInt(item.iterationCount);
         }
         static getKeyName(item) {
-            return item.attributeName + (SvgBuild.isAnimateTransform(item) ? `:${TRANSFORM.typeAsName(item.type)}` : '');
+            return item.attributeName + (SvgBuild.isAnimateTransform(item) ? ':' + TRANSFORM.typeAsName(item.type) : '');
         }
         constructor(animations, ...attrs) {
             animations = (attrs.length ? $util$5.filterArray(animations, item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => {
@@ -3121,7 +3121,7 @@
     }
     const getItemTime = (delay, duration, keyTimes, iteration, index) => Math.round(delay + (keyTimes[index] + iteration) * duration);
     const getEllipsePoints = (values) => [{ x: values[0], y: values[1], rx: values[2], ry: values[values.length - 1] }];
-    const convertToString = (value) => Array.isArray(value) ? $util$6.objectMap(value, pt => `${pt.x},${pt.y}`).join(' ') : value.toString();
+    const convertToString = (value) => Array.isArray(value) ? $util$6.objectMap(value, pt => pt.x + ',' + pt.y).join(' ') : value.toString();
     const isKeyTimeFormat = (transforming, keyTimeMode) => $util$6.hasBit(keyTimeMode, transforming ? 32 /* KEYTIME_TRANSFORM */ : 4 /* KEYTIME_ANIMATE */);
     const isFromToFormat = (transforming, keyTimeMode) => $util$6.hasBit(keyTimeMode, transforming ? 16 /* FROMTO_TRANSFORM */ : 2 /* FROMTO_ANIMATE */);
     const playableAnimation = (item) => item.playable || item.animationElement && item.duration !== -1;
@@ -4429,7 +4429,7 @@
                                                     const x = data.get('x') || 0;
                                                     const y = data.get('y') || 0;
                                                     animate.keyTimes.push(keyTime);
-                                                    animate.values.push(this.parent ? `${this.parent.refitX(x)} ${this.parent.refitX(y)}` : `${x} ${y}`);
+                                                    animate.values.push(this.parent ? this.parent.refitX(x) + ' ' + this.parent.refitX(y) : x + ' ' + y);
                                                 }
                                                 object = animate;
                                             }
@@ -4493,7 +4493,7 @@
                                                     animate.values = $util$6.objectMap([dataFrom, dataTo], data => {
                                                         const x = data.get('x') || 0;
                                                         const y = data.get('y') || 0;
-                                                        return this.parent ? `${this.parent.refitX(x)} ${this.parent.refitX(y)}` : `${x} ${y}`;
+                                                        return this.parent ? this.parent.refitX(x) + ' ' + this.parent.refitX(y) : x + ' ' + y;
                                                     });
                                                     value += i;
                                                     object = animate;
@@ -4555,7 +4555,7 @@
                         break;
                     default:
                         if ($util$7.isNumber(rotate)) {
-                            this.rotate = `${$util$7.convertFloat(rotate)}deg`;
+                            this.rotate = $util$7.convertFloat(rotate) + 'deg';
                         }
                         break;
                 }
@@ -4897,7 +4897,7 @@
         get values() {
             this.setOffsetPath();
             if (this._offsetPath) {
-                return $util$7.objectMap(this._offsetPath, item => `${item.value.x} ${item.value.y}`);
+                return $util$7.objectMap(this._offsetPath, item => item.value.x + ' ' + item.value.y);
             }
             return super.values;
         }
@@ -4999,7 +4999,7 @@
     }
 
     const { css: $css$5, dom: $dom$7, regex: $regex$4, util: $util$8 } = squared.lib;
-    const STRING_CUBICBEZIER = `cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)`;
+    const STRING_CUBICBEZIER = 'cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)';
     const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
     const KEYFRAME_MAP = $css$5.getKeyframeRules();
     const ANIMATION_DEFAULT = {
@@ -5045,7 +5045,7 @@
         else if (value.startsWith('reverse ')) {
             const angle = value.split(' ')[1];
             if ($css$5.isAngle(angle)) {
-                return `auto ${180 + $css$5.parseAngle(angle)}deg`;
+                return 'auto ' + (180 + $css$5.parseAngle(angle)) + 'deg';
             }
             return 'auto 0deg';
         }
@@ -5146,7 +5146,7 @@
                             const delay = SvgAnimation.convertClockTime(cssData['animation-delay'][i]);
                             const iterationCount = cssData['animation-iteration-count'][i];
                             const fillMode = cssData['animation-fill-mode'][i];
-                            const keyframeIndex = `${animationName[i]}_${i}`;
+                            const keyframeIndex = animationName[i] + '_' + i;
                             const attributes = [];
                             let includeKeySplines = true;
                             groupOrdering.push({
@@ -5200,11 +5200,11 @@
                                             switch (item.type) {
                                                 case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                                                     name = 'translate';
-                                                    value = `${m.e} ${m.f}`;
+                                                    value = m.e + ' ' + m.f;
                                                     break;
                                                 case SVGTransform.SVG_TRANSFORM_SCALE:
                                                     name = 'scale';
-                                                    value = `${m.a} ${m.d} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
+                                                    value = m.a + ' ' + m.d + ' ' + (origin ? origin.x + ' ' + origin.y : '0 0');
                                                     if (origin && (transform.key !== 0 || origin.x !== 0 || origin.y !== 0)) {
                                                         transformOrigin = {
                                                             x: origin.x * (1 - m.a),
@@ -5214,7 +5214,7 @@
                                                     break;
                                                 case SVGTransform.SVG_TRANSFORM_ROTATE:
                                                     name = 'rotate';
-                                                    value = `${item.angle} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
+                                                    value = item.angle + ' ' + (origin ? origin.x + ' ' + origin.y : '0 0');
                                                     break;
                                                 case SVGTransform.SVG_TRANSFORM_SKEWX:
                                                     name = 'skewX';
@@ -5307,7 +5307,7 @@
                                             if (item.value.startsWith('auto')) {
                                                 angle += 90;
                                             }
-                                            item.value = `${angle} 0 0`;
+                                            item.value = angle + '0 0';
                                         }
                                         attrMap['rotate'] = offsetRotate;
                                         delete attrMap['offset-rotate'];
@@ -5421,7 +5421,7 @@
                                                 }
                                                 else {
                                                     const match = new RegExp(STRING_CUBICBEZIER).exec(keySplines[j]);
-                                                    keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
+                                                    keySplines[j] = match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : KEYSPLINE_NAME.ease;
                                                 }
                                                 keySplinesData.push(keySplines[j]);
                                             }
@@ -5854,7 +5854,7 @@
         for (const attr of attrs) {
             if (element[attr]) {
                 result[attr] = element[attr].baseVal.value;
-                result[`${attr}AsString`] = element[attr].baseVal.valueAsString;
+                result[attr + 'AsString'] = element[attr].baseVal.valueAsString;
             }
         }
         return result;
@@ -5901,7 +5901,7 @@
         setDefinitions(item) {
             item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element) => {
                 if (element.id) {
-                    const id = `#${element.id}`;
+                    const id = '#' + element.id;
                     if (SVG.clipPath(element)) {
                         this.definitions.clipPath.set(id, element);
                     }
@@ -6081,7 +6081,7 @@
                         case 'stroke':
                             const url = getAttributeURL(value);
                             if (url !== '') {
-                                this[`${attr}Pattern`] = url;
+                                this[attr + 'Pattern'] = url;
                             }
                             else {
                                 let color;
@@ -6979,7 +6979,7 @@
                             }
                             return valueArray;
                         }
-                        const getFromToValue = (item) => item ? `${item.start} ${item.end}` : '1 1';
+                        const getFromToValue = (item) => item ? item.start + ' ' + item.end : '1 1';
                         let setDashLength = (index) => {
                             let offset = valueOffset;
                             const length = sorted.length;
@@ -7473,7 +7473,7 @@
                                     options.transforms = item.transforms;
                                     item.path.build(options);
                                     item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
-                                    item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
+                                    item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (item.path.clipPath !== '' ? ';' + item.path.clipPath : '');
                                 }
                             }
                         }

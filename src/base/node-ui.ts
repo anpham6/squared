@@ -398,21 +398,21 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public namespace(name: string): StringMap {
-        return this['__' + name] || {};
-    }
-
     public unsafe(name: string, value?: any): any {
         if (value !== undefined) {
-            this['__' + name] =  value;
+            this['_' + name] =  value;
         }
         else {
-            return this['__' + name];
+            return this['_' + name];
         }
     }
 
     public unset(name: string) {
-        delete this['__' + name];
+        delete this['_' + name];
+    }
+
+    public namespace(name: string): StringMap {
+        return this['__' + name] || {};
     }
 
     public delete(name: string, ...attrs: string[]) {
@@ -503,7 +503,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
                 case 'alignment': {
-                    const nodeStyleMap = <InitialData<T>> node.unsafe('initial').styleMap;
+                    const nodeStyleMap = (<InitialData<T>> node.unsafe('initial')).styleMap;
                     const styleMap = this._styleMap;
                     const initialStyleMap = this._initial.styleMap;
                     this.positionAuto = node.positionAuto;
