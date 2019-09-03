@@ -114,91 +114,100 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public expandToValues() {
-        if (this.additiveSum && this.iterationCount !== -1 && this.keyTimes.length && this.duration > 0) {
-            const durationTotal = this.duration * this.iterationCount;
-            invalid: {
-                const keyTimesBase = this.keyTimes;
-                const keyTimes: number[] = [];
-                const values: string[] = [];
-                const keySplines: string[] = [];
-                let previousValues: number[] | undefined;
-                const length = keyTimesBase.length;
-                for (let i = 0; i < this.iterationCount; i++) {
-                    if (i > 0 && this.keySplines) {
-                        keySplines.push('');
-                    }
-                    for (let j = 0; j < length; j++) {
-                        const coordinates = SvgBuild.parseCoordinates(this.values[j]);
-                        const lengthA = coordinates.length;
-                        if (lengthA) {
-                            let currentValues: number[] | undefined;
-                            switch (this.type) {
-                                case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                                    if (lengthA === 1) {
-                                        currentValues = [coordinates[0], 0];
-                                    }
-                                    else if (lengthA === 2) {
-                                        currentValues = coordinates;
-                                    }
-                                    break;
-                                case SVGTransform.SVG_TRANSFORM_SCALE:
-                                    if (lengthA === 1) {
-                                        currentValues = [coordinates[0], coordinates[0]];
-                                    }
-                                    else if (lengthA === 2) {
-                                        currentValues = coordinates;
-                                    }
-                                    break;
-                                case SVGTransform.SVG_TRANSFORM_ROTATE:
-                                    if (lengthA === 1) {
-                                        currentValues = [coordinates[0], 0, 0];
-                                    }
-                                    else if (lengthA === 3) {
-                                        currentValues = coordinates;
-                                    }
-                                    break;
-                                case SVGTransform.SVG_TRANSFORM_SKEWX:
-                                case SVGTransform.SVG_TRANSFORM_SKEWY:
-                                    if (lengthA === 1) {
-                                        currentValues = coordinates;
-                                    }
-                                    break;
+        if (this.additiveSum) {
+            const iterationCount = this.iterationCount;
+            if (iterationCount !== -1 && this.keyTimes.length) {
+                const duration = this.duration;
+                if (duration > 0) {
+                    const durationTotal = duration * iterationCount;
+                    invalid: {
+                        const keyTimesBase = this.keyTimes;
+                        const keySplinesBase = this.keySplines;
+                        const valuesBase = this.values;
+                        const type = this.type;
+                        const keyTimes: number[] = [];
+                        const values: string[] = [];
+                        const keySplines: string[] = [];
+                        let previousValues: number[] | undefined;
+                        const length = keyTimesBase.length;
+                        for (let i = 0; i < iterationCount; i++) {
+                            if (i > 0 && keySplinesBase) {
+                                keySplines.push('');
                             }
-                            if (currentValues) {
-                                let time = (keyTimesBase[j] + i) * this.duration;
-                                if (previousValues) {
-                                    const lengthB = currentValues.length;
-                                    for (let k = 0; k < lengthB; k++) {
-                                        currentValues[k] += previousValues[k];
+                            for (let j = 0; j < length; j++) {
+                                const coordinates = SvgBuild.parseCoordinates(valuesBase[j]);
+                                const lengthA = coordinates.length;
+                                if (lengthA) {
+                                    let currentValues: number[] | undefined;
+                                    switch (type) {
+                                        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                                            if (lengthA === 1) {
+                                                currentValues = [coordinates[0], 0];
+                                            }
+                                            else if (lengthA === 2) {
+                                                currentValues = coordinates;
+                                            }
+                                            break;
+                                        case SVGTransform.SVG_TRANSFORM_SCALE:
+                                            if (lengthA === 1) {
+                                                currentValues = [coordinates[0], coordinates[0]];
+                                            }
+                                            else if (lengthA === 2) {
+                                                currentValues = coordinates;
+                                            }
+                                            break;
+                                        case SVGTransform.SVG_TRANSFORM_ROTATE:
+                                            if (lengthA === 1) {
+                                                currentValues = [coordinates[0], 0, 0];
+                                            }
+                                            else if (lengthA === 3) {
+                                                currentValues = coordinates;
+                                            }
+                                            break;
+                                        case SVGTransform.SVG_TRANSFORM_SKEWX:
+                                        case SVGTransform.SVG_TRANSFORM_SKEWY:
+                                            if (lengthA === 1) {
+                                                currentValues = coordinates;
+                                            }
+                                            break;
+                                    }
+                                    if (currentValues) {
+                                        let time = (keyTimesBase[j] + i) * duration;
+                                        if (previousValues) {
+                                            const lengthB = currentValues.length;
+                                            for (let k = 0; k < lengthB; k++) {
+                                                currentValues[k] += previousValues[k];
+                                            }
+                                        }
+                                        if (i < iterationCount - 1 && j === length - 1) {
+                                            if (this.accumulateSum) {
+                                                previousValues = currentValues;
+                                            }
+                                            time--;
+                                        }
+                                        keyTimes.push(time / durationTotal);
+                                        values.push(currentValues.join(' '));
+                                        if (keySplinesBase && j < length - 1) {
+                                            keySplines.push(keySplinesBase[j]);
+                                        }
+                                    }
+                                    else {
+                                        break invalid;
                                     }
                                 }
-                                if (i < this.iterationCount - 1 && j === length - 1) {
-                                    if (this.accumulateSum) {
-                                        previousValues = currentValues;
-                                    }
-                                    time--;
+                                else {
+                                    break invalid;
                                 }
-                                keyTimes.push(time / durationTotal);
-                                values.push(currentValues.join(' '));
-                                if (this.keySplines && j < length - 1) {
-                                    keySplines.push(this.keySplines[j]);
-                                }
-                            }
-                            else {
-                                break invalid;
                             }
                         }
-                        else {
-                            break invalid;
-                        }
+                        this.values = values;
+                        this.keyTimes = keyTimes;
+                        this.keySplines = keySplines.length ? keySplines : undefined;
+                        this.duration = durationTotal;
+                        this.iterationCount = 1;
+                        this.accumulateSum = false;
                     }
                 }
-                this.values = values;
-                this.keyTimes = keyTimes;
-                this.keySplines = keySplines.length ? keySplines : undefined;
-                this.duration = durationTotal;
-                this.iterationCount = 1;
-                this.accumulateSum = false;
             }
         }
     }

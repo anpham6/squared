@@ -35,9 +35,11 @@ function getColorStop(element: SVGGradientElement) {
 function getBaseValue(element: SVGElement, ...attrs: string[]) {
     const result: ObjectMap<any> = {};
     for (const attr of attrs) {
-        if (element[attr]) {
-            result[attr] = element[attr].baseVal.value;
-            result[attr + 'AsString'] = element[attr].baseVal.valueAsString;
+        const item = element[attr];
+        if (item) {
+            const baseVal = item.baseVal;
+            result[attr] = baseVal.value;
+            result[attr + 'AsString'] = baseVal.valueAsString;
         }
     }
     return result;
@@ -73,34 +75,37 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     private init() {
+        const element = this.element;
         if (this.documentRoot) {
-            $util.cloneObject(this.element.viewBox.baseVal, this.aspectRatio);
-            this.element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((element: SVGAnimationElement) => {
-                const target = getTargetElement(element, this.element);
+            $util.cloneObject(element.viewBox.baseVal, this.aspectRatio);
+            element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((animation: SVGAnimationElement) => {
+                const target = getTargetElement(animation, element);
                 if (target) {
-                    if (element.parentElement) {
-                        element.parentElement.removeChild(element);
+                    const parentElement = animation.parentElement;
+                    if (parentElement) {
+                        parentElement.removeChild(animation);
                     }
-                    target.appendChild(element);
+                    target.appendChild(animation);
                 }
             });
         }
-        this.setDefinitions(this.element);
-        this.element.querySelectorAll('defs').forEach(element => this.setDefinitions(element));
+        this.setDefinitions(element);
+        element.querySelectorAll('defs').forEach(def => this.setDefinitions(def));
     }
 
     private setDefinitions(item: SVGElement) {
+        const definitions = this.definitions;
         item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element: SVGElement) => {
             if (element.id) {
                 const id = '#' + element.id;
                 if (SVG.clipPath(element)) {
-                    this.definitions.clipPath.set(id, element);
+                    definitions.clipPath.set(id, element);
                 }
                 else if (SVG.pattern(element)) {
-                    this.definitions.pattern.set(id, element);
+                    definitions.pattern.set(id, element);
                 }
                 else if (SVG.linearGradient(element)) {
-                    this.definitions.gradient.set(id, {
+                    definitions.gradient.set(id, {
                         type: 'linear',
                         element,
                         spreadMethod: element.spreadMethod.baseVal,
@@ -109,7 +114,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                     });
                 }
                 else if (SVG.radialGradient(element)) {
-                    this.definitions.gradient.set(id, {
+                    definitions.gradient.set(id, {
                         type: 'radial',
                         element,
                         spreadMethod: element.spreadMethod.baseVal,

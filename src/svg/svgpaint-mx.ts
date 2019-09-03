@@ -57,10 +57,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const clipPath = this.getAttribute('clip-path', true, false);
             if (clipPath !== '' && clipPath !== 'none') {
                 if (CACHE_PATTERN.polygon === undefined) {
+                    const percentage = $regex.STRING.LENGTH_PERCENTAGE;
                     CACHE_PATTERN.polygon = /polygon\(([^)]+)\)/;
-                    CACHE_PATTERN.inset = new RegExp(`inset\\(${$regex.STRING.LENGTH_PERCENTAGE}\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\s?${$regex.STRING.LENGTH_PERCENTAGE}?\\)`);
-                    CACHE_PATTERN.circle = new RegExp(`circle\\(${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`);
-                    CACHE_PATTERN.ellipse = new RegExp(`ellipse\\(${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE}(?: at ${$regex.STRING.LENGTH_PERCENTAGE} ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`);
+                    CACHE_PATTERN.inset = new RegExp(`inset\\(${percentage}\\s?${percentage}?\\s?${percentage}?\\s?${percentage}?\\)`);
+                    CACHE_PATTERN.circle = new RegExp(`circle\\(${percentage}(?: at ${percentage} ${percentage})?\\)`);
+                    CACHE_PATTERN.ellipse = new RegExp(`ellipse\\(${percentage} ${percentage}(?: at ${percentage} ${percentage})?\\)`);
                 }
                 for (const name in CACHE_PATTERN) {
                     const match = CACHE_PATTERN[name].exec(clipPath);
@@ -70,9 +71,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             return;
                         }
                         else if (d && d.length) {
-                            const boxRect = SvgBuild.getBoxRect(d);
-                            const width = boxRect.right - boxRect.left;
-                            const height = boxRect.bottom - boxRect.top;
+                            const { top, right, bottom, left } = SvgBuild.getBoxRect(d);
+                            const width = right - left;
+                            const height = bottom - top;
                             const parent = this.parent;
                             switch (name) {
                                 case 'inset': {
@@ -81,22 +82,22 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     let y1 = this.convertLength(match[1], height);
                                     let y2 = 0;
                                     if (match[4]) {
-                                        x1 = boxRect.left + this.convertLength(match[4], width);
-                                        x2 = boxRect.right - this.convertLength(match[2], width);
-                                        y2 = boxRect.bottom - this.convertLength(match[3], height);
+                                        x1 = left + this.convertLength(match[4], width);
+                                        x2 = right - this.convertLength(match[2], width);
+                                        y2 = bottom - this.convertLength(match[3], height);
                                     }
                                     else if (match[2]) {
                                         x1 = this.convertLength(match[2], width);
-                                        x2 = boxRect.right - x1;
-                                        y2 = boxRect.bottom - (match[3] ? this.convertLength(match[3], height) : y1);
-                                        x1 += boxRect.left;
+                                        x2 = right - x1;
+                                        y2 = bottom - (match[3] ? this.convertLength(match[3], height) : y1);
+                                        x1 += left;
                                     }
                                     else {
-                                        x1 = boxRect.left + y1;
-                                        x2 = boxRect.right - y1;
-                                        y2 = boxRect.bottom - y1;
+                                        x1 = left + y1;
+                                        x2 = right - y1;
+                                        y2 = bottom - y1;
                                     }
-                                    y1 += boxRect.top;
+                                    y1 += top;
                                     const points: Point[] = [
                                         { x: x1, y: y1 },
                                         { x: x2, y: y1 },
@@ -112,8 +113,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 case 'polygon': {
                                     const points = $util.objectMap<string, Point>(match[1].split($regex.XML.SEPARATOR), values => {
                                         let [x, y] = $util.replaceMap<string, number>(values.trim().split(' '), (value, index) => this.convertLength(value, index === 0 ? width : height));
-                                        x += boxRect.left;
-                                        y += boxRect.top;
+                                        x += left;
+                                        y += top;
                                         return { x, y };
                                     });
                                     if (parent) {
@@ -135,11 +136,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             rx = this.convertLength(match[1], width);
                                             ry = this.convertLength(match[2], height);
                                         }
-                                        let cx = boxRect.left;
-                                        let cy = boxRect.top;
-                                        if (match.length >= 4) {
-                                            cx += this.convertLength(match[match.length - 2], dimension);
-                                            cy += this.convertLength(match[match.length - 1], dimension);
+                                        let cx = left;
+                                        let cy = top;
+                                        const length = match.length;
+                                        if (length >= 4) {
+                                            cx += this.convertLength(match[length - 2], dimension);
+                                            cy += this.convertLength(match[length - 1], dimension);
                                         }
                                         if (parent) {
                                             cx = parent.refitX(cx);

@@ -825,10 +825,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             previousComplete = item;
                             if (item.fillForwards) {
                                 setFreezeValue(actualMaxTime, baseValue, item.type, item);
-                                if (item.group.ordering) {
+                                const group = item.group;
+                                if (group.ordering) {
                                     const duration = item.getTotalDuration();
-                                    for (const previous of item.group.ordering) {
-                                        if (previous.name === item.group.name) {
+                                    const name = group.name;
+                                    for (const previous of group.ordering) {
+                                        if (previous.name === name) {
                                             return true;
                                         }
                                         else if (SvgAnimationIntervalMap.getGroupEndTime(previous) >= duration) {
@@ -1905,13 +1907,14 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             }
                                         }
                                         else {
+                                            const parent = this.parent;
                                             const animate = new SvgAnimateTransform();
                                             animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
                                             for (const [keyTime, data] of result.entries()) {
                                                 const x = data.get('x') as number || 0;
                                                 const y = data.get('y') as number || 0;
                                                 animate.keyTimes.push(keyTime);
-                                                animate.values.push(this.parent ? this.parent.refitX(x) + ' ' + this.parent.refitX(y) : x + ' ' + y);
+                                                animate.values.push(parent ? parent.refitX(x) + ' ' + parent.refitX(y) : x + ' ' + y);
                                             }
                                             object = animate;
                                         }

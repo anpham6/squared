@@ -468,8 +468,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                 case 'Z':
                     if (result.length) {
-                        coordinates[0] = result[0].coordinates[0];
-                        coordinates[1] = result[0].coordinates[1];
+                        const coordinatesData = result[0].coordinates;
+                        coordinates[0] = coordinatesData[0];
+                        coordinates[1] = coordinatesData[1];
                         coordinates.length = 2;
                         match[1] = 'Z';
                         break;
@@ -800,7 +801,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
         }
         else {
-            for (let i = 0; i < values.numberOfItems; i++) {
+            const length = values.numberOfItems;
+            for (let i = 0; i < length; i++) {
                 const pt = values.getItem(i);
                 result.push({ x: pt.x, y: pt.y });
             }

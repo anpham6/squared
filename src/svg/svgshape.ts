@@ -25,20 +25,24 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
     }
 
     public build(options?: SvgBuildOptions) {
-        if (this.path) {
-            this.path.parent = this.parent;
+        const path = this.path;
+        if (path) {
+            path.parent = this.parent;
             options = {
                 ...options,
                 transforms: this.transforms
             };
-            this.path.build(options);
+            path.build(options);
         }
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {
-        if (this.path && this.animations.length) {
-            const element = options && options.element;
-            this.animateSequentially(this.getAnimateShape(element || this.element), element ? undefined : this.getAnimateTransform(options), this.path, options);
+        if (this.animations.length) {
+            const path = this.path;
+            if (path) {
+                const element = options && options.element;
+                this.animateSequentially(this.getAnimateShape(element || this.element), element ? undefined : this.getAnimateTransform(options), path, options);
+            }
         }
     }
 

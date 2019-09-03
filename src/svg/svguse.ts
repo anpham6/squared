@@ -31,7 +31,8 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
 
     public build(options?: SvgBuildOptions) {
         super.build(options);
-        this.setPaint(this.path ? [this.path.value] : undefined, options && options.precision);
+        const path = this.path;
+        this.setPaint(path ? [path.value] : undefined, options && options.precision);
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {

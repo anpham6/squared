@@ -137,7 +137,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 for (const time of times) {
                                     const animate = new SvgAnimateTransform(element, <SVGAnimateTransformElement> item);
                                     if (SvgBuild.isShape(this) && this.path) {
-                                        animate.transformFrom = SvgBuild.drawRefit(element, this.parent, this.viewport && this.viewport.precision);
+                                        const viewport = this.viewport;
+                                        animate.transformFrom = SvgBuild.drawRefit(element, this.parent, viewport && viewport.precision);
                                     }
                                     addAnimation(animate, time);
                                 }
@@ -146,7 +147,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 for (const time of times) {
                                     const animate = new SvgAnimateMotion(element, <SVGAnimateMotionElement> item);
                                     if (animate.motionPathElement) {
-                                        animate.path = SvgBuild.drawRefit(animate.motionPathElement, this.parent, this.viewport && this.viewport.precision);
+                                        const viewport = this.viewport;
+                                        animate.path = SvgBuild.drawRefit(animate.motionPathElement, this.parent, viewport && viewport.precision);
                                     }
                                     addAnimation(animate, time);
                                 }
@@ -219,7 +221,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         }
                         if (attrMap['transform']) {
                             function getKeyframeOrigin(order: number) {
-                                const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.key === order);
+                                const transformOrigin = attrMap['transform-origin'];
+                                const origin = transformOrigin && transformOrigin.find(item => item.key === order);
                                 if (origin) {
                                     return TRANSFORM.origin(<SVGGraphicsElement> element, origin.value);
                                 }
@@ -276,16 +279,19 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             default:
                                                 continue;
                                         }
-                                        if (attrMap[name] === undefined) {
-                                            attrMap[name] = [];
+                                        let attrData = attrMap[name];
+                                        if (attrData === undefined) {
+                                            attrData = [];
+                                            attrMap[name] = attrData;
                                         }
-                                        const index = attrMap[name].findIndex(previous => previous.key === transform.key);
+                                        const index = attrData.findIndex(previous => previous.key === transform.key);
                                         if (index !== -1) {
-                                            attrMap[name][index].value = value;
-                                            attrMap[name][index].transformOrigin = transformOrigin;
+                                            const indexData = attrData[index];
+                                            indexData.value = value;
+                                            indexData.transformOrigin = transformOrigin;
                                         }
                                         else {
-                                            attrMap[name].push({
+                                            attrData.push({
                                                 key: transform.key,
                                                 value,
                                                 transformOrigin
@@ -340,8 +346,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     animate.addKeyPoint({ key: 0, value: animate.distance });
                                     addAnimation(animate, delay, keyframeIndex);
                                     for (const item of offsetRotate) {
-                                        let angle = $css.parseAngle(item.value.split(' ').pop() as string);
-                                        if (item.value.startsWith('auto')) {
+                                        const value = item.value;
+                                        let angle = $css.parseAngle(value.split(' ').pop() as string);
+                                        if (value.startsWith('auto')) {
                                             angle += 90;
                                         }
                                         item.value = angle + '0 0';

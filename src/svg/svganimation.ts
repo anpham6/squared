@@ -98,8 +98,9 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     public setAttribute(attr: string, equality?: string) {
-        if (this.animationElement) {
-            const value = $dom.getNamedItem(this.animationElement, attr);
+        const animationElement = this.animationElement;
+        if (animationElement) {
+            const value = $dom.getNamedItem(animationElement, attr);
             if (value !== '') {
                 if (equality !== undefined) {
                     this[attr + $util.capitalize(equality)] = value === equality;
@@ -147,22 +148,25 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     set attributeName(value) {
         if (!$util.isString(this.baseValue) && value !== 'transform') {
-            if (this.element) {
+            const { animationElement, element } = this;
+            if (element) {
                 switch (value) {
                     case 'opacity':
                     case 'stroke-opacity':
                     case 'fill-opacity':
-                        this.baseValue = getAttribute(this.element, value, false) || '1';
+                        this.baseValue = getAttribute(element, value, false) || '1';
                         break;
                     default:
-                        this.baseValue = getAttribute(this.element, value);
+                        this.baseValue = getAttribute(element, value);
                         break;
                 }
             }
-            if (!$util.isString(this.baseValue) && this.animationElement) {
-                this.baseValue = $util.optionalAsString(this.animationElement.parentElement, value + '.baseVal.valueAsString');
-                if ($css.isLength(this.baseValue)) {
-                    this.baseValue = $css.parseUnit(this.baseValue, $css.getFontSize(this.animationElement.parentElement)).toString();
+            if (animationElement) {
+                const parentElement = animationElement.parentElement;
+                const baseValue = $util.optionalAsString(parentElement, value + '.baseVal.valueAsString');
+                this.baseValue = baseValue;
+                if ($css.isLength(baseValue)) {
+                    this.baseValue = $css.parseUnit(baseValue, $css.getFontSize(parentElement)).toString();
                 }
             }
         }
@@ -215,7 +219,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get fillReplace() {
-        return this.fillMode === 0 || this.fillMode === FILL_MODE.BACKWARDS;
+        const fillMode = this.fillMode;
+        return fillMode === 0 || fillMode === FILL_MODE.BACKWARDS;
     }
 
     get parentContainer() {

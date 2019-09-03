@@ -1853,7 +1853,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     private createClipPath(target: SvgView, clipArray: StringMap[], clipPath: string) {
-        const precision = this.options.floatPrecisionValue;
+        const options = this.options;
+        const precision = options.floatPrecisionValue;
         let result = 0;
         clipPath.split(';').forEach((value, index, array) => {
             if (value.charAt(0) === '#') {
@@ -1861,7 +1862,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 if (element) {
                     const g = new $SvgG(element);
                     g.build({
-                        exclude: this.options.transformExclude,
+                        exclude: options.transformExclude,
                         residual: partitionTransforms,
                         precision
                     });
@@ -1870,12 +1871,16 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         precision
                     });
                     g.each((child: $SvgShape) => {
-                        if (child.path && child.path.value) {
-                            let name = getVectorName(child, 'clip_path', array.length > 1 ? index + 1 : -1);
-                            if (!this.queueAnimations(child, name, item => $SvgBuild.asAnimate(item) || $SvgBuild.asSet(item), child.path.value)) {
-                                name = '';
+                        const path = child.path;
+                        if (path) {
+                            const pathData = path.value;
+                            if (pathData) {
+                                let name = getVectorName(child, 'clip_path', array.length > 1 ? index + 1 : -1);
+                                if (!this.queueAnimations(child, name, item => $SvgBuild.asAnimate(item) || $SvgBuild.asSet(item), pathData)) {
+                                    name = '';
+                                }
+                                clipArray.push({ name, pathData });
                             }
-                            clipArray.push({ name, pathData: child.path.value });
                         }
                     });
                 }
@@ -1897,14 +1902,15 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (svg.animations.length) {
             const animate = $util.filterArray(svg.animations, (item, index, array) => !item.paused && (item.duration >= 0 || item.setterType) && predicate(item, index, array));
             if (animate.length) {
+                const element = svg.element;
                 this.ANIMATE_DATA.set(name, {
-                    element: svg.element,
+                    element,
                     animate,
                     pathData
                 });
                 if (targetName) {
                     this.ANIMATE_TARGET.set(targetName, {
-                        element: svg.element,
+                        element,
                         animate,
                         pathData
                     });
@@ -1916,14 +1922,15 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     private createPropertyValue(propertyName: string, valueTo: string, duration: string, valueType: string, valueFrom = '', startOffset = '', repeatCount = '0'): PropertyValue {
+        const precision = this.options.floatPrecisionValue;
         return {
             propertyName,
             startOffset,
             duration,
             repeatCount,
             valueType,
-            valueFrom: $util.isNumber(valueFrom) ? $math.truncate(valueFrom, this.options.floatPrecisionValue) : valueFrom,
-            valueTo: $util.isNumber(valueTo) ? $math.truncate(valueTo, this.options.floatPrecisionValue) : valueTo,
+            valueFrom: $util.isNumber(valueFrom) ? $math.truncate(valueFrom, precision) : valueFrom,
+            valueTo: $util.isNumber(valueTo) ? $math.truncate(valueTo, precision) : valueTo,
             propertyValuesHolder: false
         };
     }

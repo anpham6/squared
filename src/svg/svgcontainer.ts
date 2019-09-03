@@ -25,14 +25,15 @@ function getNearestViewBox(instance: SvgContainer | undefined) {
 function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): SVGPatternElement | undefined {
     const value = getAttributeURL(getParentAttribute(element, 'fill'));
     if (value !== '') {
-        if (viewport && viewport.definitions.pattern.has(value)) {
-            return viewport.definitions.pattern.get(value);
-        }
-        else {
-            const target = document.getElementById(value.substring(1));
-            if (target instanceof SVGPatternElement) {
-                return target;
+        if (viewport) {
+            const pattern = viewport.definitions.pattern.get(value);
+            if (pattern) {
+                return pattern;
             }
+        }
+        const target = document.getElementById(value.substring(1));
+        if (target instanceof SVGPatternElement) {
+            return target;
         }
     }
     return undefined;
@@ -84,8 +85,8 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             element = this.element;
         }
         this.clear();
-        const viewport = this.getViewport();
         let requireClip = false;
+        const viewport = this.getViewport();
         const children = element.children;
         const length = children.length;
         for (let i = 0; i < length; i++) {
@@ -141,17 +142,18 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 svg.build(options);
             }
         }
+        const aspectRatio = this.aspectRatio;
         if (SvgBuild.asSvg(this) && this.documentRoot) {
-            if (this.aspectRatio.x < 0 || this.aspectRatio.y < 0) {
-                this.clipViewBox(this.aspectRatio.x, this.aspectRatio.y, this.aspectRatio.width, this.aspectRatio.height, precision, true);
+            if (aspectRatio.x < 0 || aspectRatio.y < 0) {
+                this.clipViewBox(aspectRatio.x, aspectRatio.y, aspectRatio.width, aspectRatio.height, precision, true);
             }
         }
-        else if (requireClip && this.hasViewBox() && (this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0)) {
+        else if (requireClip && this.hasViewBox() && (aspectRatio.x !== 0 || aspectRatio.y !== 0)) {
             const boxRect = SvgBuild.getBoxRect(this.getPathAll(false));
-            const x = this.refitX(this.aspectRatio.x);
-            const y = this.refitY(this.aspectRatio.y);
+            const x = this.refitX(aspectRatio.x);
+            const y = this.refitY(aspectRatio.y);
             if (boxRect.left < x || boxRect.top < y) {
-                this.clipViewBox(boxRect.left, boxRect.top, this.refitSize(this.aspectRatio.width), this.refitSize(this.aspectRatio.height), precision);
+                this.clipViewBox(boxRect.left, boxRect.top, this.refitSize(aspectRatio.width), this.refitSize(aspectRatio.height), precision);
             }
         }
     }
@@ -175,11 +177,13 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     public refitX(value: number) {
-        return (value - this.aspectRatio.x) * this.aspectRatio.unit - this.aspectRatio.parent.x + this.aspectRatio.position.x;
+        const aspectRatio = this.aspectRatio;
+        return (value - aspectRatio.x) * aspectRatio.unit - aspectRatio.parent.x + aspectRatio.position.x;
     }
 
     public refitY(value: number) {
-        return (value - this.aspectRatio.y) * this.aspectRatio.unit - this.aspectRatio.parent.y + this.aspectRatio.position.y;
+        const aspectRatio = this.aspectRatio;
+        return (value - aspectRatio.y) * aspectRatio.unit - aspectRatio.parent.y + aspectRatio.position.y;
     }
 
     public refitSize(value: number) {
@@ -191,8 +195,9 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             pt.x = this.refitX(pt.x);
             pt.y = this.refitY(pt.y);
             if (pt.rx !== undefined && pt.ry !== undefined) {
-                pt.rx *= this.aspectRatio.unit;
-                pt.ry *= this.aspectRatio.unit;
+                const unit = this.aspectRatio.unit;
+                pt.rx *= unit;
+                pt.ry *= unit;
             }
         }
         return values;
@@ -201,8 +206,11 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     public getPathAll(cascade = true) {
         const result: string[] = [];
         for (const item of (cascade ? this.cascade() : this)) {
-            if (SvgBuild.isShape(item) && item.path && item.path.value) {
-                result.push(item.path.value);
+            if (SvgBuild.isShape(item)) {
+                const path = item.path;
+                if (path && path.value) {
+                    result.push(path.value);
+                }
             }
         }
         return result;
@@ -216,12 +224,14 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         const parent = getNearestViewBox(this);
         if (parent) {
             const aspectRatio = group.aspectRatio;
+            const parentAspectRatio = parent.aspectRatio;
             if (viewBox) {
                 $util.cloneObject(viewBox, aspectRatio);
-                if (aspectRatio.width > 0 && aspectRatio.height > 0) {
-                    const ratio = aspectRatio.width / aspectRatio.height;
-                    const parentWidth = parent.aspectRatio.width || parent.viewBox.width;
-                    const parentHeight = parent.aspectRatio.height || parent.viewBox.height;
+                const { width, height } = aspectRatio;
+                if (width > 0 && height > 0) {
+                    const ratio = width / height;
+                    const parentWidth = parentAspectRatio.width || parent.viewBox.width;
+                    const parentHeight = parentAspectRatio.height || parent.viewBox.height;
                     const parentRatio = parentWidth / parentHeight;
                     if (parentRatio > ratio) {
                         aspectRatio.position.x = (parentWidth - (parentHeight * ratio)) / 2;
@@ -229,16 +239,17 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                     else if (parentRatio < ratio) {
                         aspectRatio.position.y = (parentHeight - (parentWidth * (1 / ratio))) / 2;
                     }
-                    aspectRatio.unit = Math.min(parentWidth / aspectRatio.width, parentHeight / aspectRatio.height);
+                    aspectRatio.unit = Math.min(parentWidth / width, parentHeight / height);
                 }
             }
-            aspectRatio.parent.x = parent.aspectRatio.x + parent.aspectRatio.x * (parent.aspectRatio.unit - 1);
-            aspectRatio.position.x *= parent.aspectRatio.unit;
-            aspectRatio.position.x += parent.aspectRatio.position.x - parent.aspectRatio.parent.x;
-            aspectRatio.parent.y = parent.aspectRatio.y + parent.aspectRatio.y * (parent.aspectRatio.unit - 1);
-            aspectRatio.position.y *= parent.aspectRatio.unit;
-            aspectRatio.position.y += parent.aspectRatio.position.y - parent.aspectRatio.parent.y;
-            aspectRatio.unit *= parent.aspectRatio.unit;
+            const { parent: parentOffset, position, unit, x, y } = parentAspectRatio;
+            aspectRatio.parent.x = x + x * (unit - 1);
+            aspectRatio.position.x *= parentAspectRatio.unit;
+            aspectRatio.position.x += position.x - parentOffset.x;
+            aspectRatio.parent.y = y + y * (unit - 1);
+            aspectRatio.position.y *= unit;
+            aspectRatio.position.y += position.y - parentOffset.y;
+            aspectRatio.unit *= unit;
         }
     }
 
@@ -251,11 +262,13 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         }
     }
     get clipRegion() {
-        return this._clipRegion.length ? this._clipRegion.join(';') : '';
+        const clipRegion = this._clipRegion;
+        return clipRegion.length ? clipRegion.join(';') : '';
     }
 
     get requireRefit() {
-        return this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0 || this.aspectRatio.position.x !== 0 || this.aspectRatio.position.y !== 0 || this.aspectRatio.parent.x !== 0 || this.aspectRatio.parent.y !== 0 || this.aspectRatio.unit !== 1;
+        const aspectRatio = this.aspectRatio;
+        return aspectRatio.x !== 0 || aspectRatio.y !== 0 || aspectRatio.position.x !== 0 || aspectRatio.position.y !== 0 || aspectRatio.parent.x !== 0 || aspectRatio.parent.y !== 0 || aspectRatio.unit !== 1;
     }
 
     get instanceType() {

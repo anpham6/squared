@@ -63,8 +63,7 @@ function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?
         }
     }
     for (const seg of path) {
-        const value = seg.value;
-        const coordinates = seg.coordinates;
+        const { coordinates, value } = seg;
         const length = coordinates.length;
         for (let j = 0, k = 0; j < length; j += 2, k++) {
             if (x !== undefined) {
@@ -760,8 +759,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             values[j].push(getFromToValue(dashValue[j]));
                                         }
                                     }
-                                    const keyTimes = item.keyTimes;
-                                    const keySplines = item.keySplines;
+                                    const { keyTimes, keySplines } = item;
                                     const timingFunction = item.timingFunction;
                                     for (let j = 0; j < dashTotal; j++) {
                                         group[j].values = values[j];
@@ -986,8 +984,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 }
                             }
                             else {
-                                const delay = dashGroup[i].delay;
-                                const duration = dashGroup[i].duration;
+                                const { delay, duration } = dashGroup[i];
                                 const baseValue = length > 2 ? this.flattenStrokeDash(getDashArray(delay - 1), getDashOffset(delay - 1), totalLength, pathLength).items : result;
                                 for (let j = 0; j < dashTotal; j++) {
                                     const animate = new SvgAnimation(this.element);

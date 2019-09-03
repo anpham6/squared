@@ -32,10 +32,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
 
     public extract(exclude?: number[]) {
         const transforms = exclude ? SvgBuild.filterTransforms(this.transforms, exclude) : this.transforms;
-        let x = this.x;
-        let y = this.y;
-        let width = this.width;
-        let height = this.height;
+        let { x, y, width, height } = this;
         if (transforms.length) {
             transforms.reverse();
             for (const item of transforms) {
@@ -74,15 +71,16 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
             }
             this.transformed = transforms;
         }
-        if (this.parent) {
-            x = this.parent.refitX(x);
-            y = this.parent.refitY(y);
-            width = this.parent.refitSize(width);
-            height = this.parent.refitSize(height);
+        const { parent, translationOffset } = this;
+        if (parent) {
+            x = parent.refitX(x);
+            y = parent.refitY(y);
+            width = parent.refitSize(width);
+            height = parent.refitSize(height);
         }
-        if (this.translationOffset) {
-            x += this.translationOffset.x;
-            y += this.translationOffset.y;
+        if (translationOffset) {
+            x += translationOffset.x;
+            y += translationOffset.y;
         }
         this.setBaseValue('x', x);
         this.setBaseValue('y', y);
@@ -95,8 +93,11 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     }
     get x() {
         const value = super.x;
-        if (value === 0 && this.imageElement) {
-            return this.imageElement.x.baseVal.value;
+        if (value === 0) {
+            const imageElement = this.imageElement;
+            if (imageElement) {
+                return imageElement.x.baseVal.value;
+            }
         }
         return value;
     }
@@ -106,8 +107,11 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     }
     get y() {
         const value = super.y;
-        if (value === 0 && this.imageElement) {
-            return this.imageElement.y.baseVal.value;
+        if (value === 0) {
+            const imageElement = this.imageElement;
+            if (imageElement) {
+                return imageElement.y.baseVal.value;
+            }
         }
         return value;
     }
@@ -117,8 +121,11 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     }
     get width() {
         const value = super.width;
-        if (value === 0 && this.imageElement) {
-            return this.imageElement.width.baseVal.value;
+        if (value === 0) {
+            const imageElement = this.imageElement;
+            if (imageElement) {
+                return imageElement.width.baseVal.value;
+            }
         }
         return value;
     }
@@ -128,8 +135,11 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     }
     get height() {
         const value = super.height;
-        if (value === 0 && this.imageElement) {
-            return this.imageElement.height.baseVal.value;
+        if (value === 0) {
+            const imageElement = this.imageElement;
+            if (imageElement) {
+                return imageElement.height.baseVal.value;
+            }
         }
         return value;
     }
@@ -145,8 +155,9 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     get transforms() {
         let transforms = super.transforms;
         if (!this.__get_transforms) {
-            if (this.imageElement) {
-                transforms = transforms.concat(this.getTransforms(this.imageElement));
+            const imageElement = this.imageElement;
+            if (imageElement) {
+                transforms = transforms.concat(this.getTransforms(imageElement));
                 this._transforms = transforms;
             }
             this.__get_transforms = true;
@@ -157,8 +168,9 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     get animations() {
         let animations = super.animations;
         if (!this.__get_animations) {
-            if (this.imageElement) {
-                animations = animations.concat(this.getAnimations(this.imageElement));
+            const imageElement = this.imageElement;
+            if (imageElement) {
+                animations = animations.concat(this.getAnimations(imageElement));
                 this._animations = animations;
             }
             this.__get_animations = true;

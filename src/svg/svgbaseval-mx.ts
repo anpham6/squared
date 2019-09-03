@@ -51,18 +51,20 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         }
 
         public getBaseValue(attr: string, fallback?: any): any {
-            return this._baseVal[attr] === undefined && !this.setBaseValue(attr) ? fallback : this._baseVal[attr];
+            const value = this._baseVal[attr];
+            return value === undefined && !this.setBaseValue(attr) ? fallback : value;
         }
 
         public refitBaseValue(x: number, y: number, precision?: number, scaleX = 1, scaleY = 1) {
-            for (const attr in this._baseVal) {
-                const value = this._baseVal[attr];
+            const baseVal = this._baseVal;
+            for (const attr in baseVal) {
+                const value = baseVal[attr];
                 if (typeof value === 'string') {
                     if (attr === 'd') {
                         const commands = SvgBuild.getPathCommands(value);
                         const points = SvgBuild.getPathPoints(commands);
                         adjustPoints(points, x, y, scaleX, scaleY);
-                        this._baseVal[attr] = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points), precision);
+                        baseVal[attr] = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points), precision);
                     }
                 }
                 else if (typeof value === 'number') {
@@ -71,24 +73,24 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         case 'x1':
                         case 'x2':
                         case 'x':
-                            this._baseVal[attr] += x;
+                            baseVal[attr] += x;
                             break;
                         case 'cy':
                         case 'y1':
                         case 'y2':
                         case 'y':
-                            this._baseVal[attr] += y;
+                            baseVal[attr] += y;
                             break;
                         case 'r':
-                            this._baseVal[attr] *= Math.min(scaleX, scaleY);
+                            baseVal[attr] *= Math.min(scaleX, scaleY);
                             break;
                         case 'rx':
                         case 'width':
-                            this._baseVal[attr] *= scaleX;
+                            baseVal[attr] *= scaleX;
                             break;
                         case 'ry':
                         case 'height':
-                            this._baseVal[attr] *= scaleY;
+                            baseVal[attr] *= scaleY;
                             break;
                     }
                 }

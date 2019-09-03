@@ -79,8 +79,9 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     public setCalcMode() {
-        if (this.animationElement) {
-            const mode = $dom.getNamedItem(this.animationElement, 'calcMode') || 'paced';
+        const animationElement = this.animationElement;
+        if (animationElement) {
+            const mode = $dom.getNamedItem(animationElement, 'calcMode') || 'paced';
             switch (mode) {
                 case 'paced':
                 case 'discrete':
@@ -88,10 +89,10 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     super.setCalcMode('translate', mode);
                     break;
                 case 'linear':
-                    const keyPoints = SvgAnimateTransform.toFractionList($dom.getNamedItem(this.animationElement, 'keyPoints'), ';', false);
+                    const keyPoints = SvgAnimateTransform.toFractionList($dom.getNamedItem(animationElement, 'keyPoints'), ';', false);
                     let keyTimes = super.keyTimes;
                     if (keyTimes.length === 0 && this.duration !== -1) {
-                        keyTimes = SvgAnimateTransform.toFractionList($dom.getNamedItem(this.animationElement, 'keyTimes'));
+                        keyTimes = SvgAnimateTransform.toFractionList($dom.getNamedItem(animationElement, 'keyTimes'));
                         this.length = 0;
                         super.keyTimes = keyTimes;
                     }
@@ -357,7 +358,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     private validKeyPoints() {
-        return !!this._keyPoints && this._keyPoints.length > 0 && this._keyPoints.length === super.keyTimes.length;
+        const keyPoints = this.keyPoints;
+        return keyPoints.length > 0 && keyPoints.length === super.keyTimes.length;
     }
 
     get offsetPath() {
@@ -478,17 +480,23 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     set parent(value) {
         super.parent = value;
         const parentContainer = this.parentContainer;
-        if (parentContainer && parentContainer.requireRefit && this.path) {
-            this.path = SvgBuild.transformRefit(this.path, undefined, undefined, parentContainer);
-        }
+        if (parentContainer && parentContainer.requireRefit) {
+            const path = this.path;
+            if (path) {
+                this.path = SvgBuild.transformRefit(path, undefined, undefined, parentContainer);
+            }
+       }
     }
     get parent() {
         return super.parent;
     }
 
     get offsetLength() {
-        if (this._offsetLength === 0 && this.path) {
-            this._offsetLength = getPathLength(this.path);
+        if (this._offsetLength === 0) {
+            const path = this.path;
+            if (path) {
+                this._offsetLength = getPathLength(path);
+            }
         }
         return this._offsetLength;
     }

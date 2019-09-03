@@ -50,22 +50,19 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
             const d = [path.value];
             this.setPaint(d, precision);
             this.drawRegion = SvgBuild.getBoxRect(d);
+            const { drawRegion, fillOpacity, patternWidth, patternHeight, tileWidth, tileHeight } = this;
             const boundingBox = this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
-            const patternWidth = this.patternWidth;
-            const patternHeight = this.patternHeight;
-            const tileWidth = this.tileWidth;
-            const tileHeight = this.tileHeight;
             let offsetX = this.offsetX % tileWidth;
             let offsetY = this.offsetY % tileHeight;
             let boundingX = 0;
             let boundingY = 0;
-            let width = this.drawRegion.right;
-            let remainingHeight = this.drawRegion.bottom;
+            let width = drawRegion.right;
+            let remainingHeight = drawRegion.bottom;
             if (boundingBox) {
-                width -= this.drawRegion.left;
-                remainingHeight -= this.drawRegion.top;
-                boundingX = this.drawRegion.left;
-                boundingY = this.drawRegion.top;
+                width -= drawRegion.left;
+                remainingHeight -= drawRegion.top;
+                boundingX = drawRegion.left;
+                boundingY = drawRegion.top;
             }
             let j = 0;
             if (offsetX !== 0) {
@@ -77,28 +74,31 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 remainingHeight += tileHeight;
             }
             while (remainingHeight > 0) {
+                const patternElement = this.patternElement;
+                const contentBoundingBox = this.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
                 const y = boundingY + j * tileHeight - offsetY;
                 let remainingWidth = width;
                 let i = 0;
                 do {
                     const x = boundingX + i * tileWidth - offsetX;
-                    const pattern = new SvgPattern(element, this.patternElement);
+                    const pattern = new SvgPattern(element, patternElement);
                     pattern.build(options);
                     for (const item of pattern.cascade()) {
                         if (SvgBuild.isShape(item)) {
                             item.setPath();
-                            if (item.path) {
-                                item.path.patternParent = this;
-                                if (this.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-                                    item.path.refitBaseValue(x / patternWidth, y / patternHeight, precision);
+                            const patternPath = item.path;
+                            if (patternPath) {
+                                patternPath.patternParent = this;
+                                if (contentBoundingBox) {
+                                    patternPath.refitBaseValue(x / patternWidth, y / patternHeight, precision);
                                 }
                                 else {
-                                    item.path.refitBaseValue(x, y, precision);
+                                    patternPath.refitBaseValue(x, y, precision);
                                 }
                                 options.transforms = item.transforms;
-                                item.path.build(options);
-                                item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
-                                item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (item.path.clipPath !== '' ? ';' + item.path.clipPath : '');
+                                patternPath.build(options);
+                                patternPath.fillOpacity = (parseFloat(patternPath.fillOpacity) * parseFloat(fillOpacity)).toString();
+                                patternPath.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (patternPath.clipPath !== '' ? ';' + patternPath.clipPath : '');
                             }
                         }
                     }
@@ -154,18 +154,21 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     get patternWidth() {
-        return this.drawRegion ? this.drawRegion.right - this.drawRegion.left : 0;
+        const drawRegion = this.drawRegion;
+        return drawRegion ? drawRegion.right - drawRegion.left : 0;
     }
 
     get patternHeight() {
-        return this.drawRegion ? this.drawRegion.bottom - this.drawRegion.top : 0;
+        const drawRegion = this.drawRegion;
+        return drawRegion ? drawRegion.bottom - drawRegion.top : 0;
     }
 
     get transforms() {
         if (!this.__get_transforms) {
-            const transforms = SvgBuild.convertTransforms(this.patternElement.patternTransform.baseVal);
+            const patternElement = this.patternElement;
+            const transforms = SvgBuild.convertTransforms(patternElement.patternTransform.baseVal);
             if (transforms.length) {
-                const rotateOrigin = TRANSFORM.rotateOrigin(this.patternElement, 'patternTransform');
+                const rotateOrigin = TRANSFORM.rotateOrigin(patternElement, 'patternTransform');
                 const x = this.patternWidth / 2;
                 const y = this.patternHeight / 2;
                 for (const item of transforms) {
@@ -199,35 +202,39 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     get offsetX() {
+        const baseVal = this.patternElement.x.baseVal;
         let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            value = this.patternWidth * getPercent(this.patternElement.x.baseVal.valueAsString);
+            value = this.patternWidth * getPercent(baseVal.valueAsString);
         }
-        return value || this.patternElement.x.baseVal.value;
+        return value || baseVal.value;
     }
 
     get offsetY() {
+        const baseVal = this.patternElement.y.baseVal;
         let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            value = this.patternHeight * getPercent(this.patternElement.y.baseVal.valueAsString);
+            value = this.patternHeight * getPercent(baseVal.valueAsString);
         }
-        return value || this.patternElement.y.baseVal.value;
+        return value || baseVal.value;
     }
 
     get tileWidth() {
+        const baseVal = this.patternElement.width.baseVal;
         let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            value = this.patternWidth * getPercent(this.patternElement.width.baseVal.valueAsString);
+            value = this.patternWidth * getPercent(baseVal.valueAsString);
         }
-        return value || this.patternElement.width.baseVal.value;
+        return value || baseVal.value;
     }
 
     get tileHeight() {
+        const baseVal = this.patternElement.height.baseVal;
         let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            value = this.patternHeight * getPercent(this.patternElement.height.baseVal.valueAsString);
+            value = this.patternHeight * getPercent(baseVal.valueAsString);
         }
-        return value || this.patternElement.height.baseVal.value;
+        return value || baseVal.value;
     }
 
     get instanceType() {

@@ -21,10 +21,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
 
         public setRect() {
             const parent = this.parent;
-            let x = this.x;
-            let y = this.y;
-            let width = this.width;
-            let height = this.height;
+            let { x, y, width, height } = this;
             if (parent) {
                 x = parent.refitX(x);
                 y = parent.refitY(y);
@@ -38,11 +35,12 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         }
 
         private _getElement() {
-            switch (this.element.tagName) {
+            const element = this.element;
+            switch (element.tagName) {
                 case 'svg':
                 case 'use':
                 case 'image':
-                    return <SVGSVGElement> this.element;
+                    return <SVGSVGElement> element;
                 default:
                     return null;
             }
