@@ -34,7 +34,7 @@ GitHub
 <script src="/dist/android.framework.min.js"></script> /* OR: chrome.framework.min.js */
 <script>
     // optional
-    squared.settings.targetAPI = 26;
+    squared.settings.targetAPI = 29;
     squared.settings.resolutionDPI = 160;
 
     // without Express: use either console.log() or element.innerHTML to display using "system.write" commands

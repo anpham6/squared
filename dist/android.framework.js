@@ -1,4 +1,4 @@
-/* android-framework 1.2.9
+/* android-framework 1.2.10
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -538,8 +538,42 @@ var android = (function () {
         return false;
     }
     const API_ANDROID = {
-        [28 /* PIE */]: {
+        [29 /* Q */]: {
             android: {},
+            assign: {}
+        },
+        [28 /* PIE */]: {
+            android: {
+                'allowAudioPlaybackCapture': false,
+                'enforceNavigationBarContrast': false,
+                'enforceStatusBarContrast': false,
+                'forceDarkAllowed': false,
+                'forceUriPermissions': false,
+                'foregroundServiceType': false,
+                'hasFragileUserData': false,
+                'identifier': false,
+                'inheritShowWhenLocked': false,
+                'interactiveUiTimeout': false,
+                'isLightTheme': false,
+                'isSplitRequired': false,
+                'minAspectRatio': false,
+                'nonInteractiveUiTimeout': false,
+                'opticalInsetBottom': false,
+                'opticalInsetLeft': false,
+                'opticalInsetRight': false,
+                'opticalInsetTop': false,
+                'packageType': false,
+                'requestLegacyExternalStorage': false,
+                'secureElementName': false,
+                'selectionDividerHeight': false,
+                'settingsSliceUri': false,
+                'shell': false,
+                'supportsMultipleDisplays': false,
+                'textLocale': false,
+                'useAppZygote': false,
+                'useEmbeddedDex': false,
+                'zygotePreloadName': false
+            },
             assign: {}
         },
         [27 /* OREO_1 */]: {
@@ -1326,7 +1360,7 @@ var android = (function () {
             }
             android(attr, value, overwrite = true) {
                 if (value) {
-                    if (this.localSettings.targetAPI < 28 /* LATEST */) {
+                    if (this.localSettings.targetAPI < 29 /* LATEST */) {
                         const result = {};
                         if (!this.supported(attr, result)) {
                             return '';
@@ -1539,7 +1573,7 @@ var android = (function () {
                 return '';
             }
             supported(attr, result = {}) {
-                if (this.localSettings.targetAPI < 28 /* LATEST */) {
+                if (this.localSettings.targetAPI < 29 /* LATEST */) {
                     const deprecated = DEPRECATED_ANDROID.android;
                     if (deprecated && typeof deprecated[attr] === 'function') {
                         const valid = deprecated[attr](result, this.localSettings.targetAPI, this);
@@ -1547,7 +1581,7 @@ var android = (function () {
                             return valid;
                         }
                     }
-                    for (let i = this.localSettings.targetAPI; i <= 28 /* LATEST */; i++) {
+                    for (let i = this.localSettings.targetAPI; i <= 29 /* LATEST */; i++) {
                         const version = API_ANDROID[i];
                         if (version && version.android[attr] !== undefined) {
                             const callback = version.android[attr];
@@ -3203,7 +3237,7 @@ var android = (function () {
         init() {
             const settings = this.userSettings;
             DEFAULT_VIEWSETTINGS = {
-                targetAPI: settings.targetAPI || 28 /* LATEST */,
+                targetAPI: settings.targetAPI || 29 /* LATEST */,
                 supportRTL: typeof settings.supportRTL === 'boolean' ? settings.supportRTL : true,
                 floatPrecision: this.localSettings.precision.standardFloat
             };
@@ -11084,8 +11118,7 @@ var android = (function () {
             const client = [];
             const rotateOrigin = transforms[0].fromCSS ? [] : $utilS.TRANSFORM.rotateOrigin(element).reverse();
             const items = transforms.slice(0).reverse();
-            const length = items.length;
-            for (let i = 1; i < length; i++) {
+            for (let i = 1; i < items.length; i++) {
                 const itemA = items[i];
                 const itemB = items[i - 1];
                 if (itemA.type === itemB.type) {
@@ -12579,15 +12612,17 @@ var android = (function () {
             return [result, renderData];
         }
         createClipPath(target, clipArray, clipPath) {
-            const precision = this.options.floatPrecisionValue;
+            const definitions = this.SVG_INSTANCE.definitions;
+            const options = this.options;
+            const precision = options.floatPrecisionValue;
             let result = 0;
             clipPath.split(';').forEach((value, index, array) => {
                 if (value.charAt(0) === '#') {
-                    const element = this.SVG_INSTANCE.definitions.clipPath.get(value);
+                    const element = definitions.clipPath.get(value);
                     if (element) {
                         const g = new $SvgG(element);
                         g.build({
-                            exclude: this.options.transformExclude,
+                            exclude: options.transformExclude,
                             residual: partitionTransforms,
                             precision
                         });
@@ -12596,12 +12631,16 @@ var android = (function () {
                             precision
                         });
                         g.each((child) => {
-                            if (child.path && child.path.value) {
-                                let name = getVectorName(child, 'clip_path', array.length > 1 ? index + 1 : -1);
-                                if (!this.queueAnimations(child, name, item => $SvgBuild.asAnimate(item) || $SvgBuild.asSet(item), child.path.value)) {
-                                    name = '';
+                            const path = child.path;
+                            if (path) {
+                                const pathData = path.value;
+                                if (pathData) {
+                                    let name = getVectorName(child, 'clip_path', array.length > 1 ? index + 1 : -1);
+                                    if (!this.queueAnimations(child, name, item => $SvgBuild.asAnimate(item) || $SvgBuild.asSet(item), pathData)) {
+                                        name = '';
+                                    }
+                                    clipArray.push({ name, pathData });
                                 }
-                                clipArray.push({ name, pathData: child.path.value });
                             }
                         });
                     }
@@ -12622,14 +12661,15 @@ var android = (function () {
             if (svg.animations.length) {
                 const animate = $util$j.filterArray(svg.animations, (item, index, array) => !item.paused && (item.duration >= 0 || item.setterType) && predicate(item, index, array));
                 if (animate.length) {
+                    const element = svg.element;
                     this.ANIMATE_DATA.set(name, {
-                        element: svg.element,
+                        element,
                         animate,
                         pathData
                     });
                     if (targetName) {
                         this.ANIMATE_TARGET.set(targetName, {
-                            element: svg.element,
+                            element,
                             animate,
                             pathData
                         });
@@ -12640,14 +12680,15 @@ var android = (function () {
             return false;
         }
         createPropertyValue(propertyName, valueTo, duration, valueType, valueFrom = '', startOffset = '', repeatCount = '0') {
+            const precision = this.options.floatPrecisionValue;
             return {
                 propertyName,
                 startOffset,
                 duration,
                 repeatCount,
                 valueType,
-                valueFrom: $util$j.isNumber(valueFrom) ? $math$6.truncate(valueFrom, this.options.floatPrecisionValue) : valueFrom,
-                valueTo: $util$j.isNumber(valueTo) ? $math$6.truncate(valueTo, this.options.floatPrecisionValue) : valueTo,
+                valueFrom: $util$j.isNumber(valueFrom) ? $math$6.truncate(valueFrom, precision) : valueFrom,
+                valueTo: $util$j.isNumber(valueTo) ? $math$6.truncate(valueTo, precision) : valueTo,
                 propertyValuesHolder: false
             };
         }

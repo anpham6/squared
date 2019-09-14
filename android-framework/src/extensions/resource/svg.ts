@@ -307,8 +307,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
         const client: SvgTransform[] = [];
         const rotateOrigin = transforms[0].fromCSS ? [] : $utilS.TRANSFORM.rotateOrigin(element).reverse();
         const items = transforms.slice(0).reverse();
-        const length = items.length;
-        for (let i = 1; i < length; i++) {
+        for (let i = 1; i < items.length; i++) {
             const itemA = items[i];
             const itemB = items[i - 1];
             if (itemA.type === itemB.type) {
@@ -1853,12 +1852,13 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     private createClipPath(target: SvgView, clipArray: StringMap[], clipPath: string) {
+        const definitions = this.SVG_INSTANCE.definitions;
         const options = this.options;
         const precision = options.floatPrecisionValue;
         let result = 0;
         clipPath.split(';').forEach((value, index, array) => {
             if (value.charAt(0) === '#') {
-                const element = this.SVG_INSTANCE.definitions.clipPath.get(value);
+                const element = definitions.clipPath.get(value);
                 if (element) {
                     const g = new $SvgG(element);
                     g.build({

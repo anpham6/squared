@@ -1,4 +1,5 @@
 export const enum BUILD_ANDROID {
+    Q = 29,
     PIE = 28,
     OREO_1 = 27,
     OREO = 26,
@@ -15,7 +16,7 @@ export const enum BUILD_ANDROID {
     ICE_CREAM_SANDWICH_1 = 15,
     ICE_CREAM_SANDWICH = 14,
     ALL = 0,
-    LATEST = 28
+    LATEST = 29
 }
 
 export const enum DENSITY_ANDROID {

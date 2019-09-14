@@ -1,4 +1,4 @@
-/* chrome-framework 1.2.9
+/* chrome-framework 1.2.10
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -86,9 +86,6 @@ var chrome = (function () {
         }
         includeElement() {
             return true;
-        }
-        cacheElement(node) {
-            this._elementMap.set(node.element, node);
         }
         cacheElementList(list) {
             const elementMap = this._elementMap;

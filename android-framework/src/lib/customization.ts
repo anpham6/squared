@@ -29,8 +29,42 @@ function substitute(result: {}, value: string, api?: number, minApi = 0) {
 }
 
 export const API_ANDROID: Customizations = {
-    [BUILD_ANDROID.PIE]: {
+    [BUILD_ANDROID.Q]: {
         android: {},
+        assign: {}
+    },
+    [BUILD_ANDROID.PIE]: {
+        android: {
+            'allowAudioPlaybackCapture': false,
+            'enforceNavigationBarContrast': false,
+            'enforceStatusBarContrast': false,
+            'forceDarkAllowed': false,
+            'forceUriPermissions': false,
+            'foregroundServiceType': false,
+            'hasFragileUserData': false,
+            'identifier': false,
+            'inheritShowWhenLocked': false,
+            'interactiveUiTimeout': false,
+            'isLightTheme': false,
+            'isSplitRequired': false,
+            'minAspectRatio': false,
+            'nonInteractiveUiTimeout': false,
+            'opticalInsetBottom': false,
+            'opticalInsetLeft': false,
+            'opticalInsetRight': false,
+            'opticalInsetTop': false,
+            'packageType': false,
+            'requestLegacyExternalStorage': false,
+            'secureElementName': false,
+            'selectionDividerHeight': false,
+            'settingsSliceUri': false,
+            'shell': false,
+            'supportsMultipleDisplays': false,
+            'textLocale': false,
+            'useAppZygote': false,
+            'useEmbeddedDex': false,
+            'zygotePreloadName': false
+        },
         assign: {}
     },
     [BUILD_ANDROID.OREO_1]: {
