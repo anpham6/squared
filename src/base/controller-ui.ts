@@ -390,6 +390,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                 parent = actualParent;
                             }
                             else if (this.userSettings.supportNegativeLeftTop) {
+                                const box = parent.box;
                                 let outside = false;
                                 while (parent && parent !== documentRoot) {
                                     if (!outside) {
@@ -399,9 +400,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             break;
                                         }
                                         else {
-                                            const outsideX = !overflowX && node.outsideX(parent.box);
-                                            const outsideY = !overflowY && node.outsideY(parent.box);
-                                            if (!overflowY && node.linear.top < Math.floor(parent.box.top) && (node.top < 0 || node.marginTop < 0)) {
+                                            const outsideX = !overflowX && node.outsideX(box);
+                                            const outsideY = !overflowY && node.outsideY(box);
+                                            if (!overflowY && node.linear.top < Math.floor(box.top) && (node.top < 0 || node.marginTop < 0)) {
                                                 outside = true;
                                             }
                                             else if (outsideX && !node.hasPX('left') && node.right > 0 || outsideY && !node.hasPX('top') && node.bottom !== 0) {
@@ -413,7 +414,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.hasPX('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
                                                 outside = true;
                                             }
-                                            else if (!overflowX && !overflowY && !node.intersectX(parent.box) && !node.intersectY(parent.box)) {
+                                            else if (!overflowX && !overflowY && !node.intersectX(box) && !node.intersectY(box)) {
                                                 outside = true;
                                             }
                                             else {
@@ -425,7 +426,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                         parent = absoluteParent as T;
                                         break;
                                     }
-                                    else if (node.withinX(parent.box) && node.withinY(parent.box)) {
+                                    else if (node.withinX(box) && node.withinY(box)) {
                                         break;
                                     }
                                     parent = parent.actualParent as T;
@@ -439,22 +440,23 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
                 if (parent !== actualParent) {
                     if (absoluteParent && absoluteParent.positionRelative && parent !== absoluteParent) {
+                        const { left, right, top, bottom } = absoluteParent;
                         const bounds = node.bounds;
-                        if (absoluteParent.left !== 0) {
-                            bounds.left += absoluteParent.left;
-                            bounds.right += absoluteParent.left;
+                        if (left !== 0) {
+                            bounds.left += left;
+                            bounds.right += left;
                         }
-                        else if (!absoluteParent.hasPX('left') && absoluteParent.right !== 0) {
-                            bounds.left -= absoluteParent.right;
-                            bounds.right -= absoluteParent.right;
+                        else if (!absoluteParent.hasPX('left') && right !== 0) {
+                            bounds.left -= right;
+                            bounds.right -= right;
                         }
-                        if (absoluteParent.top !== 0) {
-                            bounds.top += absoluteParent.top;
-                            bounds.bottom += absoluteParent.top;
+                        if (top !== 0) {
+                            bounds.top += top;
+                            bounds.bottom += top;
                         }
-                        else if (!absoluteParent.hasPX('top') && absoluteParent.bottom !== 0) {
-                            bounds.top -= absoluteParent.bottom;
-                            bounds.bottom -= absoluteParent.bottom;
+                        else if (!absoluteParent.hasPX('top') && bottom !== 0) {
+                            bounds.top -= bottom;
+                            bounds.bottom -= bottom;
                         }
                         node.unset('box');
                         node.unset('linear');
@@ -554,6 +556,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public cascadeDocument(templates: NodeTemplate<T>[], depth: number) {
         const indent = depth > 0 ? '\t'.repeat(depth) : '';
+        const showAttributes = this.userSettings.showAttributes;
         let output = '';
         for (const item of templates) {
             if (item) {
@@ -561,21 +564,22 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 switch (item.type) {
                     case NODE_TEMPLATE.XML: {
                         const { controlName, attributes } = <NodeXmlTemplate<T>> item;
+                        const { id, renderTemplates } = node;
                         const renderDepth = depth + 1;
-                        const beforeInside = this.getBeforeInsideTemplate(node.id, renderDepth);
-                        const afterInside = this.getAfterInsideTemplate(node.id, renderDepth);
-                        let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
-                        if (node.renderTemplates || beforeInside !== '' || afterInside !== '') {
+                        const beforeInside = this.getBeforeInsideTemplate(id, renderDepth);
+                        const afterInside = this.getAfterInsideTemplate(id, renderDepth);
+                        let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? $xml.pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
+                        if (renderTemplates || beforeInside !== '' || afterInside !== '') {
                             template += '>\n' +
                                         beforeInside +
-                                        (node.renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> node.renderTemplates), renderDepth) : '') +
+                                        (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> renderTemplates), renderDepth) : '') +
                                         afterInside +
                                         indent + `</${controlName}>\n`;
                         }
                         else {
                             template += ' />\n';
                         }
-                        output += this.getBeforeOutsideTemplate(node.id, depth) + template + this.getAfterOutsideTemplate(node.id, depth);
+                        output += this.getBeforeOutsideTemplate(id, depth) + template + this.getAfterOutsideTemplate(id, depth);
                         break;
                     }
                     case NODE_TEMPLATE.INCLUDE: {

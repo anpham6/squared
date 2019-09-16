@@ -138,8 +138,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 );
             }
         }
-        this.resourceHandler.finalize(this._layouts);
-        controller.finalize(this._layouts);
+        const layouts = this._layouts;
+        this.resourceHandler.finalize(layouts);
+        controller.finalize(layouts);
         for (const ext of this.extensions) {
             ext.afterFinalize();
         }
@@ -237,11 +238,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 content,
                 index
             };
-            if (index !== undefined && index >= 0 && index < this._layouts.length) {
-                this._layouts.splice(index, 0, layout);
+            const layouts = this._layouts;
+            if (index !== undefined && index >= 0 && index < layouts.length) {
+                layouts.splice(index, 0, layout);
             }
             else {
-                this._layouts.push(layout);
+                layouts.push(layout);
             }
         }
     }
@@ -646,261 +648,266 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        if (styleMap && styleMap.content) {
-            if ($util.trimString(styleMap.content, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
-                let valid = true;
-                for (const attr in styleMap) {
-                    if (/(Width|Height)$/.test(attr) && $css.isLength(styleMap[attr], true) && $util.convertFloat(styleMap[attr]) !== 0) {
-                        valid = false;
-                        break;
-                    }
-                }
-                if (valid) {
-                    return undefined;
-                }
-            }
+        if (styleMap) {
             let value = styleMap.content;
-            if (value === 'inherit') {
-                let current: HTMLElement | null = element;
-                while (current) {
-                    value = $css.getStyle(current).getPropertyValue('content');
-                    if (value !== 'inherit') {
-                        break;
-                    }
-                    current = current.parentElement;
-                }
-            }
-            const style = $css.getStyle(element);
-            if (styleMap.fontFamily === undefined) {
-                styleMap.fontFamily = style.getPropertyValue('font-family');
-            }
-            if (styleMap.fontSize === undefined) {
-                styleMap.fontSize = style.getPropertyValue('font-size');
-            }
-            if (styleMap.fontWeight === undefined) {
-                styleMap.fontWeight = style.getPropertyValue('font-weight');
-            }
-            if (styleMap.color === undefined) {
-                styleMap.color = style.getPropertyValue('color');
-            }
-            if (styleMap.display === undefined) {
-                styleMap.display = 'inline';
-            }
-            let tagName = styleMap.display.startsWith('inline') ? 'span' : 'div';
-            let content = '';
-            switch (value) {
-                case 'normal':
-                case 'none':
-                case 'initial':
-                case 'inherit':
-                case 'no-open-quote':
-                case 'no-close-quote':
-                case '""':
-                    break;
-                case 'open-quote':
-                    if (pseudoElt === '::before') {
-                        content = nested % 2 === 0 ? '&#8220;' : "&#8216;";
-                    }
-                    break;
-                case 'close-quote':
-                    if (pseudoElt === '::after') {
-                        content = nested % 2 === 0 ? '&#8221;' : "&#8217;";
-                    }
-                    break;
-                default:
-                    if (value.startsWith('url(')) {
-                        content = $css.resolveURL(value);
-                        const format = $util.fromLastIndexOf(content, '.').toLowerCase();
-                        const imageFormat = this.controllerHandler.localSettings.supported.imageFormat;
-                        if (imageFormat === '*' || imageFormat.includes(format)) {
-                            tagName = 'img';
-                        }
-                        else {
-                            content = '';
-                        }
-                    }
-                    else {
-                        if (CACHE_PATTERN.COUNTER === undefined) {
-                            CACHE_PATTERN.COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
-                            CACHE_PATTERN.COUNTER_VALUE = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
-                        }
-                        else {
-                            CACHE_PATTERN.COUNTER.lastIndex = 0;
-                        }
-                        let found = false;
-                        let match: RegExpExecArray | null;
-                        while ((match = CACHE_PATTERN.COUNTER.exec(value)) !== null) {
-                            if (match[1]) {
-                                content += $dom.getNamedItem(element, match[1].trim());
+            if (value) {
+                if ($util.trimString(value, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
+                    let valid = true;
+                    for (const attr in styleMap) {
+                        if (/(Width|Height)$/.test(attr)) {
+                            const dimension = styleMap[attr];
+                            if ($css.isLength(dimension, true) && $util.convertFloat(dimension) !== 0) {
+                                valid = false;
+                                break;
                             }
-                            else if (match[2] || match[5]) {
-                                const counterType = match[2] === 'counter';
-                                let counterName: string;
-                                let styleName: string;
-                                if (counterType) {
-                                    counterName = match[3];
-                                    styleName = match[4] || 'decimal';
+                        }
+                    }
+                    if (valid) {
+                        return undefined;
+                    }
+                }
+                if (value === 'inherit') {
+                    let current: HTMLElement | null = element;
+                    while (current) {
+                        value = $css.getStyle(current).getPropertyValue('content');
+                        if (value !== 'inherit') {
+                            break;
+                        }
+                        current = current.parentElement;
+                    }
+                }
+                const style = $css.getStyle(element);
+                if (styleMap.fontFamily === undefined) {
+                    styleMap.fontFamily = style.getPropertyValue('font-family');
+                }
+                if (styleMap.fontSize === undefined) {
+                    styleMap.fontSize = style.getPropertyValue('font-size');
+                }
+                if (styleMap.fontWeight === undefined) {
+                    styleMap.fontWeight = style.getPropertyValue('font-weight');
+                }
+                if (styleMap.color === undefined) {
+                    styleMap.color = style.getPropertyValue('color');
+                }
+                if (styleMap.display === undefined) {
+                    styleMap.display = 'inline';
+                }
+                let tagName = styleMap.display.startsWith('inline') ? 'span' : 'div';
+                let content = '';
+                switch (value) {
+                    case 'normal':
+                    case 'none':
+                    case 'initial':
+                    case 'inherit':
+                    case 'no-open-quote':
+                    case 'no-close-quote':
+                    case '""':
+                        break;
+                    case 'open-quote':
+                        if (pseudoElt === '::before') {
+                            content = nested % 2 === 0 ? '&#8220;' : "&#8216;";
+                        }
+                        break;
+                    case 'close-quote':
+                        if (pseudoElt === '::after') {
+                            content = nested % 2 === 0 ? '&#8221;' : "&#8217;";
+                        }
+                        break;
+                    default:
+                        if (value.startsWith('url(')) {
+                            content = $css.resolveURL(value);
+                            const format = $util.fromLastIndexOf(content, '.').toLowerCase();
+                            const imageFormat = this.controllerHandler.localSettings.supported.imageFormat;
+                            if (imageFormat === '*' || imageFormat.includes(format)) {
+                                tagName = 'img';
+                            }
+                            else {
+                                content = '';
+                            }
+                        }
+                        else {
+                            if (CACHE_PATTERN.COUNTER === undefined) {
+                                CACHE_PATTERN.COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
+                                CACHE_PATTERN.COUNTER_VALUE = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
+                            }
+                            else {
+                                CACHE_PATTERN.COUNTER.lastIndex = 0;
+                            }
+                            let found = false;
+                            let match: RegExpExecArray | null;
+                            while ((match = CACHE_PATTERN.COUNTER.exec(value)) !== null) {
+                                if (match[1]) {
+                                    content += $dom.getNamedItem(element, match[1].trim());
                                 }
-                                else {
-                                    counterName = match[6];
-                                    styleName = match[8] || 'decimal';
-                                }
-                                function getCounterValue(name: string) {
-                                    if (name !== 'none') {
-                                        CACHE_PATTERN.COUNTER_VALUE.lastIndex = 0;
-                                        let counterMatch: RegExpExecArray | null;
-                                        while ((counterMatch = CACHE_PATTERN.COUNTER_VALUE.exec(name)) !== null) {
-                                            if (counterMatch[1] === counterName) {
-                                                return parseInt(counterMatch[2]);
-                                            }
-                                        }
-                                    }
-                                    return undefined;
-                                }
-                                const getIncrementValue = (parent: Element) => {
-                                    const pseduoStyle: StringMap = $session.getElementCache(parent, 'styleMap' + pseudoElt, sessionId);
-                                    if (pseduoStyle && pseduoStyle.counterIncrement) {
-                                        return getCounterValue(pseduoStyle.counterIncrement);
-                                    }
-                                    return undefined;
-                                };
-                                const initalValue = (getIncrementValue(element) || 0) + (getCounterValue(style.getPropertyValue('counter-reset')) || 0);
-                                const subcounter: number[] = [];
-                                let current: Element | null = element;
-                                let counter = initalValue;
-                                let ascending = false;
-                                let lastResetElement: Element | undefined;
-                                function incrementCounter(increment: number, pseudo: boolean) {
-                                    if (subcounter.length === 0) {
-                                        counter += increment;
-                                    }
-                                    else if (ascending || pseudo) {
-                                        subcounter[subcounter.length - 1] += increment;
-                                    }
-                                }
-                                function cascadeSibling(sibling: Element) {
-                                    if (getCounterValue($css.getStyle(sibling).getPropertyValue('counter-reset')) === undefined) {
-                                        const children = sibling.children;
-                                        const length = children.length;
-                                        for (let i = 0; i < length; i++) {
-                                            const child = children[i];
-                                            if (child.className !== '__squared.pseudo') {
-                                                let increment = getIncrementValue(child);
-                                                if (increment) {
-                                                    incrementCounter(increment, true);
-                                                }
-                                                const childStyle = $css.getStyle(child);
-                                                increment = getCounterValue(childStyle.getPropertyValue('counter-increment'));
-                                                if (increment) {
-                                                    incrementCounter(increment, false);
-                                                }
-                                                increment = getCounterValue(childStyle.getPropertyValue('counter-reset'));
-                                                if (increment !== undefined) {
-                                                    return;
-                                                }
-                                                cascadeSibling(child);
-                                            }
-                                        }
-                                    }
-                                }
-                                do {
-                                    ascending = false;
-                                    if (current.previousElementSibling) {
-                                        current = current.previousElementSibling;
-                                        cascadeSibling(current);
-                                    }
-                                    else if (current.parentElement) {
-                                        current = current.parentElement;
-                                        ascending = true;
+                                else if (match[2] || match[5]) {
+                                    const counterType = match[2] === 'counter';
+                                    let counterName: string;
+                                    let styleName: string;
+                                    if (counterType) {
+                                        counterName = match[3];
+                                        styleName = match[4] || 'decimal';
                                     }
                                     else {
-                                        break;
+                                        counterName = match[6];
+                                        styleName = match[8] || 'decimal';
                                     }
-                                    if (current.className !== '__squared.pseudo') {
-                                        const pesudoIncrement = getIncrementValue(current);
-                                        if (pesudoIncrement) {
-                                            incrementCounter(pesudoIncrement, true);
-                                        }
-                                        const currentStyle = $css.getStyle(current);
-                                        const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment')) || 0;
-                                        if (counterIncrement) {
-                                            incrementCounter(counterIncrement, false);
-                                        }
-                                        const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'));
-                                        if (counterReset !== undefined) {
-                                            if (lastResetElement === undefined) {
-                                                counter += counterReset;
-                                            }
-                                            lastResetElement = current;
-                                            if (counterType) {
-                                                break;
-                                            }
-                                            else if (ascending) {
-                                                subcounter.push((pesudoIncrement || 0) + counterReset);
+                                    function getCounterValue(name: string) {
+                                        if (name !== 'none') {
+                                            CACHE_PATTERN.COUNTER_VALUE.lastIndex = 0;
+                                            let counterMatch: RegExpExecArray | null;
+                                            while ((counterMatch = CACHE_PATTERN.COUNTER_VALUE.exec(name)) !== null) {
+                                                if (counterMatch[1] === counterName) {
+                                                    return parseInt(counterMatch[2]);
+                                                }
                                             }
                                         }
+                                        return undefined;
                                     }
-                                }
-                                while (true);
-                                if (lastResetElement) {
-                                    if (!counterType && subcounter.length > 1) {
-                                        subcounter.reverse();
-                                        subcounter.splice(1, 1);
-                                        for (const leading of subcounter) {
-                                            content += $css.convertListStyle(styleName, leading, true) + match[7];
+                                    const getIncrementValue = (parent: Element) => {
+                                        const pseduoStyle: StringMap = $session.getElementCache(parent, 'styleMap' + pseudoElt, sessionId);
+                                        if (pseduoStyle && pseduoStyle.counterIncrement) {
+                                            return getCounterValue(pseduoStyle.counterIncrement);
+                                        }
+                                        return undefined;
+                                    };
+                                    const initalValue = (getIncrementValue(element) || 0) + (getCounterValue(style.getPropertyValue('counter-reset')) || 0);
+                                    const subcounter: number[] = [];
+                                    let current: Element | null = element;
+                                    let counter = initalValue;
+                                    let ascending = false;
+                                    let lastResetElement: Element | undefined;
+                                    function incrementCounter(increment: number, pseudo: boolean) {
+                                        if (subcounter.length === 0) {
+                                            counter += increment;
+                                        }
+                                        else if (ascending || pseudo) {
+                                            subcounter[subcounter.length - 1] += increment;
                                         }
                                     }
+                                    function cascadeSibling(sibling: Element) {
+                                        if (getCounterValue($css.getStyle(sibling).getPropertyValue('counter-reset')) === undefined) {
+                                            const children = sibling.children;
+                                            const length = children.length;
+                                            for (let i = 0; i < length; i++) {
+                                                const child = children[i];
+                                                if (child.className !== '__squared.pseudo') {
+                                                    let increment = getIncrementValue(child);
+                                                    if (increment) {
+                                                        incrementCounter(increment, true);
+                                                    }
+                                                    const childStyle = $css.getStyle(child);
+                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-increment'));
+                                                    if (increment) {
+                                                        incrementCounter(increment, false);
+                                                    }
+                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-reset'));
+                                                    if (increment !== undefined) {
+                                                        return;
+                                                    }
+                                                    cascadeSibling(child);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    do {
+                                        ascending = false;
+                                        if (current.previousElementSibling) {
+                                            current = current.previousElementSibling;
+                                            cascadeSibling(current);
+                                        }
+                                        else if (current.parentElement) {
+                                            current = current.parentElement;
+                                            ascending = true;
+                                        }
+                                        else {
+                                            break;
+                                        }
+                                        if (current.className !== '__squared.pseudo') {
+                                            const pesudoIncrement = getIncrementValue(current);
+                                            if (pesudoIncrement) {
+                                                incrementCounter(pesudoIncrement, true);
+                                            }
+                                            const currentStyle = $css.getStyle(current);
+                                            const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment')) || 0;
+                                            if (counterIncrement) {
+                                                incrementCounter(counterIncrement, false);
+                                            }
+                                            const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'));
+                                            if (counterReset !== undefined) {
+                                                if (lastResetElement === undefined) {
+                                                    counter += counterReset;
+                                                }
+                                                lastResetElement = current;
+                                                if (counterType) {
+                                                    break;
+                                                }
+                                                else if (ascending) {
+                                                    subcounter.push((pesudoIncrement || 0) + counterReset);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    while (true);
+                                    if (lastResetElement) {
+                                        if (!counterType && subcounter.length > 1) {
+                                            subcounter.reverse();
+                                            subcounter.splice(1, 1);
+                                            for (const leading of subcounter) {
+                                                content += $css.convertListStyle(styleName, leading, true) + match[7];
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        counter = initalValue;
+                                    }
+                                    content += $css.convertListStyle(styleName, counter, true);
                                 }
-                                else {
-                                    counter = initalValue;
+                                else if (match[9]) {
+                                    content += match[9];
                                 }
-                                content += $css.convertListStyle(styleName, counter, true);
+                                found = true;
                             }
-                            else if (match[9]) {
-                                content += match[9];
+                            if (!found) {
+                                content = value;
                             }
-                            found = true;
                         }
-                        if (!found) {
-                            content = value;
+                        break;
+                }
+                if (content || value === '""') {
+                    const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
+                    if (tagName === 'img') {
+                        (<HTMLImageElement> pseudoElement).src = content;
+                        const image = this.resourceHandler.getImage(content);
+                        if (image) {
+                            const { width, height } = image;
+                            if (width > 0) {
+                                const dimension = $css.formatPX(width);
+                                if (styleMap.width === undefined) {
+                                    styleMap.width = dimension;
+                                }
+                                pseudoElement.style.width = dimension;
+                            }
+                            if (height > 0) {
+                                const dimension = $css.formatPX(height);
+                                if (styleMap.height === undefined) {
+                                    styleMap.height = dimension;
+                                }
+                                pseudoElement.style.height = dimension;
+                            }
                         }
                     }
-                    break;
-            }
-            if (content || value === '""') {
-                const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
-                if (tagName === 'img') {
-                    (<HTMLImageElement> pseudoElement).src = content;
-                    const image = this.resourceHandler.getImage(content);
-                    if (image) {
-                        const { width, height } = image;
-                        if (width > 0) {
-                            const dimension = $css.formatPX(width);
-                            if (styleMap.width === undefined) {
-                                styleMap.width = dimension;
-                            }
-                            pseudoElement.style.width = dimension;
-                        }
-                        if (height > 0) {
-                            const dimension = $css.formatPX(height);
-                            if (styleMap.height === undefined) {
-                                styleMap.height = dimension;
-                            }
-                            pseudoElement.style.height = dimension;
+                    else if (value !== '""') {
+                        pseudoElement.innerText = content;
+                    }
+                    for (const attr in styleMap) {
+                        if (attr !== 'display') {
+                            pseudoElement.style[attr] = styleMap[attr];
                         }
                     }
+                    $session.setElementCache(pseudoElement, 'pseudoElement', sessionId, pseudoElt);
+                    $session.setElementCache(pseudoElement, 'styleMap', sessionId, styleMap);
+                    return pseudoElement;
                 }
-                else if (value !== '""') {
-                    pseudoElement.innerText = content;
-                }
-                for (const attr in styleMap) {
-                    if (attr !== 'display') {
-                        pseudoElement.style[attr] = styleMap[attr];
-                    }
-                }
-                $session.setElementCache(pseudoElement, 'pseudoElement', sessionId, pseudoElt);
-                $session.setElementCache(pseudoElement, 'styleMap', sessionId, styleMap);
-                return pseudoElement;
             }
         }
         return undefined;
@@ -1435,18 +1442,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let floatgroup: T | undefined;
             if (Array.isArray(item[0])) {
                 segments = item as T[][];
+                const node = layout.node;
                 let grouping: T[] = segments[0];
                 for (let i = 1; i < segments.length; i++) {
                     grouping = grouping.concat(segments[i]);
                 }
                 grouping.sort((a: T, b: T) => a.childIndex < b.childIndex ? -1 : 1);
-                if (layout.node.layoutVertical) {
-                    floatgroup = layout.node;
+                if (node.layoutVertical) {
+                    floatgroup = node;
                 }
                 else {
-                    floatgroup = controller.createNodeGroup(grouping[0], grouping, layout.node);
+                    floatgroup = controller.createNodeGroup(grouping[0], grouping, node);
                     const group = new LayoutUI(
-                        layout.node,
+                        node,
                         floatgroup,
                         containerType,
                         alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
@@ -1497,10 +1505,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const controller = this.controllerHandler;
         const { containerType, alignmentType } = controller.containerTypeVertical;
         if (layout.containerType !== 0) {
-            const parent = controller.createNodeGroup(layout.node, [layout.node], layout.parent);
+            const node = layout.node;
+            const parent = controller.createNodeGroup(node, [node], layout.parent);
             this.addLayout(new LayoutUI(
                 parent,
-                layout.node,
+                node,
                 containerType,
                 alignmentType,
                 parent.children as T[]

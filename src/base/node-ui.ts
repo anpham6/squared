@@ -465,18 +465,21 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public hide(invisible?: boolean) {
-        this.rendered = true;
-        this.visible = false;
         const renderParent = this.renderParent;
-        if (renderParent && renderParent.renderTemplates) {
-            const index = renderParent.renderChildren.findIndex(node => node === this);
-            if (index !== -1) {
-                const template = renderParent.renderTemplates[index];
-                if (template && template.node === this) {
-                    renderParent.renderTemplates[index] = null;
+        if (renderParent) {
+            const renderTemplates = renderParent.renderTemplates;
+            if (renderTemplates) {
+                const index = renderParent.renderChildren.findIndex(node => node === this);
+                if (index !== -1) {
+                    const template = renderTemplates[index];
+                    if (template && template.node === this) {
+                        renderTemplates[index] = null;
+                    }
                 }
             }
         }
+        this.rendered = true;
+        this.visible = false;
     }
 
     public inherit(node: T, ...modules: string[]) {
