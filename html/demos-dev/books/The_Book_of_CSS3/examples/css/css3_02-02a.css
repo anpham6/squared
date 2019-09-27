@@ -1,0 +1,8 @@
+h1 {
+    background: black url('../images/landscape-600.jpg') no-repeat;
+    color: white;
+    height: 189px;
+    margin-bottom: 0;
+    padding: 20px;
+    width: 560px;
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 16-4</title>
+  <style>
+  .extrinsic {
+    background-color: silver;
+    padding: 1em;
+  }
+  .fill {
+    background-color: white;
+    border: 5px solid #666;
+    border-width: 0 5px;
+    display: inline-block;
+    margin: 0;
+    padding: 0 1em;
+    width: -moz-available;
+    width: -webkit-fill-available;
+    width: fill;
+  }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body class="ch_16">
+<div class="container">
+  <div class="span-6">&thinsp;</div>
+  <div class="span-12">
+    <div class="extrinsic">
+      <img src="images/arundel.jpg" width="320">
+      <p class="fill">Arundel Castle.</p>
+    </div>
+  </div>
+  <div class="span-6 last">&thinsp;</div>
+</div>
+
+</body>
+</html>

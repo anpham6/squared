@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 15-12</title>
+  <style>
+  .ch_15 .flex-container {
+    align-items: flex-end;
+    height: 150px;
+  }
+  .ch_15 .flex-item { flex-grow: 1; }
+  #c { align-self: center; }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body class="ch_15">
+<div class="container">
+  <div class="span-4">&thinsp;</div>
+  <div class="span-16">
+    <div class="flex-container">
+      <div class="flex-item">A</div>
+      <div class="flex-item">B</div>
+      <div class="flex-item" id="c">C</div>
+    </div>
+  </div>
+  <div class="span-4 last">&thinsp;</div>
+</div>
+
+</body>
+</html>

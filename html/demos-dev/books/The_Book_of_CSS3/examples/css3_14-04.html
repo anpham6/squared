@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 14-4</title>
+  <style>
+    .transition {
+        border: 1px solid black;
+        height: 250px;
+        padding: 10px;
+    }
+    h1 {
+        font: bold 300%/250px ChunkFiveRegular, serif;
+        text-align: center;
+        -webkit-transition: font-size 2s ease-out 250ms;
+        transition: font-size 2s ease-out 250ms;
+    }
+    h1:hover { font-size: 1200%; }
+    </style>
+    		<script src="/node_modules/systemjs/dist/system.js"></script>
+            <script src="/dist/squared.js"></script>
+            <script src="/dist/squared.base.js"></script>
+            <script src="/dist/android.framework.js"></script>
+            <script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="span-6">&nbsp;</div>
+    <div class="span-12">
+        <div class="transition box-sizing">
+            <h1>CSS3</h1>
+        </div>
+    </div>
+    <div class="span-6 last">&nbsp;</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 16-1</title>
+  <style>
+  .box-model {
+    background-color: #EEE;
+    background-clip: content-box;
+    border: 10px solid gray;
+    border-width: 0 10px;
+    margin: 0 auto;
+    padding: 0 20px;
+    width: 250px;
+  }
+  .border-box {
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+  .box-model p { margin: 0; }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body class="ch_16">
+<div class="container">
+  <div class="span-24">
+    <div class="box-model">
+      <p>All states, all powers, that have held and hold rule over men have been and are either republics or principalities. Principalities are either hereditary, in which the family has been long established; or they are new.</p>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="span-24">
+    <div class="box-model border-box">
+      <p>All states, all powers, that have held and hold rule over men have been and are either republics or principalities. Principalities are either hereditary, in which the family has been long established; or they are new.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

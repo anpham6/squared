@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 9-3</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+    .radius-1 {
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+      border-bottom-left-radius: 20px;
+    }
+    .radius-2 {
+      border-top-left-radius: 10px 20px;
+      border-top-right-radius: 10px 20px;
+      border-bottom-right-radius: 10px 20px;
+      border-bottom-left-radius: 10px 20px;
+    }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-6">&nbsp;</div>
+    <div class="span-6">
+        <div class="radius-1"></div>
+    </div>
+    <div class="span-6">
+        <div class="radius-2"></div>
+    </div>
+    <div class="span-6 last">&nbsp;</div>
+</div>
+
+</body>
+</html>

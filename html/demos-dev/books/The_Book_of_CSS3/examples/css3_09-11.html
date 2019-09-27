@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 9-11</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+    .bimage div {
+      background-color: #DDD;
+      -webkit-border-image: url('images/frame.png') 34 stretch;
+      border-image: url('images/frame.png') 34 stretch;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+      border-width: 34px;
+      height: 100%;
+    }
+    .bimage h2 {
+      color: #333;
+      font-family: ChunkFiveRegular, sans-serif;
+      -moz-hyphens: auto;
+      hyphens: auto;
+      margin-bottom: 0;
+      text-align: justify;
+    }
+    div.bimage-2 { border-image-outset: 15px 30px; }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-2">&thinsp;</div>
+    <div class="span-10 bimage">
+      <div class="bimage-1">
+        <h2>One morning, when Gregor Samsa woke from troubled dreams, he found himself transformed in his bed into a horrible vermin.</h2>
+      </div>
+    </div>
+    <div class="span-10 bimage">
+      <div class="bimage-2">
+        <h2>One morning, when Gregor Samsa woke from troubled dreams, he found himself transformed in his bed into a horrible vermin.</h2>
+      </div>
+    </div>
+    <div class="span-2 last">&thinsp;</div>
+</div>
+
+</body>
+</html>

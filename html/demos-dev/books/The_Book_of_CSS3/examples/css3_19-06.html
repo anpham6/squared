@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 19-6</title>
+  <style>
+  .source { -webkit-flow-into: foo; }
+  .holder div { -webkit-flow-from: foo; }
+  /* Decoration */
+  .holder {
+    display: -webkit-flex;
+    -webkit-align-items: flex-start;
+    -webkit-flex-direction: column;
+    -webkit-justify-content: space-between;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .holder div {
+    background-color: #DDD;
+    -webkit-flex: 0;
+    flex: 0;
+    height: 6em;
+    width: 50%;
+  }
+  div.b {
+    background-color: #BBB;
+    -webkit-align-self: center;
+    align-self: center;
+  }
+  div.c {
+    -webkit-align-self: flex-end;
+    align-self: flex-end;
+  }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body class="ch_18">
+<p class="source">While I watched the tempest, so beautiful yet terrific, I wandered on with a hasty step. This noble war in the sky elevated my spirits; I clasped my hands, and exclaimed aloud, “William, dear angel! This is thy funeral, this thy dirge!” As I said these words, I perceived in the gloom a figure which stole from behind a clump of trees near me; I stood fixed, gazing intently: I could not be mistaken. A flash of lightning illuminated the object, and discovered its shape plainly to me; its gigantic stature, and the deformity of its aspect more hideous than belongs to humanity, instantly informed me that it was the wretch, the filthy daemon, to whom I had given life.</p>
+<div class="container">
+  <div class="span-4">&thinsp;</div>
+  <div class="span-16">
+  	<div class="holder">
+      <div class="a"></div>
+      <div class="b"></div>
+      <div class="c"></div>
+    </div>
+  </div>
+  <div class="span-4 last">&thinsp;</div>
+</div>
+
+</body>
+</html>

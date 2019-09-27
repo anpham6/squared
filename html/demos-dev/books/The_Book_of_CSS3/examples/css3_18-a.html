@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 18-a</title>
+  <style>
+  .grayscale {
+    -webkit-filter: grayscale(100%);
+    filter: url('#grayscale');
+    filter: grayscale(100%);
+  }
+  .sepia {
+    -webkit-filter: sepia(100%);
+    filter: url('#sepia');
+    filter: sepia(100%);
+  }
+  .saturate {
+    -webkit-filter: saturate(200%);
+    filter: url('#saturate');
+    filter: saturate(200%);
+  }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body class="ch_18">
+<div class="container">
+  <div class="span-6">
+    <img src="images/landscape-medium-colour.jpg">
+  </div>
+  <div class="span-6">
+    <img src="images/landscape-medium-colour.jpg" class="grayscale">
+  </div>
+  <div class="span-6">
+    <img src="images/landscape-medium-colour.jpg" class="sepia">
+  </div>
+  <div class="span-6 last">
+    <img src="images/landscape-medium-colour.jpg" class="saturate">
+  </div>
+</div>
+<svg>
+  <filter id="grayscale">
+    <feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0
+                                         0.2126 0.7152 0.0722 0 0
+                                         0.2126 0.7152 0.0722 0 0
+                                         0 0 0 1 0"/>
+  </filter>
+  <filter id="sepia">
+    <feColorMatrix type="matrix" values="0.393 0.769 0.189 0 0
+                                         0.349 0.686 0.168 0 0
+                                         0.272 0.534 0.131 0 0
+                                         0 0 0 1 0"/>
+  </filter>
+  <filter id="saturate">
+    <feColorMatrix type="saturate" values="2"/>
+  </filter>
+</svg>
+
+</body>
+</html>

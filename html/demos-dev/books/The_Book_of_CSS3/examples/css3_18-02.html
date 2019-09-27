@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 18-2</title>
+  <style>
+  .blend {
+    background-image: url('images/landscape-300.jpg'), url('images/eyes.jpg');
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 200px;
+    transition: all 0.5s;
+  }
+  .screen { background-blend-mode: screen; }
+  .multiply { background-blend-mode: multiply; }
+  .overlay { background-blend-mode: overlay; }
+  .blend:hover {
+    background-position: 0 0, 100% 100%;
+    background-size: 50% auto;
+  }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="span-8">
+    <div class="blend screen"></div>
+  </div>
+  <div class="span-8">
+    <div class="blend multiply"></div>
+  </div>
+  <div class="span-8 last">
+    <div class="blend overlay"></div>
+  </div>
+</div>
+
+</body>
+</html>

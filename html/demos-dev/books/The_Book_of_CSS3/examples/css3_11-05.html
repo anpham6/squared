@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 11-5</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+.container div { min-height: 150px; }
+.gradient-1 {
+  background-image: -webkit-linear-gradient(left center, black, white 75%);
+  background-image: linear-gradient(to right, black, white 75%);
+}
+.gradient-2 {
+  background-image: -webkit-linear-gradient(left center, black 50%, white);
+  background-image: linear-gradient(to right, black 50%, white);
+}
+.gradient-3 {
+  background-image: -webkit-linear-gradient(left center, black, white 50%, black 1px);
+  background-image: linear-gradient(to right, black, white 50%, black 1px);
+}
+</style>
+		<script src="/node_modules/systemjs/dist/system.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="span-8 gradient-1"></div>
+  <div class="span-8 gradient-2"></div>
+  <div class="span-8 last gradient-3"></div>
+</div>
+
+</body>
+</html>

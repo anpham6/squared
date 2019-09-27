@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 6-9</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+p {
+	font-size: 2em;
+	line-height: 1.25;
+	margin: 0;
+	padding: 0 0.5em;
+}
+.hyphens p {
+	-moz-hyphens: auto;
+	-ms-hyphens: auto;
+	-webkit-hyphens: auto;
+	hyphens: auto;
+}
+mark { background-color: #DDD; }
+</style>
+		<script src="/node_modules/systemjs/dist/system.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-12">
+        <p> Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or <mark>conversations</mark> in it, 'and what is the use of a book,' thought Alice 'without pictures or conversation?'</p>
+    </div>
+    <div class="span-12 last hyphens">
+        <p>Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or <mark>conversations</mark> in it, 'and what is the use of a book,' thought Alice 'without pictures or conversation?'</p>
+    </div>
+</div>
+
+</body>
+</html>

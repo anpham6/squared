@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 15-14</title>
+  <style>
+  .ch_15 .flex-container {
+    flex-wrap: wrap;
+    height: 250px;
+  }
+  #container-a { align-content: center; }
+  #container-b { align-content: space-between; }
+  .ch_15 .flex-item {
+    flex-shrink: 0;
+    width: 250px;
+  }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body class="ch_15">
+<div class="container">
+  <div class="span-4">&thinsp;</div>
+  <div class="span-16">
+    <div class="flex-container" id="container-a">
+      <div class="flex-item">A</div>
+      <div class="flex-item">B</div>
+      <div class="flex-item">C</div>
+    </div>
+  </div>
+  <div class="span-4 last">&thinsp;</div>
+</div>
+<div class="container">
+  <div class="span-4">&thinsp;</div>
+  <div class="span-16">
+    <div class="flex-container" id="container-b">
+      <div class="flex-item">A</div>
+      <div class="flex-item">B</div>
+      <div class="flex-item">C</div>
+    </div>
+  </div>
+  <div class="span-4 last">&thinsp;</div>
+</div>
+
+</body>
+</html>

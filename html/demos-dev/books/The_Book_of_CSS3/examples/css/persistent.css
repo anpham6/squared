@@ -1,0 +1,284 @@
+.container { padding-top: 20px; }
+
+.alert {
+	background-color: yellow;
+	padding: 10px 0;
+}
+
+.alert p {
+	font-weight: bold;
+	margin: 0 auto;
+	max-width: 90%;
+	min-width: 400px;
+	text-align: center;
+}
+
+.box-sizing {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* Fonts */
+
+@font-face {
+  font-family: 'ChunkFiveRegular';
+  src:  url('../assets/ChunkFive/Chunkfive-webfont.eot');
+  src:  url('../assets/ChunkFive/Chunkfive-webfont.eot?#iefix') format('embedded-opentype'),
+        url('../assets/ChunkFive/Chunkfive-webfont.woff') format('woff'),
+        url('../assets/ChunkFive/Chunkfive-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'PT Sans';
+  src:  url('../assets/PT-Sans/PT_Sans-webfont.eot');
+  src:  url('../assets/PT-Sans/PT_Sans-webfont.eot?#iefix') format('embedded-opentype'),
+        url('../assets/PT-Sans/PT_Sans-webfont.woff') format('woff'),
+        url('../assets/PT-Sans/PT_Sans-webfont.ttf') format('truetype');
+  font-style: normal;
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'PT Sans';
+  src:  url('../assets/PT-Sans/PT_Sans_Narrow-webfont.eot');
+  src:  url('../assets/PT-Sans/PT_Sans_Narrow-webfont.eot?#iefix') format('embedded-opentype'),
+        url('../assets/PT-Sans/PT_Sans_Narrow-webfont.woff') format('woff'),
+        url('../assets/PT-Sans/PT_Sans_Narrow-webfont.ttf') format('truetype');
+  font-stretch: condensed;
+  font-style: normal;
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'Gentium Basic';
+  src:  url('../assets/GentiumBasic/GenBasR-webfont.eot');
+  src:  url('../assets/GentiumBasic/GenBasR-webfont.eot?#iefix') format('embedded-opentype'),
+        url('../assets/GentiumBasic/GenBasR-webfont.woff') format('woff'),
+        url('../assets/GentiumBasic/GenBasR-webfont.ttf')  format('truetype');
+}
+@font-face {
+  font-family: 'Gentium Basic';
+  font-style: italic;
+  src:  url('../assets/GentiumBasic/GenBasI-webfont.eot');
+  src:  url('../assets/GentiumBasic/GenBasI-webfont.eot?#iefix') format('embedded-opentype'),
+        url('../assets/GentiumBasic/GenBasI-webfont.woff') format('woff'),
+        url('../assets/GentiumBasic/GenBasI-webfont.ttf')  format('truetype');
+}
+/* Chapter 2 */
+
+body.ch_02 { font-size: 100%; }
+
+.ch_02 .container {
+	margin: 0 auto;
+	width: auto;
+}
+
+.ch_02 h1 {
+	font-size: 2em;
+	line-height: 1.25;
+	padding: 0.375em 0.375em 0;
+	text-align: center;
+}
+
+.ch_02 h2 {
+	background-color: #DDD;
+	border-top: 2px solid #666;
+	font-size: 1.625em;
+	line-height: 1.15384615;
+	padding: 0.25em;
+}
+
+.ch_02 p {
+	line-height: 1.25;
+	margin-bottom: 0;
+}
+
+/* Chapter 4 */
+
+.ch_04 .content {
+    background-color: #efefef;
+    border: 2px solid #999;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 0.5em 1.5em 1em;
+}
+
+.ch_04 h2 {
+    font-family: ChunkFiveRegular, serif;
+    font-size: 240%;
+    margin-bottom: 0;
+}
+
+.ch_04 p {
+  font-size: 1.25em;
+  line-height: 1.25;
+  margin-bottom: 0.625em;
+}
+
+/* Chapter 5 */
+
+.ch_05 h1 { margin: 0; }
+
+/* Chapter 6 */
+
+.ch_06 h1 {
+    font-family: ChunkFiveRegular, serif;
+    font-size: 600%;
+    line-height: 0.9;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+/* Chapter 7 */
+
+.ch_07 p {
+  margin-bottom: 0;
+  text-indent: 1em;
+}
+
+.ch_07 p:first-child { text-indent: 0; }
+
+/* Chapter 8 */
+
+.ch_08 .bunny {
+  background-color: #0F0;
+  background-image: url('../images/bunny_sprite.png');
+  background-repeat: repeat;
+  -moz-background-size: auto 40%;
+  -webkit-background-size: auto 40%;
+  background-size: auto 40%;
+  min-height: 220px;
+}
+
+/* Chapter 9 */
+
+div[class^='radius'] {
+  background-color: #EFEFEF;
+  border: 5px solid #000;
+  min-height: 100px;
+}
+
+.bimage div {
+  background-color: red;
+  border: 1px solid;
+}
+
+.bimage p {
+  margin-bottom: 0;
+  padding: 30px;
+}
+
+div[class^='shadow'] {
+  background-color: #EFEFEF;
+  border: 1px solid black;
+  height: 100px;
+}
+
+/* Chapter 12 */
+
+.ch_12 .container { padding-top: 60px; }
+
+.ch_12 .container > div { position: relative; }
+
+.ch_12 h2 {
+  background-color: silver;
+  font: normal 360%/1 ChunkFiveRegular, sans-serif;
+  letter-spacing: -2px;
+  opacity: 0.5;
+  padding: 0.25em;
+  text-align: center;
+}
+
+.ch_12 h2.transformed {
+    background-color: #333;
+    color: white;
+    left: 0;
+    opacity: 1;
+    position: absolute;
+    top: 0;
+}
+
+/* Chapter 14 */
+
+.ch_14 .container { padding-top: 80px; }
+
+.d3-parent {
+  outline: 4px dashed silver;
+  -webkit-perspective: 200px;
+  perspective: 200px;
+}
+
+.d3-child {
+	background-color: white;
+	border: 10px solid black;
+	padding: 10px;
+	text-align: center;
+  -webkit-transition: -webkit-transform 2s;
+  transition: transform 2s;
+}
+
+.ch_14 h1, .ch_14 h2 {
+	font-weight: bold;
+	margin: 0;
+}
+
+.ch_14 h1 {
+	font-size: 480%;
+	letter-spacing: -0.06em;
+	line-height: 0.8;
+}
+
+.ch_14 h2 {
+	font-size: 180%;
+	line-height: 1;
+}
+
+/* Chapter 15 */
+
+.ch_15 .flex-container {
+  border: 1px solid black;
+  display: -webkit-flex;
+  display: flex;
+  max-width: 598px;
+}
+
+.ch_15 .flex-item {
+  background-color: silver;
+  font-size: 600%;
+  line-height: 100px;
+  text-align: center;
+  width: 150px;
+}
+
+.ch_15 .flex-item:nth-child(even) { background-color: gray; }
+
+/* Chapter 17 */
+
+.ch_17 .grid-container,
+.ch_17 .grid-highlight {
+	outline: 1px solid #333;
+}
+
+.ch_17 .grid-container { display: grid; }
+
+.ch_17 .grid-highlight { height: 100%; }
+
+.ch_17 .grid-item {
+	background-color: #DDD;
+	height: 100%;
+}
+
+.ch_17 .grid-item p {
+	margin: 0;
+	padding: 1em;
+}
+
+/* Chapter 18 */
+
+.ch_18 .container { padding-top: 10px; }
+
+.ch_18 img { width: 100%; }

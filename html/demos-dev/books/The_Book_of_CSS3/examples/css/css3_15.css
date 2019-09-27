@@ -1,0 +1,26 @@
+/* Chapter 15 */
+
+.container { padding-top: 40px; }
+
+.flexbox-holder {
+  background-color: silver;
+  margin-bottom: 20px;
+  width: 600px;
+}
+
+.flex {
+    background-color: white;
+    border: 1px solid gray;
+    margin: 10px;
+    padding: 10px;
+}
+
+.legacy .flex { width: 200px; }
+
+.flex:nth-of-type(2n) { margin: 10px 0; }
+
+h3 { line-height: 21px; }
+
+h3, p { margin-bottom: 0; }
+
+p { color: #333; }

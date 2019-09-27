@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 2-4</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+body {
+  font-family: 'Lucida Grande',Helvetica,Verdana;
+  padding: 1em;
+}
+ul, li {
+  margin: 0;
+  padding: 0;
+}
+ul {
+  border: 1px solid black;
+  list-style: none;
+}
+li {
+    border-bottom: 1px solid black;
+    box-sizing: border-box;
+    color: black;
+    font: 14px/20px 'Lucida Grande',Helvetica,Verdana;
+    padding: 5px 0;
+    text-align: center;
+}
+li:last-child { border-bottom-width: 0; }
+li a {
+  color: inherit;
+  text-decoration: none;
+}
+@media only screen and (orientation:landscape) {
+    ul { overflow: hidden; }
+    li {
+        float: left;
+        border-bottom-width: 0;
+        border-right: 1px solid black;
+        width: 20%;
+    }
+    li:last-child { border-right-width: 0; }
+}
+</style>
+		<script src="/node_modules/systemjs/dist/system.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<ul>
+    <li><a href="http://example.com/">Home</a></li>
+    <li><a href="http://example.com/">Products</a></li>
+    <li><a href="http://example.com/">About Us</a></li>
+    <li><a href="http://example.com/">Blog</a></li>
+    <li><a href="http://example.com/">Contact</a></li>
+</ul>
+
+</body>
+</html>

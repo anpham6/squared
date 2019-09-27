@@ -1,0 +1,76 @@
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 5-4</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+<style>
+		@font-face {
+			font-family: Airstream;
+			src: url('assets/Airstream/Airstream-webfont.eot');
+			src: url('assets/Airstream/Airstream-webfont.eot?#iefix') format('embedded-opentype'),
+			url('assets/Airstream/Airstream-webfont.woff') format('woff'),
+			url('assets/Airstream/Airstream-webfont.ttf')  format('truetype');
+		}
+		@font-face {
+			font-family: CartoonistHand;
+			src: url('assets/CartoonistHand/SF_Cartoonist_Hand-webfont.eot');
+			src: url('assets/CartoonistHand/SF_Cartoonist_Hand-webfont.eot?#iefix') format('embedded-opentype'),
+			url('assets/CartoonistHand/SF_Cartoonist_Hand-webfont.woff') format('woff'),
+			url('assets/CartoonistHand/SF_Cartoonist_Hand-webfont.ttf')  format('truetype');
+		}
+		@font-face {
+			font-family: CartoonistHand;
+			font-style: italic;
+			src: url('assets/CartoonistHand/SF_Cartoonist_Hand_Italic-webfont.eot');
+			src: url('assets/CartoonistHand/SF_Cartoonist_Hand_Italic-webfont.eot?#iefix') format('embedded-opentype'),
+			url('assets/CartoonistHand/SF_Cartoonist_Hand_Italic-webfont.woff') format('woff'),
+			url('assets/CartoonistHand/SF_Cartoonist_Hand_Italic-webfont.ttf')  format('truetype');
+		}
+		@font-face {
+			font-family: CartoonistHand;
+			font-weight: bold;
+			src: url('assets/CartoonistHand/SF_Cartoonist_Hand_Bold-webfont.eot');
+			src: url('assets/CartoonistHand/SF_Cartoonist_Hand_Bold-webfont.eot?#iefix') format('embedded-opentype'),
+			url('assets/CartoonistHand/SF_Cartoonist_Hand_Bold-webfont.woff') format('woff'),
+			url('assets/CartoonistHand/SF_Cartoonist_Hand_Bold-webfont.ttf')  format('truetype');
+		}
+		@font-face {
+			font-family: ChunkFive;
+			src: url('assets/ChunkFive/ChunkFive-webfont.eot');
+			src: url('assets/ChunkFive/ChunkFive-webfont.eot?#iefix') format('embedded-opentype'),
+			url('assets/ChunkFive/Chunkfive-webfont.woff') format('woff'),
+			url('assets/ChunkFive/ChunkFive-webfont.ttf')  format('truetype');
+		}
+		h1 { color: #333; margin-bottom: 0; }
+		h2 { color: #555; }
+		p { font-size: 1.4em; }
+		.font-face h1 { font-family: ChunkFive, sans-serif; }
+		.font-face h2 { font-family: Airstream, cursive; font-size-adjust: 0.57; }
+		.font-face p { font-family: CartoonistHand, sans-serif; font-size-adjust: 0.5; }
+	</style>
+			<script src="/node_modules/systemjs/dist/system.js"></script>
+			<script src="/dist/squared.js"></script>
+			<script src="/dist/squared.base.js"></script>
+			<script src="/dist/android.framework.js"></script>
+			<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+	<div class="span-2">&thinsp;</div>
+    <div class="span-10">
+      <h1>Great Expectations</h1>
+      <h2>By Charles Dickens</h2>
+      <p>My father's family name being <em>Pirrip</em>, and my Christian name <em>Philip</em>, my infant tongue could make of both names nothing longer or more explicit than <strong>Pip</strong>. So, I called myself <strong>Pip</strong>, and came to be called&nbsp;<strong>Pip</strong>.</p>
+    </div>
+    <div class="span-10 font-face">
+      <h1>Great Expectations</h1>
+      <h2>By Charles Dickens</h2>
+      <p>My father's family name being <em>Pirrip</em>, and my Christian name <em>Philip</em>, my infant tongue could make of both names nothing longer or more explicit than <strong>Pip</strong>. So, I called myself <strong>Pip</strong>, and came to be called&nbsp;<strong>Pip</strong>.</p>
+    </div>
+    <div class="span-2 last">&thinsp;</div>
+</div>
+
+</body>
+</html>

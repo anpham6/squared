@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 4-3</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+/* Undo inherited style */ tbody tr:nth-child(2n) td { background-color: transparent; }
+thead th, tbody td { text-align: center; }
+thead th:nth-child(-n+2), tbody td:first-of-type { text-align: left; }
+tbody tr:nth-of-type(even) { background-color: #DDD; }
+tbody tr:nth-last-child(-n+2) { font-style: italic; }
+</style>
+		<script src="/node_modules/systemjs/dist/system.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-6">&nbsp;</div>
+    <div class="span-12">
+    <table>
+      <thead>
+        <tr>
+        <th>Day</th>
+        <th>Weather</th>
+        <th>Max. Day (°C)</th>
+        <th>Min. Night (°C)</th>
+        <th>Wind (mph)</th>
+        </tr>
+      </thead>
+    <tfoot>
+      <tr>
+        <td colspan="5">Data from <a href="http://bbc.co.uk/weather">bbc.co.uk/weather</a></td>
+      </tr>
+    </tfoot>
+    <tbody>
+      <tr>
+        <th>Sun</th>
+        <td>Sunny</td>
+        <td>8</td>
+        <td>4</td>
+        <td>8</td>
+      </tr>
+      <tr>
+        <th>Mon</th>
+        <td>Grey Cloud</td>
+        <td>7</td>
+        <td>4</td>
+        <td>6</td>
+      </tr>
+      <tr>
+        <th>Tue</th>
+        <td>Grey Cloud</td>
+        <td>5</td>
+        <td>2</td>
+        <td>13</td>
+      </tr>
+      <tr>
+        <th>Wed</th>
+        <td>Sleet</td>
+        <td>2</td>
+        <td>1</td>
+        <td>8</td>
+      </tr>
+      <tr>
+        <th>Thu</th>
+        <td>Heavy Rain</td>
+        <td>4</td>
+        <td>2</td>
+        <td>7</td>
+      </tr>
+    </tbody>
+    </table>
+    </div>
+    <div class="span-6 last">&nbsp;</div>
+</div>
+
+</body>
+</html>

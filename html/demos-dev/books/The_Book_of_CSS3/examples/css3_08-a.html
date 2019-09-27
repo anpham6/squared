@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 8-a</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+  html, body { height: 110%; }
+  .container, .ba { height: 300px; }
+  .container { padding-top: 0; }
+  .ba {
+      background-image: url('images/bunny.png');
+      background-position: 0 0;
+      overflow: scroll;
+  }
+  .ba div {
+      height: 600px;
+  }
+  .scroll { background-attachment: scroll; }
+  .fixed { background-attachment: fixed; }
+  .local { background-attachment: local; }
+  .info {
+    margin-top: 10px;
+    text-align: center;
+  }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-3">&nbsp;</div>
+    <div class="span-6 ba scroll">
+        <div></div>
+    </div>
+    <div class="span-6 ba fixed">
+        <div></div>
+    </div>
+    <div class="span-6 ba local">
+        <div></div>
+    </div>
+    <div class="span-3 last">&nbsp;</div>
+    <div class="span-3">&nbsp;</div>
+    <div class="span-6">
+        <p class="info">scroll</p>
+    </div>
+    <div class="span-6">
+        <p class="info">fixed</p>
+    </div>
+    <div class="span-6">
+        <p class="info">local</p>
+    </div>
+    <div class="span-3 last">&nbsp;</div>
+    <div class="span-3">&nbsp;</div>
+    <div class="span-18">
+      <p class="notice">Scroll each iframe window individually, then the main browser window.</p>
+    </div>
+    <div class="span-3 last">&nbsp;</div>
+</div>
+
+</body>
+</html>

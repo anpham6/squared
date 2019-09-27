@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 18-b</title>
+  <style>
+  .hue-rotate {
+    -webkit-filter: hue-rotate(45deg);
+    filter: url('#hue-rotate');
+    filter: hue-rotate(45deg);
+  }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body class="ch_18">
+<div class="container">
+  <div class="span-4">&thinsp;</div>
+  <div class="span-8">
+    <img src="images/landscape-medium-colour.jpg">
+  </div>
+  <div class="span-8">
+      <img src="images/landscape-medium-colour.jpg" class="hue-rotate">
+  </div>
+  <div class="span-4 last">&thinsp;</div>
+</div>
+<svg>
+  <filter id="hue-rotate">
+    <feColorMatrix type="hueRotate" values="45"/>
+  </filter>
+</svg>
+
+</body>
+</html>

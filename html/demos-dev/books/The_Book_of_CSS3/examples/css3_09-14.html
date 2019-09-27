@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 9-14</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+    .shadow-one { box-shadow: inset 4px 4px; }
+    .shadow-two { box-shadow: inset 4px 4px 3px; }
+    .shadow-three { box-shadow: inset 12px 12px 2px -6px; }
+    .shadow-four { box-shadow: inset 4px -4px 2px #999; }
+    .shadow-five { box-shadow: inset 4px -4px 2px #999, inset -4px 4px 2px; }
+  </style>
+  		<script src="/node_modules/systemjs/dist/system.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="span-2">&thinsp;</div>
+  <div class="span-4">
+    <div class="shadow-one"></div>
+  </div>
+  <div class="span-4">
+    <div class="shadow-two"></div>
+  </div>
+  <div class="span-4">
+    <div class="shadow-three"></div>
+  </div>
+  <div class="span-4">
+    <div class="shadow-four"></div>
+  </div>
+  <div class="span-4">
+    <div class="shadow-five"></div>
+  </div>
+  <div class="span-2 last">&thinsp;</div>
+</div>
+
+</body>
+</html>

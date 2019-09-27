@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 5-1</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+<style>
+	@font-face {
+	  font-family: ChunkFive;
+	  src:  url('assets/ChunkFive/Chunkfive-webfont.eot');
+	  src:  url('assets/ChunkFive/Chunkfive-webfont.eot?#iefix') format('embedded-opentype'),
+	        url('assets/ChunkFive/Chunkfive-webfont.woff') format('woff'),
+	        url('assets/ChunkFive/Chunkfive-webfont.ttf') format('truetype');
+	  font-weight: normal;
+	  font-style: normal;
+	}
+	h1.webfont { font-family: ChunkFive, sans-serif; }
+</style>
+		<script src="/node_modules/systemjs/dist/system.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body class="ch_05">
+<div class="container">
+  <div class="span-6">&thinsp;</div>
+  <div class="span-12">
+    <h1>Alas, poor Yorick!</h2>
+    <h1 class="webfont">Alas, poor Yorick!</h2>
+  </div>
+  <div class="span-6 last">&thinsp;</div>
+</div>
+
+</body>
+</html>

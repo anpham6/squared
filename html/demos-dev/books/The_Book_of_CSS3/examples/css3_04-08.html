@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 4-8</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+input[type='text']:disabled { border: 1px dotted grey; }
+input[type='text']:enabled { border: 1px solid black; }
+</style>
+		<script src="/node_modules/systemjs/dist/system.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-7">&nbsp;</div>
+    <div class="span-10">
+    <form action="">
+    <fieldset>
+    <legend>UI element state pseudo-classes</legend>
+    <input type="text" value="Lorem ipsum" disabled>
+    <input type="text" value="Lorem ipsum">
+    </fieldset>
+    </form>
+    </div>
+    <div class="span-7 last">&nbsp;</div>
+</div>
+
+</body>
+</html>
