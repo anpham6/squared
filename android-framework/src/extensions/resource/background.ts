@@ -771,6 +771,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const images: (string | GradientTemplate)[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
             const imageDimensions: Undefined<Dimension>[] = [];
+            const svgDrawables: boolean[] = [];
             let backgroundSize = data.backgroundSize.split($regex.XML.SEPARATOR);
             let length = 0;
             let resizable = true;
@@ -792,6 +793,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     const drawable = resourceInstance.createSvgDrawable(node, element);
                                     if (drawable !== '') {
                                         images[j] = drawable;
+                                        svgDrawables[j] = true;
                                         imageDimensions[j] = { width: element.width.baseVal.value, height: element.height.baseVal.value };
                                         valid = true;
                                     }
@@ -910,6 +912,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     const src = '@drawable/' + value;
                     const repeat = backgroundRepeat[i];
                     const repeating = repeat === 'repeat';
+                    const svg = svgDrawables[i] === true;
                     let gravityX = '';
                     let gravityY = '';
                     if (!repeating && repeat !== 'repeat-x') {
@@ -1220,7 +1223,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             width = dimenWidth;
                             height = dimenHeight;
                         }
-                        if (resizable && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE)) {
+                        if (resizable && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE) && !svg) {
                             let fillX = false;
                             let fillY = false;
                             if (boundsWidth < dimenWidth && (!node.has('width', $e.CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) && !(node.blockStatic && centerHorizontally) || !node.pageFlow) && node.renderParent && !node.renderParent.tableElement) {
@@ -1308,7 +1311,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             gravityY = '';
                         }
                     }
-                    if (node.documentBody || tileMode === 'repeat' || tileModeX !== '' || tileModeY !== '' || gravityAlign) {
+                    if ((node.documentBody || tileMode === 'repeat' || tileModeX !== '' || tileModeY !== '' || gravityAlign) && !svg) {
                         if (gravityAlign) {
                             imageData.gravity = gravityAlign;
                         }

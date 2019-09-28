@@ -991,24 +991,27 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public actualRect(direction: string, dimension = 'linear') {
+        const value = this[dimension][direction];
         if (this.inputElement) {
             const companion = this.companion;
-            let node: T;
             switch (direction) {
                 case 'top':
                 case 'left':
-                    node = companion && !companion.visible && companion[dimension][direction] < this[dimension][direction] ? companion : this;
+                    if (companion && !companion.visible && companion[dimension][direction] < value) {
+                        return companion[dimension][direction] as number;
+                    }
                     break;
                 case 'right':
                 case 'bottom':
-                    node = companion && !companion.visible && companion[dimension][direction] > this[dimension][direction] ? companion : this;
+                    if (companion && !companion.visible && companion[dimension][direction] > value) {
+                        return companion[dimension][direction] as number;
+                    }
                     break;
                 default:
                     return NaN;
             }
-            return node[dimension][direction] as number;
         }
-        return this[dimension][direction] as number;
+        return value as number;
     }
 
     public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {

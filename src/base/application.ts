@@ -34,7 +34,7 @@ function parseConditionText(rule: string, value: string) {
     return match ? match[1].trim() : value;
 }
 
-async function getImageSvgAsync(value: string)  {
+async function getImageSvgAsync(value: string) {
     const response = await fetch(value, {
         method: 'GET',
         headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' })
@@ -175,20 +175,21 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (preloadImages) {
             for (const element of this.rootElements) {
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
-                    const uri = image.src;
+                    const { width, height, src: uri } = image;
                     if (uri !== '') {
-                        ASSETS.images.set(uri, { width: image.width, height: image.height, uri });
+                        ASSETS.images.set(uri, { width, height, uri });
                     }
                 });
             }
             for (const image of ASSETS.images.values()) {
-                if (image.uri) {
-                    if (image.uri.toLowerCase().endsWith('.svg')) {
-                        images.push(image.uri);
+                const uri = image.uri;
+                if (uri) {
+                    if (uri.toLowerCase().endsWith('.svg')) {
+                        images.push(uri);
                     }
                     else if (image.width === 0 && image.height === 0) {
                         const element = document.createElement('img');
-                        element.src = image.uri;
+                        element.src = uri;
                         const width = element.naturalWidth;
                         const height = element.naturalHeight;
                         if (width > 0 && height > 0) {
@@ -257,8 +258,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 for (let i = 0; i < length; i++) {
                     const value = result[i];
                     if (typeof value === 'string') {
-                        if (typeof images[i] === 'string') {
-                            resource.addRawData(images[i] as string, 'image/svg+xml', 'utf8', value);
+                        const uri = images[i] as string;
+                        if (typeof uri === 'string') {
+                            resource.addRawData(uri, 'image/svg+xml', 'utf8', value);
                         }
                     }
                     else {
@@ -414,12 +416,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 for (let j = 0; j < lengthA; j++) {
                     const k = j + 1;
                     const map = result[k];
-                    if (map) {
-                        result[k] = map.concat(childMap[j]);
-                    }
-                    else {
-                        result[k] = childMap[j];
-                    }
+                    result[k] = map ? map.concat(childMap[j]) : childMap[j];
                 }
             }
         }

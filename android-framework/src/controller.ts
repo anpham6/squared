@@ -1310,7 +1310,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.css('minWidth', $css.formatPX(node.actualWidth), true);
                     node.css('display', 'inline-block', true);
                 }
-                node.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, node.actualHeight * this.localSettings.deviations.legendBottomOffset);
+                const offset = node.actualHeight * this.localSettings.deviations.legendBottomOffset;
+                node.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, offset);
+                const linear = node.unsafe('linear');
+                linear.bottom += offset;
                 break;
             }
             case 'METER':
@@ -1374,7 +1377,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 if (node.has('textShadow')) {
                     if (CACHE_PATTERN.TEXT_SHADOW === undefined) {
-                        CACHE_PATTERN.TEXT_SHADOW = /^(rgba?\([^)]+\)|[a-z]+) (-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?$/;
+                        CACHE_PATTERN.TEXT_SHADOW = /^(rgba?\([^)]+\)|[a-z]+) (-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?.*$/;
                     }
                     const match = CACHE_PATTERN.TEXT_SHADOW.exec(node.css('textShadow'));
                     if (match) {

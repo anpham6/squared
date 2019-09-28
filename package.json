@@ -5,7 +5,7 @@
   "main": "dist/squared.js",
   "scripts": {
     "express": "node app.js",
-    "watch": "tsc -w -p tsconfig.dev.json",
+    "watch": "tsc -w -p tsconfig.json",
     "dev-base": "tsc --inlineSourceMap false && rollup -c rollup.config.dev-base.js && cd ./android-framework && rollup -c rollup.config.dev.js",
     "dev": "tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js && cd ../chrome-framework && rollup -c rollup.config.js",
     "prod": "npm run clean && tslint -c tslint.json '**/*.ts' && tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js",
@@ -64,7 +64,7 @@
     "rollup-plugin-terser": "^5.1.2",
     "systemjs": "^0.21.6",
     "systemjs-plugin-babel": "0.0.25",
-    "terser": "^4.3.3",
+    "terser": "^4.2.1",
     "tslint": "^5.20.0",
     "typescript": "^3.6.3"
   }

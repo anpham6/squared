@@ -1715,6 +1715,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     else {
                         value = $css.parseUnit(lineHeight, this.fontSize);
+                        if (lineHeight.endsWith('px')) {
+                            const fontSize = this.css('fontSize');
+                            if (fontSize.endsWith('em')) {
+                                value *= parseFloat(fontSize);
+                            }
+                        }
                     }
                 }
                 else if (this.naturalChild) {
@@ -2296,6 +2302,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'initial':
                 case 'unset':
                 case 'rgba(0, 0, 0, 0)':
+                case 'transparent':
                     result = '';
                     break;
                 default:

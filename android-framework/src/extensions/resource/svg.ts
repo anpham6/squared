@@ -1439,7 +1439,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         return drawable;
     }
 
-    public afterParseDocument() {
+    public afterFinalize() {
         this.controller.localSettings.svg.enabled = false;
     }
 

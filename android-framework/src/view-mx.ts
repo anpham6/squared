@@ -125,7 +125,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
         let offset = 0;
         let usePadding = true;
         if (inlineStyle && !node.inline && node.inlineText) {
-            setMinHeight(node, lineHeight);
+            setMinHeight(node, lineHeight, false);
             setMultiline(node, lineHeight, false, false);
         }
         else if (!inlineStyle && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
@@ -158,14 +158,16 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
         }
     }
     else if (inlineStyle && (!node.hasHeight || lineHeight > node.height) && (node.layoutHorizontal && node.horizontalRows === undefined || node.hasAlign($e.NODE_ALIGNMENT.SINGLE))) {
-        setMinHeight(node, lineHeight);
+        setMinHeight(node, lineHeight, true);
     }
 }
 
-function setMinHeight(node: T, value: number) {
+function setMinHeight(node: T, value: number, gravity: boolean) {
     if (node.inlineText) {
         value += node.contentBoxHeight;
-        node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL, false);
+        if (gravity) {
+            node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL, false);
+        }
     }
     if (value > node.height) {
         node.android('minHeight', $css.formatPX(value));
@@ -1394,8 +1396,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         }
                                     }
                                     const baseline = row.find(node => node.baselineActive);
-                                    const top = !previousMultiline && (i > 0 || length === 1) || row[0].lineBreakLeading;
-                                    const bottom = !nextMultiline && (i < length - 1 || length === 1);
+                                    const singleLine = row.length === 1 && !row[0].multiline;
+                                    const top = singleLine || !previousMultiline && (i > 0 || length === 1) || row[0].lineBreakLeading;
+                                    const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
                                     if (baseline) {
                                         if (!baseline.has('lineHeight')) {
                                             setMarginOffset(baseline, lineHeight, false, top, bottom);
