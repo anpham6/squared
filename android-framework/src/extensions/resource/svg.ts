@@ -638,48 +638,54 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     public afterResources() {
-        for (const node of this.application.processing.cache) {
-            let parentElement: HTMLElement | undefined;
-            let element: SVGSVGElement | undefined;
-            if (node.imageElement) {
-                [parentElement, element] = this.createSvgElement(node, node.src);
-            }
-            else if (node.svgElement) {
-                element = <SVGSVGElement> node.element;
-            }
-            if (element) {
-                const drawable = this.createSvgDrawable(node, element);
-                if (drawable !== '') {
-                    if (node.localSettings.targetAPI >= BUILD_ANDROID.LOLLIPOP) {
-                        node.android('src', getDrawableSrc(drawable));
+        if ($SvgBuild) {
+            for (const node of this.application.processing.cache) {
+                let parentElement: HTMLElement | undefined;
+                let element: SVGSVGElement | undefined;
+                if (node.imageElement) {
+                    [parentElement, element] = this.createSvgElement(node, node.src);
+                }
+                else if (node.svgElement) {
+                    element = <SVGSVGElement> node.element;
+                }
+                if (element) {
+                    const drawable = this.createSvgDrawable(node, element);
+                    if (drawable !== '') {
+                        if (node.localSettings.targetAPI >= BUILD_ANDROID.LOLLIPOP) {
+                            node.android('src', getDrawableSrc(drawable));
+                        }
+                        else {
+                            node.app('srcCompat', getDrawableSrc(drawable));
+                        }
                     }
-                    else {
-                        node.app('srcCompat', getDrawableSrc(drawable));
+                    if (!node.hasWidth) {
+                        node.setLayoutWidth('wrap_content');
                     }
-                }
-                if (!node.hasWidth) {
-                    node.setLayoutWidth('wrap_content');
-                }
-                if (!node.hasHeight) {
-                    node.setLayoutHeight('wrap_content');
-                }
-                if (node.baseline) {
-                    node.android('baselineAlignBottom', 'true');
-                }
-                if (parentElement) {
-                    parentElement.removeChild(element);
+                    if (!node.hasHeight) {
+                        node.setLayoutHeight('wrap_content');
+                    }
+                    if (node.baseline) {
+                        node.android('baselineAlignBottom', 'true');
+                    }
+                    if (parentElement) {
+                        parentElement.removeChild(element);
+                    }
                 }
             }
         }
     }
 
+    public afterFinalize() {
+        this.controller.localSettings.svg.enabled = false;
+    }
+
     public createSvgElement(node: T, src: string): [HTMLElement | undefined, SVGSVGElement | undefined] {
-        let parentElement: HTMLElement | undefined;
-        let element: SVGSVGElement | undefined;
         const match = $regex.CSS.URL.exec(src);
         if (match) {
             src = match[1];
         }
+        let parentElement: HTMLElement | undefined;
+        let element: SVGSVGElement | undefined;
         if (src.toLowerCase().endsWith('.svg') || src.startsWith('data:image/svg+xml')) {
             const fileAsset = this.resource.getRawData(src);
             if (fileAsset) {
@@ -1436,11 +1442,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         else {
             drawable = vectorName;
         }
+        node.data(Resource.KEY_NAME, 'svgViewBox', svg.viewBox);
         return drawable;
-    }
-
-    public afterFinalize() {
-        this.controller.localSettings.svg.enabled = false;
     }
 
     private parseVectorData(group: SvgGroup, depth = 0) {

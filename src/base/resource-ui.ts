@@ -300,7 +300,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 dimension,
                                 angle: parseAngle(direction)
                             };
-                            conic.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, undefined, node.fontSize);
+                            conic.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize);
                             conic.colorStops = parseColorStops(node, conic, match[4]);
                             gradient = conic;
                             break;
@@ -313,7 +313,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 horizontal: node.actualWidth <= node.actualHeight,
                                 dimension
                             };
-                            radial.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, undefined, node.fontSize);
+                            radial.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize);
                             radial.closestCorner = Number.POSITIVE_INFINITY;
                             radial.farthestCorner = Number.NEGATIVE_INFINITY;
                             let shape = 'ellipse';
@@ -602,23 +602,31 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                 }
             }
-            switch (node.css('backgroundClip')) {
-                case 'padding-box':
-                    boxStyle.backgroundClip = {
-                        top: node.borderTopWidth,
-                        right: node.borderRightWidth,
-                        bottom: node.borderBottomWidth,
-                        left: node.borderLeftWidth
-                    };
-                    break;
-                case 'content-box':
-                    boxStyle.backgroundClip = {
-                        top: node.borderTopWidth + node.paddingTop,
-                        right: node.borderRightWidth + node.paddingRight,
-                        bottom: node.borderBottomWidth + node.paddingBottom,
-                        left: node.borderLeftWidth + node.paddingLeft
-                    };
-                    break;
+            function setBackgroundOffset(attr: 'backgroundClip' | 'backgroundOrigin') {
+                switch (node.css(attr)) {
+                    case 'border-box':
+                        return true;
+                    case 'padding-box':
+                        boxStyle[attr] = {
+                            top: node.borderTopWidth,
+                            right: node.borderRightWidth,
+                            bottom: node.borderBottomWidth,
+                            left: node.borderLeftWidth
+                        };
+                        break;
+                    case 'content-box':
+                        boxStyle[attr] = {
+                            top: node.borderTopWidth + node.paddingTop,
+                            right: node.borderRightWidth + node.paddingRight,
+                            bottom: node.borderBottomWidth + node.paddingBottom,
+                            left: node.borderLeftWidth + node.paddingLeft
+                        };
+                        break;
+                }
+                return false;
+            }
+            if (setBackgroundOffset('backgroundClip')) {
+                setBackgroundOffset('backgroundOrigin');
             }
             if (node.css('borderRadius') !== '0px') {
                 const [A, B] = node.css('borderTopLeftRadius').split(' ');

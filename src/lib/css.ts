@@ -25,7 +25,7 @@ function compareRange(operation: string, unit: number, range: number) {
 
 const convertLength = (value: string, dimension: number, fontSize?: number) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
 
-const convertPercent = (value: string, dimension: number, fontSize?: number) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
+const convertPercent = (value: string, dimension: number, fontSize?: number) => Math.min(isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension, 1);
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -426,7 +426,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
     return undefined;
 }
 
-export function getBackgroundPosition(value: string, dimension: Dimension, imageDimension?: Dimension, fontSize?: number) {
+export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, imageDimension?: Dimension, imageSize?: string) {
     const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
     const result: BoxRectPosition = {
         static: true,
@@ -443,8 +443,70 @@ export function getBackgroundPosition(value: string, dimension: Dimension, image
         orientation
     };
     function setImageOffset(position: string, horizontal: boolean, direction: string, directionAsPercent: string) {
-        if (imageDimension && /^[a-z]+|-?[\d.]+%$/.test(position)) {
-            const offset = Math.min(result[directionAsPercent], 1) * (horizontal ? imageDimension.width : imageDimension.height);
+        if (imageDimension && (isPercent(position) || /^[a-z]+$/.test(position))) {
+            let offset = result[directionAsPercent];
+            if (imageSize) {
+                const [sizeW, sizeH] = imageSize.split(' ');
+                if (horizontal) {
+                    let width = dimension.width;
+                    if (sizeW && isLength(sizeW, true)) {
+                        if (isPercent(sizeW)) {
+                            width *= parseFloat(sizeW) / 100;
+                        }
+                        else if (isLength(sizeW)) {
+                            const length = parseUnit(sizeW, fontSize);
+                            if (length > 0) {
+                                width = length;
+                            }
+                        }
+                    }
+                    else if (sizeH) {
+                        let percent = 1;
+                        if (isPercent(sizeH)) {
+                            percent = ((parseFloat(sizeH) / 100) * dimension.height) / imageDimension.height;
+                        }
+                        else if (isLength(sizeH)) {
+                            const length = parseUnit(sizeH, fontSize);
+                            if (length > 0) {
+                                percent = length / imageDimension.height;
+                            }
+                        }
+                        width = percent * imageDimension.width;
+                    }
+                    offset *= width;
+                }
+                else {
+                    let height = dimension.height;
+                    if (sizeH && isLength(sizeH, true)) {
+                        if (isPercent(sizeH)) {
+                            height *= parseFloat(sizeH) / 100;
+                        }
+                        else if (isLength(sizeH)) {
+                            const length = parseUnit(sizeH, fontSize);
+                            if (length > 0) {
+                                height = length;
+                            }
+                        }
+                    }
+                    else if (sizeW) {
+                        let percent = 1;
+                        if (isPercent(sizeW)) {
+                            percent = ((parseFloat(sizeW) / 100) * dimension.width) / imageDimension.width;
+                        }
+                        else if (isLength(sizeW)) {
+                            const length = parseUnit(sizeW, fontSize);
+                            if (length > 0) {
+                                percent = length / imageDimension.width;
+                            }
+                        }
+                        height = percent * imageDimension.height;
+                    }
+                    offset *= height;
+                }
+            }
+            else {
+                offset *= horizontal ? imageDimension.width : imageDimension.height;
+            }
             result[direction] -= offset;
         }
     }

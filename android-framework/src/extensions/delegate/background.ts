@@ -36,7 +36,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                     const image = backgroundImage[i];
                     if (typeof image === 'string' && image.startsWith('url(')) {
                         const repeat = backgroundRepeat[i];
-                        if (repeat !== 'repeat' && repeat !== 'repeat-y') {
+                        if (repeat === 'no-repeat' || repeat === 'repeat-x') {
                             const asset = <ImageAsset> (this.resource.getRawData(image) || this.resource.getImage($css.resolveURL(image)));
                             if (asset) {
                                 const height = asset.height;

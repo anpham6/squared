@@ -106,31 +106,34 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public saveAsInitial(overwrite = false) {
-        if (this._initial.iteration === -1 || overwrite) {
-            this._initial.children = this.duplicate();
-            this._initial.styleMap = { ...this._styleMap };
+        const initial = this._initial;
+        if (initial.iteration === -1 || overwrite) {
+            initial.children = this.duplicate();
+            initial.styleMap = { ...this._styleMap };
         }
-        if (this._bounds) {
-            this._initial.bounds = $dom.assignRect(this._bounds);
-            this._initial.linear = $dom.assignRect(this.linear);
-            this._initial.box = $dom.assignRect(this.box);
+        const bounds = this._bounds;
+        if (bounds) {
+            initial.bounds = $dom.assignRect(bounds);
+            initial.linear = $dom.assignRect(this.linear);
+            initial.box = $dom.assignRect(this.box);
         }
-        this._initial.iteration++;
+        initial.iteration++;
     }
 
     public data(name: string, attr: string, value?: any, overwrite = true) {
+        const data = this._data;
         if ($util.hasValue(value)) {
-            if (typeof this._data[name] !== 'object') {
-                this._data[name] = {};
+            if (typeof data[name] !== 'object') {
+                data[name] = {};
             }
-            if (overwrite || this._data[name][attr] === undefined) {
-                this._data[name][attr] = value;
+            if (overwrite || data[name][attr] === undefined) {
+                data[name][attr] = value;
             }
         }
         else if (value === null) {
             delete this._data[name];
         }
-        return typeof this._data[name] === 'object' && this._data[name] !== null ? this._data[name][attr] : undefined;
+        return typeof data[name] === 'object' && data[name] !== null ? data[name][attr] : undefined;
     }
 
     public unsetCache(...attrs: string[]) {
@@ -1705,6 +1708,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get lineHeight() {
         let result = this._cached.lineHeight;
         if (result === undefined) {
+            result = 0;
             if (!this.imageElement && !this.svgElement) {
                 let hasOwnStyle = this.has('lineHeight');
                 let value = 0;
@@ -1716,7 +1720,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     else {
                         value = $css.parseUnit(lineHeight, this.fontSize);
                         if (lineHeight.endsWith('px')) {
-                            const fontSize = this.css('fontSize');
+                            const fontSize = this.cssInitial('fontSize');
                             if (fontSize.endsWith('em')) {
                                 value *= parseFloat(fontSize);
                             }
@@ -1744,10 +1748,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                     }
                 }
-                result = hasOwnStyle || value > this.actualHeight || this.multiline || this.block && this.naturalChildren.some(node => node.textElement) ? value : 0;
-            }
-            else {
-                result = 0;
+                if (hasOwnStyle || value > this.actualHeight || this.multiline || this.block && this.naturalChildren.some(node => node.textElement)) {
+                    result = value;
+                }
             }
             this._cached.lineHeight = result;
         }

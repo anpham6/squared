@@ -79,6 +79,7 @@ interface BoxStyle extends Optional<BoxBorder> {
     backgroundPositionY: string;
     backgroundColor?: string;
     backgroundClip?: BoxRect;
+    backgroundOrigin?: BoxRect;
     borderRadius?: string[];
     outline?: BorderAttribute;
     backgroundImage?: (string | Gradient)[];

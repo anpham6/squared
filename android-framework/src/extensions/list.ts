@@ -119,7 +119,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 let image: string | undefined;
                 if (mainData.imageSrc !== '') {
                     if (mainData.imagePosition) {
-                        ({ top, left } = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, this.resource.getImage(mainData.imageSrc), node.fontSize));
+                        ({ top, left } = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize, this.resource.getImage(mainData.imageSrc)));
                         gravity = 'left';
                         if (node.marginLeft < 0) {
                             resetPadding = node.marginLeft;

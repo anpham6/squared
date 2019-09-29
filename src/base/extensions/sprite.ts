@@ -21,7 +21,7 @@ export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
                 const dimension = node.actualDimension;
                 const backgroundPositionX = node.css('backgroundPositionX');
                 const backgroundPositionY = node.css('backgroundPositionY');
-                const position = $css.getBackgroundPosition(backgroundPositionX + ' ' + backgroundPositionY, dimension, undefined, node.fontSize);
+                const position = $css.getBackgroundPosition(backgroundPositionX + ' ' + backgroundPositionY, dimension, node.fontSize);
                 const x = (position.left < 0 || pattern.test(backgroundPositionX)) && image.width > dimension.width;
                 const y = (position.top < 0 || pattern.test(backgroundPositionY)) && image.height > dimension.height;
                 if ((x || y) && (x || position.left === 0) && (y || position.top === 0)) {
