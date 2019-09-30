@@ -557,15 +557,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         [stored.borderTop, stored.borderRight, stored.borderBottom, stored.borderLeft],
                         undefined,
                         this.getDrawableImages(node, stored),
-                        drawOutline && stored.outline ? getIndentOffset(stored.outline) : 0,
-                        false
-                    );
+                        drawOutline && stored.outline ? getIndentOffset(stored.outline) : 0);
                     const emptyBackground = shapeData === undefined && layerListData === undefined;
                     if (stored.outline && (drawOutline || emptyBackground)) {
                         const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(
                             stored,
                             [],
-                            stored.outline
+                            stored.outline,
+                            undefined,
+                            undefined,
+                            !emptyBackground
                         );
                         if (outlineShapeData) {
                             if (shapeData === undefined) {
@@ -613,7 +614,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         this._resourceSvgInstance = undefined;
     }
 
-    public getDrawableBorder(data: BoxStyle, borders: (BorderAttribute | undefined)[], outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = true) {
+    public getDrawableBorder(data: BoxStyle, borders: (BorderAttribute | undefined)[], outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false) {
         const borderVisible: boolean[] = [];
         const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
         const indentOffset = indentWidth > 0 ? $css.formatPX(indentWidth) : '';
