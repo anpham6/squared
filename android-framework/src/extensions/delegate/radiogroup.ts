@@ -56,6 +56,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         }
         if (children.length > 1) {
             const container = this.controller.createNodeGroup(node, children, parent, true);
+            const controlName = CONTAINER_ANDROID.RADIOGROUP;
             const linearX = $NodeUI.linearData(children).linearX;
             if (linearX) {
                 container.addAlign($e.NODE_ALIGNMENT.HORIZONTAL | $e.NODE_ALIGNMENT.SEGMENTED);
@@ -65,7 +66,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 container.addAlign($e.NODE_ALIGNMENT.VERTICAL);
                 container.android('orientation', STRING_ANDROID.VERTICAL);
             }
-            container.setControlType(CONTAINER_ANDROID.RADIOGROUP, CONTAINER_NODE.LINEAR);
+            container.setControlType(controlName, CONTAINER_NODE.LINEAR);
             container.inherit(node, 'alignment');
             if (container.baseline) {
                 container.css('verticalAlign', 'middle');
@@ -82,7 +83,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 outputAs: <NodeXmlTemplate<T>> {
                     type: $e.NODE_TEMPLATE.XML,
                     node: container,
-                    controlName: CONTAINER_ANDROID.RADIOGROUP
+                    controlName
                 },
                 parent: container,
                 complete: true

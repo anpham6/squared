@@ -26,7 +26,8 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
                 }
             }
         }
-        node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
+        const controlName = node.localSettings.targetAPI < $enumA.BUILD_ANDROID.Q ? $constA.SUPPORT_ANDROID.COORDINATOR : $constA.SUPPORT_ANDROID_X.COORDINATOR;
+        node.setControlType(controlName, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude($e.NODE_RESOURCE.ASSET);
         node.renderExclude = false;
         node.render(parent);
@@ -34,7 +35,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
             output: <NodeXmlTemplate<T>> {
                 type: $e.NODE_TEMPLATE.XML,
                 node,
-                controlName: $constA.SUPPORT_ANDROID.COORDINATOR
+                controlName
             }
         };
     }

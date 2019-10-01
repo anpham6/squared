@@ -108,7 +108,7 @@ declare namespace base {
     }
 
     class View implements View {
-        public static getControlName(containerType: number): string;
+        public static getControlName(containerType: number, api?: number): string;
         constructor(id: number, sessionId?: string, element?: Element, afterInit?: BindGeneric<View, void>);
     }
 
@@ -166,6 +166,8 @@ declare namespace lib {
         export import EXT_ANDROID = $const.EXT_ANDROID;
         export import CONTAINER_ANDROID = $const.CONTAINER_ANDROID;
         export import SUPPORT_ANDROID = $const.SUPPORT_ANDROID;
+        export import CONTAINER_ANDROID_X = $const.CONTAINER_ANDROID_X;
+        export import SUPPORT_ANDROID_X = $const.SUPPORT_ANDROID_X;
         export import ELEMENT_ANDROID = $const.ELEMENT_ANDROID;
         export import STRING_ANDROID = $const.STRING_ANDROID;
         export import LAYOUT_ANDROID = $const.LAYOUT_ANDROID;

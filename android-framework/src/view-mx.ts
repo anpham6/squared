@@ -3,7 +3,7 @@ import { CachedValue } from '../../@types/base/node';
 import { CustomizationResult } from '../../@types/android/application';
 import { Constraint, LocalSettings, SupportAndroid } from '../../@types/android/node';
 
-import { CONTAINER_ANDROID, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
+import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { localizeString } from './lib/util';
@@ -180,8 +180,15 @@ const validateString = (value: string) => value ? value.trim().replace(REGEXP_VA
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
-        public static getControlName(containerType: number): string {
-            return CONTAINER_ANDROID[CONTAINER_NODE[containerType]];
+        public static getControlName(containerType: number, api = BUILD_ANDROID.Q): string {
+            const name = CONTAINER_NODE[containerType];
+            if (api >= BUILD_ANDROID.Q) {
+                const controlName: string | undefined = CONTAINER_ANDROID_X[name];
+                if (controlName) {
+                    return controlName;
+                }
+            }
+            return CONTAINER_ANDROID[name];
         }
 
         public renderParent?: T;

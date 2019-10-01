@@ -1,7 +1,7 @@
 import Controller from '../../controller';
 import View from '../../view';
 
-import { CONTAINER_ANDROID, EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
+import { EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
@@ -39,7 +39,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public processNode(node: T, parent: T) {
         const outside = node.filter((item: T) => outsideX(item, node)) as T[];
-        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
+        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, View.getControlName(CONTAINER_NODE.CONSTRAINT, node.localSettings.targetAPI), CONTAINER_NODE.CONSTRAINT);
         if (node.marginTop > 0) {
             container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.marginTop);
             node.modifyBox($e.BOX_STANDARD.MARGIN_TOP);

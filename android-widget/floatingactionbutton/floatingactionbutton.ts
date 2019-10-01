@@ -55,7 +55,8 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         if (src !== '') {
             $util.assignEmptyValue(options, 'app', 'srcCompat', '@drawable/' + src);
         }
-        node.setControlType($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, $enumA.CONTAINER_NODE.BUTTON);
+        const controlName = node.localSettings.targetAPI < $enumA.BUILD_ANDROID.Q ? $constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : $constA.SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
+        node.setControlType(controlName, $enumA.CONTAINER_NODE.BUTTON);
         node.exclude($e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET);
         $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         let parentAs: T | undefined;
@@ -106,7 +107,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
             if (target) {
                 const layoutGravity = node.android('layout_gravity');
                 let anchor = parent.documentId;
-                if (parent.controlName === $constA.SUPPORT_ANDROID.TOOLBAR) {
+                if (parent.controlName === (node.localSettings.targetAPI < $enumA.BUILD_ANDROID.Q ? $constA.SUPPORT_ANDROID.TOOLBAR : $constA.SUPPORT_ANDROID_X.TOOLBAR)) {
                     const outerParent: string = parent.data(WIDGET_NAME.TOOLBAR, 'outerParent');
                     if (outerParent) {
                         anchor = outerParent;
@@ -131,7 +132,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
             output: <NodeXmlTemplate<T>> {
                 type: $e.NODE_TEMPLATE.XML,
                 node,
-                controlName: $constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON
+                controlName
             },
             complete: true
         };

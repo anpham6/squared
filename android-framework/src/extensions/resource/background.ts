@@ -552,19 +552,19 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                     }
+                    const outline = stored.outline;
+                    const images = this.getDrawableImages(node, stored);
                     let [shapeData, layerListData] = this.getDrawableBorder(
                         stored,
-                        [stored.borderTop, stored.borderRight, stored.borderBottom, stored.borderLeft],
                         undefined,
-                        this.getDrawableImages(node, stored),
-                        drawOutline && stored.outline ? getIndentOffset(stored.outline) : 0);
+                        images,
+                        drawOutline && outline ? getIndentOffset(outline) : 0);
                     const emptyBackground = shapeData === undefined && layerListData === undefined;
-                    if (stored.outline && (drawOutline || emptyBackground)) {
+                    if (outline && (drawOutline || emptyBackground)) {
                         const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(
                             stored,
-                            [],
-                            stored.outline,
-                            undefined,
+                            outline,
+                            images,
                             undefined,
                             !emptyBackground
                         );
@@ -614,7 +614,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         this._resourceSvgInstance = undefined;
     }
 
-    public getDrawableBorder(data: BoxStyle, borders: (BorderAttribute | undefined)[], outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false) {
+    public getDrawableBorder(data: BoxStyle, outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false) {
+        const borders: (BorderAttribute | undefined)[] = new Array(4);
         const borderVisible: boolean[] = [];
         const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
         const indentOffset = indentWidth > 0 ? $css.formatPX(indentWidth) : '';
@@ -624,7 +625,19 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         let borderData: BorderAttribute | undefined;
         let shapeData: ExternalData[] | undefined;
         let layerListData: ExternalData[] | undefined;
-        if (borders.length) {
+        if (outline) {
+            border = outline;
+            borderData = outline;
+            borders[0] = outline;
+            borders[1] = outline;
+            borders[2] = outline;
+            borders[3] = outline;
+        }
+        else {
+            borders[0] = data.borderTop;
+            borders[1] = data.borderRight;
+            borders[2] = data.borderBottom;
+            borders[3] = data.borderLeft;
             for (let i = 0; i < 4; i++) {
                 const item = borders[i];
                 if (item) {
@@ -642,10 +655,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     borderAll = false;
                 }
             }
-        }
-        else if (outline) {
-            border = outline;
-            borderData = outline;
         }
         if (borderAll) {
             border = borderData;
@@ -837,8 +846,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (valid) {
                         const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
                         const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                        backgroundPosition[length] = $css.getBackgroundPosition(checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'), node.actualDimension, node.fontSize, imageDimensions[length], backgroundSize[i]);
-                        length++;
+                        backgroundPosition[length++] = $css.getBackgroundPosition(checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'), node.actualDimension, node.fontSize, imageDimensions[length], backgroundSize[i]);
                     }
                     else {
                         backgroundRepeat[i] = undefined as any;
@@ -857,22 +865,21 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundSize.length = 0;
                 }
                 const embedded = extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'));
-                for (let i = 0, j = length; i < embedded.length; i++) {
+                for (let i = 0; i < embedded.length; i++) {
                     const image = embedded[i];
                     const element = <HTMLImageElement> image.element;
                     const src = resource.addImageSrc(element);
                     if (src !== '') {
-                        images[j] = src;
-                        backgroundRepeat[j] = 'no-repeat';
-                        backgroundSize[j] = getPixelUnit(image.actualWidth, image.actualHeight);
-                        backgroundPosition[j] = $css.getBackgroundPosition(
+                        images[length] = src;
+                        backgroundRepeat[length] = 'no-repeat';
+                        backgroundSize[length] = getPixelUnit(image.actualWidth, image.actualHeight);
+                        backgroundPosition[length] = $css.getBackgroundPosition(
                             image.containerName === 'INPUT_IMAGE' ? getPixelUnit(0, 0) : getPixelUnit(image.bounds.left - node.bounds.left + node.borderLeftWidth, image.bounds.top - node.bounds.top + node.borderTopWidth),
                             node.actualDimension,
                             node.fontSize,
                             image.bounds
                         );
-                        imageDimensions[j] = resource.getImage(element.src);
-                        j++;
+                        imageDimensions[length++] = resource.getImage(element.src);
                     }
                 }
             }

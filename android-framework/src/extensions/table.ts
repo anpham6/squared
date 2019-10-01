@@ -57,7 +57,9 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                             }
                         }
                     }
-                    item.setSingleLine(true);
+                    if (item.tagName === 'TD') {
+                        item.setSingleLine(true);
+                    }
                 });
             }
             else {

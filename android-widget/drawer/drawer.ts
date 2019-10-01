@@ -66,7 +66,8 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         }
         node.documentRoot = true;
         node.renderExclude = false;
-        node.setControlType($constA.SUPPORT_ANDROID.DRAWER, $enumA.CONTAINER_NODE.BLOCK);
+        const controlName = node.localSettings.targetAPI < $enumA.BUILD_ANDROID.Q ? $constA.SUPPORT_ANDROID.DRAWER : $constA.SUPPORT_ANDROID_X.DRAWER;
+        node.setControlType(controlName, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude($e.NODE_RESOURCE.FONT_STYLE);
         node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
         node.render(parent);
@@ -76,7 +77,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             output: <NodeXmlTemplate<T>> {
                 type: $e.NODE_TEMPLATE.XML,
                 node,
-                controlName: $constA.SUPPORT_ANDROID.DRAWER
+                controlName
             },
             complete: true,
             remove: true
@@ -102,7 +103,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
                 controller.addAfterInsideTemplate(
                     node.id,
                     controller.renderNodeStatic(
-                        $constA.SUPPORT_ANDROID.NAVIGATION_VIEW,
+                        node.localSettings.targetAPI < $enumA.BUILD_ANDROID.Q ? $constA.SUPPORT_ANDROID.NAVIGATION_VIEW : $constA.SUPPORT_ANDROID_X.NAVIGATION_VIEW,
                         $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
                         'wrap_content',
                         'match_parent'

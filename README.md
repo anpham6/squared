@@ -124,7 +124,7 @@ squared.settings = {
         'android.resource.styles',
         'android.resource.includes'
     ],
-    targetAPI: 28,
+    targetAPI: 29,
     resolutionDPI: 160,
     framesPerSecond: 60,
     supportRTL: true,
@@ -306,7 +306,7 @@ squared.system.writeResourceStyleXml()
 
 ```javascript
 <script>
-    // targetAPI: 0 - ALL, 26 - OREO
+    // targetAPI: 0 - ALL, 29 - Android Q
     squared.system.customize(squared.settings.targetAPI, 'Button', {
         android: {
             minWidth: '35px',

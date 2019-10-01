@@ -37,7 +37,8 @@ export default class BottomNavigation<T extends android.base.View> extends squar
                 child.hide();
             }
         }
-        node.setControlType($constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION, $enumA.CONTAINER_NODE.BLOCK);
+        const controlName = node.localSettings.targetAPI < $enumA.BUILD_ANDROID.Q ? $constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION : $constA.SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
+        node.setControlType(controlName, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude($e.NODE_RESOURCE.ASSET);
         node.render(parent);
         node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
@@ -51,7 +52,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
             output: <NodeXmlTemplate<T>> {
                 type: $e.NODE_TEMPLATE.XML,
                 node,
-                controlName: $constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION
+                controlName
             },
             complete: true
         };

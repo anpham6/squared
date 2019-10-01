@@ -133,7 +133,20 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             $util.assignEmptyValue(toolbarOptions, 'android', 'fitsSystemWindows', 'true');
         }
         $util.assignEmptyValue(toolbarOptions, 'android', 'layout_height', hasAppBar || !node.hasPX('height') ? '?android:attr/actionBarSize' : '');
-        node.setControlType($constA.SUPPORT_ANDROID.TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
+        let controlName: string;
+        let appBarName: string;
+        let collapsingToolbarName: string;
+        if (node.localSettings.targetAPI < $enumA.BUILD_ANDROID.Q) {
+            controlName = $constA.SUPPORT_ANDROID.TOOLBAR;
+            appBarName = $constA.SUPPORT_ANDROID.APPBAR;
+            collapsingToolbarName = $constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR;
+        }
+        else {
+            controlName = $constA.SUPPORT_ANDROID_X.TOOLBAR;
+            appBarName = $constA.SUPPORT_ANDROID_X.APPBAR;
+            collapsingToolbarName = $constA.SUPPORT_ANDROID_X.COLLAPSING_TOOLBAR;
+        }
+        node.setControlType(controlName, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude($e.NODE_RESOURCE.FONT_STYLE);
         let appBarNode: T | undefined;
         let collapsingToolbarNode: T | undefined;
@@ -156,7 +169,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             if (appBarOptions.android.id) {
                 appBarNode.controlId = $utilA.getDocumentId(appBarOptions.android.id);
             }
-            appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
+            appBarNode.setControlType(appBarName, $enumA.CONTAINER_NODE.BLOCK);
             if (hasCollapsingToolbar) {
                 $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId + '_collapsingtoolbar');
                 $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
@@ -171,7 +184,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     if (collapsingToolbarOptions.android.id) {
                         appBarNode.controlId = $utilA.getDocumentId(collapsingToolbarOptions.android.id);
                     }
-                    collapsingToolbarNode.setControlType($constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
+                    collapsingToolbarNode.setControlType(collapsingToolbarName, $enumA.CONTAINER_NODE.BLOCK);
                     collapsingToolbarNode.each(item => item.dataset.target = (collapsingToolbarNode as T).controlId);
                 }
             }
@@ -185,7 +198,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             outputAs = {
                 type: $e.NODE_TEMPLATE.XML,
                 node: appBarNode,
-                controlName: $constA.SUPPORT_ANDROID.APPBAR
+                controlName: appBarName
             };
             if (collapsingToolbarNode) {
                 node.parent = collapsingToolbarNode;
@@ -199,7 +212,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     <NodeXmlTemplate<T>> {
                         type: $e.NODE_TEMPLATE.XML,
                         node: collapsingToolbarNode,
-                        controlName: $constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR
+                        controlName: collapsingToolbarName
                     }
                 );
                 if (backgroundImage) {
@@ -256,7 +269,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         const output = <NodeXmlTemplate<T>> {
             type: $e.NODE_TEMPLATE.XML,
             node,
-            controlName: $constA.SUPPORT_ANDROID.TOOLBAR
+            controlName
         };
         if (appBarNode) {
             return {

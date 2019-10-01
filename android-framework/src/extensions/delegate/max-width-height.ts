@@ -1,6 +1,6 @@
 import View from '../../view';
 
-import { CONTAINER_ANDROID, EXT_ANDROID } from '../../lib/constant';
+import { EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
@@ -40,7 +40,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     public processNode(node: T, parent: T) {
         const mainData: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const container = parent.layoutConstraint ? parent : (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
+            const container = parent.layoutConstraint ? parent : (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, View.getControlName(CONTAINER_NODE.CONSTRAINT, node.localSettings.targetAPI), CONTAINER_NODE.CONSTRAINT);
             if (mainData.width) {
                 node.setLayoutWidth('0px');
                 container.setLayoutWidth('match_parent');

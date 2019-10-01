@@ -6,7 +6,7 @@ import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
 
-import { CONTAINER_ANDROID, STRING_ANDROID } from './lib/constant';
+import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, STRING_ANDROID } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { createViewAttribute, getDocumentId, getRootNs } from './lib/util';
 
@@ -1052,7 +1052,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
         }
         if (valid) {
-            node.setControlType(View.getControlName(containerType), containerType);
+            node.setControlType(View.getControlName(containerType, node.localSettings.targetAPI), containerType);
             node.addAlign(alignmentType);
             node.render(!node.dataset.use && node.dataset.target ? (<squared.base.ApplicationUI<T>> this.application).resolveTarget(node.dataset.target) : layout.parent);
             node.apply(options);
@@ -1067,7 +1067,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public renderNode(layout: squared.base.LayoutUI<T>) {
         const node = layout.node;
-        let controlName = View.getControlName(layout.containerType);
+        let controlName = View.getControlName(layout.containerType, node.localSettings.targetAPI);
         node.setControlType(controlName, layout.containerType);
         node.addAlign(layout.alignmentType);
         let parent = layout.parent;
@@ -1657,7 +1657,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         { orientation: horizontal ? STRING_ANDROID.VERTICAL : STRING_ANDROID.HORIZONTAL },
                         { [beginPercent]: resourceValue }
                     );
-                    this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(CONTAINER_ANDROID.GUIDELINE, options), false);
+                    this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(node.localSettings.targetAPI < BUILD_ANDROID.Q ? CONTAINER_ANDROID.GUIDELINE : CONTAINER_ANDROID_X.GUIDELINE, options), false);
                     const documentId = options.documentId;
                     if (documentId) {
                         node.anchor(LT, documentId, true);
@@ -1693,7 +1693,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     constraint_referenced_ids: $util.objectMap(unbound, item => getDocumentId(item.documentId)).join(',')
                 }
             );
-            this.addAfterOutsideTemplate(unbound[unbound.length - 1].id, this.renderNodeStatic(CONTAINER_ANDROID.BARRIER, options), false);
+            const target = unbound[unbound.length - 1];
+            this.addAfterOutsideTemplate(target.id, this.renderNodeStatic(target.localSettings.targetAPI < BUILD_ANDROID.Q ? CONTAINER_ANDROID.BARRIER : CONTAINER_ANDROID_X.BARRIER, options), false);
             for (const node of unbound) {
                 (node.constraint.barrier as {})[barrierDirection] = options.documentId;
             }

@@ -50,6 +50,35 @@ export const CONTAINER_ANDROID = {
     BARRIER: 'android.support.constraint.Barrier'
 };
 
+export const CONTAINER_ANDROID_X = {
+    VERTICAL_SCROLL: 'androidx.core.widget.NestedScrollView',
+    CONSTRAINT: 'androidx.constraintlayout.widget.ConstraintLayout',
+    GUIDELINE: 'androidx.constraintlayout.widget.Guideline',
+    BARRIER: 'androidx.constraintlayout.widget.Barrier'
+};
+
+export const SUPPORT_ANDROID = {
+    DRAWER: 'android.support.v4.widget.DrawerLayout',
+    NAVIGATION_VIEW: 'android.support.design.widget.NavigationView',
+    COORDINATOR: 'android.support.design.widget.CoordinatorLayout',
+    APPBAR: 'android.support.design.widget.AppBarLayout',
+    COLLAPSING_TOOLBAR: 'android.support.design.widget.CollapsingToolbarLayout',
+    TOOLBAR: 'android.support.v7.widget.Toolbar',
+    FLOATING_ACTION_BUTTON: 'android.support.design.widget.FloatingActionButton',
+    BOTTOM_NAVIGATION: 'android.support.design.widget.BottomNavigationView'
+};
+
+export const SUPPORT_ANDROID_X = {
+    DRAWER: 'androidx.drawerlayout.widget.DrawerLayout',
+    NAVIGATION_VIEW: 'com.google.android.material.navigation.NavigationView',
+    COORDINATOR: 'androidx.coordinatorlayout.widget.CoordinatorLayout',
+    APPBAR: 'com.google.android.material.appbar.AppBarLayout',
+    COLLAPSING_TOOLBAR: 'com.google.android.material.appbar.CollapsingToolbarLayout',
+    TOOLBAR: 'androidx.appcompat.widget.Toolbar',
+    FLOATING_ACTION_BUTTON: 'com.google.android.material.floatingactionbutton.FloatingActionButton',
+    BOTTOM_NAVIGATION: 'com.google.android.material.bottomnavigation.BottomNavigationView'
+};
+
 export const ELEMENT_ANDROID = {
     PLAINTEXT: CONTAINER_NODE.TEXT,
     HR: CONTAINER_NODE.LINE,
@@ -81,17 +110,6 @@ export const ELEMENT_ANDROID = {
     INPUT_CHECKBOX: CONTAINER_NODE.CHECKBOX,
     INPUT_RADIO: CONTAINER_NODE.RADIO,
     'INPUT_DATETIME-LOCAL': CONTAINER_NODE.EDIT
-};
-
-export const SUPPORT_ANDROID = {
-    DRAWER: 'android.support.v4.widget.DrawerLayout',
-    NAVIGATION_VIEW: 'android.support.design.widget.NavigationView',
-    COORDINATOR: 'android.support.design.widget.CoordinatorLayout',
-    APPBAR: 'android.support.design.widget.AppBarLayout',
-    COLLAPSING_TOOLBAR: 'android.support.design.widget.CollapsingToolbarLayout',
-    TOOLBAR: 'android.support.v7.widget.Toolbar',
-    FLOATING_ACTION_BUTTON: 'android.support.design.widget.FloatingActionButton',
-    BOTTOM_NAVIGATION: 'android.support.design.widget.BottomNavigationView'
 };
 
 export const LAYOUT_ANDROID = {

@@ -2,8 +2,8 @@ import { NodeXmlTemplate } from '../../../../@types/base/application';
 
 import View from '../../view';
 
-import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
-import { CONTAINER_NODE } from '../../lib/enumeration';
+import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, STRING_ANDROID } from '../../lib/constant';
+import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
 const $css = squared.lib.css;
 const $e = squared.base.lib.enumeration;
@@ -21,7 +21,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         const overflow: string[] = [];
         const scrollView: T[] = [];
         const horizontalScroll = CONTAINER_ANDROID.HORIZONTAL_SCROLL;
-        const verticalScroll = CONTAINER_ANDROID.VERTICAL_SCROLL;
+        const verticalScroll = node.localSettings.targetAPI < BUILD_ANDROID.Q ? CONTAINER_ANDROID.VERTICAL_SCROLL : CONTAINER_ANDROID_X.VERTICAL_SCROLL;
         if (node.overflowX && node.overflowY) {
             overflow.push(horizontalScroll, verticalScroll);
         }

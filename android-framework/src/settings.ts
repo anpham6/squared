@@ -28,7 +28,7 @@ const settings: UserSettingsAndroid = {
         'android.resource.styles',
         'android.resource.includes'
     ],
-    targetAPI: 28,
+    targetAPI: 29,
     resolutionDPI: 160,
     framesPerSecond: 60,
     supportRTL: true,
