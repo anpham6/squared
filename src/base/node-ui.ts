@@ -540,8 +540,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this.fontSize = node.fontSize;
                     break;
                 case 'boxStyle':
-                    const backgroundColor = node.backgroundColor;
-                    const backgroundImage = node.backgroundImage;
+                    const { backgroundColor, backgroundImage } = node;
                     this.cssApply({
                         backgroundColor,
                         backgroundImage,
@@ -1354,15 +1353,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get lastChild() {
         const children = this.naturalChildren;
-        return children.length ? children[children.length - 1] : null;
+        return children[children.length - 1] || null;
     }
 
     get onlyChild() {
         if (this.renderParent) {
             return this.renderParent.length === 1;
         }
-        else if (this.parent && this.parent.id !== 0) {
-            return this.parent.length === 1;
+        else {
+            const parent = this.parent;
+            if (parent && parent.id !== 0) {
+                return parent.length === 1;
+            }
         }
         return false;
     }

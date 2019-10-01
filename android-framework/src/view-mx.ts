@@ -672,6 +672,45 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             layoutWidth = $css.formatPX(value);
                         }
                     }
+                    else if (this.length > 0) {
+                        switch (this.cssInitial('width')) {
+                            case 'max-content':
+                            case 'fit-content':
+                                for (const node of this.renderChildren) {
+                                    if (!node.hasPX('width')) {
+                                        node.setLayoutWidth('wrap_content');
+                                    }
+                                }
+                                layoutWidth = 'wrap_content';
+                                break;
+                            case 'min-content':
+                                const nodes: T[] = [];
+                                let maxWidth = 0;
+                                for (const node of this.renderChildren) {
+                                    if (!node.textElement || node.hasPX('width')) {
+                                        const actualWidth = node.actualWidth;
+                                        if (actualWidth > maxWidth) {
+                                            maxWidth = actualWidth;
+                                        }
+                                    }
+                                    else {
+                                        const minWidth = node.parseUnit(node.css('minWidth'));
+                                        if (minWidth > maxWidth) {
+                                            maxWidth = minWidth;
+                                        }
+                                        nodes.push(node);
+                                    }
+                                }
+                                if (nodes.length) {
+                                    const widthPX = $css.formatPX(maxWidth);
+                                    for (const node of nodes) {
+                                        node.css('maxWidth', widthPX);
+                                    }
+                                }
+                                layoutWidth = 'wrap_content';
+                                break;
+                        }
+                    }
                     else if (this.imageElement && this.hasPX('height')) {
                         layoutWidth = 'wrap_content';
                         adjustViewBounds = true;

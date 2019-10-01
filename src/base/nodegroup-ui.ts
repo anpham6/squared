@@ -143,7 +143,7 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get lastChild() {
         const children = this.children;
-        return children.length ? children[children.length - 1] : null;
+        return children[children.length - 1] || null;
     }
 
     get tagName() {

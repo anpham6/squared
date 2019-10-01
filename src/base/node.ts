@@ -1303,8 +1303,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         bounds.height -= this.contentBoxHeight;
                         break;
                     case 'linear':
-                        bounds.width += (this.marginLeft > 0 ? this.marginLeft : 0) + this.marginRight;
-                        bounds.height += (this.marginTop > 0 ? this.marginTop : 0) + this.marginBottom;
+                        bounds.width += Math.max(this.marginLeft, 0) + this.marginRight;
+                        bounds.height += Math.max(this.marginTop, 0) + this.marginBottom;
                         break;
                 }
             }
