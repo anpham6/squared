@@ -726,12 +726,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            if (CACHE_PATTERN.COUNTER === undefined) {
-                                CACHE_PATTERN.COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
-                                CACHE_PATTERN.COUNTER_VALUE = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
+                            if (CACHE_PATTERN.COUNTER) {
+                                CACHE_PATTERN.COUNTER.lastIndex = 0;
                             }
                             else {
-                                CACHE_PATTERN.COUNTER.lastIndex = 0;
+                                CACHE_PATTERN.COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
+                                CACHE_PATTERN.COUNTER_VALUE = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
                             }
                             let found = false;
                             let match: RegExpExecArray | null;

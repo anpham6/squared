@@ -125,7 +125,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
         let offset = 0;
         let usePadding = true;
         if (inlineStyle && !node.inline && node.inlineText) {
-            setMinHeight(node, lineHeight, false);
+            setMinHeight(node, lineHeight);
             setMultiline(node, lineHeight, false, false);
         }
         else if (!inlineStyle && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
@@ -147,10 +147,11 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
                 offset = (lineHeight - bounds.height) / 2;
             }
         }
-        if (Math.round(offset) > 0) {
+        const upper = Math.round(offset);
+        if (upper > 0) {
             const boxPadding = usePadding && node.textElement && !node.plainText && !inlineStyle;
             if (top) {
-                node.modifyBox(boxPadding ? $e.BOX_STANDARD.PADDING_TOP : $e.BOX_STANDARD.MARGIN_TOP, Math.round(offset));
+                node.modifyBox(boxPadding ? $e.BOX_STANDARD.PADDING_TOP : $e.BOX_STANDARD.MARGIN_TOP, upper);
             }
             if (bottom) {
                 node.modifyBox(boxPadding ? $e.BOX_STANDARD.PADDING_BOTTOM : $e.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
@@ -158,14 +159,14 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
         }
     }
     else if (inlineStyle && (!node.hasHeight || lineHeight > node.height) && (node.layoutHorizontal && node.horizontalRows === undefined || node.hasAlign($e.NODE_ALIGNMENT.SINGLE))) {
-        setMinHeight(node, lineHeight, true);
+        setMinHeight(node, lineHeight);
     }
 }
 
-function setMinHeight(node: T, value: number, gravity: boolean) {
+function setMinHeight(node: T, value: number) {
     if (node.inlineText) {
         value += node.contentBoxHeight;
-        if (gravity) {
+        if (!node.hasPX('height') || value >= Math.floor(node.height)) {
             node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL, false);
         }
     }

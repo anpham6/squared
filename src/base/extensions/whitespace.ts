@@ -190,7 +190,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     if (!node.floating) {
                         if (!current.floating) {
-                            if (current.bounds.height > 0 || length === 1 || current.tagName === 'HR') {
+                            if (current.blockStatic || current.bounds.height > 0 || length === 1) {
                                 if (firstChild === undefined) {
                                     firstChild = current;
                                 }

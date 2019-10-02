@@ -1052,9 +1052,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
         }
         if (valid) {
+            const dataset = node.dataset;
             node.setControlType(View.getControlName(containerType, node.localSettings.targetAPI), containerType);
             node.addAlign(alignmentType);
-            node.render(!node.dataset.use && node.dataset.target ? (<squared.base.ApplicationUI<T>> this.application).resolveTarget(node.dataset.target) : layout.parent);
+            node.render(!dataset.use && dataset.target ? (<squared.base.ApplicationUI<T>> this.application).resolveTarget(dataset.target) : layout.parent);
             node.apply(options);
             return <NodeXmlTemplate<T>> {
                 type: $e.NODE_TEMPLATE.XML,

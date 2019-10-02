@@ -272,11 +272,11 @@ export const TRANSFORM = {
         const value = $dom.getNamedItem(element, attr);
         const result: SvgPoint[] = [];
         if (value !== '') {
-            if (REGEXP_ROTATEORIGIN === undefined) {
-                REGEXP_ROTATEORIGIN = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
+            if (REGEXP_ROTATEORIGIN) {
+                REGEXP_ROTATEORIGIN.lastIndex = 0;
             }
             else {
-                REGEXP_ROTATEORIGIN.lastIndex = 0;
+                REGEXP_ROTATEORIGIN = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
             }
             let match: RegExpExecArray | null;
             while ((match = REGEXP_ROTATEORIGIN.exec(value)) !== null) {

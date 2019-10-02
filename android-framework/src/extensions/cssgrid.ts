@@ -22,7 +22,7 @@ const {
 } = squared.base.lib;
 
 const REGEXP_ALIGNSELF = /(start|end|center|baseline)/;
-const REGEXP_JUSTIFYSELF = /(left|right)/;
+const REGEXP_JUSTIFYSELF = /(start|left|center|right|end)/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
@@ -231,6 +231,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     cellSpan = cellData.rowSpan;
                 }
                 const unitMin = data.unitMin;
+                const unitDimension = horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL;
                 let unit = data.unit;
                 let size = 0;
                 let minSize = 0;
@@ -290,11 +291,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             break;
                         }
                     }
-                    else if ($css.isPercent(value)) {
-                        sizeWeight += parseFloat(value) / 100;
-                        minSize = size;
-                        size = 0;
-                    }
                     else if (value.endsWith('fr')) {
                         if (horizontal || node.hasHeight) {
                             sizeWeight += parseFloat(value);
@@ -306,8 +302,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                         size = 0;
                     }
-                    else if (value.endsWith('px')) {
-                        const gap = parseFloat(value);
+                    else if ($css.isPercent(value)) {
+                        sizeWeight += parseFloat(value) / 100;
+                        minSize = size;
+                        size = 0;
+                    }
+                    else {
+                        const gap = item.parseUnit(value, unitDimension);
                         if (minSize === 0) {
                             size += gap;
                         }

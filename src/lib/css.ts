@@ -275,12 +275,12 @@ export function validMediaRule(value: string, fontSize?: number) {
         case 'only screen':
             return true;
         default: {
-            if (CACHE_PATTERN.MEDIA_RULE === undefined) {
-                CACHE_PATTERN.MEDIA_RULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-                CACHE_PATTERN.MEDIA_CONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+            if (CACHE_PATTERN.MEDIA_RULE) {
+                CACHE_PATTERN.MEDIA_RULE.lastIndex = 0;
             }
             else {
-                CACHE_PATTERN.MEDIA_RULE.lastIndex = 0;
+                CACHE_PATTERN.MEDIA_RULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+                CACHE_PATTERN.MEDIA_CONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
             }
             let match: RegExpExecArray | null;
             while ((match = CACHE_PATTERN.MEDIA_RULE.exec(value)) !== null) {
@@ -443,9 +443,9 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
         orientation
     };
     function setImageOffset(position: string, horizontal: boolean, direction: string, directionAsPercent: string) {
-        if (imageDimension && (isPercent(position) || /^[a-z]+$/.test(position))) {
+        if (imageDimension && !isLength(position)) {
             let offset = result[directionAsPercent];
-            if (imageSize) {
+            if (imageSize && imageSize !== 'auto') {
                 const [sizeW, sizeH] = imageSize.split(' ');
                 if (horizontal) {
                     let width = dimension.width;
@@ -528,9 +528,11 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
             }
             const directionAsPercent = direction + 'AsPercent';
             switch (position) {
+                case '0%':
                 case 'start':
                     result.horizontal = 'left';
                     break;
+                case '100%':
                 case 'end':
                     result.horizontal = 'right';
                 case 'right':
@@ -538,6 +540,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     result[direction] = offsetParent;
                     result[directionAsPercent] = 1;
                     break;
+                case '50%':
                 case 'center':
                     result[direction] = offsetParent / 2;
                     result[directionAsPercent] = 0.5;
@@ -555,7 +558,20 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
             const position = orientation[i];
             switch (i) {
                 case 0:
-                    result.horizontal = position;
+                    switch (position) {
+                        case '0%':
+                            result.horizontal = 'left';
+                            break;
+                        case '50%':
+                            result.horizontal = 'center';
+                            break;
+                        case '100%':
+                            result.horizontal = 'right';
+                            break;
+                        default:
+                            result.horizontal = position;
+                            break;
+                    }
                     break;
                 case 1: {
                     const location = convertLength(position, dimension.width, fontSize);
@@ -581,7 +597,20 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     break;
                 }
                 case 2:
-                    result.vertical = position;
+                    switch (position) {
+                        case '0%':
+                            result.vertical = 'top';
+                            break;
+                        case '50%':
+                            result.vertical = 'center';
+                            break;
+                        case '100%':
+                            result.vertical = 'bottom';
+                            break;
+                        default:
+                            result.vertical = position;
+                            break;
+                    }
                     break;
                 case 3: {
                     const location = convertLength(position, dimension.height, fontSize);
@@ -603,7 +632,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
             }
         }
     }
-    result.static = result.top === 0 && result.right === 0 && result.left === 0 && result.bottom === 0;
+    result.static = result.top === 0 && result.right === 0 && result.bottom === 0 && result.left === 0;
     return result;
 }
 

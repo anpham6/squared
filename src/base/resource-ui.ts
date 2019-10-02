@@ -22,11 +22,11 @@ const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)
 let REGEXP_COLORSTOP: RegExp | undefined;
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
-    if (REGEXP_COLORSTOP === undefined) {
-        REGEXP_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
+    if (REGEXP_COLORSTOP) {
+        REGEXP_COLORSTOP.lastIndex = 0;
     }
     else {
-        REGEXP_COLORSTOP.lastIndex = 0;
+        REGEXP_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
     }
     const item = <RadialGradient> gradient;
     const repeating = item.repeating === true;
@@ -296,7 +296,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const repeating = match[1] === 'repeating';
                     const type = match[2];
                     const direction = match[3];
-                    const dimension = getBackgroundSize(node, i, node.css('backgroundSize')) || node.actualDimension;
+                    const imageDimension = getBackgroundSize(node, i, node.css('backgroundSize'));
+                    const dimension = imageDimension || node.actualDimension;
                     let gradient: Gradient | undefined;
                     switch (type) {
                         case 'conic': {
@@ -306,7 +307,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 dimension,
                                 angle: parseAngle(direction)
                             };
-                            conic.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize);
+                            conic.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension);
                             conic.colorStops = parseColorStops(node, conic, match[4]);
                             gradient = conic;
                             break;
@@ -320,7 +321,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 horizontal: node.actualWidth <= node.actualHeight,
                                 dimension
                             };
-                            const center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize);
+                            const center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension);
                             const { left, top } = center;
                             radial.center = center;
                             radial.closestCorner = Number.POSITIVE_INFINITY;
@@ -500,14 +501,15 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     dimensions[1] = dimensions[0];
                 }
                 for (let i = 0; i < length; i++) {
-                    if (dimensions[i] === 'auto') {
-                        dimensions[i] = '100%';
+                    let size = dimensions[i];
+                    if (size === 'auto') {
+                        size = '100%';
                     }
                     if (i === 0) {
-                        width = node.parseUnit(dimensions[i], 'width', false);
+                        width = node.parseUnit(size, 'width', false);
                     }
                     else {
-                        height = node.parseUnit(dimensions[i], 'height', false);
+                        height = node.parseUnit(size, 'height', false);
                     }
                 }
                 break;
@@ -601,7 +603,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         color = $css.getInheritedStyle(<HTMLElement> node.element, border[2]);
                         break;
                 }
-                if (style !== 'none' && width !== '0px') {
+                if (width !== '0px' && style !== 'none') {
                     if (width === '2px' && (style === 'inset' || style === 'outset')) {
                         width = '1px';
                     }

@@ -265,22 +265,26 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         });
         if (horizontal) {
             node.sort((a, b) => {
-                if (!$util.withinRange(a.linear.top, b.linear.top)) {
-                    return a.linear.top < b.linear.top ? -1 : 1;
+                const { left, top } = a.linear;
+                const { left: leftB, top: topB } = b.linear;
+                if (!$util.withinRange(top, topB)) {
+                    return top < topB ? -1 : 1;
                 }
-                else if (!$util.withinRange(a.linear.left, b.linear.left)) {
-                    return a.linear.left < b.linear.left ? -1 : 1;
+                else if (!$util.withinRange(left, leftB)) {
+                    return left < leftB ? -1 : 1;
                 }
                 return 0;
             });
         }
         else {
             node.sort((a, b) => {
-                if (!$util.withinRange(a.linear.left, b.linear.left)) {
-                    return a.linear.left < b.linear.left ? -1 : 1;
+                const { left, top } = a.linear;
+                const { left: leftB, top: topB } = b.linear;
+                if (!$util.withinRange(left, leftB)) {
+                    return left < leftB ? -1 : 1;
                 }
-                else if (!$util.withinRange(a.linear.top, b.linear.top)) {
-                    return a.linear.top < b.linear.top ? -1 : 1;
+                else if (!$util.withinRange(top, topB)) {
+                    return top < topB ? -1 : 1;
                 }
                 return 0;
             });

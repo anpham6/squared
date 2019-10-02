@@ -519,11 +519,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                     fromRule.push($util.convertCamelCase(attr));
                 }
                 if (cssText.indexOf('!important') !== -1) {
-                    if (REGEXP_IMPORTANT === undefined) {
-                        REGEXP_IMPORTANT = /\s*([a-z\-]+):.*?!important;/g;
+                    if (REGEXP_IMPORTANT) {
+                        REGEXP_IMPORTANT.lastIndex = 0;
                     }
                     else {
-                        REGEXP_IMPORTANT.lastIndex = 0;
+                        REGEXP_IMPORTANT = /\s*([a-z\-]+):.*?!important;/g;
                     }
                     let match: RegExpExecArray | null;
                     while ((match = REGEXP_IMPORTANT.exec(cssText)) !== null) {
@@ -622,7 +622,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 const revisedSpecificity = specificity + (important[attr] ? 1000 : 0);
                                 if (specificityData[attr] === undefined || revisedSpecificity >= specificityData[attr]) {
                                     specificityData[attr] = revisedSpecificity;
-                                    if (value === 'initial' && cssStyle.background !== '' && attr.startsWith('background')) {
+                                    if (value === 'initial' && cssStyle.background && attr.startsWith('background')) {
                                         continue;
                                     }
                                     styleData[attr] = value;

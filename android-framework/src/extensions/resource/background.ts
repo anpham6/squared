@@ -564,7 +564,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(
                             stored,
                             outline,
-                            images,
+                            emptyBackground ? images : undefined,
                             undefined,
                             !emptyBackground
                         );
@@ -616,7 +616,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public getDrawableBorder(data: BoxStyle, outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false) {
         const borders: (BorderAttribute | undefined)[] = new Array(4);
-        const borderVisible: boolean[] = [];
+        const borderVisible: boolean[] = new Array(4);
         const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
         const indentOffset = indentWidth > 0 ? $css.formatPX(indentWidth) : '';
         let borderStyle = true;
@@ -626,12 +626,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         let shapeData: ExternalData[] | undefined;
         let layerListData: ExternalData[] | undefined;
         if (outline) {
-            border = outline;
             borderData = outline;
-            borders[0] = outline;
-            borders[1] = outline;
-            borders[2] = outline;
-            borders[3] = outline;
+            for (let i = 0; i < 4; i++) {
+                borders[i] = outline;
+                borderVisible[i] = true;
+            }
         }
         else {
             borders[0] = data.borderTop;
@@ -818,7 +817,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         const rawData = resource.getRawData(match[1]);
                                         if (rawData && rawData.base64) {
                                             images[length] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));
-                                            imageDimensions[length] = { width: rawData.width, height: rawData.height };
+                                            imageDimensions[length] = rawData;
                                             resource.writeRawImage(rawData.filename, rawData.base64);
                                             valid = true;
                                         }
@@ -846,7 +845,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (valid) {
                         const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
                         const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                        backgroundPosition[length++] = $css.getBackgroundPosition(checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'), node.actualDimension, node.fontSize, imageDimensions[length], backgroundSize[i]);
+                        backgroundPosition[length] = $css.getBackgroundPosition(checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'), node.actualDimension, node.fontSize, imageDimensions[length], backgroundSize[i]);
+                        length++;
                     }
                     else {
                         backgroundRepeat[i] = undefined as any;
@@ -879,7 +879,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             node.fontSize,
                             image.bounds
                         );
-                        imageDimensions[length++] = resource.getImage(element.src);
+                        imageDimensions[length] = resource.getImage(element.src);
+                        length++;
                     }
                 }
             }

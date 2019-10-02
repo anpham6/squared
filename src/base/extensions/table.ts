@@ -98,7 +98,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const element = <HTMLTableCellElement> td.element;
                 for (let k = 0; k < element.rowSpan - 1; k++)  {
                     const col = i + k + 1;
-                    if (columnIndex[col] !== undefined) {
+                    if (columnIndex[col] >= 0) {
                         columnIndex[col] += element.colSpan;
                     }
                 }
@@ -123,12 +123,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     if (colgroup) {
-                        const style = $css.getStyle(colgroup.children[m]);
-                        const backgroundColor = style.backgroundColor as string;
-                        if (style.backgroundImage && style.backgroundImage !== 'none') {
-                            td.css('backgroundImage', style.backgroundImage, true);
+                        const { backgroundImage, backgroundColor } = $css.getStyle(colgroup.children[m]);
+                        if (backgroundImage && backgroundImage !== 'none') {
+                            td.css('backgroundImage', backgroundImage, true);
                         }
-                        if (!REGEXP_BACKGROUND.test(backgroundColor)) {
+                        if (backgroundColor && !REGEXP_BACKGROUND.test(backgroundColor)) {
                             td.css('backgroundColor', backgroundColor, true);
                         }
                     }
@@ -149,11 +148,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             const cssStyle = attr + 'Style';
                             const cssColor = attr + 'Color';
                             const cssWidth = attr + 'Width';
-                            td.ascend(undefined, node).some(item => {
+                            td.ascend(undefined, node).some((item: T) => {
                                 if (item.has(cssStyle)) {
                                     td.css(cssStyle, item.css(cssStyle));
                                     td.css(cssColor, item.css(cssColor));
-                                    td.css(cssWidth, item.css(cssWidth, true));
+                                    td.css(cssWidth, item.css(cssWidth), true);
                                     td.css('border', 'inherit');
                                     return true;
                                 }
