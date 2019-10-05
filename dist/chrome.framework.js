@@ -1,4 +1,4 @@
-/* chrome-framework 1.2.10
+/* chrome-framework 1.3.0
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -406,9 +406,19 @@ var chrome = (function () {
     };
 
     var constant = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         EXT_CHROME: EXT_CHROME
     });
 
+    var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+        function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+        return new (P || (P = Promise))(function (resolve, reject) {
+            function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+            function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+            function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+            step((generator = generator.apply(thisArg, _arguments || [])).next());
+        });
+    };
     const $util$1 = squared.lib.util;
     const framework = 4 /* CHROME */;
     let initialized = false;
@@ -588,13 +598,13 @@ var chrome = (function () {
             }
             return appBase.create();
         },
-        getElement: (element, cache = true) => __awaiter(undefined, void 0, void 0, function* () {
+        getElement: (element, cache = true) => __awaiter(void 0, void 0, void 0, function* () {
             if (application) {
                 return yield findElementAsync(element, cache);
             }
             return null;
         }),
-        getElementById: (value, cache = true) => __awaiter(undefined, void 0, void 0, function* () {
+        getElementById: (value, cache = true) => __awaiter(void 0, void 0, void 0, function* () {
             if (application) {
                 const element = document.getElementById(value);
                 if (element) {
@@ -603,7 +613,7 @@ var chrome = (function () {
             }
             return null;
         }),
-        querySelector: (value) => __awaiter(undefined, void 0, void 0, function* () {
+        querySelector: (value) => __awaiter(void 0, void 0, void 0, function* () {
             if (application) {
                 const element = document.querySelector(value);
                 if (element) {
@@ -612,13 +622,13 @@ var chrome = (function () {
             }
             return null;
         }),
-        querySelectorAll: (value) => __awaiter(undefined, void 0, void 0, function* () {
+        querySelectorAll: (value) => __awaiter(void 0, void 0, void 0, function* () {
             if (application) {
                 const query = document.querySelectorAll(value);
                 const result = new Array(query.length);
                 let incomplete = false;
-                yield (() => __awaiter(this, void 0, void 0, function* () {
-                    query.forEach((element, index) => __awaiter(this, void 0, void 0, function* () {
+                yield (() => __awaiter(void 0, void 0, void 0, function* () {
+                    query.forEach((element, index) => __awaiter(void 0, void 0, void 0, function* () {
                         const item = yield findElementAsync(element);
                         if (item) {
                             result[index] = item;

@@ -1,4 +1,4 @@
-/* squared 1.2.10
+/* squared 1.3.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -69,6 +69,7 @@
     };
 
     var regex = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         STRING: STRING,
         UNIT: UNIT,
         CSS: CSS,
@@ -672,6 +673,7 @@
     }
 
     var util = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         capitalize: capitalize,
         capitalizeString: capitalizeString,
         lowerCaseString: lowerCaseString,
@@ -959,6 +961,7 @@
     }
 
     var client = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         isPlatform: isPlatform,
         isUserAgent: isUserAgent,
         getDeviceDPI: getDeviceDPI
@@ -1128,6 +1131,7 @@
     }
 
     var math = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         minArray: minArray,
         maxArray: maxArray,
         isEqual: isEqual$1,
@@ -3442,6 +3446,7 @@
     }
 
     var color = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         findColorName: findColorName,
         findColorShade: findColorShade,
         parseColor: parseColor,
@@ -3470,7 +3475,7 @@
         }
     }
     const convertLength = (value, dimension, fontSize) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
-    const convertPercent = (value, dimension, fontSize) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
+    const convertPercent = (value, dimension, fontSize) => Math.min(isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension, 1);
     const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
     const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
     const BOX_BORDER = [
@@ -3709,12 +3714,12 @@
             case 'only screen':
                 return true;
             default: {
-                if (CACHE_PATTERN.MEDIA_RULE === undefined) {
-                    CACHE_PATTERN.MEDIA_RULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-                    CACHE_PATTERN.MEDIA_CONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+                if (CACHE_PATTERN.MEDIA_RULE) {
+                    CACHE_PATTERN.MEDIA_RULE.lastIndex = 0;
                 }
                 else {
-                    CACHE_PATTERN.MEDIA_RULE.lastIndex = 0;
+                    CACHE_PATTERN.MEDIA_RULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+                    CACHE_PATTERN.MEDIA_CONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
                 }
                 let match;
                 while ((match = CACHE_PATTERN.MEDIA_RULE.exec(value)) !== null) {
@@ -3855,7 +3860,7 @@
         }
         return undefined;
     }
-    function getBackgroundPosition(value, dimension, imageDimension, fontSize) {
+    function getBackgroundPosition(value, dimension, fontSize, imageDimension, imageSize) {
         const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
         const result = {
             static: true,
@@ -3872,8 +3877,70 @@
             orientation
         };
         function setImageOffset(position, horizontal, direction, directionAsPercent) {
-            if (imageDimension && /^[a-z]+|-?[\d.]+%$/.test(position)) {
-                const offset = Math.min(result[directionAsPercent], 1) * (horizontal ? imageDimension.width : imageDimension.height);
+            if (imageDimension && !isLength(position)) {
+                let offset = result[directionAsPercent];
+                if (imageSize && imageSize !== 'auto') {
+                    const [sizeW, sizeH] = imageSize.split(' ');
+                    if (horizontal) {
+                        let width = dimension.width;
+                        if (sizeW && isLength(sizeW, true)) {
+                            if (isPercent(sizeW)) {
+                                width *= parseFloat(sizeW) / 100;
+                            }
+                            else if (isLength(sizeW)) {
+                                const length = parseUnit(sizeW, fontSize);
+                                if (length > 0) {
+                                    width = length;
+                                }
+                            }
+                        }
+                        else if (sizeH) {
+                            let percent = 1;
+                            if (isPercent(sizeH)) {
+                                percent = ((parseFloat(sizeH) / 100) * dimension.height) / imageDimension.height;
+                            }
+                            else if (isLength(sizeH)) {
+                                const length = parseUnit(sizeH, fontSize);
+                                if (length > 0) {
+                                    percent = length / imageDimension.height;
+                                }
+                            }
+                            width = percent * imageDimension.width;
+                        }
+                        offset *= width;
+                    }
+                    else {
+                        let height = dimension.height;
+                        if (sizeH && isLength(sizeH, true)) {
+                            if (isPercent(sizeH)) {
+                                height *= parseFloat(sizeH) / 100;
+                            }
+                            else if (isLength(sizeH)) {
+                                const length = parseUnit(sizeH, fontSize);
+                                if (length > 0) {
+                                    height = length;
+                                }
+                            }
+                        }
+                        else if (sizeW) {
+                            let percent = 1;
+                            if (isPercent(sizeW)) {
+                                percent = ((parseFloat(sizeW) / 100) * dimension.width) / imageDimension.width;
+                            }
+                            else if (isLength(sizeW)) {
+                                const length = parseUnit(sizeW, fontSize);
+                                if (length > 0) {
+                                    percent = length / imageDimension.width;
+                                }
+                            }
+                            height = percent * imageDimension.height;
+                        }
+                        offset *= height;
+                    }
+                }
+                else {
+                    offset *= horizontal ? imageDimension.width : imageDimension.height;
+                }
                 result[direction] -= offset;
             }
         }
@@ -3895,9 +3962,11 @@
                 }
                 const directionAsPercent = direction + 'AsPercent';
                 switch (position) {
+                    case '0%':
                     case 'start':
                         result.horizontal = 'left';
                         break;
+                    case '100%':
                     case 'end':
                         result.horizontal = 'right';
                     case 'right':
@@ -3905,6 +3974,7 @@
                         result[direction] = offsetParent;
                         result[directionAsPercent] = 1;
                         break;
+                    case '50%':
                     case 'center':
                         result[direction] = offsetParent / 2;
                         result[directionAsPercent] = 0.5;
@@ -3922,7 +3992,20 @@
                 const position = orientation[i];
                 switch (i) {
                     case 0:
-                        result.horizontal = position;
+                        switch (position) {
+                            case '0%':
+                                result.horizontal = 'left';
+                                break;
+                            case '50%':
+                                result.horizontal = 'center';
+                                break;
+                            case '100%':
+                                result.horizontal = 'right';
+                                break;
+                            default:
+                                result.horizontal = position;
+                                break;
+                        }
                         break;
                     case 1: {
                         const location = convertLength(position, dimension.width, fontSize);
@@ -3948,7 +4031,20 @@
                         break;
                     }
                     case 2:
-                        result.vertical = position;
+                        switch (position) {
+                            case '0%':
+                                result.vertical = 'top';
+                                break;
+                            case '50%':
+                                result.vertical = 'center';
+                                break;
+                            case '100%':
+                                result.vertical = 'bottom';
+                                break;
+                            default:
+                                result.vertical = position;
+                                break;
+                        }
                         break;
                     case 3: {
                         const location = convertLength(position, dimension.height, fontSize);
@@ -3970,7 +4066,7 @@
                 }
             }
         }
-        result.static = result.top === 0 && result.right === 0 && result.left === 0 && result.bottom === 0;
+        result.static = result.top === 0 && result.right === 0 && result.bottom === 0 && result.left === 0;
         return result;
     }
     function getSrcSet(element, mimeType) {
@@ -4356,6 +4452,7 @@
     }
 
     var css = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         BOX_POSITION: BOX_POSITION,
         BOX_MARGIN: BOX_MARGIN,
         BOX_BORDER: BOX_BORDER,
@@ -4601,6 +4698,7 @@
     }
 
     var dom = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         ELEMENT_BLOCK: ELEMENT_BLOCK,
         newBoxRect: newBoxRect,
         newBoxRectDimension: newBoxRectDimension,
@@ -4680,6 +4778,7 @@
     }
 
     var session = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         actualClientRect: actualClientRect,
         actualTextRangeRect: actualTextRangeRect,
         setElementCache: setElementCache,
@@ -4952,6 +5051,7 @@
     }
 
     var xml = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         STRING_XMLENCODING: STRING_XMLENCODING,
         isPlainText: isPlainText,
         pushIndent: pushIndent,

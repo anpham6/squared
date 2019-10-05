@@ -170,7 +170,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     distance = result.length;
                 }
                 const keyPoints = this.keyPoints;
-                const fps = this.framesPerSecond ? 1000 / this.framesPerSecond : 0;
+                const framesPerSecond = this.framesPerSecond;
+                const fps = framesPerSecond ? 1000 / framesPerSecond : 0;
                 if (keyPoints.length) {
                     const length = distance - 1;
                     const keyTimes = super.keyTimes;

@@ -38,7 +38,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             return a.delay < b.delay ? -1 : 1;
         });
         attrs.length = 0;
-        for (const item of animations) {
+        for (const item of animations as SvgAnimate[]) {
             const value = SvgAnimationIntervalMap.getKeyName(item);
             if (!attrs.includes(value)) {
                 attrs.push(value);

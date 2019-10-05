@@ -1014,7 +1014,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     let width = 0;
                     let height = 0;
-                    let tileMode = 'disabled';
+                    let tileMode = '';
                     let tileModeX = '';
                     let tileModeY = '';
                     let gravityAlign = '';
@@ -1055,6 +1055,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         gravityY = 'fill_vertical';
                                     }
                                 }
+                                break;
+                            default:
+                                tileMode = 'disabled';
                                 break;
                         }
                     }

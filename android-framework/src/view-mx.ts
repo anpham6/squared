@@ -577,6 +577,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else {
                         name = validateString($dom.getNamedItem(<HTMLElement> this.element, 'name'));
+                        if (this.svgElement) {
+                            this._requireDocumentId = true;
+                        }
                     }
                     if (name === 'parent' || RESERVED_JAVA.includes(name)) {
                         name = '_' + name;

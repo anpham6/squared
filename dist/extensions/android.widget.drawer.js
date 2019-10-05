@@ -1,4 +1,4 @@
-/* android.widget 1.2.10
+/* android.widget 1.3.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -51,7 +51,8 @@ this.android.widget.drawer = (function () {
             }
             node.documentRoot = true;
             node.renderExclude = false;
-            node.setControlType($constA.SUPPORT_ANDROID.DRAWER, $enumA.CONTAINER_NODE.BLOCK);
+            const controlName = node.localSettings.targetAPI < 29 /* Q */ ? $constA.SUPPORT_ANDROID.DRAWER : $constA.SUPPORT_ANDROID_X.DRAWER;
+            node.setControlType(controlName, $enumA.CONTAINER_NODE.BLOCK);
             node.exclude($e.NODE_RESOURCE.FONT_STYLE);
             node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
             node.render(parent);
@@ -61,7 +62,7 @@ this.android.widget.drawer = (function () {
                 output: {
                     type: 1 /* XML */,
                     node,
-                    controlName: $constA.SUPPORT_ANDROID.DRAWER
+                    controlName
                 },
                 complete: true,
                 remove: true
@@ -83,7 +84,7 @@ this.android.widget.drawer = (function () {
                     $util.assignEmptyValue(options, 'android', 'id', node.documentId + '_navigation');
                     $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                     $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
-                    controller.addAfterInsideTemplate(node.id, controller.renderNodeStatic($constA.SUPPORT_ANDROID.NAVIGATION_VIEW, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'match_parent'));
+                    controller.addAfterInsideTemplate(node.id, controller.renderNodeStatic(node.localSettings.targetAPI < 29 /* Q */ ? $constA.SUPPORT_ANDROID.NAVIGATION_VIEW : $constA.SUPPORT_ANDROID_X.NAVIGATION_VIEW, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'match_parent'));
                 }
             }
         }

@@ -20,6 +20,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 const seg = SvgBuild.parseCoordinates(value);
                 if (seg.length === 1) {
                     seg[1] = 0;
+                }
+                if (seg.length === 2) {
                     seg[2] = 0;
                 }
                 if (seg.length === 3) {

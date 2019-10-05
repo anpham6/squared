@@ -1,4 +1,4 @@
-/* android.widget 1.2.10
+/* android.widget 1.3.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -24,7 +24,8 @@ this.android.widget.coordinator = (function () {
                     }
                 }
             }
-            node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
+            const controlName = node.localSettings.targetAPI < 29 /* Q */ ? $constA.SUPPORT_ANDROID.COORDINATOR : $constA.SUPPORT_ANDROID_X.COORDINATOR;
+            node.setControlType(controlName, $enumA.CONTAINER_NODE.BLOCK);
             node.exclude($e.NODE_RESOURCE.ASSET);
             node.renderExclude = false;
             node.render(parent);
@@ -32,7 +33,7 @@ this.android.widget.coordinator = (function () {
                 output: {
                     type: 1 /* XML */,
                     node,
-                    controlName: $constA.SUPPORT_ANDROID.COORDINATOR
+                    controlName
                 }
             };
         }

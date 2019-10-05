@@ -147,27 +147,33 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set attributeName(value) {
-        if (!$util.isString(this.baseValue) && value !== 'transform') {
-            const { animationElement, element } = this;
+        if (value !== 'transform' && !$util.isString(this.baseValue)) {
+            let baseValue: string | undefined;
+            const element = this.element;
             if (element) {
                 switch (value) {
                     case 'opacity':
                     case 'stroke-opacity':
                     case 'fill-opacity':
-                        this.baseValue = getAttribute(element, value, false) || '1';
+                        baseValue = getAttribute(element, value, false) || '1';
                         break;
                     default:
-                        this.baseValue = getAttribute(element, value);
+                        baseValue = getAttribute(element, value);
                         break;
                 }
             }
-            if (animationElement) {
-                const parentElement = animationElement.parentElement;
-                const baseValue = $util.optionalAsString(parentElement, value + '.baseVal.valueAsString');
-                this.baseValue = baseValue;
-                if ($css.isLength(baseValue)) {
-                    this.baseValue = $css.parseUnit(baseValue, $css.getFontSize(parentElement)).toString();
+            if (!$util.isString(baseValue)) {
+                const animationElement = this.animationElement;
+                if (animationElement) {
+                    const parentElement = animationElement.parentElement;
+                    baseValue = $util.optionalAsString(parentElement, value + '.baseVal.valueAsString');
+                    if ($css.isLength(baseValue)) {
+                        baseValue = $css.parseUnit(baseValue, $css.getFontSize(parentElement)).toString();
+                    }
                 }
+            }
+            if (baseValue !== undefined) {
+                this.baseValue = baseValue;
             }
         }
         this._attributeName = value;

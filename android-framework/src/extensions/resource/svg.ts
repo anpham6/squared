@@ -524,19 +524,20 @@ function createFillGradient(gradient: Gradient, path: $SvgPath, precision?: numb
     switch (type) {
         case 'radial': {
             const radial = <SvgRadialGradient> gradient;
+            const element = path.element;
             let points: Point[] = [];
             let cx!: number;
             let cy!: number;
             let cxDiameter!: number;
             let cyDiameter!: number;
-            switch (path.element.tagName) {
+            switch (element.tagName) {
                 case 'path':
                     for (const command of $SvgBuild.getPathCommands(path.value)) {
                         points = points.concat(command.value);
                     }
                 case 'polygon':
-                    if ($utilS.SVG.polygon(path.element)) {
-                        points = points.concat($SvgBuild.clonePoints(path.element.points));
+                    if ($utilS.SVG.polygon(element)) {
+                        points = points.concat($SvgBuild.clonePoints(element.points));
                     }
                     if (!points.length) {
                         return undefined;
@@ -546,26 +547,23 @@ function createFillGradient(gradient: Gradient, path: $SvgPath, precision?: numb
                     cyDiameter -= cy;
                     break;
                 default:
-                    if ($utilS.SVG.rect(path.element)) {
-                        const rect = path.element;
-                        cx = rect.x.baseVal.value;
-                        cy = rect.y.baseVal.value;
-                        cxDiameter = rect.width.baseVal.value;
-                        cyDiameter = rect.height.baseVal.value;
+                    if ($utilS.SVG.rect(element)) {
+                        cx = element.x.baseVal.value;
+                        cy = element.y.baseVal.value;
+                        cxDiameter = element.width.baseVal.value;
+                        cyDiameter = element.height.baseVal.value;
                     }
-                    else if ($utilS.SVG.circle(path.element)) {
-                        const circle = path.element;
-                        cx = circle.cx.baseVal.value - circle.r.baseVal.value;
-                        cy = circle.cy.baseVal.value - circle.r.baseVal.value;
-                        cxDiameter = circle.r.baseVal.value * 2;
+                    else if ($utilS.SVG.circle(element)) {
+                        cx = element.cx.baseVal.value - element.r.baseVal.value;
+                        cy = element.cy.baseVal.value - element.r.baseVal.value;
+                        cxDiameter = element.r.baseVal.value * 2;
                         cyDiameter = cxDiameter;
                     }
-                    else if ($utilS.SVG.ellipse(path.element)) {
-                        const ellipse = path.element;
-                        cx = ellipse.cx.baseVal.value - ellipse.rx.baseVal.value;
-                        cy = ellipse.cy.baseVal.value - ellipse.ry.baseVal.value;
-                        cxDiameter = ellipse.rx.baseVal.value * 2;
-                        cyDiameter = ellipse.ry.baseVal.value * 2;
+                    else if ($utilS.SVG.ellipse(element)) {
+                        cx = element.cx.baseVal.value - element.rx.baseVal.value;
+                        cy = element.cy.baseVal.value - element.ry.baseVal.value;
+                        cxDiameter = element.rx.baseVal.value * 2;
+                        cyDiameter = element.ry.baseVal.value * 2;
                     }
                     else {
                         return undefined;
@@ -730,6 +728,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
         const include = this.parseVectorData(svg);
+        const viewBox = svg.viewBox;
         let vectorName = Resource.insertStoredAsset(
             'drawables',
             getFilename(),
@@ -739,8 +738,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 'android:name': svg.name,
                 'android:width': $css.formatPX(svg.width),
                 'android:height': $css.formatPX(svg.height),
-                'android:viewportWidth': (svg.viewBox.width || svg.width).toString(),
-                'android:viewportHeight': (svg.viewBox.height || svg.height).toString(),
+                'android:viewportWidth': (viewBox.width || svg.width).toString(),
+                'android:viewportHeight': (viewBox.height || svg.height).toString(),
                 'android:alpha': parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : '',
                 include
             }])
@@ -753,14 +752,15 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 target: []
             }];
             function insertTargetAnimation(name: string, targetSetTemplate: SetTemplate) {
-                if (targetSetTemplate.set.length) {
+                const templateSet = targetSetTemplate.set;
+                if (templateSet.length) {
                     let modified = false;
-                    if (targetSetTemplate.set.length > 1 && targetSetTemplate.set.every(item => item.ordering === '')) {
+                    if (templateSet.length > 1 && templateSet.every(item => item.ordering === '')) {
                         const setData: SetTemplate = {
                             set: [],
                             objectAnimator: []
                         };
-                        for (const item of targetSetTemplate.set) {
+                        for (const item of templateSet) {
                             setData.set = setData.set.concat(item.set as any);
                             setData.objectAnimator = setData.objectAnimator.concat(item.objectAnimator);
                         }
@@ -847,15 +847,16 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         else {
                             const synchronized = item.synchronized;
                             if (synchronized) {
+                                const value = synchronized.value;
                                 if ($SvgBuild.isAnimateTransform(item)) {
-                                    const values = transformMap.get(synchronized.value) || [];
+                                    const values = transformMap.get(value) || [];
                                     values.push(item);
-                                    transformMap.set(synchronized.value, values);
+                                    transformMap.set(value, values);
                                 }
                                 else {
-                                    const values = sequentialMap.get(synchronized.value) || [];
+                                    const values = sequentialMap.get(value) || [];
                                     values.push(item);
-                                    sequentialMap.set(synchronized.value, values);
+                                    sequentialMap.set(value, values);
                                 }
                             }
                             else {
@@ -1403,8 +1404,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 item
             }];
             for (const image of this.IMAGE_DATA) {
-                const scaleX = svg.width / svg.viewBox.width;
-                const scaleY = svg.height / svg.viewBox.height;
+                const box = svg.viewBox;
+                const scaleX = svg.width / box.width;
+                const scaleY = svg.height / box.height;
                 let x = image.getBaseValue('x', 0) * scaleX;
                 let y = image.getBaseValue('y', 0) * scaleY;
                 let width: number = image.getBaseValue('width', 0);
@@ -1447,6 +1449,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     private parseVectorData(group: SvgGroup, depth = 0) {
+        const floatPrecisionValue = this.options.floatPrecisionValue;
         const result = this.createGroup(group);
         const length = result.length;
         const renderDepth = depth + length;
@@ -1454,13 +1457,14 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         for (const item of group) {
             if (item.visible) {
                 if ($SvgBuild.isShape(item)) {
-                    if (item.path && item.path.value) {
-                        const [path, groupArray] = this.createPath(item, item.path);
+                    const itemPath = item.path;
+                    if (itemPath && itemPath.value) {
+                        const [path, groupArray] = this.createPath(item, itemPath);
                         const pathArray: PathData[] = [];
-                        if (item.path.strokeWidth && (item.path.strokeDasharray || item.path.strokeDashoffset)) {
+                        if (itemPath.strokeWidth && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                             const animateData = this.ANIMATE_DATA.get(item.name);
                             if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
-                                const [animations, strokeDash, pathData, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, this.options.floatPrecisionValue);
+                                const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData && animateData.animate, floatPrecisionValue);
                                 if (strokeDash) {
                                     if (animateData) {
                                         this.ANIMATE_DATA.delete(item.name);
@@ -1479,6 +1483,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     const lengthA = strokeDash.length;
                                     for (let i = 0; i < lengthA; i++) {
                                         const strokePath = i === 0 ? path : { ...path };
+                                        const dash = strokeDash[i];
                                         strokePath.name = name + '_' + i;
                                         if (animateData) {
                                             this.ANIMATE_DATA.set(strokePath.name, {
@@ -1486,8 +1491,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 animate: $util.filterArray(animateData.animate, animate => animate.id === undefined || animate.id === i)
                                             });
                                         }
-                                        strokePath.trimPathStart = $math.truncate(strokeDash[i].start, this.options.floatPrecisionValue);
-                                        strokePath.trimPathEnd = $math.truncate(strokeDash[i].end, this.options.floatPrecisionValue);
+                                        strokePath.trimPathStart = $math.truncate(dash.start, floatPrecisionValue);
+                                        strokePath.trimPathEnd = $math.truncate(dash.end, floatPrecisionValue);
                                         pathArray.push(strokePath);
                                     }
                                     groupArray.unshift(strokeData);

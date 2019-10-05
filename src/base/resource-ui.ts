@@ -188,12 +188,7 @@ function getBackgroundSize(node: NodeUI, index: number, value?: string) {
 
 function getGradientPosition(value: string) {
     if (value) {
-        if (value.indexOf('at ') !== -1) {
-            return /(.+?)?\s*at (.+?)\s*$/.exec(value);
-        }
-        else {
-            return <RegExpExecArray> [value, value];
-        }
+        return value.indexOf('at ') !== -1 ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : <RegExpExecArray> [value, value];
     }
     return null;
 }
@@ -893,7 +888,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             value = value.replace(new RegExp(`\\s*${(<Element> item.element).outerHTML}\\s*`), '\\n');
                         }
                         else {
-                            value = value.replace((<Element> item.element).outerHTML, item.pageFlow && item.textContent ? STRING_SPACE : '');
+                            value = value.replace((<Element> item.element).outerHTML, item.pageFlow && item.textContent.trim() !== '' ? STRING_SPACE : '');
                         }
                         continue;
                     }
@@ -904,7 +899,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 else if (child instanceof HTMLElement) {
                     const position = getComputedStyle(child).getPropertyValue('position');
-                    value = value.replace(child.outerHTML, position !== 'absolute' && position !== 'fixed' && child.textContent ? STRING_SPACE : '');
+                    value = value.replace(child.outerHTML, position !== 'absolute' && position !== 'fixed' &&  (child.textContent as string).trim() !== '' ? STRING_SPACE : '');
                 }
                 if (i === 0) {
                     value = $util.trimStart(value, ' ');

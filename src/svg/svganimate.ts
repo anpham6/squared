@@ -271,10 +271,17 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public convertToValues(keyTimes?: number[]) {
         if (this.to) {
             this.values = [this.from, this.to];
-            this.keyTimes = keyTimes && keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] <= 1 ? keyTimes : [0, 1];
             if (this.from === '') {
                 this.evaluateStart = true;
             }
+            if (keyTimes && keyTimes.length === 2) {
+                const keyTimesBase = this.keyTimes;
+                if (keyTimesBase.length !== 2 || keyTimesBase[0] === 0 && keyTimesBase[1] <= 1) {
+                    this.keyTimes = keyTimes;
+                    return;
+                }
+            }
+            this.keyTimes = [0, 1];
         }
     }
 

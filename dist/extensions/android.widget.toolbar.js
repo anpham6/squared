@@ -1,4 +1,4 @@
-/* android.widget 1.2.10
+/* android.widget 1.3.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -112,7 +112,20 @@ this.android.widget.toolbar = (function () {
                 $util.assignEmptyValue(toolbarOptions, 'android', 'fitsSystemWindows', 'true');
             }
             $util.assignEmptyValue(toolbarOptions, 'android', 'layout_height', hasAppBar || !node.hasPX('height') ? '?android:attr/actionBarSize' : '');
-            node.setControlType($constA.SUPPORT_ANDROID.TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
+            let controlName;
+            let appBarName;
+            let collapsingToolbarName;
+            if (node.localSettings.targetAPI < 29 /* Q */) {
+                controlName = $constA.SUPPORT_ANDROID.TOOLBAR;
+                appBarName = $constA.SUPPORT_ANDROID.APPBAR;
+                collapsingToolbarName = $constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR;
+            }
+            else {
+                controlName = $constA.SUPPORT_ANDROID_X.TOOLBAR;
+                appBarName = $constA.SUPPORT_ANDROID_X.APPBAR;
+                collapsingToolbarName = $constA.SUPPORT_ANDROID_X.COLLAPSING_TOOLBAR;
+            }
+            node.setControlType(controlName, $enumA.CONTAINER_NODE.BLOCK);
             node.exclude($e.NODE_RESOURCE.FONT_STYLE);
             let appBarNode;
             let collapsingToolbarNode;
@@ -135,7 +148,7 @@ this.android.widget.toolbar = (function () {
                 if (appBarOptions.android.id) {
                     appBarNode.controlId = $utilA.getDocumentId(appBarOptions.android.id);
                 }
-                appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
+                appBarNode.setControlType(appBarName, $enumA.CONTAINER_NODE.BLOCK);
                 if (hasCollapsingToolbar) {
                     $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId + '_collapsingtoolbar');
                     $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
@@ -150,7 +163,7 @@ this.android.widget.toolbar = (function () {
                         if (collapsingToolbarOptions.android.id) {
                             appBarNode.controlId = $utilA.getDocumentId(collapsingToolbarOptions.android.id);
                         }
-                        collapsingToolbarNode.setControlType($constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
+                        collapsingToolbarNode.setControlType(collapsingToolbarName, $enumA.CONTAINER_NODE.BLOCK);
                         collapsingToolbarNode.each(item => item.dataset.target = collapsingToolbarNode.controlId);
                     }
                 }
@@ -164,7 +177,7 @@ this.android.widget.toolbar = (function () {
                 outputAs = {
                     type: 1 /* XML */,
                     node: appBarNode,
-                    controlName: $constA.SUPPORT_ANDROID.APPBAR
+                    controlName: appBarName
                 };
                 if (collapsingToolbarNode) {
                     node.parent = collapsingToolbarNode;
@@ -175,7 +188,7 @@ this.android.widget.toolbar = (function () {
                     application.addLayoutTemplate((collapsingToolbarNode.renderParent || parent), collapsingToolbarNode, {
                         type: 1 /* XML */,
                         node: collapsingToolbarNode,
-                        controlName: $constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR
+                        controlName: collapsingToolbarName
                     });
                     if (backgroundImage) {
                         const src = this.resource.addImageSrc(node.backgroundImage);
@@ -223,7 +236,7 @@ this.android.widget.toolbar = (function () {
             const output = {
                 type: 1 /* XML */,
                 node,
-                controlName: $constA.SUPPORT_ANDROID.TOOLBAR
+                controlName
             };
             if (appBarNode) {
                 return {

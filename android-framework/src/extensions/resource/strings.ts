@@ -150,7 +150,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 }
                 if (node.styleElement) {
                     const title = (<HTMLElement> node.element).title;
-                    if (title !== '') {
+                    if (title) {
                         setTextValue(node, 'tooltipText', node.controlId.toLowerCase() + '_title', title);
                     }
                 }
