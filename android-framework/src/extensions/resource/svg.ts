@@ -706,7 +706,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     public createSvgDrawable(node: T, element: SVGSVGElement) {
         const svg = new $Svg(element);
         const supportedKeyFrames = node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW;
-        const precision = this.options.floatPrecisionValue;
+        const { floatPrecisionValue, floatPrecisionKeyTime } = this.options;
         this.SVG_INSTANCE = svg;
         this.VECTOR_DATA.clear();
         this.ANIMATE_DATA.clear();
@@ -719,12 +719,12 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         svg.build({
             exclude: this.options.transformExclude,
             residual: partitionTransforms,
-            precision
+            precision: floatPrecisionValue
         });
         svg.synchronize({
             keyTimeMode: this.SYNCHRONIZE_MODE,
             framesPerSecond: this.controller.userSettings.framesPerSecond,
-            precision
+            precision: floatPrecisionValue
         });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
         const include = this.parseVectorData(svg);
@@ -1076,7 +1076,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 }
                                             }
                                             propertyNames = ['pathData'];
-                                            values = $SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, companion, this.options.floatPrecisionValue);
+                                            values = $SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, companion, floatPrecisionValue);
                                         }
                                     }
                                     else if ($SvgBuild.asAnimateTransform(item)) {
@@ -1154,8 +1154,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     }
                                     if (values && propertyNames) {
                                         const lengthB = propertyNames.length;
-                                        const keyName = item.synchronized ? item.synchronized.key + item.synchronized.value :
-                                                                            index !== 0 || lengthB > 1 ? JSON.stringify(options) : '';
+                                        const syncData = item.synchronized;
+                                        const keyName = syncData ? syncData.key + syncData.value :
+                                                                 index !== 0 || lengthB > 1 ? JSON.stringify(options) : '';
                                         const keyTimes = item.keyTimes;
                                         for (let i = 0; i < lengthB; i++) {
                                             const propertyName = propertyNames[i];
@@ -1173,11 +1174,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                     for (let j = 0; j < lengthC; j++) {
                                                         let value = getPropertyValue(values, j, i, true);
                                                         if (value && options.valueType === 'floatType') {
-                                                            value = $math.truncate(value, this.options.floatPrecisionValue);
+                                                            value = $math.truncate(value, floatPrecisionValue);
                                                         }
                                                         keyframe.push({
                                                             interpolator: j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, j - 1) : '',
-                                                            fraction: keyTimes[j] === 0 && value === '' ? '' : $math.truncate(keyTimes[j], this.options.floatPrecisionKeyTime),
+                                                            fraction: keyTimes[j] === 0 && value === '' ? '' : $math.truncate(keyTimes[j], floatPrecisionKeyTime),
                                                             value
                                                         });
                                                     }
@@ -1221,7 +1222,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                 duration = Math.floor((keyTimes[j] - keyTimes[j - 1]) * item.duration);
                                                             }
                                                             if (options.valueType === 'floatType') {
-                                                                valueTo = $math.truncate(valueTo, this.options.floatPrecisionValue);
+                                                                valueTo = $math.truncate(valueTo, floatPrecisionValue);
                                                             }
                                                             if (transformOrigin && transformOrigin[j]) {
                                                                 let direction: string | undefined;
@@ -1235,7 +1236,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                     translateTo = transformOrigin[j].y;
                                                                 }
                                                                 if (direction) {
-                                                                    const valueData = this.createPropertyValue(direction, $math.truncate(translateTo, this.options.floatPrecisionValue), duration.toString(), 'floatType');
+                                                                    const valueData = this.createPropertyValue(direction, $math.truncate(translateTo, floatPrecisionValue), duration.toString(), 'floatType');
                                                                     valueData.interpolator = createPathInterpolator($constS.KEYSPLINE_NAME['step-start']);
                                                                     translateData.objectAnimator.push(valueData);
                                                                 }
@@ -1289,7 +1290,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 }
                                                 if (propertyOptions.valueTo) {
                                                     if (options.valueType === 'floatType') {
-                                                        propertyOptions.valueTo = $math.truncate(propertyOptions.valueTo, this.options.floatPrecisionValue);
+                                                        propertyOptions.valueTo = $math.truncate(propertyOptions.valueTo, floatPrecisionValue);
                                                     }
                                                     (section === 0 ? repeating : fillCustom).objectAnimator.push(propertyOptions);
                                                 }
@@ -1930,15 +1931,15 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     private createPropertyValue(propertyName: string, valueTo: string, duration: string, valueType: string, valueFrom = '', startOffset = '', repeatCount = '0'): PropertyValue {
-        const precision = this.options.floatPrecisionValue;
+        const floatPrecisionValue = this.options.floatPrecisionValue;
         return {
             propertyName,
             startOffset,
             duration,
             repeatCount,
             valueType,
-            valueFrom: $util.isNumber(valueFrom) ? $math.truncate(valueFrom, precision) : valueFrom,
-            valueTo: $util.isNumber(valueTo) ? $math.truncate(valueTo, precision) : valueTo,
+            valueFrom: $util.isNumber(valueFrom) ? $math.truncate(valueFrom, floatPrecisionValue) : valueFrom,
+            valueTo: $util.isNumber(valueTo) ? $math.truncate(valueTo, floatPrecisionValue) : valueTo,
             propertyValuesHolder: false
         };
     }

@@ -40,14 +40,15 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         const element = options && options.element || <SVGGeometryElement> this.element;
         const path = new SvgPath(element);
         path.build(options);
-        if (path.value) {
+        const pathValue = path.value;
+        if (pathValue) {
             const precision = options && options.precision;
             options = { ...options };
-            this.clipRegion = path.value;
+            this.clipRegion = pathValue;
             if (path.clipPath) {
                 this.clipRegion = path.clipPath;
             }
-            const d = [path.value];
+            const d = [pathValue];
             this.setPaint(d, precision);
             this.drawRegion = SvgBuild.getBoxRect(d);
             const { drawRegion, fillOpacity, patternWidth, patternHeight, tileWidth, tileHeight } = this;

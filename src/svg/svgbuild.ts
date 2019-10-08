@@ -698,8 +698,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static filterTransforms(transforms: SvgTransform[], exclude?: number[]) {
         const result: SvgTransform[] = [];
         for (const item of transforms) {
-            if (exclude === undefined || !exclude.includes(item.type)) {
-                switch (item.type) {
+            const type = item.type;
+            if (exclude === undefined || !exclude.includes(type)) {
+                switch (type) {
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
                     case SVGTransform.SVG_TRANSFORM_SKEWX:
                     case SVGTransform.SVG_TRANSFORM_SKEWY:
@@ -707,16 +708,20 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                             continue;
                         }
                         break;
-                    case SVGTransform.SVG_TRANSFORM_SCALE:
-                        if (item.matrix.a === 1 && item.matrix.d === 1) {
+                    case SVGTransform.SVG_TRANSFORM_SCALE: {
+                        const m = item.matrix;
+                        if (m.a === 1 && m.d === 1) {
                             continue;
                         }
                         break;
-                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                        if (item.matrix.e === 0 && item.matrix.f === 0) {
+                    }
+                    case SVGTransform.SVG_TRANSFORM_TRANSLATE: {
+                        const m = item.matrix;
+                        if (m.e === 0 && m.f === 0) {
                             continue;
                         }
                         break;
+                    }
                 }
                 result.push(item);
             }
@@ -734,31 +739,32 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let x2 = 0;
             let y2 = 0;
             if (origin) {
+                const method = item.method;
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_SCALE:
-                        if (item.method.x) {
+                        if (method.x) {
                             x2 = origin.x * (1 - m.a);
                         }
-                        if (item.method.y) {
+                        if (method.y) {
                             y2 = origin.y * (1 - m.d);
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWX:
-                        if (item.method.y) {
+                        if (method.y) {
                             y1 -= origin.y;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWY:
-                        if (item.method.x) {
+                        if (method.x) {
                             x1 -= origin.x;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
-                        if (item.method.x) {
+                        if (method.x) {
                             x1 -= origin.x;
                             x2 = origin.x + $math.offsetAngleY(item.angle, origin.x);
                         }
-                        if (item.method.y) {
+                        if (method.y) {
                             y1 -= origin.y;
                             y2 = origin.y + $math.offsetAngleY(item.angle, origin.y);
                         }

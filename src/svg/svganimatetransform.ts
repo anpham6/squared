@@ -18,9 +18,6 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
             }
             else {
                 const seg = SvgBuild.parseCoordinates(value);
-                if (seg.length === 1) {
-                    seg[1] = 0;
-                }
                 if (seg.length === 2) {
                     seg[2] = 0;
                 }
@@ -117,98 +114,94 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
 
     public expandToValues() {
         if (this.additiveSum) {
-            const iterationCount = this.iterationCount;
-            if (iterationCount !== -1 && this.keyTimes.length) {
-                const duration = this.duration;
-                if (duration > 0) {
-                    const durationTotal = duration * iterationCount;
-                    invalid: {
-                        const keyTimesBase = this.keyTimes;
-                        const keySplinesBase = this.keySplines;
-                        const valuesBase = this.values;
-                        const type = this.type;
-                        const keyTimes: number[] = [];
-                        const values: string[] = [];
-                        const keySplines: string[] = [];
-                        let previousValues: number[] | undefined;
-                        const length = keyTimesBase.length;
-                        for (let i = 0; i < iterationCount; i++) {
-                            if (i > 0 && keySplinesBase) {
-                                keySplines.push('');
-                            }
-                            for (let j = 0; j < length; j++) {
-                                const coordinates = SvgBuild.parseCoordinates(valuesBase[j]);
-                                const lengthA = coordinates.length;
-                                if (lengthA) {
-                                    let currentValues: number[] | undefined;
-                                    switch (type) {
-                                        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                                            if (lengthA === 1) {
-                                                currentValues = [coordinates[0], 0];
-                                            }
-                                            else if (lengthA === 2) {
-                                                currentValues = coordinates;
-                                            }
-                                            break;
-                                        case SVGTransform.SVG_TRANSFORM_SCALE:
-                                            if (lengthA === 1) {
-                                                currentValues = [coordinates[0], coordinates[0]];
-                                            }
-                                            else if (lengthA === 2) {
-                                                currentValues = coordinates;
-                                            }
-                                            break;
-                                        case SVGTransform.SVG_TRANSFORM_ROTATE:
-                                            if (lengthA === 1) {
-                                                currentValues = [coordinates[0], 0, 0];
-                                            }
-                                            else if (lengthA === 3) {
-                                                currentValues = coordinates;
-                                            }
-                                            break;
-                                        case SVGTransform.SVG_TRANSFORM_SKEWX:
-                                        case SVGTransform.SVG_TRANSFORM_SKEWY:
-                                            if (lengthA === 1) {
-                                                currentValues = coordinates;
-                                            }
-                                            break;
-                                    }
-                                    if (currentValues) {
-                                        let time = (keyTimesBase[j] + i) * duration;
-                                        if (previousValues) {
-                                            const lengthB = currentValues.length;
-                                            for (let k = 0; k < lengthB; k++) {
-                                                currentValues[k] += previousValues[k];
-                                            }
+            const { duration, keyTimes: keyTimesBase, iterationCount } = this;
+            if (iterationCount !== -1 && duration > 0 && keyTimesBase.length) {
+                const durationTotal = duration * iterationCount;
+                invalid: {
+                    const keySplinesBase = this.keySplines;
+                    const valuesBase = this.values;
+                    const type = this.type;
+                    const keyTimes: number[] = [];
+                    const values: string[] = [];
+                    const keySplines: string[] = [];
+                    let previousValues: number[] | undefined;
+                    const length = keyTimesBase.length;
+                    for (let i = 0; i < iterationCount; i++) {
+                        if (i > 0 && keySplinesBase) {
+                            keySplines.push('');
+                        }
+                        for (let j = 0; j < length; j++) {
+                            const coordinates = SvgBuild.parseCoordinates(valuesBase[j]);
+                            const lengthA = coordinates.length;
+                            if (lengthA) {
+                                let currentValues: number[] | undefined;
+                                switch (type) {
+                                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                                        if (lengthA === 1) {
+                                            currentValues = [coordinates[0], 0];
                                         }
-                                        if (i < iterationCount - 1 && j === length - 1) {
-                                            if (this.accumulateSum) {
-                                                previousValues = currentValues;
-                                            }
-                                            time--;
+                                        else if (lengthA === 2) {
+                                            currentValues = coordinates;
                                         }
-                                        keyTimes.push(time / durationTotal);
-                                        values.push(currentValues.join(' '));
-                                        if (keySplinesBase && j < length - 1) {
-                                            keySplines.push(keySplinesBase[j]);
+                                        break;
+                                    case SVGTransform.SVG_TRANSFORM_SCALE:
+                                        if (lengthA === 1) {
+                                            currentValues = [coordinates[0], coordinates[0]];
+                                        }
+                                        else if (lengthA === 2) {
+                                            currentValues = coordinates;
+                                        }
+                                        break;
+                                    case SVGTransform.SVG_TRANSFORM_ROTATE:
+                                        if (lengthA === 1) {
+                                            currentValues = [coordinates[0], 0, 0];
+                                        }
+                                        else if (lengthA === 3) {
+                                            currentValues = coordinates;
+                                        }
+                                        break;
+                                    case SVGTransform.SVG_TRANSFORM_SKEWX:
+                                    case SVGTransform.SVG_TRANSFORM_SKEWY:
+                                        if (lengthA === 1) {
+                                            currentValues = coordinates;
+                                        }
+                                        break;
+                                }
+                                if (currentValues) {
+                                    let time = (keyTimesBase[j] + i) * duration;
+                                    if (previousValues) {
+                                        const lengthB = currentValues.length;
+                                        for (let k = 0; k < lengthB; k++) {
+                                            currentValues[k] += previousValues[k];
                                         }
                                     }
-                                    else {
-                                        break invalid;
+                                    if (i < iterationCount - 1 && j === length - 1) {
+                                        if (this.accumulateSum) {
+                                            previousValues = currentValues;
+                                        }
+                                        time--;
+                                    }
+                                    keyTimes.push(time / durationTotal);
+                                    values.push(currentValues.join(' '));
+                                    if (keySplinesBase && j < length - 1) {
+                                        keySplines.push(keySplinesBase[j]);
                                     }
                                 }
                                 else {
                                     break invalid;
                                 }
                             }
+                            else {
+                                break invalid;
+                            }
                         }
-                        this.values = values;
-                        this.keyTimes = keyTimes;
-                        this.keySplines = keySplines.length ? keySplines : undefined;
-                        this.duration = durationTotal;
-                        this.iterationCount = 1;
-                        this.accumulateSum = false;
                     }
+                    this.values = values;
+                    this.keyTimes = keyTimes;
+                    this.keySplines = keySplines.length ? keySplines : undefined;
+                    this.duration = durationTotal;
+                    this.iterationCount = 1;
+                    this.accumulateSum = false;
                 }
             }
         }

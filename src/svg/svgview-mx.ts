@@ -351,7 +351,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         if (value.startsWith('auto')) {
                                             angle += 90;
                                         }
-                                        item.value = angle + '0 0';
+                                        item.value = angle + ' 0 0';
                                     }
                                     attrMap['rotate'] = offsetRotate;
                                     delete attrMap['offset-rotate'];
@@ -441,12 +441,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     for (let j = 0; j < lengthB; j++) {
                                         if (j < lengthB - 1) {
                                             const segDuration = (keyTimes[j + 1] - keyTimes[j]) * duration;
-                                            if (KEYSPLINE_NAME[keySplines[j]]) {
-                                                keySplines[j] = KEYSPLINE_NAME[keySplines[j]];
+                                            let keySpline = keySplines[j];
+                                            if (KEYSPLINE_NAME[keySpline]) {
+                                                keySpline = KEYSPLINE_NAME[keySpline];
                                             }
-                                            else if (keySplines[j].startsWith('step')) {
+                                            else if (keySpline.startsWith('step')) {
                                                 if (values[j] !== '') {
-                                                    const steps = SvgAnimate.convertStepTimingFunction(name, keySplines[j], keyTimes, values, j, $css.getFontSize(element));
+                                                    const steps = SvgAnimate.convertStepTimingFunction(name, keySpline, keyTimes, values, j, $css.getFontSize(element));
                                                     if (steps) {
                                                         const offset = keyTimes[j + 1] === 1 ? 1 : 0;
                                                         for (let k = 0; k < steps[0].length - offset; k++) {
@@ -456,18 +457,18 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                             }
                                                             keyTimesData.push(keyTime);
                                                             valuesData.push(steps[1][k]);
-                                                            keySplinesData.push(KEYSPLINE_NAME[keySplines[j].indexOf('start') !== -1 ? 'step-start' : 'step-end']);
+                                                            keySplinesData.push(KEYSPLINE_NAME[keySpline.indexOf('start') !== -1 ? 'step-start' : 'step-end']);
                                                         }
                                                         continue;
                                                     }
                                                 }
-                                                keySplines[j] = KEYSPLINE_NAME.linear;
+                                                keySpline = KEYSPLINE_NAME.linear;
                                             }
                                             else {
-                                                const match = new RegExp(STRING_CUBICBEZIER).exec(keySplines[j]);
-                                                keySplines[j] = match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : KEYSPLINE_NAME.ease;
+                                                const match = new RegExp(STRING_CUBICBEZIER).exec(keySpline);
+                                                keySpline = match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : KEYSPLINE_NAME.ease;
                                             }
-                                            keySplinesData.push(keySplines[j]);
+                                            keySplinesData.push(keySpline);
                                         }
                                         keyTimesData.push(keyTimes[j]);
                                         valuesData.push(values[j]);
