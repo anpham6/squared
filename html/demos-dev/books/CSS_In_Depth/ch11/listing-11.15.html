@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+  <style type="text/css">
+.blend {
+  min-height: 400px;
+  background-image: url("images/scratches.png"), url("images/bear.jpg");
+  background-size: 200px, cover;
+  background-repeat: repeat, no-repeat;
+  background-position: center center;
+  background-blend-mode: soft-light;
+}
+  </style>
+        <script src="/node_modules/systemjs/dist/system.js"></script>
+        <script src="/dist/squared.js"></script>
+        <script src="/dist/squared.base.js"></script>
+        <script src="/dist/android.framework.js"></script>
+        <script src="../../squared.js"></script>
+</head>
+<body>
+  <div class="blend"></div>
+</body>
+</html>
