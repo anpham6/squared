@@ -485,14 +485,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         if ($css.isLength(basis)) {
-            setFlexGrow(node.convertPX(basis), node.flexbox.grow);
+            setFlexGrow(node.convertPX(basis), flexbox.grow);
         }
         else if (basis !== '0%' && $css.isPercent(basis)) {
             node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
-            setFlexGrow('', node.flexbox.grow);
+            setFlexGrow('', flexbox.grow);
         }
-        else if (flexbox.grow > 0) {
-            setFlexGrow(node.hasPX(dimension, false) ? $css.formatPX(node[horizontal ? 'actualWidth' : 'actualHeight']) : '', node.flexbox.grow);
+        else if (flexbox.grow > 0 && (horizontal && node.documentParent.css('flexDirection') === 'column' || !horizontal && node.documentParent.css('flexDirection') === 'row')) {
+            setFlexGrow(node.hasPX(dimension, false) ? $css.formatPX(node[horizontal ? 'actualWidth' : 'actualHeight']) : '', flexbox.grow);
         }
         else {
             if (horizontal) {

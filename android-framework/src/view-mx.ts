@@ -603,7 +603,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.setLayoutHeight('wrap_content', false);
                     return;
                 }
-                const documentParent = this.documentParent;
+                const documentParent = this.documentParent as T;
                 let adjustViewBounds = false;
                 if (this.documentBody) {
                     if (this.css('width') === '100%' || this.css('minWidth') === '100%' || !this.hasWidth && this.renderChildren.some(node => node.alignParent('right'))) {
@@ -732,11 +732,26 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         else {
                             if (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID)) {
-                                if (!documentParent.layoutElement || this.display === 'flex') {
+                                if (this.flexElement) {
+                                    if (this.display === 'flex') {
+                                        layoutWidth = renderParent.layoutConstraint && this.css('flexDirection') === 'column' ? '0px' : 'match_parent';
+                                    }
+                                    else {
+                                        layoutWidth = 'wrap_content';
+                                    }
+                                }
+                                else if (!documentParent.layoutElement && !(renderParent.blockWidth && !this.layoutElement && this.renderChildren.every(node => node.renderChildren.length === 0))) {
                                     layoutWidth = 'match_parent';
                                 }
-                                else if (!documentParent.flexElement && renderParent.layoutConstraint && this.alignParent('left') && this.alignParent('right')) {
-                                    layoutWidth = this.autoMargin.horizontal || this.ascend(item => item.hasPX('width') || item.blockStatic).length ? '0px' : 'match_parent';
+                                else if (renderParent.layoutConstraint) {
+                                    if (documentParent.flexElement) {
+                                        if (documentParent.css('flexDirection') === 'column' || this.flexbox.grow > 0) {
+                                            layoutWidth = '0px';
+                                        }
+                                    }
+                                    else if (this.alignParent('left') && this.alignParent('right')) {
+                                        layoutWidth = this.autoMargin.horizontal || this.ascend(item => item.hasPX('width') || item.blockStatic).length ? '0px' : 'match_parent';
+                                    }
                                 }
                             }
                             if (layoutWidth === '') {

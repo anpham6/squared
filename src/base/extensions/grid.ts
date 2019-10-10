@@ -39,7 +39,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {
         if (node.length > 1 && !node.layoutElement && !node.has('listStyle')) {
             if (node.display === 'table') {
-                return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell'));
+                return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }
             else {
                 let length = 0;
@@ -287,7 +287,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             const item = group[i];
                             const siblingData: GridCellData<T> = item.data(EXT_NAME.GRID, 'cellData');
                             if (siblingData && siblingData.rowSpan === 1) {
-                                siblings.push(group[i]);
+                                siblings.push(item);
                                 if (siblingData.siblings) {
                                     siblings = siblings.concat(siblingData.siblings);
                                 }

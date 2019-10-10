@@ -317,7 +317,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 const orientationWeight = `layout_constraint${$util.capitalize(orientation)}_weight`;
                 function setLayoutWeight(chain: T, value: number) {
                     chain.app(orientationWeight, $math.truncate(value, chain.localSettings.floatPrecision));
-                    chain.android('layout_' + WH.toLowerCase(), '0px');
+                    chain.android('layout_' + WHL, '0px');
                 }
                 const length = partition.length;
                 for (let i = 0; i < length; i++) {
@@ -333,7 +333,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     let growAvailable = 0;
                     let parentEnd = true;
                     let baseline: T | null = null;
+                    let growAll: boolean;
                     if (opposing) {
+                        growAll = false;
                         if (dimensionInverse) {
                             let chainStyle = 'spread';
                             let bias = 0;
@@ -360,6 +362,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                     else {
+                        growAll = horizontal || dimensionInverse;
                         growAvailable = 1 - adjustGrowRatio(node, seg, WHL);
                         if (lengthA > 1) {
                             const sizeMap = new Set<number>($util.objectMap(seg, item => item.initial.bounds && item.initial.bounds[HWL] || 0));
@@ -547,11 +550,19 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                             }
                             Controller.setFlexDimension(chain, WHL);
+                            if (!(innerWrapped || chain).has('flexGrow')) {
+                                growAll = false;
+                            }
                         }
                         chain.anchored = true;
                         chain.positioned = true;
                     }
-                    if (growAvailable > 0) {
+                    if (growAll) {
+                        for (const item of seg) {
+                            setLayoutWeight(item, (item.innerWrapped || item).flexbox.grow);
+                        }
+                    }
+                    else if (growAvailable > 0) {
                         for (const item of layoutWeight) {
                             const autoMargin = getAutoMargin(item);
                             let ratio = 1;
@@ -607,9 +618,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'space-evenly':
                                     if (lengthA > 1) {
                                         segStart.anchorStyle(orientation, 'spread');
-                                        const HVU = $util.capitalize(orientation);
                                         for (const item of seg) {
-                                            item.app(`layout_constraint${HVU}_weight`, (item.flexbox.grow || 1).toString());
+                                            setLayoutWeight(item, item.flexbox.grow || 1);
                                         }
                                     }
                                     else {

@@ -1363,9 +1363,32 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 return 0;
             case 'table-cell':
                 if (margin) {
+                    switch (this.tagName) {
+                        case 'TD':
+                        case 'TH':
+                            return 0;
+                        default:
+                            const actualParent = this.actualParent;
+                            if (actualParent) {
+                                const [horizontal, vertical] = actualParent.css('borderSpacing').split(' ');
+                                switch (attr) {
+                                    case 'marginTop':
+                                    case 'marginBottom':
+                                        return vertical ? this.parseUnit(vertical, 'height', false) : this.parseUnit(horizontal, 'width', false);
+                                    case 'marginRight':
+                                        if (actualParent.lastChild !== this) {
+                                            return this.parseUnit(horizontal, 'width', false);
+                                        }
+                                    case 'marginLeft':
+                                        return 0;
+                                }
+                            }
+                            break;
+                    }
+                }
+                else {
                     return 0;
                 }
-                break;
         }
         const result = this.parseUnit(this.css(attr));
         if (!margin) {
