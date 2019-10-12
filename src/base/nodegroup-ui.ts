@@ -12,8 +12,9 @@ export default abstract class NodeGroupUI extends NodeUI {
             }
             this.setBounds();
             this.saveAsInitial();
-            if (this.actualParent) {
-                this.dir = this.actualParent.dir;
+            const actualParent = this.actualParent;
+            if (actualParent) {
+                this.dir = actualParent.dir;
             }
         }
     }

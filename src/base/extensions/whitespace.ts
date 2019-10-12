@@ -11,7 +11,7 @@ const {
 
 const DOCTYPE_HTML = document.doctype !== null && document.doctype.name === 'html';
 
-function setSpacingOffset(node: NodeUI, region: number, value: number) {
+function setSpacingOffset(node: NodeUI, region: number, value: number, adjustment = 0) {
     let offset = 0;
     switch (region) {
         case BOX_STANDARD.MARGIN_TOP:
@@ -24,6 +24,7 @@ function setSpacingOffset(node: NodeUI, region: number, value: number) {
             offset = value - node.actualRect('bottom');
             break;
     }
+    offset -= adjustment;
     if (offset > 0) {
         (node.renderAs || node.outerWrapper || node).modifyBox(region, offset);
     }
@@ -458,13 +459,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (!node.lineBreakLeading) {
                                     const previous = children[index - 1];
                                     if (previous && previous.pageFlow) {
-                                        setSpacingOffset(node, BOX_STANDARD.MARGIN_TOP, previous.actualRect('bottom'));
+                                        setSpacingOffset(node, BOX_STANDARD.MARGIN_TOP, previous.actualRect('bottom'), previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]);
                                     }
                                 }
                                 if (!node.lineBreakTrailing) {
                                     const next = children[index + 1];
                                     if (next && next.pageFlow && next.styleElement && !next.inlineVertical) {
-                                        setSpacingOffset(node, BOX_STANDARD.MARGIN_BOTTOM, next.actualRect('top'));
+                                        setSpacingOffset(node, BOX_STANDARD.MARGIN_BOTTOM, next.actualRect('top'), next.getBox(BOX_STANDARD.MARGIN_TOP)[1]);
                                     }
                                 }
                             }

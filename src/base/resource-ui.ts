@@ -30,15 +30,14 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     }
     const item = <RadialGradient> gradient;
     const repeating = item.repeating === true;
-    let extent: number;
+    let extent = 1;
     let size: number;
     if (repeating && gradient.type === 'radial') {
         extent = item.radiusExtent / item.radius;
         size = item.radius;
     }
     else {
-        extent = 1;
-        size = (<Dimension> gradient.dimension)[item.horizontal ? 'width' : 'height'];
+        size = item.horizontal ? (<Dimension> gradient.dimension).width : (<Dimension> gradient.dimension).height;
     }
     const result: ColorStop[] = [];
     let match: RegExpExecArray | null;
@@ -165,8 +164,7 @@ function replaceWhiteSpace(parent: NodeUI, node: NodeUI, value: string): [string
                 .replace(/[ ]+/g, ' ');
             break;
         default:
-            const previousSibling = node.previousSibling;
-            const nextSibling = node.nextSibling;
+            const { previousSibling, nextSibling } = node;
             if (previousSibling && (previousSibling.lineBreak || previousSibling.blockStatic) || node.onlyChild && node.htmlElement) {
                 value = value.replace($regex.CHAR.LEADINGSPACE, '');
             }

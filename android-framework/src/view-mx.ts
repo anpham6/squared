@@ -592,451 +592,446 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public setLayout() {
             const renderParent = this.renderParent as T;
-            if (renderParent) {
-                switch (this.cssAscend('visibility', true)) {
-                    case 'hidden':
-                    case 'collapse':
-                        this.hide(true);
-                        break;
+            switch (this.cssAscend('visibility', true)) {
+                case 'hidden':
+                case 'collapse':
+                    this.hide(true);
+                    break;
+            }
+            if (this.plainText) {
+                this.setLayoutWidth('wrap_content', false);
+                this.setLayoutHeight('wrap_content', false);
+                return;
+            }
+            const documentParent = this.documentParent as T;
+            let adjustViewBounds = false;
+            if (this.documentBody) {
+                if (this.css('width') === '100%' || this.css('minWidth') === '100%' || !this.hasWidth && this.renderChildren.some(node => node.alignParent('right'))) {
+                    this.setLayoutWidth('match_parent', false);
                 }
-                if (this.plainText) {
-                    this.setLayoutWidth('wrap_content', false);
-                    this.setLayoutHeight('wrap_content', false);
-                    return;
+                if (this.css('height') === '100%' || this.css('minHeight') === '100%' || !this.hasHeight && this.renderChildren.some(node => node.alignParent('bottom'))) {
+                    this.setLayoutHeight('match_parent', false);
                 }
-                const documentParent = this.documentParent as T;
-                let adjustViewBounds = false;
-                if (this.documentBody) {
-                    if (this.css('width') === '100%' || this.css('minWidth') === '100%' || !this.hasWidth && this.renderChildren.some(node => node.alignParent('right'))) {
-                        this.setLayoutWidth('match_parent', false);
+            }
+            if (this.layoutWidth === '') {
+                let layoutWidth = '';
+                if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {
+                    const width = this.css('width');
+                    let value = -1;
+                    if ($css.isLength(width)) {
+                        value = this.actualWidth;
                     }
-                    if (this.css('height') === '100%' || this.css('minHeight') === '100%' || !this.hasHeight && this.renderChildren.some(node => node.alignParent('bottom'))) {
-                        this.setLayoutHeight('match_parent', false);
-                    }
-                }
-                if (this.layoutWidth === '') {
-                    let layoutWidth = '';
-                    if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {
-                        const width = this.css('width');
-                        let value = -1;
-                        if ($css.isLength(width)) {
+                    else if ($css.isPercent(width)) {
+                        if (this.inputElement) {
+                            value = this.bounds.width;
+                        }
+                        else if (renderParent.layoutConstraint && !renderParent.hasPX('width', false)) {
+                            if (width === '100%') {
+                                layoutWidth = 'match_parent';
+                            }
+                            else {
+                                this.app('layout_constraintWidth_percent', $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
+                                layoutWidth = '0px';
+                            }
+                            adjustViewBounds = true;
+                        }
+                        else if (renderParent.is(CONTAINER_NODE.GRID)) {
+                            layoutWidth = '0px';
+                            this.android('layout_columnWeight', $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
+                            adjustViewBounds = true;
+                        }
+                        else if (this.imageElement) {
+                            if (width === '100%' && !renderParent.inlineWidth) {
+                                layoutWidth = 'match_parent';
+                            }
+                            else {
+                                value = this.bounds.width;
+                                adjustViewBounds = true;
+                            }
+                        }
+                        else if (width === '100%') {
+                            if (!this.support.maxWidth) {
+                                const maxWidth = this.css('maxWidth');
+                                const maxValue = this.parseUnit(maxWidth);
+                                const absoluteParent = this.absoluteParent || documentParent;
+                                if (maxWidth === '100%') {
+                                    if (!renderParent.inlineWidth && $util.aboveRange(maxValue, absoluteParent.box.width)) {
+                                        layoutWidth = 'match_parent';
+                                    }
+                                    else {
+                                        value = Math.min(this.actualWidth, maxValue);
+                                    }
+                                }
+                                else if (maxValue > 0) {
+                                    if (this.blockDimension) {
+                                        value = Math.min(this.actualWidth, maxValue);
+                                    }
+                                    else {
+                                        layoutWidth = Math.ceil(maxValue) < Math.floor(absoluteParent.width) ? 'wrap_content' : 'match_parent';
+                                    }
+                                }
+                            }
+                            if (layoutWidth === '' && (this.documentRoot || !renderParent.inlineWidth)) {
+                                layoutWidth = 'match_parent';
+                            }
+                        }
+                        else {
                             value = this.actualWidth;
                         }
-                        else if ($css.isPercent(width)) {
-                            if (this.inputElement) {
-                                value = this.bounds.width;
-                            }
-                            else if (renderParent.layoutConstraint && !renderParent.hasPX('width', false)) {
-                                if (width === '100%') {
-                                    layoutWidth = 'match_parent';
-                                }
-                                else {
-                                    this.app('layout_constraintWidth_percent', $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
-                                    layoutWidth = '0px';
-                                }
-                                adjustViewBounds = true;
-                            }
-                            else if (renderParent.is(CONTAINER_NODE.GRID)) {
-                                layoutWidth = '0px';
-                                this.android('layout_columnWeight', $math.truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
-                                adjustViewBounds = true;
-                            }
-                            else if (this.imageElement) {
-                                if (width === '100%' && !renderParent.inlineWidth) {
-                                    layoutWidth = 'match_parent';
-                                }
-                                else {
-                                    value = this.bounds.width;
-                                    adjustViewBounds = true;
+                    }
+                    if (value > 0) {
+                        layoutWidth = $css.formatPX(value);
+                    }
+                }
+                else if (this.length > 0) {
+                    switch (this.cssInitial('width')) {
+                        case 'max-content':
+                        case 'fit-content':
+                            for (const node of this.renderChildren) {
+                                if (!node.hasPX('width')) {
+                                    node.setLayoutWidth('wrap_content');
                                 }
                             }
-                            else if (width === '100%') {
-                                if (!this.support.maxWidth) {
-                                    const maxWidth = this.css('maxWidth');
-                                    const maxValue = this.parseUnit(maxWidth);
-                                    const absoluteParent = this.absoluteParent || documentParent;
-                                    if (maxWidth === '100%') {
-                                        if (!renderParent.inlineWidth && $util.aboveRange(maxValue, absoluteParent.box.width)) {
-                                            layoutWidth = 'match_parent';
-                                        }
-                                        else {
-                                            value = Math.min(this.actualWidth, maxValue);
-                                        }
-                                    }
-                                    else if (maxValue > 0) {
-                                        if (this.blockDimension) {
-                                            value = Math.min(this.actualWidth, maxValue);
-                                        }
-                                        else {
-                                            layoutWidth = Math.ceil(maxValue) < Math.floor(absoluteParent.width) ? 'wrap_content' : 'match_parent';
-                                        }
+                            layoutWidth = 'wrap_content';
+                            break;
+                        case 'min-content':
+                            const nodes: T[] = [];
+                            let maxWidth = 0;
+                            for (const node of this.renderChildren) {
+                                if (!node.textElement || node.hasPX('width')) {
+                                    const actualWidth = node.actualWidth;
+                                    if (actualWidth > maxWidth) {
+                                        maxWidth = actualWidth;
                                     }
                                 }
-                                if (layoutWidth === '' && (this.documentRoot || !renderParent.inlineWidth)) {
-                                    layoutWidth = 'match_parent';
+                                else {
+                                    const minWidth = node.parseUnit(node.css('minWidth'));
+                                    if (minWidth > maxWidth) {
+                                        maxWidth = minWidth;
+                                    }
+                                    nodes.push(node);
                                 }
+                            }
+                            if (nodes.length) {
+                                const widthPX = $css.formatPX(maxWidth);
+                                for (const node of nodes) {
+                                    node.css('maxWidth', widthPX);
+                                }
+                            }
+                            layoutWidth = 'wrap_content';
+                            break;
+                    }
+                }
+                else if (this.imageElement && this.hasPX('height')) {
+                    layoutWidth = 'wrap_content';
+                    adjustViewBounds = true;
+                }
+                if (layoutWidth === '') {
+                    if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
+                        layoutWidth = $css.formatPX(this.actualWidth);
+                    }
+                    else {
+                        function checkParentWidth() {
+                            let current = renderParent;
+                            do {
+                                if (!current.blockWidth) {
+                                    if (!current.inlineWidth) {
+                                        layoutWidth = 'match_parent';
+                                    }
+                                    break;
+                                }
+                                current = current.renderParent as T;
+                            }
+                            while (current);
+                        }
+                        if (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID)) {
+                            if (this.flexElement) {
+                                if (this.display === 'flex') {
+                                    layoutWidth = renderParent.layoutConstraint && this.css('flexDirection') === 'column' ? '0px' : 'match_parent';
+                                }
+                                else {
+                                    layoutWidth = 'wrap_content';
+                                }
+                            }
+                            else if (!documentParent.layoutElement) {
+                                checkParentWidth();
+                            }
+                            else if (renderParent.layoutConstraint) {
+                                if (documentParent.flexElement) {
+                                    if (documentParent.css('flexDirection') === 'column' || this.flexbox.grow > 0) {
+                                        layoutWidth = '0px';
+                                    }
+                                }
+                                else if (this.alignParent('left') && this.alignParent('right')) {
+                                    layoutWidth = this.autoMargin.horizontal || this.ascend(item => item.hasPX('width') || item.blockStatic).length ? '0px' : 'match_parent';
+                                }
+                            }
+                        }
+                        if (layoutWidth === '') {
+                            if (this.layoutVertical && !renderParent.inlineWidth && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) && !this.documentRoot ||
+                                !this.pageFlow && this.absoluteParent === documentParent && this.hasPX('left') && this.hasPX('right') ||
+                                documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row')
+                            {
+                                layoutWidth = 'match_parent';
+                            }
+                            else if (this.naturalElement && !documentParent.layoutElement && !this.inlineHorizontal && this.some(item => item.naturalElement && item.blockStatic && item.textElement)) {
+                                checkParentWidth();
+                            }
+                        }
+                    }
+                }
+                this.setLayoutWidth(layoutWidth || 'wrap_content');
+            }
+            if (this.layoutHeight === '') {
+                let layoutHeight = '';
+                if (this.hasPX('height') && (!this.inlineStatic || this.cssInitial('height') === '')) {
+                    const height = this.css('height');
+                    let value = -1;
+                    if ($css.isLength(height)) {
+                        value = this.actualHeight;
+                    }
+                    else if ($css.isPercent(height)) {
+                        if (this.inputElement) {
+                            value = this.bounds.height;
+                        }
+                        else if (this.imageElement) {
+                            if (height === '100%' && !renderParent.inlineHeight) {
+                                layoutHeight = 'match_parent';
                             }
                             else {
-                                value = this.actualWidth;
+                                value = this.bounds.height;
+                                adjustViewBounds = true;
                             }
                         }
-                        if (value > 0) {
-                            layoutWidth = $css.formatPX(value);
-                        }
-                    }
-                    else if (this.length > 0) {
-                        switch (this.cssInitial('width')) {
-                            case 'max-content':
-                            case 'fit-content':
-                                for (const node of this.renderChildren) {
-                                    if (!node.hasPX('width')) {
-                                        node.setLayoutWidth('wrap_content');
-                                    }
-                                }
-                                layoutWidth = 'wrap_content';
-                                break;
-                            case 'min-content':
-                                const nodes: T[] = [];
-                                let maxWidth = 0;
-                                for (const node of this.renderChildren) {
-                                    if (!node.textElement || node.hasPX('width')) {
-                                        const actualWidth = node.actualWidth;
-                                        if (actualWidth > maxWidth) {
-                                            maxWidth = actualWidth;
-                                        }
+                        else if (height === '100%') {
+                            if (!this.support.maxHeight) {
+                                const maxHeight = this.css('maxHeight');
+                                const maxValue = this.parseUnit(maxHeight);
+                                const absoluteParent = this.absoluteParent || documentParent;
+                                if (maxHeight === '100%') {
+                                    if (!renderParent.inlineHeight && $util.aboveRange(maxValue, absoluteParent.box.height)) {
+                                        layoutHeight = 'match_parent';
                                     }
                                     else {
-                                        const minWidth = node.parseUnit(node.css('minWidth'));
-                                        if (minWidth > maxWidth) {
-                                            maxWidth = minWidth;
-                                        }
-                                        nodes.push(node);
+                                        value = Math.min(this.actualHeight, maxValue);
                                     }
                                 }
-                                if (nodes.length) {
-                                    const widthPX = $css.formatPX(maxWidth);
-                                    for (const node of nodes) {
-                                        node.css('maxWidth', widthPX);
-                                    }
-                                }
-                                layoutWidth = 'wrap_content';
-                                break;
-                        }
-                    }
-                    else if (this.imageElement && this.hasPX('height')) {
-                        layoutWidth = 'wrap_content';
-                        adjustViewBounds = true;
-                    }
-                    if (layoutWidth === '') {
-                        if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
-                            layoutWidth = $css.formatPX(this.actualWidth);
-                        }
-                        else {
-                            function checkParentWidth() {
-                                let current = renderParent;
-                                do {
-                                    if (!current.blockWidth) {
-                                        if (!current.inlineWidth) {
-                                            layoutWidth = 'match_parent';
-                                        }
-                                        break;
-                                    }
-                                    current = current.renderParent as T;
-                                }
-                                while (current);
-                            }
-                            if (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID)) {
-                                if (this.flexElement) {
-                                    if (this.display === 'flex') {
-                                        layoutWidth = renderParent.layoutConstraint && this.css('flexDirection') === 'column' ? '0px' : 'match_parent';
+                                else if (maxValue > 0) {
+                                    if (this.blockDimension) {
+                                        value = Math.min(this.actualHeight, maxValue);
                                     }
                                     else {
-                                        layoutWidth = 'wrap_content';
-                                    }
-                                }
-                                else if (!documentParent.layoutElement) {
-                                    checkParentWidth();
-                                }
-                                else if (renderParent.layoutConstraint) {
-                                    if (documentParent.flexElement) {
-                                        if (documentParent.css('flexDirection') === 'column' || this.flexbox.grow > 0) {
-                                            layoutWidth = '0px';
-                                        }
-                                    }
-                                    else if (this.alignParent('left') && this.alignParent('right')) {
-                                        layoutWidth = this.autoMargin.horizontal || this.ascend(item => item.hasPX('width') || item.blockStatic).length ? '0px' : 'match_parent';
+                                        layoutHeight = Math.ceil(maxValue) < Math.floor(absoluteParent.box.height) ? 'wrap_content' : 'match_parent';
                                     }
                                 }
                             }
-                            if (layoutWidth === '') {
-                                if (this.layoutVertical && !this.documentRoot && renderParent.blockStatic && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) ||
-                                    !this.pageFlow && this.absoluteParent === documentParent && this.hasPX('left') && this.hasPX('right') ||
-                                    documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row')
-                                {
-                                    layoutWidth = 'match_parent';
-                                }
-                                else if (this.naturalElement && !documentParent.layoutElement && !this.floating && this.some(item => item.naturalElement && item.blockStatic && item.textElement)) {
-                                    checkParentWidth();
-                                }
+                            if (layoutHeight === '' && (this.documentRoot || !renderParent.inlineHeight)) {
+                                layoutHeight = 'match_parent';
                             }
                         }
-                    }
-                    this.setLayoutWidth(layoutWidth || 'wrap_content');
-                }
-                if (this.layoutHeight === '') {
-                    let layoutHeight = '';
-                    if (this.hasPX('height') && (!this.inlineStatic || this.cssInitial('height') === '')) {
-                        const height = this.css('height');
-                        let value = -1;
-                        if ($css.isLength(height)) {
+                        if (layoutHeight === '' && this.hasHeight) {
                             value = this.actualHeight;
                         }
-                        else if ($css.isPercent(height)) {
-                            if (this.inputElement) {
-                                value = this.bounds.height;
-                            }
-                            else if (this.imageElement) {
-                                if (height === '100%' && !renderParent.inlineHeight) {
-                                    layoutHeight = 'match_parent';
-                                }
-                                else {
-                                    value = this.bounds.height;
-                                    adjustViewBounds = true;
-                                }
-                            }
-                            else if (height === '100%') {
-                                if (!this.support.maxHeight) {
-                                    const maxHeight = this.css('maxHeight');
-                                    const maxValue = this.parseUnit(maxHeight);
-                                    const absoluteParent = this.absoluteParent || documentParent;
-                                    if (maxHeight === '100%') {
-                                        if (!renderParent.inlineHeight && $util.aboveRange(maxValue, absoluteParent.box.height)) {
-                                            layoutHeight = 'match_parent';
-                                        }
-                                        else {
-                                            value = Math.min(this.actualHeight, maxValue);
-                                        }
-                                    }
-                                    else if (maxValue > 0) {
-                                        if (this.blockDimension) {
-                                            value = Math.min(this.actualHeight, maxValue);
-                                        }
-                                        else {
-                                            layoutHeight = Math.ceil(maxValue) < Math.floor(absoluteParent.box.height) ? 'wrap_content' : 'match_parent';
-                                        }
-                                    }
-                                }
-                                if (layoutHeight === '' && (this.documentRoot || !renderParent.inlineHeight)) {
-                                    layoutHeight = 'match_parent';
-                                }
-                            }
-                            if (layoutHeight === '' && this.hasHeight) {
-                                value = this.actualHeight;
-                            }
-                        }
-                        if (value > 0) {
-                            if (this.is(CONTAINER_NODE.LINE) && this.tagName !== 'HR' && this.hasPX('height', true, true)) {
-                                value += this.borderTopWidth + this.borderBottomWidth;
-                            }
-                            layoutHeight = $css.formatPX(value);
-                        }
                     }
-                    else if (this.imageElement && this.hasPX('width')) {
-                        layoutHeight = 'wrap_content';
-                        adjustViewBounds = true;
-                    }
-                    if (layoutHeight === '') {
-                        if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
-                            if (renderParent.layoutConstraint && this.alignParent('top') && this.actualHeight >= (this.absoluteParent || documentParent).box.height) {
-                                layoutHeight = '0px';
-                                this.anchor('bottom', 'parent');
-                            }
-                            else {
-                                layoutHeight = $css.formatPX(this.actualHeight);
-                            }
+                    if (value > 0) {
+                        if (this.is(CONTAINER_NODE.LINE) && this.tagName !== 'HR' && this.hasPX('height', true, true)) {
+                            value += this.borderTopWidth + this.borderBottomWidth;
                         }
-                        else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.hasPX('top') && this.hasPX('bottom') || this.outerWrapper === undefined && this.onlyChild && renderParent.flexElement && !renderParent.inlineHeight && renderParent.css('flexDirection') === 'row') {
-                            layoutHeight = 'match_parent';
-                        }
+                        layoutHeight = $css.formatPX(value);
                     }
-                    this.setLayoutHeight(layoutHeight || 'wrap_content');
                 }
-                const isFlexible = (direction: string) => !(documentParent.flexElement && this.flexbox.grow > 0 && documentParent.css('flexDirection') === direction);
-                if (this.hasPX('minWidth') && isFlexible('column')) {
-                    this.android('minWidth', this.convertPX(this.css('minWidth')), false);
+                else if (this.imageElement && this.hasPX('width')) {
+                    layoutHeight = 'wrap_content';
+                    adjustViewBounds = true;
                 }
-                if (this.hasPX('minHeight') && isFlexible('row')) {
-                    this.android('minHeight', this.convertPX(this.css('minHeight'), 'height'), false);
-                }
-                if (this.support.maxWidth) {
-                    const maxWidth = this.css('maxWidth');
-                    let width = -1;
-                    if ($css.isLength(maxWidth, true)) {
-                        if (maxWidth === '100%') {
-                            if (this.imageElement) {
-                                width = (<HTMLImageElement> this.element).naturalWidth;
-                            }
-                            else if (this.svgElement) {
-                                width = this.bounds.width;
-                            }
+                if (layoutHeight === '') {
+                    if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
+                        if (renderParent.layoutConstraint && this.alignParent('top') && this.actualHeight >= (this.absoluteParent || documentParent).box.height) {
+                            layoutHeight = '0px';
+                            this.anchor('bottom', 'parent');
                         }
                         else {
-                            width = this.parseUnit(this.css('maxWidth'));
+                            layoutHeight = $css.formatPX(this.actualHeight);
                         }
                     }
-                    else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend(item => item.hasPX('width')).length > 0 || !/\n/.test(this.textContent))) {
-                        width = Math.ceil(this.bounds.width);
+                    else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.hasPX('top') && this.hasPX('bottom') || this.outerWrapper === undefined && this.onlyChild && renderParent.flexElement && !renderParent.inlineHeight && renderParent.css('flexDirection') === 'row') {
+                        layoutHeight = 'match_parent';
                     }
-                    if (width !== -1) {
-                        this.android('maxWidth', $css.formatPX(width), false);
+                }
+                this.setLayoutHeight(layoutHeight || 'wrap_content');
+            }
+            const isFlexible = (direction: string) => !(documentParent.flexElement && this.flexbox.grow > 0 && documentParent.css('flexDirection') === direction);
+            if (this.hasPX('minWidth') && isFlexible('column')) {
+                this.android('minWidth', this.convertPX(this.css('minWidth')), false);
+            }
+            if (this.hasPX('minHeight') && isFlexible('row')) {
+                this.android('minHeight', this.convertPX(this.css('minHeight'), 'height'), false);
+            }
+            if (this.support.maxWidth) {
+                const maxWidth = this.css('maxWidth');
+                let width = -1;
+                if ($css.isLength(maxWidth, true)) {
+                    if (maxWidth === '100%') {
+                        if (this.imageElement) {
+                            width = (<HTMLImageElement> this.element).naturalWidth;
+                        }
+                        else if (this.svgElement) {
+                            width = this.bounds.width;
+                        }
+                    }
+                    else {
+                        width = this.parseUnit(this.css('maxWidth'));
+                    }
+                }
+                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend(item => item.hasPX('width')).length > 0 || !/\n/.test(this.textContent))) {
+                    width = Math.ceil(this.bounds.width);
+                }
+                if (width !== -1) {
+                    this.android('maxWidth', $css.formatPX(width), false);
+                    if (this.imageElement) {
+                        adjustViewBounds = true;
+                    }
+                }
+            }
+            if (this.support.maxHeight) {
+                const maxHeight = this.css('maxHeight');
+                if ($css.isLength(maxHeight, true)) {
+                    let height = -1;
+                    if (maxHeight === '100%' && this.imageElement) {
+                        height = (<HTMLImageElement> this.element).naturalHeight;
+                    }
+                    else {
+                        height = this.parseUnit(this.css('maxHeight'), 'height');
+                    }
+                    if (height >= 0) {
+                        this.android('maxHeight', $css.formatPX(height));
                         if (this.imageElement) {
                             adjustViewBounds = true;
                         }
                     }
                 }
-                if (this.support.maxHeight) {
-                    const maxHeight = this.css('maxHeight');
-                    if ($css.isLength(maxHeight, true)) {
-                        let height = -1;
-                        if (maxHeight === '100%' && this.imageElement) {
-                            height = (<HTMLImageElement> this.element).naturalHeight;
-                        }
-                        else {
-                            height = this.parseUnit(this.css('maxHeight'), 'height');
-                        }
-                        if (height >= 0) {
-                            this.android('maxHeight', $css.formatPX(height));
-                            if (this.imageElement) {
-                                adjustViewBounds = true;
-                            }
-                        }
-                    }
-                }
-                if (this.imageElement && (adjustViewBounds || this.blockWidth || this.blockHeight)) {
-                    this.android('adjustViewBounds', 'true');
-                }
+            }
+            if (this.imageElement && (adjustViewBounds || this.blockWidth || this.blockHeight)) {
+                this.android('adjustViewBounds', 'true');
             }
         }
 
         public setAlignment() {
-            const renderParent = this.renderParent;
-            if (renderParent) {
-                const alignFloat = this.hasAlign($e.NODE_ALIGNMENT.FLOAT);
-                const node = this.outerWrapper || this;
-                const outerRenderParent = (node.renderParent || renderParent) as T;
-                let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
-                let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
-                if (this.nodeGroup && !alignFloat && textAlign === '') {
-                    const parent = this.actualParent;
-                    if (parent) {
-                        textAlign = checkTextAlign(parent.cssInitial('textAlign', true));
+            const renderParent = this.renderParent as T;
+            const node = this.outerWrapper || this;
+            const outerRenderParent = (node.renderParent || renderParent) as T;
+            let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
+            let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
+            if (this.nodeGroup && textAlign === '' && !this.hasAlign($e.NODE_ALIGNMENT.FLOAT)) {
+                const parent = this.actualParent;
+                if (parent) {
+                    textAlign = checkTextAlign(parent.cssInitial('textAlign', true));
+                }
+            }
+            if (this.pageFlow) {
+                let floating = '';
+                if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.container.positionRelative || outerRenderParent.is(CONTAINER_NODE.GRID) || this.display === 'table-cell')) {
+                    const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
+                    switch (this.cssInitial('verticalAlign', true)) {
+                        case 'top':
+                            node.mergeGravity(gravity, 'top');
+                            break;
+                        case 'middle':
+                            node.mergeGravity(gravity, STRING_ANDROID.CENTER_VERTICAL);
+                            break;
+                        case 'bottom':
+                            node.mergeGravity(gravity, 'bottom');
+                            break;
                     }
                 }
-                if (this.pageFlow) {
-                    let floating = '';
-                    if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.container.positionRelative || outerRenderParent.is(CONTAINER_NODE.GRID) || this.display === 'table-cell')) {
-                        const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
-                        switch (this.cssInitial('verticalAlign', true)) {
+                if (!this.blockWidth) {
+                    if (outerRenderParent.layoutVertical || this.documentRoot && (this.layoutVertical || this.layoutFrame)) {
+                        if (this.floating) {
+                            node.mergeGravity('layout_gravity', this.float);
+                        }
+                        else if (!setAutoMargin(node) && textAlign !== '' && this.hasWidth && !this.blockStatic && this.display !== 'table') {
+                            node.mergeGravity('layout_gravity', textAlign, false);
+                        }
+                    }
+                    if (this.rightAligned || this.nodeGroup && this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
+                        floating = 'right';
+                    }
+                    else if (this.nodeGroup && this.hasAlign($e.NODE_ALIGNMENT.FLOAT) && !this.renderChildren.some(item => item.rightAligned)) {
+                        floating = 'left';
+                    }
+                }
+                else if (node.nodeGroup && node.layoutVertical && this.rightAligned) {
+                    node.renderEach((item: T) => {
+                        if (item.rightAligned) {
+                            item.mergeGravity('layout_gravity', 'right');
+                        }
+                    });
+                }
+                if (renderParent.layoutFrame && this.innerWrapped === undefined) {
+                    if (!setAutoMargin(this)) {
+                        if (this.floating) {
+                            floating = this.float;
+                        }
+                        if (floating !== '' && !renderParent.naturalElement && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
+                            renderParent.mergeGravity('layout_gravity', floating);
+                            floating = '';
+                        }
+                        if (this.centerAligned) {
+                            this.mergeGravity('layout_gravity', checkTextAlign('center'));
+                        }
+                    }
+                    if (this.onlyChild && renderParent.display === 'table-cell') {
+                        let gravity: string;
+                        switch (renderParent.css('verticalAlign')) {
                             case 'top':
-                                node.mergeGravity(gravity, 'top');
-                                break;
-                            case 'middle':
-                                node.mergeGravity(gravity, STRING_ANDROID.CENTER_VERTICAL);
+                                gravity = 'top';
                                 break;
                             case 'bottom':
-                                node.mergeGravity(gravity, 'bottom');
+                                gravity = 'bottom';
+                                break;
+                            default:
+                                gravity = STRING_ANDROID.CENTER_VERTICAL;
                                 break;
                         }
-                    }
-                    if (!this.blockWidth) {
-                        if (outerRenderParent.layoutVertical || this.documentRoot && (this.layoutVertical || this.layoutFrame)) {
-                            if (this.floating) {
-                                node.mergeGravity('layout_gravity', this.float);
-                            }
-                            else if (!setAutoMargin(node) && textAlign !== '' && this.hasWidth && !this.blockStatic && this.display !== 'table') {
-                                node.mergeGravity('layout_gravity', textAlign, false);
-                            }
-                        }
-                        if (this.rightAligned || this.nodeGroup && this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
-                            floating = 'right';
-                        }
-                        else if (this.nodeGroup && alignFloat && !this.renderChildren.some(item => item.rightAligned)) {
-                            floating = 'left';
-                        }
-                    }
-                    else if (node.nodeGroup && node.layoutVertical && this.rightAligned) {
-                        node.renderEach((item: T) => {
-                            if (item.rightAligned) {
-                                item.mergeGravity('layout_gravity', 'right');
-                            }
-                        });
-                    }
-                    if (renderParent.layoutFrame && this.innerWrapped === undefined) {
-                        if (!setAutoMargin(this)) {
-                            if (this.floating) {
-                                floating = this.float;
-                            }
-                            if (floating !== '' && !renderParent.naturalElement && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
-                                renderParent.mergeGravity('layout_gravity', floating);
-                                floating = '';
-                            }
-                            if (this.centerAligned) {
-                                this.mergeGravity('layout_gravity', checkTextAlign('center'));
-                            }
-                        }
-                        if (this.onlyChild && renderParent.display === 'table-cell') {
-                            let gravity: string;
-                            switch (renderParent.css('verticalAlign')) {
-                                case 'top':
-                                    gravity = 'top';
-                                    break;
-                                case 'bottom':
-                                    gravity = 'bottom';
-                                    break;
-                                default:
-                                    gravity = STRING_ANDROID.CENTER_VERTICAL;
-                                    break;
-                            }
-                            this.mergeGravity('layout_gravity', gravity);
-                        }
-                    }
-                    else if (outerRenderParent.layoutFrame && renderParent.blockWidth && this.rightAligned) {
-                        this.mergeGravity('layout_gravity', 'right');
-                    }
-                    if (floating !== '') {
-                        if (this.blockWidth) {
-                            if (textAlign === '' || floating === 'right') {
-                                textAlign = floating;
-                            }
-                        }
-                        else {
-                            (node.blockWidth && this !== node ? this : node).mergeGravity('layout_gravity', floating);
-                        }
-                    }
-                    else if (setAutoMargin(node.inlineWidth ? node : this) && textAlign !== '') {
-                        textAlignParent = '';
+                        this.mergeGravity('layout_gravity', gravity);
                     }
                 }
-                if (textAlignParent !== '') {
-                    if (this.blockStatic && !this.centerAligned && !this.rightAligned) {
-                        node.mergeGravity('layout_gravity', 'left', false);
+                else if (outerRenderParent.layoutFrame && renderParent.blockWidth && this.rightAligned) {
+                    this.mergeGravity('layout_gravity', 'right');
+                }
+                if (floating !== '') {
+                    if (this.blockWidth) {
+                        if (textAlign === '' || floating === 'right') {
+                            textAlign = floating;
+                        }
+                    }
+                    else {
+                        (node.blockWidth && this !== node ? this : node).mergeGravity('layout_gravity', floating);
                     }
                 }
-                if (!this.layoutConstraint && !this.layoutFrame && !this.is(CONTAINER_NODE.GRID) && !this.layoutElement) {
-                    if (textAlign !== '') {
-                        if (!this.imageOrSvgElement) {
-                            this.mergeGravity('gravity', textAlign);
+                else if (setAutoMargin(node.inlineWidth ? node : this) && textAlign !== '') {
+                    textAlignParent = '';
+                }
+            }
+            if (textAlignParent !== '') {
+                if (this.blockStatic && !this.centerAligned && !this.rightAligned) {
+                    node.mergeGravity('layout_gravity', 'left', false);
+                }
+            }
+            if (!this.layoutConstraint && !this.layoutFrame && !this.is(CONTAINER_NODE.GRID) && !this.layoutElement) {
+                if (textAlign !== '') {
+                    if (!this.imageOrSvgElement) {
+                        this.mergeGravity('gravity', textAlign);
+                    }
+                }
+                else if (textAlignParent !== '' && !this.inputElement) {
+                    if (this.imageOrSvgElement) {
+                        if (this.pageFlow) {
+                            this.mergeGravity('layout_gravity', textAlignParent);
                         }
                     }
-                    else if (textAlignParent !== '' && !this.inputElement) {
-                        if (this.imageOrSvgElement) {
-                            if (this.pageFlow) {
-                                this.mergeGravity('layout_gravity', textAlignParent);
-                            }
-                        }
-                        else {
-                            this.mergeGravity('gravity', textAlignParent);
-                        }
+                    else {
+                        this.mergeGravity('gravity', textAlignParent);
                     }
                 }
             }

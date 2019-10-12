@@ -1824,13 +1824,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get positionAuto() {
         let result = this._cached.positionAuto;
         if (result === undefined) {
-            const styleMap = this._initial.iteration === -1 ? this._styleMap : this._initial.styleMap;
-            result = !this.pageFlow && (
-                (!styleMap.top || styleMap.top === 'auto') &&
-                (!styleMap.right || styleMap.right === 'auto') &&
-                (!styleMap.bottom || styleMap.bottom === 'auto') &&
-                (!styleMap.left || styleMap.left === 'auto')
-            );
+            if (this.pageFlow) {
+                result = false;
+            }
+            else {
+                const { top, right, bottom, left } = this._initial.iteration === -1 ? this._styleMap : this._initial.styleMap;
+                result = (!top || top === 'auto') &&
+                    (!right || right === 'auto') &&
+                    (!bottom || bottom === 'auto') &&
+                    (!left || left === 'auto');
+            }
             this._cached.positionAuto = result;
         }
         return result;
@@ -2005,6 +2008,21 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             result = this.inline && this.pageFlow && !this.floating && !this.imageElement;
             this._cached.inlineStatic = result;
+        }
+        return result;
+    }
+
+    get inlineHorizontal() {
+        let result = this._cached.inlineHorizontal;
+        if (result === undefined) {
+            if (this.naturalElement) {
+                const value = this.display;
+                result = value.startsWith('inline-') || this.flexElement || this.floating || value.startsWith('table');
+            }
+            else {
+                result = this.plainText;
+            }
+            this._cached.inlineVertical = result;
         }
         return result;
     }
@@ -2641,8 +2659,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             result = this.naturalElement ? (<HTMLElement> this._element).dir : '';
             if (result === '') {
                 let current = this.actualParent;
-                while (current && result === '') {
+                while (current) {
                     result = current.dir;
+                    if (result !== '') {
+                        break;
+                    }
                     current = current.actualParent;
                 }
             }

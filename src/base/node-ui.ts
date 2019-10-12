@@ -39,10 +39,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 actualLeft = item.actualRect('left');
             }
             else {
-                actualTop = item.linear.top;
-                actualRight = item.linear.right;
-                actualBottom = item.linear.bottom;
-                actualLeft = item.linear.left;
+                ({ top: actualTop, right: actualRight, bottom: actualBottom, left: actualLeft } = item.linear);
             }
             if (actualTop < top) {
                 top = actualTop;
@@ -203,30 +200,32 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         let floatLeft = Number.NEGATIVE_INFINITY;
                         let floatRight = Number.POSITIVE_INFINITY;
                         for (const node of nodes) {
-                            boxLeft = Math.min(boxLeft, node.linear.left);
-                            boxRight = Math.max(boxRight, node.linear.right);
+                            const { left, right } = node.linear;
+                            boxLeft = Math.min(boxLeft, left);
+                            boxRight = Math.max(boxRight, right);
                             if (node.floating) {
                                 if (node.float === 'left') {
-                                    floatLeft = Math.max(floatLeft, node.linear.right);
+                                    floatLeft = Math.max(floatLeft, right);
                                 }
                                 else {
-                                    floatRight = Math.min(floatRight, node.linear.left);
+                                    floatRight = Math.min(floatRight, left);
                                 }
                             }
                         }
                         for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < length; i++) {
                             const item = nodes[i];
-                            if (Math.floor(item.linear.left) <= boxLeft) {
+                            const { left, right } = item.linear;
+                            if (Math.floor(left) <= boxLeft) {
                                 j++;
                             }
-                            if (Math.ceil(item.linear.right) >= boxRight) {
+                            if (Math.ceil(right) >= boxRight) {
                                 k++;
                             }
                             if (!item.floating) {
-                                if (item.linear.left === floatLeft) {
+                                if (left === floatLeft) {
                                     l++;
                                 }
-                                if (item.linear.right === floatRight) {
+                                if (right === floatRight) {
                                     m++;
                                 }
                             }
@@ -238,7 +237,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 break;
                             }
                             const previous = nodes[i - 1];
-                            if (previous.floating && $util.aboveRange(item.linear.top, previous.linear.bottom) || $util.withinRange(item.linear.left, previous.linear.left)) {
+                            if ($util.withinRange(left, previous.linear.left) || previous.floating && $util.aboveRange(item.linear.top, previous.linear.bottom)) {
                                 linearX = false;
                                 break;
                             }

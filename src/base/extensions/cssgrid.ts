@@ -9,7 +9,8 @@ import { BOX_STANDARD } from '../lib/enumeration';
 type GridLayout = {
     placement: number[],
     rowSpan: number,
-    columnSpan: number
+    columnSpan: number,
+    outerCoord: number
 };
 
 type RepeatItem = {
@@ -198,20 +199,22 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 const repeating: RepeatItem[] = [];
                                 let subMatch: RegExpMatchArray | null;
                                 while ((subMatch = CACHE_PATTERN.REPEAT.exec(match[3])) !== null) {
+                                    const subPattern = subMatch[1];
                                     let namedMatch: RegExpMatchArray | null;
-                                    if ((namedMatch = CACHE_PATTERN.CELL_NAMED.exec(subMatch[1])) !== null) {
-                                        if (name[namedMatch[1]] === undefined) {
-                                            name[namedMatch[1]] = [];
+                                    if ((namedMatch = CACHE_PATTERN.CELL_NAMED.exec(subPattern)) !== null) {
+                                        const subName = namedMatch[1];
+                                        if (name[subName] === undefined) {
+                                            name[subName] = [];
                                         }
-                                        repeating.push({ name: namedMatch[1] });
+                                        repeating.push({ name: subName });
                                     }
-                                    else if ((namedMatch = CACHE_PATTERN.CELL_MINMAX.exec(subMatch[1])) !== null) {
+                                    else if ((namedMatch = CACHE_PATTERN.CELL_MINMAX.exec(subPattern)) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[2]), unitMin: convertLength(node, namedMatch[1]) });
                                     }
-                                    else if ((namedMatch = CACHE_PATTERN.CELL_FIT_CONTENT.exec(subMatch[1])) !== null) {
+                                    else if ((namedMatch = CACHE_PATTERN.CELL_FIT_CONTENT.exec(subPattern)) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[1]), unitMin: '0px' });
                                     }
-                                    else if ((namedMatch = CACHE_PATTERN.CELL_UNIT.exec(subMatch[1])) !== null) {
+                                    else if ((namedMatch = CACHE_PATTERN.CELL_UNIT.exec(subPattern)) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[0]) });
                                     }
                                 }
@@ -402,6 +405,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             });
             node.each((item, index) => {
+                const templateAreas = mainData.templateAreas;
                 const positions = [
                     item.css('gridRowStart'),
                     item.css('gridColumnStart'),
@@ -411,10 +415,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const placement: number[] = [];
                 let rowSpan = 1;
                 let columnSpan = 1;
-                if (Object.keys(mainData.templateAreas).length) {
+                if (Object.keys(templateAreas).length) {
                     for (let i = 0; i < 4; i++) {
                         const name = positions[i];
-                        let template = mainData.templateAreas[name];
+                        let template = templateAreas[name];
                         if (template) {
                             switch (i) {
                                 case 0:
@@ -434,7 +438,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         else {
                             const match = CACHE_PATTERN.STARTEND.exec(name);
                             if (match) {
-                                template = mainData.templateAreas[match[1]];
+                                template = templateAreas[match[1]];
                                 if (template) {
                                     if (match[2] === 'start') {
                                         switch (i) {
@@ -529,6 +533,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 layout[index] = <GridLayout> {
+                    outerCoord: horizontal ? item.linear.top : item.linear.left,
                     placement,
                     rowSpan,
                     columnSpan
@@ -537,14 +542,22 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         {
             const data = horizontal ? mainData.column : mainData.row;
+            const outerCoord = horizontal ? node.box.top : node.box.left;
             let unit = data.unit;
             let length = Math.max(1, unit.length);
+            let outerCount = 0;
             for (const item of layout) {
                 if (item) {
-                    length = Math.max(length, horizontal ? item.columnSpan : item.rowSpan, item.placement[horizontal ? 1 : 0] || 0, (item.placement[horizontal ? 3 : 2] || 0) - 1);
+                    const placement = item.placement;
+                    if (placement.length) {
+                        length = Math.max(length, horizontal ? item.columnSpan : item.rowSpan, placement[horizontal ? 1 : 0] || 0, (placement[horizontal ? 3 : 2] || 0) - 1);
+                    }
+                    if ($util.withinRange(item.outerCoord, outerCoord)) {
+                        outerCount += horizontal ? item.columnSpan : item.rowSpan;
+                    }
                 }
             }
-            data.length = length;
+            data.length = Math.max(length, outerCount);
             if (data.autoFill || data.autoFit) {
                 if (unit.length === 0) {
                     unit.push('auto');
@@ -565,11 +578,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     fr += parseFloat(px);
                 }
             }
-            if (percent > 0 && fr > 0) {
+            if (percent < 1 && fr > 0) {
                 const lengthA = unit.length;
                 for (let i = 0; i < lengthA; i++) {
-                    if (unit[i].endsWith('fr')) {
-                        unit[i] = percent * (parseFloat(unit[i]) / fr) + 'fr';
+                    const px = unit[i];
+                    if (px.endsWith('fr')) {
+                        unit[i] = percent * (parseFloat(px) / fr) + 'fr';
                     }
                 }
             }

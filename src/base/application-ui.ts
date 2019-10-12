@@ -1,4 +1,4 @@
-import { AppSessionUI, FileAsset, NodeTemplate, UserUISettings } from '../../@types/base/application';
+import { AppSessionUI, FileAsset, NodeTemplate, UserUISettings, ControllerUISettings, LayoutResult } from '../../@types/base/application';
 
 import Application from './application';
 import NodeList from './nodelist';
@@ -72,6 +72,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public abstract userSettings: UserUISettings;
 
     private readonly _layouts: FileAsset[] = [];
+    private readonly _localSettings!: ControllerUISettings;
     private readonly _excluded!: Set<string>;
 
     protected constructor(
@@ -83,7 +84,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     {
         super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
         NodeConstructor = nodeConstructor;
-        this._excluded = this.controllerHandler.localSettings.unsupported.excluded;
+        this._localSettings = this.controllerHandler.localSettings;
+        this._excluded = this._localSettings.unsupported.excluded;
     }
 
     public finalize() {
@@ -124,7 +126,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         for (const ext of this.extensions) {
             ext.beforeCascade();
         }
-        const baseTemplate = controller.localSettings.layout.baseTemplate;
+        const baseTemplate = this._localSettings.layout.baseTemplate;
         for (const layout of this.session.documentRoot) {
             const node = layout.node;
             if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.naturalChildren.every(item => item.documentRoot)) {
@@ -236,7 +238,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
         if ($util.isString(content)) {
             const layout: FileAsset = {
-                pathname: pathname ? $util.trimString(pathname, '/') : this.controllerHandler.localSettings.layout.pathName,
+                pathname: pathname ? $util.trimString(pathname, '/') : this._localSettings.layout.pathName,
                 filename,
                 content,
                 index
@@ -441,7 +443,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public afterCreateCache(element: HTMLElement) {
         const dataset = element.dataset;
-        const filename = dataset.filename && dataset.filename.replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '') || element.id || 'document_' + this.length;
+        const filename = dataset.filename && dataset.filename.replace(new RegExp(`\.${this._localSettings.layout.fileExtension}$`), '') || element.id || 'document_' + this.length;
         const iteration = (dataset.iteration ? $util.convertInt(dataset.iteration) : -1) + 1;
         dataset.iteration = iteration.toString();
         dataset.layoutName = $util.convertWord(iteration > 1 ? filename + '_' + iteration : filename, true);
@@ -721,7 +723,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         if (value.startsWith('url(')) {
                             content = $css.resolveURL(value);
                             const format = $util.fromLastIndexOf(content, '.').toLowerCase();
-                            const imageFormat = this.controllerHandler.localSettings.supported.imageFormat;
+                            const imageFormat = this._localSettings.supported.imageFormat;
                             if (imageFormat === '*' || imageFormat.includes(format)) {
                                 tagName = 'img';
                             }
@@ -918,9 +920,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setBaseLayout(layoutName: string) {
-        const controller = this.controllerHandler;
-        const processing = this.processing;
-        const session = this.session;
+        const { processing, session } = this;
         const CACHE = processing.cache;
         const documentRoot = processing.node as T;
         const extensionMap = this.session.extensionMap;
@@ -1128,11 +1128,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         let layout: LayoutUI<T> | undefined;
                         let segEnd: T | undefined;
                         if (horizontal.length > 1) {
-                            layout = controller.processTraverseHorizontal(new LayoutUI(parentY, nodeY, 0, 0, horizontal), axisY);
+                            layout = this.controllerHandler.processTraverseHorizontal(new LayoutUI(parentY, nodeY, 0, 0, horizontal), axisY);
                             segEnd = horizontal[horizontal.length - 1];
                         }
                         else if (vertical.length > 1) {
-                            layout = controller.processTraverseVertical(new LayoutUI(parentY, nodeY, 0, 0, vertical), axisY);
+                            layout = this.controllerHandler.processTraverseVertical(new LayoutUI(parentY, nodeY, 0, 0, vertical), axisY);
                             segEnd = vertical[vertical.length - 1];
                             if (segEnd.horizontalAligned && segEnd !== axisY[length - 1]) {
                                 segEnd.addAlign(NODE_ALIGNMENT.EXTENDABLE);
@@ -1177,9 +1177,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (renderAs && outputAs) {
                                         this.addLayoutTemplate(parentY, renderAs, outputAs);
                                     }
-                                    if (result.parent) {
-                                        parentY = result.parent;
-                                    }
+                                    parentY = result.parent || parentY;
                                     next = result.next === true;
                                     if (result.complete || next) {
                                         break;
@@ -1215,9 +1213,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             if (renderAs && outputAs) {
                                                 this.addLayoutTemplate(parentY, renderAs, outputAs);
                                             }
-                                            if (result.parent) {
-                                                parentY = result.parent as T;
-                                            }
+                                            parentY = result.parent || parentY;
                                             if (output && include !== false || include) {
                                                 if (nodeY.renderExtension === undefined) {
                                                     nodeY.renderExtension = [];
@@ -1244,8 +1240,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
                         let layout = this.createLayoutControl(parentY, nodeY);
                         if (layout.containerType === 0) {
-                            const result = nodeY.length ? controller.processUnknownParent(layout) : controller.processUnknownChild(layout);
-                            if (result.next === true) {
+                            const result: LayoutResult<T> = nodeY.length ? this.controllerHandler.processUnknownParent(layout) : this.controllerHandler.processUnknownChild(layout);
+                            if (result.next) {
                                 continue;
                             }
                             layout = result.layout;
@@ -1256,7 +1252,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         for (const node of CACHE) {
-            if (node.documentRoot && node.rendered) {
+            if (node.documentRoot && node.renderParent) {
                 session.documentRoot.push({ node, layoutName: node === documentRoot ? layoutName : '' });
             }
         }
@@ -1670,7 +1666,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (invalid < inlineAbove.length) {
                     const offset = floatPosition - parent.box.left - marginLeft;
                     if (offset > 0) {
-                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
+                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this._localSettings.deviations.textMarginBoundarySize : 0));
                     }
                 }
             }
@@ -1699,7 +1695,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (invalid < inlineAbove.length) {
                     const offset = parent.box.right - floatPosition - marginRight;
                     if (offset > 0) {
-                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this.controllerHandler.localSettings.deviations.textMarginBoundarySize : 0));
+                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this._localSettings.deviations.textMarginBoundarySize : 0));
                     }
                 }
             }
@@ -1734,7 +1730,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     get rendered() {
-        return this.session.cache.filter((node: T) => node.visible && node.rendered);
+        return this.session.cache.filter((node: T) => node.visible && node.renderParent !== undefined);
     }
 
     get nextId() {

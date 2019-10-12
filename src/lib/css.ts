@@ -646,7 +646,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const source = <HTMLSourceElement> children[i];
-            if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || isString(source.type) && mimeType && mimeType.includes((source.type.split('/').pop() as string).toLowerCase()))) {
+            if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || mimeType && isString(source.type) && mimeType.includes((source.type.split('/').pop() as string).toLowerCase()))) {
                 ({ srcset, sizes } = source);
                 break;
             }
@@ -655,7 +655,6 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     if (srcset !== '') {
         const filepath = src.substring(0, src.lastIndexOf('/') + 1);
         const pattern = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
-        let baseWidth = NaN;
         for (const value of srcset.split(XML.SEPARATOR)) {
             const match = pattern.exec(value.trim());
             if (match) {
@@ -664,13 +663,6 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                 switch (match[3]) {
                     case 'w':
                         width = parseFloat(match[2]);
-                        if (isNaN(baseWidth)) {
-                            baseWidth = width;
-                            pixelRatio = 1;
-                        }
-                        else {
-                            pixelRatio = width / baseWidth;
-                        }
                         break;
                     case 'x':
                         pixelRatio = parseFloat(match[2]);
@@ -742,15 +734,21 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                     index = i;
                 }
             }
-            if (index > 0) {
+            if (index === 0) {
+                result[0].pixelRatio = 1;
+                result[0].actualWidth = width;
+            }
+            else if (index > 0) {
                 const selected = result.splice(index, 1)[0];
                 selected.pixelRatio = 1;
                 selected.actualWidth = width;
                 result.unshift(selected);
             }
-            else if (index === 0) {
-                result[0].pixelRatio = 1;
-                result[0].actualWidth = width;
+            for (let i = 1; i < length; i++) {
+                const item = result[i];
+                if (item.pixelRatio === 0) {
+                    item.pixelRatio = item.width / width;
+                }
             }
         }
     }

@@ -6,9 +6,10 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
 
     public include(ext: squared.base.Extension<T>) {
         const application = this.application;
-        const index = application.extensions.findIndex(item => item.name === ext.name);
+        const extensions = application.extensions;
+        const index = extensions.findIndex(item => item.name === ext.name);
         if (index !== -1) {
-            application.extensions[index] = ext;
+            extensions[index] = ext;
             return true;
         }
         else {
@@ -25,7 +26,7 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
             }
             if ((framework === 0 || $util.hasBit(framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
                 ext.application = application;
-                application.extensions.push(ext);
+                extensions.push(ext);
                 return true;
             }
         }

@@ -26,8 +26,9 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         for (const name in Resource.ASSETS) {
             Resource.ASSETS[name].clear();
         }
-        if (this.fileHandler) {
-            this.fileHandler.reset();
+        const fileHandler = this.fileHandler;
+        if (fileHandler) {
+            fileHandler.reset();
         }
     }
 
@@ -69,7 +70,6 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public addRawData(dataURI: string, mimeType: string, encoding: string, content: string, width = 0, height = 0) {
         mimeType = mimeType.toLowerCase();
         encoding = encoding.toLowerCase();
-        const imageFormat = this.controllerSettings.supported.imageFormat;
         let base64: string | undefined;
         if (encoding === 'base64') {
             base64 = content;
@@ -80,8 +80,9 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         else {
             content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
         }
-        const getFileName = () => $util.buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
+        const imageFormat = this.controllerSettings.supported.imageFormat;
         const pathname = dataURI.startsWith(location.origin) ? dataURI.substring(location.origin.length + 1, dataURI.lastIndexOf('/')) : '';
+        const getFileName = () => $util.buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
         let filename: string | undefined;
         if (imageFormat === '*') {
             if (dataURI.startsWith(location.origin)) {

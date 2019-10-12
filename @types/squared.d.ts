@@ -387,6 +387,7 @@ declare namespace base {
         readonly inlineFlow: boolean;
         readonly inline: boolean;
         readonly inlineStatic: boolean;
+        readonly inlineHorizontal: boolean;
         readonly inlineVertical: boolean;
         readonly plainText: boolean;
         readonly styleText: boolean;
