@@ -454,7 +454,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'auto':
                 case 'none':
                 case 'initial':
-                case 'unset':
                 case 'normal':
                 case 'transparent':
                 case 'rgba(0, 0, 0, 0)':
@@ -1385,10 +1384,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             }
                             break;
                     }
-                }
-                else {
                     return 0;
                 }
+                break;
         }
         const result = this.parseUnit(this.css(attr));
         if (!margin) {
@@ -1996,7 +1994,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.inline;
         if (result === undefined) {
             const value = this.display;
-            result = value === 'inline' || (value === 'initial' || value === 'unset') && !$dom.ELEMENT_BLOCK.includes(this.tagName);
+            result = value === 'inline' || value === 'initial' && !$dom.ELEMENT_BLOCK.includes(this.tagName);
             this._cached.inline = result;
         }
         return result;
@@ -2260,7 +2258,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get baseline() {
         let result = this._cached.baseline;
         if (result === undefined) {
-            result = this.pageFlow && !this.floating && this.cssAny('verticalAlign', 'baseline', 'initial', '0px', '0%', 'unset');
+            result = this.pageFlow && !this.floating && this.cssAny('verticalAlign', 'baseline', 'initial', '0px', '0%');
             this._cached.baseline = result;
         }
         return result;
@@ -2326,7 +2324,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             result = this.css('backgroundColor');
             switch (result) {
                 case 'initial':
-                case 'unset':
                 case 'rgba(0, 0, 0, 0)':
                 case 'transparent':
                     result = '';
@@ -2422,7 +2419,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (!this.pageFlow) {
                 while (result && result.id !== 0) {
                     const position = result.cssInitial('position', false, true);
-                    if (result.documentBody || position !== 'static' && position !== 'initial' && position !== 'unset') {
+                    if (result.documentBody || position !== 'static' && position !== 'initial') {
                         break;
                     }
                     result = result.actualParent;

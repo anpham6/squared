@@ -1387,16 +1387,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    get leftTopAxis() {
-        let result = this._cached.leftTopAxis;
-        if (result === undefined) {
-            const value = this.cssInitial('position');
-            result = value === 'absolute' && this.absoluteParent === this.documentParent || value === 'fixed';
-            this._cached.leftTopAxis = result;
-        }
-        return result;
-    }
-
     set fontSize(value) {
         this._fontSize = value;
     }

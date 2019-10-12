@@ -524,7 +524,6 @@ declare namespace base {
         readonly textEmpty: boolean;
         readonly preserveWhiteSpace: boolean;
         readonly baselineHeight: number;
-        readonly leftTopAxis: boolean;
         readonly layoutHorizontal: boolean;
         readonly layoutVertical: boolean;
         readonly onlyChild: boolean;

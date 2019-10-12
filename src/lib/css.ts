@@ -647,7 +647,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         for (let i = 0; i < length; i++) {
             const source = <HTMLSourceElement> children[i];
             if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || isString(source.type) && mimeType && mimeType.includes((source.type.split('/').pop() as string).toLowerCase()))) {
-                ({ srcset, sizes} = source);
+                ({ srcset, sizes } = source);
                 break;
             }
         }
@@ -655,6 +655,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     if (srcset !== '') {
         const filepath = src.substring(0, src.lastIndexOf('/') + 1);
         const pattern = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
+        let baseWidth = NaN;
         for (const value of srcset.split(XML.SEPARATOR)) {
             const match = pattern.exec(value.trim());
             if (match) {
@@ -663,6 +664,13 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                 switch (match[3]) {
                     case 'w':
                         width = parseFloat(match[2]);
+                        if (isNaN(baseWidth)) {
+                            baseWidth = width;
+                            pixelRatio = 1;
+                        }
+                        else {
+                            pixelRatio = width / baseWidth;
+                        }
                         break;
                     case 'x':
                         pixelRatio = parseFloat(match[2]);

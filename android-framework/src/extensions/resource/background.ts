@@ -266,11 +266,10 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
 }
 
 function checkBackgroundPosition(value: string, adjacent: string, fallback: string) {
-    const initial = value === 'initial' || value === 'unset';
     if (value.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
-        return $regex.CHAR.LOWERCASE.test(value) ? (initial ? fallback : value) + ' 0px' : fallback + ' ' + value;
+        return $regex.CHAR.LOWERCASE.test(value) ? (value === 'initial' ? fallback : value) + ' 0px' : fallback + ' ' + value;
     }
-    else if (initial) {
+    else if (value === 'initial') {
         return '0px';
     }
     return value;
@@ -285,8 +284,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     const hasStop = api >= BUILD_ANDROID.LOLLIPOP;
     switch (type) {
         case 'conic': {
-            const conic = <ConicGradient> gradient;
-            const center = conic.center;
+            const center = (<ConicGradient> gradient).center;
             result.type = 'sweep';
             if (hasStop) {
                 result.centerX = (center.left * 2).toString();
@@ -299,27 +297,25 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
             break;
         }
         case 'radial': {
-            const radial = <RadialGradient> gradient;
-            const center = radial.center;
+            const { center, radius } = <RadialGradient> gradient;
             if (hasStop) {
-                result.gradientRadius = radial.radius.toString();
+                result.gradientRadius = radius.toString();
                 result.centerX = center.left.toString();
                 result.centerY = center.top.toString();
             }
             else {
-                result.gradientRadius = $css.formatPX(radial.radius);
+                result.gradientRadius = $css.formatPX(radius);
                 result.centerX = $css.formatPercent(center.leftAsPercent);
                 result.centerY = $css.formatPercent(center.topAsPercent);
             }
             break;
         }
         case 'linear': {
-            const linear = <LinearGradient> gradient;
-            const { width, height } = <Dimension> linear.dimension;
-            const angle = linear.angle;
-            let positionX = linear.angleExtent.x;
-            let positionY = linear.angleExtent.y;
+            const { angle, angleExtent, dimension } = <LinearGradient> gradient;
+            let positionX = angleExtent.x;
+            let positionY = angleExtent.y;
             if (angle <= 90) {
+                const height = (<Dimension> dimension).height;
                 positionY += height;
                 result.startX = '0';
                 result.startY = height.toString();
@@ -329,11 +325,13 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
                 result.startY = '0';
             }
             else if (angle <= 270) {
+                const width = (<Dimension> dimension).width;
                 positionX += width;
                 result.startX = width.toString();
                 result.startY = '0';
             }
             else {
+                const { width, height } = <Dimension> dimension;
                 positionX += width;
                 positionY += height;
                 result.startX = width.toString();
@@ -349,10 +347,11 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
         result.item = convertColorStops(colorStops);
     }
     else {
+        const length = colorStops.length;
         result.startColor = getColorValue(colorStops[0].color);
-        result.endColor = getColorValue(colorStops[colorStops.length - 1].color);
-        if (colorStops.length > 2) {
-            result.centerColor = getColorValue(colorStops[Math.floor(colorStops.length / 2)].color);
+        result.endColor = getColorValue(colorStops[length - 1].color);
+        if (length > 2) {
+            result.centerColor = getColorValue(colorStops[Math.floor(length / 2)].color);
         }
     }
     return result;
@@ -1123,15 +1122,19 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         case 'auto':
                         case 'auto auto':
                         case 'initial':
+                            resizable = false;
                         case 'contain':
                             break;
                         case '100%':
                         case '100% 100%':
                         case '100% auto':
                         case 'auto 100%':
-                            gravity = 'fill';
-                            gravityX = 'fill_horizontal';
-                            gravityY = 'fill_vertical';
+                            if (boundsWidth < dimenWidth && boundsHeight < dimenHeight) {
+                                gravity = 'fill';
+                                gravityX = 'fill_horizontal';
+                                gravityY = 'fill_vertical';
+                            }
+                            resizable = false;
                         case 'cover':
                             tileMode = '';
                             tileModeX = '';
@@ -1349,37 +1352,46 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                 }
                             }
-                            if (resizable && !svg && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE)) {
-                                let fillX = false;
-                                let fillY = false;
-                                if (boundsWidth < dimenWidth && (!node.has('width', $e.CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) && !(node.blockStatic && centerHorizontally) || !node.pageFlow) && node.renderParent && !node.renderParent.tableElement) {
-                                    width = boundsWidth - (node.contentBox ? node.contentBoxWidth : 0);
-                                    fillX = true;
-                                    if (tileMode !== 'disabled') {
-                                        switch (position.horizontal) {
-                                            case 'left':
-                                            case '0px':
-                                                tileModeX = 'repeat';
-                                                break;
+                            if (!svg && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE)) {
+                                if (resizable) {
+                                    let fillX = false;
+                                    let fillY = false;
+                                    if (boundsWidth < dimenWidth && (!node.has('width', $e.CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) && !(node.blockStatic && centerHorizontally) || !node.pageFlow) && node.renderParent && !node.renderParent.tableElement) {
+                                        width = boundsWidth - (node.contentBox ? node.contentBoxWidth : 0);
+                                        fillX = true;
+                                        if (tileMode !== 'disabled') {
+                                            switch (position.horizontal) {
+                                                case 'left':
+                                                case '0px':
+                                                    tileModeX = 'repeat';
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    if (boundsHeight < dimenHeight && (!node.has('height', $e.CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) || !node.pageFlow)) {
+                                        height = boundsHeight - (node.contentBox ? node.contentBoxHeight : 0);
+                                        fillY = true;
+                                    }
+                                    if (fillX || fillY) {
+                                        if (gravityAlign !== '') {
+                                            gravityAlign += '|';
+                                        }
+                                        if (fillX && fillY) {
+                                            gravityAlign += 'fill';
+                                        }
+                                        else if (fillX) {
+                                            gravityAlign += 'fill_horizontal';
+                                        }
+                                        else {
+                                            gravityAlign += 'fill_vertical';
                                         }
                                     }
                                 }
-                                if (boundsHeight < dimenHeight && (!node.has('height', $e.CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) || !node.pageFlow)) {
+                                else if (boundsHeight < dimenHeight) {
                                     height = boundsHeight - (node.contentBox ? node.contentBoxHeight : 0);
-                                    fillY = true;
-                                }
-                                if (fillX || fillY) {
-                                    if (gravityAlign !== '') {
-                                        gravityAlign += '|';
-                                    }
-                                    if (fillX && fillY) {
-                                        gravityAlign += 'fill';
-                                    }
-                                    else if (fillX) {
-                                        gravityAlign += 'fill_horizontal';
-                                    }
-                                    else {
-                                        gravityAlign += 'fill_vertical';
+                                    gravityAlign = '';
+                                    if (gravityY === '') {
+                                        gravityY = 'top';
                                     }
                                 }
                             }
@@ -1438,7 +1450,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             gravityY = '';
                         }
                     }
-                    if ((node.documentBody || tileMode === 'repeat' || tileModeX !== '' || tileModeY !== '' || gravityAlign) && !svg) {
+                    if ((node.documentBody || tileMode === 'repeat' || tileModeX !== '' || tileModeY !== '' || gravityAlign || !resizable && height > 0) && !svg) {
                         if (gravityAlign) {
                             imageData.gravity = gravityAlign;
                         }

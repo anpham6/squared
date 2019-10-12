@@ -158,7 +158,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
     public static addImage(images: StringMap, prefix = '') {
         const mdpi = images.mdpi;
         if (mdpi) {
-            if (CACHE_IMAGE[mdpi]) {
+            if (CACHE_IMAGE[mdpi] && Object.keys(images).length === 1) {
                 return CACHE_IMAGE[mdpi];
             }
             const src = $util.fromLastIndexOf(mdpi, '/');

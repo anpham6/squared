@@ -202,6 +202,19 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             );
             layout.rowCount = mainData.row.length;
             layout.columnCount = mainData.column.length;
+            for (const image of node.cascade(item => item.imageElement) as T[]) {
+                const asset = this.resource.getImage(image.src);
+                if (asset) {
+                    if (!image.hasPX('width', false) && asset.width > image.bounds.width) {
+                        image.css('width', $css.formatPX(image.bounds.width), true);
+                        image.android('adjustViewBounds', 'true');
+                    }
+                    else if (!image.hasPX('height', false) && asset.height > image.bounds.height) {
+                        image.css('height', $css.formatPX(image.bounds.height), true);
+                        image.android('adjustViewBounds', 'true');
+                    }
+                }
+            }
             return {
                 output: this.application.renderNode(layout),
                 complete: true
@@ -432,6 +445,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 );
             }
             const target = renderAs || node;
+            const row = mainData.row;
             applyLayout(target, true, 'width');
             if (!target.hasPX('width')) {
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
@@ -451,7 +465,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 return false;
             }
-            const row = mainData.row;
             if (mainData.alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.initial.bounds && node.bounds.height > node.initial.bounds.height && checkRowSpan()) {
                 target.css('minHeight', $css.formatPX(node.actualHeight), true);
             }

@@ -801,7 +801,22 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public sortRenderPosition(parent: T, templates: NodeXmlTemplate<T>[]) {
-        if (parent.layoutConstraint && templates.some(item => !item.node.pageFlow || item.node.zIndex !== 0)) {
+        if (parent.layoutRelative && templates.some(item => item.node.zIndex !== 0)) {
+            templates.sort((a, b) => {
+                const indexA = a.node.zIndex;
+                const indexB = b.node.zIndex;
+                if (indexA === indexB) {
+                    return 0;
+                }
+                else if (indexA > indexB) {
+                    return 1;
+                }
+                else {
+                    return -1;
+                }
+            });
+        }
+        else if (parent.layoutConstraint && templates.some(item => !item.node.pageFlow || item.node.zIndex !== 0)) {
             const below: NodeXmlTemplate<T>[] = [];
             const middle: NodeXmlTemplate<T>[] = [];
             const above: NodeXmlTemplate<T>[] = [];
@@ -891,7 +906,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if ((floated.size === 0 || floated.size === 1 && floated.has('left')) && layout.node.lineHeight === 0 && layout.singleRowAligned) {
             const { fontSize, lineHeight } = layout.children[0];
             for (const node of layout) {
-                if (!(node.naturalChild && node.length === 0 && !node.inputElement && !node.positionRelative && !node.blockVertical && !node.positionAuto && (lineHeight === 0 || node.lineHeight === lineHeight && node.fontSize === fontSize) && node.tagName !== 'WBR' && (node.baseline || node.cssAny('verticalAlign', 'top', 'middle', 'bottom')))) {
+                if (!(node.naturalChild && node.length === 0 && !node.inputElement && !node.positionRelative && !node.blockVertical && !node.positionAuto && node.zIndex === 0 && (lineHeight === 0 || node.lineHeight === lineHeight && node.fontSize === fontSize) && node.tagName !== 'WBR' && (node.baseline || node.cssAny('verticalAlign', 'top', 'middle', 'bottom')))) {
                     return false;
                 }
             }
@@ -1003,10 +1018,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     for (const item of children) {
                         if (!item.anchored) {
                             if (item.outerWrapper) {
-                                if (item.constraint.horizontal) {
+                                const { horizontal, vertical } = item.constraint;
+                                if (horizontal) {
                                     item.anchorParent(STRING_ANDROID.HORIZONTAL);
                                 }
-                                if (item.constraint.vertical) {
+                                if (vertical) {
                                     item.anchorParent(STRING_ANDROID.VERTICAL);
                                 }
                             }
@@ -1067,9 +1083,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public renderNode(layout: squared.base.LayoutUI<T>) {
-        const node = layout.node;
-        let controlName = View.getControlName(layout.containerType, node.localSettings.targetAPI);
-        node.setControlType(controlName, layout.containerType);
+        const { containerType, node } = layout;
+        let controlName = View.getControlName(containerType, node.localSettings.targetAPI);
+        node.setControlType(controlName, containerType);
         node.addAlign(layout.alignmentType);
         let parent = layout.parent;
         let target = !node.dataset.use ? node.dataset.target : undefined;

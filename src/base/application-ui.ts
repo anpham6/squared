@@ -72,6 +72,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public abstract userSettings: UserUISettings;
 
     private readonly _layouts: FileAsset[] = [];
+    private readonly _excluded!: Set<string>;
 
     protected constructor(
         framework: number,
@@ -82,6 +83,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     {
         super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
         NodeConstructor = nodeConstructor;
+        this._excluded = this.controllerHandler.localSettings.unsupported.excluded;
     }
 
     public finalize() {
@@ -175,28 +177,29 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public conditionElement(element: HTMLElement) {
-        const controller = this.controllerHandler;
-        if (!controller.localSettings.unsupported.excluded.has(element.tagName)) {
-            if (controller.visibleElement(element) || this._cascadeAll || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value))) {
+        if (!this._excluded.has(element.tagName)) {
+            if (this.controllerHandler.visibleElement(element) || this._cascadeAll || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value))) {
                 return true;
             }
             else {
+                switch ($css.getStyle(element).position) {
+                    case 'absolute':
+                    case 'fixed':
+                        return false;
+                }
                 let current = element.parentElement;
-                let valid = true;
                 while (current) {
                     if ($css.getStyle(current).display === 'none') {
-                        valid = false;
-                        break;
+                        return false;
                     }
                     current = current.parentElement;
                 }
-                if (valid) {
-                    const children = element.children;
-                    const length = children.length;
-                    for (let i = 0; i < length; i++) {
-                        if (controller.visibleElement(<Element> children[i])) {
-                            return true;
-                        }
+                const controller = this.controllerHandler;
+                const children = element.children;
+                const length = children.length;
+                for (let i = 0; i < length; i++) {
+                    if (controller.visibleElement(<Element> children[i])) {
+                        return true;
                     }
                 }
                 return false;
@@ -274,15 +277,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (template) {
             if (!node.renderExclude) {
                 if (node.renderParent) {
+                    const renderChildren = parent.renderChildren;
                     if (parent.renderTemplates === undefined) {
                         parent.renderTemplates = [];
                     }
-                    if (index >= 0 && index < parent.renderChildren.length) {
-                        parent.renderChildren.splice(index, 0, node);
+                    if (index >= 0 && index < renderChildren.length) {
+                        renderChildren.splice(index, 0, node);
                         parent.renderTemplates.splice(index, 0, template);
                     }
                     else {
-                        parent.renderChildren.push(node);
+                        renderChildren.push(node);
                         parent.renderTemplates.push(template);
                     }
                 }
@@ -940,19 +944,22 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let maxDepth = 0;
         for (const node of CACHE) {
             if (node.visible && node.length) {
-                setMapY(node.depth, node.id, node);
-                maxDepth = Math.max(node.depth, maxDepth);
+                const depth = node.depth;
+                setMapY(depth, node.id, node);
+                maxDepth = Math.max(depth, maxDepth);
             }
         }
         for (let i = 0; i < maxDepth; i++) {
             mapY.set((i * -1) - 2, new Map<number, T>());
         }
         CACHE.afterAppend = (node: T) => {
-            deleteMapY(node.id);
-            setMapY((node.depth * -1) - 2, node.id, node);
+            const id = node.id;
+            deleteMapY(id);
+            setMapY((node.depth * -1) - 2, id, node);
             for (const item of node.cascade()) {
-                deleteMapY(item.id);
-                setMapY((item.depth * -1) - 2, item.id, item as T);
+                const itemId = item.id;
+                deleteMapY(itemId);
+                setMapY((item.depth * -1) - 2, itemId, item as T);
             }
         };
         for (const ext of this.extensions) {
@@ -963,10 +970,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (parent.length === 0) {
                     continue;
                 }
-                const axisY = parent.duplicate() as T[];
                 const floatContainer = parent.floatContainer;
-                const length = axisY.length;
                 const renderExtension = <ExtensionUI<T>[] | undefined> parent.renderExtension;
+                const axisY = parent.duplicate() as T[];
+                const length = axisY.length;
                 let cleared!: Map<T, string>;
                 if (floatContainer) {
                     cleared = <Map<T, string>> NodeUI.linearData(parent.naturalElements as T[], true).cleared;
@@ -1105,8 +1112,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     }
                                 }
                                 else if (item.positionAuto) {
-                                    if (vertical.length) {
-                                        if (vertical[vertical.length - 1].blockStatic) {
+                                    const lengthA = vertical.length;
+                                    if (lengthA) {
+                                        if (vertical[lengthA - 1].blockStatic) {
                                             vertical.push(item);
                                         }
                                         break;
