@@ -282,12 +282,12 @@ function constraintPercentValue(node: View, dimension: string, horizontal: boole
             if (node.imageElement) {
                 const element = <HTMLImageElement> node.element;
                 if (element && element.naturalWidth > 0 && element.naturalHeight > 0) {
-                    const opposingUnit = (node.bounds[dimension] / (horizontal ? element.naturalWidth : element.naturalHeight)) * (horizontal ? element.naturalHeight : element.naturalWidth);
+                    const opposingUnit = $css.formatPX((node.bounds[dimension] / (horizontal ? element.naturalWidth : element.naturalHeight)) * (horizontal ? element.naturalHeight : element.naturalWidth));
                     if (horizontal) {
-                        node.setLayoutHeight($css.formatPX(opposingUnit), false);
+                        node.setLayoutHeight(opposingUnit, false);
                     }
                     else {
-                        node.setLayoutWidth($css.formatPX(opposingUnit), false);
+                        node.setLayoutWidth(opposingUnit, false);
                     }
                 }
             }
@@ -334,8 +334,14 @@ function constraintPercentHeight(node: View, opposing: boolean) {
             constraintPercentValue(node, 'height', false, opposing);
         }
     }
-    else if ($css.isLength(node.cssInitial('height'), true)) {
-        node.setLayoutHeight($css.formatPX(node.bounds.height), false);
+    else {
+        const height = node.cssInitial('height');
+        if (height === '100%' && node.alignParent('top') && node.alignParent('bottom')) {
+            node.setLayoutHeight('0px', false);
+        }
+        else if ($css.isLength(height, true)) {
+            node.setLayoutHeight($css.formatPX(node.bounds.height), false);
+        }
     }
 }
 
@@ -465,8 +471,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public static setFlexDimension<T extends View>(node: T, dimension: string) {
         const horizontal = dimension === 'width';
         const flexbox = node.flexbox;
-        const basis = flexbox.basis;
-        function setFlexGrow(value: string, grow: number) {
+        const { grow, basis } = flexbox;
+        function setFlexGrow(value: string) {
             node.android(horizontal ? 'layout_width' : 'layout_height', '0px');
             if (grow > 0) {
                 node.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', $math.truncate(grow, node.localSettings.floatPrecision));
@@ -485,14 +491,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         if ($css.isLength(basis)) {
-            setFlexGrow(node.convertPX(basis), flexbox.grow);
+            setFlexGrow(node.convertPX(basis));
         }
         else if (basis !== '0%' && $css.isPercent(basis)) {
             node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
-            setFlexGrow('', flexbox.grow);
+            setFlexGrow('');
         }
-        else if (flexbox.grow > 0 && (horizontal && node.documentParent.css('flexDirection') === 'column' || !horizontal && node.documentParent.css('flexDirection') === 'row')) {
-            setFlexGrow(node.hasPX(dimension, false) ? $css.formatPX(node[horizontal ? 'actualWidth' : 'actualHeight']) : '', flexbox.grow);
+        else if (grow > 0 && (horizontal && node.documentParent.css('flexDirection') === 'row' || !horizontal && node.documentParent.css('flexDirection') === 'column')) {
+            setFlexGrow(node.hasPX(dimension, false) ? $css.formatPX(node[horizontal ? 'actualWidth' : 'actualHeight']) : '');
         }
         else {
             if (horizontal) {
@@ -1504,16 +1510,32 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let LTRB: string;
                 let RBLT: string;
                 if (horizontal) {
-                    LT = !opposite ? 'left' : 'right';
-                    RB = !opposite ? 'right' : 'left';
-                    LTRB = !opposite ? $c.STRING_BASE.LEFT_RIGHT : $c.STRING_BASE.RIGHT_LEFT;
-                    RBLT = !opposite ? $c.STRING_BASE.RIGHT_LEFT : $c.STRING_BASE.LEFT_RIGHT;
+                    if (opposite) {
+                        LT = 'right';
+                        RB = 'left';
+                        LTRB = $c.STRING_BASE.RIGHT_LEFT;
+                        RBLT = $c.STRING_BASE.LEFT_RIGHT;
+                    }
+                    else {
+                        LT = 'left';
+                        RB = 'right';
+                        LTRB = $c.STRING_BASE.LEFT_RIGHT;
+                        RBLT = $c.STRING_BASE.RIGHT_LEFT;
+                    }
                 }
                 else {
-                    LT = !opposite ? 'top' : 'bottom';
-                    RB = !opposite ? 'bottom' : 'top';
-                    LTRB = !opposite ? $c.STRING_BASE.TOP_BOTTOM : $c.STRING_BASE.BOTTOM_TOP;
-                    RBLT = !opposite ? $c.STRING_BASE.BOTTOM_TOP : $c.STRING_BASE.TOP_BOTTOM;
+                    if (opposite) {
+                        LT = 'bottom';
+                        RB = 'top';
+                        LTRB = $c.STRING_BASE.BOTTOM_TOP;
+                        RBLT = $c.STRING_BASE.TOP_BOTTOM;
+                    }
+                    else {
+                        LT = 'top';
+                        RB = 'bottom';
+                        LTRB = $c.STRING_BASE.TOP_BOTTOM;
+                        RBLT = $c.STRING_BASE.BOTTOM_TOP;
+                    }
                 }
                 if ($util.withinRange(node.linear[LT], box[LT])) {
                     node.anchor(LT, 'parent', true);
@@ -2040,18 +2062,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         multiline = false;
                         item.multiline = false;
                     }
-                    let anchored = true;
-                    if (item.autoMargin.leftRight) {
-                        item.anchor('centerHorizontal', 'true');
-                    }
-                    else if (item.autoMargin.left) {
-                        item.anchor('right', 'true');
-                    }
-                    else if (item.autoMargin.right) {
-                        item.anchor('left', 'true');
-                    }
-                    else {
-                        anchored = false;
+                    let anchored = item.autoMargin.horizontal;
+                    if (anchored) {
+                        const autoMargin = item.autoMargin;
+                        if (autoMargin.leftRight) {
+                            item.anchor('centerHorizontal', 'true');
+                        }
+                        else if (autoMargin.left) {
+                            item.anchor('right', 'true');
+                        }
+                        else {
+                            item.anchor('left', 'true');
+                        }
                     }
                     if (previous) {
                         const items = rows[rows.length - 1];
@@ -2845,7 +2867,27 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     else {
                         if (previous) {
-                            chain.anchor(chainStart, previous.documentId);
+                            if (!previous.pageFlow && previous.positionAuto) {
+                                let found: T | undefined;
+                                for (let k = j - 2; k >= 0; k--) {
+                                    found = seg[k];
+                                    if (found.pageFlow) {
+                                        break;
+                                    }
+                                    else {
+                                        found = undefined;
+                                    }
+                                }
+                                if (found) {
+                                    chain.anchor(chainStart, found.documentId);
+                                }
+                                else {
+                                    chain.anchor(anchorStart, 'parent');
+                                }
+                            }
+                            else {
+                                chain.anchor(chainStart, previous.documentId);
+                            }
                         }
                         if (next) {
                             chain.anchor(chainEnd, next.documentId);

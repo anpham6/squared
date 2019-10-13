@@ -59,24 +59,29 @@ function isHorizontalAlign(value: string) {
 
 function setAutoMargin(node: T) {
     if (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerWrapped && node.innerWrapped.has('width', $e.CSS_UNIT.PERCENT, { not: '100%' })) {
+        const autoMargin = node.autoMargin;
         const alignment: string[] = [];
-        if (node.autoMargin.leftRight) {
-            alignment.push(STRING_ANDROID.CENTER_HORIZONTAL);
+        if (autoMargin.horizontal) {
+            if (autoMargin.leftRight) {
+                alignment.push(STRING_ANDROID.CENTER_HORIZONTAL);
+            }
+            else if (autoMargin.left) {
+                alignment.push('right');
+            }
+            else {
+                alignment.push('left');
+            }
         }
-        else if (node.autoMargin.left) {
-            alignment.push('right');
-        }
-        else if (node.autoMargin.right) {
-            alignment.push('left');
-        }
-        if (node.autoMargin.topBottom) {
-            alignment.push(STRING_ANDROID.CENTER_VERTICAL);
-        }
-        else if (node.autoMargin.top) {
-            alignment.push('bottom');
-        }
-        else if (node.autoMargin.bottom) {
-            alignment.push('top');
+        if (autoMargin.vertical) {
+            if (node.autoMargin.topBottom) {
+                alignment.push(STRING_ANDROID.CENTER_VERTICAL);
+            }
+            else if (node.autoMargin.top) {
+                alignment.push('bottom');
+            }
+            else {
+                alignment.push('top');
+            }
         }
         if (alignment.length) {
             const attr = node.outerWrapper === undefined && (node.blockWidth || !node.pageFlow) ? 'gravity' : 'layout_gravity';
@@ -220,6 +225,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         private _requireDocumentId = false;
         private _containerType = 0;
+        private _api = BUILD_ANDROID.LATEST;
         private __android: StringMap = {};
         private __app: StringMap = {};
 
@@ -238,7 +244,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public android(attr: string, value?: string, overwrite = true) {
             if (value) {
-                if (this.localSettings.targetAPI < BUILD_ANDROID.LATEST) {
+                if (this._api < BUILD_ANDROID.LATEST) {
                     const result: ObjectMap<string | boolean> = {};
                     if (!this.supported(attr, result)) {
                         return '';
@@ -462,20 +468,20 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public supported(attr: string, result = {}): boolean {
-            if (this.localSettings.targetAPI < BUILD_ANDROID.LATEST) {
+            if (this._api < BUILD_ANDROID.LATEST) {
                 const deprecated: ObjectMap<CustomizationResult> = DEPRECATED_ANDROID.android;
                 if (deprecated && typeof deprecated[attr] === 'function') {
-                    const valid = deprecated[attr](result, this.localSettings.targetAPI, this);
+                    const valid = deprecated[attr](result, this._api, this);
                     if (!valid || Object.keys(result).length) {
                         return valid;
                     }
                 }
-                for (let i = this.localSettings.targetAPI; i <= BUILD_ANDROID.LATEST; i++) {
+                for (let i = this._api; i <= BUILD_ANDROID.LATEST; i++) {
                     const version = API_ANDROID[i];
                     if (version && version.android[attr] !== undefined) {
                         const callback: CustomizationResult | boolean = version.android[attr];
                         if (typeof callback === 'function') {
-                            return callback(result, this.localSettings.targetAPI, this);
+                            return callback(result, this._api, this);
                         }
                         return callback;
                     }
@@ -506,7 +512,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public localizeString(value: string) {
             if (this.hasProcedure($e.NODE_PROCEDURE.LOCALIZATION)) {
-                return localizeString(value, this.localSettings.supportRTL, this.localSettings.targetAPI);
+                return localizeString(value, this.localSettings.supportRTL, this._api);
             }
             return value;
         }
@@ -731,26 +737,40 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         layoutWidth = $css.formatPX(this.actualWidth);
                     }
                     else {
-                        function checkParentWidth() {
+                        const checkParentWidth = () => {
                             let current = renderParent;
+                            let blockAll = true;
                             do {
                                 if (!current.blockWidth) {
+                                    blockAll = false;
                                     if (!current.inlineWidth) {
                                         layoutWidth = 'match_parent';
                                     }
+                                    else if (this.cssTry('display', 'inline-block')) {
+                                        if ((<Element> this.element).getBoundingClientRect().width < this.bounds.width) {
+                                            layoutWidth = 'match_parent';
+                                        }
+                                        this.cssFinally('display');
+                                    }
+                                    return;
+                                }
+                                else if (current.documentBody) {
                                     break;
                                 }
                                 current = current.renderParent as T;
                             }
                             while (current);
-                        }
+                            if (blockAll && (renderParent.layoutVertical || renderParent.layoutFrame || this.onlyChild || (renderParent.layoutRelative || renderParent.layoutConstraint) && this.alignSibling('left') === '' && this.alignSibling('right') === '')) {
+                                layoutWidth = 'match_parent';
+                            }
+                        };
                         if (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID)) {
-                            if (this.flexElement) {
-                                if (this.display === 'flex') {
-                                    layoutWidth = renderParent.layoutConstraint && this.css('flexDirection') === 'column' ? '0px' : 'match_parent';
+                            if (this.display === 'flex') {
+                                if (renderParent.layoutConstraint && this.css('flexDirection') === 'column') {
+                                    layoutWidth = '0px';
                                 }
-                                else {
-                                    layoutWidth = 'wrap_content';
+                                else if (!documentParent.layoutElement) {
+                                    layoutWidth = 'match_parent';
                                 }
                             }
                             else if (!documentParent.layoutElement) {
@@ -763,18 +783,19 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                 }
                                 else if (this.alignParent('left') && this.alignParent('right')) {
-                                    layoutWidth = this.autoMargin.horizontal || this.ascend(item => item.hasPX('width') || item.blockStatic).length ? '0px' : 'match_parent';
+                                    layoutWidth = this.autoMargin.horizontal || !renderParent.inlineWidth ? '0px' : 'match_parent';
                                 }
                             }
                         }
                         if (layoutWidth === '') {
                             if (this.layoutVertical && !renderParent.inlineWidth && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) && !this.documentRoot ||
                                 !this.pageFlow && this.absoluteParent === documentParent && this.hasPX('left') && this.hasPX('right') ||
+                                this.is(CONTAINER_NODE.GRID) && this.some((node: T) => parseFloat(node.android('layout_columnWeight')) > 0) ||
                                 documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row')
                             {
                                 layoutWidth = 'match_parent';
                             }
-                            else if (this.naturalElement && !documentParent.layoutElement && !this.inlineHorizontal && this.some(item => item.naturalElement && item.blockStatic && item.textElement)) {
+                            else if (this.naturalElement && !this.inlineHorizontal && this.some(item => item.naturalElement && item.blockStatic && item.textElement) && !documentParent.layoutElement) {
                                 checkParentWidth();
                             }
                         }
@@ -782,8 +803,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 this.setLayoutWidth(layoutWidth || 'wrap_content');
             }
+            let layoutHeight = this.layoutHeight;
             if (this.layoutHeight === '') {
-                let layoutHeight = '';
                 if (this.hasPX('height') && (!this.inlineStatic || this.cssInitial('height') === '')) {
                     const height = this.css('height');
                     let value = -1;
@@ -846,7 +867,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (layoutHeight === '') {
                     if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
-                        if (renderParent.layoutConstraint && this.alignParent('top') && this.actualHeight >= (this.absoluteParent || documentParent).box.height) {
+                        if (renderParent.layoutConstraint && !this.floating && this.alignParent('top') && this.actualHeight >= (this.absoluteParent || documentParent).box.height) {
                             layoutHeight = '0px';
                             this.anchor('bottom', 'parent');
                         }
@@ -854,11 +875,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             layoutHeight = $css.formatPX(this.actualHeight);
                         }
                     }
-                    else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.hasPX('top') && this.hasPX('bottom') || this.outerWrapper === undefined && this.onlyChild && renderParent.flexElement && !renderParent.inlineHeight && renderParent.css('flexDirection') === 'row') {
+                    else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.hasPX('top') && this.hasPX('bottom') || this.onlyChild && renderParent.flexElement && !renderParent.inlineHeight && renderParent.css('flexDirection') === 'row' && this.outerWrapper === undefined) {
                         layoutHeight = 'match_parent';
                     }
                 }
                 this.setLayoutHeight(layoutHeight || 'wrap_content');
+            }
+            else if (layoutHeight === '0px' && renderParent.inlineHeight && renderParent.android('minHeight') === '' && !this.lockedAttr('android', 'layout_height')) {
+                this.setLayoutHeight('wrap_content');
             }
             const isFlexible = (direction: string) => !(documentParent.flexElement && this.flexbox.grow > 0 && documentParent.css('flexDirection') === direction);
             if (this.hasPX('minWidth') && isFlexible('column')) {
@@ -1030,7 +1054,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             this.mergeGravity('layout_gravity', textAlignParent);
                         }
                     }
-                    else {
+                    else if (!this.nodeGroup || !this.hasAlign($e.NODE_ALIGNMENT.FLOAT)) {
                         this.mergeGravity('gravity', textAlignParent);
                     }
                 }
@@ -1182,7 +1206,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const controlName = this.controlName;
             setCustomization(API_ANDROID[0], tagName);
             setCustomization(API_ANDROID[0], controlName);
-            const api = API_ANDROID[this.localSettings.targetAPI];
+            const api = API_ANDROID[this._api];
             if (api) {
                 setCustomization(api, tagName);
                 setCustomization(api, controlName);
@@ -1279,7 +1303,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 break;
                         }
                     }
-                    if (!unmergeable && this.localSettings.targetAPI >= BUILD_ANDROID.OREO) {
+                    if (!unmergeable && this._api >= BUILD_ANDROID.OREO) {
                         if (top === right && right === bottom && bottom === left) {
                             mergeAll = top;
                         }
@@ -1612,7 +1636,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         get leftTopAxis() {
             let result = this._cached.leftTopAxis;
             if (result === undefined) {
-                result = false;
                 switch (this.cssInitial('position')) {
                     case 'absolute':
                         const { absoluteParent, documentParent } = this;
@@ -1620,25 +1643,23 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             result = true;
                         }
                         else if (absoluteParent) {
-                            const box = documentParent.box;
-                            const bounds = this.bounds;
-                            if (this.has('left')) {
-                                this.css('left', $css.formatPX(Math.max(0, bounds.left - box.left)), true);
+                            if (this.has('right') && !this.has('left') && absoluteParent.box.right === documentParent.linear.right) {
+                                this.css('top', $css.formatPX(this.linear.top - documentParent.box.top), true);
+                                result = true;
                             }
-                            else if (this.has('right')) {
-                                this.css('right', $css.formatPX(Math.max(0, box.right - bounds.right)), true);
+                            else {
+                                result = false;
                             }
-                            if (this.has('top')) {
-                                this.css('top', $css.formatPX(Math.max(0, bounds.top - box.top)), true);
-                            }
-                            else if (this.has('bottom')) {
-                                this.css('bottom', $css.formatPX(Math.max(0, box.bottom - bounds.bottom)), true);
-                            }
-                            result = true;
+                        }
+                        else {
+                            result = false;
                         }
                         break;
                     case 'fixed':
                         result = true;
+                        break;
+                    default:
+                        result = false;
                         break;
                 }
                 this._cached.leftTopAxis = result;
@@ -1699,6 +1720,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             else {
                 this._localSettings = { ...value };
+            }
+            const api = value.targetAPI;
+            if (api) {
+                this._api = api;
             }
         }
         get localSettings() {

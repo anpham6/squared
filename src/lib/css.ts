@@ -445,7 +445,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
     function setImageOffset(position: string, horizontal: boolean, direction: string, directionAsPercent: string) {
         if (imageDimension && !isLength(position)) {
             let offset = result[directionAsPercent];
-            if (imageSize && imageSize !== 'auto') {
+            if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
                 const [sizeW, sizeH] = imageSize.split(' ');
                 if (horizontal) {
                     let width = dimension.width;

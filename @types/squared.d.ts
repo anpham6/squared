@@ -549,6 +549,8 @@ declare namespace base {
         unset(name: string): void;
         delete(name: string, ...attrs: string[]): void;
         apply(options: {}): void;
+        lockAttr(name: string, attr: string): void;
+        lockedAttr(name: string, attr: string): boolean;
         addAlign(value: number): void;
         removeAlign(value: number): void;
         hasAlign(value: number): boolean;

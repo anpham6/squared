@@ -1832,7 +1832,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 result = (!top || top === 'auto') &&
                     (!right || right === 'auto') &&
                     (!bottom || bottom === 'auto') &&
-                    (!left || left === 'auto');
+                    (!left || left === 'auto') &&
+                    this.toFloat('opacity', true, 1) > 0;
             }
             this._cached.positionAuto = result;
         }

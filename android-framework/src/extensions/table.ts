@@ -16,6 +16,12 @@ const {
     enumeration: $e
 } = squared.base.lib;
 
+function setLayoutHeight(node: View) {
+    if (node.hasPX('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {
+        node.setLayoutHeight('wrap_content');
+    }
+}
+
 export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
@@ -60,6 +66,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     if (item.tagName === 'TD') {
                         item.setSingleLine(true);
                     }
+                    setLayoutHeight(item);
                 });
             }
             else {
@@ -68,6 +75,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         item.setLayoutWidth('wrap_content');
                         requireWidth = true;
                     }
+                    setLayoutHeight(item);
                 });
             }
             if (requireWidth) {

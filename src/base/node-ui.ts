@@ -149,9 +149,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 break;
                         }
                         for (const item of previousFloat) {
-                            if (item && floating.has(item.float) && !node.floating && $util.aboveRange(node.linear.top, item.linear.bottom)) {
-                                floating.delete(item.float);
-                                clearable[item.float] = undefined;
+                            if (item) {
+                                const float = item.float;
+                                if (floating.has(float) && !node.floating && $util.aboveRange(node.linear.top, item.linear.bottom)) {
+                                    floating.delete(float);
+                                    clearable[float] = undefined;
+                                }
                             }
                         }
                         if (clear === 'both') {
@@ -167,9 +170,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                     }
                     if (node.floating) {
-                        floating.add(node.float);
-                        floated.add(node.float);
-                        clearable[node.float] = node;
+                        const float = node.float;
+                        floating.add(float);
+                        floated.add(float);
+                        clearable[float] = node;
                     }
                     nodes.push(node);
                 }
@@ -346,6 +350,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _excludeProcedure = 0;
     private _excludeResource = 0;
     private _visible = true;
+    private _locked: ObjectMapNested<boolean> = {};
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
     private _renderAs?: T;
@@ -390,7 +395,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 return '';
             }
             obj[attr] = value.toString();
-            return obj[attr];
+            return value;
         }
         else {
             return obj && obj[attr] || '';
@@ -440,6 +445,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 delete options[name];
             }
         }
+    }
+
+    public lockAttr(name: string, attr: string) {
+        let locked = this._locked[name];
+        if (locked === undefined) {
+            locked = {};
+            this._locked[name] = locked;
+        }
+        locked[attr] = true;
+    }
+
+    public lockedAttr(name: string, attr: string) {
+        const locked = this._locked[name];
+        return locked && locked[attr] || false;
     }
 
     public render(parent?: T) {
@@ -1371,7 +1390,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textEmpty() {
         let result = this._cached.textEmpty;
         if (result === undefined) {
-            result = this.styleElement && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '') && !this.imageElement && !this.svgElement && this.tagName !== 'HR';
+            result = this.styleElement && (this.textContent === '' || !this.preserveWhiteSpace && !this.pseudoElement && this.textContent.trim() === '') && !this.imageElement && !this.svgElement && this.tagName !== 'HR';
             this._cached.textEmpty = result;
         }
         return result;

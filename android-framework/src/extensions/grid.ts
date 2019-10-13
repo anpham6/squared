@@ -124,7 +124,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                     const cellData: GridCellData<T> = item.data($c.EXT_NAME.GRID, 'cellData');
                     if (cellData) {
                         const parent = item.actualParent as T;
-                        if (parent && !parent.visible) {
+                        if (!parent.visible) {
                             const marginTop = parent.getBox($e.BOX_STANDARD.MARGIN_TOP)[0] !== 1 ? parent.marginTop : 0;
                             const marginBottom = parent.getBox($e.BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1 ? parent.marginBottom : 0;
                             if (cellData.cellStart) {

@@ -49,7 +49,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                 }
             }
             const parent = node.actualParent as T;
-            if (parent && !parent.visible && parent.tagName === 'HTML' && parent.visibleStyle.background) {
+            if (parent.visibleStyle.background && parent.tagName === 'HTML' && !parent.visible) {
                 return true;
             }
         }

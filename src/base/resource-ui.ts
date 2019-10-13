@@ -633,7 +633,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 return false;
             }
-            if (setBackgroundOffset('backgroundClip')) {
+            if (setBackgroundOffset('backgroundClip') && node.has('backgroundOrigin')) {
                 setBackgroundOffset('backgroundOrigin');
             }
             if (node.css('borderRadius') !== '0px') {
@@ -792,7 +792,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             break;
                         default:
                             const textContent = node.textContent;
-                            if (node.plainText) {
+                            if (node.plainText || node.pseudoElement) {
                                 key = textContent.trim();
                                 [value] = replaceWhiteSpace(renderParent, node, textContent.replace(/&/g, '&amp;'));
                                 inlined = true;
@@ -828,12 +828,14 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 }
                             }
                             if (inlined) {
-                                const original = value;
-                                value = value.trim();
-                                if (previousSibling && $regex.CHAR.LEADINGSPACE.test(original) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
-                                    value = STRING_SPACE + value;
+                                const trailingSpace = !node.lineBreakTrailing && $regex.CHAR.TRAILINGSPACE.test(value);
+                                if (previousSibling && $regex.CHAR.LEADINGSPACE.test(value) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
+                                    value = STRING_SPACE + value.trim();
                                 }
-                                if (!node.lineBreakTrailing && $regex.CHAR.TRAILINGSPACE.test(original)) {
+                                else {
+                                    value = value.trim();
+                                }
+                                if (trailingSpace) {
                                     const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
                                     if (nextSibling && !nextSibling.blockStatic) {
                                         value += STRING_SPACE;

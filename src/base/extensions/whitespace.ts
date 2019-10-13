@@ -145,30 +145,32 @@ function resetMargin(node: NodeUI, value: number) {
     }
 }
 
-function isBlockElement(node: NodeUI | null, direction?: boolean): boolean {
+function isBlockElement(node: NodeUI | null, direction?: boolean, checkIndex = false): boolean {
     if (node && !node.lineBreak) {
+        let valid = false;
         if (node.blockStatic) {
-            return true;
+            valid = true;
         }
         else if (!node.floating) {
             const display = node.display;
             if (display === 'list-item') {
-                return true;
+                valid = true;
             }
             if (direction !== undefined) {
                 if (display === 'table') {
-                    return true;
+                    valid = true;
                 }
                 if (direction) {
                     const firstChild = <NodeUI> node.firstStaticChild;
-                    return isBlockElement(firstChild) && validAboveChild(firstChild);
+                    valid = isBlockElement(firstChild) && validAboveChild(firstChild);
                 }
                 else {
                     const lastChild = <NodeUI> node.lastStaticChild;
-                    return isBlockElement(lastChild) && validBelowChild(lastChild);
+                    valid = isBlockElement(lastChild) && validBelowChild(lastChild);
                 }
             }
         }
+        return valid && (!checkIndex || direction === undefined || node.bounds.height > 0);
     }
     return false;
 }
@@ -198,7 +200,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     if (blockParent) {
                         if (!current.floating) {
-                            if (current.bounds.height > 0 || length === 1 || isBlockElement(current, i === 0 ? true : (i === length - 1 ? false : undefined))) {
+                            if (current.bounds.height > 0 || length === 1 || isBlockElement(current, i === 0 ? true : (i === length - 1 ? false : undefined), true)) {
                                 if (firstChild === undefined) {
                                     firstChild = current;
                                 }

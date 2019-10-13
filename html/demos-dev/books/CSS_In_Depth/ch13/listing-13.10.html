@@ -1,6 +1,5 @@
 <!doctype html>
 <head>
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300|Sansita:800" rel="stylesheet">
   <style>
 html {
   --brand-green: hsl(162, 87%, 21%);
@@ -254,27 +253,5 @@ p {
     </div>
   </footer>
 
-  <script type="text/javascript">
-    var html = document.documentElement;
-    var script = document.createElement("script");
-    script.src = "fontfaceobserver.js";
-    script.async = true;
-
-    script.onload = function () {
-      var roboto = new FontFaceObserver("Roboto");
-      var sansita = new FontFaceObserver("Sansita");
-      var timeout = 2000;
-
-      Promise.all([
-        roboto.load(null, timeout),
-        sansita.load(null, timeout)
-      ]).then(function () {
-        html.classList.add("fonts-loaded");
-      }).catch(function (e) {
-        html.classList.add("fonts-failed");
-      });
-    };
-    document.head.appendChild(script);
-  </script>
 </body>
 </html>

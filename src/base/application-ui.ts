@@ -331,6 +331,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const parent = node.parent as T;
             if (node.documentBody) {
                 parent.visible = false;
+                parent.exclude(NODE_RESOURCE.ALL, NODE_PROCEDURE.ALL, APP_SECTION.EXTENSION);
                 this.processing.cache.append(parent);
             }
             node.documentParent = parent;
@@ -711,12 +712,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     case 'open-quote':
                         if (pseudoElt === '::before') {
-                            content = nested % 2 === 0 ? '&#8220;' : "&#8216;";
+                            content = nested % 2 === 0 ? '“' : "‘";
                         }
                         break;
                     case 'close-quote':
                         if (pseudoElt === '::after') {
-                            content = nested % 2 === 0 ? '&#8221;' : "&#8217;";
+                            content = nested % 2 === 0 ? '”' : "’";
                         }
                         break;
                     default:

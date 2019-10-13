@@ -343,14 +343,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 switch (node.css('position')) {
                     case 'relative':
                         if (node === actualParent.lastChild) {
+                            const box = actualParent.box;
                             let valid = false;
-                            if (node.outsideX(actualParent.box)) {
+                            if (node.outsideX(box)) {
                                 if (!actualParent.hasPX('width') || actualParent.css('overflowX') === 'hidden') {
                                     continue;
                                 }
                                 valid = true;
                             }
-                            if (node.outsideY(actualParent.box)) {
+                            if (node.outsideY(box)) {
                                 if (!actualParent.hasHeight && !actualParent.hasPX('height') || actualParent.css('overflowY') === 'hidden') {
                                     continue;
                                 }

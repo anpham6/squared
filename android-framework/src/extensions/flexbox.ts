@@ -462,6 +462,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     if (chain[HWL] === 0 && !horizontal && !dimension && chain.cascadeSome(child => child.multiline)) {
                                         chain.android('layout_' + HWL, '0px');
                                     }
+                                    else if (chain.textElement) {
+                                        chain.mergeGravity('gravity', 'center');
+                                    }
                                     break;
                                 default:
                                     const childContent = chain.innerWrapped as T;
@@ -529,7 +532,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                         chain.android(attr, '0px');
                                                     }
                                                 }
-                                                else if (dimension || maxSize === 0 || smaller) {
+                                                else {
+                                                    chain.lockAttr('android', attr);
                                                     if (maxSize === 0 && (!dimension && lengthA > 1 || mainData.wrap)) {
                                                         break;
                                                     }
