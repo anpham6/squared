@@ -281,7 +281,7 @@ function constraintPercentValue(node: View, dimension: string, horizontal: boole
             unit = $css.formatPX(node.bounds[dimension]);
             if (node.imageElement) {
                 const element = <HTMLImageElement> node.element;
-                if (element && element.naturalWidth > 0 && element.naturalHeight > 0) {
+                if (element.naturalWidth > 0 && element.naturalHeight > 0) {
                     const opposingUnit = $css.formatPX((node.bounds[dimension] / (horizontal ? element.naturalWidth : element.naturalHeight)) * (horizontal ? element.naturalHeight : element.naturalWidth));
                     if (horizontal) {
                         node.setLayoutHeight(opposingUnit, false);
@@ -473,7 +473,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const flexbox = node.flexbox;
         const { grow, basis } = flexbox;
         function setFlexGrow(value: string) {
-            node.android(horizontal ? 'layout_width' : 'layout_height', '0px');
+            if (horizontal) {
+                node.setLayoutWidth('0px');
+            }
+            else {
+                node.setLayoutHeight('0px');
+            }
             if (grow > 0) {
                 node.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', $math.truncate(grow, node.localSettings.floatPrecision));
                 if (value !== '') {
@@ -497,8 +502,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
             setFlexGrow('');
         }
-        else if (grow > 0 && (horizontal && node.documentParent.css('flexDirection') === 'row' || !horizontal && node.documentParent.css('flexDirection') === 'column')) {
-            setFlexGrow(node.hasPX(dimension, false) ? $css.formatPX(node[horizontal ? 'actualWidth' : 'actualHeight']) : '');
+        else if (grow > 0 && (horizontal && node.documentParent.css('flexDirection').startsWith('row') || !horizontal && node.documentParent.css('flexDirection').startsWith('column'))) {
+            setFlexGrow(node.hasPX(dimension, false) ? $css.formatPX(horizontal ? node.actualWidth : node.actualHeight) : '');
         }
         else {
             if (horizontal) {

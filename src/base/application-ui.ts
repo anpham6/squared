@@ -331,7 +331,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const parent = node.parent as T;
             if (node.documentBody) {
                 parent.visible = false;
-                parent.exclude(NODE_RESOURCE.ALL, NODE_PROCEDURE.ALL, APP_SECTION.EXTENSION);
+                parent.exclude(NODE_RESOURCE.ASSET, NODE_PROCEDURE.ALL, APP_SECTION.EXTENSION);
                 this.processing.cache.append(parent);
             }
             node.documentParent = parent;
@@ -383,6 +383,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             (node.parent as T).setBounds();
+            const pseudoElements: T[] = [];
             for (const item of CACHE) {
                 if (!item.pseudoElement) {
                     item.setBounds(preAlignment[item.id] === undefined && !resetBounds);
@@ -391,25 +392,45 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 else {
-                    const element = (item.actualParent as T).element;
-                    if (element) {
-                        const id = element.id;
-                        let styleElement: HTMLElement | undefined;
-                        if (item.pageFlow) {
-                            element.id = 'id_' + Math.round(Math.random() * new Date().getTime());
-                            styleElement = $css.insertStyleSheetRule(`#${element.id + NodeUI.getPseudoElt(item)} { display: none !important; }`);
+                    pseudoElements.push(item);
+                }
+            }
+            if (pseudoElements.length) {
+                const pseudoMap = new Map<T, { id: string, styleElement?: HTMLStyleElement }>();
+                for (const item of pseudoElements) {
+                    const element = <HTMLElement> (item.actualParent as T).element;
+                    let id = element.id;
+                    let styleElement: HTMLStyleElement | undefined;
+                    if (item.pageFlow) {
+                        if (id === '') {
+                            id = '__squared_' + Math.round(Math.random() * new Date().getTime());
+                            element.id = id;
                         }
-                        if (item.cssTry('display', item.display)) {
-                            item.setBounds(false);
-                            item.cssFinally('display');
-                        }
-                        if (styleElement) {
-                            document.head.removeChild(styleElement);
-                        }
-                        element.id = id;
+                        styleElement = $css.insertStyleSheetRule(`#${id + NodeUI.getPseudoElt(item)} { display: none !important; }`);
+                    }
+                    if (item.cssTry('display', item.display)) {
+                        pseudoMap.set(item, { id, styleElement });
                     }
                 }
-
+                for (const item of pseudoElements) {
+                    const data = pseudoMap.get(item);
+                    if (data) {
+                        item.setBounds(false);
+                    }
+                }
+                for (const item of pseudoElements) {
+                    const data = pseudoMap.get(item);
+                    if (data) {
+                        if (data.id.startsWith('__squared_')) {
+                            const element = <HTMLElement> (item.actualParent as T).element;
+                            element.id = '';
+                        }
+                        if (data.styleElement) {
+                            document.head.removeChild(data.styleElement);
+                        }
+                        item.cssFinally('display');
+                    }
+                }
             }
             for (const item of this.processing.excluded) {
                 if (!item.lineBreak) {
@@ -886,20 +907,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         (<HTMLImageElement> pseudoElement).src = content;
                         const image = this.resourceHandler.getImage(content);
                         if (image) {
-                            const { width, height } = image;
-                            if (width > 0) {
-                                const dimension = $css.formatPX(width);
-                                if (styleMap.width === undefined) {
-                                    styleMap.width = dimension;
+                            if (styleMap.width === undefined) {
+                                if (image.width > 0) {
+                                    styleMap.width = $css.formatPX(image.width);
                                 }
-                                pseudoElement.style.width = dimension;
                             }
-                            if (height > 0) {
-                                const dimension = $css.formatPX(height);
-                                if (styleMap.height === undefined) {
-                                    styleMap.height = dimension;
+                            if (styleMap.height === undefined) {
+                                if (image.height > 0) {
+                                    styleMap.height = $css.formatPX(image.height);
                                 }
-                                pseudoElement.style.height = dimension;
                             }
                         }
                     }

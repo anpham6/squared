@@ -44,15 +44,9 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     const bounds = item.initial.bounds;
                     if (bounds && item.cssTry('align-self', 'start')) {
                         if (item.cssTry('justify-self', 'start')) {
-                            if (item.cssTry('flex-grow', '0')) {
-                                if (item.cssTry('flex-shrink', '1')) {
-                                    const rect = (<Element> item.element).getBoundingClientRect();
-                                    bounds.width = rect.width;
-                                    bounds.height = rect.height;
-                                    item.cssFinally('flex-shrink');
-                                }
-                                item.cssFinally('flex-grow');
-                            }
+                            const rect = (<Element> item.element).getBoundingClientRect();
+                            bounds.width = rect.width;
+                            bounds.height = rect.height;
                             item.cssFinally('justify-self');
                         }
                         item.cssFinally('align-self');
@@ -149,10 +143,12 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             if (children.some(item => item.flexbox.order !== 0)) {
                 const [c, d] = mainData.directionReverse ? [-1, 1] : [1, -1];
                 children.sort((a, b) => {
-                    if (a.flexbox.order === b.flexbox.order) {
+                    const orderA = a.flexbox.order;
+                    const orderB = b.flexbox.order;
+                    if (orderA === orderB) {
                         return 0;
                     }
-                    return a.flexbox.order > b.flexbox.order ? c : d;
+                    return orderA > orderB ? c : d;
                 });
             }
             if (mainData.directionRow) {

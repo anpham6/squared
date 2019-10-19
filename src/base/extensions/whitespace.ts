@@ -206,6 +206,15 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                                 lastChild = current;
                             }
+                            else if (current.bounds.height === 0 && node.layoutVertical && node.alignSibling('top') === '' && node.alignSibling('bottom') === '') {
+                                if (i === 0) {
+                                    firstChild = current;
+                                }
+                                else if (i === length - 1) {
+                                    lastChild = current;
+                                }
+                                current.hide();
+                            }
                         }
                         else {
                             lastChild = undefined;
@@ -323,7 +332,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                 }
-                if (!$util.hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && !(node.documentParent.layoutElement && node.documentParent.css('flexDirection') === 'column') && node.tagName !== 'FIELDSET') {
+                if (!$util.hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && !(node.documentParent.layoutElement && node.documentParent.css('flexDirection').startsWith('column')) && node.tagName !== 'FIELDSET') {
                     if (firstChild) {
                         applyMarginCollapse(node, firstChild, true);
                     }
@@ -349,12 +358,14 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     if (nextSiblings.length) {
                         let above = previousSiblings.pop() as T;
                         let below = nextSiblings.pop() as T;
-                        if (above.inlineStatic && below.inlineStatic && previousSiblings.length === 0) {
+                        const inline = above.inlineStatic && below.inlineStatic;
+                        if (inline && previousSiblings.length === 0) {
                             processed.add(node.id);
                             continue;
                         }
                         let lineHeight = 0;
-                        const getMarginOffset = () => below.linear.top - above.linear.bottom - lineHeight;
+                        let aboveLineBreak: T | undefined;
+                        const getMarginOffset = () => below.linear.top - (aboveLineBreak ? Math.max(aboveLineBreak.linear.top, above.linear.bottom) : above.linear.bottom) - lineHeight;
                         if (!above.multiline && above.has('lineHeight')) {
                             const aboveOffset = Math.floor((above.lineHeight - above.bounds.height) / 2);
                             if (aboveOffset > 0) {
@@ -365,6 +376,20 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             const belowOffset = Math.round((below.lineHeight - below.bounds.height) / 2);
                             if (belowOffset > 0) {
                                 lineHeight += belowOffset;
+                            }
+                        }
+                        if (inline) {
+                            aboveLineBreak = previousSiblings[0] as T;
+                            if (previousSiblings.length === 1) {
+                                if ((aboveLineBreak as T).lineBreak) {
+                                    aboveLineBreak = node;
+                                }
+                                else {
+                                    aboveLineBreak = undefined;
+                                }
+                            }
+                            if (aboveLineBreak) {
+                                aboveLineBreak.setBounds(false);
                             }
                         }
                         let aboveParent = above.renderParent;

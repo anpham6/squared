@@ -1,4 +1,4 @@
-/* squared 1.3.0
+/* squared 1.3.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -3879,7 +3879,7 @@
         function setImageOffset(position, horizontal, direction, directionAsPercent) {
             if (imageDimension && !isLength(position)) {
                 let offset = result[directionAsPercent];
-                if (imageSize && imageSize !== 'auto') {
+                if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
                     const [sizeW, sizeH] = imageSize.split(' ');
                     if (horizontal) {
                         let width = dimension.width;
@@ -3964,11 +3964,15 @@
                 switch (position) {
                     case '0%':
                     case 'start':
-                        result.horizontal = 'left';
+                        if (horizontal) {
+                            result.horizontal = 'left';
+                        }
                         break;
                     case '100%':
                     case 'end':
-                        result.horizontal = 'right';
+                        if (horizontal) {
+                            result.horizontal = 'right';
+                        }
                     case 'right':
                     case 'bottom':
                         result[direction] = offsetParent;
@@ -4079,7 +4083,7 @@
             const length = children.length;
             for (let i = 0; i < length; i++) {
                 const source = children[i];
-                if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || isString(source.type) && mimeType && mimeType.includes(source.type.split('/').pop().toLowerCase()))) {
+                if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || mimeType && isString(source.type) && mimeType.includes(source.type.split('/').pop().toLowerCase()))) {
                     ({ srcset, sizes } = source);
                     break;
                 }
@@ -4167,15 +4171,21 @@
                         index = i;
                     }
                 }
-                if (index > 0) {
+                if (index === 0) {
+                    result[0].pixelRatio = 1;
+                    result[0].actualWidth = width;
+                }
+                else if (index > 0) {
                     const selected = result.splice(index, 1)[0];
                     selected.pixelRatio = 1;
                     selected.actualWidth = width;
                     result.unshift(selected);
                 }
-                else if (index === 0) {
-                    result[0].pixelRatio = 1;
-                    result[0].actualWidth = width;
+                for (let i = 1; i < length; i++) {
+                    const item = result[i];
+                    if (item.pixelRatio === 0) {
+                        item.pixelRatio = item.width / width;
+                    }
                 }
             }
         }

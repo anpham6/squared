@@ -530,11 +530,15 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
             switch (position) {
                 case '0%':
                 case 'start':
-                    result.horizontal = 'left';
+                    if (horizontal) {
+                        result.horizontal = 'left';
+                    }
                     break;
                 case '100%':
                 case 'end':
-                    result.horizontal = 'right';
+                    if (horizontal) {
+                        result.horizontal = 'right';
+                    }
                 case 'right':
                 case 'bottom':
                     result[direction] = offsetParent;

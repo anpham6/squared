@@ -677,30 +677,33 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         this.controller.localSettings.svg.enabled = false;
     }
 
-    public createSvgElement(node: T, src: string): [HTMLElement | undefined, SVGSVGElement | undefined] {
-        const match = $regex.CSS.URL.exec(src);
-        if (match) {
-            src = match[1];
+    public createSvgElement(node: T, src: string): [HTMLElement | undefined, SVGSVGElement | undefined] | [] {
+        let valid = src.startsWith('data:image/svg+xml');
+        if (!valid) {
+            const match = $regex.CSS.URL.exec(src);
+            if (match) {
+                src = match[1];
+            }
+            valid = src.toLowerCase().endsWith('.svg');
         }
-        let parentElement: HTMLElement | undefined;
-        let element: SVGSVGElement | undefined;
-        if (src.toLowerCase().endsWith('.svg') || src.startsWith('data:image/svg+xml')) {
+        if (valid) {
             const fileAsset = this.resource.getRawData(src);
             if (fileAsset) {
-                parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;
+                const parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;
                 parentElement.insertAdjacentHTML('beforeend', fileAsset.content);
                 if (parentElement.lastElementChild instanceof SVGSVGElement) {
-                    element = parentElement.lastElementChild;
+                    const element = parentElement.lastElementChild;
                     if (element.width.baseVal.value === 0) {
                         element.setAttribute('width', node.actualWidth.toString());
                     }
                     if (element.height.baseVal.value === 0) {
                         element.setAttribute('height', node.actualHeight.toString());
                     }
+                    return [parentElement, element];
                 }
             }
         }
-        return [parentElement, element];
+        return [];
     }
 
     public createSvgDrawable(node: T, element: SVGSVGElement) {

@@ -70,11 +70,12 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
         let maxRatio = NaN;
         for (const item of items) {
             const dimension = item.bounds[attr];
+            const flexbox = item.flexbox;
             let growPercent = false;
-            if (item.flexbox.grow > 0 || item.flexbox.shrink !== 1) {
-                const basis = item.flexbox.basis === 'auto' ? item.parseUnit(item.css(attr), attr) : item.parseUnit(item.flexbox.basis, attr);
+            if (flexbox.grow > 0 || flexbox.shrink !== 1) {
+                const basis = flexbox.basis === 'auto' ? item.parseUnit(item.css(attr), attr) : item.parseUnit(flexbox.basis, attr);
                 if (basis > 0) {
-                    const { shrink, grow } = item.flexbox;
+                    const { shrink, grow } = flexbox;
                     let largest = false;
                     if (dimension < basis) {
                         if (isNaN(maxRatio) || shrink < maxRatio) {
@@ -104,11 +105,11 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
                     });
                     continue;
                 }
-                else if (item.flexbox.grow > 0 && dimension > item[attr]) {
+                else if (flexbox.grow > 0 && dimension > item[attr]) {
                     growPercent = true;
                 }
             }
-            if (item.flexbox.alignSelf === 'auto' && (percent && !item[hasDimension] || growPercent)) {
+            if (flexbox.alignSelf === 'auto' && (percent && !item[hasDimension] || growPercent)) {
                 percentage.push(item);
             }
         }
@@ -316,8 +317,15 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 const dimensionInverse: boolean = node['has' + WH];
                 const orientationWeight = `layout_constraint${$util.capitalize(orientation)}_weight`;
                 function setLayoutWeight(chain: T, value: number) {
-                    chain.app(orientationWeight, $math.truncate(value, chain.localSettings.floatPrecision));
-                    chain.android('layout_' + WHL, '0px');
+                    if (chain[WHL] === 0) {
+                        chain.app(orientationWeight, $math.truncate(value, chain.localSettings.floatPrecision));
+                        if (horizontal) {
+                            chain.setLayoutWidth('0px');
+                        }
+                        else {
+                            chain.setLayoutHeight('0px');
+                        }
+                    }
                 }
                 const length = partition.length;
                 for (let i = 0; i < length; i++) {
@@ -365,9 +373,26 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         growAll = horizontal || dimensionInverse;
                         growAvailable = 1 - adjustGrowRatio(node, seg, WHL);
                         if (lengthA > 1) {
-                            const sizeMap = new Set<number>($util.objectMap(seg, item => item.initial.bounds && item.initial.bounds[HWL] || 0));
-                            if (sizeMap.size > 1) {
-                                maxSize = $math.maxArray(Array.from(sizeMap));
+                            let sizeCount = 0;
+                            for (const chain of seg) {
+                                const bounds = chain.initial.bounds;
+                                if (bounds) {
+                                    const value = bounds[HWL];
+                                    if (sizeCount === 0) {
+                                        maxSize = value;
+                                        sizeCount++;
+                                    }
+                                    else if (value === maxSize) {
+                                        sizeCount++;
+                                    }
+                                    else if (value > maxSize) {
+                                        maxSize = value;
+                                        sizeCount = 1;
+                                    }
+                                }
+                            }
+                            if (sizeCount === lengthA) {
+                                maxSize = NaN;
                             }
                         }
                     }
@@ -389,7 +414,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                         else {
                             const autoMargin = getAutoMargin(chain);
-                            const innerWrapped = chain.innerWrapped;
+                            const innerWrapped = chain.innerWrapped as T | undefined;
                             if (horizontal) {
                                 if (autoMargin.horizontal) {
                                     if (innerWrapped) {
@@ -459,10 +484,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 case 'center':
                                     chain.anchorParent(orientationInverse, 'packed', 0.5);
-                                    if (chain[HWL] === 0 && !horizontal && !dimension && chain.cascadeSome(child => child.multiline)) {
-                                        chain.android('layout_' + HWL, '0px');
-                                    }
-                                    else if (chain.textElement) {
+                                    if (chain.textElement) {
                                         chain.mergeGravity('gravity', 'center');
                                     }
                                     break;
@@ -470,13 +492,13 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     const childContent = chain.innerWrapped as T;
                                     switch (mainData.alignContent) {
                                         case 'center':
-                                            if (partition.length % 2 === 1 && i === Math.floor(partition.length / 2)) {
+                                            if (length % 2 === 1 && i === Math.floor(length / 2)) {
                                                 chain.anchorParent(orientationInverse);
                                             }
-                                            else if (i < partition.length / 2) {
+                                            else if (i < length / 2) {
                                                 chain.anchor(BR, 'parent');
                                             }
-                                            else if (i >= partition.length / 2) {
+                                            else if (i >= length / 2) {
                                                 chain.anchor(TL, 'parent');
                                             }
                                             break;
@@ -501,7 +523,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     chain.anchor(wrapReverse ? BR : TL, 'parent');
                                                 }
                                             }
-                                            else if (partition.length > 2 && i < partition.length - 1) {
+                                            else if (length > 2 && i < length - 1) {
                                                 if (chain.layoutFrame && childContent) {
                                                     childContent.mergeGravity('layout_gravity', horizontal ? STRING_ANDROID.CENTER_VERTICAL : STRING_ANDROID.CENTER_HORIZONTAL);
                                                 }
@@ -524,28 +546,34 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchorStyle(orientationInverse, 'packed', wrapReverse ? 1 : 0);
                                             }
                                             if (chain[HWL] === 0) {
-                                                const bounds = chain.initial.bounds && chain.initial.bounds[HWL];
-                                                const smaller = bounds < maxSize;
-                                                const attr = 'layout_' + HWL;
-                                                if (!smaller) {
-                                                    if (dimension && (maxSize === 0 && chain.bounds[HWL] > bounds || chain.flexElement && (horizontal && chain.css('flexDirection') === 'column' || !horizontal && chain.css('flexDirection') === 'row'))) {
-                                                        chain.android(attr, '0px');
+                                                function setLayoutWeightOpposing(item: T, value: string) {
+                                                    if (horizontal) {
+                                                        item.setLayoutHeight(value);
+                                                    }
+                                                    else {
+                                                        item.setLayoutWidth(value);
+                                                    }
+                                                }
+                                                if (isNaN(maxSize)) {
+                                                    if (!mainData.wrap && chain.length) {
+                                                        setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent');
+                                                    }
+                                                    else {
+                                                        setLayoutWeightOpposing(chain, 'wrap_content');
+                                                    }
+                                                }
+                                                else if (lengthA === 1) {
+                                                    setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent');
+                                                }
+                                                else if ((chain.naturalElement ? (chain.initial.bounds as Dimension)[HWL] : Number.POSITIVE_INFINITY) < maxSize) {
+                                                    setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px');
+                                                    if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
+                                                        setLayoutWeightOpposing(innerWrapped, 'match_parent');
                                                     }
                                                 }
                                                 else {
-                                                    chain.lockAttr('android', attr);
-                                                    if (maxSize === 0 && (!dimension && lengthA > 1 || mainData.wrap)) {
-                                                        break;
-                                                    }
-                                                    else if (horizontal && !dimension) {
-                                                        chain.android(attr, smaller ? '0px' : 'match_parent');
-                                                    }
-                                                    else {
-                                                        chain.android(attr, '0px');
-                                                    }
-                                                    if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
-                                                        innerWrapped.android(attr, 'match_parent');
-                                                    }
+                                                    chain.lockAttr('android', 'layout_' + HWL);
+                                                    setLayoutWeightOpposing(chain, 'wrap_content');
                                                 }
                                             }
                                             break;
@@ -622,8 +650,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'space-evenly':
                                     if (lengthA > 1) {
                                         segStart.anchorStyle(orientation, 'spread');
-                                        for (const item of seg) {
-                                            setLayoutWeight(item, item.flexbox.grow || 1);
+                                        if (!mainData.alignContent.startsWith('space')) {
+                                            for (const item of seg) {
+                                                setLayoutWeight(item, item.flexbox.grow || 1);
+                                            }
                                         }
                                     }
                                     else {

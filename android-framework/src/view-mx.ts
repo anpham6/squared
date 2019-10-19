@@ -554,11 +554,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (position) {
                 node.anchorClear();
-                if (node.anchor('left', this.documentId)) {
+                const documentId = this.documentId;
+                if (node.anchor('left', documentId)) {
                     node.modifyBox($e.BOX_STANDARD.MARGIN_LEFT);
                     Object.assign(node.unsafe('boxAdjustment'), { marginLeft: 0 });
                 }
-                if (node.anchor('top', this.documentId)) {
+                if (node.anchor('top', documentId)) {
                     node.modifyBox($e.BOX_STANDARD.MARGIN_TOP);
                     Object.assign(node.unsafe('boxAdjustment'), { marginTop: 0 });
                 }
@@ -766,7 +767,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         };
                         if (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID)) {
                             if (this.display === 'flex') {
-                                if (renderParent.layoutConstraint && this.css('flexDirection') === 'column') {
+                                if (renderParent.layoutConstraint && this.css('flexDirection').startsWith('column')) {
                                     layoutWidth = '0px';
                                 }
                                 else if (!documentParent.layoutElement) {
@@ -776,22 +777,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             else if (!documentParent.layoutElement) {
                                 checkParentWidth();
                             }
-                            else if (renderParent.layoutConstraint) {
-                                if (documentParent.flexElement) {
-                                    if (documentParent.css('flexDirection') === 'column' || this.flexbox.grow > 0) {
-                                        layoutWidth = '0px';
-                                    }
-                                }
-                                else if (this.alignParent('left') && this.alignParent('right')) {
-                                    layoutWidth = this.autoMargin.horizontal || !renderParent.inlineWidth ? '0px' : 'match_parent';
-                                }
-                            }
                         }
                         if (layoutWidth === '') {
                             if (this.layoutVertical && !renderParent.inlineWidth && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) && !this.documentRoot ||
                                 !this.pageFlow && this.absoluteParent === documentParent && this.hasPX('left') && this.hasPX('right') ||
                                 this.is(CONTAINER_NODE.GRID) && this.some((node: T) => parseFloat(node.android('layout_columnWeight')) > 0) ||
-                                documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection') === 'row')
+                                documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection').startsWith('row'))
                             {
                                 layoutWidth = 'match_parent';
                             }
@@ -875,23 +866,24 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             layoutHeight = $css.formatPX(this.actualHeight);
                         }
                     }
-                    else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.hasPX('top') && this.hasPX('bottom') || this.onlyChild && renderParent.flexElement && !renderParent.inlineHeight && renderParent.css('flexDirection') === 'row' && this.outerWrapper === undefined) {
+                    else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.hasPX('top') && this.hasPX('bottom') || this.onlyChild && renderParent.flexElement && !renderParent.inlineHeight && renderParent.css('flexDirection').startsWith('row') && this.outerWrapper === undefined) {
                         layoutHeight = 'match_parent';
                     }
                 }
                 this.setLayoutHeight(layoutHeight || 'wrap_content');
             }
-            else if (layoutHeight === '0px' && renderParent.inlineHeight && renderParent.android('minHeight') === '' && !this.lockedAttr('android', 'layout_height')) {
+            else if (layoutHeight === '0px' && renderParent.inlineHeight && renderParent.android('minHeight') === '' && !documentParent.layoutElement) {
                 this.setLayoutHeight('wrap_content');
             }
-            const isFlexible = (direction: string) => !(documentParent.flexElement && this.flexbox.grow > 0 && documentParent.css('flexDirection') === direction);
+            const isFlexible = (direction: string) => !(documentParent.flexElement && this.flexbox.grow > 0 && documentParent.css('flexDirection').startsWith(direction));
             if (this.hasPX('minWidth') && isFlexible('column')) {
                 this.android('minWidth', this.convertPX(this.css('minWidth')), false);
             }
             if (this.hasPX('minHeight') && isFlexible('row')) {
                 this.android('minHeight', this.convertPX(this.css('minHeight'), 'height'), false);
             }
-            if (this.support.maxWidth) {
+            const support = this.support;
+            if (support.maxWidth) {
                 const maxWidth = this.css('maxWidth');
                 let width = -1;
                 if ($css.isLength(maxWidth, true)) {
@@ -917,7 +909,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             }
-            if (this.support.maxHeight) {
+            if (support.maxHeight) {
                 const maxHeight = this.css('maxHeight');
                 if ($css.isLength(maxHeight, true)) {
                     let height = -1;
@@ -1202,8 +1194,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             };
-            const tagName = this.tagName;
-            const controlName = this.controlName;
+            const { tagName, controlName } = this;
             setCustomization(API_ANDROID[0], tagName);
             setCustomization(API_ANDROID[0], controlName);
             const api = API_ANDROID[this._api];

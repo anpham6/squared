@@ -365,12 +365,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     if (!item.hasPX(dimension)) {
                         const weight = $math.truncate(sizeWeight, node.localSettings.floatPrecision);
                         if (horizontal) {
-                            item.android('layout_width', '0px');
+                            item.setLayoutWidth('0px');
                             item.android('layout_columnWeight', weight);
                             item.mergeGravity('layout_gravity', 'fill_horizontal');
                         }
                         else {
-                            item.android('layout_height', '0px');
+                            item.setLayoutHeight('0px');
                             item.android('layout_rowWeight', weight);
                             item.mergeGravity('layout_gravity', 'fill_vertical');
                         }

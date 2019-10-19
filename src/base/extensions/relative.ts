@@ -27,11 +27,11 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
         const renderParent = node.renderParent as T;
         if (renderParent) {
             const verticalAlign = $util.convertFloat(node.verticalAlign);
-            let target = node;
             let { top, right, bottom, left } = node;
+            let target = node;
             if (renderParent.support.container.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                 const application = this.application;
-                target = node.clone(this.application.nextId, true, true) as T;
+                target = node.clone(application.nextId, true, true) as T;
                 target.baselineAltered = true;
                 node.hide(true);
                 application.session.cache.append(target, false);
@@ -46,12 +46,13 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                     layout.renderIndex = index + 1;
                 }
                 application.addLayout(layout);
-                if (renderParent.layoutHorizontal && node.documentParent.toInt('textIndent') < 0) {
+                if (renderParent.layoutHorizontal && node.documentParent.parseUnit(node.css('textIndent')) < 0) {
                     renderParent.renderEach(item => {
-                        if (item.alignSibling(STRING_BASE.TOP_BOTTOM) === node.documentId) {
+                        const documentId = node.documentId;
+                        if (item.alignSibling(STRING_BASE.TOP_BOTTOM) === documentId) {
                             item.alignSibling(STRING_BASE.TOP_BOTTOM, target.documentId);
                         }
-                        else if (item.alignSibling(STRING_BASE.BOTTOM_TOP) === node.documentId) {
+                        else if (item.alignSibling(STRING_BASE.BOTTOM_TOP) === documentId) {
                             item.alignSibling(STRING_BASE.BOTTOM_TOP, target.documentId);
                         }
                     });
@@ -63,10 +64,12 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                             const length = unaligned.length;
                             if (length) {
                                 unaligned.sort((a, b) => {
-                                    if ($util.withinRange(a.linear.top, b.linear.top)) {
+                                    const topA = a.linear.top;
+                                    const topB = b.linear.top;
+                                    if ($util.withinRange(topA, topB)) {
                                         return 0;
                                     }
-                                    return a.linear.top < b.linear.top ? -1 : 1;
+                                    return topA < topB ? -1 : 1;
                                 });
                                 for (let i = 0; i < length; i++) {
                                     const item = unaligned[i];

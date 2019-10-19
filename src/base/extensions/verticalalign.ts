@@ -17,18 +17,31 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
         let valid = false;
         let alignable = 0;
         let inlineVertical = 0;
+        let sameValue = 0;
         for (const item of node) {
             if (item.inlineVertical) {
-                inlineVertical++;
-                if ($util.convertInt(item.verticalAlign) !== 0) {
+                const value = $util.convertFloat(item.verticalAlign);
+                if (value !== 0) {
                     valid = true;
                 }
+                if (!isNaN(sameValue)) {
+                    if (sameValue === 0) {
+                        sameValue = value;
+                    }
+                    else if (sameValue !== value) {
+                        sameValue = NaN;
+                    }
+                }
+                inlineVertical++;
+            }
+            else {
+                sameValue = NaN;
             }
             if (item.positionStatic || item.positionRelative && item.length) {
                 alignable++;
             }
         }
-        return valid && inlineVertical > 1 && alignable === node.length && NodeUI.linearData(node.children as T[]).linearX;
+        return valid && isNaN(sameValue) && inlineVertical > 1 && alignable === node.length && NodeUI.linearData(node.children as T[]).linearX;
     }
 
     public processNode(node: T) {
@@ -63,21 +76,27 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                     const top = aboveBaseline[0].linear.top;
                     for (const item of children) {
                         if (item !== baseline) {
-                            if (item.inlineVertical && !item.baseline && !aboveBaseline.includes(item)) {
-                                let valid = false;
-                                switch (item.verticalAlign) {
-                                    case 'super':
-                                    case 'sub':
-                                        valid = true;
-                                        break;
-                                    default:
-                                        if ($css.isLength(item.verticalAlign) || baseline === undefined) {
+                            if (item.inlineVertical && !item.baseline) {
+                                if (!aboveBaseline.includes(item)) {
+                                    const verticalAlign = item.verticalAlign;
+                                    let valid = false;
+                                    switch (verticalAlign) {
+                                        case 'super':
+                                        case 'sub':
                                             valid = true;
-                                        }
-                                        break;
+                                            break;
+                                        default:
+                                            if ($css.isLength(verticalAlign) || baseline === undefined) {
+                                                valid = true;
+                                            }
+                                            break;
+                                    }
+                                    if (valid) {
+                                        item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - top);
+                                    }
                                 }
-                                if (valid) {
-                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - top);
+                                else if (item.imageElement && baseline) {
+                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, baseline.linear.top - item.linear.top);
                                 }
                             }
                             if (item.baselineAltered) {
