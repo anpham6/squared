@@ -50,20 +50,24 @@ const NAVIGATION = {
 const PREFIX_MENU = 'ic_menu_';
 
 function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, options: ViewAttribute) {
-    for (const attr in element.dataset) {
-        const value = element.dataset[attr];
-        if (value && validator[attr]) {
-            const match = validator[attr].exec(value);
-            if (match) {
-                options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
+    const dataset = element.dataset;
+    for (const attr in dataset) {
+        if (validator[attr]) {
+            const value = dataset[attr];
+            if (value) {
+                const match = validator[attr].exec(value);
+                if (match) {
+                    options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
+                }
             }
         }
     }
 }
 
 function getTitle(node: View, element: HTMLElement) {
-    if (element.title !== '') {
-        return element.title;
+    const title = element.title;
+    if (title) {
+        return title;
     }
     else {
         for (const child of node.naturalChildren) {

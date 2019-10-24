@@ -1,4 +1,4 @@
-/* android.widget 1.3.0
+/* android.widget 1.3.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -130,14 +130,15 @@ this.android.widget.toolbar = (function () {
             let appBarNode;
             let collapsingToolbarNode;
             if (hasAppBar) {
-                $util.assignEmptyValue(appBarOptions, 'android', 'id', node.documentId + '_appbar');
+                let android = appBarOptions.android;
+                $util.assignEmptyValue(appBarOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_appbar');
                 $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $css.formatPX(node.actualHeight) : 'wrap_content');
                 $util.assignEmptyValue(appBarOptions, 'android', 'fitsSystemWindows', 'true');
                 if (hasMenu) {
-                    if (appBarOptions.android.theme) {
-                        appBarOverlay = appBarOptions.android.theme;
+                    if (android.theme) {
+                        appBarOverlay = android.theme;
                     }
-                    appBarOptions.android.theme = '@style/' + settings.manifestThemeName + '.AppBarOverlay';
+                    android.theme = '@style/' + settings.manifestThemeName + '.AppBarOverlay';
                     node.data("android.widget.toolbar" /* TOOLBAR */, 'themeData', { appBarOverlay, popupOverlay });
                 }
                 else {
@@ -145,12 +146,14 @@ this.android.widget.toolbar = (function () {
                 }
                 appBarNode = this.createPlaceholder(node, appBarChildren, target);
                 appBarNode.parent = parent;
-                if (appBarOptions.android.id) {
-                    appBarNode.controlId = $utilA.getDocumentId(appBarOptions.android.id);
+                let id = android.id;
+                if (id) {
+                    appBarNode.controlId = $utilA.getDocumentId(id);
+                    delete android.id;
                 }
                 appBarNode.setControlType(appBarName, $enumA.CONTAINER_NODE.BLOCK);
                 if (hasCollapsingToolbar) {
-                    $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId + '_collapsingtoolbar');
+                    $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_collapsingtoolbar');
                     $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
                     if (!backgroundImage) {
                         $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'contentScrim', '?attr/colorPrimary');
@@ -160,8 +163,11 @@ this.android.widget.toolbar = (function () {
                     collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
                     if (collapsingToolbarNode) {
                         collapsingToolbarNode.parent = appBarNode;
-                        if (collapsingToolbarOptions.android.id) {
-                            appBarNode.controlId = $utilA.getDocumentId(collapsingToolbarOptions.android.id);
+                        android = collapsingToolbarOptions.android;
+                        id = android.id;
+                        if (id) {
+                            appBarNode.controlId = $utilA.getDocumentId(id);
+                            delete android.id;
                         }
                         collapsingToolbarNode.setControlType(collapsingToolbarName, $enumA.CONTAINER_NODE.BLOCK);
                         collapsingToolbarNode.each(item => item.dataset.target = collapsingToolbarNode.controlId);
@@ -209,7 +215,7 @@ this.android.widget.toolbar = (function () {
                                     scaleType = 'matrix';
                                     break;
                             }
-                            $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId + '_image');
+                            $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_image');
                             $util.assignEmptyValue(backgroundImageOptions, 'android', 'src', '@drawable/' + src);
                             $util.assignEmptyValue(backgroundImageOptions, 'android', 'scaleType', scaleType);
                             $util.assignEmptyValue(backgroundImageOptions, 'android', 'fitsSystemWindows', 'true');

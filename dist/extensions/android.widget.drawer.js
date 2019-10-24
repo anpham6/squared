@@ -1,4 +1,4 @@
-/* android.widget 1.3.0
+/* android.widget 1.3.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -81,7 +81,7 @@ this.android.widget.drawer = (function () {
                 }
                 if (menu !== '' || headerLayout !== '') {
                     const controller = this.controller;
-                    $util.assignEmptyValue(options, 'android', 'id', node.documentId + '_navigation');
+                    $util.assignEmptyValue(options, 'android', 'id', node.documentId.replace('@', '@+') + '_navigation');
                     $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                     $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
                     controller.addAfterInsideTemplate(node.id, controller.renderNodeStatic(node.localSettings.targetAPI < 29 /* Q */ ? $constA.SUPPORT_ANDROID.NAVIGATION_VIEW : $constA.SUPPORT_ANDROID_X.NAVIGATION_VIEW, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'match_parent'));

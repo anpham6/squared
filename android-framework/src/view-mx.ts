@@ -223,7 +223,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _boxAdjustment?: BoxModel;
         protected _boxReset?: BoxModel;
 
-        private _requireDocumentId = false;
         private _containerType = 0;
         private _api = BUILD_ANDROID.LATEST;
         private __android: StringMap = {};
@@ -493,20 +492,24 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public combine(...objs: string[]) {
             const result: string[] = [];
             const all = objs.length === 0;
+            let id = '';
             for (const value of this._namespaces) {
                 if (all || objs.includes(value)) {
                     const obj: StringMap = this['__' + value];
                     if (obj) {
                         for (const attr in obj) {
-                            result.push((value !== '_' ? value + ':' : '') + `${attr}="${obj[attr]}"`);
+                            if (attr === 'id' && value === 'android') {
+                                id = obj[attr];
+                            }
+                            else {
+                                result.push((value !== '_' ? value + ':' : '') + `${attr}="${obj[attr]}"`);
+                            }
                         }
                     }
                 }
             }
             result.sort((a, b) => a > b ? 1 : -1);
-            if (this._requireDocumentId) {
-                result.unshift(`android:id="@+id/${this.controlId}"`);
-            }
+            result.unshift(`android:id="${id !== '' ? id : '@+id/' + this.controlId}"`);
             return result;
         }
 
@@ -548,7 +551,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 for (const name of this._namespaces) {
                     const obj: StringMap = this['__' + name];
                     for (const attr in obj) {
-                        node.attr(name, attr, name === 'android' && attr === 'id' ? node.documentId : obj[attr]);
+                        node.attr(name, attr, attr === 'id' && name === 'android' ? node.documentId : obj[attr]);
                     }
                 }
             }
@@ -581,13 +584,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     const elementId = this.elementId;
                     if (elementId !== '') {
                         name = validateString(elementId);
-                        this._requireDocumentId = true;
                     }
                     else {
                         name = validateString($dom.getNamedItem(<HTMLElement> this.element, 'name'));
-                        if (this.svgElement) {
-                            this._requireDocumentId = true;
-                        }
                     }
                     if (name === 'parent' || RESERVED_JAVA.includes(name)) {
                         name = '_' + name;
@@ -1505,7 +1504,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         get documentId() {
             const controlId = this.controlId;
             if (controlId) {
-                this._requireDocumentId = true;
                 return '@id/' + controlId;
             }
             return '';

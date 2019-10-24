@@ -97,7 +97,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             }
             if (menu !== '' || headerLayout !== '') {
                 const controller = <android.base.Controller<T>> this.controller;
-                $util.assignEmptyValue(options, 'android', 'id', node.documentId + '_navigation');
+                $util.assignEmptyValue(options, 'android', 'id', node.documentId.replace('@', '@+') + '_navigation');
                 $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                 $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
                 controller.addAfterInsideTemplate(

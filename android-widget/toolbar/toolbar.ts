@@ -151,14 +151,15 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         let appBarNode: T | undefined;
         let collapsingToolbarNode: T | undefined;
         if (hasAppBar) {
-            $util.assignEmptyValue(appBarOptions, 'android', 'id', node.documentId + '_appbar');
+            let android = appBarOptions.android;
+            $util.assignEmptyValue(appBarOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_appbar');
             $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? $css.formatPX(node.actualHeight) : 'wrap_content');
             $util.assignEmptyValue(appBarOptions, 'android', 'fitsSystemWindows', 'true');
             if (hasMenu) {
-                if (appBarOptions.android.theme) {
-                    appBarOverlay = appBarOptions.android.theme;
+                if (android.theme) {
+                    appBarOverlay = android.theme;
                 }
-                appBarOptions.android.theme = '@style/' + settings.manifestThemeName + '.AppBarOverlay';
+                android.theme = '@style/' + settings.manifestThemeName + '.AppBarOverlay';
                 node.data(WIDGET_NAME.TOOLBAR, 'themeData', <ToolbarThemeData> { appBarOverlay, popupOverlay });
             }
             else {
@@ -166,12 +167,14 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             }
             appBarNode = this.createPlaceholder(node, appBarChildren, target);
             appBarNode.parent = parent;
-            if (appBarOptions.android.id) {
-                appBarNode.controlId = $utilA.getDocumentId(appBarOptions.android.id);
+            let id = android.id;
+            if (id) {
+                appBarNode.controlId = $utilA.getDocumentId(id);
+                delete android.id;
             }
             appBarNode.setControlType(appBarName, $enumA.CONTAINER_NODE.BLOCK);
             if (hasCollapsingToolbar) {
-                $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId + '_collapsingtoolbar');
+                $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_collapsingtoolbar');
                 $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
                 if (!backgroundImage) {
                     $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'contentScrim', '?attr/colorPrimary');
@@ -181,8 +184,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
                 if (collapsingToolbarNode) {
                     collapsingToolbarNode.parent = appBarNode;
-                    if (collapsingToolbarOptions.android.id) {
-                        appBarNode.controlId = $utilA.getDocumentId(collapsingToolbarOptions.android.id);
+                    android = collapsingToolbarOptions.android;
+                    id = android.id;
+                    if (id) {
+                        appBarNode.controlId = $utilA.getDocumentId(id);
+                        delete android.id;
                     }
                     collapsingToolbarNode.setControlType(collapsingToolbarName, $enumA.CONTAINER_NODE.BLOCK);
                     collapsingToolbarNode.each(item => item.dataset.target = (collapsingToolbarNode as T).controlId);
@@ -234,7 +240,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                                 scaleType = 'matrix';
                                 break;
                         }
-                        $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId + '_image');
+                        $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_image');
                         $util.assignEmptyValue(backgroundImageOptions, 'android', 'src', '@drawable/' + src);
                         $util.assignEmptyValue(backgroundImageOptions, 'android', 'scaleType', scaleType);
                         $util.assignEmptyValue(backgroundImageOptions, 'android', 'fitsSystemWindows', 'true');

@@ -32,7 +32,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
             const tagChild = data.tagChild;
             if (tagChild) {
                 node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
-                node.each(item => {
+                node.each((item: T) => {
                     if (item.styleElement) {
                         const dataset = item.dataset;
                         dataset.use = name;

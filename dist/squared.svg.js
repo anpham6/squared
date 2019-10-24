@@ -1,11 +1,11 @@
-/* squared.svg 1.3.1
+/* squared.svg 1.3.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (global = global || self, factory((global.squared = global.squared || {}, global.squared.svg = {})));
-}(this, function (exports) { 'use strict';
+}(this, (function (exports) { 'use strict';
 
     const { css: $css, dom: $dom, math: $math, regex: $regex, session: $session, util: $util, } = squared.lib;
     const SHAPES = {
@@ -7905,4 +7905,4 @@
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-}));
+})));

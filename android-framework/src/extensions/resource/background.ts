@@ -1395,7 +1395,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         }
                                     }
                                 }
-                                else if (boundsHeight < dimenHeight) {
+                                else if (boundsHeight < dimenHeight && !node.hasPX('height') && node.length === 0) {
                                     height = boundsHeight;
                                     gravityAlign = '';
                                     if (gravityY === '') {

@@ -1,11 +1,11 @@
-/* squared 1.3.1
+/* squared 1.3.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (global = global || self, factory(global.squared = {}));
-}(this, function (exports) { 'use strict';
+}(this, (function (exports) { 'use strict';
 
     const DECIMAL = '-?\\d+(?:\\.\\d+)?';
     const UNIT_TYPE = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in';
@@ -5304,4 +5304,4 @@
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-}));
+})));

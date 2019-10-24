@@ -1,4 +1,4 @@
-/* android-framework 1.3.1
+/* android-framework 1.3.2
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -1377,7 +1377,6 @@ var android = (function () {
                 this._namespaces = ['android', 'app'];
                 this._cached = {};
                 this._controlName = '';
-                this._requireDocumentId = false;
                 this._containerType = 0;
                 this._api = 29 /* LATEST */;
                 this.__android = {};
@@ -1636,20 +1635,24 @@ var android = (function () {
             combine(...objs) {
                 const result = [];
                 const all = objs.length === 0;
+                let id = '';
                 for (const value of this._namespaces) {
                     if (all || objs.includes(value)) {
                         const obj = this['__' + value];
                         if (obj) {
                             for (const attr in obj) {
-                                result.push((value !== '_' ? value + ':' : '') + `${attr}="${obj[attr]}"`);
+                                if (attr === 'id' && value === 'android') {
+                                    id = obj[attr];
+                                }
+                                else {
+                                    result.push((value !== '_' ? value + ':' : '') + `${attr}="${obj[attr]}"`);
+                                }
                             }
                         }
                     }
                 }
                 result.sort((a, b) => a > b ? 1 : -1);
-                if (this._requireDocumentId) {
-                    result.unshift(`android:id="@+id/${this.controlId}"`);
-                }
+                result.unshift(`android:id="${id !== '' ? id : '@+id/' + this.controlId}"`);
                 return result;
             }
             localizeString(value) {
@@ -1688,7 +1691,7 @@ var android = (function () {
                     for (const name of this._namespaces) {
                         const obj = this['__' + name];
                         for (const attr in obj) {
-                            node.attr(name, attr, name === 'android' && attr === 'id' ? node.documentId : obj[attr]);
+                            node.attr(name, attr, attr === 'id' && name === 'android' ? node.documentId : obj[attr]);
                         }
                     }
                 }
@@ -1720,13 +1723,9 @@ var android = (function () {
                         const elementId = this.elementId;
                         if (elementId !== '') {
                             name = validateString(elementId);
-                            this._requireDocumentId = true;
                         }
                         else {
                             name = validateString($dom.getNamedItem(this.element, 'name'));
-                            if (this.svgElement) {
-                                this._requireDocumentId = true;
-                            }
                         }
                         if (name === 'parent' || RESERVED_JAVA.includes(name)) {
                             name = '_' + name;
@@ -2628,7 +2627,6 @@ var android = (function () {
             get documentId() {
                 const controlId = this.controlId;
                 if (controlId) {
-                    this._requireDocumentId = true;
                     return '@id/' + controlId;
                 }
                 return '';
@@ -7866,7 +7864,7 @@ var android = (function () {
                 const tagChild = data.tagChild;
                 if (tagChild) {
                     node.addAlign(4 /* AUTO_LAYOUT */);
-                    node.each(item => {
+                    node.each((item) => {
                         if (item.styleElement) {
                             const dataset = item.dataset;
                             dataset.use = name;
@@ -10274,7 +10272,7 @@ var android = (function () {
                                             }
                                         }
                                     }
-                                    else if (boundsHeight < dimenHeight) {
+                                    else if (boundsHeight < dimenHeight && !node.hasPX('height') && node.length === 0) {
                                         height = boundsHeight;
                                         gravityAlign = '';
                                         if (gravityY === '') {
