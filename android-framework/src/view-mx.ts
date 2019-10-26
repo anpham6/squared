@@ -58,37 +58,17 @@ function isHorizontalAlign(value: string) {
 }
 
 function setAutoMargin(node: T) {
-    if (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerWrapped && node.innerWrapped.has('width', $e.CSS_UNIT.PERCENT, { not: '100%' })) {
+    if (node.autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerWrapped && node.innerWrapped.has('width', $e.CSS_UNIT.PERCENT, { not: '100%' }))) {
         const autoMargin = node.autoMargin;
-        const alignment: string[] = [];
-        if (autoMargin.horizontal) {
-            if (autoMargin.leftRight) {
-                alignment.push(STRING_ANDROID.CENTER_HORIZONTAL);
-            }
-            else if (autoMargin.left) {
-                alignment.push('right');
-            }
-            else {
-                alignment.push('left');
-            }
+        const attr = node.outerWrapper === undefined && (node.blockWidth || !node.pageFlow) ? 'gravity' : 'layout_gravity';
+        if (autoMargin.leftRight) {
+            node.mergeGravity(attr, STRING_ANDROID.CENTER_HORIZONTAL);
         }
-        if (autoMargin.vertical) {
-            if (node.autoMargin.topBottom) {
-                alignment.push(STRING_ANDROID.CENTER_VERTICAL);
-            }
-            else if (node.autoMargin.top) {
-                alignment.push('bottom');
-            }
-            else {
-                alignment.push('top');
-            }
+        else if (autoMargin.left) {
+            node.mergeGravity(attr, 'right');
         }
-        if (alignment.length) {
-            const attr = node.outerWrapper === undefined && (node.blockWidth || !node.pageFlow) ? 'gravity' : 'layout_gravity';
-            for (const value of alignment) {
-                node.mergeGravity(attr, value);
-            }
-            return true;
+        else {
+            node.mergeGravity(attr, 'left');
         }
     }
     return false;
@@ -746,7 +726,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     if (!current.inlineWidth) {
                                         layoutWidth = 'match_parent';
                                     }
-                                    else if (this.cssTry('display', 'inline-block')) {
+                                    else if (this.styleElement && this.cssTry('display', 'inline-block')) {
                                         if ((<Element> this.element).getBoundingClientRect().width < this.bounds.width) {
                                             layoutWidth = 'match_parent';
                                         }
@@ -777,7 +757,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 checkParentWidth();
                             }
                         }
-                        if (layoutWidth === '') {
+                        if (layoutWidth === '' && !this.floating) {
                             if (this.layoutVertical && !renderParent.inlineWidth && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) && !this.documentRoot ||
                                 !this.pageFlow && this.absoluteParent === documentParent && this.hasPX('left') && this.hasPX('right') ||
                                 this.is(CONTAINER_NODE.GRID) && this.some((node: T) => parseFloat(node.android('layout_columnWeight')) > 0) ||
@@ -1028,10 +1008,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     textAlignParent = '';
                 }
             }
-            if (textAlignParent !== '') {
-                if (this.blockStatic && !this.centerAligned && !this.rightAligned) {
-                    node.mergeGravity('layout_gravity', 'left', false);
-                }
+            if (textAlignParent !== '' && this.blockStatic && !this.centerAligned && !this.rightAligned) {
+                node.mergeGravity('layout_gravity', 'left', false);
             }
             if (!this.layoutConstraint && !this.layoutFrame && !this.is(CONTAINER_NODE.GRID) && !this.layoutElement) {
                 if (textAlign !== '') {
@@ -1048,6 +1026,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else if (!this.nodeGroup || !this.hasAlign($e.NODE_ALIGNMENT.FLOAT)) {
                         this.mergeGravity('gravity', textAlignParent);
                     }
+                }
+            }
+            if (node.autoMargin.vertical && (renderParent.layoutFrame || renderParent.layoutLinear && renderParent.layoutVertical)) {
+                const autoMargin = node.autoMargin;
+                if (autoMargin.topBottom) {
+                    node.mergeGravity('layout_gravity', STRING_ANDROID.CENTER_VERTICAL);
+                }
+                else if (autoMargin.top) {
+                    node.mergeGravity('layout_gravity', 'bottom');
+                }
+                else {
+                    node.mergeGravity('layout_gravity', 'top');
                 }
             }
         }
@@ -1562,7 +1552,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             let result = this._cached.renderExclude;
             if (result === undefined) {
                 if (this.styleElement && this.length === 0 && !this.imageElement) {
-                    if (this.blockStatic || this.layoutVertical) {
+                    if (this.blockStatic || this.layoutVertical || this.layoutFrame) {
                         result = this.contentBoxHeight === 0 && (this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0 || this.css('height') === '0px' && this.css('overflow') === 'hidden');
                     }
                     else {

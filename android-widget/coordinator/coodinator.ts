@@ -14,15 +14,19 @@ const $e = squared.base.lib.enumeration;
 
 export default class Coordinator<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {
+        const extensionManager = this.application.extensionManager;
         const options = $utilA.createViewAttribute(this.options[node.elementId]);
-        $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
+        $Resource.formatOptions(options, extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         const element = Coordinator.findNestedElement(node.element, WIDGET_NAME.TOOLBAR);
         if (element) {
             const toolbar = $session.getElementAsNode<T>(element, node.sessionId);
             if (toolbar) {
-                const extension = this.application.extensionManager.retrieve(WIDGET_NAME.TOOLBAR);
-                if (extension && extension.options[toolbar.elementId] && 'collapsingToolbar' in extension.options[toolbar.elementId]) {
-                    node.android('fitsSystemWindows', 'true');
+                const extension = extensionManager.retrieve(WIDGET_NAME.TOOLBAR);
+                if (extension) {
+                    const elementId = toolbar.elementId;
+                    if (extension.options[elementId] && 'collapsingToolbar' in extension.options[elementId]) {
+                        node.android('fitsSystemWindows', 'true');
+                    }
                 }
             }
         }

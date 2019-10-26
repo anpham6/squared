@@ -87,12 +87,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const element = <HTMLElement> this._element;
         if (element) {
             const sessionId = this.sessionId;
-            if (sessionId !== '0') {
+            const valid = sessionId !== '0';
+            if (valid) {
                 $session.setElementCache(element, 'node', sessionId, this);
             }
             this.style = this.pseudoElement ? $css.getStyle(element.parentElement, Node.getPseudoElt(this)) : $css.getStyle(element);
             this._styleMap = $session.getElementCache(element, 'styleMap', sessionId) || {};
-            if (this.styleElement && !this.pseudoElement && sessionId !== '0') {
+            if (this.styleElement && !this.pseudoElement && valid) {
                 for (let attr of Array.from(element.style)) {
                     let value = element.style.getPropertyValue(attr);
                     attr = $util.convertCamelCase(attr);
@@ -1790,7 +1791,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'absolute':
                     result = false;
                     break;
-                case 'sticky':
                 case 'relative':
                     result = !this.hasPX('top') && !this.hasPX('right') && !this.hasPX('bottom') && !this.hasPX('left');
                     if (result) {
@@ -1814,8 +1814,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get positionRelative() {
         let result = this._cached.positionRelative;
         if (result === undefined) {
-            const value = this.css('position');
-            result = value === 'relative' || value === 'sticky';
+            result = this.css('position') === 'relative';
             this._cached.positionRelative = result;
         }
         return result;
@@ -2018,7 +2017,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             if (this.naturalElement) {
                 const value = this.display;
-                result = value.startsWith('inline-') || this.flexElement || this.floating || value.startsWith('table');
+                result = value.startsWith('inline-') || value.startsWith('table') || this.flexElement || this.floating || this.tagName === 'RUBY';
             }
             else {
                 result = this.plainText;

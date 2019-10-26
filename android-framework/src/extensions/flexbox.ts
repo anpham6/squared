@@ -351,10 +351,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'left':
                                 case 'right':
                                 case 'flex-end':
-                                    chainStyle = 'packed';
                                     bias = 1;
-                                    parentEnd = false;
-                                    break;
                                 case 'baseline':
                                 case 'start':
                                 case 'end':
@@ -489,7 +486,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                     break;
                                 default:
-                                    const childContent = chain.innerWrapped as T;
+                                    const childContent = chain.layoutFrame && chain.innerWrapped as T;
                                     switch (mainData.alignContent) {
                                         case 'center':
                                             if (length % 2 === 1 && i === Math.floor(length / 2)) {
@@ -504,7 +501,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             break;
                                         case 'space-evenly':
                                         case 'space-around':
-                                            if (chain.layoutFrame && childContent) {
+                                            if (childContent) {
                                                 childContent.mergeGravity('layout_gravity', horizontal ? STRING_ANDROID.CENTER_VERTICAL : STRING_ANDROID.CENTER_HORIZONTAL);
                                             }
                                             else {
@@ -516,7 +513,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchorDelete(j === 0 ? RLBT : LRTB);
                                             }
                                             if (i === 0) {
-                                                if (chain.layoutFrame && childContent) {
+                                                if (childContent) {
                                                     childContent.mergeGravity('layout_gravity', wrapReverse ? BR : TL);
                                                 }
                                                 else {
@@ -524,7 +521,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 }
                                             }
                                             else if (length > 2 && i < length - 1) {
-                                                if (chain.layoutFrame && childContent) {
+                                                if (childContent) {
                                                     childContent.mergeGravity('layout_gravity', horizontal ? STRING_ANDROID.CENTER_VERTICAL : STRING_ANDROID.CENTER_HORIZONTAL);
                                                 }
                                                 else {
@@ -532,7 +529,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 }
                                             }
                                             else {
-                                                if (chain.layoutFrame && childContent) {
+                                                if (childContent) {
                                                     childContent.mergeGravity('layout_gravity', wrapReverse ? TL : BR);
                                                 }
                                                 else {
@@ -554,8 +551,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                         item.setLayoutWidth(value);
                                                     }
                                                 }
-                                                if (isNaN(maxSize)) {
-                                                    if (!mainData.wrap && chain.length) {
+                                                if (!horizontal && chain.blockStatic) {
+                                                    setLayoutWeightOpposing(chain, 'match_parent');
+                                                }
+                                                else if (isNaN(maxSize)) {
+                                                    if (!mainData.wrap && chain.length || dimension) {
                                                         setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent');
                                                     }
                                                     else {

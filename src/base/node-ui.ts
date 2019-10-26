@@ -789,16 +789,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (
                     blockStatic && (!previous.floating || !previous.rightAligned && $util.withinRange(previous.linear.right, parent.box.right) || cleared && cleared.has(previous)) ||
                     previous.blockStatic ||
-                    previous.autoMargin.leftRight ||
-                    previous.float === 'left' && this.autoMargin.right ||
-                    previous.float === 'right' && this.autoMargin.left)
+                    previous.autoMargin.leftRight)
                 {
                     return NODE_TRAVERSE.VERTICAL;
                 }
-                else if (previous.floating && blockStatic && this.some(item => item.floating && $util.aboveRange(item.linear.top, previous.linear.bottom))) {
-                    return NODE_TRAVERSE.FLOAT_BLOCK;
+                else if (previous.floating) {
+                    if (previous.float === 'left' && this.autoMargin.right || previous.float === 'right' && this.autoMargin.left) {
+                        return NODE_TRAVERSE.VERTICAL;
+                    }
+                    else if (blockStatic && this.some(item => item.floating && $util.aboveRange(item.linear.top, previous.linear.bottom))) {
+                        return NODE_TRAVERSE.FLOAT_BLOCK;
+                    }
                 }
-                else if (this.blockDimension && checkBlockDimension(previous)) {
+                if (this.blockDimension && checkBlockDimension(previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }
@@ -1212,7 +1215,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     set renderAs(value) {
-        if (!this.rendered && value && !value.rendered) {
+        if (value && !value.rendered && !this.rendered) {
             this._renderAs = value;
         }
     }

@@ -39,8 +39,9 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             if (length) {
                 for (let i = 0; i < length; i++) {
                     const item = <HTMLElement> children[i];
-                    if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $constA.EXT_ANDROID.EXTERNAL)) {
-                        item.dataset.use = (item.dataset.use ? item.dataset.use + ', ' : '') + $constA.EXT_ANDROID.EXTERNAL;
+                    const use = item.dataset.use;
+                    if (item.tagName === 'NAV' && !$util.includes(use, $constA.EXT_ANDROID.EXTERNAL)) {
+                        item.dataset.use = (use ? use + ', ' : '') + $constA.EXT_ANDROID.EXTERNAL;
                     }
                 }
                 this.application.rootElements.add(element);
@@ -86,9 +87,10 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
 
     public afterParseDocument() {
         for (const node of this.subscribers) {
+            const element = node.element;
             const options = $utilA.createViewAttribute(this.options.navigationView);
-            const menu = $util.optionalAsString(Drawer.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
-            const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $constA.EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
+            const menu = $util.optionalAsString(Drawer.findNestedElement(element, WIDGET_NAME.MENU), 'dataset.layoutName');
+            const headerLayout = $util.optionalAsString(Drawer.findNestedElement(element, $constA.EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
             if (menu !== '') {
                 $util.assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
             }
@@ -132,10 +134,11 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         $Resource.addTheme(options);
         if (api >= 21) {
             const lollipop = $utilA.createStyleAttribute($util.cloneObject(options));
-            lollipop.items = {};
+            const items = {};
             $util.assignEmptyValue(lollipop.output, 'path', 'res/values-v21');
-            $util.assignEmptyValue(lollipop.items, 'android:windowDrawsSystemBarBackgrounds', 'true');
-            $util.assignEmptyValue(lollipop.items, 'android:statusBarColor', '@android:color/transparent');
+            $util.assignEmptyValue(items, 'android:windowDrawsSystemBarBackgrounds', 'true');
+            $util.assignEmptyValue(items, 'android:statusBarColor', '@android:color/transparent');
+            lollipop.items = items;
             $Resource.addTheme(lollipop);
         }
     }

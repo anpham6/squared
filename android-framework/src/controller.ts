@@ -346,7 +346,7 @@ function constraintPercentHeight(node: View, opposing: boolean) {
 }
 
 function isTargeted(parent: View, node: View) {
-    if (parent.element && node.dataset.target) {
+    if (node.dataset.target && parent.element) {
         const element = document.getElementById(node.dataset.target);
         return element !== null && element !== parent.element;
     }
@@ -502,7 +502,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
             setFlexGrow('');
         }
-        else if (grow > 0 && (horizontal && node.documentParent.css('flexDirection').startsWith('row') || !horizontal && node.documentParent.css('flexDirection').startsWith('column'))) {
+        else if (grow > 0 && (horizontal && node.documentParent.css('flexDirection').startsWith('row') || !horizontal && node.documentParent.css('flexDirection').startsWith('column') && node.documentParent.hasHeight)) {
             setFlexGrow(node.hasPX(dimension, false) ? $css.formatPX(horizontal ? node.actualWidth : node.actualHeight) : '');
         }
         else {

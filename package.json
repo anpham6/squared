@@ -59,7 +59,7 @@
     "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "rollup": "^1.25.2",
+    "rollup": "^1.26.0",
     "rollup-plugin-async": "^1.2.0",
     "rollup-plugin-terser": "^5.1.2",
     "systemjs": "^0.21.6",

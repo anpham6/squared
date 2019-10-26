@@ -678,15 +678,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     public createSvgElement(node: T, src: string): [HTMLElement | undefined, SVGSVGElement | undefined] | [] {
-        let valid = src.startsWith('data:image/svg+xml');
-        if (!valid) {
-            const match = $regex.CSS.URL.exec(src);
-            if (match) {
-                src = match[1];
-            }
-            valid = src.toLowerCase().endsWith('.svg');
+        const match = $regex.CSS.URL.exec(src);
+        if (match) {
+            src = match[1];
         }
-        if (valid) {
+        if (src.toLowerCase().endsWith('.svg') || src.startsWith('data:image/svg+xml')) {
             const fileAsset = this.resource.getRawData(src);
             if (fileAsset) {
                 const parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;

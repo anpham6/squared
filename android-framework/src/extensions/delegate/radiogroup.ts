@@ -20,15 +20,14 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
     }
 
     public processNode(node: T, parent: T) {
-        const element = <HTMLInputElement> node.element;
-        const inputName = getInputName(element);
+        const inputName = getInputName(<HTMLInputElement> node.element);
         const children: T[] = [];
         const removeable: T[] = [];
         const radioButton: T[] = [];
         parent.each((item: T) => {
             let remove: T | undefined;
-            const renderAs = item.renderAs as T;
-            if (renderAs) {
+            if (item.renderAs) {
+                const renderAs = item.renderAs as T;
                 if (renderAs !== node) {
                     remove = item;
                 }

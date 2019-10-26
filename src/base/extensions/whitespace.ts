@@ -12,7 +12,7 @@ const {
 const DOCTYPE_HTML = document.doctype !== null && document.doctype.name === 'html';
 
 function setSpacingOffset(node: NodeUI, region: number, value: number, adjustment = 0) {
-    let offset = 0;
+    let offset: number;
     switch (region) {
         case BOX_STANDARD.MARGIN_TOP:
             offset = node.actualRect('top') - value;
@@ -22,6 +22,9 @@ function setSpacingOffset(node: NodeUI, region: number, value: number, adjustmen
             break;
         case BOX_STANDARD.MARGIN_BOTTOM:
             offset = value - node.actualRect('bottom');
+            break;
+        default:
+            offset = 0;
             break;
     }
     offset -= adjustment;
@@ -43,9 +46,9 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
             boxMargin = BOX_STANDARD.MARGIN_TOP;
         }
         else {
-            padding = 'paddingBottom';
-            borderWidth = 'borderBottomWidth';
             margin = 'marginBottom';
+            borderWidth = 'borderBottomWidth';
+            padding = 'paddingBottom';
             boxMargin = BOX_STANDARD.MARGIN_BOTTOM;
         }
         if (node[borderWidth] === 0) {
@@ -103,13 +106,14 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                 let blockAll = true;
                 do {
                     const endChild = <NodeUI> (direction ? child.firstStaticChild : child.lastStaticChild);
-                    if (endChild && endChild[margin] === 0 && endChild[borderWidth] === 0) {
-                        if (endChild[padding] > 0) {
-                            if (endChild[padding] >= node[padding]) {
+                    if (endChild && endChild[margin] === 0 && endChild[borderWidth] === 0 && !endChild.visibleStyle.background && canResetChild(endChild)) {
+                        const value = endChild[padding];
+                        if (value > 0) {
+                            if (value >= node[padding]) {
                                 node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM);
                             }
                             else if (blockAll) {
-                                node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, -endChild[padding]);
+                                node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, -value);
                             }
                             break;
                         }
@@ -206,14 +210,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                                 lastChild = current;
                             }
-                            else if (current.bounds.height === 0 && node.layoutVertical && node.alignSibling('top') === '' && node.alignSibling('bottom') === '') {
-                                if (i === 0) {
-                                    firstChild = current;
+                            else if (current.bounds.height === 0 && node.layoutVertical && current.alignSibling('top') === '' && current.alignSibling('bottom') === '' && (current.renderChildren.length === 0 || current.every((item: T) => !item.visible))) {
+                                if (!current.pseudoElement || current.pseudoElement && (length === 1 || i > 0 || children.every((item, index) => index === 0 || item.floating || item.pseudoElement && item.textContent.trim() === ''))) {
+                                    current.hide();
                                 }
-                                else if (i === length - 1) {
-                                    lastChild = current;
-                                }
-                                current.hide();
                             }
                         }
                         else {
@@ -321,9 +321,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                             }
                             if (!inheritedTop && previousSiblings.length > 1) {
-                                const adjacent = previousSiblings[0];
-                                if (adjacent.floating && (node.layoutVertical || current.renderParent && current.renderParent.layoutVertical)) {
-                                    const offset = adjacent.linear.top - current.linear.top;
+                                if (previousSiblings[0].floating && (node.layoutVertical || current.renderParent && current.renderParent.layoutVertical)) {
+                                    const offset = previousSiblings[0].linear.top - current.linear.top;
                                     if (offset < 0) {
                                         current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset, false);
                                     }

@@ -59,7 +59,6 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
 
     public processNode(node: T, parent: T) {
         const application = this.application;
-        const controller = this.controller;
         const resource = <android.base.Resource<T>> this.resource;
         const settings = <UserSettingsAndroid> application.userSettings;
         const element = <HTMLElement> node.element;
@@ -222,10 +221,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     }
                 );
                 if (backgroundImage) {
-                    const src = (<android.base.Resource<T>> this.resource).addImageSrc(node.backgroundImage);
+                    const src = resource.addImageSrc(node.backgroundImage);
                     if (src !== '') {
+                        const controller = this.controller;
                         const backgroundImageOptions = $utilA.createViewAttribute(options.backgroundImage);
-                        let scaleType = 'center';
+                        let scaleType: string;
                         switch (node.css('backgroundSize')) {
                             case 'cover':
                             case '100% auto':
@@ -238,6 +238,9 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                                 break;
                             case 'auto':
                                 scaleType = 'matrix';
+                                break;
+                            default:
+                                scaleType = 'center';
                                 break;
                         }
                         $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_image');
