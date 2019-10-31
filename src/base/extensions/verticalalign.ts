@@ -95,7 +95,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - top);
                                     }
                                 }
-                                else if (item.imageElement && baseline) {
+                                else if (item.imageElement && baseline && item.alignSibling('baseline') === baseline.documentId) {
                                     item.modifyBox(BOX_STANDARD.MARGIN_TOP, baseline.linear.top - item.linear.top);
                                 }
                             }

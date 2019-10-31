@@ -231,11 +231,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     public postBaseLayout(node: T) {
         const mainData: FlexboxData<T> = node.data($c.EXT_NAME.FLEXBOX, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const { children, directionReverse, directionRow, wrapReverse } = mainData;
+            const { alignContent, children, directionColumn, directionReverse, directionRow, justifyContent, wrap, wrapReverse } = mainData;
             const chainHorizontal: T[][] = [];
             const chainVertical: T[][] = [];
             const segmented: T[] = [];
-            if (mainData.wrap) {
+            if (wrap) {
                 let previous: T[] | undefined;
                 node.each((item: T) => {
                     if (item.hasAlign($e.NODE_ALIGNMENT.SEGMENTED)) {
@@ -271,7 +271,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                 });
                 if (node.layoutLinear) {
-                    if (wrapReverse && mainData.directionColumn) {
+                    if (wrapReverse && directionColumn) {
                         node.mergeGravity('gravity', 'right');
                     }
                 }
@@ -334,8 +334,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     const segStart = seg[0];
                     const segEnd = seg[lengthA - 1];
                     const opposing = seg === segmented;
-                    const justifyContent = !opposing && seg.every(item => item.flexbox.grow === 0);
-                    const spreadInside = justifyContent && (mainData.justifyContent === 'space-between' || mainData.justifyContent === 'space-around' && lengthA > 1);
+                    const justified = !opposing && seg.every(item => item.flexbox.grow === 0);
+                    const spreadInside = justified && (justifyContent === 'space-between' || justifyContent === 'space-around' && lengthA > 1);
                     const layoutWeight: T[] = [];
                     let maxSize = 0;
                     let growAvailable = 0;
@@ -347,7 +347,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         if (dimensionInverse) {
                             let chainStyle = 'spread';
                             let bias = 0;
-                            switch (mainData.alignContent) {
+                            switch (alignContent) {
                                 case 'left':
                                 case 'right':
                                 case 'flex-end':
@@ -487,7 +487,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 default:
                                     const childContent = chain.layoutFrame && chain.innerWrapped as T;
-                                    switch (mainData.alignContent) {
+                                    switch (alignContent) {
                                         case 'center':
                                             if (length % 2 === 1 && i === Math.floor(length / 2)) {
                                                 chain.anchorParent(orientationInverse);
@@ -555,7 +555,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     setLayoutWeightOpposing(chain, 'match_parent');
                                                 }
                                                 else if (isNaN(maxSize)) {
-                                                    if (!mainData.wrap && chain.length || dimension) {
+                                                    if (!wrap && chain.length || dimension && alignContent === 'normal') {
                                                         setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent');
                                                     }
                                                     else {
@@ -611,12 +611,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                     segStart.anchor(LT, 'parent');
                     segEnd.anchor(RB, 'parent');
-                    if (!opposing && (horizontal || mainData.directionColumn)) {
+                    if (!opposing && (horizontal || directionColumn)) {
                         let centered = false;
-                        if (justifyContent) {
-                            switch (mainData.justifyContent) {
+                        if (justified) {
+                            switch (justifyContent) {
                                 case 'normal':
-                                    if (mainData.directionColumn) {
+                                    if (directionColumn) {
                                         segStart.anchorStyle(orientation, 'packed', directionReverse ? 1 : 0);
                                     }
                                     break;
@@ -650,7 +650,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'space-evenly':
                                     if (lengthA > 1) {
                                         segStart.anchorStyle(orientation, 'spread');
-                                        if (!mainData.alignContent.startsWith('space')) {
+                                        if (!alignContent.startsWith('space')) {
                                             for (const item of seg) {
                                                 setLayoutWeight(item, item.flexbox.grow || 1);
                                             }
@@ -674,7 +674,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                             }
                         }
-                        if (spreadInside || !mainData.wrap && partition[i].some(item => item.app(orientationWeight) !== '') && !$util.sameArray(partition[i], item => item.app(orientationWeight))) {
+                        if (spreadInside || !wrap && partition[i].some(item => item.app(orientationWeight) !== '') && !$util.sameArray(partition[i], item => item.app(orientationWeight))) {
                             segStart.anchorStyle(orientation, 'spread_inside', 0, false);
                         }
                         else if (!centered) {

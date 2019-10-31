@@ -1,4 +1,4 @@
-/* android.widget 1.3.2
+/* android.widget 1.3.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -38,7 +38,6 @@ this.android.widget.toolbar = (function () {
         }
         processNode(node, parent) {
             const application = this.application;
-            const controller = this.controller;
             const resource = this.resource;
             const settings = application.userSettings;
             const element = node.element;
@@ -197,10 +196,11 @@ this.android.widget.toolbar = (function () {
                         controlName: collapsingToolbarName
                     });
                     if (backgroundImage) {
-                        const src = this.resource.addImageSrc(node.backgroundImage);
+                        const src = resource.addImageSrc(node.backgroundImage);
                         if (src !== '') {
+                            const controller = this.controller;
                             const backgroundImageOptions = $utilA.createViewAttribute(options.backgroundImage);
-                            let scaleType = 'center';
+                            let scaleType;
                             switch (node.css('backgroundSize')) {
                                 case 'cover':
                                 case '100% auto':
@@ -213,6 +213,9 @@ this.android.widget.toolbar = (function () {
                                     break;
                                 case 'auto':
                                     scaleType = 'matrix';
+                                    break;
+                                default:
+                                    scaleType = 'center';
                                     break;
                             }
                             $util.assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_image');

@@ -1,4 +1,4 @@
-/* android.widget 1.3.2
+/* android.widget 1.3.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -136,6 +136,7 @@ this.android.widget.menu = (function () {
             }
             const options = $utilA.createViewAttribute();
             const element = node.element;
+            const android = options.android;
             let controlName;
             let title = '';
             if (node.tagName === 'NAV') {
@@ -149,10 +150,10 @@ this.android.widget.menu = (function () {
                 else {
                     controlName = NAVIGATION.GROUP;
                     if (node.every((item) => hasInputType(item, 'radio'))) {
-                        options.android.checkableBehavior = 'single';
+                        android.checkableBehavior = 'single';
                     }
                     else if (node.every((item) => hasInputType(item, 'checkbox'))) {
-                        options.android.checkableBehavior = 'all';
+                        android.checkableBehavior = 'all';
                     }
                 }
                 title = getTitle(node, element);
@@ -161,7 +162,7 @@ this.android.widget.menu = (function () {
                 controlName = NAVIGATION.ITEM;
                 title = (element.title || element.innerText).trim();
                 if (hasInputType(node, 'checkbox') && !parent.android('checkableBehavior')) {
-                    options.android.checkable = 'true';
+                    android.checkable = 'true';
                 }
             }
             switch (controlName) {
@@ -174,18 +175,18 @@ this.android.widget.menu = (function () {
                     break;
                 case NAVIGATION.ITEM:
                     parseDataSet(REGEXP_ITEM, element, options);
-                    if (!options.android.icon) {
+                    if (!android.icon) {
                         const resource = this.resource;
                         let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);
                         if (src !== '') {
-                            options.android.icon = '@drawable/' + src;
+                            android.icon = '@drawable/' + src;
                         }
                         else {
                             const image = node.find(item => item.imageElement);
                             if (image) {
                                 src = resource.addImageSrc(image.element, PREFIX_MENU);
                                 if (src !== '') {
-                                    options.android.icon = '@drawable/' + src;
+                                    android.icon = '@drawable/' + src;
                                 }
                             }
                         }
@@ -196,7 +197,7 @@ this.android.widget.menu = (function () {
             if (title !== '') {
                 const numberResourceValue = this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
                 const name = $Resource.addString(title, '', numberResourceValue);
-                options.android.title = numberResourceValue || !$util.isNumber(name) ? '@string/' + name : title;
+                android.title = numberResourceValue || !$util.isNumber(name) ? '@string/' + name : title;
             }
             node.setControlType(controlName, $enumA.CONTAINER_NODE.INLINE);
             node.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);

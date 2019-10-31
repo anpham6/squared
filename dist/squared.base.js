@@ -1,6 +1,3 @@
-/* squared.base 1.3.2
-   https://github.com/anpham6/squared */
-
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -1225,12 +1222,13 @@
             const element = this._element;
             if (element) {
                 const sessionId = this.sessionId;
-                if (sessionId !== '0') {
+                const valid = sessionId !== '0';
+                if (valid) {
                     $session$1.setElementCache(element, 'node', sessionId, this);
                 }
                 this.style = this.pseudoElement ? $css$1.getStyle(element.parentElement, Node.getPseudoElt(this)) : $css$1.getStyle(element);
                 this._styleMap = $session$1.getElementCache(element, 'styleMap', sessionId) || {};
-                if (this.styleElement && !this.pseudoElement && sessionId !== '0') {
+                if (this.styleElement && !this.pseudoElement && valid) {
                     for (let attr of Array.from(element.style)) {
                         let value = element.style.getPropertyValue(attr);
                         attr = $util$4.convertCamelCase(attr);
@@ -2855,7 +2853,6 @@
                     case 'absolute':
                         result = false;
                         break;
-                    case 'sticky':
                     case 'relative':
                         result = !this.hasPX('top') && !this.hasPX('right') && !this.hasPX('bottom') && !this.hasPX('left');
                         if (result) {
@@ -2878,8 +2875,7 @@
         get positionRelative() {
             let result = this._cached.positionRelative;
             if (result === undefined) {
-                const value = this.css('position');
-                result = value === 'relative' || value === 'sticky';
+                result = this.css('position') === 'relative';
                 this._cached.positionRelative = result;
             }
             return result;
@@ -3071,7 +3067,7 @@
             if (result === undefined) {
                 if (this.naturalElement) {
                     const value = this.display;
-                    result = value.startsWith('inline-') || this.flexElement || this.floating || value.startsWith('table');
+                    result = value.startsWith('inline-') || value.startsWith('table') || this.flexElement || this.floating || this.tagName === 'RUBY';
                 }
                 else {
                     result = this.plainText;
@@ -4465,15 +4461,18 @@
                     }
                     else if (blockStatic && (!previous.floating || !previous.rightAligned && $util$5.withinRange(previous.linear.right, parent.box.right) || cleared && cleared.has(previous)) ||
                         previous.blockStatic ||
-                        previous.autoMargin.leftRight ||
-                        previous.float === 'left' && this.autoMargin.right ||
-                        previous.float === 'right' && this.autoMargin.left) {
+                        previous.autoMargin.leftRight) {
                         return 1 /* VERTICAL */;
                     }
-                    else if (previous.floating && blockStatic && this.some(item => item.floating && $util$5.aboveRange(item.linear.top, previous.linear.bottom))) {
-                        return 6 /* FLOAT_BLOCK */;
+                    else if (previous.floating) {
+                        if (previous.float === 'left' && this.autoMargin.right || previous.float === 'right' && this.autoMargin.left) {
+                            return 1 /* VERTICAL */;
+                        }
+                        else if (blockStatic && this.some(item => item.floating && $util$5.aboveRange(item.linear.top, previous.linear.bottom))) {
+                            return 6 /* FLOAT_BLOCK */;
+                        }
                     }
-                    else if (this.blockDimension && checkBlockDimension(previous)) {
+                    if (this.blockDimension && checkBlockDimension(previous)) {
                         return 3 /* INLINE_WRAP */;
                     }
                 }
@@ -4862,7 +4861,7 @@
             return false;
         }
         set renderAs(value) {
-            if (!this.rendered && value && !value.rendered) {
+            if (value && !value.rendered && !this.rendered) {
                 this._renderAs = value;
             }
         }
@@ -8484,14 +8483,12 @@
                             const element = node.element;
                             [node.nextSibling, node.previousSibling].some((sibling) => {
                                 if (sibling && sibling.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
-                                    const labelElement = sibling.element;
-                                    const labelParent = sibling.documentParent.tagName === 'LABEL' ? sibling.documentParent : undefined;
-                                    if (element.id === labelElement.htmlFor && element.id) {
+                                    if (element.id && element.id === sibling.element.htmlFor) {
                                         node.companion = sibling;
                                     }
-                                    else if (sibling.textElement && labelParent) {
+                                    else if (sibling.textElement && sibling.documentParent.tagName === 'LABEL') {
                                         node.companion = sibling;
-                                        labelParent.renderAs = node;
+                                        sibling.documentParent.renderAs = node;
                                     }
                                     else if (sibling.plainText) {
                                         node.companion = sibling;
@@ -10728,7 +10725,7 @@
                                             item.modifyBox(2 /* MARGIN_TOP */, item.linear.top - top);
                                         }
                                     }
-                                    else if (item.imageElement && baseline) {
+                                    else if (item.imageElement && baseline && item.alignSibling('baseline') === baseline.documentId) {
                                         item.modifyBox(2 /* MARGIN_TOP */, baseline.linear.top - item.linear.top);
                                     }
                                 }
@@ -10753,7 +10750,7 @@
     const { css: $css$d, util: $util$h } = squared.lib;
     const DOCTYPE_HTML = document.doctype !== null && document.doctype.name === 'html';
     function setSpacingOffset(node, region, value, adjustment = 0) {
-        let offset = 0;
+        let offset;
         switch (region) {
             case 2 /* MARGIN_TOP */:
                 offset = node.actualRect('top') - value;
@@ -10763,6 +10760,9 @@
                 break;
             case 8 /* MARGIN_BOTTOM */:
                 offset = value - node.actualRect('bottom');
+                break;
+            default:
+                offset = 0;
                 break;
         }
         offset -= adjustment;
@@ -10783,9 +10783,9 @@
                 boxMargin = 2 /* MARGIN_TOP */;
             }
             else {
-                padding = 'paddingBottom';
-                borderWidth = 'borderBottomWidth';
                 margin = 'marginBottom';
+                borderWidth = 'borderBottomWidth';
+                padding = 'paddingBottom';
                 boxMargin = 8 /* MARGIN_BOTTOM */;
             }
             if (node[borderWidth] === 0) {
@@ -10843,13 +10843,14 @@
                     let blockAll = true;
                     do {
                         const endChild = (direction ? child.firstStaticChild : child.lastStaticChild);
-                        if (endChild && endChild[margin] === 0 && endChild[borderWidth] === 0) {
-                            if (endChild[padding] > 0) {
-                                if (endChild[padding] >= node[padding]) {
+                        if (endChild && endChild[margin] === 0 && endChild[borderWidth] === 0 && !endChild.visibleStyle.background && canResetChild(endChild)) {
+                            const value = endChild[padding];
+                            if (value > 0) {
+                                if (value >= node[padding]) {
                                     node.modifyBox(direction ? 32 /* PADDING_TOP */ : 128 /* PADDING_BOTTOM */);
                                 }
                                 else if (blockAll) {
-                                    node.modifyBox(direction ? 32 /* PADDING_TOP */ : 128 /* PADDING_BOTTOM */, -endChild[padding]);
+                                    node.modifyBox(direction ? 32 /* PADDING_TOP */ : 128 /* PADDING_BOTTOM */, -value);
                                 }
                                 break;
                             }
@@ -10938,14 +10939,10 @@
                                     }
                                     lastChild = current;
                                 }
-                                else if (current.bounds.height === 0 && node.layoutVertical && node.alignSibling('top') === '' && node.alignSibling('bottom') === '') {
-                                    if (i === 0) {
-                                        firstChild = current;
+                                else if (current.bounds.height === 0 && node.layoutVertical && current.alignSibling('top') === '' && current.alignSibling('bottom') === '' && (current.renderChildren.length === 0 || current.every((item) => !item.visible))) {
+                                    if (!current.pseudoElement || current.pseudoElement && (length === 1 || i > 0 || children.every((item, index) => index === 0 || item.floating || item.pseudoElement && item.textContent.trim() === ''))) {
+                                        current.hide();
                                     }
-                                    else if (i === length - 1) {
-                                        lastChild = current;
-                                    }
-                                    current.hide();
                                 }
                             }
                             else {
@@ -11053,9 +11050,8 @@
                                     }
                                 }
                                 if (!inheritedTop && previousSiblings.length > 1) {
-                                    const adjacent = previousSiblings[0];
-                                    if (adjacent.floating && (node.layoutVertical || current.renderParent && current.renderParent.layoutVertical)) {
-                                        const offset = adjacent.linear.top - current.linear.top;
+                                    if (previousSiblings[0].floating && (node.layoutVertical || current.renderParent && current.renderParent.layoutVertical)) {
+                                        const offset = previousSiblings[0].linear.top - current.linear.top;
                                         if (offset < 0) {
                                             current.modifyBox(2 /* MARGIN_TOP */, offset, false);
                                         }

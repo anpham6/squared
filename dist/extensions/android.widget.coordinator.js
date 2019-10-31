@@ -1,4 +1,4 @@
-/* android.widget 1.3.2
+/* android.widget 1.3.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -12,15 +12,19 @@ this.android.widget.coordinator = (function () {
     const $e = squared.base.lib.enumeration;
     class Coordinator extends squared.base.ExtensionUI {
         processNode(node, parent) {
+            const extensionManager = this.application.extensionManager;
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
-            $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
+            $Resource.formatOptions(options, extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
             const element = Coordinator.findNestedElement(node.element, "android.widget.toolbar" /* TOOLBAR */);
             if (element) {
                 const toolbar = $session.getElementAsNode(element, node.sessionId);
                 if (toolbar) {
-                    const extension = this.application.extensionManager.retrieve("android.widget.toolbar" /* TOOLBAR */);
-                    if (extension && extension.options[toolbar.elementId] && 'collapsingToolbar' in extension.options[toolbar.elementId]) {
-                        node.android('fitsSystemWindows', 'true');
+                    const extension = extensionManager.retrieve("android.widget.toolbar" /* TOOLBAR */);
+                    if (extension) {
+                        const elementId = toolbar.elementId;
+                        if (extension.options[elementId] && 'collapsingToolbar' in extension.options[elementId]) {
+                            node.android('fitsSystemWindows', 'true');
+                        }
                     }
                 }
             }
