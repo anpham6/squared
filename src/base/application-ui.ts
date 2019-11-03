@@ -495,7 +495,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected cascadeParentNode(parentElement: HTMLElement, depth = 0) {
         const node = this.insertNode(parentElement);
-        if (node) {
+        if (node && node.display !== 'none') {
             node.depth = depth;
             if (depth === 0) {
                 this.processing.cache.append(node);

@@ -347,7 +347,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected cascadeParentNode(parentElement: HTMLElement, depth = 0) {
         const node = this.insertNode(parentElement);
-        if (node) {
+        if (node && node.display !== 'none') {
             const controller = this.controllerHandler;
             const processing = this.processing;
             const CACHE = processing.cache;

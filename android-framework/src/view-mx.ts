@@ -27,7 +27,7 @@ const REGEXP_DATASETATTR = /^attr[A-Z]/;
 const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
 const REGEXP_VALIDSTRING = /[^\w$\-_.]/g;
 
-function checkTextAlign(value: string, ignoreStart = false) {
+function checkTextAlign(value: string, ignoreStart: boolean) {
     switch (value) {
         case 'justify':
         case 'initial':
@@ -915,12 +915,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = this.renderParent as T;
             const node = this.outerWrapper || this;
             const outerRenderParent = (node.renderParent || renderParent) as T;
-            let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
+            let textAlign = checkTextAlign(this.cssInitial('textAlign', true), false);
             let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
             if (this.nodeGroup && textAlign === '' && !this.hasAlign($e.NODE_ALIGNMENT.FLOAT)) {
                 const parent = this.actualParent;
                 if (parent) {
-                    textAlign = checkTextAlign(parent.cssInitial('textAlign', true));
+                    textAlign = checkTextAlign(parent.cssInitial('textAlign', true), false);
                 }
             }
             if (this.pageFlow) {
@@ -972,7 +972,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             floating = '';
                         }
                         if (this.centerAligned) {
-                            this.mergeGravity('layout_gravity', checkTextAlign('center'));
+                            this.mergeGravity('layout_gravity', checkTextAlign('center', false));
                         }
                     }
                     if (this.onlyChild && renderParent.display === 'table-cell') {
@@ -1104,7 +1104,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 case 0:
                     break;
                 case 1:
-                    result = checkTextAlign(direction.values().next().value);
+                    result = checkTextAlign(direction.values().next().value, false);
                 default:
                     function checkMergable(value: string) {
                         const horizontal = value + '_horizontal';

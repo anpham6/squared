@@ -502,15 +502,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
             setFlexGrow('');
         }
-        else if (grow > 0 && (horizontal && node.documentParent.css('flexDirection').startsWith('row') || !horizontal && node.documentParent.css('flexDirection').startsWith('column') && node.documentParent.hasHeight)) {
-            setFlexGrow(node.hasPX(dimension, false) ? $css.formatPX(horizontal ? node.actualWidth : node.actualHeight) : '');
-        }
         else {
-            if (horizontal) {
-                constraintPercentWidth(node, false);
+            const documentParent = node.documentParent as T;
+            if (grow > 0 && (horizontal && documentParent.css('flexDirection').startsWith('row') || !horizontal && documentParent.css('flexDirection').startsWith('column') && (documentParent.hasHeight || documentParent.blockHeight || documentParent.flexibleHeight))) {
+                setFlexGrow(node.hasPX(dimension, false) ? $css.formatPX(horizontal ? node.actualWidth : node.actualHeight) : '');
             }
             else {
-                constraintPercentHeight(node, false);
+                if (horizontal) {
+                    constraintPercentWidth(node, false);
+                }
+                else {
+                    constraintPercentHeight(node, false);
+                }
             }
         }
         if (flexbox.shrink > 1) {
@@ -597,6 +600,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             supportRTL: typeof settings.supportRTL === 'boolean' ? settings.supportRTL : true,
             floatPrecision: this.localSettings.precision.standardFloat
         };
+        super.init();
     }
 
     public optimize(nodes: T[]) {

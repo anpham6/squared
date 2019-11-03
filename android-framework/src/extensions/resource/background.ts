@@ -1223,13 +1223,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     width = boundsWidth;
                                     height = boundsHeight * (ratioHeight / ratioWidth);
                                     left = 0;
-                                    top = Math.round((boundsHeight - height) / 2);
+                                    top = height > boundsHeight ? boundsHeight - height : 0;
                                     gravity = '';
                                 }
                                 else if (ratioWidth > ratioHeight) {
                                     width = boundsWidth * (ratioWidth / ratioHeight);
                                     height = boundsHeight;
-                                    left = Math.round((boundsWidth - width) / 2);
+                                    left = width > boundsWidth ? boundsWidth - width : 0;
                                     top = 0;
                                     gravity = '';
                                 }

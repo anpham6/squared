@@ -544,18 +544,18 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             }
                                             if (chain[HWL] === 0) {
                                                 function setLayoutWeightOpposing(item: T, value: string) {
-                                                    if (horizontal) {
-                                                        item.setLayoutHeight(value);
+                                                    if (!horizontal) {
+                                                        item.setLayoutWidth(value);
                                                     }
                                                     else {
-                                                        item.setLayoutWidth(value);
+                                                        item.setLayoutHeight(value);
                                                     }
                                                 }
                                                 if (!horizontal && chain.blockStatic) {
                                                     setLayoutWeightOpposing(chain, 'match_parent');
                                                 }
                                                 else if (isNaN(maxSize)) {
-                                                    if (!wrap && chain.length || dimension && alignContent === 'normal') {
+                                                    if (!horizontal && !wrap && chain.length || dimension && alignContent === 'normal') {
                                                         setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent');
                                                     }
                                                     else {
@@ -563,7 +563,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     }
                                                 }
                                                 else if (lengthA === 1) {
-                                                    setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent');
+                                                    if (!horizontal) {
+                                                        setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent');
+                                                    }
+                                                    else {
+                                                        setLayoutWeightOpposing(chain, 'wrap_content');
+                                                    }
                                                 }
                                                 else if ((chain.naturalElement ? (chain.initial.bounds as Dimension)[HWL] : Number.POSITIVE_INFINITY) < maxSize) {
                                                     setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px');

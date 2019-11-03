@@ -25,6 +25,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     private _beforeInside: ObjectIndex<string[]> = {};
     private _afterInside: ObjectIndex<string[]> = {};
     private _afterOutside: ObjectIndex<string[]> = {};
+    private _unsupportedCascade!: Set<string>;
+    private _unsupportedTagName!: Set<string>;
 
     public abstract processUnknownParent(layout: squared.base.LayoutUI<T>): LayoutResult<T>;
     public abstract processUnknownChild(layout: squared.base.LayoutUI<T>): LayoutResult<T>;
@@ -46,6 +48,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract get containerTypeVerticalMargin(): LayoutType;
     public abstract get containerTypePercent(): LayoutType;
 
+    public init() {
+        const unsupported = this.localSettings.unsupported;
+        this._unsupportedCascade = unsupported.cascade;
+        this._unsupportedTagName = unsupported.tagName;
+    }
+
     public reset() {
         this._requireFormat = false;
         this._beforeOutside = {};
@@ -55,7 +63,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public preventNodeCascade(element: Element) {
-        return this.localSettings.unsupported.cascade.has(element.tagName);
+        return this._unsupportedCascade.has(element.tagName);
     }
 
     public applyDefaultStyles(element: Element) {
@@ -310,7 +318,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public includeElement(element: Element) {
-        return !(this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && this.localSettings.unsupported.tagName.has(element.tagName + ':' + (<HTMLInputElement> element).type)) || (<HTMLElement> element).contentEditable === 'true';
+        return !(this._unsupportedTagName.has(element.tagName) || element.tagName === 'INPUT' && this._unsupportedTagName.has(element.tagName + ':' + (<HTMLInputElement> element).type)) || (<HTMLElement> element).contentEditable === 'true';
     }
 
     public visibleElement(element: Element) {
