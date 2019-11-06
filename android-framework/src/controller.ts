@@ -1117,9 +1117,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (element.srcset) {
                     imageSet = $css.getSrcSet(element, this.localSettings.supported.imageFormat as string[]);
                     if (imageSet.length) {
-                        if (imageSet[0].actualWidth) {
+                        const actualWidth = imageSet[0].actualWidth;
+                        if (actualWidth) {
                             if (percentWidth === -1) {
-                                width = imageSet[0].actualWidth;
+                                width = actualWidth;
                                 node.css('width', $css.formatPX(width), true);
                                 const image = this.application.resourceHandler.getImage(element.src);
                                 if (image && image.width > 0 && image.height > 0) {

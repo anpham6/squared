@@ -182,9 +182,12 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
         if (style) {
             return style[attr];
         }
-        else {
+        else if (isCalc(value)) {
             const result = calculateVar(element, value, attr);
             return result !== undefined ? result.toString() : '';
+        }
+        else {
+            return parseVar(element, value);
         }
     }
     return value || '';

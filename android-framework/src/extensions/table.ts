@@ -1,4 +1,4 @@
-import { TableData } from '../../../@types/base/extension';
+import { TableData, TableCellData } from '../../../@types/base/extension';
 
 import View from '../view';
 
@@ -8,6 +8,7 @@ import $LayoutUI = squared.base.LayoutUI;
 
 const {
     css: $css,
+    regex: $regex,
     util: $util
 } = squared.lib;
 
@@ -32,7 +33,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 requireWidth = mainData.expand;
                 node.each((item: T) => {
                     const data = item.data($c.EXT_NAME.TABLE, 'cellData');
-                    if (item.css('width') === '0px') {
+                    if ($regex.CHAR.UNITZERO.test(item.css('width'))) {
                         item.setLayoutWidth('0px');
                         item.android('layout_columnWeight', ((<HTMLTableCellElement> item.element).colSpan || 1).toString());
                     }
@@ -123,19 +124,16 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const data = node.data($c.EXT_NAME.TABLE, 'cellData');
+        const data: TableCellData = node.data($c.EXT_NAME.TABLE, 'cellData');
         if (data) {
-            const rowSpan: number = data.rowSpan;
-            const colSpan: number = data.colSpan;
-            const spaceSpan: number = data.spaceSpan || 0;
+            const { rowSpan, colSpan, spaceSpan } = data;
             if (rowSpan > 1) {
                 node.android('layout_rowSpan', rowSpan.toString());
             }
             if (colSpan > 1) {
                 node.android('layout_columnSpan', colSpan.toString());
             }
-            node.mergeGravity('layout_gravity', 'fill');
-            if (spaceSpan > 0) {
+            if (spaceSpan) {
                 const controller = <android.base.Controller<T>> this.controller;
                 controller.addAfterOutsideTemplate(
                     node.id,
@@ -143,6 +141,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     false
                 );
             }
+            node.mergeGravity('layout_gravity', 'fill');
             if (parent.css('empty-cells') === 'hide' && node.naturalChildren.length === 0 && node.textContent === '') {
                 node.hide(true);
             }

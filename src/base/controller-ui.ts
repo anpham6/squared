@@ -405,7 +405,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     if (!outside) {
                                         const overflowX = parent.css('overflowX') === 'hidden';
                                         const overflowY = parent.css('overflowY') === 'hidden';
-                                        if (overflowX && overflowY || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
+                                        if (overflowX && overflowY || parseFloat(node.cssInitial('top')) === 0 || parseFloat(node.cssInitial('right')) === 0 || parseFloat(node.cssInitial('bottom')) === 0 || parseFloat(node.cssInitial('left')) === 0) {
                                             break;
                                         }
                                         else {
@@ -417,7 +417,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             else if (outsideX && !node.hasPX('left') && node.right > 0 || outsideY && !node.hasPX('top') && node.bottom !== 0) {
                                                 outside = true;
                                             }
-                                            else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent && parent.actualParent.documentBody) && (node.top > 0 || node.left > 0)) {
+                                            else if (outsideX && outsideY && (!parent.pageFlow || (parent.actualParent as T).documentBody) && (node.top > 0 || node.left > 0)) {
                                                 outside = true;
                                             }
                                             else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.hasPX('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {

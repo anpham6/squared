@@ -468,7 +468,12 @@ export default abstract class Application<T extends Node> implements squared.bas
         const length = styleSheets.length;
         for (let i = 0; i < length; i++) {
             const styleSheet = styleSheets[i];
-            const mediaText = styleSheet.media.mediaText;
+            let mediaText = '';
+            try {
+                mediaText = styleSheet.media.mediaText;
+            }
+            catch {
+            }
             if (mediaText === '' || REGEXP_MEDIATEXT.test(mediaText)) {
                 applyStyleSheet(<CSSStyleSheet> styleSheet);
             }

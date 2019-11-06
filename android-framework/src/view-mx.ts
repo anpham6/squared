@@ -15,6 +15,7 @@ const {
     css: $css,
     dom: $dom,
     math: $math,
+    regex: $regex,
     util: $util
 } = squared.lib;
 
@@ -161,7 +162,15 @@ function setMinHeight(node: T, value: number) {
     }
 }
 
-const isFlexibleDimension = (node: T, value: string) => !!node.renderParent && value === '0px' && ((node.renderParent as T).layoutConstraint || (node.renderParent as T).is(CONTAINER_NODE.GRID));
+function isFlexibleDimension(node: T, value: string) {
+    if (value === '0px') {
+        const renderParent = node.renderParent as T;
+        if (renderParent) {
+            return renderParent.layoutConstraint || renderParent.is(CONTAINER_NODE.GRID);
+        }
+    }
+    return false;
+}
 
 const validateString = (value: string) => value ? value.trim().replace(REGEXP_VALIDSTRING, '_').toLowerCase() : '';
 
@@ -740,7 +749,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 current = current.renderParent as T;
                             }
                             while (current);
-                            if (blockAll && (renderParent.layoutVertical || renderParent.layoutFrame || this.onlyChild || (renderParent.layoutRelative || renderParent.layoutConstraint) && this.alignSibling('left') === '' && this.alignSibling('right') === '')) {
+                            if (blockAll && (renderParent.layoutVertical || renderParent.layoutFrame || this.onlyChild || (renderParent.layoutRelative || renderParent.layoutConstraint) && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '')) {
                                 layoutWidth = 'match_parent';
                             }
                         };
@@ -1552,11 +1561,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             let result = this._cached.renderExclude;
             if (result === undefined) {
                 if (this.styleElement && this.length === 0 && !this.imageElement) {
-                    if (this.blockStatic || this.layoutVertical || this.layoutFrame) {
-                        result = this.contentBoxHeight === 0 && (this.bounds.height === 0 && this.marginTop <= 0 && this.marginBottom <= 0 || this.css('height') === '0px' && this.css('overflow') === 'hidden');
+                    const renderParent = this.renderParent as T;
+                    if (this.blockStatic || renderParent && (renderParent.layoutVertical || renderParent.layoutFrame)) {
+                        result = this.contentBoxHeight === 0 && ((this.bounds.height === 0 || this.textEmpty && this.pseudoElement && this.pageFlow) && this.marginTop <= 0 && this.marginBottom <= 0 || this.css('overflow') === 'hidden' && $regex.CHAR.UNITZERO.test(this.css('height'))) && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
                     }
                     else {
-                        result = this.bounds.width === 0 && this.contentBoxWidth === 0 && this.textEmpty && !this.visibleStyle.background && this.marginLeft <= 0 && this.marginRight <= 0;
+                        result = this.textEmpty && (this.bounds.width === 0 && this.contentBoxWidth === 0 && this.marginLeft <= 0 && this.marginRight <= 0 && !this.visibleStyle.background || this.bounds.height === 0 && this.contentBoxHeight === 0 && this.marginTop <= 0 && this.marginBottom <= 0) && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '' && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
                     }
                 }
                 else {

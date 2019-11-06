@@ -210,7 +210,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                                 lastChild = current;
                             }
-                            else if (current.bounds.height === 0 && node.layoutVertical && current.alignSibling('top') === '' && current.alignSibling('bottom') === '' && (current.renderChildren.length === 0 || current.every((item: T) => !item.visible))) {
+                            else if (current.bounds.height === 0 && node.layoutVertical && current.alignSibling('topBottom') === '' && current.alignSibling('bottomTop') === '' && (current.renderChildren.length === 0 || current.every((item: T) => !item.visible))) {
                                 if (!current.pseudoElement || current.pseudoElement && (length === 1 || i > 0 || children.every((item, index) => index === 0 || item.floating || item.pseudoElement && item.textContent.trim() === ''))) {
                                     current.hide();
                                 }
@@ -364,7 +364,16 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                         let lineHeight = 0;
                         let aboveLineBreak: T | undefined;
-                        const getMarginOffset = () => below.linear.top - (aboveLineBreak ? Math.max(aboveLineBreak.linear.top, above.linear.bottom) : above.linear.bottom) - lineHeight;
+                        function getMarginOffset() {
+                            const top = below.linear.top;
+                            if (aboveLineBreak) {
+                                const bottom = Math.max(aboveLineBreak.linear.top, above.linear.bottom);
+                                if (bottom < top) {
+                                    return top - bottom - lineHeight;
+                                }
+                            }
+                            return top - above.linear.bottom - lineHeight;
+                        }
                         if (!above.multiline && above.has('lineHeight')) {
                             const aboveOffset = Math.floor((above.lineHeight - above.bounds.height) / 2);
                             if (aboveOffset > 0) {
@@ -404,7 +413,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                             if (belowParent === aboveParent) {
                                 const offset = getMarginOffset();
-                                if (offset !== 0) {
+                                if (offset > 0) {
                                     if (below.visible) {
                                         below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                         valid = true;
@@ -418,7 +427,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                         else {
                             const offset = getMarginOffset();
-                            if (offset !== 0) {
+                            if (offset > 0) {
                                 if (below.lineBreak || below.excluded) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                                     valid = true;

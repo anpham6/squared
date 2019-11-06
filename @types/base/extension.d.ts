@@ -78,3 +78,9 @@ export interface TableData {
     rowCount: number;
     columnCount: number;
 }
+
+export interface TableCellData {
+    rowSpan: number;
+    colSpan: number;
+    spaceSpan?: number;
+}

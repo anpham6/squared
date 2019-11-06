@@ -13,6 +13,7 @@ import $LayoutUI = squared.base.LayoutUI;
 const {
     css: $css,
     math: $math,
+    regex: $regex,
     util: $util
 } = squared.lib;
 
@@ -329,7 +330,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             minSize += gap;
                         }
                     }
-                    if (min === '0px' && node.textElement) {
+                    if (node.textElement && $regex.CHAR.UNITZERO.test(min)) {
                         fitContent = true;
                     }
                 }
