@@ -1,3 +1,6 @@
+/* squared 1.3.4
+   https://github.com/anpham6/squared */
+
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -29,7 +32,7 @@
         CALC: new RegExp(`^${STRING.CSS_CALC}$`),
         VAR: /var\((--[A-Za-z\d\-]+)(?!,\s*var\()(?:,\s*([a-z\-]+\([^)]+\)|[^)]+))?\)/,
         URL: /^url\("?(.+?)"?\)$/,
-        CUSTOM_PROPERTY: /^(?:var|calc)\(.+\)$/,
+        CUSTOM_PROPERTY: /^\s*(?:var|calc)\(.+\)$/,
         HEX: /[A-Za-z\d]{3,8}/,
         RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/,
         SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+])\\s*`, 'g'),
@@ -55,6 +58,7 @@
         LEADINGNUMBER: /^\d/,
         LOWERCASE: /^[a-z]+$/,
         WORD: /\w/,
+        UNITZERO: /^\s*0[a-z]*\s*$/,
         WORDDASH: /[a-zA-Z\d]/
     };
     const COMPONENT = {
@@ -3622,9 +3626,12 @@
             if (style) {
                 return style[attr];
             }
-            else {
+            else if (isCalc(value)) {
                 const result = calculateVar(element, value, attr);
                 return result !== undefined ? result.toString() : '';
+            }
+            else {
+                return parseVar(element, value);
             }
         }
         return value || '';

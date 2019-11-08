@@ -1,3 +1,6 @@
+/* squared.base 1.3.4
+   https://github.com/anpham6/squared */
+
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -457,7 +460,7 @@
         }
         cascadeParentNode(parentElement, depth = 0) {
             const node = this.insertNode(parentElement);
-            if (node) {
+            if (node && node.display !== 'none') {
                 const controller = this.controllerHandler;
                 const processing = this.processing;
                 const CACHE = processing.cache;
@@ -576,7 +579,12 @@
             const length = styleSheets.length;
             for (let i = 0; i < length; i++) {
                 const styleSheet = styleSheets[i];
-                const mediaText = styleSheet.media.mediaText;
+                let mediaText = '';
+                try {
+                    mediaText = styleSheet.media.mediaText;
+                }
+                catch (_a) {
+                }
                 if (mediaText === '' || REGEXP_MEDIATEXT.test(mediaText)) {
                     applyStyleSheet(styleSheet);
                 }
@@ -5620,7 +5628,7 @@
         }
         cascadeParentNode(parentElement, depth = 0) {
             const node = this.insertNode(parentElement);
-            if (node) {
+            if (node && node.display !== 'none') {
                 node.depth = depth;
                 if (depth === 0) {
                     this.processing.cache.append(node);
@@ -6831,6 +6839,11 @@
             this._afterInside = {};
             this._afterOutside = {};
         }
+        init() {
+            const unsupported = this.localSettings.unsupported;
+            this._unsupportedCascade = unsupported.cascade;
+            this._unsupportedTagName = unsupported.tagName;
+        }
         reset() {
             this._requireFormat = false;
             this._beforeOutside = {};
@@ -6839,7 +6852,7 @@
             this._afterOutside = {};
         }
         preventNodeCascade(element) {
-            return this.localSettings.unsupported.cascade.has(element.tagName);
+            return this._unsupportedCascade.has(element.tagName);
         }
         applyDefaultStyles(element) {
             const sessionId = this.sessionId;
@@ -7083,7 +7096,7 @@
             return this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined;
         }
         includeElement(element) {
-            return !(this.localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && this.localSettings.unsupported.tagName.has(element.tagName + ':' + element.type)) || element.contentEditable === 'true';
+            return !(this._unsupportedTagName.has(element.tagName) || element.tagName === 'INPUT' && this._unsupportedTagName.has(element.tagName + ':' + element.type)) || element.contentEditable === 'true';
         }
         visibleElement(element) {
             const rect = $session$4.actualClientRect(element, this.sessionId);
@@ -7167,7 +7180,7 @@
                                         if (!outside) {
                                             const overflowX = parent.css('overflowX') === 'hidden';
                                             const overflowY = parent.css('overflowY') === 'hidden';
-                                            if (overflowX && overflowY || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
+                                            if (overflowX && overflowY || parseFloat(node.cssInitial('top')) === 0 || parseFloat(node.cssInitial('right')) === 0 || parseFloat(node.cssInitial('bottom')) === 0 || parseFloat(node.cssInitial('left')) === 0) {
                                                 break;
                                             }
                                             else {
@@ -7179,7 +7192,7 @@
                                                 else if (outsideX && !node.hasPX('left') && node.right > 0 || outsideY && !node.hasPX('top') && node.bottom !== 0) {
                                                     outside = true;
                                                 }
-                                                else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent && parent.actualParent.documentBody) && (node.top > 0 || node.left > 0)) {
+                                                else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent.documentBody) && (node.top > 0 || node.left > 0)) {
                                                     outside = true;
                                                 }
                                                 else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.hasPX('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
@@ -10939,7 +10952,7 @@
                                     }
                                     lastChild = current;
                                 }
-                                else if (current.bounds.height === 0 && node.layoutVertical && current.alignSibling('top') === '' && current.alignSibling('bottom') === '' && (current.renderChildren.length === 0 || current.every((item) => !item.visible))) {
+                                else if (current.bounds.height === 0 && node.layoutVertical && current.alignSibling('topBottom') === '' && current.alignSibling('bottomTop') === '' && (current.renderChildren.length === 0 || current.every((item) => !item.visible))) {
                                     if (!current.pseudoElement || current.pseudoElement && (length === 1 || i > 0 || children.every((item, index) => index === 0 || item.floating || item.pseudoElement && item.textContent.trim() === ''))) {
                                         current.hide();
                                     }
@@ -11093,7 +11106,16 @@
                             }
                             let lineHeight = 0;
                             let aboveLineBreak;
-                            const getMarginOffset = () => below.linear.top - (aboveLineBreak ? Math.max(aboveLineBreak.linear.top, above.linear.bottom) : above.linear.bottom) - lineHeight;
+                            function getMarginOffset() {
+                                const top = below.linear.top;
+                                if (aboveLineBreak) {
+                                    const bottom = Math.max(aboveLineBreak.linear.top, above.linear.bottom);
+                                    if (bottom < top) {
+                                        return top - bottom - lineHeight;
+                                    }
+                                }
+                                return top - above.linear.bottom - lineHeight;
+                            }
                             if (!above.multiline && above.has('lineHeight')) {
                                 const aboveOffset = Math.floor((above.lineHeight - above.bounds.height) / 2);
                                 if (aboveOffset > 0) {
@@ -11133,7 +11155,7 @@
                                 }
                                 if (belowParent === aboveParent) {
                                     const offset = getMarginOffset();
-                                    if (offset !== 0) {
+                                    if (offset > 0) {
                                         if (below.visible) {
                                             below.modifyBox(2 /* MARGIN_TOP */, offset);
                                             valid = true;
@@ -11147,7 +11169,7 @@
                             }
                             else {
                                 const offset = getMarginOffset();
-                                if (offset !== 0) {
+                                if (offset > 0) {
                                     if (below.lineBreak || below.excluded) {
                                         actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
                                         valid = true;

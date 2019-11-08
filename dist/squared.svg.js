@@ -1,3 +1,6 @@
+/* squared.svg 1.3.4
+   https://github.com/anpham6/squared */
+
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :

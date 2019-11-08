@@ -10,7 +10,7 @@ export default [
             file: '../dist/extensions/android.widget.bottomnavigation.js',
             name: 'android.widget.bottomnavigation',
             format: 'iife',
-            banner: `/* android.widget ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* android.widget.bottomnavigation ${version}\n   https://github.com/anpham6/squared */\n`
         }
     },
     {
@@ -37,7 +37,7 @@ export default [
             file: '../dist/extensions/android.widget.coordinator.js',
             name: 'android.widget.coordinator',
             format: 'iife',
-            banner: `/* android.widget ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* android.widget.coordinator ${version}\n   https://github.com/anpham6/squared */\n`
         }
     },
     {
@@ -64,7 +64,7 @@ export default [
             file: '../dist/extensions/android.widget.drawer.js',
             name: 'android.widget.drawer',
             format: 'iife',
-            banner: `/* android.widget ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* android.widget.drawer ${version}\n   https://github.com/anpham6/squared */\n`
         }
     },
     {
@@ -91,7 +91,7 @@ export default [
             file: '../dist/extensions/android.widget.floatingactionbutton.js',
             name: 'android.widget.floatingactionbutton',
             format: 'iife',
-            banner: `/* android.widget ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* android.widget.floatingactionbutton ${version}\n   https://github.com/anpham6/squared */\n`
         }
     },
     {
@@ -118,7 +118,7 @@ export default [
             file: '../dist/extensions/android.widget.menu.js',
             name: 'android.widget.menu',
             format: 'iife',
-            banner: `/* android.widget ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* android.widget.menu ${version}\n   https://github.com/anpham6/squared */\n`
         }
     },
     {
@@ -145,7 +145,7 @@ export default [
             file: '../dist/extensions/android.widget.toolbar.js',
             name: 'android.widget.toolbar',
             format: 'iife',
-            banner: `/* android.widget ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* android.widget.toolbar ${version}\n   https://github.com/anpham6/squared */\n`
         }
     },
     {
