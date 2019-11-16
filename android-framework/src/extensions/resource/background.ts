@@ -182,36 +182,47 @@ function getBorderRadius(radius?: string[]): StringMap | undefined {
             return { radius: radius[0] };
         }
         else {
-            let corners: string[];
-            if (length === 8) {
-                corners = [];
-                for (let i = 0; i < length; i += 2) {
-                    corners.push($css.formatPX((parseFloat(radius[i]) + parseFloat(radius[i + 1])) / 2));
-                }
-            }
-            else {
-                corners = radius;
-            }
-            const boxModel = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
-            const result = {};
-            let valid = false;
-            const lengthB = corners.length;
-            for (let i = 0; i < lengthB; i++) {
-                const value = corners[i];
-                if (corners[i] !== '0px') {
-                    result[boxModel[i] + 'Radius'] = value;
+            function getCornerRadius(corners: string[]) {
+                const [topLeft, topRight, bottomRight, bottomLeft] = corners;
+                const result: StringMap = {};
+                let valid = false;
+                if (topLeft !== '0px') {
+                    result.topLeftRadius = topLeft;
                     valid = true;
                 }
+                if (topRight !== '0px') {
+                    result.topRightRadius = topRight;
+                    valid = true;
+                }
+                if (bottomRight !== '0px') {
+                    result.bottomRightRadius = bottomRight;
+                    valid = true;
+                }
+                if (bottomLeft !== '0px') {
+                    result.bottomLeftRadius = bottomLeft;
+                    valid = true;
+                }
+                if (valid) {
+                    return result;
+                }
+                return undefined;
             }
-            if (valid) {
-                return result;
+            if (length === 8) {
+                const corners = new Array(4);
+                for (let i = 0, j = 0; i < length; i += 2) {
+                    corners[j++] = $css.formatPX((parseFloat(radius[i]) + parseFloat(radius[i + 1])) / 2);
+                }
+                return getCornerRadius(corners);
+            }
+            else {
+                return getCornerRadius(radius);
             }
         }
     }
     return undefined;
 }
 
-function getBackgroundColor(value: string | undefined) {
+function getBackgroundColor(value?: string) {
     const color = getColorValue(value, false);
     return color !== '' ? { color } : undefined;
 }
@@ -358,7 +369,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     return result;
 }
 
-function getPercentOffset(direction: string, position: BoxRectPosition, backgroundSize: string, bounds: BoxRectDimension, dimension?: Dimension): number {
+function getPercentOffset(direction: string, position: BoxRectPosition, bounds: BoxRectDimension, dimension?: Dimension): number {
     if (dimension) {
         const orientation = position.orientation;
         if (direction === 'left' || direction === 'right') {
@@ -820,8 +831,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (!valid) {
                                 const match = $regex.CSS.URL.exec(value);
                                 if (match) {
-                                    if (match[1].startsWith('data:image')) {
-                                        const rawData = resource.getRawData(match[1]);
+                                    const uri = match[1];
+                                    if (uri.startsWith('data:image')) {
+                                        const rawData = resource.getRawData(uri);
                                         if (rawData && rawData.base64) {
                                             images[length] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));
                                             imageDimensions[length] = rawData;
@@ -830,7 +842,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         }
                                     }
                                     else {
-                                        value = $util.resolvePath(match[1]);
+                                        value = $util.resolvePath(uri);
                                         images[length] = Resource.addImage({ mdpi: value });
                                         if (images[length] !== '') {
                                             imageDimensions[length] = resource.getImage(value);
@@ -1072,7 +1084,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (dimension) {
                         if (gravityX !== '' && tileModeY === 'repeat' && dimenWidth < boundsWidth) {
                             function resetX() {
-                                if (gravityY === '' && gravityX !== '' && gravityX !== node.localizeString('left') && node.renderChildren.length) {
+                                if (gravityY === '' && gravityX !== node.localizeString('left') && node.renderChildren.length) {
                                     tileModeY = 'disabled';
                                 }
                                 gravityAlign = gravityX;
@@ -1101,7 +1113,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         if (gravityY !== '' && tileModeX === 'repeat' && dimenHeight < boundsHeight) {
                             function resetY() {
-                                if (gravityX === '' && gravityY !== '' && gravityY !== 'top' && node.renderChildren.length) {
+                                if (gravityX === '' && gravityY !== 'top' && node.renderChildren.length) {
                                     tileModeX = 'disabled';
                                 }
                                 gravityAlign += (gravityAlign !== '' ? '|' : '') + gravityY;
@@ -1540,33 +1552,42 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 if (imageData.drawable || imageData.bitmap || imageData.gradient) {
-                    const bounds = node.bounds;
                     if (position.bottom !== 0) {
-                        imageData.bottom = $css.formatPX((repeatY || !recalibrate ? position.bottom : getPercentOffset('bottom', position, size, bounds, dimension)) + bottom);
-                        bottom = 0;
+                        bottom = (repeatY || !recalibrate ? position.bottom : getPercentOffset('bottom', position, node.bounds, dimension)) + bottom;
                     }
                     else if (position.top !== 0) {
-                        imageData.top = $css.formatPX((repeatY || !recalibrate ? position.top : getPercentOffset('top', position, size, bounds, dimension)) + top);
-                        top = 0;
+                        top = (repeatY || !recalibrate ? position.top : getPercentOffset('top', position, node.bounds, dimension)) + top;
                     }
                     if (position.right !== 0) {
-                        imageData.right = $css.formatPX((repeatX || !recalibrate ? position.right : getPercentOffset('right', position, size, bounds, dimension)) + right);
-                        right = 0;
+                        right = (repeatX || !recalibrate ? position.right : getPercentOffset('right', position, node.bounds, dimension)) + right;
                     }
                     else if (position.left !== 0) {
-                        imageData.left = $css.formatPX((repeatX || !recalibrate ? position.left : getPercentOffset('left', position, size, bounds, dimension)) + left);
-                        left = 0;
+                        left = (repeatX || !recalibrate ? position.left : getPercentOffset('left', position, node.bounds, dimension)) + left;
                     }
+                    const width = parseInt(imageData.width as string);
+                    const height = parseInt(imageData.height as string);
                     if (top !== 0) {
+                        if (height) {
+                            top = Math.max(top, boundsHeight - height);
+                        }
                         imageData.top = $css.formatPX(top);
                     }
                     if (right !== 0) {
+                        if (width) {
+                            right = Math.max(right, boundsWidth - width);
+                        }
                         imageData.right = $css.formatPX(right);
                     }
                     if (bottom !== 0) {
+                        if (height) {
+                            bottom = Math.max(bottom, boundsHeight - height);
+                        }
                         imageData.bottom = $css.formatPX(bottom);
                     }
                     if (left !== 0) {
+                        if (width) {
+                            left = Math.max(left, boundsWidth - width);
+                        }
                         imageData.left = $css.formatPX(left);
                     }
                     result.push(imageData);

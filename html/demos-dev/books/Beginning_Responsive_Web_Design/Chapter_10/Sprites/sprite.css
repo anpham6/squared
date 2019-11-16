@@ -1,0 +1,24 @@
+.orange-smile-icon,
+.green-smile-icon,
+.blue-smile-icon,
+.pink-smile-icon {
+	width: 25px;
+	height: 25px;
+	background: url('sprite.png') 0 0 no-repeat;
+}
+
+.orange-smile-icon{
+	background-position: 0 0;
+}
+
+.green-smile-icon{
+	background-position: -25px 0;
+}
+
+.blue-smile-icon{
+	background-position: -50px 0;
+}
+
+.pink-smile-icon{
+	background-position: -75px 0;
+}

@@ -229,43 +229,61 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public intersectX(rect: BoxRectDimension, dimension = 'linear') {
-        const self: BoxRectDimension = this[dimension];
-        return (
-            $util.aboveRange(rect.left, self.left) && Math.ceil(rect.left) < self.right ||
-            rect.right > Math.ceil(self.left) && $util.belowRange(rect.right, self.right) ||
-            $util.aboveRange(self.left, rect.left) && $util.belowRange(self.right, rect.right) ||
-            $util.aboveRange(rect.left, self.left) && $util.belowRange(rect.right, self.right)
-        );
+        if (rect.width > 0) {
+            const self: BoxRectDimension = this[dimension];
+            return (
+                $util.aboveRange(rect.left, self.left) && Math.ceil(rect.left) < self.right ||
+                rect.right > Math.ceil(self.left) && $util.belowRange(rect.right, self.right) ||
+                $util.aboveRange(self.left, rect.left) && $util.belowRange(self.right, rect.right) ||
+                $util.aboveRange(rect.left, self.left) && $util.belowRange(rect.right, self.right)
+            );
+        }
+        return false;
     }
 
     public intersectY(rect: BoxRectDimension, dimension = 'linear') {
-        const self: BoxRectDimension = this[dimension];
-        return (
-            $util.aboveRange(rect.top, self.top) && Math.ceil(rect.top) < self.bottom ||
-            rect.bottom > Math.ceil(self.top) && $util.belowRange(rect.bottom, self.bottom) ||
-            $util.aboveRange(self.top, rect.top) && $util.belowRange(self.bottom, rect.bottom) ||
-            $util.aboveRange(rect.top, self.top) && $util.belowRange(rect.bottom, self.bottom)
-        );
+        if (rect.height > 0) {
+            const self: BoxRectDimension = this[dimension];
+            return (
+                $util.aboveRange(rect.top, self.top) && Math.ceil(rect.top) < self.bottom ||
+                rect.bottom > Math.ceil(self.top) && $util.belowRange(rect.bottom, self.bottom) ||
+                $util.aboveRange(self.top, rect.top) && $util.belowRange(self.bottom, rect.bottom) ||
+                $util.aboveRange(rect.top, self.top) && $util.belowRange(rect.bottom, self.bottom)
+            );
+        }
+        return false;
     }
 
     public withinX(rect: BoxRectDimension, dimension = 'linear') {
-        const self: BoxRectDimension = this[dimension];
-        return $util.aboveRange(self.left, rect.left) && $util.belowRange(self.right, rect.right);
+        if (this.pageFlow || rect.width > 0) {
+            const self: BoxRectDimension = this[dimension];
+            return $util.aboveRange(self.left, rect.left) && $util.belowRange(self.right, rect.right);
+        }
+        return true;
     }
 
     public withinY(rect: BoxRectDimension, dimension = 'linear') {
-        const self: BoxRectDimension = this[dimension];
-        return $util.aboveRange(self.top, rect.top) && $util.belowRange(self.bottom, rect.bottom);
+        if (this.pageFlow || rect.height > 0) {
+            const self: BoxRectDimension = this[dimension];
+            return $util.aboveRange(self.top, rect.top) && $util.belowRange(self.bottom, rect.bottom);
+        }
+        return true;
     }
 
     public outsideX(rect: BoxRectDimension, dimension = 'linear') {
-        const self: BoxRectDimension = this[dimension];
-        return self.left < Math.floor(rect.left) || Math.floor(self.right) > rect.right;
+        if (this.pageFlow || rect.width > 0) {
+            const self: BoxRectDimension = this[dimension];
+            return self.left < Math.floor(rect.left) || Math.floor(self.right) > rect.right;
+        }
+        return false;
     }
 
     public outsideY(rect: BoxRectDimension, dimension = 'linear') {
-        const self: BoxRectDimension = this[dimension];
-        return self.top < Math.floor(rect.top) || Math.floor(self.bottom) > rect.bottom;
+        if (this.pageFlow || rect.height > 0) {
+            const self: BoxRectDimension = this[dimension];
+            return self.top < Math.floor(rect.top) || Math.floor(self.bottom) > rect.bottom;
+        }
+        return false;
     }
 
     public css(attr: string, value?: string, cache = true): string {

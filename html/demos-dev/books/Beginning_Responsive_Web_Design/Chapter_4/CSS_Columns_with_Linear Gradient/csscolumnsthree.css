@@ -1,0 +1,22 @@
+body{
+	margin: 0;
+	padding: 0;
+    font-size: 14px;
+    line-height: 18px;
+}
+
+.col-container{
+	background: linear-gradient(to right, #000000 0%,#000000 33%,#a0a0a0 33%,#a0a0a0 66%,#a0a0a0 66%,#707070 66%); /* W3C */
+	color: #fff;
+}
+
+.col-container:after{
+	content: ' ';
+	clear: both;
+	display: block;
+}
+
+.col{
+	float: left;
+	width: 33.3%;
+}

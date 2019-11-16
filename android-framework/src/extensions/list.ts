@@ -53,8 +53,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     public processChild(node: T, parent: T) {
         const mainData: ListData = node.data($c.EXT_NAME.LIST, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
-            const application = this.application;
-            const controller = this.controller;
+            const { application, controller } = this;
             const firstChild = parent.firstStaticChild === node;
             let minWidth = node.marginLeft;
             let columnCount = 0;

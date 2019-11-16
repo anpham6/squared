@@ -371,7 +371,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     if (node.withinX(parent.box) && node.withinY(parent.box) || parent.css('overflow') === 'hidden') {
                                         break;
                                     }
-                                    parent = actualParent.actualParent as T;
+                                    parent = parent.actualParent as T;
                                 }
                                 while (parent && parent !== documentRoot);
                                 if (parent) {

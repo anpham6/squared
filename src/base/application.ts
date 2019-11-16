@@ -6,6 +6,7 @@ import ExtensionManager from './extensionmanager';
 import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
+import { base } from '../../@types/squared';
 
 type PreloadImage = HTMLImageElement | string;
 
@@ -62,6 +63,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract userSettings: UserSettings;
 
     protected _cascadeAll = false;
+    protected _cache!: base.NodeList<T>;
 
     protected constructor(
         public framework: number,
@@ -75,6 +77,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.controllerHandler = <Controller<T>> (new ControllerConstructor(this, cache) as unknown);
         this.resourceHandler = <Resource<T>> (new ResourceConstructor(this, cache) as unknown);
         this.extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, cache) as unknown);
+        this._cache = cache;
     }
 
     public abstract insertNode(element: Element, parent?: T): T | undefined;
@@ -103,11 +106,11 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public reset() {
-        this.session.active.length = 0;
         const processing = this.processing;
         processing.cache.reset();
         processing.excluded.clear();
         processing.sessionId = '';
+        this.session.active.length = 0;
         this.controllerHandler.reset();
         for (const ext of this.extensions) {
             ext.subscribers.clear();
@@ -116,8 +119,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public parseDocument(...elements: any[]): squared.PromiseResult {
-        const controller = this.controllerHandler;
-        const resource = this.resourceHandler;
+        const { controllerHandler: controller, resourceHandler: resource } = this;
         let __THEN: Undefined<() => void>;
         this.rootElements.clear();
         this.initializing = false;
@@ -295,13 +297,12 @@ export default abstract class Application<T extends Node> implements squared.bas
     public createCache(documentRoot: HTMLElement) {
         const node = this.createRootNode(documentRoot);
         if (node) {
-            const CACHE = <NodeList<T>> this.processing.cache;
             (node.parent as T).setBounds();
-            for (const item of CACHE) {
+            for (const item of this._cache) {
                 item.setBounds();
                 item.saveAsInitial();
             }
-            this.controllerHandler.sortInitialCache(CACHE);
+            this.controllerHandler.sortInitialCache(this._cache);
             return true;
         }
         return false;
@@ -318,7 +319,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         if (append) {
-            this.processing.cache.append(node, children !== undefined);
+            this._cache.append(node, children !== undefined);
         }
         return node;
     }
@@ -348,8 +349,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected cascadeParentNode(parentElement: HTMLElement, depth = 0) {
         const node = this.insertNode(parentElement);
         if (node && node.display !== 'none') {
-            const controller = this.controllerHandler;
-            const processing = this.processing;
+            const { controllerHandler: controller, processing } = this;
             const CACHE = processing.cache;
             node.depth = depth;
             if (depth === 0) {
@@ -697,7 +697,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     get nextId() {
-        return this.processing.cache.nextId;
+        return this._cache.nextId;
     }
 
     get length() {

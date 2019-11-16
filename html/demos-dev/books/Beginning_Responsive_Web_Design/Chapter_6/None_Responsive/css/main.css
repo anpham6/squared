@@ -1,0 +1,158 @@
+/* ==========================================================================
+   Main Styles
+   ========================================================================== */
+
+body{
+    background: #000;
+}
+
+.wrapper{
+    background: #fff;
+    width: 940px;
+    padding: 0 20px 20px;
+    margin: 0 auto;
+}
+
+/*
+ * Header
+ */
+
+.global-header{
+    margin: 0 0 20px;
+    border-bottom: 1px solid #ccc;
+}
+
+.global-header h1{
+    float: left;
+}
+
+/*
+ * Jumbotron
+ */
+
+.jumbotron{
+    position: relative;
+    background: #f4a156;
+    width: 940px;
+    height: 250px;
+    margin-bottom: 20px;
+}
+
+.jumbotron img{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+
+.jumbotron h2{
+    position: absolute;
+    left: 260px;
+    top: 20px;
+    font-size: 3rem;
+    width: 300px;
+    margin: 0px;
+}
+
+.jumbotron .roundal{
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+}
+
+.jumbotron .roundal span{
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    font-size: 2rem;
+}
+
+/*
+ * Product
+ */
+
+.product{
+    float: left;
+    width: 300px;
+    padding-left: 20px;
+    text-align: center;
+}
+
+.product:first-child{
+    padding-left: 0px;
+}
+
+.product .roundal{
+    width: 100px;
+    height: 75px;
+    margin: 0 auto;
+    background: #f4a156;
+    border-radius: 50px;
+    padding-top: 25px;
+}
+
+.product .roundal span{
+    display: block;
+    font-size: 1.6rem;
+}
+
+.product ul{
+    padding: 0px;
+}
+
+.product li{
+    list-style: none;
+    font-size: 0.8rem;
+    color: #333;
+}
+
+.product a{
+    font-size: 0.9rem;
+    color: #000;
+    text-decoration: none;
+    display: inline-block;
+    background: #ccc;
+    padding: 5px 10px;
+    border-radius: 2px;
+}
+
+.product a:hover, .product a:focus, .product a:active{
+    background: #999;
+    color: #eee;
+}
+
+.product *:first-child{
+    margin-top: 0px;
+}
+
+.product *:last-child{
+    margin-bottom: 0px;
+}
+
+/*
+ * Footer
+ */
+
+.global-footer{
+    margin: 20px 0;
+    border-top: 1px solid #ccc;
+}
+
+.global-footer p{
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+/* ==========================================================================
+   Helper classes
+   ========================================================================== */
+
+
+.clearfix:before,
+.clearfix:after {
+    content: " "; /* 1 */
+    display: table; /* 2 */
+}
+
+.clearfix:after {
+    clear: both;
+}

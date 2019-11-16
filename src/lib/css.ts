@@ -679,7 +679,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                         break;
                 }
                 result.push({
-                    src: filepath + fromLastIndexOf(match[1], '/'),
+                    src: resolvePath(filepath + fromLastIndexOf(match[1], '/')),
                     pixelRatio,
                     width
                 });

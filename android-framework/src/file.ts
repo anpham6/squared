@@ -161,8 +161,8 @@ export default class File<T extends android.base.View> extends squared.base.File
     public resourceFontToXml(options: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.fonts.size) {
-            const settings = this.userSettings;
-            const xmlns = XMLNS_ANDROID[settings.targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
+            const { insertSpaces, targetAPI } = this.userSettings;
+            const xmlns = XMLNS_ANDROID[targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
             const pathname = this.directory.font;
             for (const [name, font] of Array.from(STORED.fonts.entries()).sort()) {
                 const data: ExternalData[] = [{
@@ -197,9 +197,9 @@ export default class File<T extends android.base.View> extends squared.base.File
                 }
                 let output = $xml.replaceTab(
                     $xml.applyTemplate('font-family', FONTFAMILY_TMPL, data),
-                    settings.insertSpaces
+                    insertSpaces
                 );
-                if (settings.targetAPI < BUILD_ANDROID.OREO) {
+                if (targetAPI < BUILD_ANDROID.OREO) {
                     output = output.replace(/\s+android:/g, ' app:');
                 }
                 result.push(output, pathname, name + '.xml');
@@ -230,7 +230,6 @@ export default class File<T extends android.base.View> extends squared.base.File
     }
 
     public resourceStyleToXml(options: FileOutputOptions = {}) {
-        const settings = this.userSettings;
         const result: string[] = [];
         if (STORED.styles.size) {
             const data: ExternalData[] = [{ style: [] }];
@@ -250,14 +249,14 @@ export default class File<T extends android.base.View> extends squared.base.File
             result.push(
                 $xml.replaceTab(
                     $xml.applyTemplate('resources', STYLE_TMPL, data),
-                    settings.insertSpaces
+                    this.userSettings.insertSpaces
                 ),
                 this.directory.string,
                 'styles.xml'
             );
         }
         if (STORED.themes.size) {
-            const manifestThemeName = settings.manifestThemeName;
+            const { convertPixels, insertSpaces, manifestThemeName, resolutionDPI } = this.userSettings;
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of STORED.themes.entries()) {
                 const data: ExternalData[] = [{ style: [] }];
@@ -284,10 +283,10 @@ export default class File<T extends android.base.View> extends squared.base.File
                         $xml.replaceTab(
                             replaceThemeLength(
                                 $xml.applyTemplate('resources', STYLE_TMPL, data),
-                                settings.resolutionDPI,
-                                settings.convertPixels
+                                resolutionDPI,
+                                convertPixels
                             ),
-                            settings.insertSpaces
+                            insertSpaces
                         ),
                         match[1],
                         match[2]
@@ -303,11 +302,9 @@ export default class File<T extends android.base.View> extends squared.base.File
         const result: string[] = [];
         if (STORED.dimens.size) {
             const data: ExternalData[] = [{ dimen: [] }];
-            const settings = this.userSettings;
-            const dpi = settings.resolutionDPI;
-            const convertPixels = settings.convertPixels;
+            const { convertPixels, resolutionDPI } = this.userSettings;
             for (const [name, value] of Array.from(STORED.dimens.entries()).sort()) {
-                data[0].dimen.push({ name, innerText: convertPixels ? convertLength(value, dpi, false) : value });
+                data[0].dimen.push({ name, innerText: convertPixels ? convertLength(value, resolutionDPI, false) : value });
             }
             result.push(
                 $xml.replaceTab($xml.applyTemplate('resources', DIMEN_TMPL, data)),
@@ -322,17 +319,17 @@ export default class File<T extends android.base.View> extends squared.base.File
     public resourceDrawableToXml(options: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.drawables.size) {
-            const settings = this.userSettings;
+            const { convertPixels, insertSpaces, resolutionDPI } = this.userSettings;
             const directory = this.directory.image;
             for (const [name, value] of STORED.drawables.entries()) {
                 result.push(
                     $xml.replaceTab(
                         replaceDrawableLength(
                             value,
-                            settings.resolutionDPI,
-                            settings.convertPixels
+                            resolutionDPI,
+                            convertPixels
                         ),
-                        settings.insertSpaces
+                        insertSpaces
                     ),
                     directory,
                     name + '.xml'
@@ -350,19 +347,23 @@ export default class File<T extends android.base.View> extends squared.base.File
             for (const [name, images] of STORED.images.entries()) {
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
+                        const value = images[dpi];
                         result.push(
-                            images[dpi],
+                            value,
                             directory + '-' + dpi,
-                            name + '.' + $util.fromLastIndexOf(images[dpi], '.')
+                            name + '.' + $util.fromLastIndexOf(value, '.')
                         );
                     }
                 }
-                else if (images.mdpi) {
-                    result.push(
-                        images.mdpi,
-                        directory,
-                        name + '.' + $util.fromLastIndexOf(images.mdpi, '.')
-                    );
+                else {
+                    const mdpi = images.mdpi;
+                    if (mdpi) {
+                        result.push(
+                            mdpi,
+                            directory,
+                            name + '.' + $util.fromLastIndexOf(mdpi, '.')
+                        );
+                    }
                 }
             }
             if (copyTo || archiveTo) {
@@ -381,10 +382,10 @@ export default class File<T extends android.base.View> extends squared.base.File
     public resourceAnimToXml(options: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.animators.size) {
-            const settings = this.userSettings;
+            const insertSpaces = this.userSettings.insertSpaces;
             for (const [name, value] of STORED.animators.entries()) {
                 result.push(
-                    $xml.replaceTab(value, settings.insertSpaces),
+                    $xml.replaceTab(value, insertSpaces),
                     'res/anim',
                     name + '.xml'
                 );

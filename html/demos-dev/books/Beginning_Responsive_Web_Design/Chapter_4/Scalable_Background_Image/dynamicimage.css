@@ -1,0 +1,6 @@
+.image{
+	width: 100%;
+	padding-bottom: 125%;
+	background: url(scalableimage.jpg) 0 0 no-repeat;
+	background-size: 100% 100%;
+}

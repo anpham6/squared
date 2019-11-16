@@ -28,20 +28,30 @@ if (env === 'development') {
     app.use('/demos-dev', express.static(path.join(__dirname, 'html/demos-dev')));
 }
 
-function getQueryData(req, dirname) {
-    const timeout = Math.max(parseInt(req.query.timeout) || 60, 1) * 1000;
+function getQueryData(req, directory) {
+    const query = req.query;
+    const timeout = Math.max(parseInt(query.timeout) || 60, 1) * 1000;
+    if (query.directory) {
+        if (!directory.endsWith('/')) {
+            directory += '/';
+        }
+        directory += query.directory;
+    }
     return {
-        directory: dirname + (req.query.directory ? `/${req.query.directory}` : ''),
+        directory,
         timeout,
         finalizeTime: Date.now() + timeout
     };
 }
 
 function getFileData(file, directory) {
-    const pathname = `${directory}/${file.pathname}`;
+    if (!directory.endsWith('/')) {
+        directory += '/';
+    }
+    const pathname = directory + file.pathname;
     return {
         pathname,
-        filename: `${pathname}/${file.filename}`,
+        filename: pathname + (!pathname.endsWith('/') ? '/' : '') + file.filename,
         level: file.gzipQuality > 0 ? Math.min(file.gzipQuality, 9) : 0,
         quality: file.brotliQuality > 0 ? Math.min(file.brotliQuality, 11) : 0
     };
@@ -56,7 +66,7 @@ function createGzipWriteStream(level, filename, filenameOut) {
 }
 
 app.post('/api/assets/copy', (req, res) => {
-    const dirname = req.query.to && req.query.to.trim();
+    const dirname = req.query.to;
     if (dirname) {
         try {
             if (!fs.existsSync(dirname)) {
@@ -75,11 +85,10 @@ app.post('/api/assets/copy', (req, res) => {
         let fileerror = '';
         function finalize(valid = false) {
             if (valid && --delayed === 0 || Date.now() >= finalizeTime) {
-                const success = delayed === 0;
                 delayed = Number.POSITIVE_INFINITY;
                 finalizeTime = Number.POSITIVE_INFINITY;
                 res.json({
-                    success,
+                    success: delayed === 0,
                     directory: dirname
                 });
             }
@@ -158,8 +167,9 @@ app.post('/api/assets/archive', (req, res) => {
         res.json({ application: `DIRECTORY: ${directory}`, system: err });
         return;
     }
-    const append_to = req.query.append_to && req.query.append_to.trim();
-    let format = req.query.format.toLowerCase() === 'tar' ? 'tar' : 'zip';
+    const query = req.query;
+    const append_to = query.append_to;
+    let format = query.format.toLowerCase() === 'tar' ? 'tar' : 'zip';
     let success = false;
     let delayed = 0;
     let fileerror = '';
@@ -175,7 +185,7 @@ app.post('/api/assets/archive', (req, res) => {
         }
         const archive = archiver(format, { zlib: { level: 9 } });
         if (!zipname) {
-            zipname = `${dirname}/${req.query.filename || 'squared'}.${format}`;
+            zipname = `${dirname}/${query.filename || 'squared'}.${format}`;
         }
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
@@ -202,7 +212,7 @@ app.post('/api/assets/archive', (req, res) => {
             }
             for (const file of req.body) {
                 const { pathname, filename, level, quality } = getFileData(file, directory);
-                const data = { name: `${(req.query.directory ? `${req.query.directory}/` : '') + file.pathname}/${file.filename}` };
+                const data = { name: `${(query.directory ? `${query.directory}/` : '') + file.pathname}/${file.filename}` };
                 function writeBuffer() {
                     if (delayed !== Number.POSITIVE_INFINITY) {
                         if (level > 0) {

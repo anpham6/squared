@@ -1,0 +1,22 @@
+h1{
+	width: 100px;
+	height: 100px;
+	text-indent: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+	background-image: url("low-res-image.png");
+	border: 3px solid #d3000c;
+	margin: 0px;
+}
+
+@media only screen and (-webkit-min-device-pixel-ratio: 2), 
+only screen and (     -o-min-device-pixel-ratio: 2/1),
+only screen and (   min--moz-device-pixel-ratio: 2),
+only screen and (        min-device-pixel-ratio: 2),
+only screen and (                min-resolution: 192dpi),
+only screen and (                min-resolution: 2dppx) { 
+	h1{
+		background-image: url("high-res-image.png");
+		background-size: 100px 100px;
+	}
+}

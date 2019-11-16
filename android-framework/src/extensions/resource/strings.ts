@@ -111,24 +111,28 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 if (tagName === 'INS' && textDecorationLine.indexOf('line-through') === -1) {
                                     value = '<strike>' + value + '</strike>';
                                 }
-                                let textIndent = 0;
+                                let indent = 0;
                                 if (node.blockDimension || node.display === 'table-cell') {
-                                    textIndent = node.parseUnit(node.css('textIndent'));
-                                    if (textIndent + node.bounds.width < 0) {
+                                    const textIndent = node.css('textIndent');
+                                    indent = node.parseUnit(textIndent);
+                                    if (textIndent === '100%' || indent + node.bounds.width < 0) {
                                         value = '';
+                                        node.delete('android', 'ellipsize', 'maxLines');
                                     }
                                 }
-                                if (textIndent === 0) {
-                                    const parent = node.actualParent;
-                                    if (parent && (parent.blockDimension || parent.display === 'table-cell') && node === parent.firstChild) {
-                                        textIndent = parent.parseUnit(parent.css('textIndent'));
+                                if (value !== '') {
+                                    if (indent === 0) {
+                                        const parent = node.actualParent;
+                                        if (parent && (parent.blockDimension || parent.display === 'table-cell') && node === parent.firstChild) {
+                                            indent = parent.parseUnit(parent.css('textIndent'));
+                                        }
                                     }
+                                    if (indent > 0) {
+                                        const width = $dom.measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
+                                        value = '&#160;'.repeat(Math.max(Math.floor(indent / width), 1)) + value;
+                                    }
+                                    setTextValue(node, 'text', name, value);
                                 }
-                                if (textIndent > 0) {
-                                    const width = $dom.measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
-                                    value = '&#160;'.repeat(Math.max(Math.floor(textIndent / width), 1)) + value;
-                                }
-                                setTextValue(node, 'text', name, value);
                             }
                             if (node.inputElement) {
                                 if (node.controlName === CONTAINER_ANDROID.EDIT_LIST) {

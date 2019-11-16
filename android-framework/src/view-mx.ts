@@ -479,26 +479,46 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public combine(...objs: string[]) {
+            const namespaces = this._namespaces;
             const result: string[] = [];
             const all = objs.length === 0;
+            let requireId = false;
             let id = '';
-            for (const value of this._namespaces) {
+            for (const value of namespaces) {
                 if (all || objs.includes(value)) {
                     const obj: StringMap = this['__' + value];
                     if (obj) {
-                        for (const attr in obj) {
-                            if (attr === 'id' && value === 'android') {
-                                id = obj[attr];
-                            }
-                            else {
-                                result.push((value !== '_' ? value + ':' : '') + `${attr}="${obj[attr]}"`);
-                            }
+                        const prefix = value + ':';
+                        switch (value) {
+                            case '_':
+                                for (const attr in obj) {
+                                    result.push(`${attr}="${obj[attr]}"`);
+                                }
+                                break;
+                            case 'android':
+                                for (const attr in obj) {
+                                    if (attr === 'id') {
+                                        id = obj[attr];
+                                    }
+                                    else {
+                                        result.push(prefix + `${attr}="${obj[attr]}"`);
+                                    }
+                                }
+                                requireId = true;
+                                break;
+                            default:
+                                for (const attr in obj) {
+                                    result.push(prefix + `${attr}="${obj[attr]}"`);
+                                }
+                                break;
                         }
                     }
                 }
             }
             result.sort((a, b) => a > b ? 1 : -1);
-            result.unshift(`android:id="${id !== '' ? id : '@+id/' + this.controlId}"`);
+            if (requireId) {
+                result.unshift(`android:id="${id !== '' ? id : '@+id/' + this.controlId}"`);
+            }
             return result;
         }
 
@@ -678,7 +698,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         layoutWidth = $css.formatPX(value);
                     }
                 }
-                else if (this.length > 0) {
+                else if (this.length) {
                     switch (this.cssInitial('width')) {
                         case 'max-content':
                         case 'fit-content':
@@ -863,7 +883,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             else if (layoutHeight === '0px' && renderParent.inlineHeight && renderParent.android('minHeight') === '' && !documentParent.layoutElement) {
                 this.setLayoutHeight('wrap_content');
             }
-            const isFlexible = (direction: string) => !(documentParent.flexElement && this.flexbox.grow > 0 && documentParent.css('flexDirection').startsWith(direction));
+            const isFlexible = (direction: string) => !(documentParent.flexElement && documentParent.css('flexDirection').startsWith(direction) && this.flexbox.grow > 0);
             if (this.hasPX('minWidth') && isFlexible('column')) {
                 this.android('minWidth', this.convertPX(this.css('minWidth')), false);
             }
@@ -890,9 +910,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend(item => item.hasPX('width')).length > 0 || !/\n/.test(this.textContent))) {
                     width = Math.ceil(this.bounds.width);
                 }
-                if (width !== -1) {
+                if (width >= 0) {
                     this.android('maxWidth', $css.formatPX(width), false);
-                    if (this.imageElement) {
+                    if (this.textElement) {
+                        this.android('ellipsize', 'end');
+                    }
+                    else if (this.imageElement) {
                         adjustViewBounds = true;
                     }
                 }

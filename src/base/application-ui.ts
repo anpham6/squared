@@ -35,28 +35,28 @@ function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
     return element;
 }
 
-export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
-    public static prioritizeExtensions<T extends NodeUI>(element: HTMLElement, extensions: ExtensionUI<T>[]) {
-        if (element.dataset.use) {
-            const included = element.dataset.use.split($regex.XML.SEPARATOR);
-            const result: ExtensionUI<T>[] = [];
-            const untagged: ExtensionUI<T>[] = [];
-            for (const ext of extensions) {
-                const index = included.indexOf(ext.name);
-                if (index !== -1) {
-                    result[index] = ext;
-                }
-                else {
-                    untagged.push(ext);
-                }
+function prioritizeExtensions<T extends NodeUI>(element: HTMLElement, extensions: ExtensionUI<T>[]) {
+    if (element.dataset.use) {
+        const included = element.dataset.use.split($regex.XML.SEPARATOR);
+        const result: ExtensionUI<T>[] = [];
+        const untagged: ExtensionUI<T>[] = [];
+        for (const ext of extensions) {
+            const index = included.indexOf(ext.name);
+            if (index !== -1) {
+                result[index] = ext;
             }
-            if (result.length) {
-                return $util.spliceArray(result, item => item === undefined).concat(untagged);
+            else {
+                untagged.push(ext);
             }
         }
-        return extensions;
+        if (result.length) {
+            return $util.spliceArray(result, item => item === undefined).concat(untagged);
+        }
     }
+    return extensions;
+}
 
+export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public controllerHandler!: ControllerUI<T>;
     public resourceHandler!: ResourceUI<T>;
     public readonly session: AppSessionUI<T> = {
@@ -279,16 +279,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (template) {
             if (!node.renderExclude) {
                 if (node.renderParent) {
-                    const renderChildren = parent.renderChildren;
                     if (parent.renderTemplates === undefined) {
                         parent.renderTemplates = [];
                     }
-                    if (index >= 0 && index < renderChildren.length) {
-                        renderChildren.splice(index, 0, node);
+                    if (index >= 0 && index < parent.renderChildren.length) {
+                        parent.renderChildren.splice(index, 0, node);
                         parent.renderTemplates.splice(index, 0, template);
                     }
                     else {
-                        renderChildren.push(node);
+                        parent.renderChildren.push(node);
                         parent.renderTemplates.push(template);
                     }
                 }
@@ -328,15 +327,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public createCache(documentRoot: HTMLElement) {
         const node = this.createRootNode(documentRoot);
         if (node) {
+            const CACHE = <NodeList<T>> this._cache;
             const parent = node.parent as T;
             if (node.documentBody) {
                 parent.visible = false;
                 parent.exclude(NODE_RESOURCE.ASSET, NODE_PROCEDURE.ALL, APP_SECTION.EXTENSION);
-                this.processing.cache.append(parent);
+                CACHE.append(parent);
             }
             node.documentParent = parent;
             const controller = this.controllerHandler;
-            const CACHE = <NodeList<T>> this.processing.cache;
             const preAlignment: ObjectIndex<StringMap> = {};
             const direction = new Set<HTMLElement>();
             let resetBounds = false;
@@ -475,7 +474,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public resolveTarget(target: string) {
-        for (const parent of this.processing.cache) {
+        for (const parent of this._cache) {
             if (parent.elementId === target || parent.controlId === target) {
                 return parent;
             }
@@ -498,7 +497,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (node && node.display !== 'none') {
             node.depth = depth;
             if (depth === 0) {
-                this.processing.cache.append(node);
+                this._cache.append(node);
                 const extensionManager = this.extensionManager;
                 for (const name of node.extensions) {
                     const ext = <ExtensionUI<T>> extensionManager.retrieve(name);
@@ -551,7 +550,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 else if (controller.includeElement(element)) {
-                    ApplicationUI.prioritizeExtensions(element, this.extensions).some(item => item.init(element));
+                    prioritizeExtensions(element, this.extensions).some(item => item.init(element));
                     if (!this.rootElements.has(element)) {
                         child = this.cascadeParentNode(element, depth + 1);
                         if (child && (!child.excluded || child.tagName === 'WBR')) {
@@ -591,7 +590,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected cacheNodeChildren(node: T, children: T[], inlineText: boolean) {
         const length = children.length;
         if (length) {
-            const CACHE = this.processing.cache;
+            const CACHE = this._cache;
             let siblingsLeading: T[] = [];
             let siblingsTrailing: T[] = [];
             if (length > 1) {
@@ -946,13 +945,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         function setMapY(depth: number, id: number, node: T) {
             const index = mapY.get(depth) || new Map<number, T>();
             mapY.set(depth, index.set(id, node));
-        }
-        function deleteMapY(id: number) {
-            for (const mapNode of mapY.values()) {
-                for (const node of mapNode.values()) {
-                    if (node.id === id) {
-                        mapNode.delete(node.id);
-                        return;
+            if (id > 0) {
+                for (const mapNode of mapY.values()) {
+                    for (const nodeY of mapNode.values()) {
+                        if (nodeY.id === id) {
+                            mapNode.delete(nodeY.id);
+                            return;
+                        }
                     }
                 }
             }
@@ -960,23 +959,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         setMapY(-1, 0, documentRoot.parent as T);
         let maxDepth = 0;
         for (const node of CACHE) {
-            if (node.visible && node.length) {
+            if (node.length && node.visible) {
                 const depth = node.depth;
                 setMapY(depth, node.id, node);
-                maxDepth = Math.max(depth, maxDepth);
+                if (depth > maxDepth) {
+                    maxDepth = depth;
+                }
             }
         }
         for (let i = 0; i < maxDepth; i++) {
             mapY.set((i * -1) - 2, new Map<number, T>());
         }
         CACHE.afterAppend = (node: T) => {
-            const id = node.id;
-            deleteMapY(id);
-            setMapY((node.depth * -1) - 2, id, node);
+            setMapY((node.depth * -1) - 2, node.id, node);
             for (const item of node.cascade()) {
-                const itemId = item.id;
-                deleteMapY(itemId);
-                setMapY((item.depth * -1) - 2, itemId, item as T);
+                setMapY((item.depth * -1) - 2, item.id, item as T);
             }
         };
         for (const ext of this.extensions) {
@@ -1206,7 +1203,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (nodeY.styleElement) {
-                            const prioritized = ApplicationUI.prioritizeExtensions(<HTMLElement> nodeY.element, extensions);
+                            const prioritized = prioritizeExtensions(<HTMLElement> nodeY.element, extensions);
                             let next = false;
                             function removeExtension(item: ExtensionUI<T>) {
                                 const index = extensions.indexOf(item);
@@ -1298,7 +1295,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setConstraints() {
-        const CACHE = this.processing.cache;
+        const CACHE = this._cache;
         this.controllerHandler.setConstraints();
         for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
@@ -1312,7 +1309,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected setResources() {
         const resource = this.resourceHandler;
-        for (const node of this.processing.cache) {
+        for (const node of this._cache) {
             resource.setBoxStyle(node);
             resource.setFontStyle(node);
             resource.setValueString(node);
@@ -1324,6 +1321,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected processFloatHorizontal(layout: LayoutUI<T>) {
         const controller = this.controllerHandler;
+        const { containerType, alignmentType } = controller.containerTypeVertical;
         const layerIndex: Array<T[] | T[][]> = [];
         const inlineAbove: T[] = [];
         const inlineBelow: T[] = [];
@@ -1355,11 +1353,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             }
+            const float = node.float;
             if (clearedFloat === 0) {
-                if (node.float === 'right') {
+                if (float === 'right') {
                     rightAbove.push(node);
                 }
-                else if (node.float === 'left') {
+                else if (float === 'left') {
                     leftAbove.push(node);
                 }
                 else if (leftAbove.length || rightAbove.length) {
@@ -1381,7 +1380,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     inlineAbove.push(node);
                 }
             }
-            else if (node.float === 'right') {
+            else if (float === 'right') {
                 if (clearedFloat === 4 || clearedFloat === 6) {
                     if (rightBelow === undefined) {
                         rightBelow = [];
@@ -1392,7 +1391,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     rightAbove.push(node);
                 }
             }
-            else if (node.float === 'left') {
+            else if (float === 'left') {
                 if (clearedFloat === 2 || clearedFloat === 6) {
                     if (leftBelow === undefined) {
                         leftBelow = [];
@@ -1410,19 +1409,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 inlineAbove.push(node);
             }
         });
-        if (leftAbove.length && leftBelow) {
-            leftSub = [leftAbove, leftBelow];
+        if (leftAbove.length) {
+            leftSub = leftBelow ? [leftAbove, leftBelow] : leftAbove;
         }
-        else if (leftAbove.length) {
-            leftSub = leftAbove;
+        if (rightAbove.length) {
+            rightSub = rightBelow ? [rightAbove, rightBelow] : rightAbove;
         }
-        if (rightAbove.length && rightBelow) {
-            rightSub = [rightAbove, rightBelow];
-        }
-        else if (rightAbove.length) {
-            rightSub = rightAbove;
-        }
-        const { containerType, alignmentType } = controller.containerTypeVertical;
         if (rightAbove.length + (rightBelow ? rightBelow.length : 0) === layout.length) {
             layout.add(NODE_ALIGNMENT.RIGHT);
         }
@@ -1498,8 +1490,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     seg
                 );
                 if (seg.length === 1) {
-                    group.node.innerWrapped = seg[0];
-                    seg[0].outerWrapper = group.node;
+                    const groupNode = group.node;
+                    groupNode.innerWrapped = seg[0];
+                    seg[0].outerWrapper = groupNode;
                     if (seg[0].percentWidth) {
                         group.setType(controller.containerTypePercent);
                     }
@@ -1731,15 +1724,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     get layouts() {
         return this._layouts.sort((a, b) => {
-            if (a.index !== b.index) {
-                if (a.index === 0 || a.index !== undefined && a.index !== Number.POSITIVE_INFINITY && b.index === undefined || b.index === Number.POSITIVE_INFINITY) {
+            const indexA = a.index;
+            const indexB = b.index;
+            if (indexA !== indexB) {
+                if (indexA === 0 || indexB === Number.POSITIVE_INFINITY || indexB === undefined && !(indexA === Number.POSITIVE_INFINITY)) {
                     return -1;
                 }
-                else if (b.index === 0 || b.index !== undefined && b.index !== Number.POSITIVE_INFINITY && a.index === undefined || a.index === Number.POSITIVE_INFINITY) {
+                else if (indexB === 0 || indexA === Number.POSITIVE_INFINITY || indexA === undefined && !(indexB === Number.POSITIVE_INFINITY)) {
                     return 1;
                 }
-                else if (a.index !== undefined && b.index !== undefined) {
-                    return a.index < b.index ? -1 : 1;
+                else if (indexA !== undefined && indexB !== undefined) {
+                    return indexA < indexB ? -1 : 1;
                 }
             }
             return 0;
@@ -1748,10 +1743,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     get rendered() {
         return this.session.cache.filter((node: T) => node.visible && node.renderParent !== undefined);
-    }
-
-    get nextId() {
-        return this.processing.cache.nextId;
     }
 
     get length() {

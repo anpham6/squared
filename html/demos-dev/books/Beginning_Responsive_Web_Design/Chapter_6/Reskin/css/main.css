@@ -1,0 +1,190 @@
+* { 
+	-webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+	-moz-box-sizing: border-box;    /* Firefox, other Gecko */
+	box-sizing: border-box;         /* Opera/IE 8+ */
+}
+
+
+/*Typography*/
+
+html{
+    font-size: 87.5%;
+}
+
+h1{
+    font-size: 22px;
+    font-size: 1.571rem;
+    text-align: center;
+}
+
+h2{
+    font-size: 18px;
+    font-size: 1.286rem;
+}
+
+/*Wrapper*/
+
+.wrapper{
+    margin: 0 20px;
+}
+
+/*header*/
+
+.global-header{
+    border-bottom: 1px solid #ccc;
+    margin: 0 -20px;
+}
+
+/*jumbrotron*/
+
+.jumbotron{
+    background: #f4a156;
+    margin: 0 -20px;
+    padding: 20px;
+    text-align: center;
+}
+
+.jumbotron h2{
+    margin-top: 0px;
+}
+
+.jumbotron .roundal{
+    font-size: 18px;
+    font-size: 1.286rem;
+}
+
+/*product*/
+
+.product{
+    text-align: center;
+    margin: 20px 0;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 20px;
+}
+
+.product .roundal{
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    background: #f4a156;
+    border-radius: 50px;
+    padding-top: 30px;
+}
+
+.product .roundal span{
+    display: block;
+    font-size: 1.6rem;
+}
+
+.product ul{
+    padding: 0px;
+}
+
+.product li{
+    list-style: none;
+    color: #333;
+}
+
+.product a{
+    color: #000;
+    text-decoration: none;
+    display: inline-block;
+    background: #ccc;
+    padding: 0px 10px;
+    border-radius: 2px;
+    line-height: 40px;
+}
+
+.product a:hover, .product a:focus, .product a:active{
+    background: #999;
+    color: #eee;
+}
+
+.product > *:first-child{
+    margin-top: 0px;
+}
+
+.product > *:last-child{
+    margin-bottom: 0px;
+}
+
+.global-footer{
+    text-align: center;
+    padding-bottom: 10px;
+}
+
+@media screen and (min-width: 767px){
+    h1{
+        font-size: 28px;
+        font-size: 2rem;
+        text-align: center;
+    }
+
+    h2{
+        font-size: 24px;
+        font-size: 1.714rem;
+    }
+
+    .wrapper{
+        width: 740px;
+        margin: 0px auto;
+    }
+
+    .global-header{
+        margin: 0px;
+    }
+
+    .global-header h1{
+        text-align: left;
+    }
+
+    .jumbotron{
+        margin: 0px;
+        height: 290px;
+        position: relative;
+    }
+
+    .jumbotron h2{
+        position: absolute;
+        left: 50%;
+        margin-left: 20px;
+        width: 250px;
+        font-size: 42px;
+        font-size: 3rem;
+        text-align: left;
+    }
+
+    .jumbotron img{
+        position: absolute;
+        left: 50%;
+        margin-left: -270px;
+    }
+
+    .jumbotron .roundal{
+        position: absolute;
+        left: 50%;
+        margin-left: 20px;
+        bottom: 40px;
+        font-size: 28px;
+        font-size: 2rem;
+    }
+
+    .product{
+        float: left;
+        width: 33.3333%;
+    }
+}
+
+@media screen and (min-width: 992px){
+    .wrapper{
+        width: 980px;
+        margin: 0px auto;
+    }
+}
+
+@media screen and (min-width: 1200px){
+    .wrapper{
+        width: 1170px;
+        margin: 0px auto;
+    }
+}

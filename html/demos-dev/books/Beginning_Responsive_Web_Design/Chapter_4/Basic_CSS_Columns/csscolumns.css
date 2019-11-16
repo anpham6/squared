@@ -1,0 +1,26 @@
+body{
+	margin: 0;
+	padding: 0;
+    font-size: 14px;
+    line-height: 18px;
+}
+
+.col-container{
+	background: #000;
+	color: #fff;
+}
+
+.col-container:after{
+	content: ' ';
+	clear: both;
+	display: block;
+}
+
+.col{
+	float: left;
+	width: 50%;
+}
+
+.col.main{
+	background: #999;
+}

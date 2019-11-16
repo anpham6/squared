@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>CSS Columns</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="stylesheet" type="text/css" href="csscolumnsjs.css">
+	<script src="/node_modules/systemjs/dist/system.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../../squared.js"></script>
+</head>
+<body>
+<div class="col-container">
+	<aside class="col nav">
+		Sidebar
+	</aside>
+	<div class="col main">
+		Main content area with our main body content
+	</div>
+	<div class="col related">
+		Related content
+	</aside>
+</div>
+
+<script>
+	var equalColumns = function(){
+		var columns = document.getElementsByClassName('col'), height = 0;
+	
+		//Reset the height of all the columns so that we can recalculate max height
+		for (var i = 0; i < columns.length; i++) {
+			columns[i].style.height = "auto";
+		}
+
+		//Loop through columns and find max height
+		for (var i = 0; i < columns.length; i++) {
+			if(height < columns[i].clientHeight){
+				height = columns[i].clientHeight;
+			}
+		}
+
+		//Apply the max height to all columns
+		for (var i = 0; i < columns.length; i++) {
+			columns[i].style.height = height + "px";
+		}
+	}
+
+	//Initially set the column heights
+	equalColumns();
+
+	//Update column heights on browser resize
+	window.addEventListener("resize", equalColumns, true);
+</script>
+
+</body>
+</html>
