@@ -70,7 +70,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             this.clipPath = match[1];
                             return;
                         }
-                        else if (d && d.length) {
+                        else if (d?.length) {
                             const { top, right, bottom, left } = SvgBuild.getBoxRect(d);
                             const width = right - left;
                             const height = bottom - top;

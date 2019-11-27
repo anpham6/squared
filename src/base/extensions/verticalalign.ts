@@ -73,7 +73,8 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 if (aboveBaseline.length) {
-                    const top = aboveBaseline[0].linear.top;
+                    const above = aboveBaseline[0];
+                    const top = above.linear.top;
                     for (const item of children) {
                         if (item !== baseline) {
                             if (item.inlineVertical && !item.baseline) {
@@ -95,7 +96,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - top);
                                     }
                                 }
-                                else if (item.imageElement && baseline && item.alignSibling('baseline') === baseline.documentId) {
+                                else if (item.imageElement && baseline?.documentId === item.alignSibling('baseline')) {
                                     item.modifyBox(BOX_STANDARD.MARGIN_TOP, baseline.linear.top - item.linear.top);
                                 }
                             }
@@ -105,7 +106,8 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     if (baseline) {
-                        baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, baseline.linear.top - top);
+                        const offset = above.parseUnit(above.cssInitial('verticalAlign'), 'height');
+                        baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, baseline.linear.top - top + (offset < 0 ? offset : 0));
                         baseline.baselineAltered = true;
                     }
                 }

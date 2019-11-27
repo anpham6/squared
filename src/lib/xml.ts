@@ -201,7 +201,7 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
                 if (!REGEXP_FORMAT.CLOSETAG.exec(line.tag)) {
                     if (closeEmpty && line.value.trim() === '') {
                         const next = lines[i + 1];
-                        if (next && next.closing && next.tagName === line.tagName) {
+                        if (next?.closing && next.tagName === line.tagName) {
                             line.tag = line.tag.replace(REGEXP_FORMAT.OPENTAG, ' />');
                             i++;
                         }

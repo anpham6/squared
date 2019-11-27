@@ -149,11 +149,11 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             }
         }
         else if (requireClip && this.hasViewBox() && (aspectRatio.x !== 0 || aspectRatio.y !== 0)) {
-            const boxRect = SvgBuild.getBoxRect(this.getPathAll(false));
+            const { left, top } = SvgBuild.getBoxRect(this.getPathAll(false));
             const x = this.refitX(aspectRatio.x);
             const y = this.refitY(aspectRatio.y);
-            if (boxRect.left < x || boxRect.top < y) {
-                this.clipViewBox(boxRect.left, boxRect.top, this.refitSize(aspectRatio.width), this.refitSize(aspectRatio.height), precision);
+            if (left < x || top < y) {
+                this.clipViewBox(left, top, this.refitSize(aspectRatio.width), this.refitSize(aspectRatio.height), precision);
             }
         }
     }
@@ -207,9 +207,9 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         const result: string[] = [];
         for (const item of (cascade ? this.cascade() : this)) {
             if (SvgBuild.isShape(item)) {
-                const path = item.path;
-                if (path && path.value) {
-                    result.push(path.value);
+                const value = item.path?.value;
+                if (value) {
+                    result.push(value);
                 }
             }
         }

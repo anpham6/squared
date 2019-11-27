@@ -45,13 +45,15 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
     public postBaseLayout(node: T) {
         const controller = <android.base.Controller<T>> this.controller;
         const circlePosition = this.options.circlePosition;
+        const { left, top } = node.box;
         let anchor!: T;
         node.each((item: T) => {
-            if ($util.withinRange(item.linear.left, node.box.left)) {
+            const linear = item.linear;
+            if ($util.withinRange(linear.left, left)) {
                 item.anchor('left', 'parent');
                 item.anchorStyle(STRING_ANDROID.HORIZONTAL);
             }
-            if ($util.withinRange(item.linear.top, node.box.top)) {
+            if ($util.withinRange(linear.top, top)) {
                 item.anchor('top', 'parent');
                 item.anchorStyle(STRING_ANDROID.VERTICAL);
             }
@@ -59,16 +61,19 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                 if (item.anchored) {
                     anchor = item;
                 }
-                else if (anchor) {
-                    if (!anchor.constraint.vertical && item.constraint.vertical) {
+                else {
+                    const constraint = item.constraint;
+                    if (anchor) {
+                        if (!anchor.constraint.vertical && constraint.vertical) {
+                            anchor = item;
+                        }
+                    }
+                    else if (constraint.vertical) {
                         anchor = item;
                     }
-                }
-                else if (item.constraint.vertical) {
-                    anchor = item;
-                }
-                else if (item.constraint.horizontal) {
-                    anchor = item;
+                    else if (constraint.horizontal) {
+                        anchor = item;
+                    }
                 }
             }
         });
@@ -79,16 +84,16 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
             if (!anchor.anchored) {
                 controller.addGuideline(anchor, node);
             }
+            const { x: x2, y: y2 } = anchor.center;
             node.each((item: T) => {
                 if (item !== anchor) {
-                    const center1 = item.center;
-                    const center2 = anchor.center;
-                    const x = Math.abs(center1.x - center2.x);
-                    const y = Math.abs(center1.y - center2.y);
+                    const { x: x1, y: y1 } = item.center;
+                    const x = Math.abs(x1 - x2);
+                    const y = Math.abs(y1 - y2);
                     const radius = Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)));
                     let degrees = Math.round(Math.atan(Math.min(x, y) / Math.max(x, y)) * (180 / Math.PI));
-                    if (center1.y > center2.y) {
-                        if (center1.x > center2.x) {
+                    if (y1 > y2) {
+                        if (x1 > x2) {
                             if (x > y) {
                                 degrees += 90;
                             }
@@ -105,8 +110,8 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                             }
                         }
                     }
-                    else if (center1.y < center2.y) {
-                        if (center2.x > center1.x) {
+                    else if (y1 < y2) {
+                        if (x2 > x1) {
                             if (x > y) {
                                 degrees += 270;
                             }
@@ -121,7 +126,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                         }
                     }
                     else {
-                        degrees = center1.x > center2.x ? 90 : 270;
+                        degrees = x1 > x2 ? 90 : 270;
                     }
                     item.app('layout_constraintCircle', anchor.documentId);
                     item.app('layout_constraintCircleRadius', $css.formatPX(radius));

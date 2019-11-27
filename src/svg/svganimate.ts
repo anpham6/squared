@@ -436,7 +436,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set keySplines(value) {
-        if (value && value.length) {
+        if (value?.length) {
             const minSegment = this.keyTimes.length - 1;
             if (value.length >= minSegment && !value.every(spline => spline === '' || spline === KEYSPLINE_NAME.linear)) {
                 const keySplines: string[] = [];

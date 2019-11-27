@@ -20,7 +20,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
         const styles: ObjectMap<string[]> = {};
         const styleCache: StringMap = {};
         for (const node of this.application.session.cache) {
-            if (node.visible && node.controlId) {
+            if (node.controlId && node.visible) {
                 const renderChildren = node.renderChildren;
                 const length = renderChildren.length;
                 if (length > 1) {

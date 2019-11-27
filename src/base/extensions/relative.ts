@@ -62,7 +62,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                         if (children.includes(node)) {
                             const unaligned = $util.filterArray(children, item => item.positionRelative && item.length > 0 && $util.convertFloat(node.verticalAlign) !== 0);
                             const length = unaligned.length;
-                            if (length) {
+                            if (length > 0) {
                                 unaligned.sort((a, b) => {
                                     const topA = a.linear.top;
                                     const topB = b.linear.top;
@@ -116,7 +116,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                             }
                             else if (renderParent.layoutVertical) {
                                 if (top !== 0) {
-                                    if (previous && previous.blockStatic && previous.positionRelative && item.blockStatic) {
+                                    if (previous?.blockStatic && previous.positionRelative && item.blockStatic) {
                                         top -= previous.top;
                                     }
                                 }

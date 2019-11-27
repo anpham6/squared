@@ -569,7 +569,7 @@ export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
 
 export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
     const length = list.length;
-    if (length) {
+    if (length > 0) {
         let baseValue!: any;
         for (let i = 0; i < length; i++) {
             const value = predicate(list[i], i, list);

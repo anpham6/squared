@@ -21,7 +21,7 @@ export default abstract class Accessibility<T extends NodeUI> extends ExtensionU
                     case 'INPUT_CHECKBOX':
                         const element = <HTMLInputElement> node.element;
                         [node.nextSibling, node.previousSibling].some((sibling: T) => {
-                            if (sibling && sibling.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
+                            if (sibling?.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
                                 if (element.id && element.id === (<HTMLLabelElement> sibling.element).htmlFor) {
                                     node.companion = sibling;
                                 }

@@ -22,7 +22,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {
         if (super.condition(node)) {
             const length = node.length;
-            if (length) {
+            if (length > 0) {
                 const floated = new Set<string>();
                 const children = node.children;
                 let blockStatic = 0;

@@ -147,7 +147,7 @@ export function nextMultiple(values: number[], minimum = 0, offset?: number[]) {
     const length = values.length;
     if (length > 1) {
         const increment = minArray(values);
-        if (offset && offset.length === length) {
+        if (offset?.length === length) {
             for (let i = 0; i < offset.length; i++) {
                 minimum = Math.max(minimum, offset[i] + values[i]);
             }

@@ -140,63 +140,61 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (let node of data) {
                 const stored: FontAttribute = { ...node.data(Resource.KEY_NAME, 'fontStyle') };
                 const { id, companion } = node;
-                if (companion && !companion.visible && companion.tagName === 'LABEL') {
+                if (companion?.tagName === 'LABEL' && !companion.visible) {
                     node = companion as T;
                 }
                 if (stored.backgroundColor) {
                     stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 }
-                if (stored.fontFamily) {
-                    stored.fontFamily.replace(REGEXP_DOUBLEQUOTE, '').split($regex.XML.SEPARATOR).some((value, index, array) => {
-                        value = $util.trimString(value, "'");
-                        let fontFamily = value.toLowerCase();
-                        let customFont = false;
-                        if (!this.options.disableFontAlias && FONTREPLACE_ANDROID[fontFamily]) {
-                            fontFamily = this.options.systemDefaultFont || FONTREPLACE_ANDROID[fontFamily];
+                stored.fontFamily.replace(REGEXP_DOUBLEQUOTE, '').split($regex.XML.SEPARATOR).some((value, index, array) => {
+                    const { fontStyle, fontWeight } = stored;
+                    value = $util.trimString(value, "'");
+                    let fontFamily = value.toLowerCase();
+                    let customFont = false;
+                    if (!this.options.disableFontAlias && FONTREPLACE_ANDROID[fontFamily]) {
+                        fontFamily = this.options.systemDefaultFont || FONTREPLACE_ANDROID[fontFamily];
+                    }
+                    if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || !this.options.disableFontAlias && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
+                        stored.fontFamily = fontFamily;
+                        customFont = true;
+                    }
+                    else if (fontStyle && fontWeight) {
+                        let createFont = true;
+                        if (resource.getFont(value, fontStyle, fontWeight) === undefined) {
+                            if (resource.getFont(value, fontStyle)) {
+                                createFont = false;
+                            }
+                            else if (index < array.length - 1) {
+                                return false;
+                            }
+                            else if (index > 0) {
+                                value = $util.trimString(array[0], "'");
+                                fontFamily = value.toLowerCase();
+                            }
                         }
-                        if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || !this.options.disableFontAlias && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
-                            stored.fontFamily = fontFamily;
-                            customFont = true;
+                        fontFamily = $util.convertWord(fontFamily);
+                        if (createFont) {
+                            const fontData = fonts.get(fontFamily) || {};
+                            fontData[value + '|' + fontStyle + '|' + fontWeight] = FONTWEIGHT_ANDROID[fontWeight] || fontWeight;
+                            fonts.set(fontFamily, fontData);
                         }
-                        else if (stored.fontStyle && stored.fontWeight) {
-                            let createFont = true;
-                            if (resource.getFont(value, stored.fontStyle, stored.fontWeight) === undefined) {
-                                if (resource.getFont(value, stored.fontStyle)) {
-                                    createFont = false;
-                                }
-                                else if (index < array.length - 1) {
-                                    return false;
-                                }
-                                else if (index > 0) {
-                                    value = $util.trimString(array[0], "'");
-                                    fontFamily = value.toLowerCase();
-                                }
-                            }
-                            fontFamily = $util.convertWord(fontFamily);
-                            if (createFont) {
-                                const fontData = fonts.get(fontFamily) || {};
-                                fontData[value + '|' + stored.fontStyle + '|' + stored.fontWeight] = FONTWEIGHT_ANDROID[stored.fontWeight] || stored.fontWeight;
-                                fonts.set(fontFamily, fontData);
-                            }
-                            stored.fontFamily = '@font/' + fontFamily;
-                            customFont = true;
+                        stored.fontFamily = '@font/' + fontFamily;
+                        customFont = true;
+                    }
+                    if (customFont) {
+                        if (stored.fontStyle === 'normal') {
+                            stored.fontStyle = '';
                         }
-                        if (customFont) {
-                            const fontWeight = stored.fontWeight;
-                            if (stored.fontStyle === 'normal') {
-                                stored.fontStyle = '';
-                            }
-                            if (fontWeight === '400' || node.localSettings.targetAPI < BUILD_ANDROID.OREO) {
-                                stored.fontWeight = '';
-                            }
-                            else if (parseInt(fontWeight) > 500) {
-                                stored.fontStyle += (stored.fontStyle ? '|' : '') + 'bold';
-                            }
-                            return true;
+                        if (fontWeight === '400' || node.localSettings.targetAPI < BUILD_ANDROID.OREO) {
+                            stored.fontWeight = '';
                         }
-                        return false;
-                    });
-                }
+                        else if (parseInt(fontWeight) > 500) {
+                            stored.fontStyle += (stored.fontStyle ? '|' : '') + 'bold';
+                        }
+                        return true;
+                    }
+                    return false;
+                });
                 stored.color = Resource.addColor(stored.color);
                 for (let i = 0; i < length; i++) {
                     const key = styleKeys[i];
@@ -415,7 +413,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         for (const node of this.application.session.cache) {
             const styleData = nodeMap[node.id];
-            if (styleData && styleData.length) {
+            if (styleData?.length) {
                 switch (node.tagName) {
                     case 'METER':
                     case 'PROGRESS':

@@ -50,7 +50,7 @@ export default abstract class NodeGroupUI extends NodeUI {
         if (this._cached.blockStatic === undefined) {
             const documentParent = this.documentParent;
             const value = (
-                this.naturalChildren.length && this.naturalChildren[0].blockStatic ||
+                this.naturalChildren.length > 0 && this.naturalChildren[0].blockStatic ||
                 this.actualWidth === documentParent.actualWidth && !this.some(node => node.plainText || node.naturalElement && node.rightAligned) ||
                 this.layoutVertical && this.some(node => node.blockStatic || node.rightAligned) ||
                 documentParent.blockStatic && (documentParent.layoutVertical || this.hasAlign(NODE_ALIGNMENT.COLUMN))
@@ -110,8 +110,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     get baseline() {
         if (this._cached.baseline === undefined) {
             const value = this.cssInitial('verticalAlign', true);
-            this._cached.baseline = value !== '' ? value === 'baseline'
-                                                 : this.layoutHorizontal && this.every(node => node.baseline);
+            this._cached.baseline = value !== '' ? value === 'baseline' : this.layoutHorizontal && this.every(node => node.baseline);
         }
         return this._cached.baseline;
     }

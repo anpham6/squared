@@ -56,14 +56,14 @@ let file: File<View>;
 let userSettings: UserSettingsAndroid;
 
 function autoClose() {
-    if (application && application.userSettings.autoCloseOnWrite && !application.initializing && !application.closed) {
+    if (initialized && !application.initializing && !application.closed && application.userSettings.autoCloseOnWrite) {
         application.finalize();
         return true;
     }
     return false;
 }
 
-const checkApplication = (main?: Application<View>): main is Application<View> => initialized && !!main && (main.closed || autoClose());
+const checkApplication = (main: Application<View>): main is Application<View> => initialized && (main.closed || autoClose());
 
 const lib = {
     constant,

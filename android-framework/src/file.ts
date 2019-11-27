@@ -187,7 +187,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                         fontWeight
                     });
                     const src = this.resource.getFont(fontFamily, fontStyle, fontWeight);
-                    if (src && src.srcUrl) {
+                    if (src?.srcUrl) {
                         this.addAsset({
                             pathname,
                             filename: fontName + '.' + $util.fromLastIndexOf(src.srcUrl, '.').toLowerCase(),

@@ -137,8 +137,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 for (const time of times) {
                                     const animate = new SvgAnimateTransform(element, <SVGAnimateTransformElement> item);
                                     if (SvgBuild.isShape(this) && this.path) {
-                                        const viewport = this.viewport;
-                                        animate.transformFrom = SvgBuild.drawRefit(element, this.parent, viewport && viewport.precision);
+                                        animate.transformFrom = SvgBuild.drawRefit(element, this.parent, this.viewport?.precision);
                                     }
                                     addAnimation(animate, time);
                                 }
@@ -147,8 +146,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 for (const time of times) {
                                     const animate = new SvgAnimateMotion(element, <SVGAnimateMotionElement> item);
                                     if (animate.motionPathElement) {
-                                        const viewport = this.viewport;
-                                        animate.path = SvgBuild.drawRefit(animate.motionPathElement, this.parent, viewport && viewport.precision);
+                                        animate.path = SvgBuild.drawRefit(animate.motionPathElement, this.parent, this.viewport?.precision);
                                     }
                                     addAnimation(animate, time);
                                 }
@@ -159,7 +157,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
             const animationName = parseAttribute(element, 'animation-name');
             length = animationName.length;
-            if (length) {
+            if (length > 0) {
                 const cssData: ObjectMap<string[]> = {};
                 const groupName: SvgAnimate[] = [];
                 const groupOrdering: SvgAnimationAttribute[] = [];
@@ -221,8 +219,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         }
                         if (attrMap['transform']) {
                             function getKeyframeOrigin(order: number) {
-                                const transformOrigin = attrMap['transform-origin'];
-                                const origin = transformOrigin && transformOrigin.find(item => item.key === order);
+                                const origin = attrMap['transform-origin']?.find(item => item.key === order);
                                 if (origin) {
                                     return TRANSFORM.origin(<SVGGraphicsElement> element, origin.value);
                                 }
@@ -326,15 +323,17 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 for (let j = 1; j < offsetRotate.length; j++) {
                                     const previous = offsetRotate[j - 1];
                                     const item = offsetRotate[j];
-                                    previous.value = convertRotate(previous.value);
-                                    item.value = convertRotate(item.value);
-                                    if (previous.value.split(' ').pop() !== item.value.split(' ').pop()) {
-                                        const previousAuto = previous.value.startsWith('auto');
-                                        const auto = item.value.startsWith('auto');
+                                    const previousValue = convertRotate(previous.value);
+                                    const itemValue = convertRotate(item.value);
+                                    previous.value = previousValue;
+                                    item.value = itemValue;
+                                    if (previousValue.split(' ').pop() !== itemValue.split(' ').pop()) {
+                                        const previousAuto = previousValue.startsWith('auto');
+                                        const auto = itemValue.startsWith('auto');
                                         if (previousAuto && !auto || !previousAuto && auto) {
                                             const key = (previous.key + item.key) / 2;
-                                            offsetRotate.splice(j++, 0, { key, value: previous.value });
-                                            offsetRotate.splice(j++, 0, { key, value: item.value });
+                                            offsetRotate.splice(j++, 0, { key, value: previousValue });
+                                            offsetRotate.splice(j++, 0, { key, value: itemValue });
                                         }
                                     }
                                 }
@@ -411,13 +410,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const keySplines: string[] = [];
                                 const lengthA = animation.length;
                                 for (let j = 0; j < lengthA; j++) {
-                                    keyTimes.push(animation[j].key);
-                                    values.push(animation[j].value);
+                                    const item = animation[j];
+                                    keyTimes.push(item.key);
+                                    values.push(item.value);
                                     if (includeKeySplines && j < lengthA - 1) {
-                                        const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.key === animation[j].key);
+                                        const spline = keyframeMap['animation-timing-function']?.find(timing => timing.key === item.key);
                                         keySplines.push(spline ? spline.value : timingFunction);
                                     }
-                                    const transformOrigin = animation[j].transformOrigin;
+                                    const transformOrigin = item.transformOrigin;
                                     if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
                                         if (animate.transformOrigin === undefined) {
                                             animate.transformOrigin = [];

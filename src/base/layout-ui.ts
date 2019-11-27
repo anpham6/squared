@@ -27,7 +27,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         children?: T[])
     {
         super(children);
-        if (children && children.length) {
+        if (children?.length) {
             this.init();
         }
     }
@@ -35,7 +35,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     public init() {
         const children = this.children;
         const length = children.length;
-        if (length) {
+        if (length > 0) {
             if (length > 1) {
                 const linearData = NodeUI.linearData(children);
                 this._floated = linearData.floated;
@@ -67,7 +67,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
                     break;
                 }
             }
-            if (A === length || this._floated && this._floated.size === 2) {
+            if (A === length || this._floated?.size === 2) {
                 this.add(NODE_ALIGNMENT.FLOAT);
                 if (this.some(node => node.blockStatic)) {
                     this.add(NODE_ALIGNMENT.BLOCK);
@@ -134,7 +134,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     get singleRowAligned() {
         if (this._singleRow === undefined) {
             const length = this.length;
-            if (length) {
+            if (length > 0) {
                 this._singleRow = true;
                 if (length > 1) {
                     let previousBottom = Number.POSITIVE_INFINITY;

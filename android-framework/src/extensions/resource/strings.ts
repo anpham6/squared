@@ -53,8 +53,8 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 const name = valueString.key || valueString.value;
                                 let value = valueString.value;
                                 if (node.naturalChild && node.alignParent('left') && !(!node.plainText && node.preserveWhiteSpace || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
-                                    const textContent = node.textContent;
                                     let leadingSpace = 0;
+                                    const textContent = node.textContent;
                                     const length = textContent.length;
                                     for (let i = 0; i < length; i++) {
                                         switch (textContent.charCodeAt(i)) {
@@ -123,7 +123,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 if (value !== '') {
                                     if (indent === 0) {
                                         const parent = node.actualParent;
-                                        if (parent && (parent.blockDimension || parent.display === 'table-cell') && node === parent.firstChild) {
+                                        if (parent?.firstChild === node && (parent.blockDimension || parent.display === 'table-cell')) {
                                             indent = parent.parseUnit(parent.css('textIndent'));
                                         }
                                     }
@@ -136,9 +136,9 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             }
                             if (node.inputElement) {
                                 if (node.controlName === CONTAINER_ANDROID.EDIT_LIST) {
-                                    const element = <HTMLInputElement> node.element;
-                                    if (element.list) {
-                                        this.createOptionArray(<HTMLSelectElement> element.list, node.controlId);
+                                    const list = (<HTMLInputElement> node.element).list;
+                                    if (list) {
+                                        this.createOptionArray(<HTMLSelectElement> list, node.controlId);
                                         if (!node.hasPX('width')) {
                                             node.css('width', $css.formatPX(Math.max(node.bounds.width, node.width)), true);
                                         }
@@ -180,7 +180,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 }
             }
         }
-        if (result && result.length) {
+        if (result?.length) {
             return Resource.insertStoredAsset('arrays', controlId + '_array', result);
         }
         return '';

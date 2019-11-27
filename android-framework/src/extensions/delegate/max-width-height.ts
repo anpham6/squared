@@ -22,12 +22,13 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     }
 
     public condition(node: T, parent: T) {
+        const { maxWidth, maxHeight } = node.support;
         let width = false;
         let height = false;
-        if (!node.support.maxWidth && !isNaN(node.width) && node.hasPX('maxWidth') && !parent.hasAlign($e.NODE_ALIGNMENT.COLUMN)) {
+        if (!maxWidth && !isNaN(node.width) && node.hasPX('maxWidth') && !parent.hasAlign($e.NODE_ALIGNMENT.COLUMN)) {
             width = true;
         }
-        if (!node.support.maxHeight && !isNaN(node.height) && node.hasPX('maxHeight') && parent.hasHeight) {
+        if (!maxHeight && !isNaN(node.height) && node.hasPX('maxHeight') && parent.hasHeight) {
             height = true;
         }
         if (width || height) {

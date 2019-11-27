@@ -46,16 +46,17 @@ function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
     }
     const lengthB = data.length;
     const lengthC = lengthB - unitPX.length;
+    const lengthD = unitRepeat.length;
     const result: string[] = new Array(lengthB);
     for (let i = 0; i < lengthB; i++) {
         if (repeat[i]) {
             for (let j = 0, k = 0; j < lengthC; i++, j++, k++) {
-                if (k === unitRepeat.length) {
+                if (k === lengthD) {
                     k = 0;
                 }
                 result[i] = unitRepeat[k];
             }
-            break;
+            i--;
         }
         else {
             result[i] = unitPX.shift() as string;
@@ -568,10 +569,11 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 data.unit = unit;
                 data.unitMin = repeatUnit(data, data.unitMin);
             }
+            const isPercent = $css.isPercent;
             let percent = 1;
             let fr = 0;
             for (const px of unit) {
-                if ($css.isPercent(px)) {
+                if (isPercent(px)) {
                     percent -= parseFloat(px) / 100;
                 }
                 else if (px.endsWith('fr')) {
@@ -709,7 +711,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     const lengthA = available.length;
-                    if (lengthA) {
+                    if (lengthA > 0) {
                         const data = available[0];
                         if (data[0][1] === -1) {
                             PLACEMENT[colA] = 1;
@@ -774,7 +776,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
         });
         const lengthC = rowData.length;
-        if (lengthC) {
+        if (lengthC > 0) {
             if (horizontal) {
                 mainData.rowData = rowData;
             }

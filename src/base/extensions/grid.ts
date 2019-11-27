@@ -11,6 +11,8 @@ const {
     util: $util
 } = squared.lib;
 
+const { isLength, isPercent } = $css;
+
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     const top = target.linear.top;
     for (const column of columns) {
@@ -85,7 +87,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         }
         const nextCoordsX = Object.keys(nextMapX);
         const lengthA = nextCoordsX.length;
-        if (lengthA) {
+        if (lengthA > 0) {
             let columnLength = -1;
             for (let i = 0; i < lengthA; i++) {
                 const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
@@ -178,8 +180,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 for (let i = 0; i < columns.length; i++) {
-                    const column = columns[i];
-                    if (column && column.length) {
+                    if (columns[i]?.length) {
                         columnEnd.push(columnRight[i]);
                     }
                     else {
@@ -270,23 +271,23 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 let hasPercent = false;
                 for (const item of group) {
                     const width = item.css('width');
-                    if ($css.isPercent(width)) {
+                    if (isPercent(width)) {
                         hasPercent = true;
                     }
-                    else if (!$css.isLength(width)) {
+                    else if (!isLength(width)) {
                         hasLength = false;
                         break;
                     }
                 }
                 if (hasLength && hasPercent && group.length > 1) {
                     const cellData: GridCellData<T> = group[0].data(EXT_NAME.GRID, 'cellData');
-                    if (cellData && cellData.rowSpan === 1) {
+                    if (cellData?.rowSpan === 1) {
                         let siblings: T[] = cellData.siblings ? cellData.siblings.slice(0) : [];
                         const length = group.length;
                         for (let i = 1; i < length; i++) {
                             const item = group[i];
                             const siblingData: GridCellData<T> = item.data(EXT_NAME.GRID, 'cellData');
-                            if (siblingData && siblingData.rowSpan === 1) {
+                            if (siblingData?.rowSpan === 1) {
                                 siblings.push(item);
                                 if (siblingData.siblings) {
                                     siblings = siblings.concat(siblingData.siblings);

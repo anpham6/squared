@@ -64,7 +64,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
     public processChild(node: T, parent: T) {
         const cellData: GridCellData<T> = node.data($c.EXT_NAME.GRID, 'cellData');
         if (cellData) {
-            const siblings = cellData.siblings && cellData.siblings.slice(0);
+            const siblings = cellData.siblings?.slice(0);
             let layout: $LayoutUI<T> | undefined;
             if (siblings) {
                 const controller = <android.base.Controller<T>> this.controller;

@@ -40,9 +40,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         break;
                     default:
                         const object: SVGAnimatedLength = this.element[attr];
-                        if (object && object.baseVal) {
-                            this._baseVal[attr] = object.baseVal.value;
-                            return true;
+                        if (object) {
+                            const baseVal = object.baseVal;
+                            if (baseVal) {
+                                this._baseVal[attr] = baseVal.value;
+                                return true;
+                            }
                         }
                         break;
                 }

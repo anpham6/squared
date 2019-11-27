@@ -297,7 +297,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                             const maxTime = Math.floor($math.truncateFraction(toKey * duration));
                             for ( ; ; j++) {
                                 const item = offsetPath[j];
-                                if (item && item.key <= maxTime) {
+                                if (item?.key <= maxTime) {
                                     timeRange.push(item);
                                 }
                                 else {
@@ -489,7 +489,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     set parent(value) {
         super.parent = value;
         const parentContainer = this.parentContainer;
-        if (parentContainer && parentContainer.requireRefit) {
+        if (parentContainer?.requireRefit) {
             const path = this.path;
             if (path) {
                 this.path = SvgBuild.transformRefit(path, undefined, undefined, parentContainer);

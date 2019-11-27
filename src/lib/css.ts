@@ -374,7 +374,16 @@ export function validMediaRule(value: string, fontSize?: number) {
 }
 
 export function isParentStyle(element: Element, attr: string, ...styles: string[]) {
-    return element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr]) || element.parentElement && styles.includes(getStyle(element.parentElement)[attr]);
+    if (element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr])) {
+        return true;
+    }
+    else {
+        const parentElement = element.parentElement;
+        if (parentElement) {
+            return styles.includes(getStyle(parentElement)[attr]);
+        }
+    }
+    return false;
 }
 
 export function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]) {
@@ -648,7 +657,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     const result: ImageSrcSet[] = [];
     const src = element.src;
     let { srcset, sizes } = element;
-    if (parentElement && parentElement.tagName === 'PICTURE') {
+    if (parentElement?.tagName === 'PICTURE') {
         const children = parentElement.children;
         const length = children.length;
         for (let i = 0; i < length; i++) {
@@ -800,7 +809,7 @@ export function insertStyleSheetRule(value: string, index = 0) {
     }
     document.head.appendChild(style);
     const sheet = style.sheet as any;
-    if (sheet && typeof sheet.insertRule === 'function') {
+    if (typeof sheet?.insertRule === 'function') {
         try {
             sheet.insertRule(value, index);
         }

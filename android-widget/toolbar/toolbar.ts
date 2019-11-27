@@ -47,9 +47,10 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     break;
                 }
             }
-            if (element.dataset.target) {
-                const target = document.getElementById(element.dataset.target);
-                if (target && element.parentElement !== target && !$util.includes(target.dataset.use, WIDGET_NAME.COORDINATOR)) {
+            const target = element.dataset.target;
+            if (target) {
+                const targetElement = document.getElementById(target);
+                if (element.parentElement !== targetElement && targetElement && !$util.includes(targetElement.dataset.use, WIDGET_NAME.COORDINATOR)) {
                     (<squared.base.ApplicationUI<T>> this.application).rootElements.add(element);
                 }
             }
@@ -304,7 +305,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     public postOptimize(node: T) {
         const menu = $util.optionalAsString(Toolbar.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
-            const toolbarOptions = $utilA.createViewAttribute(this.options[node.elementId] && this.options[node.elementId].self);
+            const toolbarOptions = $utilA.createViewAttribute(this.options[node.elementId]?.self);
             $util.assignEmptyValue(toolbarOptions, 'app', 'menu', '@menu/' + menu);
             node.app('menu', toolbarOptions.app.menu);
         }

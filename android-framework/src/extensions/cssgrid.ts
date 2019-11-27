@@ -22,6 +22,8 @@ const {
     enumeration: $e
 } = squared.base.lib;
 
+const { formatPX, isLength, isPercent } = $css;
+
 const REGEXP_ALIGNSELF = /(start|end|center|baseline)/;
 const REGEXP_JUSTIFYSELF = /(start|left|center|right|end)/;
 
@@ -50,7 +52,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
     const unit = data.unit;
     const length = unit.length;
     let value = 0;
-    if (length) {
+    if (length > 0) {
         const dimension = horizontal ? 'width' : 'height';
         for (let i = 0; i < length; i++) {
             const unitPX = unit[i];
@@ -61,7 +63,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
                 let size = 0;
                 $util.captureMap(
                     <View[][]> mainData.rowData[i],
-                    item => item && item.length > 0,
+                    item => !!item && item.length > 0,
                     item => size = Math.min(size, ...$util.objectMap(item, child => child.bounds[dimension]))
                 );
                 value += size;
@@ -206,12 +208,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             for (const image of node.cascade(item => item.imageElement) as T[]) {
                 const asset = this.resource.getImage(image.src);
                 if (asset) {
-                    if (!image.hasPX('width', false) && asset.width > image.bounds.width) {
-                        image.css('width', $css.formatPX(image.bounds.width), true);
+                    const bounds = image.bounds;
+                    if (!image.hasPX('width', false) && asset.width > bounds.width) {
+                        image.css('width', formatPX(bounds.width), true);
                         image.android('adjustViewBounds', 'true');
                     }
-                    else if (!image.hasPX('height', false) && asset.height > image.bounds.height) {
-                        image.css('height', $css.formatPX(image.bounds.height), true);
+                    else if (!image.hasPX('height', false) && asset.height > bounds.height) {
+                        image.css('height', formatPX(bounds.height), true);
                         image.android('adjustViewBounds', 'true');
                     }
                 }
@@ -281,7 +284,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                     }
                     if (value === 'auto' || value === 'max-content') {
-                        if (cellSpan < unit.length && (!parent.hasPX(dimension) || unit.some(px => $css.isLength(px)) || value === 'max-content')) {
+                        if (cellSpan < unit.length && (!parent.hasPX(dimension) || unit.some(px => isLength(px)) || value === 'max-content')) {
                             size = node.bounds[dimension];
                             minSize = 0;
                             sizeWeight = 0;
@@ -316,7 +319,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                         size = 0;
                     }
-                    else if ($css.isPercent(value)) {
+                    else if (isPercent(value)) {
                         sizeWeight += parseFloat(value) / 100;
                         minSize = size;
                         size = 0;
@@ -360,7 +363,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan', cellSpan.toString());
                 }
                 if (minSize > 0 && !item.hasPX(horizontal ? 'minWidth' : 'minHeight')) {
-                    item.css(horizontal ? 'minWidth' : 'minHeight', $css.formatPX(minSize), true);
+                    item.css(horizontal ? 'minWidth' : 'minHeight', formatPX(minSize), true);
                 }
                 if (sizeWeight > 0) {
                     if (!item.hasPX(dimension)) {
@@ -382,11 +385,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         size -= horizontal ? item.contentBoxWidth : item.contentBoxHeight;
                     }
                     if (fitContent && !item.hasPX(horizontal ? 'maxWidth' : 'maxHeight')) {
-                        item.css(horizontal ? 'maxWidth' : 'maxHeight', $css.formatPX(size), true);
+                        item.css(horizontal ? 'maxWidth' : 'maxHeight', formatPX(size), true);
                         item.mergeGravity('layout_gravity', horizontal ? 'fill_horizontal' : 'fill_vertical');
                     }
                     else if (!item.hasPX(dimension)) {
-                        item.css(dimension, $css.formatPX(size), true);
+                        item.css(dimension, formatPX(size), true);
                     }
                 }
                 return [cellStart, cellSpan];
@@ -466,8 +469,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 return false;
             }
-            if (mainData.alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.initial.bounds && node.bounds.height > node.initial.bounds.height && checkRowSpan()) {
-                target.css('minHeight', $css.formatPX(node.actualHeight), true);
+            if (mainData.alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.bounds.height > (node.initial.bounds as BoxRectDimension).height && checkRowSpan()) {
+                target.css('minHeight', formatPX(node.actualHeight), true);
             }
             else if (!target.hasPX('height') && !(row.length === 1 && mainData.alignContent === 'space-between')) {
                 if (!REGEXP_ALIGNSELF.test(mainData.alignItems)) {
@@ -520,13 +523,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (column.normal && !column.unit.includes('auto')) {
                 const gap =  column.gap * (column.length - 1);
                 if (gap > 0) {
-                    const renderParent = node.renderParent;
-                    if (renderParent && !renderParent.hasAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT)) {
+                    if (!(node.renderParent as T).hasAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT)) {
                         node.cssPX('minWidth', gap);
                         node.cssPX('width', gap, false, true);
                     }
                     if (!node.hasPX('width') && node.hasPX('maxWidth')) {
-                        node.css('width', $css.formatPX(node.actualWidth + gap), true);
+                        node.css('width', formatPX(node.actualWidth + gap), true);
                     }
                 }
             }
@@ -540,11 +542,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const { children, column } = mainData;
             const unit = column.unit;
             const lastChild = children[children.length - 1];
-            if (unit.length && unit.every(value => $css.isPercent(value))) {
+            if (unit.length && unit.every(value => isPercent(value))) {
                 const columnCount = column.length;
                 const percent = unit.reduce((a, b) => a + parseFloat(b), 0) + (column.gap * columnCount * 100) / node.actualWidth;
                 if (percent < 100) {
-                    const columnGap = '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_cssgrid_column_gap', $css.formatPX(column.gap));
+                    const columnGap = '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_cssgrid_column_gap', formatPX(column.gap));
                     const lengthA = mainData.row.length;
                     for (let i = 0; i < lengthA; i++) {
                         controller.addAfterOutsideTemplate(
@@ -571,7 +573,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             for (let i = 0; i < length; i++) {
                 const row = emptyRows[i];
                 if (row) {
-                    const rowGap = '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_cssgrid_row_gap', $css.formatPX(mainData.row.gap));
+                    const rowGap = '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_cssgrid_row_gap', formatPX(mainData.row.gap));
                     const lengthA = row.length;
                     for (let j = 0; j < lengthA; j++) {
                         if (row[j] === 1) {

@@ -105,7 +105,7 @@ function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
-        const transformRefit = !!transforms || !!companion && !!companion.parent && companion.parent.requireRefit;
+        const transformRefit = !!(transforms || companion?.parent?.requireRefit);
         const result: string[] = [];
         let commands: SvgPathCommand[] | undefined;
         const length = values.length;
@@ -191,7 +191,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             if (result[i]) {
                 if (transformRefit) {
-                    result[i] = SvgBuild.transformRefit(result[i], transforms, companion, companion && companion.parent, precision);
+                    result[i] = SvgBuild.transformRefit(result[i], transforms, companion, companion?.parent, precision);
                 }
             }
             else {
@@ -216,7 +216,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
 
     public build(options?: SvgBuildOptions) {
         let transforms: SvgTransform[] | undefined;
-        if (options && options.transforms) {
+        if (options?.transforms) {
             transforms = SvgBuild.filterTransforms(options.transforms, options.exclude && options.exclude[this.element.tagName]);
         }
         this.draw(transforms, options);
@@ -232,13 +232,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         const element = this.element;
         const parent = <SvgContainer> this.parent;
         const patternParent = <SvgShapePattern> this.patternParent;
-        const refit = !!parent && parent.requireRefit;
-        const patternRefit = !!patternParent && patternParent.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
+        const requireRefit = parent?.requireRefit === true;
+        const patternRefit = patternParent?.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
         this.transformed = undefined;
         let d: string;
         if (SVG.path(element)) {
             d = this.getBaseValue('d');
-            if (transforms && transforms.length || refit || patternRefit) {
+            if (transforms?.length || requireRefit || patternRefit) {
                 const commands = SvgBuild.getPathCommands(d);
                 if (commands.length) {
                     let points = SvgBuild.getPathPoints(commands);
@@ -246,7 +246,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         if (patternRefit) {
                             patternParent.patternRefitPoints(points);
                         }
-                        if (transforms && transforms.length) {
+                        if (transforms?.length) {
                             if (typeof residual === 'function') {
                                 [this.transformResidual, transforms] = residual.call(this, element, transforms);
                             }
@@ -255,8 +255,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 this.transformed = transforms;
                             }
                         }
-                        this.baseValue = SvgBuild.drawPath(SvgBuild.syncPathPoints(refit ? $util.cloneArray(commands, [], true) : commands, refit ? $util.cloneArray(points, [], true) : points, this.transformed !== undefined), precision);
-                        if (refit) {
+                        this.baseValue = SvgBuild.drawPath(SvgBuild.syncPathPoints(requireRefit ? $util.cloneArray(commands, [], true) : commands, requireRefit ? $util.cloneArray(points, [], true) : points, this.transformed !== undefined), precision);
+                        if (requireRefit) {
                             parent.refitPoints(points);
                             d = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, this.transformed !== undefined), precision);
                         }
@@ -278,7 +278,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             if (patternRefit) {
                 patternParent.patternRefitPoints(points);
             }
-            if (transforms && transforms.length) {
+            if (transforms?.length) {
                 if (typeof residual === 'function') {
                     [this.transformResidual, transforms] = residual.call(this, element, transforms);
                 }
@@ -289,7 +289,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             const drawPolyline = () => SvgBuild.drawPolyline(points, precision);
             this.baseValue = drawPolyline();
-            if (refit) {
+            if (requireRefit) {
                 parent.refitPoints(points);
                 d = drawPolyline();
             }
@@ -314,7 +314,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             if (patternRefit) {
                 patternParent.patternRefitPoints(points);
             }
-            if (transforms && transforms.length) {
+            if (transforms?.length) {
                 if (typeof residual === 'function') {
                     [this.transformResidual, transforms] = residual.call(this, element, transforms, rx, ry);
                 }
@@ -326,7 +326,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             const pt = <Required<SvgPoint>> points[0];
             const drawEllipse = () => SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, precision);
             this.baseValue = drawEllipse();
-            if (refit) {
+            if (requireRefit) {
                 parent.refitPoints(points);
                 d = drawEllipse();
             }
@@ -339,7 +339,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             let y = this.getBaseValue('y');
             let width = this.getBaseValue('width');
             let height = this.getBaseValue('height');
-            if (transforms && transforms.length) {
+            if (transforms?.length) {
                 let points: SvgPoint[] = [
                     { x, y },
                     { x: x + width, y },
@@ -358,7 +358,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
                 const drawPolygon = () => SvgBuild.drawPolygon(points, precision);
                 this.baseValue = drawPolygon();
-                if (refit) {
+                if (requireRefit) {
                     parent.refitPoints(points);
                     d = drawPolygon();
                 }
@@ -375,7 +375,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
                 const drawRect = () => SvgBuild.drawRect(width, height, x, y, precision);
                 this.baseValue = drawRect();
-                if (refit) {
+                if (requireRefit) {
                     x = parent.refitX(x);
                     y = parent.refitY(y);
                     width = parent.refitSize(width);
@@ -392,7 +392,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             if (patternRefit) {
                 patternParent.patternRefitPoints(points);
             }
-            if (transforms && transforms.length) {
+            if (transforms?.length) {
                 if (typeof residual === 'function') {
                     [this.transformResidual, transforms] = residual.call(this, element, transforms);
                 }
@@ -403,7 +403,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             const drawPolygon = () => SVG.polygon(element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
             this.baseValue = drawPolygon();
-            if (refit) {
+            if (requireRefit) {
                 if (this.transformed === null) {
                     points = SvgBuild.clonePoints(points);
                 }
@@ -429,10 +429,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 case 'line':
                 case 'polyline':
                     const commands = SvgBuild.getPathCommands(this.value);
-                    if (commands.length) {
+                    const length = commands.length;
+                    if (length > 0) {
                         const pathStart = commands[0];
                         const pathStartPoint = pathStart.start;
-                        const pathEnd = commands[commands.length - 1];
+                        const pathEnd = commands[length - 1];
                         const pathEndPoint = pathEnd.end;
                         const name = pathEnd.key.toUpperCase();
                         const leading = data.leading;
@@ -444,7 +445,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 if (pathStart.value.length > 1) {
                                     afterStartPoint = pathStart.value[1];
                                 }
-                                else if (commands.length > 1) {
+                                else if (length > 1) {
                                     afterStartPoint = commands[1].start;
                                 }
                                 if (afterStartPoint) {
@@ -470,7 +471,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 case 'L': {
                                     if (trailing > 0) {
                                         let beforeEndPoint: SvgPoint | undefined;
-                                        if (commands.length === 1) {
+                                        if (length === 1) {
                                             const startValue = pathStart.value;
                                             if (startValue.length > 1) {
                                                 beforeEndPoint = startValue[startValue.length - 2];

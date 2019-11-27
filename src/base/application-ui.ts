@@ -19,6 +19,8 @@ const {
     xml: $xml
 } = squared.lib;
 
+const getStyle = $css.getStyle;
+
 const CACHE_PATTERN: ObjectMap<RegExp> = {};
 let NodeConstructor!: Constructor<NodeUI>;
 
@@ -132,13 +134,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.naturalChildren.every(item => item.documentRoot)) {
                 continue;
             }
-            const parent = node.renderParent;
-            if (parent && parent.renderTemplates) {
+            const renderTemplates = node.renderParent?.renderTemplates;
+            if (renderTemplates) {
                 this.saveDocument(
                     layout.layoutName,
-                    baseTemplate + controller.cascadeDocument(<NodeTemplate<T>[]> parent.renderTemplates, 0),
+                    baseTemplate + controller.cascadeDocument(<NodeTemplate<T>[]> renderTemplates, 0),
                     node.dataset.pathname,
-                    !!node.renderExtension && node.renderExtension.some(item => item.documentBase) ? 0 : undefined
+                    node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
                 );
             }
         }
@@ -184,14 +186,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 return true;
             }
             else {
-                switch ($css.getStyle(element).position) {
+                switch (getStyle(element).position) {
                     case 'absolute':
                     case 'fixed':
                         return false;
                 }
                 let current = element.parentElement;
                 while (current) {
-                    if ($css.getStyle(current).display === 'none') {
+                    if (getStyle(current).display === 'none') {
                         return false;
                     }
                     current = current.parentElement;
@@ -212,7 +214,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public insertNode(element: Element, parent?: T) {
         if ($dom.isTextNode(element)) {
-            if ($xml.isPlainText(element.textContent as string) || parent && parent.preserveWhiteSpace && (parent.tagName !== 'PRE' || (<HTMLElement> parent.element).children.length === 0)) {
+            if ($xml.isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (<HTMLElement> parent.element).children.length === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode(element, false);
                 if (parent) {
@@ -310,7 +312,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (parent) {
             node.depth = parent.depth + 1;
         }
-        if (element === undefined && parent && parent.naturalElement) {
+        if (element === undefined && parent?.naturalElement) {
             node.actualParent = parent;
         }
         if (children) {
@@ -501,7 +503,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const extensionManager = this.extensionManager;
                 for (const name of node.extensions) {
                     const ext = <ExtensionUI<T>> extensionManager.retrieve(name);
-                    if (ext && ext.cascadeAll) {
+                    if (ext?.cascadeAll) {
                         this._cascadeAll = true;
                         break;
                     }
@@ -589,7 +591,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected cacheNodeChildren(node: T, children: T[], inlineText: boolean) {
         const length = children.length;
-        if (length) {
+        if (length > 0) {
             const CACHE = this._cache;
             let siblingsLeading: T[] = [];
             let siblingsTrailing: T[] = [];
@@ -665,11 +667,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 $session.setElementCache(element, 'styleMap' + pseudoElt, sessionId, styleMap);
             }
             if (!styleMap.content) {
-                styleMap.content = $css.getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
+                styleMap.content = getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
             }
             if (styleMap.content.endsWith('-quote')) {
                 let current = element.parentElement;
-                while (current && current.tagName === 'Q') {
+                while (current?.tagName === 'Q') {
                     nested++;
                     current = current.parentElement;
                 }
@@ -696,14 +698,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (value === 'inherit') {
                     let current: HTMLElement | null = element;
                     while (current) {
-                        value = $css.getStyle(current).getPropertyValue('content');
+                        value = getStyle(current).getPropertyValue('content');
                         if (value !== 'inherit') {
                             break;
                         }
                         current = current.parentElement;
                     }
                 }
-                const style = $css.getStyle(element);
+                const style = getStyle(element);
                 if (styleMap.fontFamily === undefined) {
                     styleMap.fontFamily = style.getPropertyValue('font-family');
                 }
@@ -792,7 +794,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     }
                                     const getIncrementValue = (parent: Element) => {
                                         const pseduoStyle: StringMap = $session.getElementCache(parent, 'styleMap' + pseudoElt, sessionId);
-                                        if (pseduoStyle && pseduoStyle.counterIncrement) {
+                                        if (pseduoStyle?.counterIncrement) {
                                             return getCounterValue(pseduoStyle.counterIncrement);
                                         }
                                         return undefined;
@@ -812,7 +814,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                     }
                                     function cascadeSibling(sibling: Element) {
-                                        if (getCounterValue($css.getStyle(sibling).getPropertyValue('counter-reset')) === undefined) {
+                                        if (getCounterValue(getStyle(sibling).getPropertyValue('counter-reset')) === undefined) {
                                             const children = sibling.children;
                                             const length = children.length;
                                             for (let i = 0; i < length; i++) {
@@ -822,7 +824,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                     if (increment) {
                                                         incrementCounter(increment, true);
                                                     }
-                                                    const childStyle = $css.getStyle(child);
+                                                    const childStyle = getStyle(child);
                                                     increment = getCounterValue(childStyle.getPropertyValue('counter-increment'));
                                                     if (increment) {
                                                         incrementCounter(increment, false);
@@ -854,7 +856,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             if (pesudoIncrement) {
                                                 incrementCounter(pesudoIncrement, true);
                                             }
-                                            const currentStyle = $css.getStyle(current);
+                                            const currentStyle = getStyle(current);
                                             const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment')) || 0;
                                             if (counterIncrement) {
                                                 incrementCounter(counterIncrement, false);
@@ -945,21 +947,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         function setMapY(depth: number, id: number, node: T) {
             const index = mapY.get(depth) || new Map<number, T>();
             mapY.set(depth, index.set(id, node));
-            if (id > 0) {
-                for (const mapNode of mapY.values()) {
-                    for (const nodeY of mapNode.values()) {
-                        if (nodeY.id === id) {
-                            mapNode.delete(nodeY.id);
-                            return;
-                        }
-                    }
-                }
+        }
+        function removeMapY(node: T) {
+            const index = mapY.get(node.depth);
+            if (index) {
+                index.delete(node.id);
             }
         }
         setMapY(-1, 0, documentRoot.parent as T);
         let maxDepth = 0;
         for (const node of CACHE) {
-            if (node.length && node.visible) {
+            if (node.length) {
                 const depth = node.depth;
                 setMapY(depth, node.id, node);
                 if (depth > maxDepth) {
@@ -971,8 +969,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             mapY.set((i * -1) - 2, new Map<number, T>());
         }
         CACHE.afterAppend = (node: T) => {
+            removeMapY(node);
             setMapY((node.depth * -1) - 2, node.id, node);
-            for (const item of node.cascade()) {
+            for (const item of node.cascade() as T[]) {
+                removeMapY(item);
                 setMapY((item.depth * -1) - 2, item.id, item as T);
             }
         };
@@ -1127,7 +1127,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 else if (item.positionAuto) {
                                     const lengthA = vertical.length;
-                                    if (lengthA) {
+                                    if (lengthA > 0) {
                                         if (vertical[lengthA - 1].blockStatic) {
                                             vertical.push(item);
                                         }

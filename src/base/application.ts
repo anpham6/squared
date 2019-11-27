@@ -18,6 +18,9 @@ const {
     util: $util
 } = squared.lib;
 
+const { checkStyleValue, getSpecificity, getStyle, parseSelectorText } = $css;
+const { convertCamelCase, resolvePath } = $util;
+
 const ASSETS = Resource.ASSETS;
 const REGEXP_MEDIATEXT = /all|screen/;
 const REGEXP_DATAURI = new RegExp(`(url\\("(${$regex.STRING.DATAURI})"\\)),?\\s*`, 'g');
@@ -85,24 +88,15 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract finalize(): void;
 
     public copyToDisk(directory: string, callback?: CallbackResult, assets?: FileAsset[]) {
-        const file = this.resourceHandler.fileHandler;
-        if (file) {
-            file.copyToDisk(directory, assets, callback);
-        }
+        this.resourceHandler.fileHandler?.copyToDisk(directory, assets, callback);
     }
 
     public appendToArchive(pathname: string, assets?: FileAsset[]) {
-        const file = this.resourceHandler.fileHandler;
-        if (file) {
-            file.appendToArchive(pathname, assets);
-        }
+        this.resourceHandler.fileHandler?.appendToArchive(pathname, assets);
     }
 
     public saveToArchive(filename?: string, assets?: FileAsset[]) {
-        const file = this.resourceHandler.fileHandler;
-        if (file) {
-            file.saveToArchive(filename || this.userSettings.outputArchiveName, assets);
-        }
+        this.resourceHandler.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, assets);
     }
 
     public reset() {
@@ -192,11 +186,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                     else if (image.width === 0 && image.height === 0) {
                         const element = document.createElement('img');
                         element.src = uri;
-                        const width = element.naturalWidth;
-                        const height = element.naturalHeight;
-                        if (width > 0 && height > 0) {
-                            image.width = width;
-                            image.height = height;
+                        const { naturalWidth, naturalHeight } = element;
+                        if (naturalWidth > 0 && naturalHeight > 0) {
+                            image.width = naturalWidth;
+                            image.height = naturalHeight;
                         }
                         else {
                             documentRoot.appendChild(element);
@@ -207,17 +200,17 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         for (const [uri, data] of ASSETS.rawData.entries()) {
-            if (data.mimeType && data.mimeType.startsWith('image/') && !data.mimeType.endsWith('svg+xml')) {
+            const mimeType = data.mimeType;
+            if (mimeType && mimeType.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
                 const element = document.createElement('img');
-                element.src = 'data:' + data.mimeType + ';' + (data.base64 ? 'base64,' + data.base64 : data.content);
-                const width = element.naturalWidth;
-                const height = element.naturalHeight;
-                if (width > 0 && height > 0) {
-                    data.width = width;
-                    data.height = height;
+                element.src = 'data:' + mimeType + ';' + (data.base64 ? 'base64,' + data.base64 : data.content);
+                const { naturalWidth, naturalHeight } = element;
+                if (naturalWidth > 0 && naturalHeight > 0) {
+                    data.width = naturalWidth;
+                    data.height = naturalHeight;
                     ASSETS.images.set(uri, {
-                        width,
-                        height,
+                        width: naturalWidth,
+                        height: naturalHeight,
                         uri: data.filename
                     });
                 }
@@ -260,7 +253,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 for (let i = 0; i < length; i++) {
                     const value = result[i];
                     if (typeof value === 'string') {
-                        const uri = images[i] as string;
+                        const uri = images[i];
                         if (typeof uri === 'string') {
                             resource.addRawData(uri, 'image/svg+xml', 'utf8', value);
                         }
@@ -272,7 +265,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 resume();
             })
             .catch((error: Event) => {
-                const message = error.target ? (<HTMLImageElement> error.target).src : error['message'];
+                const message = (<HTMLImageElement> error.target)?.src || error['message'];
                 if (!this.userSettings.showErrorMessages || !$util.isString(message) || confirm('FAIL: ' + message)) {
                     resume();
                 }
@@ -415,8 +408,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const lengthA = childMap.length;
                 for (let j = 0; j < lengthA; j++) {
                     const k = j + 1;
-                    const map = result[k];
-                    result[k] = map ? map.concat(childMap[j]) : childMap[j];
+                    result[k] = result[k]?.concat(childMap[j]) || childMap[j];
                 }
             }
         }
@@ -490,7 +482,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected applyStyleRule(item: CSSStyleRule) {
         const resource = this.resourceHandler;
         const sessionId = this.processing.sessionId;
-        const styleSheetHref = item.parentStyleSheet && item.parentStyleSheet.href || undefined;
+        const styleSheetHref = item.parentStyleSheet?.href || undefined;
         const cssText = item.cssText;
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
@@ -508,7 +500,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 resource.addRawData(match[2], match[3], match[4], match[5]);
                             }
                             else if (this.userSettings.preloadImages) {
-                                const uri = $util.resolvePath(match[5], styleSheetHref);
+                                const uri = resolvePath(match[5], styleSheetHref);
                                 if (uri !== '') {
                                     if (resource.getImage(uri) === undefined) {
                                         ASSETS.images.set(uri, { width: 0, height: 0, uri });
@@ -521,7 +513,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 };
                 for (const attr of Array.from(cssStyle)) {
-                    fromRule.push($util.convertCamelCase(attr));
+                    fromRule.push(convertCamelCase(attr));
                 }
                 if (cssText.indexOf('!important') !== -1) {
                     if (REGEXP_IMPORTANT) {
@@ -532,7 +524,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     let match: RegExpExecArray | null;
                     while ((match = REGEXP_IMPORTANT.exec(cssText)) !== null) {
-                        const attr = $util.convertCamelCase(match[1]);
+                        const attr = convertCamelCase(match[1]);
                         switch (attr) {
                             case 'margin':
                                 important.marginTop = true;
@@ -601,15 +593,15 @@ export default abstract class Application<T extends Node> implements squared.bas
                         important[attr] = true;
                     }
                 }
-                for (const selectorText of $css.parseSelectorText(item.selectorText)) {
-                    const specificity = $css.getSpecificity(selectorText);
+                for (const selectorText of parseSelectorText(item.selectorText)) {
+                    const specificity = getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');
                     const targetElt = target ? '::' + target : '';
                     document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
-                        const style = $css.getStyle(element, targetElt);
+                        const style = getStyle(element, targetElt);
                         const styleMap: StringMap = {};
                         for (const attr of fromRule) {
-                            const value = $css.checkStyleValue(element, attr, cssStyle[attr], style);
+                            const value = checkStyleValue(element, attr, cssStyle[attr], style);
                             if (value) {
                                 styleMap[attr] = value;
                             }
@@ -674,7 +666,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 let srcLocal: string | undefined;
                                 const url = (urlMatch[2] || urlMatch[3]).trim();
                                 if (urlMatch[1] === 'url') {
-                                    srcUrl = $util.resolvePath(url, styleSheetHref);
+                                    srcUrl = resolvePath(url, styleSheetHref);
                                 }
                                 else {
                                     srcLocal = url;

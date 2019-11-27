@@ -16,6 +16,8 @@ const {
     util: $util
 } = squared.lib;
 
+const { BOX_BORDER, formatPX } = $css;
+
 const STRING_SPACE = '&#160;';
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
@@ -271,7 +273,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static isBackgroundVisible(object: BoxStyle | undefined) {
-        return object !== undefined && (!!object.backgroundImage || !!object.borderTop || !!object.borderRight || !!object.borderBottom || !!object.borderLeft);
+        return !!(object && (object.backgroundImage || object.borderTop || object.borderRight || object.borderBottom || object.borderLeft));
     }
 
     public static parseBackgroundImage(node: NodeUI) {
@@ -585,7 +587,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             };
             function setBorderStyle(attr: string, border: string[]) {
                 const style = node.css(border[0]) || 'none';
-                let width = $css.formatPX(attr !== 'outline' ? node[border[1]] : $util.convertFloat(node.style[border[1]]));
+                let width = formatPX(attr !== 'outline' ? node[border[1]] : $util.convertFloat(node.style[border[1]]));
                 let color = node.css(border[2]) || 'initial';
                 switch (color) {
                     case 'initial':
@@ -652,7 +654,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                 }
                 const length = borderRadius.length;
-                if (length) {
+                if (length > 0) {
                     const dimension = horizontal ? 'width' : 'height';
                     for (let i = 0; i < length; i++) {
                         borderRadius[i] = node.convertPX(borderRadius[i], dimension, false);
@@ -661,12 +663,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
             }
             if (!node.css('border').startsWith('0px none')) {
-                setBorderStyle('borderTop', $css.BOX_BORDER[0]);
-                setBorderStyle('borderRight', $css.BOX_BORDER[1]);
-                setBorderStyle('borderBottom', $css.BOX_BORDER[2]);
-                setBorderStyle('borderLeft', $css.BOX_BORDER[3]);
+                setBorderStyle('borderTop', BOX_BORDER[0]);
+                setBorderStyle('borderRight', BOX_BORDER[1]);
+                setBorderStyle('borderBottom', BOX_BORDER[2]);
+                setBorderStyle('borderLeft', BOX_BORDER[3]);
             }
-            setBorderStyle('outline', $css.BOX_BORDER[4]);
+            setBorderStyle('outline', BOX_BORDER[4]);
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                 boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node);
             }
@@ -705,7 +707,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             node.data(ResourceUI.KEY_NAME, 'fontStyle', <FontAttribute> {
                 fontFamily: node.css('fontFamily').trim(),
                 fontStyle: node.css('fontStyle'),
-                fontSize: $css.formatPX(node.fontSize),
+                fontSize: formatPX(node.fontSize),
                 fontWeight,
                 color: color ? color.valueAsRGBA : ''
             });
@@ -899,7 +901,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 else if (child instanceof HTMLElement) {
                     const position = getComputedStyle(child).getPropertyValue('position');
-                    value = value.replace(child.outerHTML, position !== 'absolute' && position !== 'fixed' &&  (child.textContent as string).trim() !== '' ? STRING_SPACE : '');
+                    value = value.replace(child.outerHTML, position !== 'absolute' && position !== 'fixed' && (child.textContent as string).trim() !== '' ? STRING_SPACE : '');
                 }
                 if (i === 0) {
                     value = $util.trimStart(value, ' ');

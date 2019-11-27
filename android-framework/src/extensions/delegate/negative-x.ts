@@ -12,7 +12,7 @@ type NegativeXData = {
     firstChild?: View;
 };
 
-const $css = squared.lib.css;
+const formatPX = squared.lib.css.formatPX;
 
 const {
     constant: $c,
@@ -76,14 +76,14 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 node.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, offset);
                 for (const item of outside) {
                     if (!item.pageFlow && item.left < 0) {
-                        item.css('left', $css.formatPX(item.left + offset), true);
+                        item.css('left', formatPX(item.left + offset), true);
                     }
                 }
             }
             else {
                 for (const item of outside) {
                     if (!item.pageFlow && item.left < 0) {
-                        item.css('left', $css.formatPX(node.marginLeft + item.left), true);
+                        item.css('left', formatPX(node.marginLeft + item.left), true);
                     }
                 }
                 offset = Math.abs(offset);
@@ -110,12 +110,12 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             }
             if (offset > 0) {
                 if (node.hasPX('width', false) || !node.blockStatic && !node.hasPX('width')) {
-                    container.css(container.hasPX('width') ? 'width' : 'minWidth', $css.formatPX(node.actualWidth + offset), true);
+                    container.css(container.hasPX('width') ? 'width' : 'minWidth', formatPX(node.actualWidth + offset), true);
                 }
             }
             for (const item of outside) {
                 if (item.right < 0) {
-                    item.css('right', $css.formatPX(outerRight - item.linear.right), true);
+                    item.css('right', formatPX(outerRight - item.linear.right), true);
                 }
             }
         }

@@ -163,7 +163,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
             }
             const src = $util.fromLastIndexOf(mdpi, '/');
             const format = $util.fromLastIndexOf(src, '.').toLowerCase();
-            if (format !== 'svg' && IMAGE_FORMAT.includes(format)) {
+            if (IMAGE_FORMAT.includes(format) && format !== 'svg') {
                 CACHE_IMAGE[mdpi] = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
                 return CACHE_IMAGE[mdpi];
             }
@@ -262,7 +262,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
         if (result.mdpi) {
             const resource = this.application.resourceHandler;
             const rawData = resource.getRawData(result.mdpi);
-            if (rawData && rawData.base64) {
+            if (rawData?.base64) {
                 if (rawData.filename.toLowerCase().endsWith('.svg')) {
                     return '';
                 }

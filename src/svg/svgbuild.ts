@@ -228,7 +228,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         let value: string;
         if (SVG.path(element)) {
             value = $dom.getNamedItem(element, 'd');
-            if (parent && parent.requireRefit) {
+            if (parent?.requireRefit) {
                 const commands = SvgBuild.getPathCommands(value);
                 if (commands.length) {
                     const points = SvgBuild.getPathPoints(commands);
@@ -244,7 +244,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 { x: element.x1.baseVal.value, y: element.y1.baseVal.value },
                 { x: element.x2.baseVal.value, y: element.y2.baseVal.value }
             ];
-            if (parent && parent.requireRefit) {
+            if (parent?.requireRefit) {
                 parent.refitPoints(points);
             }
             value = SvgBuild.drawPolyline(points, precision);
@@ -260,10 +260,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 rx = element.r.baseVal.value;
                 ry = rx;
             }
-            const points: SvgPoint[] = [
-                { x: element.cx.baseVal.value, y: element.cy.baseVal.value, rx, ry }
-            ];
-            if (parent && parent.requireRefit) {
+            const points: SvgPoint[] = [{ x: element.cx.baseVal.value, y: element.cy.baseVal.value, rx, ry }];
+            if (parent?.requireRefit) {
                 parent.refitPoints(points);
             }
             const pt = <Required<SvgPoint>> points[0];
@@ -274,7 +272,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let y = element.y.baseVal.value;
             let width = element.width.baseVal.value;
             let height = element.height.baseVal.value;
-            if (parent && parent.requireRefit) {
+            if (parent?.requireRefit) {
                 x = parent.refitX(x);
                 y = parent.refitY(y);
                 width = parent.refitSize(width);
@@ -284,7 +282,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
         else if (SVG.polygon(element) || SVG.polyline(element)) {
             const points = SvgBuild.clonePoints(element.points);
-            if (parent && parent.requireRefit) {
+            if (parent?.requireRefit) {
                 parent.refitPoints(points);
             }
             value = SVG.polygon(element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
@@ -304,7 +302,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 if (transformed) {
                     points = SvgBuild.applyTransforms(<SvgTransform[]> transforms, points, parent && TRANSFORM.origin(parent.element));
                 }
-                if (container && container.requireRefit) {
+                if (container?.requireRefit) {
                     container.refitPoints(points);
                 }
                 value = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, transformed), precision);
@@ -672,7 +670,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         }
                         case 'A': {
                             const pt = points.shift();
-                            if (pt && pt.rx !== undefined && pt.ry !== undefined) {
+                            if (pt?.rx !== undefined && pt.ry !== undefined) {
                                 coordinates[0] = pt.x;
                                 coordinates[1] = pt.y;
                                 item.radiusX = pt.rx;

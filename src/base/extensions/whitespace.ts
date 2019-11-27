@@ -223,7 +223,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     if (i > 0 && isBlockElement(current, false)) {
                         const previousSiblings = current.previousSiblings({ floating: false });
                         const lengthA = previousSiblings.length;
-                        if (lengthA) {
+                        if (lengthA > 0) {
                             const previous = previousSiblings[lengthA - 1];
                             let inheritedTop = false;
                             if (isBlockElement(previous, true)) {
@@ -321,7 +321,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                             }
                             if (!inheritedTop && previousSiblings.length > 1) {
-                                if (previousSiblings[0].floating && (node.layoutVertical || current.renderParent && current.renderParent.layoutVertical)) {
+                                if (previousSiblings[0].floating && (node.layoutVertical || current.renderParent?.layoutVertical)) {
                                     const offset = previousSiblings[0].linear.top - current.linear.top;
                                     if (offset < 0) {
                                         current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset, false);
@@ -493,13 +493,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             if (index !== -1) {
                                 if (!node.lineBreakLeading) {
                                     const previous = children[index - 1];
-                                    if (previous && previous.pageFlow) {
+                                    if (previous?.pageFlow) {
                                         setSpacingOffset(node, BOX_STANDARD.MARGIN_TOP, previous.actualRect('bottom'), previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]);
                                     }
                                 }
                                 if (!node.lineBreakTrailing) {
                                     const next = children[index + 1];
-                                    if (next && next.pageFlow && next.styleElement && !next.inlineVertical) {
+                                    if (next?.pageFlow && next.styleElement && !next.inlineVertical) {
                                         setSpacingOffset(node, BOX_STANDARD.MARGIN_BOTTOM, next.actualRect('top'), next.getBox(BOX_STANDARD.MARGIN_TOP)[1]);
                                     }
                                 }
@@ -573,7 +573,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         const documentId = node.alignSibling('leftRight');
                         if (documentId !== '') {
                             const previousSibling = renderParent.renderChildren.find(item => item.documentId === documentId);
-                            if (previousSibling && previousSibling.inlineVertical) {
+                            if (previousSibling?.inlineVertical) {
                                 setSpacingOffset(node, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
                             }
                         }

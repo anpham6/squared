@@ -39,13 +39,15 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 for (const namespace of NAMESPACE_ATTR) {
                     const obj = node.namespace(namespace);
                     for (const attr in obj) {
-                        const value = obj[attr];
-                        if (REGEXP_UNIT.test(value) && attr !== 'text') {
-                            const dimen = `${namespace},${attr},${value}`;
-                            if (groups[containerName][dimen] === undefined) {
-                                groups[containerName][dimen] = [];
+                        if (attr !== 'text') {
+                            const value = obj[attr];
+                            if (REGEXP_UNIT.test(value)) {
+                                const dimen = `${namespace},${attr},${value}`;
+                                if (groups[containerName][dimen] === undefined) {
+                                    groups[containerName][dimen] = [];
+                                }
+                                groups[containerName][dimen].push(node);
                             }
-                            groups[containerName][dimen].push(node);
                         }
                     }
                 }

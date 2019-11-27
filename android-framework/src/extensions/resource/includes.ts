@@ -18,7 +18,8 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
 
     public beforeCascade() {
         for (const node of this.application.session.cache) {
-            if (node.renderTemplates) {
+            const renderTemplates = node.renderTemplates;
+            if (renderTemplates) {
                 let open: NodeRenderIndex[] | undefined;
                 let close: NodeRenderIndex[] | undefined;
                 node.renderEach((item: T, index) => {
@@ -59,12 +60,12 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                             if (index >= openData.index) {
                                 const templates: NodeTemplate<T>[] = [];
                                 for (let k = openData.index; k <= index; k++) {
-                                    templates.push(<NodeTemplate<T>> node.renderTemplates[k]);
-                                    node.renderTemplates[k] = null;
+                                    templates.push(<NodeTemplate<T>> renderTemplates[k]);
+                                    renderTemplates[k] = null;
                                 }
                                 const merge = openData.merge || templates.length > 1;
                                 const depth = merge ? 1 : 0;
-                                node.renderTemplates[openData.index] = <NodeIncludeTemplate<T>> {
+                                renderTemplates[openData.index] = <NodeIncludeTemplate<T>> {
                                     type: $e.NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
                                     content: controller.renderNodeStatic('include', { layout: '@layout/' + openData.name }, '', ''),

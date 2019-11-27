@@ -33,7 +33,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
                 item.translationOffset = pt;
             }
         }
-        this.setPaint(this.getPathAll(), options && options.precision);
+        this.setPaint(this.getPathAll(), options?.precision);
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {

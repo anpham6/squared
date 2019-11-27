@@ -12,7 +12,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
                     case CONTAINER_ANDROID.EDIT:
                         if (!node.companion) {
                             [node.previousSibling, node.nextSibling].some((sibling: T) => {
-                                if (sibling && sibling.visible && sibling.pageFlow) {
+                                if (sibling?.visible && sibling.pageFlow) {
                                     const element = <HTMLInputElement> node.element;
                                     const labelElement = <HTMLLabelElement> sibling.element;
                                     const labelParent = sibling.documentParent.tagName === 'LABEL' ? sibling.documentParent as T : undefined;

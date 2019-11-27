@@ -36,7 +36,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         if (this.included(element)) {
             const children = element.children;
             const length = children.length;
-            if (length) {
+            if (length > 0) {
                 for (let i = 0; i < length; i++) {
                     const item = <HTMLElement> children[i];
                     const use = item.dataset.use;
@@ -119,7 +119,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         const element = Drawer.findNestedElement(node.element, WIDGET_NAME.COORDINATOR);
         if (element) {
             const coordinator = $session.getElementAsNode<T>(element, node.sessionId);
-            if (coordinator && coordinator.inlineHeight && coordinator.some((item: T) => item.positioned)) {
+            if (coordinator?.inlineHeight && coordinator.some((item: T) => item.positioned)) {
                 coordinator.setLayoutHeight('match_parent');
             }
         }

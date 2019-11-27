@@ -54,9 +54,9 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
     }
 
     public optionValue(name: string, attr: string) {
-        const ext = this.retrieve(name);
-        if (ext && typeof ext.options === 'object') {
-            return ext.options[attr];
+        const options = this.retrieve(name)?.options;
+        if (typeof options === 'object') {
+            return options[attr];
         }
         return undefined;
     }

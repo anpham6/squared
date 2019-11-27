@@ -16,10 +16,12 @@ const {
     util: $util
 } = squared.lib;
 
+const isLength = $css.isLength;
+
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 
-const canCascadeChildren = (node: T) => node.naturalElements.length && !node.layoutElement && !node.tableElement;
+const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static outerRegion(node: T): BoxRect {
@@ -64,7 +66,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static baseline<T extends NodeUI>(list: T[], text = false) {
         list = $util.filterArray(list, item => {
-            if ((item.baseline || $css.isLength(item.verticalAlign)) && (!text || item.textElement)) {
+            if ((item.baseline || isLength(item.verticalAlign)) && (!text || item.textElement)) {
                 return !item.floating && !item.baselineAltered && (item.naturalChild && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline));
             }
             return false;
@@ -150,8 +152,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         for (const item of previousFloat) {
                             if (item) {
-                                const float = item.float;
-                                if (floating.has(float) && !node.floating && $util.aboveRange(node.linear.top, item.linear.bottom)) {
+                                if (floating.has(item.float) && !node.floating && $util.aboveRange(node.linear.top, item.linear.bottom)) {
+                                    const float = item.float;
                                     floating.delete(float);
                                     clearable[float] = undefined;
                                 }
@@ -182,7 +184,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
             const length = nodes.length;
-            if (length) {
+            if (length > 0) {
                 if (!clearOnly) {
                     const siblings = [nodes[0]];
                     let x = 1;
@@ -263,8 +265,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static partitionRows(list: T[]) {
-        const parent = list[0].actualParent as T;
-        const cleared = parent && parent.floatContainer ? NodeUI.linearData(parent.naturalElements as T[], true).cleared : undefined;
+        const parent = list[0].actualParent as T | null;
+        const cleared = parent?.floatContainer ? NodeUI.linearData(parent.naturalElements as T[], true).cleared : undefined;
         const result: T[][] = [];
         let row: T[] = [];
         let siblings: T[] = [];
@@ -490,7 +492,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 const index = renderParent.renderChildren.findIndex(node => node === this);
                 if (index !== -1) {
                     const template = renderTemplates[index];
-                    if (template && template.node === this) {
+                    if (template?.node === this) {
                         renderTemplates[index] = null;
                     }
                 }
@@ -519,10 +521,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         this.dir = actualParent.dir;
                     }
                     break;
-                case 'initial': {
+                case 'initial':
                     $util.cloneObject(<InitialData<T>> node.unsafe('initial'), this.initial);
                     break;
-                }
                 case 'alignment': {
                     const nodeStyleMap = (<InitialData<T>> node.unsafe('initial')).styleMap;
                     const styleMap = this._styleMap;
@@ -649,17 +650,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public setExclusions() {
         if (this.styleElement) {
             const parent = this.actualParent;
+            const dataset = parent?.dataset || {};
             const parseExclusions = (attr: string, enumeration: {}) => {
                 let exclude = this.dataset[attr] || '';
                 let offset = 0;
-                if (parent && parent.dataset[attr + 'Child']) {
-                    exclude += (exclude !== '' ? '|' : '') + parent.dataset[attr + 'Child'];
+                if (dataset[attr + 'Child']) {
+                    exclude += (exclude !== '' ? '|' : '') + dataset[attr + 'Child'];
                 }
                 if (exclude !== '') {
                     for (let name of exclude.split('|')) {
                         name = name.trim().toUpperCase();
-                        if (enumeration[name] && !$util.hasBit(offset, enumeration[name])) {
-                            offset |= enumeration[name];
+                        const value = enumeration[name];
+                        if (value && !$util.hasBit(offset, value)) {
+                            offset |= value;
                         }
                     }
                 }
@@ -711,7 +714,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth;
             const checkBlockDimension = (previous: T) => $util.aboveRange(this.linear.top, previous.linear.bottom) && (isBlockWrap(this) || isBlockWrap(previous) || this.float !== previous.float);
             if ($util.isArray(siblings)) {
-                if (cleared && cleared.has(this)) {
+                if (cleared?.has(this)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else {
@@ -723,7 +726,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         else if ($util.aboveRange(this.linear.top, lastSibling.linear.bottom)) {
                             return NODE_TRAVERSE.FLOAT_WRAP;
                         }
-                        else if (horizontal && cleared && cleared.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === this.float)) {
+                        else if (horizontal && cleared?.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === this.float)) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                     }
@@ -733,7 +736,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     else if (horizontal !== undefined) {
                         if (!this.display.startsWith('inline-')) {
                             const { top, bottom } = this.linear;
-                            if (this.textElement && cleared && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
+                            if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
                             }
                             else if (siblings[0].float === 'right') {
@@ -783,11 +786,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (previous.lineBreak) {
                     return NODE_TRAVERSE.LINEBREAK;
                 }
-                else if (cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous)) {
+                else if (cleared?.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else if (
-                    blockStatic && (!previous.floating || !previous.rightAligned && $util.withinRange(previous.linear.right, parent.box.right) || cleared && cleared.has(previous)) ||
+                    blockStatic && (!previous.floating || !previous.rightAligned && $util.withinRange(previous.linear.right, parent.box.right) || cleared?.has(previous)) ||
                     previous.blockStatic ||
                     previous.autoMargin.leftRight)
                 {
@@ -810,10 +813,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public previousSiblings(options: SiblingOptions = {}) {
-        const floating = options.floating;
-        const pageFlow = options.pageFlow;
-        const lineBreak = options.lineBreak;
-        const excluded = options.excluded;
+        const { floating, pageFlow, lineBreak, excluded } = options;
         const result: T[] = [];
         let element = this.element;
         if (element) {
@@ -850,10 +850,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public nextSiblings(options: SiblingOptions = {}) {
-        const floating = options.floating;
-        const pageFlow = options.pageFlow;
-        const lineBreak = options.lineBreak;
-        const excluded = options.excluded;
+        const { floating, pageFlow, lineBreak, excluded } = options;
         const result: T[] = [];
         let element = this._element;
         if (element) {
@@ -1011,27 +1008,28 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public actualRect(direction: string, dimension = 'linear') {
-        const value = this[dimension][direction];
+        const value = this[dimension][direction] as number;
         if (this.inputElement) {
             const companion = this.companion;
-            switch (direction) {
-                case 'top':
-                case 'left':
-                    if (companion && !companion.visible && companion[dimension][direction] < value) {
-                        return companion[dimension][direction] as number;
-                    }
-                    break;
-                case 'right':
-                case 'bottom':
-                    if (companion && !companion.visible && companion[dimension][direction] > value) {
-                        return companion[dimension][direction] as number;
-                    }
-                    break;
-                default:
-                    return NaN;
+            if (companion && !companion.visible) {
+                const outer = companion[dimension][direction] as number;
+                switch (direction) {
+                    case 'top':
+                    case 'left':
+                        if (outer < value) {
+                            return outer;
+                        }
+                        break;
+                    case 'right':
+                    case 'bottom':
+                        if (outer > value) {
+                            return outer;
+                        }
+                        break;
+                }
             }
         }
-        return value as number;
+        return value;
     }
 
     public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
@@ -1153,11 +1151,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get naturalChild() {
-        return this._element !== null && this._element.parentElement !== null;
+        return this._element?.parentElement !== null;
     }
 
     get pseudoElement() {
-        return this._element !== null && this._element.className === '__squared.pseudo';
+        return this._element?.className === '__squared.pseudo';
     }
 
     set documentParent(value) {
@@ -1378,8 +1376,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get onlyChild() {
-        if (this.renderParent) {
-            return this.renderParent.length === 1;
+        const renderParent = this.renderParent;
+        if (renderParent) {
+            return renderParent.length === 1;
         }
         else {
             const parent = this.parent;

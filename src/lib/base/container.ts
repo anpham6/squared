@@ -118,7 +118,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     public every(predicate: IteratorPredicate<T, boolean>) {
         const children = this._children;
         const length = children.length;
-        if (length) {
+        if (length > 0) {
             for (let i = 0; i < length; i++) {
                 if (!predicate(children[i], i, children)) {
                     return false;

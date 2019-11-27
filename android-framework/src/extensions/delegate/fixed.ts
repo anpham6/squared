@@ -40,13 +40,17 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
             for (const item of absolute) {
                 const fixed = item.css('position') === 'fixed';
                 if (item.hasPX('left')) {
-                    if (item.left >= 0 && item.left < paddingLeft) {
+                    const value = item.left;
+                    if (value >= 0 && value < paddingLeft) {
                         children.add(item);
                     }
                 }
-                else if (item.hasPX('right') && item.right >= 0 && (fixed || item.right < paddingRight || node.documentBody && node.hasPX('width'))) {
-                    children.add(item);
-                    right = true;
+                else if (item.hasPX('right')) {
+                    const value = item.right;
+                    if (value >= 0 && (fixed || value < paddingRight || node.documentBody && node.hasPX('width'))) {
+                        children.add(item);
+                        right = true;
+                    }
                 }
                 else if (!item.rightAligned) {
                     if (item.marginLeft < 0 && (node.documentRoot || $util.belowRange(item.linear.left, node.bounds.left))) {
@@ -57,13 +61,17 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     children.add(item);
                 }
                 if (item.hasPX('top')) {
-                    if (item.top >= 0 && item.top < paddingTop) {
+                    const value = item.top;
+                    if (value >= 0 && value < paddingTop) {
                         children.add(item);
                     }
                 }
-                else if (item.hasPX('bottom') && item.bottom >= 0 && (fixed || item.bottom < paddingBottom || node.documentBody && node.hasPX('height'))) {
-                    children.add(item);
-                    bottom = true;
+                else if (item.hasPX('bottom')) {
+                    const value = item.bottom;
+                    if (value >= 0 && (fixed || value < paddingBottom || node.documentBody && node.hasPX('height'))) {
+                        children.add(item);
+                        bottom = true;
+                    }
                 }
             }
             if (children.size) {
@@ -78,18 +86,23 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
         const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, $c.STRING_BASE.EXT_DATA);
         if (mainData) {
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[]);
-            if (node.documentBody && (mainData.right || mainData.bottom)) {
-                container.cssApply({
-                    width: 'auto',
-                    height: 'auto',
-                    display: 'block',
-                    float: 'none'
-                });
+            if (node.documentBody) {
+                let valid = false;
                 if (mainData.right) {
                     container.setLayoutWidth('match_parent');
+                    valid = true;
                 }
                 if (mainData.bottom) {
                     container.setLayoutHeight('match_parent');
+                    valid = true;
+                }
+                if (valid) {
+                    container.cssApply({
+                        width: 'auto',
+                        height: 'auto',
+                        display: 'block',
+                        float: 'none'
+                    });
                 }
             }
             else if (!node.pageFlow) {

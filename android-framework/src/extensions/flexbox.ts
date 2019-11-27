@@ -28,14 +28,12 @@ const {
 
 const $NodeUI = squared.base.NodeUI;
 
-const CHAIN_MAP = {
-    leftTop: ['left', 'top'],
-    rightBottom: ['right', 'bottom'],
-    rightLeftBottomTop: [$c.STRING_BASE.RIGHT_LEFT, $c.STRING_BASE.BOTTOM_TOP],
-    leftRightTopBottom: [$c.STRING_BASE.LEFT_RIGHT, $c.STRING_BASE.TOP_BOTTOM],
-    widthHeight: ['Width', 'Height'],
-    horizontalVertical: [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL]
-};
+const MAP_leftTop = ['left', 'top'];
+const MAP_rightBottom = ['right', 'bottom'];
+const MAP_rightLeftBottomTop = [$c.STRING_BASE.RIGHT_LEFT, $c.STRING_BASE.BOTTOM_TOP];
+const MAP_leftRightTopBottom = [$c.STRING_BASE.LEFT_RIGHT, $c.STRING_BASE.TOP_BOTTOM];
+const MAP_widthHeight = ['Width', 'Height'];
+const MAP_horizontalVertical = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
 
 function adjustGrowRatio(parent: View, items: View[], attr: string) {
     const horizontal = attr === 'width';
@@ -46,7 +44,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
     let growShrinkType = 0;
     if (percent) {
         for (const item of items) {
-            const autoMargin = item.innerWrapped && item.innerWrapped.autoMargin || item.autoMargin;
+            const autoMargin = item.innerWrapped?.autoMargin || item.autoMargin;
             if (horizontal) {
                 if (autoMargin.horizontal) {
                     percent = false;
@@ -190,38 +188,41 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 complete: true
             };
         }
-        else if (node.autoMargin.horizontal || node.autoMargin.vertical && node.hasHeight) {
-            const mainData: FlexboxData<T> = parent.data($c.EXT_NAME.FLEXBOX, $c.STRING_BASE.EXT_DATA);
-            if (mainData) {
-                const index = mainData.children.findIndex(item => item === node);
-                if (index !== -1) {
-                    const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent);
-                    container.cssApply({
-                        marginTop: '0px',
-                        marginRight: '0px',
-                        marginBottom: '0px',
-                        marginLeft: '0px',
-                        display: 'block',
-                    }, true);
-                    container.saveAsInitial(true);
-                    container.flexbox = { ...node.flexbox };
-                    mainData.children[index] = container;
-                    if (node.autoMargin.horizontal && !node.hasWidth) {
-                        node.setLayoutWidth('wrap_content');
-                    }
-                    return {
-                        parent: container,
-                        renderAs: container,
-                        outputAs: this.application.renderNode(
-                            new $LayoutUI(
-                                parent,
-                                container,
-                                CONTAINER_NODE.FRAME,
-                                $e.NODE_ALIGNMENT.SINGLE,
-                                container.children as T[]
+        else {
+            const autoMargin = node.autoMargin;
+            if (autoMargin.horizontal || autoMargin.vertical && node.hasHeight) {
+                const mainData: FlexboxData<T> = parent.data($c.EXT_NAME.FLEXBOX, $c.STRING_BASE.EXT_DATA);
+                if (mainData) {
+                    const index = mainData.children.findIndex(item => item === node);
+                    if (index !== -1) {
+                        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent);
+                        container.cssApply({
+                            marginTop: '0px',
+                            marginRight: '0px',
+                            marginBottom: '0px',
+                            marginLeft: '0px',
+                            display: 'block',
+                        }, true);
+                        container.saveAsInitial(true);
+                        container.flexbox = { ...node.flexbox };
+                        mainData.children[index] = container;
+                        if (autoMargin.horizontal && !node.hasWidth) {
+                            node.setLayoutWidth('wrap_content');
+                        }
+                        return {
+                            parent: container,
+                            renderAs: container,
+                            outputAs: this.application.renderNode(
+                                new $LayoutUI(
+                                    parent,
+                                    container,
+                                    CONTAINER_NODE.FRAME,
+                                    $e.NODE_ALIGNMENT.SINGLE,
+                                    container.children as T[]
+                                )
                             )
-                        )
-                    };
+                        };
+                    }
                 }
             }
         }
@@ -301,16 +302,16 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             [chainHorizontal, chainVertical].forEach((partition, index) => {
                 const horizontal = index === 0;
                 const inverse = horizontal ? 1 : 0;
-                const orientation = CHAIN_MAP.horizontalVertical[index];
-                const orientationInverse = CHAIN_MAP.horizontalVertical[inverse];
-                const WH = CHAIN_MAP.widthHeight[index];
-                const HW = CHAIN_MAP.widthHeight[inverse];
-                const LT = CHAIN_MAP.leftTop[index];
-                const TL = CHAIN_MAP.leftTop[inverse];
-                const RB = CHAIN_MAP.rightBottom[index];
-                const BR = CHAIN_MAP.rightBottom[inverse];
-                const LRTB = CHAIN_MAP.leftRightTopBottom[index];
-                const RLBT = CHAIN_MAP.rightLeftBottomTop[index];
+                const orientation = MAP_horizontalVertical[index];
+                const orientationInverse = MAP_horizontalVertical[inverse];
+                const WH = MAP_widthHeight[index];
+                const HW = MAP_widthHeight[inverse];
+                const LT = MAP_leftTop[index];
+                const TL = MAP_leftTop[inverse];
+                const RB = MAP_rightBottom[index];
+                const BR = MAP_rightBottom[inverse];
+                const LRTB = MAP_leftRightTopBottom[index];
+                const RLBT = MAP_rightLeftBottomTop[index];
                 const WHL = WH.toLowerCase();
                 const HWL = HW.toLowerCase();
                 const dimension: boolean = node['has' + HW];

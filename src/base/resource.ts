@@ -33,7 +33,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     }
 
     public addImage(element: HTMLImageElement | undefined) {
-        if (element && element.complete) {
+        if (element?.complete) {
             if (element.src.startsWith('data:image/')) {
                 const match = new RegExp(`^${$regex.STRING.DATAURI}$`).exec(element.src);
                 if (match && match[1] && match[2]) {

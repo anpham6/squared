@@ -11,9 +11,10 @@ export default class Gzip<T extends View> extends Extension<T> {
     };
 
     public processFile(data: ChromeAsset) {
-        if (data.extension) {
+        const extension = data.extension;
+        if (extension) {
             const options = this.options;
-            if (options.fileExtensions.includes(data.extension)) {
+            if (options.fileExtensions.includes(extension)) {
                 data.gzipQuality = Math.min(options.quality, 9);
                 return true;
             }

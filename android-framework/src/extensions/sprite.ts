@@ -27,6 +27,7 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
             if (drawable !== '') {
                 const { width, height } = mainData.image;
                 const container = this.application.createNode();
+                const formatPX = $css.formatPX;
                 container.inherit(node, 'base', 'initial', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 container.exclude($e.NODE_RESOURCE.IMAGE_SOURCE, $e.NODE_PROCEDURE.CUSTOMIZATION);
@@ -40,12 +41,12 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                     bottom: 'auto',
                     left: 'auto',
                     display: 'inline-block',
-                    width: width > 0 ? $css.formatPX(width) : 'auto',
-                    height: height > 0 ? $css.formatPX(height) : 'auto',
-                    marginTop: $css.formatPX(mainData.position.top),
+                    width: width > 0 ? formatPX(width) : 'auto',
+                    height: height > 0 ? formatPX(height) : 'auto',
+                    marginTop: formatPX(mainData.position.top),
                     marginRight: '0px',
                     marginBottom: '0px',
-                    marginLeft: $css.formatPX(mainData.position.left),
+                    marginLeft: formatPX(mainData.position.left),
                     paddingTop: '0px',
                     paddingRight: '0px',
                     paddingBottom: '0px',

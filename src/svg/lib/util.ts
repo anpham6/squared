@@ -223,9 +223,11 @@ export const TRANSFORM = {
             }
             else {
                 const parent = element.parentElement;
-                if (parent instanceof SVGGraphicsElement && parent.viewportElement && (SVG.svg(parent.viewportElement) || SVG.symbol(parent.viewportElement))) {
-                    width = parent.viewportElement.viewBox.baseVal.width;
-                    height = parent.viewportElement.viewBox.baseVal.height;
+                if (parent instanceof SVGGraphicsElement) {
+                    const viewportElement = parent.viewportElement;
+                    if (viewportElement && (SVG.svg(viewportElement) || SVG.symbol(viewportElement))) {
+                        ({ width, height } = viewportElement.viewBox.baseVal);
+                    }
                 }
             }
             if (!width || !height) {
@@ -460,8 +462,14 @@ export function getTargetElement(element: SVGElement, rootElement?: SVGElement) 
 export function getNearestViewBox(element: SVGElement) {
     let current = element.parentElement;
     while (current) {
-        if ((SVG.svg(current) || SVG.symbol(current)) && current.viewBox && current.viewBox.baseVal.width > 0 && current.viewBox.baseVal.height > 0) {
-            return current.viewBox.baseVal;
+        if (SVG.svg(current) || SVG.symbol(current)) {
+            const viewBox = current.viewBox;
+            if (viewBox) {
+                const baseVal = viewBox.baseVal;
+                if (baseVal.width > 0 && baseVal.height > 0) {
+                    return baseVal;
+                }
+            }
         }
         current = current.parentElement;
     }

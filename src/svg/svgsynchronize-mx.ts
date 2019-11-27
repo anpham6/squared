@@ -458,7 +458,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, item: SvgAnimate, s
                                         keyTimes.push(resultTime);
                                         values.push(splitValue);
                                         if (keySplines) {
-                                            keySplines.push(joined && sub.keySplines && sub.keySplines[k] ? sub.keySplines[k] : '');
+                                            keySplines.push(joined && sub.keySplines && sub.keySplines[k] || '');
                                         }
                                     }
                                 }
@@ -542,12 +542,15 @@ function insertInterpolator(item: SvgAnimate, time: number, keySplines: string[]
 function getStartItemValues(map: SvgAnimationIntervalMap, item: SvgAnimate, baseValue: AnimateValue) {
     if (item.evaluateStart) {
         const index = item.reverse ? item.length - 1 : 0;
-        const value = map.get(SvgAnimationIntervalMap.getKeyName(item), item.delay) || item.values[index] || !item.additiveSum && item.baseValue;
+        let value = map.get(SvgAnimationIntervalMap.getKeyName(item), item.delay) || item.values[index] || !item.additiveSum && item.baseValue;
         if (!value) {
             item.values[index] = convertToString(baseValue);
         }
-        if (item.by && $util.isNumber(item.values[index])) {
-            item.values[index] = (parseFloat(item.values[index]) + item.by).toString();
+        if (item.by) {
+            value = item.values[index];
+            if ($util.isNumber(value)) {
+                item.values[index] = (parseFloat(value) + item.by).toString();
+            }
         }
         item.evaluateStart = false;
     }
@@ -555,8 +558,11 @@ function getStartItemValues(map: SvgAnimationIntervalMap, item: SvgAnimate, base
 }
 
 function setTransformOrigin(map: TransformOriginMap, item: SvgAnimate, time: number, index: number) {
-    if (SvgBuild.asAnimateTransform(item) && item.transformOrigin && item.transformOrigin[index]) {
-        map.set(time, item.transformOrigin[index]);
+    if (SvgBuild.asAnimateTransform(item)) {
+        const transformOrigin = item.transformOrigin;
+        if (transformOrigin && transformOrigin[index]) {
+            map.set(time, transformOrigin[index]);
+        }
     }
 }
 
@@ -791,7 +797,13 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     let repeatingAsInfinite = -1;
                     let repeatingResult: KeyTimeMap | undefined;
                     let infiniteResult: KeyTimeMap | undefined;
-                    const getForwardItem = (attr: string): ForwardValue | undefined => forwardMap[attr] && forwardMap[attr][forwardMap[attr].length - 1];
+                    function getForwardItem(attr: string): ForwardValue | undefined {
+                        const map = forwardMap[attr];
+                        if (map) {
+                            return map[map.length - 1];
+                        }
+                        return undefined;
+                    }
                     for (const attr in groupName) {
                         const baseMap = new Map<number, AnimateValue>();
                         repeatingMap[attr] = baseMap;
@@ -894,8 +906,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                         }
                         function checkSetterDelay(delayTime: number, endTime: number): AnimateValue | undefined {
-                            const item = getForwardItem(attr);
-                            let replaceValue: AnimateValue | undefined = item && item.value;
+                            let replaceValue: AnimateValue | undefined = getForwardItem(attr)?.value;
                             $util.spliceArray(
                                 setterData,
                                 set => set.delay >= delayTime && set.delay < endTime,
@@ -1085,8 +1096,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 setFreezeValue(0, baseValueMap[attr], 0);
                             }
                             if (baseValue === undefined) {
-                                const item = getForwardItem(attr);
-                                baseValue = item && item.value || baseValueMap[attr];
+                                baseValue = getForwardItem(attr)?.value || baseValueMap[attr];
                             }
                         }
                         sortSetterData();
@@ -1223,9 +1233,13 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     }
                                     else {
                                         for (let k = i + 1; k < lengthA; k++) {
-                                            if (groupDelay[k] !== Number.POSITIVE_INFINITY && groupData[k].length && !groupData[k].every(next => next.hasState(SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID))) {
-                                                nextDelayTime = groupDelay[k];
-                                                break;
+                                            const value = groupDelay[k];
+                                            if (value !== Number.POSITIVE_INFINITY) {
+                                                const data = groupData[k];
+                                                if (data.length && !data.every(next => next.hasState(SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID))) {
+                                                    nextDelayTime = value;
+                                                    break;
+                                                }
                                             }
                                         }
                                     }

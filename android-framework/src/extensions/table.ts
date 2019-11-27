@@ -17,6 +17,8 @@ const {
     enumeration: $e
 } = squared.base.lib;
 
+const formatPX = $css.formatPX;
+
 function setLayoutHeight(node: View) {
     if (node.hasPX('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {
         node.setLayoutHeight('wrap_content');
@@ -57,9 +59,10 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 item.setLayoutWidth('0px');
                                 item.android('layout_columnWeight', '0.01');
                             }
-                            else {
-                                if (item.hasPX('width') && item.actualWidth < item.bounds.width) {
-                                    item.setLayoutWidth($css.formatPX(item.bounds.width));
+                            else if (item.hasPX('width')) {
+                                const width = item.bounds.width;
+                                if (item.actualWidth < width) {
+                                    item.setLayoutWidth(formatPX(width));
                                 }
                             }
                         }
@@ -84,25 +87,23 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     node.setLayoutWidth('match_parent');
                 }
                 else {
-                    node.css('width', $css.formatPX(node.actualWidth), true);
+                    node.css('width', formatPX(node.actualWidth), true);
                 }
             }
-            else {
-                if (node.hasPX('width') && node.actualWidth < Math.floor(node.bounds.width)) {
-                    if (mainData.layoutFixed) {
-                        node.android('width', $css.formatPX(node.bounds.width), true);
+            else if (node.hasPX('width') && node.actualWidth < Math.floor(node.bounds.width)) {
+                if (mainData.layoutFixed) {
+                    node.android('width', formatPX(node.bounds.width), true);
+                }
+                else {
+                    if (!node.hasPX('minWidth')) {
+                        node.android('minWidth', formatPX(node.actualWidth));
                     }
-                    else {
-                        if (!node.hasPX('minWidth')) {
-                            node.android('minWidth', $css.formatPX(node.actualWidth));
-                        }
-                        node.css('width', 'auto', true);
-                    }
+                    node.css('width', 'auto', true);
                 }
             }
             if (node.hasPX('height') && node.actualHeight < Math.floor(node.bounds.height)) {
                 if (!node.hasPX('minHeight')) {
-                    node.android('minHeight', $css.formatPX(node.actualHeight));
+                    node.android('minHeight', formatPX(node.actualHeight));
                 }
                 node.css('height', 'auto', true);
             }
@@ -152,8 +153,9 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     public postOptimize(node: T) {
         const layoutWidth = $util.convertInt(node.layoutWidth);
         if (layoutWidth > 0) {
-            if (node.bounds.width > layoutWidth) {
-                node.setLayoutWidth($css.formatPX(node.bounds.width));
+            const width = node.bounds.width;
+            if (width > layoutWidth) {
+                node.setLayoutWidth(formatPX(width));
             }
             if (layoutWidth > 0 && node.cssInitial('width') === 'auto' && node.renderChildren.every(item => item.inlineWidth)) {
                 node.renderEach((item: T) => {

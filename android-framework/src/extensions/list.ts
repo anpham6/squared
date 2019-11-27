@@ -22,6 +22,8 @@ const {
 
 const $NodeUI = squared.base.NodeUI;
 
+const formatPX = $css.formatPX;
+
 const MINWIDTH_INSIDE = 24;
 const PADDINGRIGHT_DFN = 8;
 
@@ -55,10 +57,12 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         if (mainData) {
             const { application, controller } = this;
             const firstChild = parent.firstStaticChild === node;
+            const ordinalValue = mainData.ordinal;
             let minWidth = node.marginLeft;
             let columnCount = 0;
             let adjustPadding = false;
             let resetPadding = NaN;
+            let register = false;
             node.modifyBox($e.BOX_STANDARD.MARGIN_LEFT);
             if (parent.is(CONTAINER_NODE.GRID)) {
                 columnCount = $util.convertInt(parent.android('columnCount'));
@@ -76,8 +80,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
             const container = node.length === 0 ? controller.createNodeGroup(node, [node], parent) : node;
-            let ordinal = !mainData.ordinal ? node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
-            let register = false;
+            let ordinal: T | undefined;
+            if (ordinalValue === '') {
+                ordinal = node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T | undefined;
+            }
             if (ordinal) {
                 const layoutOrdinal = new $LayoutUI(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
@@ -99,7 +105,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 minWidth += ordinal.marginLeft;
                 if (minWidth > 0 && !ordinal.hasWidth) {
-                    ordinal.android('minWidth', $css.formatPX(minWidth));
+                    ordinal.android('minWidth', formatPX(minWidth));
                 }
                 ordinal.modifyBox($e.BOX_STANDARD.MARGIN_LEFT);
                 application.addLayoutTemplate(
@@ -142,7 +148,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     node.modifyBox($e.BOX_STANDARD.PADDING_LEFT);
                 }
                 else {
-                    const length = mainData.ordinal ? mainData.ordinal.length : 1;
+                    const length = ordinalValue ? ordinalValue.length : 1;
                     paddingRight = Math.max(minWidth / (image ? 6 : length * 4), 4);
                 }
                 const options = createViewAttribute();
@@ -153,7 +159,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         ordinal.id,
                         controller.renderNodeStatic(
                             CONTAINER_ANDROID.SPACE,
-                            createViewAttribute(undefined, { minWidth: '@dimen/' + Resource.insertStoredAsset('dimens', node.tagName.toLowerCase() + '_space_indent', $css.formatPX(minWidth)) })
+                            createViewAttribute(undefined, { minWidth: '@dimen/' + Resource.insertStoredAsset('dimens', node.tagName.toLowerCase() + '_space_indent', formatPX(minWidth)) })
                         ),
                         false
                     );
@@ -174,8 +180,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             baselineAlignBottom: adjustPadding ? 'true' : ''
                         });
                     }
-                    else if (mainData.ordinal) {
-                        ordinal.textContent = mainData.ordinal;
+                    else if (ordinalValue) {
+                        ordinal.textContent = ordinalValue;
                         ordinal.inlineText = true;
                         ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
                         if (node.tagName === 'DFN') {
@@ -190,17 +196,17 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     ordinal.depth = node.depth;
                     ordinal.inherit(node, 'textStyle');
-                    if (mainData.ordinal && !mainData.ordinal.endsWith('.')) {
+                    if (ordinalValue && !ordinalValue.endsWith('.')) {
                         ordinal.fontSize *= 0.75;
                     }
                     ordinal.cssApply({
-                        minWidth: minWidth > 0 ? $css.formatPX(minWidth) : '',
-                        marginTop: node.marginTop !== 0 ? $css.formatPX(node.marginTop) : '',
-                        marginLeft: marginLeft > 0 ? $css.formatPX(marginLeft) : '',
-                        paddingTop: node.paddingTop > 0 && node.getBox($e.BOX_STANDARD.PADDING_TOP)[0] === 0 ? $css.formatPX(node.paddingTop) : '',
-                        paddingRight: paddingRight > 0 && gravity === 'right' ? $css.formatPX(paddingRight) : '',
-                        paddingLeft: paddingRight > 0 && gravity === 'left' && (!image || mainData.imagePosition) ? $css.formatPX(paddingRight) : '',
-                        lineHeight: node.lineHeight > 0 ? $css.formatPX(node.lineHeight) : ''
+                        minWidth: minWidth > 0 ? formatPX(minWidth) : '',
+                        marginTop: node.marginTop !== 0 ? formatPX(node.marginTop) : '',
+                        marginLeft: marginLeft > 0 ? formatPX(marginLeft) : '',
+                        paddingTop: node.paddingTop > 0 && node.getBox($e.BOX_STANDARD.PADDING_TOP)[0] === 0 ? formatPX(node.paddingTop) : '',
+                        paddingRight: paddingRight > 0 && gravity === 'right' ? formatPX(paddingRight) : '',
+                        paddingLeft: paddingRight > 0 && gravity === 'left' && (!image || mainData.imagePosition) ? formatPX(paddingRight) : '',
+                        lineHeight: node.lineHeight > 0 ? formatPX(node.lineHeight) : ''
                     });
                     ordinal.apply(options);
                     if (ordinal.cssTry('display', 'block')) {
