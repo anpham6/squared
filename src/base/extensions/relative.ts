@@ -2,13 +2,11 @@ import ExtensionUI from '../extension-ui';
 import LayoutUI from '../layout-ui';
 import NodeUI from '../node-ui';
 
-import { STRING_BASE } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const {
-    dom: $dom,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { assignRect } = $lib.dom;
+const { convertFloat, filterArray, withinRange } = $lib.util;
 
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
@@ -26,7 +24,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
     public postOptimize(node: T) {
         const renderParent = node.renderParent as T;
         if (renderParent) {
-            const verticalAlign = $util.convertFloat(node.verticalAlign);
+            const verticalAlign = convertFloat(node.verticalAlign);
             let { top, right, bottom, left } = node;
             let target = node;
             if (renderParent.support.container.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
@@ -49,24 +47,24 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 if (renderParent.layoutHorizontal && node.documentParent.parseUnit(node.css('textIndent')) < 0) {
                     renderParent.renderEach(item => {
                         const documentId = node.documentId;
-                        if (item.alignSibling(STRING_BASE.TOP_BOTTOM) === documentId) {
-                            item.alignSibling(STRING_BASE.TOP_BOTTOM, target.documentId);
+                        if (item.alignSibling('topBottom') === documentId) {
+                            item.alignSibling('topBottom', target.documentId);
                         }
-                        else if (item.alignSibling(STRING_BASE.BOTTOM_TOP) === documentId) {
-                            item.alignSibling(STRING_BASE.BOTTOM_TOP, target.documentId);
+                        else if (item.alignSibling('bottomTop') === documentId) {
+                            item.alignSibling('bottomTop', target.documentId);
                         }
                     });
                 }
                 if (node.baselineActive && !node.baselineAltered) {
                     for (const children of (renderParent.horizontalRows || [renderParent.renderChildren])) {
                         if (children.includes(node)) {
-                            const unaligned = $util.filterArray(children, item => item.positionRelative && item.length > 0 && $util.convertFloat(node.verticalAlign) !== 0);
+                            const unaligned = filterArray(children, item => item.positionRelative && item.length > 0 && convertFloat(node.verticalAlign) !== 0);
                             const length = unaligned.length;
                             if (length > 0) {
                                 unaligned.sort((a, b) => {
                                     const topA = a.linear.top;
                                     const topB = b.linear.top;
-                                    if ($util.withinRange(topA, topB)) {
+                                    if (withinRange(topA, topB)) {
                                         return 0;
                                     }
                                     return topA < topB ? -1 : 1;
@@ -74,7 +72,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                 for (let i = 0; i < length; i++) {
                                     const item = unaligned[i];
                                     if (i === 0) {
-                                        node.modifyBox(BOX_STANDARD.MARGIN_TOP, $util.convertFloat(item.verticalAlign));
+                                        node.modifyBox(BOX_STANDARD.MARGIN_TOP, convertFloat(item.verticalAlign));
                                     }
                                     else {
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - unaligned[0].linear.top);
@@ -96,7 +94,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                         if (item === node) {
                             if (preceding) {
                                 if (renderParent.layoutVertical && (node.top !== 0 || node.bottom !== 0)) {
-                                    const bounds = $dom.assignRect((<Element> node.element).getBoundingClientRect(), true);
+                                    const bounds = assignRect((<Element> node.element).getBoundingClientRect(), true);
                                     if (top !== 0) {
                                         top -= bounds.top - node.bounds.top;
                                     }
@@ -104,8 +102,8 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                         bottom += bounds.bottom - node.bounds.bottom;
                                     }
                                 }
-                                if (renderParent.layoutHorizontal && (node.left !== 0 || node.right !== 0) && node.alignSibling(STRING_BASE.LEFT_RIGHT) === '') {
-                                    const bounds = $dom.assignRect((<Element> node.element).getBoundingClientRect(), true);
+                                if (renderParent.layoutHorizontal && (node.left !== 0 || node.right !== 0) && node.alignSibling('leftRight') === '') {
+                                    const bounds = assignRect((<Element> node.element).getBoundingClientRect(), true);
                                     if (left !== 0) {
                                         left -= bounds.left - node.bounds.left;
                                     }

@@ -5,13 +5,12 @@ import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 
-const {
-    color: $color,
-    css: $css,
-    dom: $dom,
-    regex: $regex,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { getHexCode, parseColor } = $lib.color;
+const { getFontSize, isLength, parseUnit } = $lib.css;
+const { getNamedItem } = $lib.dom;
+const { CHAR } = $lib.regex;
+const { flatMap, isNumber, replaceMap, sortNumber, trimEnd } = $lib.util;
 
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
@@ -26,8 +25,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         switch (attributeName) {
             case 'fill':
             case 'stroke':
-                const colorStart = $color.parseColor(values[index]);
-                const colorEnd = $color.parseColor(values[index + 1]);
+                const colorStart = parseColor(values[index]);
+                const colorEnd = parseColor(values[index + 1]);
                 if (colorStart && colorEnd) {
                     currentValue = [colorStart];
                     nextValue = [colorEnd];
@@ -40,23 +39,23 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             case 'rotate':
             case 'scale':
             case 'translate':
-                currentValue = $util.replaceMap<string, number>(values[index].trim().split($regex.CHAR.SPACE), value => parseFloat(value));
-                nextValue = $util.replaceMap<string, number>(values[index + 1].trim().split($regex.CHAR.SPACE), value => parseFloat(value));
+                currentValue = replaceMap<string, number>(values[index].trim().split(CHAR.SPACE), value => parseFloat(value));
+                nextValue = replaceMap<string, number>(values[index + 1].trim().split(CHAR.SPACE), value => parseFloat(value));
                 break;
             default:
                 const valueA = values[index];
                 const valueB = values[index + 1];
-                if ($util.isNumber(valueA)) {
+                if (isNumber(valueA)) {
                     currentValue = [parseFloat(valueA)];
                 }
-                else if ($css.isLength(valueA)) {
-                    currentValue = [$css.parseUnit(valueA, fontSize)];
+                else if (isLength(valueA)) {
+                    currentValue = [parseUnit(valueA, fontSize)];
                 }
-                if ($util.isNumber(valueB)) {
+                if (isNumber(valueB)) {
                     nextValue = [parseFloat(valueB)];
                 }
-                else if ($css.isLength(valueB)) {
-                    nextValue = [$css.parseUnit(valueB, fontSize)];
+                else if (isLength(valueB)) {
+                    nextValue = [parseUnit(valueB, fontSize)];
                 }
                 break;
         }
@@ -88,12 +87,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             case 'stroke': {
                                 const rgbaA = (<ColorData> currentValue[0]).rgba;
                                 const rgbaB = (<ColorData> nextValue[0]).rgba;
-                                const rgb = $color.getHexCode(
+                                const rgb = getHexCode(
                                     SvgAnimate.getSplitValue(rgbaA.r, rgbaB.r, percent),
                                     SvgAnimate.getSplitValue(rgbaA.g, rgbaB.g, percent),
                                     SvgAnimate.getSplitValue(rgbaA.b, rgbaB.b, percent)
                                 );
-                                const a = $color.getHexCode(SvgAnimate.getSplitValue(rgbaA.a, rgbaB.a, percent));
+                                const a = getHexCode(SvgAnimate.getSplitValue(rgbaA.a, rgbaB.a, percent));
                                 result.push('#' + (rgb + (a !== 'FF' ? a : '')));
                                 break;
                             }
@@ -129,7 +128,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     public static toFractionList(value: string, delimiter = ';', ordered = true) {
         let previous = 0;
-        const result = $util.replaceMap<string, number>(value.split(delimiter), seg => {
+        const result = replaceMap<string, number>(value.split(delimiter), seg => {
             const fraction = parseFloat(seg);
             if (!isNaN(fraction) && (!ordered || fraction >= previous && fraction <= 1)) {
                 previous = fraction;
@@ -163,10 +162,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement) {
         super(element, animationElement);
         if (animationElement) {
-            const values = $dom.getNamedItem(animationElement, 'values');
-            const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList($dom.getNamedItem(animationElement, 'keyTimes')) : [];
+            const values = getNamedItem(animationElement, 'values');
+            const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList(getNamedItem(animationElement, 'keyTimes')) : [];
             if (values !== '') {
-                const valuesData = $util.trimEnd(values, ';').split(/\s*;\s*/);
+                const valuesData = trimEnd(values, ';').split(/\s*;\s*/);
                 this.values = valuesData;
                 const length = valuesData.length;
                 if (length > 1 && length === keyTimes.length) {
@@ -180,9 +179,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
             }
             else {
-                this.from = $dom.getNamedItem(animationElement, 'from');
+                this.from = getNamedItem(animationElement, 'from');
                 if (this.to === '') {
-                    const by = $dom.getNamedItem(animationElement, 'by');
+                    const by = getNamedItem(animationElement, 'by');
                     const byCoords = SvgBuild.parseCoordinates(by);
                     if (byCoords.length) {
                         if (this.from === '') {
@@ -208,11 +207,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
                 this.convertToValues(keyTimes);
             }
-            const repeatDur = $dom.getNamedItem(animationElement, 'repeatDur');
+            const repeatDur = getNamedItem(animationElement, 'repeatDur');
             if (repeatDur !== '' && repeatDur !== 'indefinite') {
                 this._repeatDuration = SvgAnimation.convertClockTime(repeatDur);
             }
-            const repeatCount = $dom.getNamedItem(animationElement, 'repeatCount');
+            const repeatCount = getNamedItem(animationElement, 'repeatCount');
             this.iterationCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount);
             if (animationElement.tagName === 'animate') {
                 this.setCalcMode();
@@ -224,7 +223,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         const animationElement = this.animationElement;
         if (animationElement) {
             if (mode === undefined) {
-                mode = $dom.getNamedItem(animationElement, 'calcMode') || 'linear';
+                mode = getNamedItem(animationElement, 'calcMode') || 'linear';
             }
             const keyTimesBase = this.keyTimes;
             switch (mode) {
@@ -235,7 +234,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         let values: string[] = [];
                         const length = keyTimesBase.length;
                         for (let i = 0; i < length - 1; i++) {
-                            const result = SvgAnimate.convertStepTimingFunction(attributeName || this.attributeName, 'step-end', keyTimesBase, valuesBase, i, $css.getFontSize(animationElement));
+                            const result = SvgAnimate.convertStepTimingFunction(attributeName || this.attributeName, 'step-end', keyTimesBase, valuesBase, i, getFontSize(animationElement));
                             if (result) {
                                 keyTimes = keyTimes.concat(result[0]);
                                 values = values.concat(result[1]);
@@ -252,7 +251,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     this._keySplines = undefined;
                     break;
                 case 'spline':
-                    this.keySplines = $util.flatMap($dom.getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim());
+                    this.keySplines = flatMap(getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim());
                 case 'linear':
                     if (keyTimesBase[0] !== 0 && keyTimesBase[keyTimesBase.length - 1] !== 1) {
                         const keyTimes: number[] = [];
@@ -331,9 +330,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     set delay(value) {
         super.delay = value;
         const animationElement = this.animationElement;
-        const end = animationElement && $dom.getNamedItem(animationElement, 'end');
+        const end = animationElement && getNamedItem(animationElement, 'end');
         if (end) {
-            const endTime = $util.sortNumber($util.replaceMap<string, number>(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0];
+            const endTime = sortNumber(replaceMap<string, number>(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0];
             if (!isNaN(endTime)) {
                 const { duration, iterationCount } = this;
                 if (iterationCount === -1 || duration > 0 && endTime < duration * iterationCount) {
@@ -368,7 +367,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     set iterationCount(value) {
         const animationElement = this.animationElement;
         this._iterationCount = isNaN(value) ? 1 : value;
-        this.fillFreeze = this.iterationCount !== -1 && !!animationElement && $dom.getNamedItem(animationElement, 'fill') === 'freeze';
+        this.fillFreeze = this.iterationCount !== -1 && !!animationElement && getNamedItem(animationElement, 'fill') === 'freeze';
         if (this.iterationCount !== 1) {
             this.setAttribute('accumulate', 'sum');
         }
@@ -441,7 +440,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (value.length >= minSegment && !value.every(spline => spline === '' || spline === KEYSPLINE_NAME.linear)) {
                 const keySplines: string[] = [];
                 for (let i = 0; i < minSegment; i++) {
-                    const points = $util.replaceMap<string, number>(value[i].split(' '), pt => parseFloat(pt));
+                    const points = replaceMap<string, number>(value[i].split(' '), pt => parseFloat(pt));
                     if (points.length === 4 && !points.some(pt => isNaN(pt)) && points[0] >= 0 && points[0] <= 1 && points[2] >= 0 && points[2] <= 1) {
                         keySplines.push(points.join(' '));
                     }
@@ -481,7 +480,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (keySplinesBase) {
                 const keySplines: string[] = [];
                 for (let i = keySplinesBase.length - 1; i >= 0; i--) {
-                    const points = $util.replaceMap<string, number>(keySplinesBase[i].split(' '), pt => parseFloat(pt));
+                    const points = replaceMap<string, number>(keySplinesBase[i].split(' '), pt => parseFloat(pt));
                     if (points.length === 4) {
                         keySplines.push(invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1]));
                     }

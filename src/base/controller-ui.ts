@@ -4,18 +4,15 @@ import Controller from './controller';
 
 import { NODE_TEMPLATE } from './lib/enumeration';
 
+const $lib = squared.lib;
+const { USER_AGENT, isUserAgent } = $lib.client;
+const { BOX_BORDER, BOX_PADDING, formatPX, getStyle, isLength, isPercent } = $lib.css;
+const { isTextNode } = $lib.dom;
+const { capitalize, convertFloat, flatArray } = $lib.util;
+const { actualClientRect, getElementCache, setElementCache } = $lib.session;
+const { pushIndent, pushIndentArray } = $lib.xml;
+
 type NodeUI = squared.base.NodeUI;
-
-const {
-    client: $client,
-    css: $css,
-    dom: $dom,
-    session: $session,
-    util: $util,
-    xml: $xml
-} = squared.lib;
-
-const { BOX_BORDER, formatPX, getStyle, isLength, isPercent } = $css;
 
 const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && Math.abs(rect.left) >= rect.width || rect.top < 0 && Math.abs(rect.top) >= rect.height);
 
@@ -71,7 +68,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public applyDefaultStyles(element: Element) {
         const sessionId = this.sessionId;
         let styleMap: StringMap;
-        if ($dom.isTextNode(element)) {
+        if (isTextNode(element)) {
             styleMap = {
                 position: 'static',
                 display: 'inline',
@@ -81,7 +78,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             };
         }
         else {
-            styleMap = $session.getElementCache(element, 'styleMap', sessionId) || {};
+            styleMap = getElementCache(element, 'styleMap', sessionId) || {};
             function checkBorderAttribute(index: number) {
                 for (let i = 0; i < 4; i++) {
                     if (styleMap[BOX_BORDER[i][index]]) {
@@ -110,14 +107,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 if (styleMap.textAlign === undefined) {
                     styleMap.textAlign = 'center';
                 }
-                if (styleMap.padding === undefined && !$css.BOX_PADDING.some(attr => !!styleMap[attr])) {
+                if (styleMap.padding === undefined && !BOX_PADDING.some(attr => !!styleMap[attr])) {
                     styleMap.paddingTop = '2px';
                     styleMap.paddingRight = '6px';
                     styleMap.paddingBottom = '3px';
                     styleMap.paddingLeft = '6px';
                 }
             };
-            if ($client.isUserAgent($client.USER_AGENT.FIREFOX)) {
+            if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (element.tagName) {
                     case 'INPUT':
                     case 'SELECT':
@@ -146,10 +143,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         case 'time':
                         case 'date':
                         case 'datetime-local':
-                            styleMap.paddingTop = formatPX($util.convertFloat(styleMap.paddingTop) + 1);
-                            styleMap.paddingRight = formatPX($util.convertFloat(styleMap.paddingRight) + 1);
-                            styleMap.paddingBottom = formatPX($util.convertFloat(styleMap.paddingBottom) + 1);
-                            styleMap.paddingLeft = formatPX($util.convertFloat(styleMap.paddingLeft) + 1);
+                            styleMap.paddingTop = formatPX(convertFloat(styleMap.paddingTop) + 1);
+                            styleMap.paddingRight = formatPX(convertFloat(styleMap.paddingRight) + 1);
+                            styleMap.paddingBottom = formatPX(convertFloat(styleMap.paddingBottom) + 1);
+                            styleMap.paddingLeft = formatPX(convertFloat(styleMap.paddingLeft) + 1);
                             break;
                         case 'image':
                             if (styleMap.verticalAlign === undefined) {
@@ -220,7 +217,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             else {
                                 const value = styleMap[opposing];
                                 if (value && isLength(value)) {
-                                    const attrMax = 'max' + $util.capitalize(attr);
+                                    const attrMax = 'max' + capitalize(attr);
                                     if (styleMap[attrMax] === undefined || !isPercent(attrMax)) {
                                         const image = this.application.resourceHandler.getImage((<HTMLImageElement> element).src);
                                         if (image && image.width > 0 && image.height > 0) {
@@ -236,7 +233,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
             }
         }
-        $session.setElementCache(element, 'styleMap', sessionId, styleMap);
+        setElementCache(element, 'styleMap', sessionId, styleMap);
     }
 
     public addBeforeOutsideTemplate(id: number, value: string, format = true, index = -1) {
@@ -300,19 +297,19 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public getBeforeOutsideTemplate(id: number, depth = 0): string {
-        return this._beforeOutside[id] ? $xml.pushIndentArray(this._beforeOutside[id], depth) : '';
+        return this._beforeOutside[id] ? pushIndentArray(this._beforeOutside[id], depth) : '';
     }
 
     public getBeforeInsideTemplate(id: number, depth = 0): string {
-        return this._beforeInside[id] ? $xml.pushIndentArray(this._beforeInside[id], depth) : '';
+        return this._beforeInside[id] ? pushIndentArray(this._beforeInside[id], depth) : '';
     }
 
     public getAfterInsideTemplate(id: number, depth = 0): string {
-        return this._afterInside[id] ? $xml.pushIndentArray(this._afterInside[id], depth) : '';
+        return this._afterInside[id] ? pushIndentArray(this._afterInside[id], depth) : '';
     }
 
     public getAfterOutsideTemplate(id: number, depth = 0): string {
-        return this._afterOutside[id] ? $xml.pushIndentArray(this._afterOutside[id], depth) : '';
+        return this._afterOutside[id] ? pushIndentArray(this._afterOutside[id], depth) : '';
     }
 
     public hasAppendProcessing(id?: number) {
@@ -327,7 +324,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public visibleElement(element: Element) {
-        const rect = $session.actualClientRect(element, this.sessionId);
+        const rect = actualClientRect(element, this.sessionId);
         if (withinViewport(rect)) {
             const style = getStyle(element);
             if (rect.width > 0 && rect.height > 0) {
@@ -541,7 +538,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         k += order.length;
                     }
                 }
-                node.retain($util.flatArray(children));
+                node.retain(flatArray(children));
             }
         }
     }
@@ -582,7 +579,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         const renderDepth = depth + 1;
                         const beforeInside = this.getBeforeInsideTemplate(id, renderDepth);
                         const afterInside = this.getAfterInsideTemplate(id, renderDepth);
-                        let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? $xml.pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
+                        let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
                         if (renderTemplates || beforeInside !== '' || afterInside !== '') {
                             template += '>\n' +
                                         beforeInside +
@@ -599,7 +596,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     case NODE_TEMPLATE.INCLUDE: {
                         const content = (<NodeIncludeTemplate<T>> item).content;
                         if (content) {
-                            output += $xml.pushIndent(content, depth);
+                            output += pushIndent(content, depth);
                         }
                         break;
                     }

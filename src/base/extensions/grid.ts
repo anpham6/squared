@@ -6,17 +6,14 @@ import NodeUI from '../node-ui';
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const {
-    css: $css,
-    util: $util
-} = squared.lib;
-
-const { isLength, isPercent } = $css;
+const $lib = squared.lib;
+const { formatPX, isLength, isPercent } = $lib.css;
+const { aboveRange, belowRange, withinRange } = $lib.util;
 
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     const top = target.linear.top;
     for (const column of columns) {
-        const index = column.findIndex(item => $util.withinRange(top, item.linear.top) || top > item.linear.top && top < item.linear.bottom);
+        const index = column.findIndex(item => withinRange(top, item.linear.top) || top > item.linear.top && top < item.linear.bottom);
         if (index !== -1) {
             return index;
         }
@@ -115,7 +112,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
                     for (let j = 0; j < lengthB; j++) {
                         const nextX = nextAxisX[j];
-                        if (i === 0 || $util.aboveRange(nextX.linear.left, columnRight[i - 1])) {
+                        if (i === 0 || aboveRange(nextX.linear.left, columnRight[i - 1])) {
                             if (columns[i] === undefined) {
                                 columns[i] = [];
                             }
@@ -239,7 +236,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         if (columnEnd.length) {
                             const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
                             for (const sibling of item.documentParent.naturalChildren as T[]) {
-                                if (!assigned.has(sibling) && sibling.visible && !sibling.rendered && $util.aboveRange(sibling.linear.left, item.linear.right) && $util.belowRange(sibling.linear.right, columnEnd[l])) {
+                                if (!assigned.has(sibling) && sibling.visible && !sibling.rendered && aboveRange(sibling.linear.left, item.linear.right) && belowRange(sibling.linear.right, columnEnd[l])) {
                                     if (data.siblings === undefined) {
                                         data.siblings = [];
                                     }
@@ -309,7 +306,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 for (const item of group) {
                     item.parent = node;
                     if (!hasLength && item.percentWidth) {
-                        item.css('width', $css.formatPX(item.bounds.width));
+                        item.css('width', formatPX(item.bounds.width));
                     }
                 }
             }

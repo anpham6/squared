@@ -10,19 +10,15 @@ import { createViewAttribute } from '../lib/util';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const {
-    css: $css,
-    math: $math,
-    regex: $regex,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
+const { maxArray, truncate } = $lib.math;
+const { CHAR } = $lib.regex;
+const { captureMap, convertInt, flatMultiArray, objectMap } = $lib.util;
 
-const {
-    constant: $c,
-    enumeration: $e
-} = squared.base.lib;
-
-const { formatPX, isLength, isPercent } = $css;
+const $base_lib = squared.base.lib;
+const { EXT_NAME } = $base_lib.constant;
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 
 const REGEXP_ALIGNSELF = /(start|end|center|baseline)/;
 const REGEXP_JUSTIFYSELF = /(start|left|center|right|end)/;
@@ -61,17 +57,17 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
             }
             else {
                 let size = 0;
-                $util.captureMap(
+                captureMap(
                     <View[][]> mainData.rowData[i],
                     item => !!item && item.length > 0,
-                    item => size = Math.min(size, ...$util.objectMap(item, child => child.bounds[dimension]))
+                    item => size = Math.min(size, ...objectMap(item, child => child.bounds[dimension]))
                 );
                 value += size;
             }
         }
     }
     else {
-        value = $math.maxArray(data.unitTotal);
+        value = maxArray(data.unitTotal);
         if (value <= 0) {
             return 0;
         }
@@ -103,7 +99,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                 case 'space-around': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount * 2);
                     for (let i = 0; i < itemCount; i++) {
-                        for (const item of new Set($util.flatMultiArray<View>(rowData[i]))) {
+                        for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
                             const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
                             if (!adjusted.has(item)) {
                                 item.modifyBox(MARGIN_START, marginStart);
@@ -122,7 +118,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                     if (itemCount > 1) {
                         const [marginSize, marginExcess] = getMarginSize(itemCount - 1);
                         for (let i = 0; i < itemCount; i++) {
-                            for (const item of new Set($util.flatMultiArray<View>(rowData[i]))) {
+                            for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
                                 const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
                                 if (i < itemCount - 1) {
                                     if (!adjusted.has(item)) {
@@ -133,7 +129,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                                         item.cssPX(dimension, marginEnd);
                                     }
                                 }
-                                else if ($util.convertInt(item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan')) > 1) {
+                                else if (convertInt(item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan')) > 1) {
                                     item.cssPX(dimension, marginEnd);
                                     if (adjusted.has(item)) {
                                         item.modifyBox(MARGIN_END, -marginEnd);
@@ -148,7 +144,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                 case 'space-evenly': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount + 1);
                     for (let i = 0; i < itemCount; i++) {
-                        for (const item of new Set($util.flatMultiArray<View>(rowData[i]))) {
+                        for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
                             const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
                             if (!adjusted.has(item)) {
                                 if (i === 0) {
@@ -171,7 +167,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
     else {
         const sizeTotal = getGridSize(node, mainData, horizontal);
         if (sizeTotal > 0) {
-            const padding = horizontal ? $e.BOX_STANDARD.PADDING_LEFT : $e.BOX_STANDARD.PADDING_TOP;
+            const padding = horizontal ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_TOP;
             switch (alignment) {
                 case 'center':
                     node.modifyBox(padding, Math.floor(sizeTotal / 2));
@@ -194,13 +190,13 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const mainData: CssGridData<T> = node.data($c.EXT_NAME.CSS_GRID, $c.STRING_BASE.EXT_DATA);
+        const mainData: CssGridData<T> = node.data(EXT_NAME.CSS_GRID, 'mainData');
         if (mainData) {
             const layout = new $LayoutUI(
                 parent,
                 node,
                 CONTAINER_NODE.GRID,
-                $e.NODE_ALIGNMENT.AUTO_LAYOUT,
+                NODE_ALIGNMENT.AUTO_LAYOUT,
                 node.children as T[]
             );
             layout.rowCount = mainData.row.length;
@@ -228,8 +224,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     }
 
     public processChild(node: T, parent: T) {
-        const mainData: CssGridData<T> = parent.data($c.EXT_NAME.CSS_GRID, $c.STRING_BASE.EXT_DATA);
-        const cellData: CssGridCellData = node.data($c.EXT_NAME.CSS_GRID, 'cellData');
+        const mainData: CssGridData<T> = parent.data(EXT_NAME.CSS_GRID, 'mainData');
+        const cellData: CssGridCellData = node.data(EXT_NAME.CSS_GRID, 'cellData');
         let renderAs: T | undefined;
         let outputAs: NodeXmlTemplate<T> | undefined;
         if (mainData && cellData) {
@@ -333,7 +329,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             minSize += gap;
                         }
                     }
-                    if (node.textElement && $regex.CHAR.UNITZERO.test(min)) {
+                    if (node.textElement && CHAR.UNITZERO.test(min)) {
                         fitContent = true;
                     }
                 }
@@ -367,7 +363,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (sizeWeight > 0) {
                     if (!item.hasPX(dimension)) {
-                        const weight = $math.truncate(sizeWeight, node.localSettings.floatPrecision);
+                        const weight = truncate(sizeWeight, node.localSettings.floatPrecision);
                         if (horizontal) {
                             item.setLayoutWidth('0px');
                             item.android('layout_columnWeight', weight);
@@ -400,11 +396,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'base', 'initial');
-                renderAs.resetBox($e.BOX_STANDARD.MARGIN | $e.BOX_STANDARD.PADDING);
-                renderAs.exclude($e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET, $e.NODE_PROCEDURE.CUSTOMIZATION);
+                renderAs.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING);
+                renderAs.exclude(NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET, NODE_PROCEDURE.CUSTOMIZATION);
                 parent.appendTry(node, renderAs);
                 renderAs.render(parent);
-                node.transferBox($e.BOX_STANDARD.MARGIN, renderAs);
+                node.transferBox(BOX_STANDARD.MARGIN, renderAs);
                 applyLayout(renderAs, true, 'width');
                 applyLayout(renderAs, false, 'height');
                 let inlineWidth = false;
@@ -443,7 +439,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         parent,
                         renderAs,
                         CONTAINER_NODE.FRAME,
-                        $e.NODE_ALIGNMENT.SINGLE,
+                        NODE_ALIGNMENT.SINGLE,
                         renderAs.children as T[]
                     )
                 );
@@ -458,9 +454,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             function checkRowSpan() {
                 if (rowSpan === 1 && mainData.rowSpanMultiple[rowStart] === true) {
                     const rowCount = mainData.rowData.length;
-                    for (const item of $util.flatMultiArray<T>(mainData.rowData[rowStart])) {
+                    for (const item of flatMultiArray<T>(mainData.rowData[rowStart])) {
                         if (item !== node) {
-                            const data: CssGridCellData = item.data($c.EXT_NAME.CSS_GRID, 'cellData');
+                            const data: CssGridCellData = item.data(EXT_NAME.CSS_GRID, 'cellData');
                             if (data && (rowStart === 0 || data.rowSpan < rowCount) && data.rowSpan > rowSpan) {
                                 return true;
                             }
@@ -489,13 +485,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     }
 
     public postBaseLayout(node: T) {
-        const mainData: CssGridData<T> = node.data($c.EXT_NAME.CSS_GRID, $c.STRING_BASE.EXT_DATA);
+        const mainData: CssGridData<T> = node.data(EXT_NAME.CSS_GRID, 'mainData');
         if (mainData) {
             if (node.hasWidth && mainData.justifyContent !== 'normal') {
-                setContentSpacing(node, mainData, mainData.justifyContent, true, 'width', $e.BOX_STANDARD.MARGIN_LEFT, $e.BOX_STANDARD.MARGIN_RIGHT);
+                setContentSpacing(node, mainData, mainData.justifyContent, true, 'width', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT);
             }
             if (node.hasHeight && mainData.alignContent !== 'normal') {
-                setContentSpacing(node, mainData, mainData.alignContent, false, 'height', $e.BOX_STANDARD.MARGIN_TOP, $e.BOX_STANDARD.MARGIN_BOTTOM);
+                setContentSpacing(node, mainData, mainData.alignContent, false, 'height', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM);
                 const rowWeight = mainData.rowWeight;
                 if (rowWeight.length > 1) {
                     const precision = this.controller.localSettings.precision.standardFloat;
@@ -510,7 +506,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                         if (col.outerWrapper) {
                                             col = col.outerWrapper as T;
                                         }
-                                        col.android('layout_rowWeight', $math.truncate(rowWeight[i], precision).toString());
+                                        col.android('layout_rowWeight', truncate(rowWeight[i], precision).toString());
                                         col.setLayoutHeight('0px');
                                     }
                                 }
@@ -523,7 +519,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (column.normal && !column.unit.includes('auto')) {
                 const gap =  column.gap * (column.length - 1);
                 if (gap > 0) {
-                    if (!(node.renderParent as T).hasAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT)) {
+                    if (!(node.renderParent as T).hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                         node.cssPX('minWidth', gap);
                         node.cssPX('width', gap, false, true);
                     }
@@ -536,7 +532,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     }
 
     public postOptimize(node: T) {
-        const mainData: CssGridData<T> = node.data($c.EXT_NAME.CSS_GRID, $c.STRING_BASE.EXT_DATA);
+        const mainData: CssGridData<T> = node.data(EXT_NAME.CSS_GRID, 'mainData');
         if (mainData) {
             const controller = <android.base.Controller<T>> this.controller;
             const { children, column } = mainData;
@@ -552,7 +548,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         controller.addAfterOutsideTemplate(
                             lastChild.id,
                             controller.renderSpace(
-                                $css.formatPercent((100 - percent) / 100),
+                                formatPercent((100 - percent) / 100),
                                 'wrap_content',
                                 0,
                                 0,

@@ -7,14 +7,13 @@ import View from '../../view';
 import $LayoutUI = squared.base.LayoutUI;
 import $ResourceUI = squared.base.ResourceUI;
 
-const {
-    css: $css,
-    regex: $regex
-} = squared.lib;
+const $lib = squared.lib;
+const { resolveURL } = $lib.css;
+const { XML } = $lib.regex;
 
-const $e = squared.base.lib.enumeration;
+const { NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
-const isFullScreen = (node: View) => node.visibleStyle.borderWidth && (node.backgroundColor !== '' || (<HTMLBodyElement> node.element).scrollHeight < window.innerHeight) && !node.hasPX('width') && !node.inline && node.css('height') !== '100%' && node.css('minHeight') !== '100%';
+const isFullScreen = (node: View) => node.visibleStyle.borderWidth && !node.inline && !node.hasPX('width') && (node.backgroundColor !== '' || (<HTMLBodyElement> node.element).scrollHeight < window.innerHeight) && node.css('height') !== '100%' && node.css('minHeight') !== '100%';
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly removeIs = true;
@@ -31,13 +30,13 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             const scrollHeight = (<HTMLBodyElement> node.element).scrollHeight;
             const backgroundImage = $ResourceUI.parseBackgroundImage(node);
             if (backgroundImage) {
-                const backgroundRepeat = node.css('backgroundRepeat').split($regex.XML.SEPARATOR);
+                const backgroundRepeat = node.css('backgroundRepeat').split(XML.SEPARATOR);
                 for (let i = 0; i < backgroundImage.length; i++) {
                     const image = backgroundImage[i];
                     if (typeof image === 'string' && image.startsWith('url(')) {
                         const repeat = backgroundRepeat[i];
                         if (repeat === 'no-repeat' || repeat === 'repeat-x') {
-                            const asset = <ImageAsset> (this.resource.getRawData(image) || this.resource.getImage($css.resolveURL(image)));
+                            const asset = <ImageAsset> (this.resource.getRawData(image) || this.resource.getImage(resolveURL(image)));
                             if (asset) {
                                 const height = asset.height;
                                 if (height > 0 && height < scrollHeight) {
@@ -104,7 +103,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         }
         node.unsetCache('visibleStyle');
         container.unsetCache('visibleStyle');
-        container.unsafe('excludeResource', $e.NODE_RESOURCE.BOX_SPACING);
+        container.unsafe('excludeResource', NODE_RESOURCE.BOX_SPACING);
         return {
             parent: container,
             renderAs: container,
@@ -113,7 +112,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                     parent,
                     container,
                     CONTAINER_NODE.FRAME,
-                    $e.NODE_ALIGNMENT.SINGLE,
+                    NODE_ALIGNMENT.SINGLE,
                     container.children as T[]
                 )
             )

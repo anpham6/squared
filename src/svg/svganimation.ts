@@ -5,42 +5,39 @@ import SvgBuild from './svgbuild';
 import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
 import { getAttribute } from './lib/util';
 
-const {
-    css: $css,
-    dom: $dom,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { getFontSize, isLength, parseUnit } = $lib.css;
+const { getNamedItem } = $lib.dom;
+const { capitalize, hasBit, isNumber, isString, optionalAsString } = $lib.util;
 
-const CACHE_PATTERN = {
-    MS: /-?\d+ms$/,
-    S: /-?\d+s$/,
-    MIN: /-?\d+min$/,
-    H: /-?\d+(.\d+)?h$/,
-    CLOCK: /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/
-};
+const REGEX_MS = /-?\d+ms$/;
+const REGEX_S = /-?\d+s$/;
+const REGEX_MIN = /-?\d+min$/;
+const REGEX_H = /-?\d+(.\d+)?h$/;
+const REGEX_CLOCK = /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/;
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static convertClockTime(value: string) {
         let s = 0;
         let ms = 0;
-        if ($util.isNumber(value)) {
+        if (isNumber(value)) {
             s = parseInt(value);
         }
         else {
-            if (CACHE_PATTERN.MS.test(value)) {
+            if (REGEX_MS.test(value)) {
                 ms = parseFloat(value);
             }
-            else if (CACHE_PATTERN.S.test(value)) {
+            else if (REGEX_S.test(value)) {
                 s = parseFloat(value);
             }
-            else if (CACHE_PATTERN.MIN.test(value)) {
+            else if (REGEX_MIN.test(value)) {
                 s = parseFloat(value) * 60;
             }
-            else if (CACHE_PATTERN.H.test(value)) {
+            else if (REGEX_H.test(value)) {
                 s = parseFloat(value) * 60 * 60;
             }
             else {
-                const match = CACHE_PATTERN.CLOCK.exec(value);
+                const match = REGEX_CLOCK.exec(value);
                 if (match) {
                     if (match[2]) {
                         s += parseInt(match[2]) * 60 * 60;
@@ -90,7 +87,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.setAttribute('attributeName');
             this.setAttribute('to');
             this.setAttribute('fill', 'freeze');
-            const dur = $dom.getNamedItem(animationElement, 'dur');
+            const dur = getNamedItem(animationElement, 'dur');
             if (dur !== '' && dur !== 'indefinite') {
                 this.duration = SvgAnimation.convertClockTime(dur);
             }
@@ -100,10 +97,10 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public setAttribute(attr: string, equality?: string) {
         const animationElement = this.animationElement;
         if (animationElement) {
-            const value = $dom.getNamedItem(animationElement, attr);
+            const value = getNamedItem(animationElement, attr);
             if (value !== '') {
                 if (equality !== undefined) {
-                    this[attr + $util.capitalize(equality)] = value === equality;
+                    this[attr + capitalize(equality)] = value === equality;
                 }
                 else {
                     this[attr] = value;
@@ -114,7 +111,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     public addState(...values: number[]) {
         for (const value of values) {
-            if (!$util.hasBit(this.synchronizeState, value)) {
+            if (!hasBit(this.synchronizeState, value)) {
                 this.synchronizeState |= value;
             }
         }
@@ -122,32 +119,32 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     public removeState(...values: number[]) {
         for (const value of values) {
-            if ($util.hasBit(this.synchronizeState, value)) {
+            if (hasBit(this.synchronizeState, value)) {
                 this.synchronizeState ^= value;
             }
         }
     }
 
     public hasState(...values: number[]) {
-        return values.some(value => $util.hasBit(this.synchronizeState, value));
+        return values.some(value => hasBit(this.synchronizeState, value));
     }
 
     private setFillMode(mode: boolean, value: number) {
-        const hasBit = $util.hasBit(this.fillMode, value);
+        const valid = hasBit(this.fillMode, value);
         if (mode) {
-            if (!hasBit) {
+            if (!valid) {
                 this.fillMode |= value;
             }
         }
         else {
-            if (hasBit) {
+            if (valid) {
                 this.fillMode ^= value;
             }
         }
     }
 
     set attributeName(value) {
-        if (value !== 'transform' && !$util.isString(this.baseValue)) {
+        if (value !== 'transform' && !isString(this.baseValue)) {
             let baseValue: string | undefined;
             const element = this.element;
             if (element) {
@@ -162,13 +159,13 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                         break;
                 }
             }
-            if (!$util.isString(baseValue)) {
+            if (!isString(baseValue)) {
                 const animationElement = this.animationElement;
                 if (animationElement) {
                     const parentElement = animationElement.parentElement;
-                    baseValue = $util.optionalAsString(parentElement, value + '.baseVal.valueAsString');
-                    if ($css.isLength(baseValue)) {
-                        baseValue = $css.parseUnit(baseValue, $css.getFontSize(parentElement)).toString();
+                    baseValue = optionalAsString(parentElement, value + '.baseVal.valueAsString');
+                    if (isLength(baseValue)) {
+                        baseValue = parseUnit(baseValue, getFontSize(parentElement)).toString();
                     }
                 }
             }
@@ -207,21 +204,21 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         this.setFillMode(value, FILL_MODE.BACKWARDS);
     }
     get fillBackwards() {
-        return $util.hasBit(this.fillMode, FILL_MODE.BACKWARDS);
+        return hasBit(this.fillMode, FILL_MODE.BACKWARDS);
     }
 
     set fillForwards(value) {
         this.setFillMode(value, FILL_MODE.FORWARDS);
     }
     get fillForwards() {
-        return $util.hasBit(this.fillMode, FILL_MODE.FORWARDS);
+        return hasBit(this.fillMode, FILL_MODE.FORWARDS);
     }
 
     set fillFreeze(value) {
         this.setFillMode(value, FILL_MODE.FREEZE);
     }
     get fillFreeze() {
-        return $util.hasBit(this.fillMode, FILL_MODE.FREEZE);
+        return hasBit(this.fillMode, FILL_MODE.FREEZE);
     }
 
     get fillReplace() {

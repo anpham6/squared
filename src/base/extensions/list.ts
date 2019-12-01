@@ -3,10 +3,10 @@ import { ListData } from '../../../@types/base/extension';
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
-import { EXT_NAME, STRING_BASE } from '../lib/constant';
+import { EXT_NAME } from '../lib/constant';
 import { NODE_RESOURCE } from '../lib/enumeration';
 
-const $css = squared.lib.css;
+const { convertListStyle } = squared.lib.css;
 
 const hasSingleImage = (node: NodeUI) => node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
 
@@ -90,7 +90,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     if (ordered && listItem && item.tagName === 'LI') {
                         i = (<HTMLLIElement> item.element).value || i;
                     }
-                    let ordinal = $css.convertListStyle(value, i);
+                    let ordinal = convertListStyle(value, i);
                     if (ordinal === '') {
                         switch (value) {
                             case 'disc':
@@ -126,7 +126,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     i++;
                 }
             }
-            item.data(EXT_NAME.LIST, STRING_BASE.EXT_DATA, mainData);
+            item.data(EXT_NAME.LIST, 'mainData', mainData);
         });
         return undefined;
     }

@@ -3,10 +3,10 @@ import { FlexboxData } from '../../../@types/base/extension';
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
-import { EXT_NAME, STRING_BASE } from '../lib/constant';
+import { EXT_NAME } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
 
-const $util = squared.lib.util;
+const { withinRange } = squared.lib.util;
 
 export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute<T extends NodeUI>(node: T, children: T[]): FlexboxData<T> {
@@ -43,11 +43,14 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 for (const item of children) {
                     if (item.cssTry('align-self', 'start')) {
                         if (item.cssTry('justify-self', 'start')) {
+                            const rect = (<Element> item.element).getBoundingClientRect();
                             const bounds = item.initial.bounds;
                             if (bounds) {
-                                const rect = (<Element> item.element).getBoundingClientRect();
                                 bounds.width = rect.width;
                                 bounds.height = rect.height;
+                            }
+                            else {
+                                item.initial.bounds = rect;
                             }
                             item.cssFinally('justify-self');
                         }
@@ -79,7 +82,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 if (!a[method](b.bounds, 'bounds')) {
                     return a.linear[align] < b.linear[align] ? -1 : 1;
                 }
-                else if (!$util.withinRange(a.linear[sort], b.linear[sort])) {
+                else if (!withinRange(a.linear[sort], b.linear[sort])) {
                     return a.linear[sort] < b.linear[sort] ? -1 : 1;
                 }
                 return 0;
@@ -162,7 +165,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 mainData.columnCount = 1;
             }
         }
-        node.data(EXT_NAME.FLEXBOX, STRING_BASE.EXT_DATA, mainData);
+        node.data(EXT_NAME.FLEXBOX, 'mainData', mainData);
         return undefined;
     }
 }

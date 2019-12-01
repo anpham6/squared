@@ -9,22 +9,21 @@ import SvgBuild from './svgbuild';
 import { KEYSPLINE_NAME } from './lib/constant';
 import { TRANSFORM, getAttribute } from './lib/util';
 
+const $lib = squared.lib;
+const { calculateVar, isCustomProperty, getFontSize, getKeyframeRules, parseAngle, parseVar, isAngle, isCalc } = $lib.css;
+const { getNamedItem } = $lib.dom;
+const { XML } = $lib.regex;
+const { isString, replaceMap, sortNumber } = $lib.util;
+
 type AttributeMap = ObjectMap<AttributeData[]>;
 
 interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const {
-    css: $css,
-    dom: $dom,
-    regex: $regex,
-    util: $util
-} = squared.lib;
-
 const STRING_CUBICBEZIER = 'cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)';
 const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
-const KEYFRAME_MAP = $css.getKeyframeRules();
+const KEYFRAME_MAP = getKeyframeRules();
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
     'animation-duration': '0s',
@@ -47,7 +46,7 @@ function parseAttribute(element: SVGElement, attr: string) {
         return result;
     }
     else {
-        return value.split($regex.XML.SEPARATOR);
+        return value.split(XML.SEPARATOR);
     }
 }
 
@@ -71,8 +70,8 @@ function convertRotate(value: string) {
     }
     else if (value.startsWith('reverse ')) {
         const angle = value.split(' ')[1];
-        if ($css.isAngle(angle)) {
-            return 'auto ' + (180 + $css.parseAngle(angle)) + 'deg';
+        if (isAngle(angle)) {
+            return 'auto ' + (180 + parseAngle(angle)) + 'deg';
         }
         return 'auto 0deg';
     }
@@ -116,11 +115,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             for (let i = 0; i < length; i++) {
                 const item = children[i];
                 if (item instanceof SVGAnimationElement) {
-                    const begin = $dom.getNamedItem(item, 'begin');
+                    const begin = getNamedItem(item, 'begin');
                     if (begin !== '' && /^[a-zA-Z]+$/.test(begin)) {
                         continue;
                     }
-                    const times = begin ? $util.sortNumber($util.replaceMap<string, number>(begin.split(';'), value => SvgAnimation.convertClockTime(value))) : [0];
+                    const times = begin ? sortNumber(replaceMap<string, number>(begin.split(';'), value => SvgAnimation.convertClockTime(value))) : [0];
                     if (times.length) {
                         switch (item.tagName) {
                             case 'set':
@@ -205,11 +204,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 }
                                 let value: any = data[name];
                                 if (value) {
-                                    if ($css.isCalc(value)) {
-                                        value = $css.calculateVar(element, value, name);
+                                    if (isCalc(value)) {
+                                        value = calculateVar(element, value, name);
                                     }
-                                    else if ($css.isCustomProperty(value)) {
-                                        value = $css.parseVar(element, value);
+                                    else if (isCustomProperty(value)) {
+                                        value = parseVar(element, value);
                                     }
                                     if (value !== undefined) {
                                         map[name].push({ key, value: value.toString() });
@@ -346,7 +345,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     addAnimation(animate, delay, keyframeIndex);
                                     for (const item of offsetRotate) {
                                         const value = item.value;
-                                        let angle = $css.parseAngle(value.split(' ').pop() as string);
+                                        let angle = parseAngle(value.split(' ').pop() as string);
                                         if (value.startsWith('auto')) {
                                             angle += 90;
                                         }
@@ -399,7 +398,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 if ((<NumberValue> animation.pop()).key !== 1) {
                                     animateMotion.addKeyPoint({ key: 1, value: animateMotion.distance });
                                 }
-                                if ($util.isString(timingFunction)) {
+                                if (isString(timingFunction)) {
                                     animateMotion.timingFunction = timingFunction;
                                 }
                             }
@@ -447,7 +446,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             }
                                             else if (keySpline.startsWith('step')) {
                                                 if (values[j] !== '') {
-                                                    const steps = SvgAnimate.convertStepTimingFunction(name, keySpline, keyTimes, values, j, $css.getFontSize(element));
+                                                    const steps = SvgAnimate.convertStepTimingFunction(name, keySpline, keyTimes, values, j, getFontSize(element));
                                                     if (steps) {
                                                         const offset = keyTimes[j + 1] === 1 ? 1 : 0;
                                                         for (let k = 0; k < steps[0].length - offset; k++) {

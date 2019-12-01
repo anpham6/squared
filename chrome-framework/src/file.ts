@@ -3,39 +3,36 @@ import { ChromeAsset } from '../../@types/chrome/application';
 
 import Resource from './resource';
 
-const {
-    regex: $regex,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { COMPONENT } = $lib.regex;
+const { convertWord, fromLastIndexOf, resolvePath, spliceString, trimEnd } = $lib.util;
 
 const ASSETS = Resource.ASSETS;
-const CACHE_PATTERN = {
-    SRCSET: /\s*(.+?\.[^\s,]+).*?,\s*/,
-    SRCSET_SPECIFIER: /\s+[0-9.][wx]$/
-};
+const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
+const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
 
 function parseUri(value: string): ChromeAsset | undefined {
-    value = $util.trimEnd(value, '/');
-    const match = $regex.COMPONENT.PROTOCOL.exec(value);
+    value = trimEnd(value, '/');
+    const match = COMPONENT.PROTOCOL.exec(value);
     let pathname = '';
     let filename = '';
     if (match) {
         const host = match[2];
         const port = match[3];
         const path = match[4];
-        if (!value.startsWith($util.trimEnd(location.origin, '/'))) {
-            pathname = $util.convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
+        if (!value.startsWith(trimEnd(location.origin, '/'))) {
+            pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
         }
         if (path) {
             const index = path.lastIndexOf('/');
             if (index > 0) {
                 pathname += path.substring(1, index);
-                filename = $util.fromLastIndexOf(path, '/');
+                filename = fromLastIndexOf(path, '/');
             }
         }
     }
     if (pathname !== '') {
-        const extension = filename.indexOf('.') !== -1 ? $util.fromLastIndexOf(filename, '.').toLowerCase() : undefined;
+        const extension = filename.indexOf('.') !== -1 ? fromLastIndexOf(filename, '.').toLowerCase() : undefined;
         return {
             pathname,
             filename,
@@ -102,7 +99,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         document.querySelectorAll('script').forEach(element => {
             const src = element.src.trim();
             if (src !== '') {
-                const uri = $util.resolvePath(src);
+                const uri = resolvePath(src);
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
                     data.uri = uri;
@@ -122,7 +119,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((element: HTMLLinkElement) => {
             const href = element.href.trim();
             if (href !== '') {
-                const uri = $util.resolvePath(href);
+                const uri = resolvePath(href);
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
                     data.uri = uri;
@@ -169,16 +166,16 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             const images: string[] = [];
             let srcset = element.srcset.trim();
             let match: RegExpExecArray | null;
-            while ((match = CACHE_PATTERN.SRCSET.exec(srcset)) !== null) {
-                images.push($util.resolvePath(match[1]));
-                srcset = $util.spliceString(srcset, match.index, match[0].length);
+            while ((match = REGEX_SRCSET.exec(srcset)) !== null) {
+                images.push(resolvePath(match[1]));
+                srcset = spliceString(srcset, match.index, match[0].length);
             }
             srcset = srcset.trim();
             if (srcset !== '') {
-                images.push($util.resolvePath(srcset.replace(CACHE_PATTERN.SRCSET_SPECIFIER, '')));
+                images.push(resolvePath(srcset.replace(REGEX_SRCSET_SPECIFIER, '')));
             }
             for (const src of images) {
-                if ($regex.COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
+                if (COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
                     const data = parseUri(src);
                     if (this.validFile(data)) {
                         data.uri = src;

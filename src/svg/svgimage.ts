@@ -7,7 +7,7 @@ import SvgElement from './svgelement';
 import { INSTANCE_TYPE } from './lib/constant';
 import { MATRIX, SVG } from './lib/util';
 
-const $util = squared.lib.util;
+const { resolvePath } = squared.lib.util;
 
 export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) implements squared.svg.SvgImage {
     public rotateAngle?: number;
@@ -147,7 +147,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     get href() {
         const element = this.imageElement || this.element;
         if (SVG.image(element)) {
-            return $util.resolvePath(element.href.baseVal);
+            return resolvePath(element.href.baseVal);
         }
         return '';
     }

@@ -1,13 +1,5 @@
 import { BOX_STANDARD } from './enumeration';
 
-export const STRING_BASE = {
-    EXT_DATA: 'mainData',
-    TOP_BOTTOM: 'topBottom',
-    BOTTOM_TOP: 'bottomTop',
-    LEFT_RIGHT: 'leftRight',
-    RIGHT_LEFT: 'rightLeft'
-};
-
 export const CSS_SPACING = new Map<number, string>([
     [BOX_STANDARD.MARGIN_TOP, 'marginTop'],
     [BOX_STANDARD.MARGIN_RIGHT, 'marginRight'],

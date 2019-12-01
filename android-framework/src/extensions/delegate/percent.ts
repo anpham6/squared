@@ -4,7 +4,7 @@ import View from '../../view';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const $e = squared.base.lib.enumeration;
+const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const isFlexible = (node: View) => !node.documentParent.layoutElement && !node.display.startsWith('table');
 
@@ -14,10 +14,10 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public condition(node: T, parent: T) {
-        if (node.has('width', $e.CSS_UNIT.PERCENT, { not: '100%' }) && !parent.layoutConstraint && (node.documentRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width')))) {
+        if (node.has('width', CSS_UNIT.PERCENT, { not: '100%' }) && !parent.layoutConstraint && (node.documentRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width')))) {
             return isFlexible(node);
         }
-        else if (node.has('height', $e.CSS_UNIT.PERCENT, { not: '100%' }) && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
+        else if (node.has('height', CSS_UNIT.PERCENT, { not: '100%' }) && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
             return isFlexible(node);
         }
         return false;
@@ -48,7 +48,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                     parent,
                     container,
                     CONTAINER_NODE.CONSTRAINT,
-                    $e.NODE_ALIGNMENT.SINGLE,
+                    NODE_ALIGNMENT.SINGLE,
                     container.children as T[]
                 )
             ),
@@ -59,7 +59,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
     public postConstraints(node: T) {
         const outerWrapper = node.outerWrapper as T;
         if (outerWrapper) {
-            node.resetBox($e.BOX_STANDARD.MARGIN, outerWrapper);
+            node.resetBox(BOX_STANDARD.MARGIN, outerWrapper);
         }
     }
 }

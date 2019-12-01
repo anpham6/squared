@@ -7,20 +7,18 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const {
-    css: $css,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { formatPX } = $lib.css;
+const { captureMap, withinRange } = $lib.util;
 
-const {
-    constant: $c,
-    enumeration: $e
-} = squared.base.lib;
+const $base_lib = squared.base.lib;
+const { EXT_NAME } = $base_lib.constant;
+const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 
 function transferData(parent: View, siblings: View[])  {
     const data = squared.base.extensions.Grid.createDataCellAttribute();
     for (const item of siblings) {
-        const source: GridCellData<View> = item.data($c.EXT_NAME.GRID, 'cellData');
+        const source: GridCellData<View> = item.data(EXT_NAME.GRID, 'cellData');
         if (source) {
             if (source.cellStart) {
                 data.cellStart = true;
@@ -34,22 +32,22 @@ function transferData(parent: View, siblings: View[])  {
             if (source.rowStart) {
                 data.rowStart = true;
             }
-            item.data($c.EXT_NAME.GRID, 'cellData', null);
+            item.data(EXT_NAME.GRID, 'cellData', null);
         }
     }
-    parent.data($c.EXT_NAME.GRID, 'cellData', data);
+    parent.data(EXT_NAME.GRID, 'cellData', data);
 }
 
 export default class <T extends View> extends squared.base.extensions.Grid<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const columnCount: number = node.data($c.EXT_NAME.GRID, 'columnCount');
+        const columnCount: number = node.data(EXT_NAME.GRID, 'columnCount');
         if (columnCount) {
             const layout = new $LayoutUI(
                 parent,
                 node,
                 CONTAINER_NODE.GRID,
-                $e.NODE_ALIGNMENT.AUTO_LAYOUT,
+                NODE_ALIGNMENT.AUTO_LAYOUT,
                 node.children as T[]
             );
             layout.columnCount = columnCount;
@@ -62,7 +60,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const cellData: GridCellData<T> = node.data($c.EXT_NAME.GRID, 'cellData');
+        const cellData: GridCellData<T> = node.data(EXT_NAME.GRID, 'cellData');
         if (cellData) {
             const siblings = cellData.siblings?.slice(0);
             let layout: $LayoutUI<T> | undefined;
@@ -74,7 +72,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                         parent,
                         controller.createNodeGroup(node, siblings, parent, true),
                         0,
-                        cellData.block ? $e.NODE_ALIGNMENT.BLOCK : 0,
+                        cellData.block ? NODE_ALIGNMENT.BLOCK : 0,
                         siblings
                     )
                 );
@@ -85,7 +83,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 else {
                     for (const item of siblings) {
                         if (item.percentWidth) {
-                            item.css('width', $css.formatPX(item.bounds.width), true);
+                            item.css('width', formatPX(item.bounds.width), true);
                         }
                     }
                 }
@@ -114,19 +112,19 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
 
     public postConstraints(node: T) {
         if (node.css('borderCollapse') !== 'collapse') {
-            const columnCount: number = node.data($c.EXT_NAME.GRID, 'columnCount');
+            const columnCount: number = node.data(EXT_NAME.GRID, 'columnCount');
             if (columnCount) {
                 let paddingTop = 0;
                 let paddingRight = 0;
                 let paddingBottom = 0;
                 let paddingLeft = 0;
                 node.renderEach(item => {
-                    const cellData: GridCellData<T> = item.data($c.EXT_NAME.GRID, 'cellData');
+                    const cellData: GridCellData<T> = item.data(EXT_NAME.GRID, 'cellData');
                     if (cellData) {
                         const parent = item.actualParent as T;
                         if (!parent.visible) {
-                            const marginTop = parent.getBox($e.BOX_STANDARD.MARGIN_TOP)[0] !== 1 ? parent.marginTop : 0;
-                            const marginBottom = parent.getBox($e.BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1 ? parent.marginBottom : 0;
+                            const marginTop = parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1 ? parent.marginTop : 0;
+                            const marginBottom = parent.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1 ? parent.marginBottom : 0;
                             if (cellData.cellStart) {
                                 paddingTop = marginTop + parent.paddingTop;
                             }
@@ -145,7 +143,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                                             item.id,
                                             controller.renderSpace(
                                                 'match_parent',
-                                                '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_grid_space', $css.formatPX(heightBottom)),
+                                                '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_grid_space', formatPX(heightBottom)),
                                                 columnCount
                                             ),
                                             false
@@ -157,20 +155,20 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                         }
                     }
                 });
-                node.modifyBox($e.BOX_STANDARD.PADDING_TOP, paddingTop);
-                node.modifyBox($e.BOX_STANDARD.PADDING_RIGHT, paddingRight);
-                node.modifyBox($e.BOX_STANDARD.PADDING_BOTTOM, paddingBottom);
-                node.modifyBox($e.BOX_STANDARD.PADDING_LEFT, paddingLeft);
+                node.modifyBox(BOX_STANDARD.PADDING_TOP, paddingTop);
+                node.modifyBox(BOX_STANDARD.PADDING_RIGHT, paddingRight);
+                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, paddingBottom);
+                node.modifyBox(BOX_STANDARD.PADDING_LEFT, paddingLeft);
             }
         }
         if (!node.hasWidth) {
             let maxRight = Number.NEGATIVE_INFINITY;
-            $util.captureMap(
+            captureMap(
                 node.renderChildren,
                 item => item.inlineFlow || !item.blockStatic,
                 item => maxRight = Math.max(maxRight, item.linear.right)
             );
-            if ($util.withinRange(node.box.right, maxRight)) {
+            if (withinRange(node.box.right, maxRight)) {
                 node.setLayoutWidth('wrap_content');
             }
         }

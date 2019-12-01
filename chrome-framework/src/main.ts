@@ -15,7 +15,7 @@ import SETTINGS from './settings';
 
 import * as constant from './lib/constant';
 
-const $util = squared.lib.util;
+const { flatArray, isString } = squared.lib.util;
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 let initialized = false;
@@ -117,27 +117,27 @@ const appBase: ChromeFramework<View> = {
             }
         },
         copyHtmlPage(directory: string, callback?: CallbackResult, name?: string) {
-            if (file && $util.isString(directory)) {
+            if (file && isString(directory)) {
                 file.copying(directory, <FileAsset[]> file.getHtmlPage(name), callback);
             }
         },
         copyScriptAssets(directory: string, callback?: CallbackResult) {
-            if (file && $util.isString(directory)) {
+            if (file && isString(directory)) {
                 file.copying(directory, <FileAsset[]> file.getScriptAssets(), callback);
             }
         },
         copyLinkAssets(directory: string, callback?: CallbackResult, rel?: string) {
-            if (file && $util.isString(directory)) {
+            if (file && isString(directory)) {
                 file.copying(directory, <FileAsset[]> file.getLinkAssets(rel), callback);
             }
         },
         copyImageAssets(directory: string, callback?: CallbackResult) {
-            if (file && $util.isString(directory)) {
+            if (file && isString(directory)) {
                 file.copying(directory, <FileAsset[]> file.getImageAssets(), callback);
             }
         },
         copyFontAssets(directory: string, callback?: CallbackResult) {
-            if (file && $util.isString(directory)) {
+            if (file && isString(directory)) {
                 file.copying(directory, <FileAsset[]> file.getFontAssets(), callback);
             }
         },
@@ -236,7 +236,7 @@ const appBase: ChromeFramework<View> = {
                     }
                 });
             })();
-            return incomplete ? $util.flatArray(result) : result;
+            return incomplete ? flatArray(result) : result;
         }
         return [];
     }

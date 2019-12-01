@@ -4,22 +4,19 @@ import Resource from './resource';
 
 import { NODE_RESOURCE } from './lib/enumeration';
 
+const $lib = squared.lib;
+const { USER_AGENT, isUserAgent } = $lib.client;
+const { parseColor } = $lib.color;
+const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = $lib.css;
+const { isEqual, offsetAngleX, offsetAngleY, relativeAngle, triangulate, truncateFraction } = $lib.math;
+const { CHAR, ESCAPE, STRING, XML } = $lib.regex;
+const { getElementAsNode } = $lib.session;
+const { convertCamelCase, convertFloat, hasValue, isEqual: isEqualObject, isNumber, isString, trimEnd, trimStart } = $lib.util;
+
 type NodeUI = squared.base.NodeUI;
 
-const {
-    client: $client,
-    color: $color,
-    css: $css,
-    math: $math,
-    regex: $regex,
-    session: $session,
-    util: $util
-} = squared.lib;
-
-const { BOX_BORDER, formatPX } = $css;
-
 const STRING_SPACE = '&#160;';
-const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${$regex.STRING.LENGTH_PERCENTAGE}|${$regex.STRING.CSS_ANGLE}|(?:${$regex.STRING.CSS_CALC}(?=,)|${$regex.STRING.CSS_CALC}))?,?\\s*`;
+const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 let REGEXP_COLORSTOP: RegExp | undefined;
 
@@ -45,24 +42,24 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     let match: RegExpExecArray | null;
     let previousOffset = 0;
     while ((match = REGEXP_COLORSTOP.exec(value)) !== null) {
-        const color = $color.parseColor(match[1], 1, true);
+        const color = parseColor(match[1], 1, true);
         if (color) {
             let offset = -1;
             if (gradient.type === 'conic') {
                 if (match[3] && match[4]) {
-                    offset = $css.convertAngle(match[3], match[4]) / 360;
+                    offset = convertAngle(match[3], match[4]) / 360;
                 }
             }
             else if (match[2]) {
-                if ($css.isPercent(match[2])) {
+                if (isPercent(match[2])) {
                     offset = parseFloat(match[2]) / 100;
                 }
                 else {
-                    if ($css.isLength(match[2])) {
+                    if (isLength(match[2])) {
                         offset = node.parseUnit(match[2], item.horizontal ? 'width' : 'height', false) / size;
                     }
-                    else if ($css.isCalc(match[2])) {
-                        offset = $css.calculate(match[6], size, node.fontSize) / size;
+                    else if (isCalc(match[2])) {
+                        offset = calculate(match[6], size, node.fontSize) / size;
                     }
                 }
                 if (repeating && offset !== -1) {
@@ -134,9 +131,9 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     return result;
 }
 
-function parseAngle(value: string, fallback = 0) {
+function getAngle(value: string, fallback = 0) {
     if (value) {
-        let degree = $css.parseAngle(value.trim());
+        let degree = parseAngle(value.trim());
         if (degree < 0) {
             degree += 360;
         }
@@ -168,10 +165,10 @@ function replaceWhiteSpace(parent: NodeUI, node: NodeUI, value: string): [string
         default:
             const { previousSibling, nextSibling } = node;
             if (previousSibling && (previousSibling.lineBreak || previousSibling.blockStatic) || node.onlyChild && node.htmlElement) {
-                value = value.replace($regex.CHAR.LEADINGSPACE, '');
+                value = value.replace(CHAR.LEADINGSPACE, '');
             }
             if (nextSibling && (nextSibling.lineBreak || nextSibling.blockStatic) || node.onlyChild && node.htmlElement) {
-                value = value.replace($regex.CHAR.TRAILINGSPACE, '');
+                value = value.replace(CHAR.TRAILINGSPACE, '');
             }
             return [value, false];
     }
@@ -180,7 +177,7 @@ function replaceWhiteSpace(parent: NodeUI, node: NodeUI, value: string): [string
 
 function getBackgroundSize(node: NodeUI, index: number, value?: string) {
     if (value) {
-        const sizes = value.split($regex.XML.SEPARATOR);
+        const sizes = value.split(XML.SEPARATOR);
         return ResourceUI.getBackgroundSize(node, sizes[index % sizes.length]);
     }
     return undefined;
@@ -227,10 +224,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public static insertStoredAsset(asset: string, name: string, value: any) {
         const stored: Map<string, any> = ResourceUI.STORED[asset];
-        if (stored && $util.hasValue(value)) {
+        if (stored && hasValue(value)) {
             let result = this.getStoredName(asset, value);
             if (result === '') {
-                if ($util.isNumber(name)) {
+                if (isNumber(name)) {
                     name = '__' + name;
                 }
                 let i = 0;
@@ -263,7 +260,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             }
             const value = item.text.trim() || item.value.trim();
             if (value !== '') {
-                if (numberArray && !$util.isNumber(value)) {
+                if (numberArray && !isNumber(value)) {
                     numberArray = false;
                 }
                 stringArray.push(value);
@@ -300,9 +297,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             const conic = <ConicGradient> {
                                 type,
                                 dimension,
-                                angle: parseAngle(direction)
+                                angle: getAngle(direction)
                             };
-                            conic.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension);
+                            conic.center = getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension);
                             conic.colorStops = parseColorStops(node, conic, match[4]);
                             gradient = conic;
                             break;
@@ -316,7 +313,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 horizontal: node.actualWidth <= node.actualHeight,
                                 dimension
                             };
-                            const center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension);
+                            const center = getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension);
                             const { left, top } = center;
                             radial.center = center;
                             radial.closestCorner = Number.POSITIVE_INFINITY;
@@ -373,7 +370,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     case 'closest-corner':
                                     case 'closest-side':
                                     case 'farthest-side':
-                                        const length = radial[$util.convertCamelCase(extent)];
+                                        const length = radial[convertCamelCase(extent)];
                                         if (repeating) {
                                             radial.radiusExtent = length;
                                         }
@@ -419,7 +416,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     break;
                                 default:
                                     if (direction) {
-                                        angle = parseAngle(direction, 180) || 360;
+                                        angle = getAngle(direction, 180) || 360;
                                     }
                                     break;
                             }
@@ -431,33 +428,33 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 angle
                             };
                             linear.colorStops = parseColorStops(node, linear, match[4]);
-                            let x = $math.truncateFraction($math.offsetAngleX(angle, width));
-                            let y = $math.truncateFraction($math.offsetAngleY(angle, height));
-                            if (x !== width && y !== height && !$math.isEqual(Math.abs(x), Math.abs(y))) {
+                            let x = truncateFraction(offsetAngleX(angle, width));
+                            let y = truncateFraction(offsetAngleY(angle, height));
+                            if (x !== width && y !== height && !isEqual(Math.abs(x), Math.abs(y))) {
                                 let opposite: number;
                                 if (angle <= 90) {
-                                    opposite = $math.relativeAngle({ x: 0, y: height }, { x: width, y: 0 });
+                                    opposite = relativeAngle({ x: 0, y: height }, { x: width, y: 0 });
                                 }
                                 else if (angle <= 180) {
-                                    opposite = $math.relativeAngle({ x: 0, y: 0 }, { x: width, y: height });
+                                    opposite = relativeAngle({ x: 0, y: 0 }, { x: width, y: height });
                                 }
                                 else if (angle <= 270) {
-                                    opposite = $math.relativeAngle({ x: 0, y: 0 }, { x: -width, y: height });
+                                    opposite = relativeAngle({ x: 0, y: 0 }, { x: -width, y: height });
                                 }
                                 else {
-                                    opposite = $math.relativeAngle({ x: 0, y: height }, { x: -width, y: 0 });
+                                    opposite = relativeAngle({ x: 0, y: height }, { x: -width, y: 0 });
                                 }
                                 const a = Math.abs(opposite - angle);
-                                x = $math.truncateFraction(
-                                    $math.offsetAngleX(
+                                x = truncateFraction(
+                                    offsetAngleX(
                                         angle,
-                                        $math.triangulate(a, 90 - a, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)))[1]
+                                        triangulate(a, 90 - a, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)))[1]
                                     )
                                 );
-                                y = $math.truncateFraction(
-                                    $math.offsetAngleY(
+                                y = truncateFraction(
+                                    offsetAngleY(
                                         angle,
-                                        $math.triangulate(90, 90 - angle, x)[0]
+                                        triangulate(90, 90 - angle, x)[0]
                                     )
                                 );
                             }
@@ -533,7 +530,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 value = value.trim();
             }
             if (/\n/.test(value)) {
-                if (node.plainText && $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                if (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
                     return true;
                 }
                 return node.css('whiteSpace').startsWith('pre');
@@ -545,7 +542,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     private static getStoredName(asset: string, value: any): string {
         if (ResourceUI.STORED[asset]) {
             for (const [name, data] of ResourceUI.STORED[asset].entries()) {
-                if ($util.isEqual(value, data)) {
+                if (isEqualObject(value, data)) {
                     return name;
                 }
             }
@@ -587,7 +584,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             };
             function setBorderStyle(attr: string, border: string[]) {
                 const style = node.css(border[0]) || 'none';
-                let width = formatPX(attr !== 'outline' ? node[border[1]] : $util.convertFloat(node.style[border[1]]));
+                let width = formatPX(attr !== 'outline' ? node[border[1]] : convertFloat(node.style[border[1]]));
                 let color = node.css(border[2]) || 'initial';
                 switch (color) {
                     case 'initial':
@@ -595,14 +592,14 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         break;
                     case 'inherit':
                     case 'currentcolor':
-                        color = $css.getInheritedStyle(<HTMLElement> node.element, border[2]);
+                        color = getInheritedStyle(<HTMLElement> node.element, border[2]);
                         break;
                 }
                 if (width !== '0px' && style !== 'none') {
                     if (width === '2px' && (style === 'inset' || style === 'outset')) {
                         width = '1px';
                     }
-                    const borderColor = $color.parseColor(color, 1, true);
+                    const borderColor = parseColor(color, 1, true);
                     if (borderColor) {
                         boxStyle[attr] = <BorderAttribute> {
                             width,
@@ -677,7 +674,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 backgroundColor = node.css('backgroundColor');
             }
             if (backgroundColor !== '') {
-                const color = $color.parseColor(backgroundColor);
+                const color = parseColor(backgroundColor);
                 boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
             }
             node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
@@ -686,9 +683,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public setFontStyle(node: T) {
         if (((node.textElement || node.inlineText) && (!node.textEmpty || node.visibleStyle.background) || node.inputElement) && node.visible) {
-            const color = $color.parseColor(node.css('color'));
+            const color = parseColor(node.css('color'));
             let fontWeight = node.css('fontWeight');
-            if (!$util.isNumber(fontWeight)) {
+            if (!isNumber(fontWeight)) {
                 switch (fontWeight) {
                     case 'lighter':
                         fontWeight = '200';
@@ -782,7 +779,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     }
                                     break;
                                 case 'file':
-                                    value = $client.isUserAgent($client.USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
+                                    value = isUserAgent(USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
                                     break;
                             }
                             break;
@@ -819,8 +816,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             const previousSibling = node.siblingsLeading[0];
                             let previousSpaceEnd = false;
                             if (value.length > 1) {
-                                if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $regex.CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
-                                    value = value.replace($regex.CHAR.LEADINGSPACE, '');
+                                if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
+                                    value = value.replace(CHAR.LEADINGSPACE, '');
                                 }
                                 else if (previousSibling.naturalElement) {
                                     const textContent = previousSibling.textContent;
@@ -830,8 +827,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 }
                             }
                             if (inlined) {
-                                const trailingSpace = !node.lineBreakTrailing && $regex.CHAR.TRAILINGSPACE.test(value);
-                                if (previousSibling && $regex.CHAR.LEADINGSPACE.test(value) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
+                                const trailingSpace = !node.lineBreakTrailing && CHAR.TRAILINGSPACE.test(value);
+                                if (previousSibling && CHAR.LEADINGSPACE.test(value) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
                                     value = STRING_SPACE + value.trim();
                                 }
                                 else {
@@ -845,13 +842,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 }
                             }
                             else if (value.trim() !== '') {
-                                value = value.replace($regex.CHAR.LEADINGSPACE, previousSibling && (
+                                value = value.replace(CHAR.LEADINGSPACE, previousSibling && (
                                     previousSibling.block ||
                                     previousSibling.lineBreak ||
                                     previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
                                     node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
                                 );
-                                value = value.replace($regex.CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
+                                value = value.replace(CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
                             }
                             else if (!node.inlineText) {
                                 return;
@@ -882,7 +879,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const child = <Element> children[i];
-            const item = $session.getElementAsNode(child, sessionId) as NodeUI | undefined;
+            const item = getElementAsNode(child, sessionId) as NodeUI | undefined;
             if (item === undefined || !item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
                 if (item) {
                     if (item.htmlElement && attr === 'innerHTML') {
@@ -894,7 +891,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                         continue;
                     }
-                    else if ($util.isString(item[attr])) {
+                    else if (isString(item[attr])) {
                         value = value.replace(item[attr], '');
                         continue;
                     }
@@ -904,15 +901,15 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     value = value.replace(child.outerHTML, position !== 'absolute' && position !== 'fixed' && (child.textContent as string).trim() !== '' ? STRING_SPACE : '');
                 }
                 if (i === 0) {
-                    value = $util.trimStart(value, ' ');
+                    value = trimStart(value, ' ');
                 }
                 else if (i === length - 1) {
-                    value = $util.trimEnd(value, ' ');
+                    value = trimEnd(value, ' ');
                 }
             }
         }
         if (attr === 'innerHTML') {
-            value = value.replace($regex.ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
+            value = value.replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
         }
         return value;
     }

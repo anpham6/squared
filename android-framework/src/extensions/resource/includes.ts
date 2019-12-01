@@ -4,14 +4,14 @@ import View from '../../view';
 
 import { getRootNs } from '../../lib/util';
 
+const { NODE_TEMPLATE } = squared.base.lib.enumeration;
+
 type NodeRenderIndex = {
     item: View;
     name?: string;
     index: number;
     merge: boolean;
 };
-
-const $e = squared.base.lib.enumeration;
 
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
@@ -66,7 +66,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 const merge = openData.merge || templates.length > 1;
                                 const depth = merge ? 1 : 0;
                                 renderTemplates[openData.index] = <NodeIncludeTemplate<T>> {
-                                    type: $e.NODE_TEMPLATE.INCLUDE,
+                                    type: NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
                                     content: controller.renderNodeStatic('include', { layout: '@layout/' + openData.name }, '', ''),
                                     indent: true

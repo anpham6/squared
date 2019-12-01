@@ -3,10 +3,9 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const {
-    css: $css,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { isLength } = $lib.css;
+const { convertFloat } = $lib.util;
 
 export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
     public is() {
@@ -20,7 +19,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
         let sameValue = 0;
         for (const item of node) {
             if (item.inlineVertical) {
-                const value = $util.convertFloat(item.verticalAlign);
+                const value = convertFloat(item.verticalAlign);
                 if (value !== 0) {
                     valid = true;
                 }
@@ -87,7 +86,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                                             valid = true;
                                             break;
                                         default:
-                                            if ($css.isLength(verticalAlign) || baseline === undefined) {
+                                            if (isLength(verticalAlign) || baseline === undefined) {
                                                 valid = true;
                                             }
                                             break;

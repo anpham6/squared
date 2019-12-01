@@ -1,13 +1,12 @@
 import { SvgMatrix, SvgPoint, SvgTransform } from '../../../@types/svg/object';
 
-const {
-    css: $css,
-    dom: $dom,
-    math: $math,
-    regex: $regex,
-    session: $session,
-    util: $util,
-} = squared.lib;
+const $lib = squared.lib;
+const { convertAngle, getFontSize, getStyle, isLength, isPercent, parseUnit } = $lib.css;
+const { getNamedItem } = $lib.dom;
+const { convertRadian } = $lib.math;
+const { CSS, STRING } = $lib.regex;
+const { getElementCache } = $lib.session;
+const { convertCamelCase } = $lib.util;
 
 const SHAPES = {
     path: 1,
@@ -18,13 +17,13 @@ const SHAPES = {
     polyline: 6,
     polygon: 7
 };
-const STRING_DECIMAL = `(${$regex.STRING.DECIMAL})`;
+const STRING_DECIMAL = `(${STRING.DECIMAL})`;
 const REGEXP_TRANSFORM = {
     MATRIX: new RegExp(`(matrix(?:3d)?)\\(${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?\\)`, 'g'),
-    ROTATE: new RegExp(`(rotate[XY]?)\\(${$regex.STRING.CSS_ANGLE}\\)`, 'g'),
-    SKEW: new RegExp(`(skew[XY]?)\\(${$regex.STRING.CSS_ANGLE}(?:, ${$regex.STRING.CSS_ANGLE})?\\)`, 'g'),
+    ROTATE: new RegExp(`(rotate[XY]?)\\(${STRING.CSS_ANGLE}\\)`, 'g'),
+    SKEW: new RegExp(`(skew[XY]?)\\(${STRING.CSS_ANGLE}(?:, ${STRING.CSS_ANGLE})?\\)`, 'g'),
     SCALE: new RegExp(`(scale[XY]?)\\(${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?\\)`, 'g'),
-    TRANSLATE: new RegExp(`(translate[XY]?)\\(${$regex.STRING.LENGTH_PERCENTAGE}(?:, ${$regex.STRING.LENGTH_PERCENTAGE})?\\)`, 'g')
+    TRANSLATE: new RegExp(`(translate[XY]?)\\(${STRING.LENGTH_PERCENTAGE}(?:, ${STRING.LENGTH_PERCENTAGE})?\\)`, 'g')
 };
 let REGEXP_ROTATEORIGIN: RegExp | undefined;
 
@@ -46,7 +45,7 @@ export const MATRIX = {
         };
     },
     rotate(angle: number): SvgMatrix {
-        const r = $math.convertRadian(angle);
+        const r = convertRadian(angle);
         const a = Math.cos(r);
         const b = Math.sin(r);
         return {
@@ -61,8 +60,8 @@ export const MATRIX = {
     skew(x = 0, y = 0): SvgMatrix {
         return {
             a: 1,
-            b: Math.tan($math.convertRadian(y)),
-            c: Math.tan($math.convertRadian(x)),
+            b: Math.tan(convertRadian(y)),
+            c: Math.tan(convertRadian(x)),
             d: 1,
             e: 0,
             f: 0
@@ -110,7 +109,7 @@ export const TRANSFORM = {
                     const isX = match[1].endsWith('X');
                     const isY = match[1].endsWith('Y');
                     if (match[1].startsWith('rotate')) {
-                        const angle = $css.convertAngle(match[2], match[3]);
+                        const angle = convertAngle(match[2], match[3]);
                         const matrix = MATRIX.rotate(angle);
                         if (isX) {
                             matrix.a = 1;
@@ -125,8 +124,8 @@ export const TRANSFORM = {
                         ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
                     }
                     else if (match[1].startsWith('skew')) {
-                        const x = isY ? 0 : $css.convertAngle(match[2], match[3]);
-                        const y = isY ? $css.convertAngle(match[2], match[3]) : (match[4] && match[5] ? $css.convertAngle(match[4], match[5]) : 0);
+                        const x = isY ? 0 : convertAngle(match[2], match[3]);
+                        const y = isY ? convertAngle(match[2], match[3]) : (match[4] && match[5] ? convertAngle(match[4], match[5]) : 0);
                         const matrix = MATRIX.skew(x, y);
                         if (isX) {
                             ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false);
@@ -148,9 +147,9 @@ export const TRANSFORM = {
                         ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, matrix, 0, !isY, !isX);
                     }
                     else if (match[1].startsWith('translate')) {
-                        const fontSize = $css.getFontSize(element);
-                        const arg1 = $css.parseUnit(match[2], fontSize);
-                        const arg2 = (!isX && match[3] ? $css.parseUnit(match[3], fontSize) : 0);
+                        const fontSize = getFontSize(element);
+                        const arg1 = parseUnit(match[2], fontSize);
+                        const arg2 = (!isX && match[3] ? parseUnit(match[3], fontSize) : 0);
                         const x = isY ? 0 : arg1;
                         const y = isY ? arg1 : arg2;
                         const matrix = MATRIX.translate(x, y);
@@ -175,7 +174,7 @@ export const TRANSFORM = {
     },
     matrix(element: SVGElement, value?: string): SvgMatrix | undefined {
         REGEXP_TRANSFORM.MATRIX.lastIndex = 0;
-        const match = REGEXP_TRANSFORM.MATRIX.exec(value || $css.getStyle(element).transform || '');
+        const match = REGEXP_TRANSFORM.MATRIX.exec(value || getStyle(element).transform || '');
         if (match) {
             switch (match[1]) {
                 case 'matrix':
@@ -208,10 +207,10 @@ export const TRANSFORM = {
         if (value !== '') {
             const viewBox = getNearestViewBox(element);
             function setPosition(attr: string, position: string, dimension: number) {
-                if ($css.isLength(position)) {
-                    result[attr] = $css.parseUnit(position, $css.getFontSize(element));
+                if (isLength(position)) {
+                    result[attr] = parseUnit(position, getFontSize(element));
                 }
-                else if ($css.isPercent(position)) {
+                else if (isPercent(position)) {
                     result[attr] = (parseFloat(position) / 100) * dimension;
                 }
             }
@@ -271,7 +270,7 @@ export const TRANSFORM = {
         return result;
     },
     rotateOrigin(element: SVGElement, attr = 'transform'): SvgPoint[] {
-        const value = $dom.getNamedItem(element, attr);
+        const value = getNamedItem(element, attr);
         const result: SvgPoint[] = [];
         if (value !== '') {
             if (REGEXP_ROTATEORIGIN) {
@@ -394,14 +393,14 @@ export function getDOMRect(element: SVGElement) {
 }
 
 export function getAttribute(element: SVGElement, attr: string, computed = true) {
-    let value = $dom.getNamedItem(element, attr);
+    let value = getNamedItem(element, attr);
     if (value === '') {
-        const styleMap: StringMap = $session.getElementCache(element, 'styleMap');
+        const styleMap: StringMap = getElementCache(element, 'styleMap');
         if (styleMap) {
-            value = styleMap[$util.convertCamelCase(attr)] || '';
+            value = styleMap[convertCamelCase(attr)] || '';
         }
         if (value === '' && (computed || Array.from(element.style).includes(attr))) {
-            value = $css.getStyle(element).getPropertyValue(attr);
+            value = getStyle(element).getPropertyValue(attr);
         }
     }
     return value.trim();
@@ -421,12 +420,12 @@ export function getParentAttribute(element: SVGElement, attr: string, computed =
 }
 
 export function getAttributeURL(value: string) {
-    const match = $regex.CSS.URL.exec(value);
+    const match = CSS.URL.exec(value);
     return match ? match[1] : '';
 }
 
 export function getTargetElement(element: SVGElement, rootElement?: SVGElement) {
-    const value = $dom.getNamedItem(element, 'href');
+    const value = getNamedItem(element, 'href');
     if (value.charAt(0) === '#') {
         const id = value.substring(1);
         let parent: SVGElement | HTMLElement | null;

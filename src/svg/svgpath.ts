@@ -11,6 +11,11 @@ import SvgElement from './svgelement';
 import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { SVG, TRANSFORM, getPathLength } from './lib/util';
 
+const $lib = squared.lib;
+const { getNamedItem } = $lib.dom;
+const { isEqual, lessEqual, nextMultiple, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = $lib.math;
+const { cloneArray, convertInt, convertFloat } = $lib.util;
+
 type SvgContainer = squared.svg.SvgContainer;
 type SvgShape = squared.svg.SvgShape;
 type SvgShapePattern = squared.svg.SvgShapePattern;
@@ -20,12 +25,6 @@ interface DashGroup {
     delay: number;
     duration: number;
 }
-
-const {
-    dom: $dom,
-    math: $math,
-    util: $util
-} = squared.lib;
 
 function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?: number) {
     const commandA = path[0];
@@ -125,7 +124,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
                 const value = parseFloat(values[i]);
                 if (!isNaN(value)) {
-                    const path = i < length - 1 ? <SvgPathCommand[]> $util.cloneArray(commands, [], true) : commands;
+                    const path = i < length - 1 ? <SvgPathCommand[]> cloneArray(commands, [], true) : commands;
                     switch (attr) {
                         case 'x':
                         case 'x1':
@@ -255,7 +254,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 this.transformed = transforms;
                             }
                         }
-                        this.baseValue = SvgBuild.drawPath(SvgBuild.syncPathPoints(requireRefit ? $util.cloneArray(commands, [], true) : commands, requireRefit ? $util.cloneArray(points, [], true) : points, this.transformed !== undefined), precision);
+                        this.baseValue = SvgBuild.drawPath(SvgBuild.syncPathPoints(requireRefit ? cloneArray(commands, [], true) : commands, requireRefit ? cloneArray(points, [], true) : points, this.transformed !== undefined), precision);
                         if (requireRefit) {
                             parent.refitPoints(points);
                             d = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, this.transformed !== undefined), precision);
@@ -459,9 +458,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         modified = true;
                                     }
                                     else {
-                                        const angle = $math.relativeAngle(afterStartPoint, pathStartPoint);
-                                        coordinates[0] -= $math.offsetAngleX(angle, leading);
-                                        coordinates[1] -= $math.offsetAngleY(angle, leading);
+                                        const angle = relativeAngle(afterStartPoint, pathStartPoint);
+                                        coordinates[0] -= offsetAngleX(angle, leading);
+                                        coordinates[1] -= offsetAngleY(angle, leading);
                                         modified = true;
                                     }
                                 }
@@ -497,9 +496,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 modified = true;
                                             }
                                             else {
-                                                const angle = $math.relativeAngle(beforeEndPoint, pathEndPoint);
-                                                coordinates[0] += $math.offsetAngleX(angle, trailing);
-                                                coordinates[1] += $math.offsetAngleY(angle, trailing);
+                                                const angle = relativeAngle(beforeEndPoint, pathEndPoint);
+                                                coordinates[0] += offsetAngleX(angle, trailing);
+                                                coordinates[1] += offsetAngleY(angle, trailing);
                                                 modified = true;
                                             }
                                         }
@@ -548,7 +547,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         else {
             arrayLength = valueArray.length;
             dashArray = valueArray.slice(0);
-            const dashLength = $math.nextMultiple([2, arrayLength]);
+            const dashLength = nextMultiple([2, arrayLength]);
             dashArrayTotal = 0;
             for (let i = 0; i < dashLength; i++) {
                 const value = valueArray[i % arrayLength];
@@ -601,8 +600,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 startOffset = i - valueOffset;
                 actualLength = length;
             }
-            const start = $math.truncateFraction(startOffset / extendedLength);
-            end = $math.truncateFraction(start + (actualLength / extendedLength));
+            const start = truncateFraction(startOffset / extendedLength);
+            end = truncateFraction(start + (actualLength / extendedLength));
             if (j % 2 === 0) {
                 if (start < 1) {
                     data.items.push({
@@ -620,7 +619,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 break;
             }
         }
-        data.trailing = $math.truncateFraction((end - 1) * extendedLength);
+        data.trailing = truncateFraction((end - 1) * extendedLength);
         while (dashTotal % dashArrayTotal !== 0) {
             const value = getDash(++j);
             data.trailing += value;
@@ -630,7 +629,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             data.items.push({ start: 1, end: 1 });
         }
         else {
-            data.leadingOffset = $math.truncateFraction(data.items[0].start * extendedLength);
+            data.leadingOffset = truncateFraction(data.items[0].start * extendedLength);
             data.leading *= data.lengthRatio;
             data.trailing *= data.lengthRatio;
         }
@@ -638,7 +637,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public extractStrokeDash(animations?: SvgAnimation[], precision?: number): [SvgAnimation[] | undefined, SvgStrokeDash[] | undefined, string, string] {
-        const strokeWidth = $util.convertInt(this.strokeWidth);
+        const strokeWidth = convertInt(this.strokeWidth);
         let result: SvgStrokeDash[] | undefined;
         let path = '';
         let clipPath = '';
@@ -648,7 +647,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 const totalLength = this.totalLength;
                 const pathLength =  this.pathLength || totalLength;
                 const dashGroup: DashGroup[] = [];
-                let valueOffset = $util.convertInt(this.strokeDashoffset);
+                let valueOffset = convertInt(this.strokeDashoffset);
                 let dashTotal = 0;
                 let flattenData!: SvgPathExtendData;
                 const createDashGroup = (values: number[], offset: number, delay: number, duration = 0) => {
@@ -731,7 +730,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     setDashGroup(valueArray, getDashOffset(item.delay));
                                     continue;
                                 case 'stroke-dashoffset':
-                                    valueOffset = $util.convertInt(item.to);
+                                    valueOffset = convertInt(item.to);
                                     setDashGroup(getDashArray(item.delay), valueOffset);
                                     continue;
                             }
@@ -809,7 +808,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         this.extendLength(flattenData, precision);
                                         if (flattenData.path) {
                                             const boxRect = SvgBuild.getBoxRect([this.value]);
-                                            extendedLength = $math.truncateFraction(getPathLength(flattenData.path));
+                                            extendedLength = truncateFraction(getPathLength(flattenData.path));
                                             extendedRatio = extendedLength / totalLength;
                                             flattenData.extendedLength = this.pathLength;
                                             if (flattenData.extendedLength > 0) {
@@ -829,7 +828,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     }
                                     let replaceValue: string | undefined;
                                     if (item.fillReplace && item.iterationCount !== -1) {
-                                        const offsetForward = $util.convertFloat(intervalMap.get(item.attributeName, item.getTotalDuration()) as string);
+                                        const offsetForward = convertFloat(intervalMap.get(item.attributeName, item.getTotalDuration()) as string);
                                         if (offsetForward !== valueOffset) {
                                             let offsetReplace = (Math.abs(offsetForward - valueOffset) % extendedLength) / extendedLength;
                                             if (offsetForward > valueOffset) {
@@ -868,7 +867,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         function setFinalValue(offset: number, checkInvert = false) {
                                             finalValue = (offsetRemaining - offset) / extendedLength;
                                             if (checkInvert) {
-                                                const value = $math.truncateFraction(finalValue);
+                                                const value = truncateFraction(finalValue);
                                                 if (increasing) {
                                                     if (value > 0) {
                                                         finalValue = 1 - finalValue;
@@ -894,14 +893,14 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         }
                                         function insertFractionKeyTime() {
                                             if (!isDuplicateFraction()) {
-                                                keyTimes.push(keyTime === 0 ? 0 : $math.truncateFraction(keyTime));
+                                                keyTimes.push(keyTime === 0 ? 0 : truncateFraction(keyTime));
                                                 values.push(increasing ? '1' : '0');
                                             }
                                         }
                                         function insertFinalKeyTime() {
                                             keyTime = keyTimeTo;
                                             keyTimes.push(keyTime);
-                                            const value = $math.truncateFraction(finalValue);
+                                            const value = truncateFraction(finalValue);
                                             values.push(value.toString());
                                             previousRemaining = value > 0 && value < 1 ? finalValue : 0;
                                         }
@@ -919,8 +918,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         else {
                                             if (previousRemaining > 0) {
                                                 const remaining = increasing ? previousRemaining : 1 - previousRemaining;
-                                                const remainingValue = $math.truncateFraction(remaining * extendedLength);
-                                                if ($math.lessEqual(offsetRemaining, remainingValue)) {
+                                                const remainingValue = truncateFraction(remaining * extendedLength);
+                                                if (lessEqual(offsetRemaining, remainingValue)) {
                                                     setFinalValue(0);
                                                     if (increasing) {
                                                         finalValue = previousRemaining - finalValue;
@@ -934,12 +933,12 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 else {
                                                     values.push(increasing ? '0' : '1');
                                                     keyTime += getKeyTimeIncrement(remainingValue);
-                                                    keyTimes.push($math.truncateFraction(keyTime));
-                                                    iterationTotal = $math.truncateFraction(iterationTotal - remaining);
-                                                    offsetRemaining = $math.truncateFraction(offsetRemaining - remainingValue);
+                                                    keyTimes.push(truncateFraction(keyTime));
+                                                    iterationTotal = truncateFraction(iterationTotal - remaining);
+                                                    offsetRemaining = truncateFraction(offsetRemaining - remainingValue);
                                                 }
                                             }
-                                            if ($math.isEqual(offsetRemaining, extendedLength)) {
+                                            if (isEqual(offsetRemaining, extendedLength)) {
                                                 offsetRemaining = extendedLength;
                                             }
                                             if (offsetRemaining > extendedLength) {
@@ -958,7 +957,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 insertFractionKeyTime();
                                                 values.push(increasing ? '0' : '1');
                                                 keyTime += getKeyTimeIncrement(extendedLength);
-                                                keyTimes.push($math.truncateFraction(keyTime));
+                                                keyTimes.push(truncateFraction(keyTime));
                                                 iterationTotal--;
                                             }
                                             insertFractionKeyTime();
@@ -1055,7 +1054,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     get pathLength() {
-        return $util.convertFloat($dom.getNamedItem(this.element, 'pathLength'));
+        return convertFloat(getNamedItem(this.element, 'pathLength'));
     }
 
     get totalLength() {

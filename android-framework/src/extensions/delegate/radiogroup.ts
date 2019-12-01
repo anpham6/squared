@@ -5,8 +5,10 @@ import View from '../../view';
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-const $NodeUI = squared.base.NodeUI;
-const $e = squared.base.lib.enumeration;
+const $base = squared.base;
+const { NodeUI } = $base;
+
+const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
 
 const getInputName = (element: HTMLInputElement) => element.name ? element.name.trim() : '';
 
@@ -56,13 +58,13 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         if (children.length > 1) {
             const container = this.controller.createNodeGroup(node, children, parent, true);
             const controlName = CONTAINER_ANDROID.RADIOGROUP;
-            const linearX = $NodeUI.linearData(children).linearX;
+            const linearX = NodeUI.linearData(children).linearX;
             if (linearX) {
-                container.addAlign($e.NODE_ALIGNMENT.HORIZONTAL | $e.NODE_ALIGNMENT.SEGMENTED);
+                container.addAlign(NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.SEGMENTED);
                 container.android('orientation', STRING_ANDROID.HORIZONTAL);
             }
             else {
-                container.addAlign($e.NODE_ALIGNMENT.VERTICAL);
+                container.addAlign(NODE_ALIGNMENT.VERTICAL);
                 container.android('orientation', STRING_ANDROID.VERTICAL);
             }
             container.setControlType(controlName, CONTAINER_NODE.LINEAR);
@@ -71,7 +73,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 container.css('verticalAlign', 'middle');
                 container.baseline = false;
             }
-            container.exclude($e.NODE_RESOURCE.ASSET);
+            container.exclude(NODE_RESOURCE.ASSET);
             const dataset = node.dataset;
             container.render(!dataset.use && dataset.target ? this.application.resolveTarget(dataset.target) : parent);
             for (const item of removeable) {
@@ -81,7 +83,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             return {
                 renderAs: container,
                 outputAs: <NodeXmlTemplate<T>> {
-                    type: $e.NODE_TEMPLATE.XML,
+                    type: NODE_TEMPLATE.XML,
                     node: container,
                     controlName
                 },

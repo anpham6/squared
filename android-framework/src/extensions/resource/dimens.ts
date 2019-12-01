@@ -3,10 +3,9 @@ import { ResourceStoredMapAndroid } from '../../../../@types/android/application
 import Resource from '../../resource';
 import View from '../../view';
 
-const {
-    regex: $regex,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { XML } = $lib.regex;
+const { convertUnderscore, fromLastIndexOf } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const NAMESPACE_ATTR = ['android', 'app'];
@@ -22,7 +21,7 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
     return map.has(name) && map.get(name) !== value ? Resource.generateId('dimen', name) : name;
 }
 
-const getDisplayName = (value: string) => $util.fromLastIndexOf(value, '.');
+const getDisplayName = (value: string) => fromLastIndexOf(value, '.');
 
 export default class ResourceDimens<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
@@ -56,8 +55,8 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
         for (const containerName in groups) {
             const group = groups[containerName];
             for (const name in group) {
-                const [namespace, attr, value] = name.split($regex.XML.SEPARATOR);
-                const key = getResourceName(dimens, getDisplayName(containerName) + '_' + $util.convertUnderscore(attr), value);
+                const [namespace, attr, value] = name.split(XML.SEPARATOR);
+                const key = getResourceName(dimens, getDisplayName(containerName) + '_' + convertUnderscore(attr), value);
                 const data = group[name];
                 for (const node of data) {
                     node[namespace](attr, '@dimen/' + key);
@@ -76,7 +75,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 while ((match = REGEXP_UNIT_ATTR.exec(content)) !== null) {
                     if (match[1] !== 'text') {
                         const value = match[2];
-                        const key = getResourceName(dimens, 'custom_' + $util.convertUnderscore(match[1]), value);
+                        const key = getResourceName(dimens, 'custom_' + convertUnderscore(match[1]), value);
                         dimens.set(key, value);
                         content = content.replace(match[0], match[0].replace(match[2], '@dimen/' + key));
                     }

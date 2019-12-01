@@ -1,6 +1,6 @@
 import { FileAsset, RawAsset, UserSettings } from '../../@types/base/application';
 
-const $util = squared.lib.util;
+const { fromLastIndexOf, trimString } = squared.lib.util;
 
 export interface ExpressResult {
     success: boolean;
@@ -206,7 +206,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                 fetch(
                     '/api/assets/copy' +
                     '?to=' + encodeURIComponent(directory.trim()) +
-                    '&directory=' + encodeURIComponent($util.trimString(settings.outputDirectory, '/')) +
+                    '&directory=' + encodeURIComponent(trimString(settings.outputDirectory, '/')) +
                     '&timeout=' + settings.outputArchiveTimeout, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
@@ -244,7 +244,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                 fetch(
                     '/api/assets/archive' +
                     '?filename=' + encodeURIComponent(filename.trim()) +
-                    '&directory=' + encodeURIComponent($util.trimString(settings.outputDirectory, '/')) +
+                    '&directory=' + encodeURIComponent(trimString(settings.outputDirectory, '/')) +
                     '&format=' + settings.outputArchiveFormat +
                     (appendTo ? '&append_to=' + encodeURIComponent(appendTo.trim()) : '') +
                     '&timeout=' + settings.outputArchiveTimeout, {
@@ -260,7 +260,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         if (zipname) {
                             fetch('/api/browser/download?filename=' + encodeURIComponent(zipname))
                                 .then((response: Response) => response.blob())
-                                .then((blob: Blob) => File.downloadFile(blob, $util.fromLastIndexOf(zipname, '/')));
+                                .then((blob: Blob) => File.downloadFile(blob, fromLastIndexOf(zipname, '/')));
                         }
                         else if (result.system && this.userSettings.showErrorMessages) {
                             alert(result.application + '\n\n' + result.system);

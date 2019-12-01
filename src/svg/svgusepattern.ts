@@ -6,7 +6,7 @@ import SvgShapePattern from './svgshapepattern';
 
 import { INSTANCE_TYPE } from './lib/constant';
 
-const $util = squared.lib.util;
+const { filterArray } = squared.lib.util;
 
 export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgShapePattern)) implements squared.svg.SvgUsePattern {
     constructor(
@@ -26,7 +26,7 @@ export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgS
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {
-        const animations = $util.filterArray(this.animations, item => this.verifyBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y');
+        const animations = filterArray(this.animations, item => this.verifyBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y');
         const transforms = this.getAnimateTransform(options);
         if (animations.length || transforms.length) {
             this.animateSequentially(this.getAnimateViewRect(animations), transforms, undefined, options);

@@ -15,15 +15,14 @@ import STRING_TMPL from './template/resources/string';
 import STRINGARRAY_TMPL from './template/resources/string-array';
 import STYLE_TMPL from './template/resources/style';
 
+const $lib = squared.lib;
+const { fromLastIndexOf, objectMap } = $lib.util;
+const { applyTemplate, replaceTab } = $lib.xml;
+
 type ItemValue = {
     name: string;
     innerText: string;
 };
-
-const {
-    util: $util,
-    xml: $xml
-} = squared.lib;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const REGEXP_FILENAME = /^(.+)\/(.+?\.\w+)$/;
@@ -122,8 +121,8 @@ export default class File<T extends android.base.View> extends squared.base.File
             data[0].string.push(<ItemValue> { name, innerText });
         }
         result.push(
-            $xml.replaceTab(
-                $xml.applyTemplate('resources', STRING_TMPL, data),
+            replaceTab(
+                applyTemplate('resources', STRING_TMPL, data),
                 this.userSettings.insertSpaces,
                 true
             ),
@@ -141,12 +140,12 @@ export default class File<T extends android.base.View> extends squared.base.File
             for (const [name, values] of Array.from(STORED.arrays.entries()).sort()) {
                 data[0]['string-array'].push({
                     name,
-                    item: $util.objectMap<string, {}>(values, innerText => ({ innerText }))
+                    item: objectMap<string, {}>(values, innerText => ({ innerText }))
                 });
             }
             result.push(
-                $xml.replaceTab(
-                    $xml.applyTemplate('resources', STRINGARRAY_TMPL, data),
+                replaceTab(
+                    applyTemplate('resources', STRINGARRAY_TMPL, data),
                     this.userSettings.insertSpaces,
                     true
                 ),
@@ -190,13 +189,13 @@ export default class File<T extends android.base.View> extends squared.base.File
                     if (src?.srcUrl) {
                         this.addAsset({
                             pathname,
-                            filename: fontName + '.' + $util.fromLastIndexOf(src.srcUrl, '.').toLowerCase(),
+                            filename: fontName + '.' + fromLastIndexOf(src.srcUrl, '.').toLowerCase(),
                             uri: src.srcUrl
                         });
                     }
                 }
-                let output = $xml.replaceTab(
-                    $xml.applyTemplate('font-family', FONTFAMILY_TMPL, data),
+                let output = replaceTab(
+                    applyTemplate('font-family', FONTFAMILY_TMPL, data),
                     insertSpaces
                 );
                 if (targetAPI < BUILD_ANDROID.OREO) {
@@ -217,8 +216,8 @@ export default class File<T extends android.base.View> extends squared.base.File
                 data[0].color.push(<ItemValue> { name, innerText });
             }
             result.push(
-                $xml.replaceTab(
-                    $xml.applyTemplate('resources', COLOR_TMPL, data),
+                replaceTab(
+                    applyTemplate('resources', COLOR_TMPL, data),
                     this.userSettings.insertSpaces
                 ),
                 this.directory.string,
@@ -247,8 +246,8 @@ export default class File<T extends android.base.View> extends squared.base.File
                 }
             }
             result.push(
-                $xml.replaceTab(
-                    $xml.applyTemplate('resources', STYLE_TMPL, data),
+                replaceTab(
+                    applyTemplate('resources', STYLE_TMPL, data),
                     this.userSettings.insertSpaces
                 ),
                 this.directory.string,
@@ -280,9 +279,9 @@ export default class File<T extends android.base.View> extends squared.base.File
                 const match = REGEXP_FILENAME.exec(filename);
                 if (match) {
                     result.push(
-                        $xml.replaceTab(
+                        replaceTab(
                             replaceThemeLength(
-                                $xml.applyTemplate('resources', STYLE_TMPL, data),
+                                applyTemplate('resources', STYLE_TMPL, data),
                                 resolutionDPI,
                                 convertPixels
                             ),
@@ -307,7 +306,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                 data[0].dimen.push({ name, innerText: convertPixels ? convertLength(value, resolutionDPI, false) : value });
             }
             result.push(
-                $xml.replaceTab($xml.applyTemplate('resources', DIMEN_TMPL, data)),
+                replaceTab(applyTemplate('resources', DIMEN_TMPL, data)),
                 this.directory.string,
                 'dimens.xml'
             );
@@ -323,7 +322,7 @@ export default class File<T extends android.base.View> extends squared.base.File
             const directory = this.directory.image;
             for (const [name, value] of STORED.drawables.entries()) {
                 result.push(
-                    $xml.replaceTab(
+                    replaceTab(
                         replaceDrawableLength(
                             value,
                             resolutionDPI,
@@ -351,7 +350,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                         result.push(
                             value,
                             directory + '-' + dpi,
-                            name + '.' + $util.fromLastIndexOf(value, '.')
+                            name + '.' + fromLastIndexOf(value, '.')
                         );
                     }
                 }
@@ -361,7 +360,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                         result.push(
                             mdpi,
                             directory,
-                            name + '.' + $util.fromLastIndexOf(mdpi, '.')
+                            name + '.' + fromLastIndexOf(mdpi, '.')
                         );
                     }
                 }
@@ -385,7 +384,7 @@ export default class File<T extends android.base.View> extends squared.base.File
             const insertSpaces = this.userSettings.insertSpaces;
             for (const [name, value] of STORED.animators.entries()) {
                 result.push(
-                    $xml.replaceTab(value, insertSpaces),
+                    replaceTab(value, insertSpaces),
                     'res/anim',
                     name + '.xml'
                 );

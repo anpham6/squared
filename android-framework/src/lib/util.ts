@@ -6,10 +6,9 @@ import View from '../view';
 import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
-const {
-    math: $math,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { truncate } = $lib.math;
+const { isPlainObject } = $lib.util;
 
 const REGEXP_ID = /^@\+?id\//;
 
@@ -30,7 +29,7 @@ export function convertLength(value: string, dpi = 160, font = false, precision 
     if (!isNaN(result)) {
         if (dpi !== 160) {
             result /= dpi / 160;
-            return (result !== 0 && result > -1 && result < 1 ? result.toPrecision(precision)  : $math.truncate(result, precision - 1)) + (font ? 'sp' : 'dp');
+            return (result !== 0 && result > -1 && result < 1 ? result.toPrecision(precision) : truncate(result, precision - 1)) + (font ? 'sp' : 'dp');
         }
         else {
             return Math.round(result) + (font ? 'sp' : 'dp');
@@ -75,7 +74,7 @@ export function createStyleAttribute(options?: ExternalData) {
         parent: '',
         items: {}
     };
-    if ($util.isPlainObject(options)) {
+    if (isPlainObject(options)) {
         for (const attr in result) {
             if (typeof options[attr] === typeof result[attr]) {
                 result[attr] = options[attr];

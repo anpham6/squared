@@ -10,7 +10,7 @@ type SvgGroup = squared.svg.SvgGroup;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
-const $util = squared.lib.util;
+const { cloneObject } = squared.lib.util;
 
 function getNearestViewBox(instance: SvgContainer | undefined) {
     while (instance) {
@@ -226,7 +226,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             const aspectRatio = group.aspectRatio;
             const parentAspectRatio = parent.aspectRatio;
             if (viewBox) {
-                $util.cloneObject(viewBox, aspectRatio);
+                cloneObject(viewBox, aspectRatio);
                 const { width, height } = aspectRatio;
                 if (width > 0 && height > 0) {
                     const ratio = width / height;

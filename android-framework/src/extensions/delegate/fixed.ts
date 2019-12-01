@@ -7,14 +7,9 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const {
-    util: $util
-} = squared.lib;
+const { aboveRange, belowRange } = squared.lib.util;
 
-const {
-    constant: $c,
-    enumeration: $e
-} = squared.base.lib;
+const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 export interface FixedData {
     children: View[];
@@ -53,11 +48,11 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     }
                 }
                 else if (!item.rightAligned) {
-                    if (item.marginLeft < 0 && (node.documentRoot || $util.belowRange(item.linear.left, node.bounds.left))) {
+                    if (item.marginLeft < 0 && (node.documentRoot || belowRange(item.linear.left, node.bounds.left))) {
                         children.add(item);
                     }
                 }
-                else if (item.marginRight < 0 && (node.documentRoot || $util.aboveRange(item.linear.right, node.bounds.right))) {
+                else if (item.marginRight < 0 && (node.documentRoot || aboveRange(item.linear.right, node.bounds.right))) {
                     children.add(item);
                 }
                 if (item.hasPX('top')) {
@@ -75,7 +70,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 }
             }
             if (children.size) {
-                node.data(EXT_ANDROID.DELEGATE_FIXED, $c.STRING_BASE.EXT_DATA, <FixedData> { children: Array.from(children), right, bottom });
+                node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData', <FixedData> { children: Array.from(children), right, bottom });
                 return true;
             }
         }
@@ -83,7 +78,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public processNode(node: T, parent: T) {
-        const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, $c.STRING_BASE.EXT_DATA);
+        const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData');
         if (mainData) {
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[]);
             if (node.documentBody) {
@@ -106,28 +101,28 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 }
             }
             else if (!node.pageFlow) {
-                node.resetBox($e.BOX_STANDARD.MARGIN, container);
+                node.resetBox(BOX_STANDARD.MARGIN, container);
             }
             for (const item of mainData.children) {
                 const autoMargin = item.autoMargin;
                 let top = false;
                 let left = false;
                 if (item.hasPX('top')) {
-                    item.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
+                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                     top = true;
                 }
                 if (item.hasPX('bottom') && (!top || autoMargin.top || autoMargin.topBottom)) {
-                    item.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
+                    item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
                 }
                 if (item.hasPX('left')) {
-                    item.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
+                    item.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
                     left = true;
                 }
                 if (item.hasPX('right') && (!left || autoMargin.left || autoMargin.leftRight)) {
-                    item.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
+                    item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
                 }
             }
-            const maxWidthHeight: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, $c.STRING_BASE.EXT_DATA);
+            const maxWidthHeight: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
             if (maxWidthHeight) {
                 const wrapped = maxWidthHeight.container;
                 if (wrapped) {
@@ -154,7 +149,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                         parent,
                         container,
                         CONTAINER_NODE.CONSTRAINT,
-                        $e.NODE_ALIGNMENT.ABSOLUTE,
+                        NODE_ALIGNMENT.ABSOLUTE,
                         container.children as T[]
                     )
                 )

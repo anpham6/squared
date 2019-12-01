@@ -1,10 +1,8 @@
 export interface InitialData<T> {
     iteration: number;
-    styleMap: StringMap;
-    children: T[];
     bounds?: BoxRectDimension;
-    linear?: BoxRectDimension;
-    box?: BoxRectDimension;
+    styleMap?: StringMap;
+    children?: T[];
 }
 
 export interface CachedValue<T> {

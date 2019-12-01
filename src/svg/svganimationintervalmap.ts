@@ -5,12 +5,12 @@ import SvgBuild from './svgbuild';
 import { FILL_MODE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
+const { filterArray, sortNumber } = squared.lib.util;
+
 type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgAnimationIntervalValue = squared.svg.SvgAnimationIntervalValue;
 type SvgAnimationIntervalAttributeMap = squared.svg.SvgAnimationIntervalAttributeMap;
-
-const $util = squared.lib.util;
 
 function getAttributeName(value: string) {
     if (value.indexOf(':') !== -1) {
@@ -31,7 +31,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     public map: SvgAnimationIntervalAttributeMap;
 
     constructor(animations: SvgAnimation[], ...attrs: string[]) {
-        animations = (attrs.length ? $util.filterArray(animations, item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => {
+        animations = (attrs.length ? filterArray(animations, item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => {
             if (a.delay === b.delay) {
                 return a.group.id < b.group.id ? 1 : -1;
             }
@@ -99,7 +99,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             }
         }
         for (const keyName in intervalMap) {
-            for (const time of $util.sortNumber(Array.from(intervalTimes[keyName]))) {
+            for (const time of sortNumber(Array.from(intervalTimes[keyName]))) {
                 const values = intervalMap[keyName][time];
                 for (let i = 0; i < values.length; i++) {
                     const interval = values[i];

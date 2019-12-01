@@ -530,6 +530,7 @@ declare namespace base {
         readonly onlyChild: boolean;
         readonly support: Support;
         readonly documentId: string;
+        readonly outerExtensionElement: HTMLElement | null;
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(): void;
         setLayout(): void;
@@ -564,7 +565,7 @@ declare namespace base {
         render(parent?: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
         renderFilter(predicate: IteratorPredicate<NodeUI, boolean>): NodeUI[];
-        actualRect(direction: string, dimension?: string): number;
+        actualRect(direction: string, dimension?: string, all?: boolean): number;
         actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
         previousSiblings(options?: SiblingOptions): NodeUI[];
@@ -617,7 +618,6 @@ declare namespace base {
 
     namespace lib {
         namespace constant {
-            export import STRING_BASE = $const.STRING_BASE;
             export import CSS_SPACING = $const.CSS_SPACING;
             export import EXT_NAME = $const.EXT_NAME;
         }

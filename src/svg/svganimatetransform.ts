@@ -4,10 +4,9 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
-const {
-    dom: $dom,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { getNamedItem } = $lib.dom;
+const { replaceMap } = $lib.util;
 
 export default class SvgAnimateTransform extends SvgAnimate implements squared.svg.SvgAnimateTransform {
     public static toRotateList(values: string[]) {
@@ -106,7 +105,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateTransformElement) {
         super(element, animationElement);
         if (animationElement) {
-            const type = $dom.getNamedItem(animationElement, 'type');
+            const type = getNamedItem(animationElement, 'type');
             this.setType(type);
             this.setCalcMode(type);
         }
@@ -244,7 +243,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 return;
         }
         if (values) {
-            this.values = $util.replaceMap<number[], string>(values, array => array.join(' '));
+            this.values = replaceMap<number[], string>(values, array => array.join(' '));
         }
         this.baseValue = TRANSFORM.typeAsValue(this.type);
     }

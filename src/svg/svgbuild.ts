@@ -3,6 +3,13 @@ import { SvgOffsetPath, SvgPathCommand, SvgPoint, SvgTransform } from '../../@ty
 import { INSTANCE_TYPE } from './lib/constant';
 import { MATRIX, SVG, TRANSFORM, createPath } from './lib/util';
 
+const $lib = squared.lib;
+const { isAngle, parseAngle } = $lib.css;
+const { getNamedItem } = $lib.dom;
+const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = $lib.math;
+const { CHAR, STRING, XML } = $lib.regex;
+const { convertWord, hasBit, isString, replaceMap } = $lib.util;
+
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimateMotion = squared.svg.SvgAnimateMotion;
@@ -21,37 +28,29 @@ type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
-const {
-    css: $css,
-    dom: $dom,
-    math: $math,
-    regex: $regex,
-    util: $util
-} = squared.lib;
-
-const REGEXP_DECIMAL = new RegExp($regex.STRING.DECIMAL, 'g');
+const REGEXP_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
 const REGEXP_COMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
     public static isContainer(object: SvgElement): object is SvgGroup {
-        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_CONTAINER);
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_CONTAINER);
     }
 
     public static isElement(object: SvgElement): object is SvgElement {
-        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
     }
 
     public static isShape(object: SvgElement): object is SvgShape {
-        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_SHAPE);
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_SHAPE);
     }
 
     public static isAnimate(object: SvgAnimation): object is SvgAnimate {
-        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
     }
 
     public static isAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
-        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM);
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM);
     }
 
     public static asSvg(object: SvgElement): object is Svg {
@@ -106,8 +105,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (element) {
             let value = '';
             let tagName: string | undefined;
-            if ($util.isString(element.id)) {
-                const id = $util.convertWord(element.id, true);
+            if (isString(element.id)) {
+                const id = convertWord(element.id, true);
                 if (!NAME_GRAPHICS.has(id)) {
                     value = id;
                 }
@@ -134,20 +133,20 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0, precision?: number) {
         if (precision) {
-            x1 = $math.truncate(x1, precision) as any;
-            y1 = $math.truncate(y1, precision) as any;
-            x2 = $math.truncate(x2, precision) as any;
-            y2 = $math.truncate(y2, precision) as any;
+            x1 = truncate(x1, precision) as any;
+            y1 = truncate(y1, precision) as any;
+            x2 = truncate(x2, precision) as any;
+            y2 = truncate(y2, precision) as any;
         }
         return `M${x1},${y1} L${x2},${y2}`;
     }
 
     public static drawRect(width: number, height: number, x = 0, y = 0, precision?: number) {
         if (precision) {
-            width = $math.truncate(x + width, precision) as any;
-            height = $math.truncate(y + height, precision) as any;
-            x = $math.truncate(x, precision) as any;
-            y = $math.truncate(y, precision) as any;
+            width = truncate(x + width, precision) as any;
+            height = truncate(y + height, precision) as any;
+            x = truncate(x, precision) as any;
+            y = truncate(y, precision) as any;
         }
         else {
             width += x;
@@ -166,11 +165,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
         let radius = rx * 2;
         if (precision) {
-            cx = $math.truncate(cx - rx, precision) as any;
-            cy = $math.truncate(cy, precision) as any;
-            rx = $math.truncate(rx, precision) as any;
-            ry = $math.truncate(ry, precision) as any;
-            radius = $math.truncate(radius, precision) as any;
+            cx = truncate(cx - rx, precision) as any;
+            cy = truncate(cy, precision) as any;
+            rx = truncate(rx, precision) as any;
+            ry = truncate(ry, precision) as any;
+            radius = truncate(radius, precision) as any;
         }
         else {
             cx -= rx;
@@ -186,7 +185,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         let result = 'M';
         if (precision) {
             for (const value of values) {
-                result += ` ${$math.truncate(value.x, precision)},${$math.truncate(value.y, precision)}`;
+                result += ` ${truncate(value.x, precision)},${truncate(value.y, precision)}`;
             }
         }
         else {
@@ -221,13 +220,13 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     break;
             }
         }
-        return precision ? $math.truncateString(result, precision) : result;
+        return precision ? truncateString(result, precision) : result;
     }
 
     public static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number) {
         let value: string;
         if (SVG.path(element)) {
-            value = $dom.getNamedItem(element, 'd');
+            value = getNamedItem(element, 'd');
             if (parent?.requireRefit) {
                 const commands = SvgBuild.getPathCommands(value);
                 if (commands.length) {
@@ -320,8 +319,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             const rotatingPoints: boolean[] = [];
             let rotateFixed = 0;
             let rotateInitial = 0;
-            if ($css.isAngle(rotation)) {
-                rotateFixed = $css.parseAngle(rotation);
+            if (isAngle(rotation)) {
+                rotateFixed = parseAngle(rotation);
             }
             else {
                 const commands = SvgBuild.getPathCommands(value);
@@ -348,7 +347,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                 }
                 if (rotation !== 'auto 0deg') {
-                    rotateInitial = $css.parseAngle(rotation.split(' ').pop() as string);
+                    rotateInitial = parseAngle(rotation.split(' ').pop() as string);
                 }
             }
             let rotating = false;
@@ -373,7 +372,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                             }
                             else {
                                 center = undefined;
-                                rotateFixed = $math.truncateFraction($math.absoluteAngle(nextPoint, endPoint));
+                                rotateFixed = truncateFraction(absoluteAngle(nextPoint, endPoint));
                             }
                         }
                         else {
@@ -386,7 +385,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 }
                 let rotate: number;
                 if (rotating) {
-                    rotate = center ? $math.truncateFraction($math.relativeAngle(center, nextPoint)) : 0;
+                    rotate = center ? truncateFraction(relativeAngle(center, nextPoint)) : 0;
                     if (rotatePrevious > 0 && rotatePrevious % 360 === 0 && Math.floor(rotate) === 0) {
                         overflow = rotatePrevious;
                     }
@@ -760,11 +759,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
                         if (method.x) {
                             x1 -= origin.x;
-                            x2 = origin.x + $math.offsetAngleY(item.angle, origin.x);
+                            x2 = origin.x + offsetAngleY(item.angle, origin.x);
                         }
                         if (method.y) {
                             y1 -= origin.y;
-                            y2 = origin.y + $math.offsetAngleY(item.angle, origin.y);
+                            y2 = origin.y + offsetAngleY(item.angle, origin.y);
                         }
                         break;
                 }
@@ -862,8 +861,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static parsePoints(value: string) {
         const result: Point[] = [];
-        for (const coords of value.trim().split($regex.CHAR.SPACE)) {
-            const [x, y] = $util.replaceMap<string, number>(coords.split($regex.XML.SEPARATOR), pt => parseFloat(pt));
+        for (const coords of value.trim().split(CHAR.SPACE)) {
+            const [x, y] = replaceMap<string, number>(coords.split(XML.SEPARATOR), pt => parseFloat(pt));
             result.push({ x, y });
         }
         return result;

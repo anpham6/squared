@@ -2,19 +2,18 @@ import SvgBuild from './svgbuild';
 
 import { getAttribute, getAttributeURL } from './lib/util';
 
+const $lib = squared.lib;
+const { parseColor } = $lib.color;
+const { calculateVar, getFontSize, isCustomProperty, isLength, isPercent, parseUnit } = $lib.css;
+const { CSS, STRING, XML } = $lib.regex;
+const { convertCamelCase, convertFloat, isNumber, isString, joinMap, objectMap, replaceMap } = $lib.util;
+
 type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
-const {
-    color: $color,
-    css: $css,
-    regex: $regex,
-    util: $util
-} = squared.lib;
-
 const CACHE_PATTERN: ObjectMap<RegExp> = {
-    url: $regex.CSS.URL
+    url: CSS.URL
 };
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
@@ -57,7 +56,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const clipPath = this.getAttribute('clip-path', true, false);
             if (clipPath !== '' && clipPath !== 'none') {
                 if (CACHE_PATTERN.polygon === undefined) {
-                    const percentage = $regex.STRING.LENGTH_PERCENTAGE;
+                    const percentage = STRING.LENGTH_PERCENTAGE;
                     CACHE_PATTERN.polygon = /polygon\(([^)]+)\)/;
                     CACHE_PATTERN.inset = new RegExp(`inset\\(${percentage}\\s?${percentage}?\\s?${percentage}?\\s?${percentage}?\\)`);
                     CACHE_PATTERN.circle = new RegExp(`circle\\(${percentage}(?: at ${percentage} ${percentage})?\\)`);
@@ -111,8 +110,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     return;
                                 }
                                 case 'polygon': {
-                                    const points = $util.objectMap<string, Point>(match[1].split($regex.XML.SEPARATOR), values => {
-                                        let [x, y] = $util.replaceMap<string, number>(values.trim().split(' '), (value, index) => this.convertLength(value, index === 0 ? width : height));
+                                    const points = objectMap<string, Point>(match[1].split(XML.SEPARATOR), values => {
+                                        let [x, y] = replaceMap<string, number>(values.trim().split(' '), (value, index) => this.convertLength(value, index === 0 ? width : height));
                                         x += left;
                                         y += top;
                                         return { x, y };
@@ -162,16 +161,16 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         public setAttribute(attr: string, computed = true, inherited = true) {
             let value = this.getAttribute(attr, computed, inherited);
-            if ($util.isString(value)) {
-                if ($css.isCustomProperty(value)) {
-                    const result = $css.calculateVar(this.element, value, attr);
+            if (isString(value)) {
+                if (isCustomProperty(value)) {
+                    const result = calculateVar(this.element, value, attr);
                     if (result !== undefined) {
                         value = result.toString();
                     }
                 }
                 switch (attr) {
                     case 'stroke-dasharray':
-                        value = value !== 'none' ? $util.joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ', false) : '';
+                        value = value !== 'none' ? joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ', false) : '';
                         break;
                     case 'stroke-dashoffset':
                     case 'stroke-width':
@@ -192,10 +191,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     this[attr] = 'none';
                                     break;
                                 case 'currentcolor':
-                                    color = $color.parseColor(this.color || getAttribute(this.element, attr));
+                                    color = parseColor(this.color || getAttribute(this.element, attr));
                                     break;
                                 default:
-                                    color = $color.parseColor(value);
+                                    color = parseColor(value);
                                     break;
                             }
                             if (color) {
@@ -204,13 +203,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         }
                         return;
                 }
-                this[$util.convertCamelCase(attr)] = value;
+                this[convertCamelCase(attr)] = value;
             }
         }
 
         public getAttribute(attr: string, computed = true, inherited = true) {
             let value = getAttribute(this.element, attr, computed);
-            if (inherited && !$util.isString(value)) {
+            if (inherited && !isString(value)) {
                 if (this.patternParent) {
                     switch (attr) {
                         case 'fill-opacity':
@@ -223,7 +222,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 let current = this.useParent || this.parent;
                 while (current) {
                     value = getAttribute(current.element, attr, computed);
-                    if ($util.isString(value)) {
+                    if (isString(value)) {
                         break;
                     }
                     current = current.parent;
@@ -233,15 +232,15 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         }
 
         public convertLength(value: string, dimension?: string | number) {
-            if (!$util.isNumber(value)) {
-                if ($css.isLength(value)) {
-                    return $css.parseUnit(value, $css.getFontSize(this.element));
+            if (!isNumber(value)) {
+                if (isLength(value)) {
+                    return parseUnit(value, getFontSize(this.element));
                 }
-                else if ($css.isPercent(value)) {
-                    return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * $util.convertFloat(value) / 100);
+                else if (isPercent(value)) {
+                    return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * convertFloat(value) / 100);
                 }
             }
-            return $util.convertFloat(value);
+            return convertFloat(value);
         }
 
         public resetPaint() {

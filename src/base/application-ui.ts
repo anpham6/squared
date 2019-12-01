@@ -10,18 +10,14 @@ import ResourceUI from './resource-ui';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
-const {
-    css: $css,
-    dom: $dom,
-    regex: $regex,
-    session: $session,
-    util: $util,
-    xml: $xml
-} = squared.lib;
+const $lib = squared.lib;
+const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule, isLength, resolveURL } = $lib.css;
+const { getNamedItem, getRangeClientRect, isTextNode, removeElementsByClassName } = $lib.dom;
+const { aboveRange, captureMap, convertFloat, convertInt, convertWord, filterArray, fromLastIndexOf, hasBit, isString, partitionArray, spliceArray, trimString } = $lib.util;
+const { XML } = $lib.regex;
+const { getElementCache, setElementCache } = $lib.session;
+const { isPlainText } = $lib.xml;
 
-const getStyle = $css.getStyle;
-
-const CACHE_PATTERN: ObjectMap<RegExp> = {};
 let NodeConstructor!: Constructor<NodeUI>;
 
 function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
@@ -39,7 +35,7 @@ function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
 
 function prioritizeExtensions<T extends NodeUI>(element: HTMLElement, extensions: ExtensionUI<T>[]) {
     if (element.dataset.use) {
-        const included = element.dataset.use.split($regex.XML.SEPARATOR);
+        const included = element.dataset.use.split(XML.SEPARATOR);
         const result: ExtensionUI<T>[] = [];
         const untagged: ExtensionUI<T>[] = [];
         for (const ext of extensions) {
@@ -52,7 +48,7 @@ function prioritizeExtensions<T extends NodeUI>(element: HTMLElement, extensions
             }
         }
         if (result.length) {
-            return $util.spliceArray(result, item => item === undefined).concat(untagged);
+            return spliceArray(result, item => item === undefined).concat(untagged);
         }
     }
     return extensions;
@@ -150,7 +146,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         for (const ext of this.extensions) {
             ext.afterFinalize();
         }
-        $dom.removeElementsByClassName('__squared.pseudo');
+        removeElementsByClassName('__squared.pseudo');
         this.closed = true;
     }
 
@@ -182,7 +178,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public conditionElement(element: HTMLElement) {
         if (!this._excluded.has(element.tagName)) {
-            if (this.controllerHandler.visibleElement(element) || this._cascadeAll || element.dataset.use && element.dataset.use.split($regex.XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value))) {
+            if (this.controllerHandler.visibleElement(element) || this._cascadeAll || element.dataset.use && element.dataset.use.split(XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value))) {
                 return true;
             }
             else {
@@ -213,8 +209,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public insertNode(element: Element, parent?: T) {
-        if ($dom.isTextNode(element)) {
-            if ($xml.isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (<HTMLElement> parent.element).children.length === 0)) {
+        if (isTextNode(element)) {
+            if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (<HTMLElement> parent.element).children.length === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode(element, false);
                 if (parent) {
@@ -238,9 +234,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
-        if ($util.isString(content)) {
+        if (isString(content)) {
             const layout: FileAsset = {
-                pathname: pathname ? $util.trimString(pathname, '/') : this._localSettings.layout.pathName,
+                pathname: pathname ? trimString(pathname, '/') : this._localSettings.layout.pathName,
                 filename,
                 content,
                 index
@@ -260,11 +256,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public addLayout(layout: LayoutUI<T>) {
-        if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.FLOAT)) {
-            if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.HORIZONTAL)) {
+        if (hasBit(layout.renderType, NODE_ALIGNMENT.FLOAT)) {
+            if (hasBit(layout.renderType, NODE_ALIGNMENT.HORIZONTAL)) {
                 layout = this.processFloatHorizontal(layout);
             }
-            else if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.VERTICAL)) {
+            else if (hasBit(layout.renderType, NODE_ALIGNMENT.VERTICAL)) {
                 layout = this.processFloatVertical(layout);
             }
         }
@@ -362,7 +358,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (item.positionRelative) {
-                        for (const attr of $css.BOX_POSITION) {
+                        for (const attr of BOX_POSITION) {
                             if (item.hasPX(attr)) {
                                 saveAlignment(element, item.id, attr, 'auto', item.css(attr));
                                 resetBounds = true;
@@ -389,7 +385,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (!item.pseudoElement) {
                     item.setBounds(preAlignment[item.id] === undefined && !resetBounds);
                     if (node.styleText) {
-                        item.textBounds = $dom.getRangeClientRect(<Element> node.element);
+                        item.textBounds = getRangeClientRect(<Element> node.element);
                     }
                 }
                 else {
@@ -407,7 +403,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             id = '__squared_' + Math.round(Math.random() * new Date().getTime());
                             element.id = id;
                         }
-                        styleElement = $css.insertStyleSheetRule(`#${id + NodeUI.getPseudoElt(item)} { display: none !important; }`);
+                        styleElement = insertStyleSheetRule(`#${id + NodeUI.getPseudoElt(item)} { display: none !important; }`);
                     }
                     if (item.cssTry('display', item.display)) {
                         pseudoMap.set(item, { id, styleElement });
@@ -467,9 +463,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public afterCreateCache(element: HTMLElement) {
         const dataset = element.dataset;
         const filename = dataset.filename && dataset.filename.replace(new RegExp(`\.${this._localSettings.layout.fileExtension}$`), '') || element.id || 'document_' + this.length;
-        const iteration = (dataset.iteration ? $util.convertInt(dataset.iteration) : -1) + 1;
+        const iteration = (dataset.iteration ? convertInt(dataset.iteration) : -1) + 1;
         dataset.iteration = iteration.toString();
-        dataset.layoutName = $util.convertWord(iteration > 1 ? filename + '_' + iteration : filename, true);
+        dataset.layoutName = convertWord(iteration > 1 ? filename + '_' + iteration : filename, true);
         this.setBaseLayout(dataset.layoutName);
         this.setConstraints();
         this.setResources();
@@ -496,7 +492,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected cascadeParentNode(parentElement: HTMLElement, depth = 0) {
         const node = this.insertNode(parentElement);
-        if (node && node.display !== 'none') {
+        if (node && (node.display !== 'none' || depth === 0 || node.outerExtensionElement)) {
             node.depth = depth;
             if (depth === 0) {
                 this._cache.append(node);
@@ -547,7 +543,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 else if (element.nodeName.charAt(0) === '#') {
-                    if ($dom.isTextNode(element)) {
+                    if (isTextNode(element)) {
                         child = this.insertNode(element, node);
                     }
                 }
@@ -659,12 +655,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
-        let styleMap: StringMap = $session.getElementCache(element, 'styleMap' + pseudoElt, sessionId);
+        let styleMap: StringMap = getElementCache(element, 'styleMap' + pseudoElt, sessionId);
         let nested = 0;
         if (element.tagName === 'Q') {
             if (styleMap === undefined) {
                 styleMap = {};
-                $session.setElementCache(element, 'styleMap' + pseudoElt, sessionId, styleMap);
+                setElementCache(element, 'styleMap' + pseudoElt, sessionId, styleMap);
             }
             if (!styleMap.content) {
                 styleMap.content = getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
@@ -680,12 +676,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (styleMap) {
             let value = styleMap.content;
             if (value) {
-                if ($util.trimString(value, '"').trim() === '' && $util.convertFloat(styleMap.width) === 0 && $util.convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
+                if (trimString(value, '"').trim() === '' && convertFloat(styleMap.width) === 0 && convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
                     let valid = true;
                     for (const attr in styleMap) {
                         if (/(Width|Height)$/.test(attr)) {
                             const dimension = styleMap[attr];
-                            if ($css.isLength(dimension, true) && $util.convertFloat(dimension) !== 0) {
+                            if (isLength(dimension, true) && convertFloat(dimension) !== 0) {
                                 valid = false;
                                 break;
                             }
@@ -744,8 +740,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     default:
                         if (value.startsWith('url(')) {
-                            content = $css.resolveURL(value);
-                            const format = $util.fromLastIndexOf(content, '.').toLowerCase();
+                            content = resolveURL(value);
+                            const format = fromLastIndexOf(content, '.').toLowerCase();
                             const imageFormat = this._localSettings.supported.imageFormat;
                             if (imageFormat === '*' || imageFormat.includes(format)) {
                                 tagName = 'img';
@@ -755,18 +751,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            if (CACHE_PATTERN.COUNTER) {
-                                CACHE_PATTERN.COUNTER.lastIndex = 0;
-                            }
-                            else {
-                                CACHE_PATTERN.COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
-                                CACHE_PATTERN.COUNTER_VALUE = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
-                            }
+                            const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
                             let found = false;
                             let match: RegExpExecArray | null;
-                            while ((match = CACHE_PATTERN.COUNTER.exec(value)) !== null) {
+                            while ((match = pattern.exec(value)) !== null) {
                                 if (match[1]) {
-                                    content += $dom.getNamedItem(element, match[1].trim());
+                                    content += getNamedItem(element, match[1].trim());
                                 }
                                 else if (match[2] || match[5]) {
                                     const counterType = match[2] === 'counter';
@@ -782,9 +772,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     }
                                     function getCounterValue(name: string) {
                                         if (name !== 'none') {
-                                            CACHE_PATTERN.COUNTER_VALUE.lastIndex = 0;
+                                            const patternCounter = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
                                             let counterMatch: RegExpExecArray | null;
-                                            while ((counterMatch = CACHE_PATTERN.COUNTER_VALUE.exec(name)) !== null) {
+                                            while ((counterMatch = patternCounter.exec(name)) !== null) {
                                                 if (counterMatch[1] === counterName) {
                                                     return parseInt(counterMatch[2]);
                                                 }
@@ -793,7 +783,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         return undefined;
                                     }
                                     const getIncrementValue = (parent: Element) => {
-                                        const pseduoStyle: StringMap = $session.getElementCache(parent, 'styleMap' + pseudoElt, sessionId);
+                                        const pseduoStyle: StringMap = getElementCache(parent, 'styleMap' + pseudoElt, sessionId);
                                         if (pseduoStyle?.counterIncrement) {
                                             return getCounterValue(pseduoStyle.counterIncrement);
                                         }
@@ -882,14 +872,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             subcounter.reverse();
                                             subcounter.splice(1, 1);
                                             for (const leading of subcounter) {
-                                                content += $css.convertListStyle(styleName, leading, true) + match[7];
+                                                content += convertListStyle(styleName, leading, true) + match[7];
                                             }
                                         }
                                     }
                                     else {
                                         counter = initalValue;
                                     }
-                                    content += $css.convertListStyle(styleName, counter, true);
+                                    content += convertListStyle(styleName, counter, true);
                                 }
                                 else if (match[9]) {
                                     content += match[9];
@@ -910,12 +900,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         if (image) {
                             if (styleMap.width === undefined) {
                                 if (image.width > 0) {
-                                    styleMap.width = $css.formatPX(image.width);
+                                    styleMap.width = formatPX(image.width);
                                 }
                             }
                             if (styleMap.height === undefined) {
                                 if (image.height > 0) {
-                                    styleMap.height = $css.formatPX(image.height);
+                                    styleMap.height = formatPX(image.height);
                                 }
                             }
                         }
@@ -928,8 +918,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             pseudoElement.style[attr] = styleMap[attr];
                         }
                     }
-                    $session.setElementCache(pseudoElement, 'pseudoElement', sessionId, pseudoElt);
-                    $session.setElementCache(pseudoElement, 'styleMap', sessionId, styleMap);
+                    setElementCache(pseudoElement, 'pseudoElement', sessionId, pseudoElt);
+                    setElementCache(pseudoElement, 'styleMap', sessionId, styleMap);
                     return pseudoElement;
                 }
             }
@@ -943,7 +933,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const documentRoot = processing.node as T;
         const extensionMap = this.session.extensionMap;
         const mapY = new Map<number, Map<number, T>>();
-        let extensions = $util.filterArray(this.extensions, item => !item.eventOnly);
+        let extensions = filterArray(this.extensions, item => !item.eventOnly);
         function setMapY(depth: number, id: number, node: T) {
             const index = mapY.get(depth) || new Map<number, T>();
             mapY.set(depth, index.set(id, node));
@@ -1069,7 +1059,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             if (status > 0) {
                                                 if (horizontal.length) {
                                                     if (status !== NODE_TRAVERSE.FLOAT_INTERSECT && status !== NODE_TRAVERSE.FLOAT_BLOCK && floatActive.size && floatCleared.get(item) !== 'both' && !item.siblingsLeading.some((node: T) => node.lineBreak && !cleared.has(node))) {
-                                                         if (!item.floating || previous.floating && !$util.aboveRange(item.linear.top, previous.linear.bottom)) {
+                                                         if (!item.floating || previous.floating && !aboveRange(item.linear.top, previous.linear.bottom)) {
                                                             if (floatCleared.has(item)) {
                                                                 if (!item.floating) {
                                                                     item.addAlign(NODE_ALIGNMENT.EXTENDABLE);
@@ -1082,15 +1072,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                             else {
                                                                 let floatBottom = Number.NEGATIVE_INFINITY;
                                                                 if (!item.floating) {
-                                                                    $util.captureMap(
+                                                                    captureMap(
                                                                         horizontal,
                                                                         node => node.floating,
                                                                         node => floatBottom = Math.max(floatBottom, node.linear.bottom)
                                                                     );
                                                                 }
-                                                                if (!item.floating && !$util.aboveRange(item.linear.top, floatBottom) || item.floating && floatActive.has(item.float)) {
+                                                                if (!item.floating && !aboveRange(item.linear.top, floatBottom) || item.floating && floatActive.has(item.float)) {
                                                                     horizontal.push(item);
-                                                                    if (!item.floating && $util.aboveRange(item.linear.bottom, floatBottom)) {
+                                                                    if (!item.floating && aboveRange(item.linear.bottom, floatBottom)) {
                                                                         break traverse;
                                                                     }
                                                                     else {
@@ -1338,12 +1328,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (cleared) {
                     switch (cleared) {
                         case 'left':
-                            if (!$util.hasBit(clearedFloat, 2)) {
+                            if (!hasBit(clearedFloat, 2)) {
                                 clearedFloat |= 2;
                             }
                             break;
                         case 'right':
-                            if (!$util.hasBit(clearedFloat, 4)) {
+                            if (!hasBit(clearedFloat, 4)) {
                                 clearedFloat |= 4;
                             }
                             break;
@@ -1638,7 +1628,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             ));
                         }
                         if (pageFlow.length && floating.length) {
-                            const [leftAbove, rightAbove] = $util.partitionArray(floating, item => item.float !== 'right');
+                            const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
                             this.setFloatPadding(layout.node, subgroup as T, pageFlow, leftAbove, rightAbove);
                         }
                     }

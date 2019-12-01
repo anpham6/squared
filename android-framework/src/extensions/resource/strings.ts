@@ -6,14 +6,13 @@ import View from '../../view';
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID } from '../../lib/enumeration';
 
-const {
-    css: $css,
-    dom: $dom,
-    util: $util,
-    xml: $xml
-} = squared.lib;
+const $lib = squared.lib;
+const { formatPX } = $lib.css;
+const { measureTextWidth } = $lib.dom;
+const { capitalizeString, isNumber, lowerCaseString } = $lib.util;
+const { replaceCharacterData } = $lib.xml;
 
-const $e = squared.base.lib.enumeration;
+const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceStringsOptions = {
@@ -26,11 +25,11 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
         const setTextValue = (node: T, attr: string, name: string, value: string) => {
             name = Resource.addString(value, name, this.options.numberResourceValue);
             if (name !== '') {
-                node.android(attr, this.options.numberResourceValue || !$util.isNumber(name) ? '@string/' + name : name, false);
+                node.android(attr, this.options.numberResourceValue || !isNumber(name) ? '@string/' + name : name, false);
             }
         };
         for (const node of this.application.processing.cache) {
-            if (node.hasResource($e.NODE_RESOURCE.VALUE_STRING)) {
+            if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
                     case 'SELECT': {
                         const arrayName = this.createOptionArray(<HTMLSelectElement> node.element, node.controlId);
@@ -42,7 +41,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     case 'IFRAME': {
                         const stored: StringValue = node.data(Resource.KEY_NAME, 'valueString');
                         if (stored) {
-                            Resource.addString($xml.replaceCharacterData(stored.value), stored.key);
+                            Resource.addString(replaceCharacterData(stored.value), stored.key);
                         }
                         break;
                     }
@@ -87,14 +86,14 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         node.android('textAllCaps', 'true');
                                         break;
                                     case 'lowercase':
-                                        value = $util.lowerCaseString(value);
+                                        value = lowerCaseString(value);
                                         break;
                                     case 'capitalize':
-                                        value = $util.capitalizeString(value);
+                                        value = capitalizeString(value);
                                         break;
                                 }
                                 const tagName = node.tagName;
-                                value = $xml.replaceCharacterData(value, node.preserveWhiteSpace || tagName === 'CODE');
+                                value = replaceCharacterData(value, node.preserveWhiteSpace || tagName === 'CODE');
                                 const textDecorationLine = node.css('textDecorationLine');
                                 if (textDecorationLine !== 'none') {
                                     for (const style of textDecorationLine.split(' ')) {
@@ -128,7 +127,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         }
                                     }
                                     if (indent > 0) {
-                                        const width = $dom.measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
+                                        const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
                                         value = '&#160;'.repeat(Math.max(Math.floor(indent / width), 1)) + value;
                                     }
                                     setTextValue(node, 'text', name, value);
@@ -140,7 +139,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     if (list) {
                                         this.createOptionArray(<HTMLSelectElement> list, node.controlId);
                                         if (!node.hasPX('width')) {
-                                            node.css('width', $css.formatPX(Math.max(node.bounds.width, node.width)), true);
+                                            node.css('width', formatPX(Math.max(node.bounds.width, node.width)), true);
                                         }
                                     }
                                 }
@@ -173,7 +172,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
             if (resourceArray) {
                 result = [];
                 for (let value of resourceArray) {
-                    value = Resource.addString($xml.replaceCharacterData(value), '', this.options.numberResourceValue);
+                    value = Resource.addString(replaceCharacterData(value), '', this.options.numberResourceValue);
                     if (value !== '') {
                         result.push('@string/' + value);
                     }

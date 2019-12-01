@@ -3,19 +3,18 @@ import { UserSettingsAndroid } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
-const {
-    session: $session,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { assignEmptyValue, cloneObject, includes, optionalAsString } = $lib.util;
+const { getElementAsNode } = $lib.session;
 
-const {
-    constant: $constA,
-    enumeration: $enumA,
-    util: $utilA
-} = android.lib;
+const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const $Resource = android.base.Resource;
-const $e = squared.base.lib.enumeration;
+const $libA = android.lib;
+const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
+const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
+const { createStyleAttribute, createViewAttribute } = $libA.util;
+
+const { Resource } = android.base;
 
 export default class Drawer<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     public readonly documentBase = true;
@@ -27,7 +26,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         tagNames?: string[])
     {
         super(name, framework, options, tagNames);
-        this.require($constA.EXT_ANDROID.EXTERNAL, true);
+        this.require(EXT_ANDROID.EXTERNAL, true);
         this.require(WIDGET_NAME.MENU);
         this.require(WIDGET_NAME.COORDINATOR);
     }
@@ -40,8 +39,8 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
                 for (let i = 0; i < length; i++) {
                     const item = <HTMLElement> children[i];
                     const use = item.dataset.use;
-                    if (item.tagName === 'NAV' && !$util.includes(use, $constA.EXT_ANDROID.EXTERNAL)) {
-                        item.dataset.use = (use ? use + ', ' : '') + $constA.EXT_ANDROID.EXTERNAL;
+                    if (item.tagName === 'NAV' && !includes(use, EXT_ANDROID.EXTERNAL)) {
+                        item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
                     }
                 }
                 this.application.rootElements.add(element);
@@ -52,14 +51,14 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     }
 
     public processNode(node: T, parent: T) {
-        const options = $utilA.createViewAttribute(this.options.self);
+        const options = createViewAttribute(this.options.self);
         if (Drawer.findNestedElement(node.element, WIDGET_NAME.MENU)) {
-            $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
+            assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
             this.setStyleTheme(node.localSettings.targetAPI);
         }
         else {
-            const navigationViewOptions = $utilA.createViewAttribute(this.options.navigationView);
-            $util.assignEmptyValue(navigationViewOptions, 'android', 'layout_gravity', node.localizeString('left'));
+            const navigationViewOptions = createViewAttribute(this.options.navigationView);
+            assignEmptyValue(navigationViewOptions, 'android', 'layout_gravity', node.localizeString('left'));
             const navView = node.item() as T;
             navView.mergeGravity('layout_gravity', navigationViewOptions.android.layout_gravity);
             navView.setLayoutHeight('match_parent');
@@ -67,16 +66,16 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         }
         node.documentRoot = true;
         node.renderExclude = false;
-        const controlName = node.localSettings.targetAPI < $enumA.BUILD_ANDROID.Q ? $constA.SUPPORT_ANDROID.DRAWER : $constA.SUPPORT_ANDROID_X.DRAWER;
-        node.setControlType(controlName, $enumA.CONTAINER_NODE.BLOCK);
-        node.exclude($e.NODE_RESOURCE.FONT_STYLE);
-        node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
+        const controlName = node.localSettings.targetAPI < BUILD_ANDROID.Q ? SUPPORT_ANDROID.DRAWER : SUPPORT_ANDROID_X.DRAWER;
+        node.setControlType(controlName, CONTAINER_NODE.BLOCK);
+        node.exclude(NODE_RESOURCE.FONT_STYLE);
+        node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
         node.render(parent);
         node.setLayoutWidth('match_parent');
         node.setLayoutHeight('match_parent');
         return {
             output: <NodeXmlTemplate<T>> {
-                type: $e.NODE_TEMPLATE.XML,
+                type: NODE_TEMPLATE.XML,
                 node,
                 controlName
             },
@@ -88,25 +87,25 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     public afterParseDocument() {
         for (const node of this.subscribers) {
             const element = node.element;
-            const options = $utilA.createViewAttribute(this.options.navigationView);
-            const menu = $util.optionalAsString(Drawer.findNestedElement(element, WIDGET_NAME.MENU), 'dataset.layoutName');
-            const headerLayout = $util.optionalAsString(Drawer.findNestedElement(element, $constA.EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
+            const options = createViewAttribute(this.options.navigationView);
+            const menu = optionalAsString(Drawer.findNestedElement(element, WIDGET_NAME.MENU), 'dataset.layoutName');
+            const headerLayout = optionalAsString(Drawer.findNestedElement(element, EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
             if (menu !== '') {
-                $util.assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
+                assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
             }
             if (headerLayout !== '') {
-                $util.assignEmptyValue(options, 'app', 'headerLayout', '@layout/' + headerLayout);
+                assignEmptyValue(options, 'app', 'headerLayout', '@layout/' + headerLayout);
             }
             if (menu !== '' || headerLayout !== '') {
                 const controller = <android.base.Controller<T>> this.controller;
-                $util.assignEmptyValue(options, 'android', 'id', node.documentId.replace('@', '@+') + '_navigation');
-                $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
-                $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
+                assignEmptyValue(options, 'android', 'id', node.documentId.replace('@', '@+') + '_navigation');
+                assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
+                assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
                 controller.addAfterInsideTemplate(
                     node.id,
                     controller.renderNodeStatic(
-                        node.localSettings.targetAPI < $enumA.BUILD_ANDROID.Q ? $constA.SUPPORT_ANDROID.NAVIGATION_VIEW : $constA.SUPPORT_ANDROID_X.NAVIGATION_VIEW,
-                        $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
+                        node.localSettings.targetAPI < BUILD_ANDROID.Q ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW,
+                        Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
                         'wrap_content',
                         'match_parent'
                     )
@@ -118,7 +117,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     public postOptimize(node: T) {
         const element = Drawer.findNestedElement(node.element, WIDGET_NAME.COORDINATOR);
         if (element) {
-            const coordinator = $session.getElementAsNode<T>(element, node.sessionId);
+            const coordinator = getElementAsNode<T>(element, node.sessionId);
             if (coordinator?.inlineHeight && coordinator.some((item: T) => item.positioned)) {
                 coordinator.setLayoutHeight('match_parent');
             }
@@ -127,19 +126,19 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
 
     private setStyleTheme(api: number) {
         const settings = <UserSettingsAndroid> this.application.userSettings;
-        const options = $utilA.createStyleAttribute(this.options.resource);
-        $util.assignEmptyValue(options, 'name', settings.manifestThemeName);
-        $util.assignEmptyValue(options, 'parent', settings.manifestParentThemeName);
-        $util.assignEmptyValue(options.items, 'android:windowTranslucentStatus', 'true');
-        $Resource.addTheme(options);
+        const options = createStyleAttribute(this.options.resource);
+        assignEmptyValue(options, 'name', settings.manifestThemeName);
+        assignEmptyValue(options, 'parent', settings.manifestParentThemeName);
+        assignEmptyValue(options.items, 'android:windowTranslucentStatus', 'true');
+        Resource.addTheme(options);
         if (api >= 21) {
-            const lollipop = $utilA.createStyleAttribute($util.cloneObject(options));
+            const lollipop = createStyleAttribute(cloneObject(options));
             const items = {};
-            $util.assignEmptyValue(lollipop.output, 'path', 'res/values-v21');
-            $util.assignEmptyValue(items, 'android:windowDrawsSystemBarBackgrounds', 'true');
-            $util.assignEmptyValue(items, 'android:statusBarColor', '@android:color/transparent');
+            assignEmptyValue(lollipop.output, 'path', 'res/values-v21');
+            assignEmptyValue(items, 'android:windowDrawsSystemBarBackgrounds', 'true');
+            assignEmptyValue(items, 'android:statusBarColor', '@android:color/transparent');
             lollipop.items = items;
-            $Resource.addTheme(lollipop);
+            Resource.addTheme(lollipop);
         }
     }
 }

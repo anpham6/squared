@@ -2,10 +2,9 @@ import { ControllerSettings } from '../../@types/base/application';
 
 import View from './view';
 
-const {
-    dom: $dom,
-    session: $session
-} = squared.lib;
+const $lib = squared.lib;
+const { isTextNode } = $lib.dom;
+const { setElementCache } = $lib.session;
 
 export default class Controller<T extends View> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
     public afterInsertNode?: BindGeneric<T, void>;
@@ -41,8 +40,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public applyDefaultStyles(element: Element) {
-        if ($dom.isTextNode(element)) {
-            $session.setElementCache(element, 'styleMap', this.sessionId, {
+        if (isTextNode(element)) {
+            setElementCache(element, 'styleMap', this.sessionId, {
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',

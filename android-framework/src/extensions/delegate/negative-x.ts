@@ -6,18 +6,15 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
+const { formatPX } = squared.lib.css;
+
+const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
+
 type NegativeXData = {
     offsetLeft: number;
     nextSibling: View;
     firstChild?: View;
 };
-
-const formatPX = squared.lib.css.formatPX;
-
-const {
-    constant: $c,
-    enumeration: $e
-} = squared.base.lib;
 
 function outsideX(node: View, parent: View) {
     if (node.pageFlow) {
@@ -30,7 +27,7 @@ function outsideX(node: View, parent: View) {
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return this.application.userSettings.supportNegativeLeftTop && !node.documentRoot && node.css('overflowX') !== 'hidden';
+        return !node.documentRoot && node.css('overflowX') !== 'hidden';
     }
 
     public condition(node: T) {
@@ -41,12 +38,12 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         const outside = node.filter((item: T) => outsideX(item, node)) as T[];
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, View.getControlName(CONTAINER_NODE.CONSTRAINT, node.localSettings.targetAPI), CONTAINER_NODE.CONSTRAINT);
         if (node.marginTop > 0) {
-            container.modifyBox($e.BOX_STANDARD.MARGIN_TOP, node.marginTop);
-            node.modifyBox($e.BOX_STANDARD.MARGIN_TOP);
+            container.modifyBox(BOX_STANDARD.MARGIN_TOP, node.marginTop);
+            node.modifyBox(BOX_STANDARD.MARGIN_TOP);
         }
         if (node.marginBottom > 0) {
-            container.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM, node.marginBottom);
-            node.modifyBox($e.BOX_STANDARD.MARGIN_BOTTOM);
+            container.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.marginBottom);
+            node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM);
         }
         let left = NaN;
         let right = NaN;
@@ -73,7 +70,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         if (!isNaN(left)) {
             let offset = node.linear.left - left;
             if (offset > 0) {
-                node.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, offset);
+                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
                 for (const item of outside) {
                     if (!item.pageFlow && item.left < 0) {
                         item.css('left', formatPX(item.left + offset), true);
@@ -99,7 +96,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             let offset = right - node.linear.right;
             if (offset > node.marginRight) {
                 offset -= node.marginRight;
-                node.modifyBox($e.BOX_STANDARD.MARGIN_RIGHT, offset);
+                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, offset);
             }
             else {
                 offset = 0;
@@ -120,7 +117,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             }
         }
         this.subscribers.add(container);
-        container.data(EXT_ANDROID.DELEGATE_NEGATIVEX, $c.STRING_BASE.EXT_DATA, <NegativeXData> { offsetLeft: node.marginLeft + node.paddingLeft, firstChild, nextSibling: node });
+        container.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData', <NegativeXData> { offsetLeft: node.marginLeft + node.paddingLeft, firstChild, nextSibling: node });
         return {
             parent: container,
             renderAs: container,
@@ -129,7 +126,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                     parent,
                     container,
                     container.containerType,
-                    $e.NODE_ALIGNMENT.HORIZONTAL | $e.NODE_ALIGNMENT.SINGLE,
+                    NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.SINGLE,
                     container.children as T[]
                 )
             )
@@ -137,14 +134,14 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     }
 
     public postBaseLayout(node: T) {
-        const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, $c.STRING_BASE.EXT_DATA);
+        const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData');
         if (mainData) {
             let firstChild = mainData.firstChild;
             if (firstChild) {
                 firstChild = <T> firstChild.ascend(item => item !== node, node, 'outerWrapper').pop() || firstChild;
                 firstChild.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed');
                 firstChild.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
-                firstChild.modifyBox($e.BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
+                firstChild.modifyBox(BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
                 Controller.setConstraintDimension(firstChild);
                 firstChild.positioned = true;
             }

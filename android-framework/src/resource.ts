@@ -2,12 +2,11 @@ import { ResourceStoredMapAndroid, StyleAttribute } from '../../@types/android/a
 
 import { RESERVED_JAVA } from './lib/constant';
 
-const {
-    color: $color,
-    css: $css,
-    regex: $regex,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { findColorShade, parseColor } = $lib.color;
+const { getSrcSet } = $lib.css;
+const { CHAR, COMPONENT, CSS, XML } = $lib.regex;
+const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, trimString } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> squared.base.ResourceUI.STORED;
 const REGEXP_NONWORD = /[^\w+]/g;
@@ -17,7 +16,7 @@ let IMAGE_FORMAT!: string[];
 function formatObject(obj: {}, numberAlias = false) {
     if (obj) {
         for (const attr in obj) {
-            if ($util.isPlainObject(obj[attr])) {
+            if (isPlainObject(obj[attr])) {
                 formatObject(obj, numberAlias);
             }
             else {
@@ -34,7 +33,7 @@ function formatObject(obj: {}, numberAlias = false) {
                         break;
                     case 'src':
                     case 'srcCompat':
-                        if ($regex.COMPONENT.PROTOCOL.test(value)) {
+                        if (COMPONENT.PROTOCOL.test(value)) {
                             value = Resource.addImage({ mdpi: value });
                             if (value !== '') {
                                 obj[attr] = '@drawable/' + value;
@@ -43,7 +42,7 @@ function formatObject(obj: {}, numberAlias = false) {
                         }
                         break;
                 }
-                const color = $color.parseColor(value);
+                const color = parseColor(value);
                 if (color) {
                     const colorName = Resource.addColor(color);
                     if (colorName !== '') {
@@ -59,7 +58,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
     public static formatOptions(options: ExternalData, numberAlias = false) {
         for (const namespace in options) {
             const obj: ExternalData = options[namespace];
-            if ($util.isPlainObject(obj)) {
+            if (isPlainObject(obj)) {
                 formatObject(obj, numberAlias);
             }
         }
@@ -67,7 +66,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
     }
 
     public static formatName(value: string) {
-        if ($regex.CHAR.LEADINGNUMBER.test(value)) {
+        if (CHAR.LEADINGNUMBER.test(value)) {
             value = '__' + value;
         }
         return value.replace(REGEXP_NONWORD, '_');
@@ -77,9 +76,9 @@ export default class Resource<T extends android.base.View> extends squared.base.
         for (const theme of values) {
             const output = theme.output;
             const themes = STORED.themes;
-            const path = output && $util.isString(output.path) ? output.path.trim() : 'res/values';
-            const file = output && $util.isString(output.file) ? output.file.trim() : 'themes.xml';
-            const filename = $util.trimString(path.trim(), '/') + '/' + $util.trimString(file.trim(), '/');
+            const path = output && isString(output.path) ? output.path.trim() : 'res/values';
+            const file = output && isString(output.file) ? output.file.trim() : 'themes.xml';
+            const filename = trimString(path.trim(), '/') + '/' + trimString(file.trim(), '/');
             const storedFile = themes.get(filename) || new Map<string, StyleAttribute>();
             let appTheme = '';
             if (theme.name === '' || theme.name.charAt(0) === '.') {
@@ -120,7 +119,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
             if (name === '') {
                 name = value.trim();
             }
-            const numeric = $util.isNumber(value);
+            const numeric = isNumber(value);
             if (!numeric || numberAlias) {
                 const strings = STORED.strings;
                 for (const [resourceName, resourceValue] of strings.entries()) {
@@ -128,7 +127,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
                         return resourceName;
                     }
                 }
-                const partial = $util.trimString(name.replace($regex.XML.NONWORD_G, '_'), '_').split(/_+/);
+                const partial = trimString(name.replace(XML.NONWORD_G, '_'), '_').split(/_+/);
                 if (partial.length > 1) {
                     if (partial.length > 4) {
                         partial.length = 4;
@@ -139,7 +138,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
                     name = partial[0];
                 }
                 name = name.toLowerCase();
-                if (numeric || $regex.CHAR.LEADINGNUMBER.test(name) || RESERVED_JAVA.includes(name)) {
+                if (numeric || CHAR.LEADINGNUMBER.test(name) || RESERVED_JAVA.includes(name)) {
                     name = '__' + name;
                 }
                 else if (name === '') {
@@ -161,8 +160,8 @@ export default class Resource<T extends android.base.View> extends squared.base.
             if (CACHE_IMAGE[mdpi] && Object.keys(images).length === 1) {
                 return CACHE_IMAGE[mdpi];
             }
-            const src = $util.fromLastIndexOf(mdpi, '/');
-            const format = $util.fromLastIndexOf(src, '.').toLowerCase();
+            const src = fromLastIndexOf(mdpi, '/');
+            const format = fromLastIndexOf(src, '.').toLowerCase();
             if (IMAGE_FORMAT.includes(format) && format !== 'svg') {
                 CACHE_IMAGE[mdpi] = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
                 return CACHE_IMAGE[mdpi];
@@ -173,7 +172,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
 
     public static addColor(color: ColorData | string | undefined, transparency = false) {
         if (typeof color === 'string') {
-            color = $color.parseColor(color, 1, transparency);
+            color = parseColor(color, 1, transparency);
         }
         if (color && (!color.transparent || transparency)) {
             const keyName = color.opacity < 1 ? color.valueAsARGB : color.value;
@@ -181,7 +180,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
             if (colorName) {
                 return colorName;
             }
-            const shade = $color.findColorShade(color.value);
+            const shade = findColorShade(color.value);
             if (shade) {
                 colorName = keyName === shade.value ? shade.key : Resource.generateId('color', shade.key);
                 STORED.colors.set(keyName, colorName);
@@ -213,20 +212,20 @@ export default class Resource<T extends android.base.View> extends squared.base.
     public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
         const result: StringMap = {};
         if (typeof element === 'string') {
-            const match = $regex.CSS.URL.exec(element);
+            const match = CSS.URL.exec(element);
             if (match) {
                 if (match[1].startsWith('data:image')) {
                     result.mdpi = match[1];
                 }
                 else {
-                    return Resource.addImage({ mdpi: $util.resolvePath(match[1]) }, prefix);
+                    return Resource.addImage({ mdpi: resolvePath(match[1]) }, prefix);
                 }
             }
         }
         else {
             if (element.srcset) {
                 if (imageSet === undefined) {
-                    imageSet = $css.getSrcSet(element, IMAGE_FORMAT);
+                    imageSet = getSrcSet(element, IMAGE_FORMAT);
                 }
                 for (const image of imageSet) {
                     const pixelRatio = image.pixelRatio;

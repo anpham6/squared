@@ -1,17 +1,18 @@
 import { ExtensionResult, NodeXmlTemplate } from '../../@types/base/application';
 import { ViewAttribute } from '../../@types/android/node';
 
+const { isNumber } = squared.lib.util;
+
+const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+
+const $lib = android.lib;
+const { EXT_ANDROID } = $lib.constant;
+const { CONTAINER_NODE } = $lib.enumeration;
+const { createViewAttribute } = $lib.util;
+
+const { Resource } = android.base;
+
 type View = android.base.View;
-
-const {
-    constant: $constA,
-    enumeration: $enumA,
-    util: $utilA
-} = android.lib;
-
-const $Resource = android.base.Resource;
-const $util = squared.lib.util;
-const $e = squared.base.lib.enumeration;
 
 const REGEXP_ITEM = {
     id: /^@\+id\/\w+$/,
@@ -91,7 +92,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         tagNames?: string[])
     {
         super(name, framework, options, tagNames);
-        this.require($constA.EXT_ANDROID.EXTERNAL, true);
+        this.require(EXT_ANDROID.EXTERNAL, true);
     }
 
     public init(element: HTMLElement) {
@@ -127,9 +128,9 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         const parentAs = this.application.createNode(undefined, false);
         parentAs.actualParent = parent.actualParent;
         node.documentRoot = true;
-        node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
-        node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
-        node.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
+        node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
+        node.setControlType(NAVIGATION.MENU, CONTAINER_NODE.INLINE);
+        node.exclude(NODE_RESOURCE.ALL, NODE_PROCEDURE.ALL);
         for (const item of node.cascade()) {
             this.addDescendant(item as T);
         }
@@ -137,7 +138,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         node.dataset.pathname = 'res/menu';
         return {
             output: <NodeXmlTemplate<T>> {
-                type: $e.NODE_TEMPLATE.XML,
+                type: NODE_TEMPLATE.XML,
                 node,
                 controlName: NAVIGATION.MENU
             },
@@ -151,9 +152,9 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
             node.hide();
             return { next: true };
         }
-        const options = $utilA.createViewAttribute();
-        const element = <HTMLElement> node.element;
+        const options = createViewAttribute();
         const android = options.android;
+        const element = <HTMLElement> node.element;
         let controlName: string;
         let title = '';
         if (node.tagName === 'NAV') {
@@ -184,10 +185,10 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         }
         switch (controlName) {
             case NAVIGATION.MENU:
-                node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
+                node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                 break;
             case NAVIGATION.GROUP:
-                node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
+                node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                 parseDataSet(REGEXP_GROUP, element, options);
                 break;
             case NAVIGATION.ITEM:
@@ -212,17 +213,17 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                 break;
         }
         if (title !== '') {
-            const numberResourceValue = this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
-            const name = $Resource.addString(title, '', numberResourceValue);
-            android.title = numberResourceValue || !$util.isNumber(name) ? '@string/' + name : title;
+            const numberResourceValue = this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
+            const name = Resource.addString(title, '', numberResourceValue);
+            android.title = numberResourceValue || !isNumber(name) ? '@string/' + name : title;
         }
-        node.setControlType(controlName, $enumA.CONTAINER_NODE.INLINE);
-        node.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
+        node.setControlType(controlName, CONTAINER_NODE.INLINE);
+        node.exclude(NODE_RESOURCE.ALL, NODE_PROCEDURE.ALL);
         node.render(parent);
         node.apply(options);
         return {
             output: <NodeXmlTemplate<T>> {
-                type: $e.NODE_TEMPLATE.XML,
+                type: NODE_TEMPLATE.XML,
                 node,
                 controlName
             },

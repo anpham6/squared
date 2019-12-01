@@ -1,4 +1,4 @@
-const $util = squared.lib.util;
+const { hasBit } = squared.lib.util;
 
 export default abstract class ExtensionManager<T extends squared.base.Node> implements squared.base.ExtensionManager<T> {
     protected constructor(public readonly application: squared.base.Application<T>) {
@@ -24,7 +24,7 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
                     }
                 }
             }
-            if ((framework === 0 || $util.hasBit(framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
+            if ((framework === 0 || hasBit(framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
                 ext.application = application;
                 extensions.push(ext);
                 return true;

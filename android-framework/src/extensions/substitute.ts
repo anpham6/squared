@@ -7,8 +7,9 @@ import { EXT_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
-const $css = squared.lib.css;
-const $e = squared.base.lib.enumeration;
+const { getDataSet } = squared.lib.css;
+
+const { NODE_ALIGNMENT, NODE_TEMPLATE } =  squared.base.lib.enumeration;
 
 export default class Substitute<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(
@@ -23,7 +24,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
 
     public processNode(node: T, parent: T) {
         const name = this.name;
-        const data = $css.getDataSet(<HTMLElement> node.element, name);
+        const data = getDataSet(<HTMLElement> node.element, name);
         const controlName = data.tag;
         if (controlName) {
             node.containerType = node.blockStatic ? CONTAINER_NODE.BLOCK : CONTAINER_NODE.INLINE;
@@ -31,7 +32,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
             node.render(parent);
             const tagChild = data.tagChild;
             if (tagChild) {
-                node.addAlign($e.NODE_ALIGNMENT.AUTO_LAYOUT);
+                node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                 node.each((item: T) => {
                     if (item.styleElement) {
                         const dataset = item.dataset;
@@ -42,7 +43,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
             }
             return {
                 output: <NodeXmlTemplate<T>> {
-                    type: $e.NODE_TEMPLATE.XML,
+                    type: NODE_TEMPLATE.XML,
                     node,
                     controlName
                 }

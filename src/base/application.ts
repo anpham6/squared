@@ -8,22 +8,18 @@ import NodeList from './nodelist';
 import Resource from './resource';
 import { base } from '../../@types/squared';
 
+const $lib = squared.lib;
+const { checkStyleValue, getSpecificity, getStyle, hasComputedStyle, parseSelectorText, validMediaRule } = $lib.css;
+const { isTextNode } = $lib.dom;
+const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
+const { STRING, XML } = $lib.regex;
+const { getElementCache, setElementCache } = $lib.session;
+
 type PreloadImage = HTMLImageElement | string;
-
-const {
-    css: $css,
-    dom: $dom,
-    regex: $regex,
-    session: $session,
-    util: $util
-} = squared.lib;
-
-const { checkStyleValue, getSpecificity, getStyle, parseSelectorText } = $css;
-const { convertCamelCase, resolvePath } = $util;
 
 const ASSETS = Resource.ASSETS;
 const REGEXP_MEDIATEXT = /all|screen/;
-const REGEXP_DATAURI = new RegExp(`(url\\("(${$regex.STRING.DATAURI})"\\)),?\\s*`, 'g');
+const REGEXP_DATAURI = new RegExp(`(url\\("(${STRING.DATAURI})"\\)),?\\s*`, 'g');
 let REGEXP_IMPORTANT!: RegExp;
 let REGEXP_FONT_FACE!: RegExp;
 let REGEXP_FONT_FAMILY!: RegExp;
@@ -131,7 +127,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (typeof value === 'string') {
                 element = document.getElementById(value);
             }
-            else if ($css.hasComputedStyle(value)) {
+            else if (hasComputedStyle(value)) {
                 element = value;
             }
             else {
@@ -237,7 +233,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         if (images.length) {
             this.initializing = true;
-            Promise.all($util.objectMap<PreloadImage, Promise<PreloadImage>>(images, image => {
+            Promise.all(objectMap<PreloadImage, Promise<PreloadImage>>(images, image => {
                 return new Promise((resolve, reject) => {
                     if (typeof image === 'string') {
                         resolve(getImageSvgAsync(image));
@@ -266,7 +262,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             })
             .catch((error: Event) => {
                 const message = (<HTMLImageElement> error.target)?.src || error['message'];
-                if (!this.userSettings.showErrorMessages || !$util.isString(message) || confirm('FAIL: ' + message)) {
+                if (!this.userSettings.showErrorMessages || !isString(message) || confirm('FAIL: ' + message)) {
                     resume();
                 }
             });
@@ -341,7 +337,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected cascadeParentNode(parentElement: HTMLElement, depth = 0) {
         const node = this.insertNode(parentElement);
-        if (node && node.display !== 'none') {
+        if (node) {
             const { controllerHandler: controller, processing } = this;
             const CACHE = processing.cache;
             node.depth = depth;
@@ -362,7 +358,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const element = <HTMLElement> childNodes[i];
                 let child: T | undefined;
                 if (element.nodeName.charAt(0) === '#') {
-                    if ($dom.isTextNode(element)) {
+                    if (isTextNode(element)) {
                         child = this.insertNode(element, node);
                     }
                 }
@@ -433,7 +429,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 applyStyleSheet((<CSSImportRule> rule).styleSheet);
                                 break;
                             case CSSRule.MEDIA_RULE:
-                                if ($css.validMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
+                                if (validMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
                                     this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
                                 }
                                 break;
@@ -611,9 +607,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                         parseImageUrl(styleMap, 'content');
                         const attrStyle = 'styleMap' + targetElt;
                         const attrSpecificity = 'styleSpecificity' + targetElt;
-                        const styleData: StringMap = $session.getElementCache(element, attrStyle, sessionId);
+                        const styleData: StringMap = getElementCache(element, attrStyle, sessionId);
                         if (styleData) {
-                            const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, sessionId) || {};
+                            const specificityData: ObjectMap<number> = getElementCache(element, attrSpecificity, sessionId) || {};
                             for (const attr in styleMap) {
                                 const value = styleMap[attr];
                                 const revisedSpecificity = specificity + (important[attr] ? 1000 : 0);
@@ -631,10 +627,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                             for (const attr in styleMap) {
                                 specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                             }
-                            $session.setElementCache(element, 'style' + targetElt, '0', style);
-                            $session.setElementCache(element, 'sessionId', '0', sessionId);
-                            $session.setElementCache(element, attrStyle, sessionId, styleMap);
-                            $session.setElementCache(element, attrSpecificity, sessionId, specificityData);
+                            setElementCache(element, 'style' + targetElt, '0', style);
+                            setElementCache(element, 'sessionId', '0', sessionId);
+                            setElementCache(element, attrStyle, sessionId, styleMap);
+                            setElementCache(element, attrSpecificity, sessionId, specificityData);
                         }
                     });
                 }
@@ -659,7 +655,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         const fontFamily = familyMatch[1].trim();
                         const fontStyle = styleMatch ? styleMatch[1].toLowerCase() : 'normal';
                         const fontWeight = weightMatch ? parseInt(weightMatch[1]) : 400;
-                        for (const value of srcMatch[1].split($regex.XML.SEPARATOR)) {
+                        for (const value of srcMatch[1].split(XML.SEPARATOR)) {
                             const urlMatch = REGEXP_URL.exec(value);
                             if (urlMatch) {
                                 let srcUrl: string | undefined;

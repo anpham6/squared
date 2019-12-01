@@ -5,8 +5,9 @@ import View from '../../view';
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, STRING_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
-const $css = squared.lib.css;
-const $e = squared.base.lib.enumeration;
+const { formatPX } = squared.lib.css;
+
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -34,11 +35,11 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         else {
             let overflowType = 0;
             if (node.hasPX('width')) {
-                overflowType |= $e.NODE_ALIGNMENT.HORIZONTAL;
+                overflowType |= NODE_ALIGNMENT.HORIZONTAL;
                 overflow.push(horizontalScroll);
             }
             if (node.hasHeight && node.hasPX('height')) {
-                overflowType |= $e.NODE_ALIGNMENT.VERTICAL;
+                overflowType |= NODE_ALIGNMENT.VERTICAL;
                 overflow.push(verticalScroll);
             }
             node.overflow = overflowType;
@@ -73,7 +74,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             }
             if (overflow.length) {
                 for (const child of children) {
-                    child.css('maxWidth', $css.formatPX(boxWidth), true);
+                    child.css('maxWidth', formatPX(boxWidth), true);
                 }
             }
         }
@@ -89,13 +90,13 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 else {
                     container = this.application.createNode();
                     container.inherit(node, 'base');
-                    container.exclude($e.NODE_RESOURCE.BOX_STYLE);
+                    container.exclude(NODE_RESOURCE.BOX_STYLE);
                     scrollView[0].innerWrapped = container;
                     container.outerWrapper = scrollView[0];
                 }
                 container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
-                container.exclude($e.NODE_RESOURCE.ASSET);
-                container.resetBox($e.BOX_STANDARD.PADDING);
+                container.exclude(NODE_RESOURCE.ASSET);
+                container.resetBox(BOX_STANDARD.PADDING);
                 scrollView.push(container);
             }
             for (let i = 0; i < length; i++) {
@@ -103,7 +104,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 switch (item.controlName) {
                     case verticalScroll:
                         node.setLayoutHeight('wrap_content');
-                        item.setLayoutHeight($css.formatPX(node.actualHeight));
+                        item.setLayoutHeight(formatPX(node.actualHeight));
                         item.android('scrollbars', STRING_ANDROID.VERTICAL);
                         item.cssApply({
                             width: length === 1 && node.css('width') || 'auto',
@@ -114,7 +115,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                         break;
                     case horizontalScroll:
                         node.setLayoutWidth('wrap_content');
-                        item.setLayoutWidth($css.formatPX(node.actualWidth));
+                        item.setLayoutWidth(formatPX(node.actualWidth));
                         item.android('scrollbars', STRING_ANDROID.HORIZONTAL);
                         item.cssApply({
                             height: length === 1 && node.css('height') || 'auto',
@@ -136,15 +137,15 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     (item.renderParent || parent) as T,
                     item,
                     <NodeXmlTemplate<T>> {
-                        type: $e.NODE_TEMPLATE.XML,
+                        type: NODE_TEMPLATE.XML,
                         node: item,
                         controlName: item.controlName
                     }
                 );
             }
             node.overflow = 0;
-            node.exclude($e.NODE_RESOURCE.BOX_STYLE);
-            node.resetBox($e.BOX_STANDARD.MARGIN, scrollView[0]);
+            node.exclude(NODE_RESOURCE.BOX_STYLE);
+            node.resetBox(BOX_STANDARD.MARGIN, scrollView[0]);
             parent = scrollView.pop() as T;
             parent.innerWrapped = node;
             node.parent = parent;

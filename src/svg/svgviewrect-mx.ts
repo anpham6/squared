@@ -1,11 +1,11 @@
-const $client = squared.lib.client;
+const { USER_AGENT, isUserAgent } = squared.lib.client;
 
 function hasUnsupportedAccess(element: SVGElement) {
     if (element.tagName === 'svg') {
-        if ($client.isUserAgent($client.USER_AGENT.FIREFOX)) {
+        if (isUserAgent(USER_AGENT.FIREFOX)) {
             return element.parentElement instanceof HTMLElement;
         }
-        else if ($client.isUserAgent($client.USER_AGENT.SAFARI)) {
+        else if (isUserAgent(USER_AGENT.SAFARI)) {
             return !(element.parentElement instanceof HTMLElement);
         }
     }

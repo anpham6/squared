@@ -3,8 +3,13 @@ import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@ty
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
-import { EXT_NAME, STRING_BASE } from '../lib/constant';
+import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
+
+const $lib = squared.lib;
+const { isLength, isPercent } = $lib.css;
+const { CHAR } = $lib.regex;
+const { convertInt, isNumber, trimString, withinRange } = $lib.util;
 
 type GridLayout = {
     placement: number[],
@@ -18,12 +23,6 @@ type RepeatItem = {
     unit?: string
     unitMin?: string
 };
-
-const {
-    css: $css,
-    regex: $regex,
-    util: $util
-} = squared.lib;
 
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
@@ -75,7 +74,7 @@ function getColumnTotal(rows: (NodeUI[] | undefined)[]) {
     return value;
 }
 
-const convertLength = (node: NodeUI, value: string) => $css.isLength(value) ? node.convertPX(value) : value;
+const convertLength = (node: NodeUI, value: string) => isLength(value) ? node.convertPX(value) : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute<T extends NodeUI>(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string): CssGridData<T> {
@@ -184,7 +183,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     data.autoFill = true;
                                     break;
                                 default:
-                                    iterations = $util.convertInt(match[2]);
+                                    iterations = convertInt(match[2]);
                                     break;
                             }
                             if (iterations > 0) {
@@ -271,10 +270,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             node.sort((a, b) => {
                 const { left, top } = a.linear;
                 const { left: leftB, top: topB } = b.linear;
-                if (!$util.withinRange(top, topB)) {
+                if (!withinRange(top, topB)) {
                     return top < topB ? -1 : 1;
                 }
-                else if (!$util.withinRange(left, leftB)) {
+                else if (!withinRange(left, leftB)) {
                     return left < leftB ? -1 : 1;
                 }
                 return 0;
@@ -284,10 +283,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             node.sort((a, b) => {
                 const { left, top } = a.linear;
                 const { left: leftB, top: topB } = b.linear;
-                if (!$util.withinRange(left, leftB)) {
+                if (!withinRange(left, leftB)) {
                     return left < leftB ? -1 : 1;
                 }
-                else if (!$util.withinRange(top, topB)) {
+                else if (!withinRange(top, topB)) {
                     return top < topB ? -1 : 1;
                 }
                 return 0;
@@ -330,13 +329,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (rowEnd.startsWith('span')) {
                     rowSpan = parseInt(rowEnd.split(' ')[1]);
                 }
-                else if ($util.isNumber(rowEnd)) {
+                else if (isNumber(rowEnd)) {
                     rowSpan = parseInt(rowEnd) - row;
                 }
                 if (columnEnd.startsWith('span')) {
                     columnSpan = parseInt(columnEnd.split(' ')[1]);
                 }
-                else if ($util.isNumber(columnEnd)) {
+                else if (isNumber(columnEnd)) {
                     columnSpan = parseInt(columnEnd) - column;
                 }
                 if (column === 1 && columnMax > 0) {
@@ -386,7 +385,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
                 if (template !== 'none') {
                     const templateAreas = mainData.templateAreas;
-                    $util.trimString(template.trim(), '"').split($regex.CHAR.SPACE).forEach((area, j) => {
+                    trimString(template.trim(), '"').split(CHAR.SPACE).forEach((area, j) => {
                         if (area.charAt(0) !== '.') {
                             const templateArea = templateAreas[area];
                             if (templateArea) {
@@ -472,7 +471,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (!placement[0] || !placement[1] || !placement[2] || !placement[3]) {
                     function setPlacement(value: string, position: number) {
-                        if ($util.isNumber(value)) {
+                        if (isNumber(value)) {
                             placement[position] = parseInt(value);
                             return true;
                         }
@@ -504,7 +503,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 alias[1] = alias[0];
                                 alias[0] = '1';
                             }
-                            else if ($util.isNumber(alias[0])) {
+                            else if (isNumber(alias[0])) {
                                 if (i % 2 === 0) {
                                     if (rowStart) {
                                         rowSpan = parseInt(alias[0]) - parseInt(rowStart[0]);
@@ -553,7 +552,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     if (placement.length) {
                         length = Math.max(length, horizontal ? item.columnSpan : item.rowSpan, placement[horizontal ? 1 : 0] || 0, (placement[horizontal ? 3 : 2] || 0) - 1);
                     }
-                    if ($util.withinRange(item.outerCoord, outerCoord)) {
+                    if (withinRange(item.outerCoord, outerCoord)) {
                         outerCount += horizontal ? item.columnSpan : item.rowSpan;
                     }
                 }
@@ -569,7 +568,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 data.unit = unit;
                 data.unitMin = repeatUnit(data, data.unitMin);
             }
-            const isPercent = $css.isPercent;
             let percent = 1;
             let fr = 0;
             for (const px of unit) {
@@ -861,16 +859,19 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 node.cssSort('zIndex');
                 if (node.cssTry('display', 'block')) {
                     node.each((item: T) => {
+                        const rect = (<Element> item.element).getBoundingClientRect();
                         const bounds = item.initial.bounds;
                         if (bounds) {
-                            const rect = (<Element> item.element).getBoundingClientRect();
                             bounds.width = rect.width;
                             bounds.height = rect.height;
+                        }
+                        else {
+                            item.initial.bounds = rect;
                         }
                     });
                     node.cssFinally('display');
                 }
-                node.data(EXT_NAME.CSS_GRID, STRING_BASE.EXT_DATA, mainData);
+                node.data(EXT_NAME.CSS_GRID, 'mainData', mainData);
             }
         }
         return undefined;

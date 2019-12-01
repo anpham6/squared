@@ -3,17 +3,14 @@ import { TableData } from '../../../@types/base/extension';
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
-import { EXT_NAME, STRING_BASE } from '../lib/constant';
+import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const {
-    css: $css,
-    dom: $dom,
-    math: $math,
-    util: $util
-} = squared.lib;
-
-const { formatPX, isLength, isPercent } = $css;
+const $lib = squared.lib;
+const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength, isPercent } = $lib.css;
+const { getNamedItem } = $lib.dom;
+const { maxArray } = $lib.math;
+const { isNumber, replaceMap, withinRange } = $lib.util;
 
 const enum LAYOUT_TABLE {
     NONE = 0,
@@ -81,7 +78,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             section.hide();
         }
         inheritStyles(tfoot);
-        const [horizontal, vertical] = mainData.borderCollapse ? [0, 0] : $util.replaceMap<string, number>(node.css('borderSpacing').split(' '), (value, index) => node.parseUnit(value, index === 0 ? 'width' : 'height'));
+        const [horizontal, vertical] = mainData.borderCollapse ? [0, 0] : replaceMap<string, number>(node.css('borderSpacing').split(' '), (value, index) => node.parseUnit(value, index === 0 ? 'width' : 'height'));
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const colgroup = (<Element> node.element).querySelector('COLGROUP');
@@ -106,26 +103,26 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 const m = columnIndex[i];
                 if (!td.hasPX('width')) {
-                    const value = $dom.getNamedItem(element, 'width');
+                    const value = getNamedItem(element, 'width');
                     if (isPercent(value)) {
                         td.css('width', value);
                     }
-                    else if ($util.isNumber(value)) {
+                    else if (isNumber(value)) {
                         td.css('width', formatPX(parseFloat(value)));
                     }
                 }
                 if (!td.hasPX('height')) {
-                    const value = $dom.getNamedItem(element, 'height');
+                    const value = getNamedItem(element, 'height');
                     if (isPercent(value)) {
                         td.css('height', value);
                     }
-                    else if ($util.isNumber(value)) {
+                    else if (isNumber(value)) {
                         td.css('height', formatPX(parseFloat(value)));
                     }
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     if (colgroup) {
-                        const { backgroundImage, backgroundColor } = $css.getStyle(colgroup.children[m]);
+                        const { backgroundImage, backgroundColor } = getStyle(colgroup.children[m]);
                         if (backgroundImage && backgroundImage !== 'none') {
                             td.css('backgroundImage', backgroundImage, true);
                         }
@@ -134,11 +131,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     else {
-                        let value = $css.getInheritedStyle(element, 'backgroundImage', /none/, 'TABLE');
+                        let value = getInheritedStyle(element, 'backgroundImage', /none/, 'TABLE');
                         if (value !== '') {
                             td.css('backgroundImage', value, true);
                         }
-                        value = $css.getInheritedStyle(element, 'backgroundColor', REGEXP_BACKGROUND, 'TABLE');
+                        value = getInheritedStyle(element, 'backgroundColor', REGEXP_BACKGROUND, 'TABLE');
                         if (value !== '') {
                             td.css('backgroundColor', value, true);
                         }
@@ -225,7 +222,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             columnCount = Math.max(columnCount, columnIndex[i]);
         }
         if (node.hasPX('width', false) && mapWidth.some(value => isPercent(value))) {
-            $util.replaceMap<string, string>(mapWidth, (value, index) => {
+            replaceMap<string, string>(mapWidth, (value, index) => {
                 if (value === 'auto' && mapBounds[index] > 0) {
                     return formatPX(mapBounds[index]);
                 }
@@ -236,13 +233,13 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         if (mapWidth.every(value => isPercent(value))) {
             if (mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
                 let percentTotal = 100;
-                $util.replaceMap<string, string>(mapWidth, value => {
+                replaceMap<string, string>(mapWidth, value => {
                     const percent = parseFloat(value);
                     if (percentTotal <= 0) {
                         value = '0px';
                     }
                     else if (percentTotal - percent < 0) {
-                        value = $css.formatPercent(percentTotal / 100);
+                        value = formatPercent(percentTotal / 100);
                     }
                     percentTotal -= percent;
                     return value;
@@ -257,7 +254,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
             if (node.hasWidth) {
                 if (width < node.width) {
-                    $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
+                    replaceMap<string, string>(mapWidth, value => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto', true);
@@ -293,7 +290,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         else {
                             const td = node.cascade(item => item.tagName === 'TD');
-                            if (td.length && td.every(item => $util.withinRange(item.bounds.width, td[0].bounds.width))) {
+                            if (td.length && td.every(item => withinRange(item.bounds.width, td[0].bounds.width))) {
                                 return LAYOUT_TABLE.NONE;
                             }
                             return LAYOUT_TABLE.VARIABLE;
@@ -321,7 +318,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         caption.css('maxWidth', formatPX(caption.bounds.width));
                     }
                 }
-                else if (caption.bounds.width > $math.maxArray(rowWidth)) {
+                else if (caption.bounds.width > maxArray(rowWidth)) {
                     setBoundsWidth(caption as T);
                 }
             }
@@ -545,7 +542,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         }
         mainData.rowCount = rowCount;
         mainData.columnCount = columnCount;
-        node.data(EXT_NAME.TABLE, STRING_BASE.EXT_DATA, mainData);
+        node.data(EXT_NAME.TABLE, 'mainData', mainData);
         return undefined;
     }
 }

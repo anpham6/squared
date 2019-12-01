@@ -4,7 +4,7 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const $e = squared.base.lib.enumeration;
+const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 export default class NegativeViewport<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -35,7 +35,7 @@ export default class NegativeViewport<T extends View> extends squared.base.Exten
                     parent,
                     container,
                     CONTAINER_NODE.FRAME,
-                    $e.NODE_ALIGNMENT.SINGLE,
+                    NODE_ALIGNMENT.SINGLE,
                     container.children as T[]
                 )
             ),

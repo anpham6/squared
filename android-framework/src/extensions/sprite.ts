@@ -7,33 +7,31 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
+const { formatPX } = squared.lib.css;
+
+const $base_lib = squared.base.lib;
+const { EXT_NAME } = $base_lib.constant;
+const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
+
 type SpriteData = {
     image: Required<RawAsset>,
     position: BoxRectPosition
 };
 
-const $css = squared.lib.css;
-
-const {
-    constant: $c,
-    enumeration: $e
-} = squared.base.lib;
-
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {
-        const mainData = <SpriteData> node.data($c.EXT_NAME.SPRITE, $c.STRING_BASE.EXT_DATA);
+        const mainData = <SpriteData> node.data(EXT_NAME.SPRITE, 'mainData');
         if (mainData) {
             const drawable = (<android.base.Resource<T>> this.resource).addImageSrc(node.backgroundImage);
             if (drawable !== '') {
                 const { width, height } = mainData.image;
                 const container = this.application.createNode();
-                const formatPX = $css.formatPX;
                 container.inherit(node, 'base', 'initial', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                container.exclude($e.NODE_RESOURCE.IMAGE_SOURCE, $e.NODE_PROCEDURE.CUSTOMIZATION);
+                container.exclude(NODE_RESOURCE.IMAGE_SOURCE, NODE_PROCEDURE.CUSTOMIZATION);
                 parent.appendTry(node, container);
                 node.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
-                node.exclude($e.NODE_RESOURCE.FONT_STYLE | $e.NODE_RESOURCE.BOX_STYLE);
+                node.exclude(NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.BOX_STYLE);
                 node.cssApply({
                     position: 'static',
                     top: 'auto',
@@ -72,7 +70,7 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                             parent,
                             container,
                             CONTAINER_NODE.FRAME,
-                            $e.NODE_ALIGNMENT.SINGLE,
+                            NODE_ALIGNMENT.SINGLE,
                             container.children as T[]
                         )
                     ),

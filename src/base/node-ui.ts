@@ -6,17 +6,14 @@ import Node from './node';
 import { CSS_SPACING } from './lib/constant';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
+const $lib = squared.lib;
+const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, formatPX, isLength } = $lib.css;
+const { assignRect, isTextNode, newBoxModel } = $lib.dom;
+const { isEqual } = $lib.math;
+const { getElementAsNode } = $lib.session;
+const { aboveRange, assignEmptyProperty, belowRange, cloneObject, filterArray, hasBit, isArray, searchObject, withinRange } = $lib.util;
+
 type T = NodeUI;
-
-const {
-    css: $css,
-    dom: $dom,
-    math: $math,
-    session: $session,
-    util: $util
-} = squared.lib;
-
-const isLength = $css.isLength;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
@@ -35,10 +32,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             let actualBottom: number;
             let actualLeft: number;
             if (item.companion) {
-                actualTop = item.actualRect('top');
-                actualRight = item.actualRect('right');
-                actualBottom = item.actualRect('bottom');
-                actualLeft = item.actualRect('left');
+                actualTop = item.actualRect('top', 'linear', true);
+                actualRight = item.actualRect('right', 'linear', true);
+                actualBottom = item.actualRect('bottom', 'linear', true);
+                actualLeft = item.actualRect('left', 'linear', true);
             }
             else {
                 ({ top: actualTop, right: actualRight, bottom: actualBottom, left: actualLeft } = item.linear);
@@ -65,7 +62,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static baseline<T extends NodeUI>(list: T[], text = false) {
-        list = $util.filterArray(list, item => {
+        list = filterArray(list, item => {
             if ((item.baseline || isLength(item.verticalAlign)) && (!text || item.textElement)) {
                 return !item.floating && !item.baselineAltered && (item.naturalChild && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline));
             }
@@ -97,7 +94,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         return b.marginTop > ((heightA - heightB) / 2) ? 1 : -1;
                     }
                 }
-                if (!$math.isEqual(heightA, heightB)) {
+                if (!isEqual(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
                 }
                 else {
@@ -152,7 +149,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         for (const item of previousFloat) {
                             if (item) {
-                                if (floating.has(item.float) && !node.floating && $util.aboveRange(node.linear.top, item.linear.bottom)) {
+                                if (floating.has(item.float) && !node.floating && aboveRange(node.linear.top, item.linear.bottom)) {
                                     const float = item.float;
                                     floating.delete(float);
                                     clearable[float] = undefined;
@@ -243,7 +240,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 break;
                             }
                             const previous = nodes[i - 1];
-                            if ($util.withinRange(left, previous.linear.left) || previous.floating && $util.aboveRange(item.linear.top, previous.linear.bottom)) {
+                            if (withinRange(left, previous.linear.left) || previous.floating && aboveRange(item.linear.top, previous.linear.bottom)) {
                                 linearX = false;
                                 break;
                             }
@@ -426,7 +423,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (obj) {
             for (const attr of attrs) {
                 if (attr.indexOf('*') !== -1) {
-                    for (const [key] of $util.searchObject(obj, attr)) {
+                    for (const [key] of searchObject(obj, attr)) {
                         delete obj[key];
                     }
                 }
@@ -481,7 +478,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public renderFilter(predicate: IteratorPredicate<T, boolean>) {
-        return $util.filterArray(this.renderChildren, predicate);
+        return filterArray(this.renderChildren, predicate);
     }
 
     public hide(invisible?: boolean) {
@@ -507,11 +504,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             switch (name) {
                 case 'base':
                     this._documentParent = node.documentParent;
-                    this._bounds = $dom.assignRect(node.bounds);
-                    this._linear = $dom.assignRect(node.linear);
-                    this._box = $dom.assignRect(node.box);
-                    this._boxReset = $dom.newBoxModel();
-                    this._boxAdjustment = $dom.newBoxModel();
+                    this._bounds = assignRect(node.bounds);
+                    this._linear = assignRect(node.linear);
+                    this._box = assignRect(node.box);
+                    this._boxReset = newBoxModel();
+                    this._boxAdjustment = newBoxModel();
                     if (this.depth === -1) {
                         this.depth = node.depth;
                     }
@@ -522,37 +519,32 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     break;
                 case 'initial':
-                    $util.cloneObject(<InitialData<T>> node.unsafe('initial'), this.initial);
+                    cloneObject(<InitialData<T>> node.unsafe('initial'), this.initial);
                     break;
                 case 'alignment': {
-                    const nodeStyleMap = (<InitialData<T>> node.unsafe('initial')).styleMap;
                     const styleMap = this._styleMap;
-                    const initialStyleMap = this._initial.styleMap;
-                    this.positionAuto = node.positionAuto;
                     for (const attr of INHERIT_ALIGNMENT) {
                         styleMap[attr] = node.css(attr);
-                        initialStyleMap[attr] = nodeStyleMap[attr];
                     }
                     if (!this.positionStatic) {
-                        for (const attr of $css.BOX_POSITION) {
+                        for (const attr of BOX_POSITION) {
                             if (node.hasPX(attr)) {
                                 styleMap[attr] = node.css(attr);
                             }
-                            initialStyleMap[attr] = nodeStyleMap[attr];
                         }
                     }
                     if (node.autoMargin.horizontal || node.autoMargin.vertical) {
-                        for (const attr of $css.BOX_MARGIN) {
+                        for (const attr of BOX_MARGIN) {
                             if (node.cssInitial(attr) === 'auto') {
                                 styleMap[attr] = 'auto';
-                                initialStyleMap[attr] = 'auto';
                             }
                         }
                     }
+                    this.positionAuto = node.positionAuto;
                     break;
                 }
                 case 'styleMap':
-                    $util.assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
+                    assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
                     break;
                 case 'textStyle':
                     this.cssApply(node.getTextStyle());
@@ -620,29 +612,29 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public hasAlign(value: number) {
-        return $util.hasBit(this.alignmentType, value);
+        return hasBit(this.alignmentType, value);
     }
 
     public hasResource(value: number) {
-        return !$util.hasBit(this.excludeResource, value);
+        return !hasBit(this.excludeResource, value);
     }
 
     public hasProcedure(value: number) {
-        return !$util.hasBit(this.excludeProcedure, value);
+        return !hasBit(this.excludeProcedure, value);
     }
 
     public hasSection(value: number) {
-        return !$util.hasBit(this.excludeSection, value);
+        return !hasBit(this.excludeSection, value);
     }
 
     public exclude(resource = 0, procedure = 0, section = 0) {
-        if (resource > 0 && !$util.hasBit(this._excludeResource, resource)) {
+        if (resource > 0 && !hasBit(this._excludeResource, resource)) {
             this._excludeResource |= resource;
         }
-        if (procedure > 0 && !$util.hasBit(this._excludeProcedure, procedure)) {
+        if (procedure > 0 && !hasBit(this._excludeProcedure, procedure)) {
             this._excludeProcedure |= procedure;
         }
-        if (section > 0 && !$util.hasBit(this._excludeSection, section)) {
+        if (section > 0 && !hasBit(this._excludeSection, section)) {
             this._excludeSection |= section;
         }
     }
@@ -661,7 +653,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     for (let name of exclude.split('|')) {
                         name = name.trim().toUpperCase();
                         const value = enumeration[name];
-                        if (value && !$util.hasBit(offset, value)) {
+                        if (value && !hasBit(offset, value)) {
                             offset |= value;
                         }
                     }
@@ -712,8 +704,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
         else if (this.pageFlow || this.positionAuto) {
             const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth;
-            const checkBlockDimension = (previous: T) => $util.aboveRange(this.linear.top, previous.linear.bottom) && (isBlockWrap(this) || isBlockWrap(previous) || this.float !== previous.float);
-            if ($util.isArray(siblings)) {
+            const checkBlockDimension = (previous: T) => aboveRange(this.linear.top, previous.linear.bottom) && (isBlockWrap(this) || isBlockWrap(previous) || this.float !== previous.float);
+            if (isArray(siblings)) {
                 if (cleared?.has(this)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
@@ -723,7 +715,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         if (horizontal && this.float === lastSibling.float) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if ($util.aboveRange(this.linear.top, lastSibling.linear.bottom)) {
+                        else if (aboveRange(this.linear.top, lastSibling.linear.bottom)) {
                             return NODE_TRAVERSE.FLOAT_WRAP;
                         }
                         else if (horizontal && cleared?.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === this.float)) {
@@ -759,7 +751,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                             maxBottom = item.bounds.bottom;
                                         }
                                     }
-                                    if ($util.belowRange(actualTop, maxBottom)) {
+                                    if (belowRange(actualTop, maxBottom)) {
                                         return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
                                     }
                                     else {
@@ -786,11 +778,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (previous.lineBreak) {
                     return NODE_TRAVERSE.LINEBREAK;
                 }
-                else if (cleared?.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous)) {
+                else if (cleared?.get(previous) === 'both' && (!isArray(siblings) || siblings[0] !== previous)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else if (
-                    blockStatic && (!previous.floating || !previous.rightAligned && $util.withinRange(previous.linear.right, parent.box.right) || cleared?.has(previous)) ||
+                    blockStatic && (!previous.floating || !previous.rightAligned && withinRange(previous.linear.right, parent.box.right) || cleared?.has(previous)) ||
                     previous.blockStatic ||
                     previous.autoMargin.leftRight)
                 {
@@ -800,7 +792,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     if (previous.float === 'left' && this.autoMargin.right || previous.float === 'right' && this.autoMargin.left) {
                         return NODE_TRAVERSE.VERTICAL;
                     }
-                    else if (blockStatic && this.some(item => item.floating && $util.aboveRange(item.linear.top, previous.linear.bottom))) {
+                    else if (blockStatic && this.some(item => item.floating && aboveRange(item.linear.top, previous.linear.bottom))) {
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                 }
@@ -829,7 +821,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         while (element) {
-            const node = $session.getElementAsNode<T>(element, this.sessionId);
+            const node = getElementAsNode<T>(element, this.sessionId);
             if (node) {
                 if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
                     result.push(node);
@@ -866,7 +858,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         while (element) {
-            const node = $session.getElementAsNode<T>(element, this.sessionId);
+            const node = getElementAsNode<T>(element, this.sessionId);
             if (node) {
                 if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
                     result.push(node);
@@ -892,18 +884,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (attr) {
                 if (offset === undefined) {
                     if (this._boxReset === undefined) {
-                        this._boxReset = $dom.newBoxModel();
+                        this._boxReset = newBoxModel();
                     }
                     this._boxReset[attr] = 1;
                 }
                 else {
                     if (this._boxAdjustment === undefined) {
-                        this._boxAdjustment = $dom.newBoxModel();
+                        this._boxAdjustment = newBoxModel();
                     }
                     if (!negative) {
                         if (this[attr] + this._boxAdjustment[attr] + offset <= 0) {
                             if (this._boxReset === undefined) {
-                                this._boxReset = $dom.newBoxModel();
+                                this._boxReset = newBoxModel();
                             }
                             this._boxReset[attr] = 1;
                             this._boxAdjustment[attr] = 0;
@@ -935,7 +927,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public resetBox(region: number, node?: T) {
         if (this._boxReset === undefined) {
-            this._boxReset = $dom.newBoxModel();
+            this._boxReset = newBoxModel();
         }
         const boxReset = this._boxReset;
         const applyReset = (attrs: string[], start: number) => {
@@ -948,7 +940,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         const value = this[attr];
                         if (value !== 0) {
                             if (!node.naturalChild && node[attr] === 0) {
-                                node.css(attr, $css.formatPX(value), true);
+                                node.css(attr, formatPX(value), true);
                             }
                             else {
                                 node.modifyBox(key, value);
@@ -959,17 +951,17 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
         };
-        if ($util.hasBit(region, BOX_STANDARD.MARGIN)) {
-            applyReset($css.BOX_MARGIN, 0);
+        if (hasBit(region, BOX_STANDARD.MARGIN)) {
+            applyReset(BOX_MARGIN, 0);
         }
-        if ($util.hasBit(region, BOX_STANDARD.PADDING)) {
-            applyReset($css.BOX_PADDING, 4);
+        if (hasBit(region, BOX_STANDARD.PADDING)) {
+            applyReset(BOX_PADDING, 4);
         }
     }
 
     public transferBox(region: number, node: T) {
         if (this._boxAdjustment === undefined) {
-            this._boxAdjustment = $dom.newBoxModel();
+            this._boxAdjustment = newBoxModel();
         }
         const boxAdjustment = this._boxAdjustment;
         if (boxAdjustment) {
@@ -984,11 +976,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
             };
-            if ($util.hasBit(region, BOX_STANDARD.MARGIN)) {
-                applyReset($css.BOX_MARGIN, 0);
+            if (hasBit(region, BOX_STANDARD.MARGIN)) {
+                applyReset(BOX_MARGIN, 0);
             }
-            if ($util.hasBit(region, BOX_STANDARD.PADDING)) {
-                applyReset($css.BOX_PADDING, 4);
+            if (hasBit(region, BOX_STANDARD.PADDING)) {
+                applyReset(BOX_PADDING, 4);
             }
         }
     }
@@ -1007,9 +999,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return register[region];
     }
 
-    public actualRect(direction: string, dimension = 'linear') {
+    public actualRect(direction: string, dimension = 'linear', all = false) {
         const value = this[dimension][direction] as number;
-        if (this.inputElement) {
+        if (this.inputElement || all) {
             const companion = this.companion;
             if (companion && !companion.visible) {
                 const outer = companion[dimension][direction] as number;
@@ -1151,7 +1143,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get naturalChild() {
-        return this._element?.parentElement !== null;
+        return !!this._element?.parentElement;
     }
 
     get pseudoElement() {
@@ -1174,7 +1166,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             result = '';
             const element = <HTMLInputElement> this.element;
             if (element) {
-                if ($dom.isTextNode(element)) {
+                if (isTextNode(element)) {
                     result = 'PLAINTEXT';
                 }
                 else if (element.tagName === 'INPUT') {
@@ -1271,7 +1263,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     set overflow(value: number) {
         if (value === 0 || value === NODE_ALIGNMENT.VERTICAL || value === NODE_ALIGNMENT.HORIZONTAL || value === (NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.VERTICAL)) {
-            if ($util.hasBit(this.overflow, NODE_ALIGNMENT.BLOCK)) {
+            if (hasBit(this.overflow, NODE_ALIGNMENT.BLOCK)) {
                 value |= NODE_ALIGNMENT.BLOCK;
             }
             this._cached.overflow = value;
@@ -1405,6 +1397,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             this._cached.whiteSpace = result;
         }
         return result;
+    }
+
+    get outerExtensionElement() {
+        if (this.naturalChild) {
+            let current = (this._element as Element).parentElement;
+            while (current) {
+                if (current.dataset.use) {
+                    return current;
+                }
+                current = current.parentElement;
+            }
+        }
+        return null;
     }
 
     set fontSize(value) {

@@ -2,7 +2,7 @@ import { UserSettingsChrome } from '../../@types/chrome/application';
 
 import Resource from './resource';
 
-const $dom = squared.lib.dom;
+const { isTextNode } = squared.lib.dom;
 
 const ASSETS = Resource.ASSETS;
 
@@ -14,7 +14,7 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     public finalize() {}
 
     public insertNode(element: Element, parent?: T) {
-        if ($dom.isTextNode(element)) {
+        if (isTextNode(element)) {
             if (this.userSettings.excludePlainText) {
                 return undefined;
             }

@@ -4,7 +4,7 @@ import NodeUI from './node-ui';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
-const $util = squared.lib.util;
+const { aboveRange, hasBit } = squared.lib.util;
 
 export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements squared.base.LayoutUI<T> {
     public rowCount = 0;
@@ -92,18 +92,18 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     public hasAlign(value: number) {
-        return $util.hasBit(this.alignmentType, value);
+        return hasBit(this.alignmentType, value);
     }
 
     public add(value: number) {
-        if (!$util.hasBit(this.alignmentType, value)) {
+        if (!hasBit(this.alignmentType, value)) {
             this.alignmentType |= value;
         }
         return this.alignmentType;
     }
 
     public delete(value: number) {
-        if ($util.hasBit(this.alignmentType, value)) {
+        if (hasBit(this.alignmentType, value)) {
             this.alignmentType ^= value;
         }
         return this.alignmentType;
@@ -144,7 +144,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
                             break;
                         }
                         else {
-                            if ($util.aboveRange(node.linear.top, previousBottom)) {
+                            if (aboveRange(node.linear.top, previousBottom)) {
                                 this._singleRow = false;
                                 break;
                             }

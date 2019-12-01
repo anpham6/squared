@@ -4,10 +4,9 @@ import NodeUI from '../node-ui';
 import { CSS_SPACING } from '../lib/constant';
 import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
-const {
-    css: $css,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { formatPX } = $lib.css;
+const { hasBit } = $lib.util;
 
 const DOCTYPE_HTML = document.doctype !== null && document.doctype.name === 'html';
 
@@ -140,7 +139,7 @@ function resetMargin(node: NodeUI, value: number) {
         node.modifyBox(value);
     }
     else {
-        for (const outerWrapper of node.ascend(undefined, undefined, 'outerWrapper')) {
+        for (const outerWrapper of node.ascend(undefined, undefined, 'outerWrapper') as NodeUI[]) {
             if (outerWrapper.getBox(value)[1] >= offset) {
                 outerWrapper.modifyBox(value, -offset);
                 break;
@@ -179,7 +178,7 @@ function isBlockElement(node: NodeUI | null, direction?: boolean, checkIndex = f
     return false;
 }
 
-const setMinHeight = (node: NodeUI, offset: number) => node.css('minHeight', $css.formatPX(Math.max(offset, node.hasPX('minHeight', false) ? node.parseUnit(node.css('minHeight')) : 0)));
+const setMinHeight = (node: NodeUI, offset: number) => node.css('minHeight', formatPX(Math.max(offset, node.hasPX('minHeight', false) ? node.parseUnit(node.css('minHeight')) : 0)));
 
 const canResetChild = (node: NodeUI) => !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
 
@@ -287,7 +286,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (marginBottom > 0) {
                                     if (marginTop > 0) {
                                         if (marginTop <= marginBottom) {
-                                            if (!inheritedTop || !$util.hasBit(current.overflow, NODE_ALIGNMENT.BLOCK)) {
+                                            if (!inheritedTop || !hasBit(current.overflow, NODE_ALIGNMENT.BLOCK)) {
                                                 if (inheritedTop) {
                                                     current.setCacheValue('marginTop', 0);
                                                     inheritedTop = false;
@@ -296,7 +295,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             }
                                         }
                                         else {
-                                            if (!inheritedBottom || !$util.hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
+                                            if (!inheritedBottom || !hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
                                                 if (inheritedBottom) {
                                                     previous.setCacheValue('marginBottom', 0);
                                                     inheritedBottom = false;
@@ -331,7 +330,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                 }
-                if (!$util.hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && !(node.documentParent.layoutElement && node.documentParent.css('flexDirection').startsWith('column')) && node.tagName !== 'FIELDSET') {
+                if (!hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && !(node.documentParent.layoutElement && node.documentParent.css('flexDirection').startsWith('column')) && node.tagName !== 'FIELDSET') {
                     if (firstChild) {
                         applyMarginCollapse(node, firstChild, true);
                     }

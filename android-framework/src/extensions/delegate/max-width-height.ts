@@ -5,10 +5,7 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const {
-    constant: $c,
-    enumeration: $e
-} = squared.base.lib;
+const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 export interface MaxWidthHeightData {
     width: boolean;
@@ -25,21 +22,21 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         const { maxWidth, maxHeight } = node.support;
         let width = false;
         let height = false;
-        if (!maxWidth && !isNaN(node.width) && node.hasPX('maxWidth') && !parent.hasAlign($e.NODE_ALIGNMENT.COLUMN)) {
+        if (!maxWidth && !isNaN(node.width) && node.hasPX('maxWidth') && !parent.hasAlign(NODE_ALIGNMENT.COLUMN)) {
             width = true;
         }
         if (!maxHeight && !isNaN(node.height) && node.hasPX('maxHeight') && parent.hasHeight) {
             height = true;
         }
         if (width || height) {
-            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, $c.STRING_BASE.EXT_DATA, <MaxWidthHeightData> { width, height });
+            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { width, height });
             return true;
         }
         return false;
     }
 
     public processNode(node: T, parent: T) {
-        const mainData: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, $c.STRING_BASE.EXT_DATA);
+        const mainData: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
         if (mainData) {
             const container = parent.layoutConstraint ? parent : (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, View.getControlName(CONTAINER_NODE.CONSTRAINT, node.localSettings.targetAPI), CONTAINER_NODE.CONSTRAINT);
             if (mainData.width) {
@@ -74,7 +71,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                             parent,
                             container,
                             container.containerType,
-                            $e.NODE_ALIGNMENT.SINGLE,
+                            NODE_ALIGNMENT.SINGLE,
                             container.children as T[]
                         )
                     )

@@ -7,12 +7,11 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const {
-    css: $css,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { formatPX } = $lib.css;
+const { withinRange } = $lib.util;
 
-const $e = squared.base.lib.enumeration;
+const { NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
 
 export default class Guideline<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ConstraintGuidelineOptions = {
@@ -28,14 +27,14 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
     }
 
     public processNode(node: T, parent: T) {
-        node.exclude(0, $e.NODE_PROCEDURE.CONSTRAINT);
+        node.exclude(0, NODE_PROCEDURE.CONSTRAINT);
         return {
             output: this.application.renderNode(
                 new $LayoutUI(
                     parent,
                     node,
                     CONTAINER_NODE.CONSTRAINT,
-                    $e.NODE_ALIGNMENT.ABSOLUTE,
+                    NODE_ALIGNMENT.ABSOLUTE,
                     node.children as T[]
                 )
             )
@@ -49,11 +48,11 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
         let anchor!: T;
         node.each((item: T) => {
             const linear = item.linear;
-            if ($util.withinRange(linear.left, left)) {
+            if (withinRange(linear.left, left)) {
                 item.anchor('left', 'parent');
                 item.anchorStyle(STRING_ANDROID.HORIZONTAL);
             }
-            if ($util.withinRange(linear.top, top)) {
+            if (withinRange(linear.top, top)) {
                 item.anchor('top', 'parent');
                 item.anchorStyle(STRING_ANDROID.VERTICAL);
             }
@@ -129,7 +128,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                         degrees = x1 > x2 ? 90 : 270;
                     }
                     item.app('layout_constraintCircle', anchor.documentId);
-                    item.app('layout_constraintCircleRadius', $css.formatPX(radius));
+                    item.app('layout_constraintCircleRadius', formatPX(radius));
                     item.app('layout_constraintCircleAngle', degrees.toString());
                 }
             });

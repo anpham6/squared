@@ -1,13 +1,13 @@
 import { CONTAINER_ANDROID } from '../lib/constant';
 
-const $e = squared.base.lib.enumeration;
+const { NODE_PROCEDURE } = squared.base.lib.enumeration;
 
 export default class <T extends android.base.View> extends squared.base.extensions.Accessibility<T> {
     public readonly eventOnly = true;
 
     public afterBaseLayout() {
         for (const node of this.application.processing.cache) {
-            if (node.inputElement && node.visible && node.hasProcedure($e.NODE_PROCEDURE.ACCESSIBILITY)) {
+            if (node.inputElement && node.visible && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (node.controlName) {
                     case CONTAINER_ANDROID.EDIT:
                         if (!node.companion) {

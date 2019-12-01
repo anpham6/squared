@@ -6,18 +6,14 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const {
-    css: $css,
-    regex: $regex,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { formatPX } = $lib.css;
+const { CHAR } = $lib.regex;
+const { aboveRange, convertFloat, convertInt, trimEnd } = $lib.util;
 
-const {
-    constant: $c,
-    enumeration: $e
-} = squared.base.lib;
-
-const formatPX = $css.formatPX;
+const $base_lib = squared.base.lib;
+const { EXT_NAME } = $base_lib.constant;
+const { CSS_UNIT, NODE_ALIGNMENT } = $base_lib.enumeration;
 
 function setLayoutHeight(node: View) {
     if (node.hasPX('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {
@@ -28,24 +24,24 @@ function setLayoutHeight(node: View) {
 export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const mainData: TableData = node.data($c.EXT_NAME.TABLE, $c.STRING_BASE.EXT_DATA);
+        const mainData: TableData = node.data(EXT_NAME.TABLE, 'mainData');
         if (mainData) {
             let requireWidth = false;
             if (mainData.columnCount > 1) {
                 requireWidth = mainData.expand;
                 node.each((item: T) => {
-                    const data = item.data($c.EXT_NAME.TABLE, 'cellData');
-                    if ($regex.CHAR.UNITZERO.test(item.css('width'))) {
+                    const data = item.data(EXT_NAME.TABLE, 'cellData');
+                    if (CHAR.UNITZERO.test(item.css('width'))) {
                         item.setLayoutWidth('0px');
                         item.android('layout_columnWeight', ((<HTMLTableCellElement> item.element).colSpan || 1).toString());
                     }
                     else {
                         const expand: boolean | undefined = data.expand;
                         if (expand) {
-                            const percent = $util.convertFloat(data.percent) / 100;
+                            const percent = convertFloat(data.percent) / 100;
                             if (percent > 0) {
                                 item.setLayoutWidth('0px');
-                                item.android('layout_columnWeight', $util.trimEnd(percent.toPrecision(3), '0'));
+                                item.android('layout_columnWeight', trimEnd(percent.toPrecision(3), '0'));
                                 if (!requireWidth) {
                                     requireWidth = !item.hasWidth;
                                 }
@@ -75,7 +71,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             }
             else {
                 node.each((item: T) => {
-                    if (item.has('width', $e.CSS_UNIT.PERCENT)) {
+                    if (item.has('width', CSS_UNIT.PERCENT)) {
                         item.setLayoutWidth('wrap_content');
                         requireWidth = true;
                     }
@@ -83,7 +79,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 });
             }
             if (requireWidth) {
-                if (parent.hasPX('width') && $util.aboveRange(node.actualWidth, parent.actualWidth)) {
+                if (parent.hasPX('width') && aboveRange(node.actualWidth, parent.actualWidth)) {
                     node.setLayoutWidth('match_parent');
                 }
                 else {
@@ -111,7 +107,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 parent,
                 node,
                 CONTAINER_NODE.GRID,
-                $e.NODE_ALIGNMENT.AUTO_LAYOUT,
+                NODE_ALIGNMENT.AUTO_LAYOUT,
                 node.children as T[]
             );
             layout.rowCount = mainData.rowCount;
@@ -125,7 +121,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const data: TableCellData = node.data($c.EXT_NAME.TABLE, 'cellData');
+        const data: TableCellData = node.data(EXT_NAME.TABLE, 'cellData');
         if (data) {
             const { rowSpan, colSpan, spaceSpan } = data;
             if (rowSpan > 1) {
@@ -151,7 +147,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     }
 
     public postOptimize(node: T) {
-        const layoutWidth = $util.convertInt(node.layoutWidth);
+        const layoutWidth = convertInt(node.layoutWidth);
         if (layoutWidth > 0) {
             const width = node.bounds.width;
             if (width > layoutWidth) {

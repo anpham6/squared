@@ -12,10 +12,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             }
             this.setBounds();
             this.saveAsInitial();
-            const actualParent = this.actualParent;
-            if (actualParent) {
-                this.dir = actualParent.dir;
-            }
+            this.dir = this.actualParent?.dir || '';
         }
     }
 
@@ -29,12 +26,12 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     public previousSiblings(options?: SiblingOptions) {
-        const node = <NodeUI> this._initial.children[0];
+        const node = <NodeUI> (this._initial.children || this.children)[0];
         return node ? node.previousSiblings(options) : [];
     }
 
     public nextSiblings(options?: SiblingOptions) {
-        const children = this._initial.children;
+        const children = this._initial.children || this.children;
         const node = <NodeUI> children[children.length - 1];
         return node ? node.nextSiblings(options) : [];
     }

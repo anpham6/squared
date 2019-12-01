@@ -7,18 +7,17 @@ import View from '../../view';
 import { BUILD_ANDROID } from '../../lib/enumeration';
 import { convertLength } from '../../lib/util';
 
+const $lib = squared.lib;
+const { XML } = $lib.regex;
+const { capitalize, convertInt, convertWord, filterArray, objectMap, spliceArray, trimString } = $lib.util;
+
+const { NODE_RESOURCE } = squared.base.lib.enumeration;
+
 type StyleList = ObjectMap<number[]>;
 type SharedAttributes = ObjectMapNested<number[]>;
 type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
-
-const {
-    regex: $regex,
-    util: $util
-} = squared.lib;
-
-const $e = squared.base.lib.enumeration;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const REGEXP_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
@@ -99,7 +98,7 @@ function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number
                 }
             }
             if (index !== -1) {
-                sorted[index][key] = $util.filterArray(sorted[index][key], id => !ids.includes(id));
+                sorted[index][key] = filterArray(sorted[index][key], id => !ids.includes(id));
                 if (sorted[index][key].length === 0) {
                     delete sorted[index][key];
                 }
@@ -125,7 +124,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         for (const node of this.application.session.cache) {
-            if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource($e.NODE_RESOURCE.FONT_STYLE)) {
+            if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
                 if (nameMap[node.containerName] === undefined) {
                     nameMap[node.containerName] = [];
                 }
@@ -146,9 +145,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (stored.backgroundColor) {
                     stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 }
-                stored.fontFamily.replace(REGEXP_DOUBLEQUOTE, '').split($regex.XML.SEPARATOR).some((value, index, array) => {
+                stored.fontFamily.replace(REGEXP_DOUBLEQUOTE, '').split(XML.SEPARATOR).some((value, index, array) => {
                     const { fontStyle, fontWeight } = stored;
-                    value = $util.trimString(value, "'");
+                    value = trimString(value, "'");
                     let fontFamily = value.toLowerCase();
                     let customFont = false;
                     if (!this.options.disableFontAlias && FONTREPLACE_ANDROID[fontFamily]) {
@@ -168,11 +167,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 return false;
                             }
                             else if (index > 0) {
-                                value = $util.trimString(array[0], "'");
+                                value = trimString(array[0], "'");
                                 fontFamily = value.toLowerCase();
                             }
                         }
-                        fontFamily = $util.convertWord(fontFamily);
+                        fontFamily = convertWord(fontFamily);
                         if (createFont) {
                             const fontData = fonts.get(fontFamily) || {};
                             fontData[value + '|' + fontStyle + '|' + fontWeight] = FONTWEIGHT_ANDROID[fontWeight] || fontWeight;
@@ -220,7 +219,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const tag in groupMap) {
             const styleTag = {};
             style[tag] = styleTag;
-            const sorted = $util.filterArray(groupMap[tag], item => item !== undefined).sort((a, b) => {
+            const sorted = filterArray(groupMap[tag], item => item !== undefined).sort((a, b) => {
                 let maxA = 0;
                 let maxB = 0;
                 let countA = 0;
@@ -329,7 +328,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                             for (const attr in combined) {
                                 const attrs = Array.from(combined[attr]).sort().join(';');
-                                const ids = $util.objectMap<string, number>(attr.split($regex.XML.SEPARATOR), value => parseInt(value));
+                                const ids = objectMap<string, number>(attr.split(XML.SEPARATOR), value => parseInt(value));
                                 deleteStyleAttribute(sorted, attrs, ids);
                                 styleTag[attrs] = ids;
                             }
@@ -339,7 +338,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     if (shared.length) {
                         styleTag[shared.join(';')] = styleKey[shared[0]];
                     }
-                    $util.spliceArray(sorted, item => {
+                    spliceArray(sorted, item => {
                         for (const attr in item) {
                             if (item[attr].length) {
                                 return false;
@@ -360,7 +359,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (const attrs in styleTag) {
                 const items: StringValue[] = [];
                 for (const value of attrs.split(';')) {
-                    const match = $regex.XML.ATTRIBUTE.exec(value);
+                    const match = XML.ATTRIBUTE.exec(value);
                     if (match) {
                         items.push({ key: match[1], value: match[2] });
                     }
@@ -395,7 +394,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             });
             const lengthA = styleData.length;
             for (let i = 0; i < lengthA; i++) {
-                styleData[i].name = $util.capitalize(tag) + (i > 0 ? '_' + i : '');
+                styleData[i].name = capitalize(tag) + (i > 0 ? '_' + i : '');
             }
             resourceMap[tag] = styleData;
         }
@@ -439,7 +438,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             value.split('.').forEach((tag, index, array) => {
                 const match = REGEXP_TAGNAME.exec(tag);
                 if (match) {
-                    const styleData = resourceMap[match[1].toUpperCase()][$util.convertInt(match[2])];
+                    const styleData = resourceMap[match[1].toUpperCase()][convertInt(match[2])];
                     if (styleData) {
                         if (index === 0) {
                             parent = tag;

@@ -9,11 +9,10 @@ import SvgContainer from './svgcontainer';
 import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getDOMRect, getTargetElement } from './lib/util';
 
-const {
-    color: $color,
-    dom: $dom,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { parseColor } = $lib.color;
+const { getNamedItem } = $lib.dom;
+const { cloneObject, convertFloat } = $lib.util;
 
 function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];
@@ -21,11 +20,11 @@ function getColorStop(element: SVGGradientElement) {
     const length = stops.length;
     for (let i = 0; i < length; i++) {
         const item = stops[i];
-        const color = $color.parseColor($dom.getNamedItem(item, 'stop-color'), $util.convertFloat($dom.getNamedItem(item, 'stop-opacity') || '1'));
+        const color = parseColor(getNamedItem(item, 'stop-color'), convertFloat(getNamedItem(item, 'stop-opacity') || '1'));
         if (color) {
             result.push({
                 color,
-                offset: parseFloat($dom.getNamedItem(item, 'offset')) / 100
+                offset: parseFloat(getNamedItem(item, 'offset')) / 100
             });
         }
     }
@@ -77,7 +76,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     private init() {
         const element = this.element;
         if (this.documentRoot) {
-            $util.cloneObject(element.viewBox.baseVal, this.aspectRatio);
+            cloneObject(element.viewBox.baseVal, this.aspectRatio);
             element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((animation: SVGAnimationElement) => {
                 const target = getTargetElement(animation, element);
                 if (target) {

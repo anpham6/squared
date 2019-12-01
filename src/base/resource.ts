@@ -2,10 +2,9 @@ import { ControllerSettings, ResourceAssetMap, UserSettings } from '../../@types
 
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
 
-const {
-    regex: $regex,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { CSS, STRING } = $lib.regex;
+const { buildAlphaString, fromLastIndexOf } = $lib.util;
 
 export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
     public static ASSETS: ResourceAssetMap = {
@@ -35,7 +34,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public addImage(element: HTMLImageElement | undefined) {
         if (element?.complete) {
             if (element.src.startsWith('data:image/')) {
-                const match = new RegExp(`^${$regex.STRING.DATAURI}$`).exec(element.src);
+                const match = new RegExp(`^${STRING.DATAURI}$`).exec(element.src);
                 if (match && match[1] && match[2]) {
                     this.addRawData(element.src, match[1], match[2], match[3], element.naturalWidth, element.naturalHeight);
                 }
@@ -82,11 +81,11 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         }
         const imageFormat = this.controllerSettings.supported.imageFormat;
         const pathname = dataURI.startsWith(location.origin) ? dataURI.substring(location.origin.length + 1, dataURI.lastIndexOf('/')) : '';
-        const getFileName = () => $util.buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
+        const getFileName = () => buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
         let filename: string | undefined;
         if (imageFormat === '*') {
             if (dataURI.startsWith(location.origin)) {
-                filename = $util.fromLastIndexOf(dataURI, '/');
+                filename = fromLastIndexOf(dataURI, '/');
             }
             else {
                 let extension = mimeType.split('/').pop();
@@ -100,7 +99,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
             for (const extension of imageFormat) {
                 if (mimeType.indexOf(extension) !== -1) {
                     if (dataURI.endsWith('.' + extension)) {
-                        filename = $util.fromLastIndexOf(dataURI, '/');
+                        filename = fromLastIndexOf(dataURI, '/');
                     }
                     else {
                         filename = getFileName() + '.' + extension;
@@ -126,7 +125,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
 
     public getRawData(dataURI: string) {
         if (dataURI.startsWith('url(')) {
-            const match = $regex.CSS.URL.exec(dataURI);
+            const match = CSS.URL.exec(dataURI);
             if (match) {
                 dataURI = match[1];
             }

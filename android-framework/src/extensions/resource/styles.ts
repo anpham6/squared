@@ -5,10 +5,9 @@ import View from '../../view';
 
 import { createStyleAttribute } from '../../lib/util';
 
-const {
-    regex: $regex,
-    util: $util
-} = squared.lib;
+const $lib = squared.lib;
+const { XML } = $lib.regex;
+const { capitalize, trimString } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const REGEXP_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;
@@ -58,7 +57,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         }
                         if (attrMap.size > 1) {
                             if (style !== '') {
-                                style = $util.trimString(style.substring(style.indexOf('/') + 1), '"');
+                                style = trimString(style.substring(style.indexOf('/') + 1), '"');
                             }
                             const common: string[] = [];
                             for (const attr of attrMap.keys()) {
@@ -80,7 +79,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 }
                             }
                             if (style === '' || !name.startsWith(style + '.')) {
-                                name = (style !== '' ? style + '.' : '') + $util.capitalize(node.controlId);
+                                name = (style !== '' ? style + '.' : '') + capitalize(node.controlId);
                                 styles[name] = common;
                                 styleCache[name] = commonString;
                             }
@@ -96,7 +95,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
             const items: StringValue[] = [];
             const data = styles[name];
             for (const attr in data) {
-                const match = $regex.XML.ATTRIBUTE.exec(data[attr]);
+                const match = XML.ATTRIBUTE.exec(data[attr]);
                 if (match) {
                     items.push({ key: match[1], value: match[2] });
                 }

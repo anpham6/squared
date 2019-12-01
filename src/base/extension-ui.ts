@@ -2,19 +2,18 @@ import { ExtensionResult } from '../../@types/base/application';
 
 import Extension from './extension';
 
-const {
-    css: $css,
-    util: $util,
-} = squared.lib;
+const $lib = squared.lib;
+const { hasComputedStyle } = $lib.css;
+const { includes } = $lib.util;
 
 export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
     public static findNestedElement(element: Element | null, name: string) {
-        if (element && $css.hasComputedStyle(element)) {
+        if (element && hasComputedStyle(element)) {
             const children = element.children;
             const length = children.length;
             for (let i = 0; i < length; i++) {
                 const item = <HTMLElement> children[i];
-                if ($util.includes(item.dataset.use, name)) {
+                if (includes(item.dataset.use, name)) {
                     return item;
                 }
             }
@@ -54,7 +53,7 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     }
 
     public included(element: HTMLElement) {
-        return $util.includes(element.dataset.use, this.name);
+        return includes(element.dataset.use, this.name);
     }
 
     public init(element: HTMLElement) {
