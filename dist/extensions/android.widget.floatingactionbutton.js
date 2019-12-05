@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 1.3.3
+/* android.widget.floatingactionbutton 1.3.5
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,10 +6,15 @@ this.android.widget = this.android.widget || {};
 this.android.widget.floatingactionbutton = (function () {
     'use strict';
 
-    const { color: $color, util: $util } = squared.lib;
-    const { constant: $constA, enumeration: $enumA, util: $utilA } = android.lib;
-    const $Resource = android.base.Resource;
-    const $e = squared.base.lib.enumeration;
+    const $lib = squared.lib;
+    const { parseColor } = $lib.color;
+    const { assignEmptyValue } = $lib.util;
+    const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+    const $libA = android.lib;
+    const { EXT_ANDROID, STRING_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
+    const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
+    const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
+    const { Resource } = android.base;
     const PREFIX_DIALOG = 'ic_dialog_';
     class FloatingActionButton extends squared.base.ExtensionUI {
         is(node) {
@@ -23,11 +28,11 @@ this.android.widget.floatingactionbutton = (function () {
             const resource = this.resource;
             const element = node.element;
             const target = node.dataset.target;
-            const options = $utilA.createViewAttribute(this.options[element.id]);
-            const colorName = $Resource.addColor($color.parseColor(node.css('backgroundColor'), node.toFloat('opacity', true, 1)));
-            $util.assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? '@color/' + colorName : '?attr/colorAccent');
-            if (!node.hasProcedure($e.NODE_PROCEDURE.ACCESSIBILITY)) {
-                $util.assignEmptyValue(options, 'android', 'focusable', 'false');
+            const options = createViewAttribute(this.options[element.id]);
+            const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', true, 1)));
+            assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? '@color/' + colorName : '?attr/colorAccent');
+            if (!node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
+                assignEmptyValue(options, 'android', 'focusable', 'false');
             }
             let src = '';
             switch (element.tagName) {
@@ -44,16 +49,16 @@ this.android.widget.floatingactionbutton = (function () {
                     break;
             }
             if (src !== '') {
-                $util.assignEmptyValue(options, 'app', 'srcCompat', '@drawable/' + src);
+                assignEmptyValue(options, 'app', 'srcCompat', '@drawable/' + src);
             }
-            const controlName = node.localSettings.targetAPI < 29 /* Q */ ? $constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : $constA.SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
-            node.setControlType(controlName, $enumA.CONTAINER_NODE.BUTTON);
-            node.exclude($e.NODE_RESOURCE.BOX_STYLE | $e.NODE_RESOURCE.ASSET);
-            $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
+            const controlName = node.localSettings.targetAPI < 29 /* Q */ ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
+            node.setControlType(controlName, CONTAINER_NODE.BUTTON);
+            node.exclude(NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET);
+            Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
             let parentAs;
             if (!node.pageFlow || target) {
-                const horizontalBias = $utilA.getHorizontalBias(node);
-                const verticalBias = $utilA.getVerticalBias(node);
+                const horizontalBias = getHorizontalBias(node);
+                const verticalBias = getVerticalBias(node);
                 const documentParent = node.documentParent;
                 const gravity = [];
                 if (horizontalBias < 0.5) {
@@ -63,7 +68,7 @@ this.android.widget.floatingactionbutton = (function () {
                     gravity.push(node.localizeString('right'));
                 }
                 else {
-                    gravity.push($constA.STRING_ANDROID.CENTER_HORIZONTAL);
+                    gravity.push(STRING_ANDROID.CENTER_HORIZONTAL);
                 }
                 if (verticalBias < 0.5) {
                     gravity.push('top');
@@ -73,7 +78,7 @@ this.android.widget.floatingactionbutton = (function () {
                     gravity.push('bottom');
                 }
                 else {
-                    gravity.push($constA.STRING_ANDROID.CENTER_VERTICAL);
+                    gravity.push(STRING_ANDROID.CENTER_VERTICAL);
                 }
                 for (const value of gravity) {
                     node.mergeGravity('layout_gravity', value);
@@ -98,7 +103,7 @@ this.android.widget.floatingactionbutton = (function () {
                 if (target) {
                     const layoutGravity = node.android('layout_gravity');
                     let anchor = parent.documentId;
-                    if (parent.controlName === (node.localSettings.targetAPI < 29 /* Q */ ? $constA.SUPPORT_ANDROID.TOOLBAR : $constA.SUPPORT_ANDROID_X.TOOLBAR)) {
+                    if (parent.controlName === (node.localSettings.targetAPI < 29 /* Q */ ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
                         const outerParent = parent.data("android.widget.toolbar" /* TOOLBAR */, 'outerParent');
                         if (outerParent) {
                             anchor = outerParent;
@@ -109,7 +114,7 @@ this.android.widget.floatingactionbutton = (function () {
                         node.delete('android', 'layout_gravity');
                     }
                     node.app('layout_anchor', anchor);
-                    node.exclude(0, $e.NODE_PROCEDURE.ALIGNMENT);
+                    node.exclude(0, NODE_PROCEDURE.ALIGNMENT);
                     node.render(this.application.resolveTarget(target));
                     parentAs = node.renderParent;
                 }

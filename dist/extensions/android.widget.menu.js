@@ -1,4 +1,4 @@
-/* android.widget.menu 1.3.3
+/* android.widget.menu 1.3.5
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,10 +6,13 @@ this.android.widget = this.android.widget || {};
 this.android.widget.menu = (function () {
     'use strict';
 
-    const { constant: $constA, enumeration: $enumA, util: $utilA } = android.lib;
-    const $Resource = android.base.Resource;
-    const $util = squared.lib.util;
-    const $e = squared.base.lib.enumeration;
+    const { isNumber } = squared.lib.util;
+    const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+    const $lib = android.lib;
+    const { EXT_ANDROID } = $lib.constant;
+    const { CONTAINER_NODE } = $lib.enumeration;
+    const { createViewAttribute } = $lib.util;
+    const { Resource } = android.base;
     const REGEXP_ITEM = {
         id: /^@\+id\/\w+$/,
         title: /^.+$/,
@@ -60,13 +63,14 @@ this.android.widget.menu = (function () {
         }
     }
     function getTitle(node, element) {
+        var _a;
         const title = element.title;
         if (title) {
             return title;
         }
         else {
             for (const child of node.naturalChildren) {
-                if (child && child.textElement) {
+                if ((_a = child) === null || _a === void 0 ? void 0 : _a.textElement) {
                     return child.textContent.trim();
                 }
             }
@@ -78,13 +82,13 @@ this.android.widget.menu = (function () {
         constructor(name, framework, options, tagNames) {
             super(name, framework, options, tagNames);
             this.cascadeAll = true;
-            this.require($constA.EXT_ANDROID.EXTERNAL, true);
+            this.require(EXT_ANDROID.EXTERNAL, true);
         }
         init(element) {
             if (this.included(element)) {
                 const children = element.children;
                 const length = children.length;
-                if (length) {
+                if (length > 0) {
                     const tagName = children[0].tagName;
                     for (let i = 1; i < length; i++) {
                         if (children[i].tagName !== tagName) {
@@ -112,8 +116,8 @@ this.android.widget.menu = (function () {
             parentAs.actualParent = parent.actualParent;
             node.documentRoot = true;
             node.addAlign(4 /* AUTO_LAYOUT */);
-            node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
-            node.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
+            node.setControlType(NAVIGATION.MENU, CONTAINER_NODE.INLINE);
+            node.exclude(NODE_RESOURCE.ALL, NODE_PROCEDURE.ALL);
             for (const item of node.cascade()) {
                 this.addDescendant(item);
             }
@@ -134,9 +138,9 @@ this.android.widget.menu = (function () {
                 node.hide();
                 return { next: true };
             }
-            const options = $utilA.createViewAttribute();
-            const element = node.element;
+            const options = createViewAttribute();
             const android = options.android;
+            const element = node.element;
             let controlName;
             let title = '';
             if (node.tagName === 'NAV') {
@@ -195,12 +199,12 @@ this.android.widget.menu = (function () {
                     break;
             }
             if (title !== '') {
-                const numberResourceValue = this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
-                const name = $Resource.addString(title, '', numberResourceValue);
-                android.title = numberResourceValue || !$util.isNumber(name) ? '@string/' + name : title;
+                const numberResourceValue = this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
+                const name = Resource.addString(title, '', numberResourceValue);
+                android.title = numberResourceValue || !isNumber(name) ? '@string/' + name : title;
             }
-            node.setControlType(controlName, $enumA.CONTAINER_NODE.INLINE);
-            node.exclude($e.NODE_RESOURCE.ALL, $e.NODE_PROCEDURE.ALL);
+            node.setControlType(controlName, CONTAINER_NODE.INLINE);
+            node.exclude(NODE_RESOURCE.ALL, NODE_PROCEDURE.ALL);
             node.render(parent);
             node.apply(options);
             return {

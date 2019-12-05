@@ -1,4 +1,4 @@
-/* squared 1.3.4
+/* squared 1.3.5
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -595,7 +595,7 @@
     }
     function sameArray(list, predicate) {
         const length = list.length;
-        if (length) {
+        if (length > 0) {
             let baseValue;
             for (let i = 0; i < length; i++) {
                 const value = predicate(list[i], i, list);
@@ -836,7 +836,7 @@
         every(predicate) {
             const children = this._children;
             const length = children.length;
-            if (length) {
+            if (length > 0) {
                 for (let i = 0; i < length; i++) {
                     if (!predicate(children[i], i, children)) {
                         return false;
@@ -1094,10 +1094,11 @@
         return value;
     }
     function nextMultiple(values, minimum = 0, offset) {
+        var _a;
         const length = values.length;
         if (length > 1) {
             const increment = minArray(values);
-            if (offset && offset.length === length) {
+            if (((_a = offset) === null || _a === void 0 ? void 0 : _a.length) === length) {
                 for (let i = 0; i < offset.length; i++) {
                     minimum = Math.max(minimum, offset[i] + values[i]);
                 }
@@ -3813,7 +3814,16 @@
         return false;
     }
     function isParentStyle(element, attr, ...styles) {
-        return element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr]) || element.parentElement && styles.includes(getStyle(element.parentElement)[attr]);
+        if (element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr])) {
+            return true;
+        }
+        else {
+            const parentElement = element.parentElement;
+            if (parentElement) {
+                return styles.includes(getStyle(parentElement)[attr]);
+            }
+        }
+        return false;
     }
     function getInheritedStyle(element, attr, exclude, ...tagNames) {
         let value = '';
@@ -4078,11 +4088,12 @@
         return result;
     }
     function getSrcSet(element, mimeType) {
+        var _a;
         const parentElement = element.parentElement;
         const result = [];
         const src = element.src;
         let { srcset, sizes } = element;
-        if (parentElement && parentElement.tagName === 'PICTURE') {
+        if (((_a = parentElement) === null || _a === void 0 ? void 0 : _a.tagName) === 'PICTURE') {
             const children = parentElement.children;
             const length = children.length;
             for (let i = 0; i < length; i++) {
@@ -4113,7 +4124,7 @@
                             break;
                     }
                     result.push({
-                        src: filepath + fromLastIndexOf(match[1], '/'),
+                        src: resolvePath(filepath + fromLastIndexOf(match[1], '/')),
                         pixelRatio,
                         width
                     });
@@ -4225,17 +4236,18 @@
         return match ? resolvePath(match[1]) : '';
     }
     function insertStyleSheetRule(value, index = 0) {
+        var _a;
         const style = document.createElement('style');
         if (isUserAgent(4 /* SAFARI */)) {
             style.appendChild(document.createTextNode(''));
         }
         document.head.appendChild(style);
         const sheet = style.sheet;
-        if (sheet && typeof sheet.insertRule === 'function') {
+        if (typeof ((_a = sheet) === null || _a === void 0 ? void 0 : _a.insertRule) === 'function') {
             try {
                 sheet.insertRule(value, index);
             }
-            catch (_a) {
+            catch (_b) {
                 return null;
             }
         }
@@ -4604,7 +4616,7 @@
         }
         let bounds;
         length = domRect.length;
-        if (length) {
+        if (length > 0) {
             bounds = assignRect(domRect[0]);
             let numberOfLines = 1;
             for (let i = 1; i < length; i++) {
@@ -4961,6 +4973,7 @@
         return output;
     }
     function formatTemplate(value, closeEmpty = true, startIndent = -1, char = '\t') {
+        var _a;
         const lines = [];
         let match;
         while ((match = REGEXP_FORMAT.ITEM.exec(value)) !== null) {
@@ -4986,7 +4999,7 @@
                     if (!REGEXP_FORMAT.CLOSETAG.exec(line.tag)) {
                         if (closeEmpty && line.value.trim() === '') {
                             const next = lines[i + 1];
-                            if (next && next.closing && next.tagName === line.tagName) {
+                            if (((_a = next) === null || _a === void 0 ? void 0 : _a.closing) && next.tagName === line.tagName) {
                                 line.tag = line.tag.replace(REGEXP_FORMAT.OPENTAG, ' />');
                                 i++;
                             }

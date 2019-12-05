@@ -1,4 +1,4 @@
-/* chrome-framework 1.3.0
+/* chrome-framework 1.3.5
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -16,7 +16,7 @@ var chrome = (function () {
         }
     }
 
-    const $dom = squared.lib.dom;
+    const { isTextNode } = squared.lib.dom;
     const ASSETS = Resource.ASSETS;
     class Application extends squared.base.Application {
         constructor() {
@@ -26,7 +26,7 @@ var chrome = (function () {
         }
         finalize() { }
         insertNode(element, parent) {
-            if ($dom.isTextNode(element)) {
+            if (isTextNode(element)) {
                 if (this.userSettings.excludePlainText) {
                     return undefined;
                 }
@@ -46,7 +46,9 @@ var chrome = (function () {
         }
     }
 
-    const { dom: $dom$1, session: $session } = squared.lib;
+    const $lib = squared.lib;
+    const { isTextNode: isTextNode$1 } = $lib.dom;
+    const { setElementCache } = $lib.session;
     class Controller extends squared.base.Controller {
         constructor(application, cache) {
             super();
@@ -74,8 +76,8 @@ var chrome = (function () {
             this._elementMap.clear();
         }
         applyDefaultStyles(element) {
-            if ($dom$1.isTextNode(element)) {
-                $session.setElementCache(element, 'styleMap', this.sessionId, {
+            if (isTextNode$1(element)) {
+                setElementCache(element, 'styleMap', this.sessionId, {
                     position: 'static',
                     display: 'inline',
                     verticalAlign: 'baseline',
@@ -104,34 +106,34 @@ var chrome = (function () {
     class ExtensionManager extends squared.base.ExtensionManager {
     }
 
-    const { regex: $regex, util: $util } = squared.lib;
+    const $lib$1 = squared.lib;
+    const { COMPONENT } = $lib$1.regex;
+    const { convertWord, fromLastIndexOf, resolvePath, spliceString, trimEnd } = $lib$1.util;
     const ASSETS$1 = Resource.ASSETS;
-    const CACHE_PATTERN = {
-        SRCSET: /\s*(.+?\.[^\s,]+).*?,\s*/,
-        SRCSET_SPECIFIER: /\s+[0-9.][wx]$/
-    };
+    const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
+    const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
     function parseUri(value) {
-        value = $util.trimEnd(value, '/');
-        const match = $regex.COMPONENT.PROTOCOL.exec(value);
+        value = trimEnd(value, '/');
+        const match = COMPONENT.PROTOCOL.exec(value);
         let pathname = '';
         let filename = '';
         if (match) {
             const host = match[2];
             const port = match[3];
             const path = match[4];
-            if (!value.startsWith($util.trimEnd(location.origin, '/'))) {
-                pathname = $util.convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
+            if (!value.startsWith(trimEnd(location.origin, '/'))) {
+                pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
             }
             if (path) {
                 const index = path.lastIndexOf('/');
                 if (index > 0) {
                     pathname += path.substring(1, index);
-                    filename = $util.fromLastIndexOf(path, '/');
+                    filename = fromLastIndexOf(path, '/');
                 }
             }
         }
         if (pathname !== '') {
-            const extension = filename.indexOf('.') !== -1 ? $util.fromLastIndexOf(filename, '.').toLowerCase() : undefined;
+            const extension = filename.indexOf('.') !== -1 ? fromLastIndexOf(filename, '.').toLowerCase() : undefined;
             return {
                 pathname,
                 filename,
@@ -187,7 +189,7 @@ var chrome = (function () {
             document.querySelectorAll('script').forEach(element => {
                 const src = element.src.trim();
                 if (src !== '') {
-                    const uri = $util.resolvePath(src);
+                    const uri = resolvePath(src);
                     const data = parseUri(uri);
                     if (this.validFile(data)) {
                         data.uri = uri;
@@ -206,7 +208,7 @@ var chrome = (function () {
             document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((element) => {
                 const href = element.href.trim();
                 if (href !== '') {
-                    const uri = $util.resolvePath(href);
+                    const uri = resolvePath(href);
                     const data = parseUri(uri);
                     if (this.validFile(data)) {
                         data.uri = uri;
@@ -252,16 +254,16 @@ var chrome = (function () {
                 const images = [];
                 let srcset = element.srcset.trim();
                 let match;
-                while ((match = CACHE_PATTERN.SRCSET.exec(srcset)) !== null) {
-                    images.push($util.resolvePath(match[1]));
-                    srcset = $util.spliceString(srcset, match.index, match[0].length);
+                while ((match = REGEX_SRCSET.exec(srcset)) !== null) {
+                    images.push(resolvePath(match[1]));
+                    srcset = spliceString(srcset, match.index, match[0].length);
                 }
                 srcset = srcset.trim();
                 if (srcset !== '') {
-                    images.push($util.resolvePath(srcset.replace(CACHE_PATTERN.SRCSET_SPECIFIER, '')));
+                    images.push(resolvePath(srcset.replace(REGEX_SRCSET_SPECIFIER, '')));
                 }
                 for (const src of images) {
-                    if ($regex.COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
+                    if (COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
                         const data = parseUri(src);
                         if (this.validFile(data)) {
                             data.uri = src;
@@ -352,9 +354,10 @@ var chrome = (function () {
             };
         }
         processFile(data) {
-            if (data.extension) {
+            const extension = data.extension;
+            if (extension) {
                 const options = this.options;
-                if (options.fileExtensions.includes(data.extension)) {
+                if (options.fileExtensions.includes(extension)) {
                     data.brotliQuality = Math.min(options.quality, 11);
                     return true;
                 }
@@ -372,9 +375,10 @@ var chrome = (function () {
             };
         }
         processFile(data) {
-            if (data.extension) {
+            const extension = data.extension;
+            if (extension) {
                 const options = this.options;
-                if (options.fileExtensions.includes(data.extension)) {
+                if (options.fileExtensions.includes(extension)) {
                     data.gzipQuality = Math.min(options.quality, 9);
                     return true;
                 }
@@ -419,7 +423,7 @@ var chrome = (function () {
             step((generator = generator.apply(thisArg, _arguments || [])).next());
         });
     };
-    const $util$1 = squared.lib.util;
+    const { flatArray, isString } = squared.lib.util;
     const framework = 4 /* CHROME */;
     let initialized = false;
     let application;
@@ -519,27 +523,27 @@ var chrome = (function () {
                 }
             },
             copyHtmlPage(directory, callback, name) {
-                if (file && $util$1.isString(directory)) {
+                if (file && isString(directory)) {
                     file.copying(directory, file.getHtmlPage(name), callback);
                 }
             },
             copyScriptAssets(directory, callback) {
-                if (file && $util$1.isString(directory)) {
+                if (file && isString(directory)) {
                     file.copying(directory, file.getScriptAssets(), callback);
                 }
             },
             copyLinkAssets(directory, callback, rel) {
-                if (file && $util$1.isString(directory)) {
+                if (file && isString(directory)) {
                     file.copying(directory, file.getLinkAssets(rel), callback);
                 }
             },
             copyImageAssets(directory, callback) {
-                if (file && $util$1.isString(directory)) {
+                if (file && isString(directory)) {
                     file.copying(directory, file.getImageAssets(), callback);
                 }
             },
             copyFontAssets(directory, callback) {
-                if (file && $util$1.isString(directory)) {
+                if (file && isString(directory)) {
                     file.copying(directory, file.getFontAssets(), callback);
                 }
             },
@@ -638,7 +642,7 @@ var chrome = (function () {
                         }
                     }));
                 }))();
-                return incomplete ? $util$1.flatArray(result) : result;
+                return incomplete ? flatArray(result) : result;
             }
             return [];
         })
