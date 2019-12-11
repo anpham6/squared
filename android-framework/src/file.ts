@@ -30,28 +30,28 @@ const REGEXP_DRAWABLE_UNIT = /"(-?[\d.]+)px"/g;
 const REGEXP_THEME_UNIT = />(-?[\d.]+)px</g;
 
 function getFileAssets(items: string[]) {
-    const result: FileAsset[] = [];
     const length = items.length;
-    for (let i = 0; i < length; i += 3) {
-        result.push({
+    const result: FileAsset[] = new Array(length / 3);
+    for (let i = 0, j = 0; i < length; i += 3, j++) {
+        result[j] = {
             pathname: items[i + 1],
             filename: items[i + 2],
             content: items[i]
-        });
+        };
     }
     return result;
 }
 
 function getImageAssets(items: string[]) {
-    const result: FileAsset[] = [];
     const length = items.length;
-    for (let i = 0; i < length; i += 3) {
-        result.push({
+    const result: FileAsset[] = new Array(length / 3);
+    for (let i = 0, j = 0; i < length; i += 3, j++) {
+        result[j] = {
             pathname: items[i + 1],
             filename: items[i + 2],
             content: '',
             uri: items[i]
-        });
+        };
     }
     return result;
 }
@@ -112,62 +112,61 @@ export default class File<T extends android.base.View> extends squared.base.File
     }
 
     public resourceStringToXml(options: FileOutputOptions = {}) {
-        const result: string[] = [];
-        const data: ExternalData[] = [{ string: [] }];
+        const item: ObjectMap<StringMap[]> = { string: [] };
         if (!STORED.strings.has('app_name')) {
-            data[0].string.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
+            item.string.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
         }
         for (const [name, innerText] of Array.from(STORED.strings.entries()).sort(caseInsensitive)) {
-            data[0].string.push(<ItemValue> { name, innerText });
+            item.string.push(<ItemValue> { name, innerText });
         }
-        result.push(
+        const result = [
             replaceTab(
-                applyTemplate('resources', STRING_TMPL, data),
+                applyTemplate('resources', STRING_TMPL, [item]),
                 this.userSettings.insertSpaces,
                 true
             ),
             this.directory.string,
             'strings.xml'
-        );
-        this.checkFileAssets(result, options);
-        return result;
+        ];
+        return this.checkFileAssets(result, options);
     }
 
     public resourceStringArrayToXml(options: FileOutputOptions = {}) {
-        const result: string[] = [];
         if (STORED.arrays.size) {
-            const data: ExternalData[] = [{ 'string-array': [] }];
+            const item: ObjectMap<any[]> = { 'string-array': [] };
             for (const [name, values] of Array.from(STORED.arrays.entries()).sort()) {
-                data[0]['string-array'].push({
+                item['string-array'].push({
                     name,
                     item: objectMap<string, {}>(values, innerText => ({ innerText }))
                 });
             }
-            result.push(
+            const result = [
                 replaceTab(
-                    applyTemplate('resources', STRINGARRAY_TMPL, data),
+                    applyTemplate('resources', STRINGARRAY_TMPL, [item]),
                     this.userSettings.insertSpaces,
                     true
                 ),
                 this.directory.string,
                 'string_arrays.xml'
-            );
-            this.checkFileAssets(result, options);
+            ];
+            return this.checkFileAssets(result, options);
         }
-        return result;
+        return [];
     }
 
     public resourceFontToXml(options: FileOutputOptions = {}) {
         const result: string[] = [];
-        if (STORED.fonts.size) {
+        const fonts = Array.from(STORED.fonts.entries());
+        if (fonts.length) {
+            const resource = this.resource;
             const { insertSpaces, targetAPI } = this.userSettings;
             const xmlns = XMLNS_ANDROID[targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
             const pathname = this.directory.font;
-            for (const [name, font] of Array.from(STORED.fonts.entries()).sort()) {
-                const data: ExternalData[] = [{
+            for (const [name, font] of fonts.sort()) {
+                const item: ExternalData = {
                     'xmlns:android': xmlns,
                     font: []
-                }];
+                };
                 for (const attr in font) {
                     const [fontFamily, fontStyle, fontWeight] = attr.split('|');
                     let fontName = name;
@@ -180,12 +179,12 @@ export default class File<T extends android.base.View> extends squared.base.File
                             fontName += '_' + font[attr];
                         }
                     }
-                    data[0].font.push({
+                    item.font.push({
                         font: '@font/' + fontName,
                         fontStyle,
                         fontWeight
                     });
-                    const src = this.resource.getFont(fontFamily, fontStyle, fontWeight);
+                    const src = resource.getFont(fontFamily, fontStyle, fontWeight);
                     if (src?.srcUrl) {
                         this.addAsset({
                             pathname,
@@ -194,10 +193,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                         });
                     }
                 }
-                let output = replaceTab(
-                    applyTemplate('font-family', FONTFAMILY_TMPL, data),
-                    insertSpaces
-                );
+                let output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [item]), insertSpaces);
                 if (targetAPI < BUILD_ANDROID.OREO) {
                     output = output.replace(/\s+android:/g, ' app:');
                 }
@@ -209,45 +205,44 @@ export default class File<T extends android.base.View> extends squared.base.File
     }
 
     public resourceColorToXml(options: FileOutputOptions = {}) {
-        const result: string[] = [];
         if (STORED.colors.size) {
-            const data: ExternalData[] = [{ color: [] }];
+            const item: ObjectMap<ItemValue[]> = { color: [] };
             for (const [innerText, name] of Array.from(STORED.colors.entries()).sort()) {
-                data[0].color.push(<ItemValue> { name, innerText });
+                item.color.push(<ItemValue> { name, innerText });
             }
-            result.push(
+            const result = [
                 replaceTab(
-                    applyTemplate('resources', COLOR_TMPL, data),
+                    applyTemplate('resources', COLOR_TMPL, [item]),
                     this.userSettings.insertSpaces
                 ),
                 this.directory.string,
                 'colors.xml'
-            );
-            this.checkFileAssets(result, options);
+            ];
+            return this.checkFileAssets(result, options);
         }
-        return result;
+        return [];
     }
 
     public resourceStyleToXml(options: FileOutputOptions = {}) {
         const result: string[] = [];
         if (STORED.styles.size) {
-            const data: ExternalData[] = [{ style: [] }];
+            const item: ObjectMap<any[]> = { style: [] };
             for (const style of Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
                 if (Array.isArray(style.items)) {
-                    const item: ItemValue[] = [];
+                    const styleItem: ItemValue[] = [];
                     for (const obj of style.items.sort((a, b) => a.key >= b.key ? 1 : -1)) {
-                        item.push({ name: obj.key, innerText: obj.value });
+                        styleItem.push({ name: obj.key, innerText: obj.value });
                     }
-                    data[0].style.push({
+                    item.style.push({
                         name: style.name,
                         parent: style.parent,
-                        item
+                        item: styleItem
                     });
                 }
             }
             result.push(
                 replaceTab(
-                    applyTemplate('resources', STYLE_TMPL, data),
+                    applyTemplate('resources', STYLE_TMPL, [item]),
                     this.userSettings.insertSpaces
                 ),
                 this.directory.string,
@@ -258,30 +253,30 @@ export default class File<T extends android.base.View> extends squared.base.File
             const { convertPixels, insertSpaces, manifestThemeName, resolutionDPI } = this.userSettings;
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of STORED.themes.entries()) {
-                const data: ExternalData[] = [{ style: [] }];
-                for (const [themeName, themeData] of theme.entries()) {
-                    const items = themeData.items;
-                    const item: ItemValue[] = [];
-                    for (const name in items) {
-                        item.push({ name, innerText: items[name] });
-                    }
-                    if (!appTheme[filename] || themeName !== manifestThemeName || item.length) {
-                        data[0].style.push({
-                            name: themeName,
-                            parent: themeData.parent,
-                            item
-                        });
-                    }
-                    if (themeName === manifestThemeName) {
-                        appTheme[filename] = true;
-                    }
-                }
                 const match = REGEXP_FILENAME.exec(filename);
                 if (match) {
+                    const item: ObjectMap<any[]> = { style: [] };
+                    for (const [themeName, themeData] of theme.entries()) {
+                        const themeItem: ItemValue[] = [];
+                        const items = themeData.items;
+                        for (const name in items) {
+                            themeItem.push({ name, innerText: items[name] });
+                        }
+                        if (!appTheme[filename] || themeName !== manifestThemeName || item.length) {
+                            item.style.push({
+                                name: themeName,
+                                parent: themeData.parent,
+                                item: themeItem
+                            });
+                        }
+                        if (themeName === manifestThemeName) {
+                            appTheme[filename] = true;
+                        }
+                    }
                     result.push(
                         replaceTab(
                             replaceThemeLength(
-                                applyTemplate('resources', STYLE_TMPL, data),
+                                applyTemplate('resources', STYLE_TMPL, [item]),
                                 resolutionDPI,
                                 convertPixels
                             ),
@@ -293,26 +288,24 @@ export default class File<T extends android.base.View> extends squared.base.File
                 }
             }
         }
-        this.checkFileAssets(result, options);
-        return result;
+        return this.checkFileAssets(result, options);
     }
 
     public resourceDimenToXml(options: FileOutputOptions = {}) {
-        const result: string[] = [];
         if (STORED.dimens.size) {
-            const data: ExternalData[] = [{ dimen: [] }];
+            const item: ObjectMap<any[]> = { dimen: [] };
             const { convertPixels, resolutionDPI } = this.userSettings;
             for (const [name, value] of Array.from(STORED.dimens.entries()).sort()) {
-                data[0].dimen.push({ name, innerText: convertPixels ? convertLength(value, resolutionDPI, false) : value });
+                item.dimen.push({ name, innerText: convertPixels ? convertLength(value, resolutionDPI, false) : value });
             }
-            result.push(
-                replaceTab(applyTemplate('resources', DIMEN_TMPL, data)),
+            const result = [
+                replaceTab(applyTemplate('resources', DIMEN_TMPL, [item])),
                 this.directory.string,
                 'dimens.xml'
-            );
-            this.checkFileAssets(result, options);
+            ];
+            return this.checkFileAssets(result, options);
         }
-        return result;
+        return [];
     }
 
     public resourceDrawableToXml(options: FileOutputOptions = {}) {
@@ -379,9 +372,9 @@ export default class File<T extends android.base.View> extends squared.base.File
     }
 
     public resourceAnimToXml(options: FileOutputOptions = {}) {
-        const result: string[] = [];
         if (STORED.animators.size) {
             const insertSpaces = this.userSettings.insertSpaces;
+            const result: string[] = [];
             for (const [name, value] of STORED.animators.entries()) {
                 result.push(
                     replaceTab(value, insertSpaces),
@@ -389,9 +382,9 @@ export default class File<T extends android.base.View> extends squared.base.File
                     name + '.xml'
                 );
             }
-            this.checkFileAssets(result, options);
+            return this.checkFileAssets(result, options);
         }
-        return result;
+        return [];
     }
 
     public layoutAllToXml(options: FileOutputOptions = {}) {
@@ -446,6 +439,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                 this.archiving(archiveTo, assets);
             }
         }
+        return content;
     }
 
     get userSettings() {

@@ -24,6 +24,7 @@ type RepeatItem = {
     unitMin?: string
 };
 
+const CSS_GRID = EXT_NAME.CSS_GRID;
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
 const STRING_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
@@ -172,8 +173,9 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 let match: RegExpMatchArray | null;
                 let i = 1;
                 while ((match = CACHE_PATTERN.NAMED.exec(value)) !== null) {
+                    const command = match[1];
                     if (index < 2) {
-                        if (match[1].startsWith('repeat')) {
+                        if (command.startsWith('repeat')) {
                             let iterations = 1;
                             switch (match[2]) {
                                 case 'auto-fit':
@@ -235,33 +237,34 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                         }
-                        else if (match[1].charAt(0) === '[') {
-                            if (name[match[4]] === undefined) {
-                                name[match[4]] = [];
+                        else if (command.charAt(0) === '[') {
+                            const attr = match[4];
+                            if (name[attr] === undefined) {
+                                name[attr] = [];
                             }
-                            name[match[4]].push(i);
+                            name[attr].push(i);
                         }
-                        else if (match[1].startsWith('minmax')) {
+                        else if (command.startsWith('minmax')) {
                             unit.push(convertLength(node, match[6]));
                             unitMin.push(convertLength(node, match[5]));
                             repeat.push(false);
                             i++;
                         }
-                        else if (match[1].startsWith('fit-content')) {
+                        else if (command.startsWith('fit-content')) {
                             unit.push(convertLength(node, match[7]));
                             unitMin.push('0px');
                             repeat.push(false);
                             i++;
                         }
-                        else if (CACHE_PATTERN.UNIT.test(match[1])) {
-                            unit.push(match[1] === 'auto' ? 'auto' : convertLength(node, match[1]));
+                        else if (CACHE_PATTERN.UNIT.test(command)) {
+                            unit.push(command === 'auto' ? 'auto' : convertLength(node, command));
                             unitMin.push('');
                             repeat.push(false);
                             i++;
                         }
                     }
                     else {
-                        (index === 2 ? mainData.row : mainData.column).auto.push(node.convertPX(match[1]));
+                        (index === 2 ? mainData.row : mainData.column).auto.push(node.convertPX(command));
                     }
                 }
             }
@@ -762,7 +765,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         mainData.rowSpanMultiple[i] = true;
                     }
                 }
-                item.data(EXT_NAME.CSS_GRID, 'cellData', <CssGridCellData> {
+                item.data(CSS_GRID, 'cellData', <CssGridCellData> {
                     rowStart,
                     rowSpan,
                     columnStart: placement[1] - 1,
@@ -783,10 +786,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     const data = rowData[i];
                     const lengthD = data.length;
                     for (let j = 0; j < lengthD; j++) {
-                        if (mainData.rowData[j] === undefined) {
-                            mainData.rowData[j] = [];
+                        let row = mainData.rowData[j];
+                        if (row === undefined) {
+                            row = [];
+                            mainData.rowData[j] = row;
                         }
-                        mainData.rowData[j][i] = data[j];
+                        row[i] = data[j];
                     }
                 }
             }
@@ -833,7 +838,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         if (column) {
                             for (const item of column) {
                                 if (!modified.has(item)) {
-                                    const cellData = <CssGridCellData> item.data(EXT_NAME.CSS_GRID, 'cellData');
+                                    const cellData = <CssGridCellData> item.data(CSS_GRID, 'cellData');
                                     const x = j + cellData.columnSpan - 1;
                                     const y = i + cellData.rowSpan - 1;
                                     if (x < columnCount - 1) {
@@ -859,7 +864,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 node.cssSort('zIndex');
                 if (node.cssTry('display', 'block')) {
                     node.each((item: T) => {
-                        const rect = (<Element> item.element).getBoundingClientRect();
+                        const rect = item.boundingClientRect;
                         const bounds = item.initial.bounds;
                         if (bounds) {
                             bounds.width = rect.width;
@@ -871,7 +876,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     });
                     node.cssFinally('display');
                 }
-                node.data(EXT_NAME.CSS_GRID, 'mainData', mainData);
+                node.data(CSS_GRID, 'mainData', mainData);
             }
         }
         return undefined;

@@ -92,17 +92,21 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     const inputBorderColor = this.localSettings.style.inputBorderColor;
                     styleMap.border = 'outset 1px ' + inputBorderColor;
                     for (let i = 0; i < 4; i++) {
-                        styleMap[BOX_BORDER[i][0]] = 'outset';
-                        styleMap[BOX_BORDER[i][1]] = '1px';
-                        styleMap[BOX_BORDER[i][2]] = inputBorderColor;
+                        const border = BOX_BORDER[i];
+                        styleMap[border[0]] = 'outset';
+                        styleMap[border[1]] = '1px';
+                        styleMap[border[2]] = inputBorderColor;
                     }
                     return true;
                 }
                 return false;
             };
             const setButtonStyle = (appliedBorder: boolean) => {
-                if (appliedBorder && (styleMap.backgroundColor === undefined || styleMap.backgroundColor === 'initial')) {
-                    styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
+                if (appliedBorder) {
+                    const backgroundColor = styleMap.backgroundColor;
+                    if (backgroundColor === undefined || backgroundColor === 'initial') {
+                        styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
+                    }
                 }
                 if (styleMap.textAlign === undefined) {
                     styleMap.textAlign = 'center';
@@ -114,8 +118,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     styleMap.paddingLeft = '6px';
                 }
             };
+            const tagName = element.tagName;
             if (isUserAgent(USER_AGENT.FIREFOX)) {
-                switch (element.tagName) {
+                switch (tagName) {
                     case 'INPUT':
                     case 'SELECT':
                     case 'BUTTON':
@@ -131,7 +136,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         break;
                 }
             }
-            switch (element.tagName) {
+            switch (tagName) {
                 case 'INPUT': {
                     const type = (<HTMLInputElement> element).type;
                     switch (type) {
@@ -196,18 +201,20 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                 case 'IMG':
                     const setDimension = (attr: string, opposing: string) => {
-                        if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
+                        const dimension = styleMap[attr];
+                        if (dimension === undefined || dimension === 'auto') {
                             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                             if (match) {
-                                if (isLength(match[1])) {
-                                    styleMap[attr] = match[1] + 'px';
+                                const value = match[1];
+                                if (isLength(value)) {
+                                    styleMap[attr] = value + 'px';
                                 }
-                                else if (isPercent(match[1])) {
-                                    styleMap[attr] = match[1];
+                                else if (isPercent(value)) {
+                                    styleMap[attr] = value;
                                 }
                             }
-                            else if (element.tagName === 'IFRAME') {
-                                if (attr ===  'width') {
+                            else if (tagName === 'IFRAME') {
+                                if (attr === 'width') {
                                     styleMap.width = '300px';
                                 }
                                 else {
@@ -237,14 +244,16 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addBeforeOutsideTemplate(id: number, value: string, format = true, index = -1) {
-        if (this._beforeOutside[id] === undefined) {
-            this._beforeOutside[id] = [];
+        let template = this._beforeOutside[id];
+        if (template === undefined) {
+            template = [];
+            this._beforeOutside[id] = template;
         }
-        if (index !== -1 && index < this._beforeOutside[id].length) {
-            this._beforeOutside[id].splice(index, 0, value);
+        if (index !== -1 && index < template.length) {
+            template.splice(index, 0, value);
         }
         else {
-            this._beforeOutside[id].push(value);
+            template.push(value);
         }
         if (format) {
             this._requireFormat = true;
@@ -252,14 +261,16 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addBeforeInsideTemplate(id: number, value: string, format = true, index = -1) {
-        if (this._beforeInside[id] === undefined) {
-            this._beforeInside[id] = [];
+        let template = this._beforeInside[id];
+        if (template === undefined) {
+            template = [];
+            this._beforeInside[id] = template;
         }
-        if (index !== -1 && index < this._beforeInside[id].length) {
-            this._beforeInside[id].splice(index, 0, value);
+        if (index !== -1 && index < template.length) {
+            template.splice(index, 0, value);
         }
         else {
-            this._beforeInside[id].push(value);
+            template.push(value);
         }
         if (format) {
             this._requireFormat = true;
@@ -267,14 +278,16 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addAfterInsideTemplate(id: number, value: string, format = true, index = -1) {
-        if (this._afterInside[id] === undefined) {
-            this._afterInside[id] = [];
+        let template = this._afterInside[id];
+        if (template === undefined) {
+            template = [];
+            this._afterInside[id] = template;
         }
-        if (index !== -1 && index < this._afterInside[id].length) {
-            this._afterInside[id].splice(index, 0, value);
+        if (index !== -1 && index < template.length) {
+            template.splice(index, 0, value);
         }
         else {
-            this._afterInside[id].push(value);
+            template.push(value);
         }
         if (format) {
             this._requireFormat = true;
@@ -282,34 +295,40 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addAfterOutsideTemplate(id: number, value: string, format = true, index = -1) {
-        if (this._afterOutside[id] === undefined) {
-            this._afterOutside[id] = [];
+        let template = this._afterOutside[id];
+        if (template === undefined) {
+            template = [];
+            this._afterOutside[id] = template;
         }
-        if (index !== -1 && index < this._afterOutside[id].length) {
-            this._afterOutside[id].splice(index, 0, value);
+        if (index !== -1 && index < template.length) {
+            template.splice(index, 0, value);
         }
         else {
-            this._afterOutside[id].push(value);
+            template.push(value);
         }
         if (format) {
             this._requireFormat = true;
         }
     }
 
-    public getBeforeOutsideTemplate(id: number, depth = 0): string {
-        return this._beforeOutside[id] ? pushIndentArray(this._beforeOutside[id], depth) : '';
+    public getBeforeOutsideTemplate(id: number, depth: number): string {
+        const template = this._beforeOutside[id];
+        return template ? pushIndentArray(template, depth) : '';
     }
 
-    public getBeforeInsideTemplate(id: number, depth = 0): string {
-        return this._beforeInside[id] ? pushIndentArray(this._beforeInside[id], depth) : '';
+    public getBeforeInsideTemplate(id: number, depth: number): string {
+        const template = this._beforeInside[id];
+        return template ? pushIndentArray(template, depth) : '';
     }
 
-    public getAfterInsideTemplate(id: number, depth = 0): string {
-        return this._afterInside[id] ? pushIndentArray(this._afterInside[id], depth) : '';
+    public getAfterInsideTemplate(id: number, depth: number): string {
+        const template = this._afterInside[id];
+        return template ? pushIndentArray(template, depth) : '';
     }
 
-    public getAfterOutsideTemplate(id: number, depth = 0): string {
-        return this._afterOutside[id] ? pushIndentArray(this._afterOutside[id], depth) : '';
+    public getAfterOutsideTemplate(id: number, depth: number): string {
+        const template = this._afterOutside[id];
+        return template ? pushIndentArray(template, depth) : '';
     }
 
     public hasAppendProcessing(id?: number) {

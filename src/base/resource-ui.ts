@@ -142,7 +142,7 @@ function getAngle(value: string, fallback = 0) {
     return fallback;
 }
 
-function replaceWhiteSpace(parent: NodeUI, node: NodeUI, value: string): [string, boolean] {
+function replaceWhiteSpace(parent: NodeUI | undefined, node: NodeUI, value: string): [string, boolean] {
     value = value.replace(/\u00A0/g, STRING_SPACE);
     switch (node.css('whiteSpace')) {
         case 'nowrap':
@@ -150,7 +150,7 @@ function replaceWhiteSpace(parent: NodeUI, node: NodeUI, value: string): [string
             break;
         case 'pre':
         case 'pre-wrap':
-            if (!parent.layoutVertical) {
+            if (parent?.layoutVertical === false) {
                 value = value.replace(/^\s*?\n/, '');
             }
             value = value
@@ -714,159 +714,157 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public setValueString(node: T) {
         if (node.visible && !node.svgElement) {
             const renderParent = node.renderParent;
-            if (renderParent) {
-                const element = <HTMLInputElement> node.element;
-                if (element) {
-                    let key = '';
-                    let value = '';
-                    let hint = '';
-                    let trimming = false;
-                    let inlined = false;
-                    switch (element.tagName) {
-                        case 'INPUT':
-                            value = element.value;
-                            switch (element.type) {
-                                case 'radio':
-                                case 'checkbox':
-                                    const companion = node.companion;
-                                    if (companion && !companion.visible) {
-                                        value = companion.textContent.trim();
+            const element = <HTMLInputElement> node.element;
+            if (element) {
+                let key = '';
+                let value = '';
+                let hint = '';
+                let trimming = false;
+                let inlined = false;
+                switch (element.tagName) {
+                    case 'INPUT':
+                        value = element.value;
+                        switch (element.type) {
+                            case 'radio':
+                            case 'checkbox':
+                                const companion = node.companion;
+                                if (companion?.visible === false) {
+                                    value = companion.textContent.trim();
+                                }
+                                break;
+                            case 'submit':
+                                if (value === '' && !node.visibleStyle.backgroundImage) {
+                                    value = 'Submit';
+                                }
+                                break;
+                            case 'time':
+                                if (value === '') {
+                                    hint = '--:-- --';
+                                }
+                                break;
+                            case 'date':
+                            case 'datetime-local':
+                                if (value === '') {
+                                    switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
+                                        case 'en-US':
+                                            hint = 'mm/dd/yyyy';
+                                            break;
+                                        default:
+                                            hint = 'dd/mm/yyyy';
+                                            break;
                                     }
-                                    break;
-                                case 'submit':
-                                    if (value === '' && !node.visibleStyle.backgroundImage) {
-                                        value = 'Submit';
+                                    if (element.type === 'datetime-local') {
+                                        hint += ' --:-- --';
                                     }
-                                    break;
-                                case 'time':
-                                    if (value === '') {
-                                        hint = '--:-- --';
-                                    }
-                                    break;
-                                case 'date':
-                                case 'datetime-local':
-                                    if (value === '') {
-                                        switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
-                                            case 'en-US':
-                                                hint = 'mm/dd/yyyy';
-                                                break;
-                                            default:
-                                                hint = 'dd/mm/yyyy';
-                                                break;
-                                        }
-                                        if (element.type === 'datetime-local') {
-                                            hint += ' --:-- --';
-                                        }
-                                    }
-                                    break;
-                                case 'week':
-                                    if (value === '') {
-                                        hint = 'Week: --, ----';
-                                    }
-                                    break;
-                                case 'month':
-                                    if (value === '') {
-                                        hint = '--------- ----';
-                                    }
-                                    break;
-                                case 'url':
-                                case 'email':
-                                case 'search':
-                                case 'number':
-                                case 'tel':
-                                    if (value === '') {
-                                        hint = element.placeholder;
-                                    }
-                                    break;
-                                case 'file':
-                                    value = isUserAgent(USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
-                                    break;
+                                }
+                                break;
+                            case 'week':
+                                if (value === '') {
+                                    hint = 'Week: --, ----';
+                                }
+                                break;
+                            case 'month':
+                                if (value === '') {
+                                    hint = '--------- ----';
+                                }
+                                break;
+                            case 'url':
+                            case 'email':
+                            case 'search':
+                            case 'number':
+                            case 'tel':
+                                if (value === '') {
+                                    hint = element.placeholder;
+                                }
+                                break;
+                            case 'file':
+                                value = isUserAgent(USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
+                                break;
+                        }
+                        break;
+                    case 'TEXTAREA':
+                        value = element.value;
+                        break;
+                    case 'IFRAME':
+                        value = element.src;
+                        break;
+                    default:
+                        const textContent = node.textContent;
+                        if (node.plainText || node.pseudoElement) {
+                            key = textContent.trim();
+                            [value] = replaceWhiteSpace(renderParent, node, textContent.replace(/&/g, '&amp;'));
+                            inlined = true;
+                            trimming = !(node.actualParent as T).preserveWhiteSpace;
+                        }
+                        else if (node.inlineText) {
+                            key = textContent.trim();
+                            [value, inlined] = replaceWhiteSpace(
+                                renderParent,
+                                node,
+                                this.removeExcludedFromText(element, node.sessionId)
+                            );
+                            trimming = true;
+                        }
+                        else if (node.naturalElements.length === 0 && textContent && textContent.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
+                            value = textContent;
+                        }
+                        break;
+                }
+                if (value !== '') {
+                    if (trimming) {
+                        const previousSibling = node.siblingsLeading[0];
+                        let previousSpaceEnd = false;
+                        if (value.length > 1) {
+                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
+                                value = value.replace(CHAR.LEADINGSPACE, '');
                             }
-                            break;
-                        case 'TEXTAREA':
-                            value = element.value;
-                            break;
-                        case 'IFRAME':
-                            value = element.src;
-                            break;
-                        default:
-                            const textContent = node.textContent;
-                            if (node.plainText || node.pseudoElement) {
-                                key = textContent.trim();
-                                [value] = replaceWhiteSpace(renderParent, node, textContent.replace(/&/g, '&amp;'));
-                                inlined = true;
-                                trimming = !(node.actualParent as T).preserveWhiteSpace;
+                            else if (previousSibling.naturalElement) {
+                                const textContent = previousSibling.textContent;
+                                if (textContent.length) {
+                                    previousSpaceEnd = textContent.charCodeAt(textContent.length - 1) === 32;
+                                }
                             }
-                            else if (node.inlineText) {
-                                key = textContent.trim();
-                                [value, inlined] = replaceWhiteSpace(
-                                    renderParent,
-                                    node,
-                                    this.removeExcludedFromText(element, node.sessionId)
-                                );
-                                trimming = true;
+                        }
+                        if (inlined) {
+                            const trailingSpace = !node.lineBreakTrailing && CHAR.TRAILINGSPACE.test(value);
+                            if (previousSibling && CHAR.LEADINGSPACE.test(value) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
+                                value = STRING_SPACE + value.trim();
                             }
-                            else if (node.naturalElements.length === 0 && textContent && textContent.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
-                                value = textContent;
+                            else {
+                                value = value.trim();
                             }
-                            break;
+                            if (trailingSpace) {
+                                const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
+                                if (nextSibling?.blockStatic === false) {
+                                    value += STRING_SPACE;
+                                }
+                            }
+                        }
+                        else if (value.trim() !== '') {
+                            value = value.replace(CHAR.LEADINGSPACE, previousSibling && (
+                                previousSibling.block ||
+                                previousSibling.lineBreak ||
+                                previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
+                            );
+                            value = value.replace(CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
+                        }
+                        else if (!node.inlineText) {
+                            return;
+                        }
                     }
                     if (value !== '') {
-                        if (trimming) {
-                            const previousSibling = node.siblingsLeading[0];
-                            let previousSpaceEnd = false;
-                            if (value.length > 1) {
-                                if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
-                                    value = value.replace(CHAR.LEADINGSPACE, '');
-                                }
-                                else if (previousSibling.naturalElement) {
-                                    const textContent = previousSibling.textContent;
-                                    if (textContent.length) {
-                                        previousSpaceEnd = textContent.charCodeAt(textContent.length - 1) === 32;
-                                    }
-                                }
-                            }
-                            if (inlined) {
-                                const trailingSpace = !node.lineBreakTrailing && CHAR.TRAILINGSPACE.test(value);
-                                if (previousSibling && CHAR.LEADINGSPACE.test(value) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
-                                    value = STRING_SPACE + value.trim();
-                                }
-                                else {
-                                    value = value.trim();
-                                }
-                                if (trailingSpace) {
-                                    const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
-                                    if (nextSibling && !nextSibling.blockStatic) {
-                                        value += STRING_SPACE;
-                                    }
-                                }
-                            }
-                            else if (value.trim() !== '') {
-                                value = value.replace(CHAR.LEADINGSPACE, previousSibling && (
-                                    previousSibling.block ||
-                                    previousSibling.lineBreak ||
-                                    previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                    node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
-                                );
-                                value = value.replace(CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
-                            }
-                            else if (!node.inlineText) {
-                                return;
-                            }
-                        }
-                        if (value !== '') {
-                            node.data(ResourceUI.KEY_NAME, 'valueString', { key, value });
-                        }
-                    }
-                    if (hint !== '') {
-                        node.data(ResourceUI.KEY_NAME, 'hintString', hint);
+                        node.data(ResourceUI.KEY_NAME, 'valueString', { key, value });
                     }
                 }
-                else if (node.inlineText) {
-                    const value = node.textContent;
-                    if (value) {
-                        node.data(ResourceUI.KEY_NAME, 'valueString', { key: value, value });
-                    }
+                if (hint !== '') {
+                    node.data(ResourceUI.KEY_NAME, 'hintString', hint);
+                }
+            }
+            else if (node.inlineText) {
+                const value = node.textContent;
+                if (value) {
+                    node.data(ResourceUI.KEY_NAME, 'valueString', { key: value, value });
                 }
             }
         }

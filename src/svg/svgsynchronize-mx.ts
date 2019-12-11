@@ -156,12 +156,8 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContain
         for (const attr of baseVal) {
             let value = data.get(attr);
             if (value === undefined) {
-                if (value === undefined) {
-                    value = getForwardValue(forwardMap[attr], key);
-                }
-                if (value === undefined) {
-                    value = path.getBaseValue(attr);
-                }
+                value = getForwardValue(forwardMap[attr], key) ?? path.getBaseValue(attr);
+
             }
             if (value !== undefined) {
                 values.push(value);
@@ -690,10 +686,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                 const groupActive = new Set<string>();
                 let setterTotal = 0;
                 function insertSetter(item: SvgAnimation) {
-                    if (setterAttributeMap[item.attributeName] === undefined) {
-                        setterAttributeMap[item.attributeName] = [];
+                    let setter = setterAttributeMap[item.attributeName];
+                    if (setter === undefined) {
+                        setter = [];
+                        setterAttributeMap[item.attributeName] = setter;
                     }
-                    setterAttributeMap[item.attributeName].push(item);
+                    setter.push(item);
                     setterTotal++;
                 }
                 {
@@ -798,10 +796,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     let infiniteResult: KeyTimeMap | undefined;
                     function getForwardItem(attr: string): ForwardValue | undefined {
                         const map = forwardMap[attr];
-                        if (map) {
-                            return map[map.length - 1];
-                        }
-                        return undefined;
+                        return map && map[map.length - 1];
                     }
                     for (const attr in groupName) {
                         const baseMap = new Map<number, AnimateValue>();

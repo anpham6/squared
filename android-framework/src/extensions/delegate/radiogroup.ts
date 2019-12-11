@@ -27,9 +27,9 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         const removeable: T[] = [];
         const radioButton: T[] = [];
         parent.each((item: T) => {
+            const renderAs = item.renderAs as T;
             let remove: T | undefined;
-            if (item.renderAs) {
-                const renderAs = item.renderAs as T;
+            if (renderAs) {
                 if (renderAs !== node) {
                     remove = item;
                 }

@@ -88,7 +88,7 @@ function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number
         for (let i = 0; i < length; i++) {
             let index = -1;
             let key = '';
-            const data = sorted[i];
+            let data = sorted[i];
             for (const j in data) {
                 if (j === value) {
                     index = i;
@@ -98,9 +98,10 @@ function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number
                 }
             }
             if (index !== -1) {
-                sorted[index][key] = filterArray(sorted[index][key], id => !ids.includes(id));
-                if (sorted[index][key].length === 0) {
-                    delete sorted[index][key];
+                data = sorted[index];
+                data[key] = filterArray(data[key], id => !ids.includes(id));
+                if (data[key].length === 0) {
+                    delete data[key];
                 }
                 break;
             }
@@ -118,43 +119,44 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     public afterParseDocument() {
         const resource = <android.base.Resource<T>> this.resource;
         const settings = resource.userSettings;
+        const disableFontAlias = this.options.disableFontAlias;
         const dpi = settings.resolutionDPI;
         const convertPixels = settings.convertPixels === 'dp';
         const { fonts, styles } = STORED;
+        const styleKeys = Object.keys(FONT_STYLE);
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         for (const node of this.application.session.cache) {
             if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
-                if (nameMap[node.containerName] === undefined) {
-                    nameMap[node.containerName] = [];
+                const containerName = node.containerName;
+                let map = nameMap[containerName];
+                if (map === undefined) {
+                    map = [];
+                    nameMap[containerName] = map;
                 }
-                nameMap[node.containerName].push(node);
+                map.push(node);
             }
         }
-        const styleKeys = Object.keys(FONT_STYLE);
-        const length = styleKeys.length;
         for (const tag in nameMap) {
             const sorted: StyleList[] = [];
             const data = nameMap[tag];
             for (let node of data) {
-                const stored: FontAttribute = { ...node.data(Resource.KEY_NAME, 'fontStyle') };
                 const { id, companion } = node;
+                const targetAPI = node.localSettings.targetAPI;
+                const stored = <FontAttribute> node.data(Resource.KEY_NAME, 'fontStyle');
+                let { fontFamily, fontStyle, fontWeight } = stored;
                 if (companion?.tagName === 'LABEL' && !companion.visible) {
                     node = companion as T;
                 }
-                if (stored.backgroundColor) {
-                    stored.backgroundColor = Resource.addColor(stored.backgroundColor);
-                }
-                stored.fontFamily.replace(REGEXP_DOUBLEQUOTE, '').split(XML.SEPARATOR).some((value, index, array) => {
-                    const { fontStyle, fontWeight } = stored;
-                    value = trimString(value, "'");
-                    let fontFamily = value.toLowerCase();
+                fontFamily.replace(REGEXP_DOUBLEQUOTE, '').split(XML.SEPARATOR).some((value, index, array) => {
+                    value = trimString(value, "'").toLowerCase();
+                    let fontName = value;
                     let customFont = false;
-                    if (!this.options.disableFontAlias && FONTREPLACE_ANDROID[fontFamily]) {
-                        fontFamily = this.options.systemDefaultFont || FONTREPLACE_ANDROID[fontFamily];
+                    if (!disableFontAlias && FONTREPLACE_ANDROID[fontName]) {
+                        fontName = this.options.systemDefaultFont;
                     }
-                    if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || !this.options.disableFontAlias && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
-                        stored.fontFamily = fontFamily;
+                    if (targetAPI >= FONT_ANDROID[fontName] || !disableFontAlias && targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontName]]) {
+                        fontFamily = fontName;
                         customFont = true;
                     }
                     else if (fontStyle && fontWeight) {
@@ -167,49 +169,60 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 return false;
                             }
                             else if (index > 0) {
-                                value = trimString(array[0], "'");
-                                fontFamily = value.toLowerCase();
+                                value = trimString(array[0], "'").toLowerCase();
+                                fontName = value;
                             }
                         }
-                        fontFamily = convertWord(fontFamily);
+                        fontName = convertWord(fontName);
                         if (createFont) {
-                            const fontData = fonts.get(fontFamily) || {};
-                            fontData[value + '|' + fontStyle + '|' + fontWeight] = FONTWEIGHT_ANDROID[fontWeight] || fontWeight;
-                            fonts.set(fontFamily, fontData);
+                            const font = fonts.get(fontName) || {};
+                            font[value + '|' + fontStyle + '|' + fontWeight] = FONTWEIGHT_ANDROID[fontWeight] || fontWeight;
+                            fonts.set(fontName, font);
                         }
-                        stored.fontFamily = '@font/' + fontFamily;
+                        fontFamily = '@font/' + fontName;
                         customFont = true;
                     }
                     if (customFont) {
-                        if (stored.fontStyle === 'normal') {
-                            stored.fontStyle = '';
+                        if (fontStyle === 'normal') {
+                            fontStyle = '';
                         }
                         if (fontWeight === '400' || node.localSettings.targetAPI < BUILD_ANDROID.OREO) {
-                            stored.fontWeight = '';
+                            fontWeight = '';
                         }
                         else if (parseInt(fontWeight) > 500) {
-                            stored.fontStyle += (stored.fontStyle ? '|' : '') + 'bold';
+                            fontStyle += (fontStyle ? '|' : '') + 'bold';
                         }
                         return true;
                     }
                     return false;
                 });
-                stored.color = Resource.addColor(stored.color);
-                for (let i = 0; i < length; i++) {
+                const fontData = {
+                    fontFamily,
+                    fontStyle,
+                    fontWeight,
+                    fontSize: stored.fontSize,
+                    color: Resource.addColor(stored.color),
+                    backgroundColor: Resource.addColor(stored.backgroundColor)
+                };
+                for (let i = 0; i < 6; i++) {
                     const key = styleKeys[i];
-                    let value: string = stored[key];
+                    let value: string | undefined = fontData[key];
                     if (value) {
-                        if (convertPixels && key === 'fontSize') {
+                        if (i === 3 && convertPixels) {
                             value = convertLength(value, dpi, true);
                         }
                         const attr = FONT_STYLE[key] + value + '"';
-                        if (sorted[i] === undefined) {
-                            sorted[i] = {};
+                        let dataIndex = sorted[i];
+                        if (dataIndex === undefined) {
+                            dataIndex = {};
+                            sorted[i] = dataIndex;
                         }
-                        if (sorted[i][attr] === undefined) {
-                            sorted[i][attr] = [];
+                        let dataAttr = dataIndex[attr];
+                        if (dataAttr === undefined) {
+                            dataAttr = [];
+                            dataIndex[attr] = dataAttr;
                         }
-                        sorted[i][attr].push(id);
+                        dataAttr.push(id);
                     }
                 }
             }
@@ -225,13 +238,16 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 let countA = 0;
                 let countB = 0;
                 for (const attr in a) {
-                    maxA = Math.max(a[attr].length, maxA);
-                    countA += a[attr].length;
+                    const lenA = a[attr].length;
+                    maxA = Math.max(lenA, maxA);
+                    countA += lenA;
                 }
                 for (const attr in b) {
-                    if (b[attr]) {
-                        maxB = Math.max(b[attr].length, maxB);
-                        countB += b[attr].length;
+                    const item = b[attr];
+                    if (item) {
+                        const lenB = item.length;
+                        maxB = Math.max(lenB, maxB);
+                        countB += lenB;
                     }
                 }
                 if (maxA !== maxB) {
@@ -258,13 +274,13 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     for (let i = 0; i < sorted.length; i++) {
                         const filtered: AttributeMap = {};
                         const dataA = sorted[i];
-                        for (const attr1 in dataA) {
-                            const ids = dataA[attr1];
+                        for (const attrA in dataA) {
+                            const ids = dataA[attrA];
                             if (ids.length === 0) {
                                 continue;
                             }
                             else if (ids.length === nameMap[tag].length) {
-                                styleKey[attr1] = ids;
+                                styleKey[attrA] = ids;
                                 sorted[i] = {};
                                 break;
                             }
@@ -278,24 +294,27 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                         if (compare.length) {
                                             for (const id of ids) {
                                                 if (compare.includes(id)) {
-                                                    if (found[attr] === undefined) {
-                                                        found[attr] = [];
+                                                    let dataC = found[attr];
+                                                    if (dataC === undefined) {
+                                                        dataC = [];
+                                                        found[attr] = dataC;
                                                     }
-                                                    found[attr].push(id);
+                                                    dataC.push(id);
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-                            for (const attr2 in found) {
-                                if (found[attr2].length > 1) {
-                                    filtered[[attr1, attr2].sort().join(';')] = found[attr2];
+                            for (const attrB in found) {
+                                const dataB = found[attrB];
+                                if (dataB.length > 1) {
+                                    filtered[(attrA < attrB ? attrA + ';' + attrB : attrB + ';' + attrA)] = dataB;
                                     merged = true;
                                 }
                             }
                             if (!merged) {
-                                filtered[attr1] = ids;
+                                filtered[attrA] = ids;
                             }
                         }
                         if (Object.keys(filtered).length) {
@@ -305,17 +324,19 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             for (const attr in filtered) {
                                 joinMap[attr] = filtered[attr].join(',');
                             }
-                            for (const attr1 in filtered) {
-                                for (const attr2 in filtered) {
-                                    const index = joinMap[attr1];
-                                    if (attr1 !== attr2 && index === joinMap[attr2]) {
-                                        if (combined[index] === undefined) {
-                                            combined[index] = new Set(attr1.split(';'));
+                            for (const attrA in filtered) {
+                                for (const attrB in filtered) {
+                                    const index = joinMap[attrA];
+                                    if (attrA !== attrB && index === joinMap[attrB]) {
+                                        let data = combined[index];
+                                        if (data === undefined) {
+                                            data = new Set(attrA.split(';'));
+                                            combined[index] = data;
                                         }
-                                        for (const value of attr2.split(';')) {
-                                            combined[index].add(value);
+                                        for (const value of attrB.split(';')) {
+                                            data.add(value);
                                         }
-                                        deleteKeys.add(attr1).add(attr2);
+                                        deleteKeys.add(attrA).add(attrB);
                                     }
                                 }
                             }
@@ -372,22 +393,16 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 });
             }
             styleData.sort((a, b) => {
-                let c = 0;
-                let d = 0;
-                if (a.ids && b.ids) {
-                    c = a.ids.length;
-                    d = b.ids.length;
-                }
+                let c: number | string = (a.ids as []).length;
+                let d: number | string = (b.ids as []).length;
                 if (c === d) {
-                    c = (a.items as any[]).length;
-                    d = (b.items as any[]).length;
+                    const itemA = <StringValue[]> a.items;
+                    const itemB = <StringValue[]> b.items;
+                    c = (itemA as []).length;
+                    d = (itemB as []).length;
                     if (c === d) {
-                        c = a.items[0].name;
-                        d = b.items[0].name;
-                        if (c === d) {
-                            c = a.items[0].value;
-                            d = b.items[0].value;
-                        }
+                        c = a.name;
+                        d = b.name;
                     }
                 }
                 return c <= d ? 1 : -1;
@@ -400,12 +415,15 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         for (const tag in resourceMap) {
             for (const group of resourceMap[tag]) {
-                if (group.ids) {
-                    for (const id of group.ids) {
-                        if (nodeMap[id] === undefined) {
-                            nodeMap[id] = [];
+                const ids = group.ids;
+                if (ids) {
+                    for (const id of ids) {
+                        let map = nodeMap[id];
+                        if (map === undefined) {
+                            map = [];
+                            nodeMap[id] = map;
                         }
-                        nodeMap[id].push(group.name);
+                        map.push(group.name);
                     }
                 }
             }
@@ -433,8 +451,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         for (const value of parentStyle) {
             const styleName: string[] = [];
-            let items: StringValue[] | undefined;
             let parent = '';
+            let items: StringValue[] | undefined;
             value.split('.').forEach((tag, index, array) => {
                 const match = REGEXP_TAGNAME.exec(tag);
                 if (match) {
@@ -452,9 +470,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         else {
                             if (items) {
                                 for (const item of styleData.items as StringValue[]) {
-                                    const replaceIndex = items.findIndex(previous => previous.key === item.key);
-                                    if (replaceIndex !== -1) {
-                                        items[replaceIndex] = item;
+                                    const key = items.findIndex(previous => previous.key === item.key);
+                                    if (key !== -1) {
+                                        items[key] = item;
                                     }
                                     else {
                                         items.push(item);

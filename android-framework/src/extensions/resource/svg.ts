@@ -751,7 +751,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 include
             }])
         );
-        let drawable = '';
+        let drawable: string;
         if (this.ANIMATE_DATA.size) {
             const data: AnimatedVectorTemplate[] = [{
                 'xmlns:android': XMLNS_ANDROID.android,

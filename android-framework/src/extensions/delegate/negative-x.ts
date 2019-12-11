@@ -37,32 +37,34 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     public processNode(node: T, parent: T) {
         const outside = node.filter((item: T) => outsideX(item, node)) as T[];
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, View.getControlName(CONTAINER_NODE.CONSTRAINT, node.localSettings.targetAPI), CONTAINER_NODE.CONSTRAINT);
-        if (node.marginTop > 0) {
-            container.modifyBox(BOX_STANDARD.MARGIN_TOP, node.marginTop);
+        const { marginTop, marginBottom } = node;
+        if (marginTop > 0) {
+            container.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
             node.modifyBox(BOX_STANDARD.MARGIN_TOP);
         }
-        if (node.marginBottom > 0) {
-            container.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.marginBottom);
+        if (marginBottom > 0) {
+            container.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, marginBottom);
             node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM);
         }
         let left = NaN;
         let right = NaN;
         let firstChild: T | undefined;
         for (const item of outside) {
+            const linear = item.linear;
             if (item.pageFlow) {
-                if (isNaN(left) || item.linear.left < left) {
-                    left = item.linear.left;
+                if (isNaN(left) || linear.left < left) {
+                    left = linear.left;
                 }
                 firstChild = item;
             }
             else {
                 if (item.hasPX('left')) {
-                    if (item.left < 0 && (isNaN(left) || item.linear.left < left)) {
-                        left = item.linear.left;
+                    if (item.left < 0 && (isNaN(left) || linear.left < left)) {
+                        left = linear.left;
                     }
                 }
-                else if (item.right < 0 && (isNaN(right) || item.linear.right > right)) {
-                    right = item.linear.right;
+                else if (item.right < 0 && (isNaN(right) || linear.right > right)) {
+                    right = linear.right;
                 }
             }
         }
@@ -93,17 +95,19 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             }
         }
         if (!isNaN(right)) {
-            let offset = right - node.linear.right;
-            if (offset > node.marginRight) {
-                offset -= node.marginRight;
+            const rightA = node.linear.right;
+            const marginRight = node.marginRight;
+            let offset = right - rightA;
+            if (offset > marginRight) {
+                offset -= marginRight;
                 node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, offset);
             }
             else {
                 offset = 0;
             }
-            const outerRight = node.linear.right + offset;
-            if (node.marginRight > 0) {
-                offset += node.marginRight;
+            const outerRight = rightA + offset;
+            if (marginRight > 0) {
+                offset += marginRight;
             }
             if (offset > 0) {
                 if (node.hasPX('width', false) || !node.blockStatic && !node.hasPX('width')) {

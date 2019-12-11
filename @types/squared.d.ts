@@ -435,6 +435,7 @@ declare namespace base {
         readonly previousElementSibling: Node | null;
         readonly nextElementSibling: Node | null;
         readonly attributes: StringMap;
+        readonly boundingClientRect: DOMRect;
         readonly center: Point;
         init(): void;
         saveAsInitial(overwrite?: boolean): void;

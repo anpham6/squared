@@ -753,14 +753,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         const extracted = node.extracted;
         if ((backgroundImage || extracted) && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
             const resource = <android.base.Resource<T>> this.resource;
-            const { width: boundsWidth, height: boundsHeight } = node.bounds;
-            const backgroundPositionX = data.backgroundPositionX.split(XML.SEPARATOR);
-            const backgroundPositionY = data.backgroundPositionY.split(XML.SEPARATOR);
+            const bounds = node.bounds;
+            const { width: boundsWidth, height: boundsHeight } = bounds;
             const result: BackgroundImageData[] = [];
             const images: (string | GradientTemplate)[] = [];
             const imageDimensions: Undefined<Dimension>[] = [];
             const imageSvg: boolean[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
+            const backgroundPositionX = data.backgroundPositionX.split(XML.SEPARATOR);
+            const backgroundPositionY = data.backgroundPositionY.split(XML.SEPARATOR);
             let backgroundRepeat = data.backgroundRepeat.split(XML.SEPARATOR);
             let backgroundSize = data.backgroundSize.split(XML.SEPARATOR);
             let length = 0;
@@ -884,15 +885,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     const image = embedded[i];
                     const src = resource.addImageSrc(<HTMLImageElement> image.element);
                     if (src !== '') {
-                        const bounds = image.bounds;
+                        const imageBounds = image.bounds;
                         images[length] = src;
                         backgroundRepeat[length] = 'no-repeat';
                         backgroundSize[length] = getPixelUnit(image.actualWidth, image.actualHeight);
                         backgroundPosition[length] = getBackgroundPosition(
-                            image.containerName === 'INPUT_IMAGE' ? getPixelUnit(0, 0) : getPixelUnit(bounds.left - node.bounds.left + node.borderLeftWidth, bounds.top - node.bounds.top + node.borderTopWidth),
+                            image.containerName === 'INPUT_IMAGE' ? getPixelUnit(0, 0) : getPixelUnit(imageBounds.left - bounds.left + node.borderLeftWidth, imageBounds.top - bounds.top + node.borderTopWidth),
                             node.actualDimension,
                             node.fontSize,
-                            bounds
+                            imageBounds
                         );
                         imageDimensions[length] = resource.getImage(src);
                         length++;
@@ -1564,16 +1565,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 if (imageData.drawable || imageData.bitmap || imageData.gradient) {
                     if (position.bottom !== 0) {
-                        bottom = (repeatY || !recalibrate ? position.bottom : getPercentOffset('bottom', position, node.bounds, dimension)) + bottom;
+                        bottom = (repeatY || !recalibrate ? position.bottom : getPercentOffset('bottom', position, bounds, dimension)) + bottom;
                     }
                     else if (position.top !== 0) {
-                        top = (repeatY || !recalibrate ? position.top : getPercentOffset('top', position, node.bounds, dimension)) + top;
+                        top = (repeatY || !recalibrate ? position.top : getPercentOffset('top', position, bounds, dimension)) + top;
                     }
                     if (position.right !== 0) {
-                        right = (repeatX || !recalibrate ? position.right : getPercentOffset('right', position, node.bounds, dimension)) + right;
+                        right = (repeatX || !recalibrate ? position.right : getPercentOffset('right', position, bounds, dimension)) + right;
                     }
                     else if (position.left !== 0) {
-                        left = (repeatX || !recalibrate ? position.left : getPercentOffset('left', position, node.bounds, dimension)) + left;
+                        left = (repeatX || !recalibrate ? position.left : getPercentOffset('left', position, bounds, dimension)) + left;
                     }
                     const width = imageData.width as number;
                     const height = imageData.height as number;

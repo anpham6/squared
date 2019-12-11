@@ -52,13 +52,15 @@ export default abstract class Resource<T extends squared.base.Node> implements s
 
     public addFont(data: CSSFontFaceData) {
         const fonts = Resource.ASSETS.fonts;
-        const items = fonts.get(data.fontFamily) || [];
+        const fontFamily = data.fontFamily.trim().toLowerCase();
+        data.fontFamily =  fontFamily;
+        const items = fonts.get(fontFamily) || [];
         items.push(data);
-        fonts.set(data.fontFamily, items);
+        fonts.set(fontFamily, items);
     }
 
     public getFont(fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
-        const font = Resource.ASSETS.fonts.get(fontFamily);
+        const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
         if (font) {
             const fontFormat = this.controllerSettings.supported.fontFormat;
             return font.find(item => item.fontStyle === fontStyle && (fontWeight === undefined || item.fontWeight === parseInt(fontWeight)) && (fontFormat === '*' || fontFormat.includes(item.srcFormat)));

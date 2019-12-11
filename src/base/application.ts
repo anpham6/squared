@@ -6,7 +6,6 @@ import ExtensionManager from './extensionmanager';
 import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
-import { base } from '../../@types/squared';
 
 const $lib = squared.lib;
 const { checkStyleValue, getSpecificity, getStyle, hasComputedStyle, parseSelectorText, validMediaRule } = $lib.css;
@@ -62,7 +61,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract userSettings: UserSettings;
 
     protected _cascadeAll = false;
-    protected _cache!: base.NodeList<T>;
+    protected _cache!: squared.base.NodeList<T>;
 
     protected constructor(
         public framework: number,
@@ -611,13 +610,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                         if (styleData) {
                             const specificityData: ObjectMap<number> = getElementCache(element, attrSpecificity, sessionId) || {};
                             for (const attr in styleMap) {
-                                const value = styleMap[attr];
                                 const revisedSpecificity = specificity + (important[attr] ? 1000 : 0);
                                 if (specificityData[attr] === undefined || revisedSpecificity >= specificityData[attr]) {
-                                    specificityData[attr] = revisedSpecificity;
+                                    const value = styleMap[attr];
                                     if (value === 'initial' && cssStyle.background && attr.startsWith('background')) {
                                         continue;
                                     }
+                                    specificityData[attr] = revisedSpecificity;
                                     styleData[attr] = value;
                                 }
                             }
@@ -647,11 +646,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 const match = REGEXP_FONT_FACE.exec(cssText);
                 if (match) {
-                    const familyMatch = REGEXP_FONT_FAMILY.exec(match[1]);
-                    const srcMatch = REGEXP_FONT_SRC.exec(match[1]);
+                    const attr = match[1];
+                    const familyMatch = REGEXP_FONT_FAMILY.exec(attr);
+                    const srcMatch = REGEXP_FONT_SRC.exec(attr);
                     if (familyMatch && srcMatch) {
-                        const styleMatch = REGEXP_FONT_STYLE.exec(match[1]);
-                        const weightMatch = REGEXP_FONT_WEIGHT.exec(match[1]);
+                        const styleMatch = REGEXP_FONT_STYLE.exec(attr);
+                        const weightMatch = REGEXP_FONT_WEIGHT.exec(attr);
                         const fontFamily = familyMatch[1].trim();
                         const fontStyle = styleMatch ? styleMatch[1].toLowerCase() : 'normal';
                         const fontWeight = weightMatch ? parseInt(weightMatch[1]) : 400;

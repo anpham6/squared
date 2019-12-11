@@ -2271,8 +2271,8 @@ export function convertHSLA(value: RGBA) {
     const min = Math.min(r, g, b);
     const max = Math.max(r, g, b);
     let h = (max + min) / 2;
-    let s = h;
     const l = h;
+    let s: number;
     if (max === min) {
         h = 0;
         s = 0;

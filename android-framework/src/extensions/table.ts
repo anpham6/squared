@@ -8,11 +8,12 @@ import $LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
 const { formatPX } = $lib.css;
-const { CHAR } = $lib.regex;
 const { aboveRange, convertFloat, convertInt, trimEnd } = $lib.util;
 
+const { UNITZERO } = $lib.regex.CHAR;
+
 const $base_lib = squared.base.lib;
-const { EXT_NAME } = $base_lib.constant;
+const { TABLE } = $base_lib.constant.EXT_NAME;
 const { CSS_UNIT, NODE_ALIGNMENT } = $base_lib.enumeration;
 
 function setLayoutHeight(node: View) {
@@ -24,14 +25,14 @@ function setLayoutHeight(node: View) {
 export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const mainData: TableData = node.data(EXT_NAME.TABLE, 'mainData');
+        const mainData: TableData = node.data(TABLE, 'mainData');
         if (mainData) {
             let requireWidth = false;
             if (mainData.columnCount > 1) {
                 requireWidth = mainData.expand;
                 node.each((item: T) => {
-                    const data = item.data(EXT_NAME.TABLE, 'cellData');
-                    if (CHAR.UNITZERO.test(item.css('width'))) {
+                    const data = item.data(TABLE, 'cellData');
+                    if (UNITZERO.test(item.css('width'))) {
                         item.setLayoutWidth('0px');
                         item.android('layout_columnWeight', ((<HTMLTableCellElement> item.element).colSpan || 1).toString());
                     }
@@ -121,9 +122,9 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const data: TableCellData = node.data(EXT_NAME.TABLE, 'cellData');
-        if (data) {
-            const { rowSpan, colSpan, spaceSpan } = data;
+        const cellData: TableCellData = node.data(TABLE, 'cellData');
+        if (cellData) {
+            const { rowSpan, colSpan, spaceSpan } = cellData;
             if (rowSpan > 1) {
                 node.android('layout_rowSpan', rowSpan.toString());
             }

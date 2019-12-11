@@ -1,4 +1,3 @@
-import { FileAsset } from '../base/application';
 import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
 import { Constraint, LocalSettings, SupportAndroid, ViewAttribute } from './node';
 import { FileOutputOptions } from './resource';

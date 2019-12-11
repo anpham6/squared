@@ -18,8 +18,9 @@ const $base = squared.base;
 const { NodeUI } = $base;
 
 const $base_lib = $base.lib;
-const { EXT_NAME } = $base_lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = $base_lib.enumeration;
+
+const { LIST } = $base_lib.constant.EXT_NAME;
 
 const MINWIDTH_INSIDE = 24;
 const PADDINGRIGHT_DFN = 8;
@@ -50,7 +51,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const mainData: ListData = node.data(EXT_NAME.LIST, 'mainData');
+        const mainData: ListData = node.data(LIST, 'mainData');
         if (mainData) {
             const { application, controller } = this;
             const firstChild = parent.firstStaticChild === node;

@@ -19,6 +19,8 @@ const enum LAYOUT_TABLE {
     VARIABLE = 3,
     COMPRESS = 4
 }
+
+const TABLE = EXT_NAME.TABLE;
 const REGEXP_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
 
 export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
@@ -325,7 +327,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             if (!caption.cssInitial('textAlign')) {
                 caption.css('textAlign', 'center');
             }
-            caption.data(EXT_NAME.TABLE, 'cellData', { colSpan: columnCount });
+            caption.data(TABLE, 'cellData', { colSpan: columnCount });
             caption.parent = node;
         }
         const hasWidth = node.hasWidth;
@@ -425,12 +427,12 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         tableFilled[i + k].push(td);
                     }
                 }
-                td.data(EXT_NAME.TABLE, 'cellData', data);
+                td.data(TABLE, 'cellData', data);
                 td.parent = node;
                 lastChild = td;
             }
             if (lastChild && columnIndex[i] < columnCount) {
-                const data: ExternalData = lastChild.data(EXT_NAME.TABLE, 'cellData');
+                const data: ExternalData = lastChild.data(TABLE, 'cellData');
                 if (data) {
                     data.spaceSpan = columnCount - columnIndex[i];
                 }
@@ -542,7 +544,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         }
         mainData.rowCount = rowCount;
         mainData.columnCount = columnCount;
-        node.data(EXT_NAME.TABLE, 'mainData', mainData);
+        node.data(TABLE, 'mainData', mainData);
         return undefined;
     }
 }

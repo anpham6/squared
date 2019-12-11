@@ -18,7 +18,7 @@ interface Deprecations {
     android: ObjectMap<CustomizationResult>;
 }
 
-const $util = squared.lib.util;
+const { optionalAsString, isString } = squared.lib.util;
 
 function substitute(result: {}, value: string, api?: number, minApi = 0) {
     if (!api || api >= minApi) {
@@ -571,8 +571,8 @@ export const DEPRECATED_ANDROID: Deprecations = {
 
 export function getValue(api: number, tagName: string, obj: string, attr: string) {
     for (const build of [API_ANDROID[api], API_ANDROID[0]]) {
-        const value = $util.optionalAsString(build, `assign.${tagName}.${obj}.${attr}`);
-        if ($util.isString(value)) {
+        const value = optionalAsString(build, `assign.${tagName}.${obj}.${attr}`);
+        if (isString(value)) {
             return value;
         }
     }

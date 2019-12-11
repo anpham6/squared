@@ -10,8 +10,9 @@ import $LayoutUI = squared.base.LayoutUI;
 const { formatPX } = squared.lib.css;
 
 const $base_lib = squared.base.lib;
-const { EXT_NAME } = $base_lib.constant;
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
+
+const { SPRITE } = $base_lib.constant.EXT_NAME;
 
 type SpriteData = {
     image: Required<RawAsset>,
@@ -20,11 +21,12 @@ type SpriteData = {
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {
-        const mainData = <SpriteData> node.data(EXT_NAME.SPRITE, 'mainData');
+        const mainData = <SpriteData> node.data(SPRITE, 'mainData');
         if (mainData) {
             const drawable = (<android.base.Resource<T>> this.resource).addImageSrc(node.backgroundImage);
             if (drawable !== '') {
                 const { width, height } = mainData.image;
+                const { top, left } = mainData.position;
                 const container = this.application.createNode();
                 container.inherit(node, 'base', 'initial', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -41,10 +43,10 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                     display: 'inline-block',
                     width: width > 0 ? formatPX(width) : 'auto',
                     height: height > 0 ? formatPX(height) : 'auto',
-                    marginTop: formatPX(mainData.position.top),
+                    marginTop: formatPX(top),
                     marginRight: '0px',
                     marginBottom: '0px',
-                    marginLeft: formatPX(mainData.position.left),
+                    marginLeft: formatPX(left),
                     paddingTop: '0px',
                     paddingRight: '0px',
                     paddingBottom: '0px',

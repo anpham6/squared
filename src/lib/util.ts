@@ -422,19 +422,20 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
         let current = dest;
         for (let i = 0; ; i++) {
             const name = attrs[i];
+            const value = current[name];
             if (i === attrs.length - 2) {
-                if (!hasValue(current[name])) {
+                if (!hasValue(value)) {
                     current[name] = attrs[i + 1];
                 }
                 break;
             }
             else if (isString(name)) {
-                if (current[name] === undefined || current[name] === null) {
-                    current[name] = {};
-                    current = current[name];
+                if (value === undefined || value === null) {
+                    current = {};
+                    current[name] = current;
                 }
-                else if (typeof current[name] === 'object') {
-                    current = current[name];
+                else if (typeof value === 'object') {
+                    current = value;
                 }
                 else {
                     break;
@@ -468,14 +469,16 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
             let valueA: any = a;
             let valueB: any = b;
             for (const name of namespaces) {
-                if (valueA[name] !== undefined && valueB[name] !== undefined) {
-                    valueA = valueA[name];
-                    valueB = valueB[name];
+                const vA = valueA[name];
+                const vB = valueB[name];
+                if (vA !== undefined && vB !== undefined) {
+                    valueA = vA;
+                    valueB = vB;
                 }
-                else if (valueA[name] === undefined && valueB[name] === undefined) {
+                else if (vA === undefined && vB === undefined) {
                     return 0;
                 }
-                else if (valueA[name] !== undefined) {
+                else if (vA !== undefined) {
                     return -1;
                 }
                 else {

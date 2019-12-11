@@ -10,10 +10,15 @@ const $lib = squared.lib;
 const { formatPX, isLength, isPercent } = $lib.css;
 const { aboveRange, belowRange, withinRange } = $lib.util;
 
+const GRID = EXT_NAME.GRID;
+
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
-    const top = target.linear.top;
+    const topA = target.linear.top;
     for (const column of columns) {
-        const index = column.findIndex(item => withinRange(top, item.linear.top) || top > item.linear.top && top < item.linear.bottom);
+        const index = column.findIndex(item => {
+            const { top, bottom } = item.linear;
+            return withinRange(topA, top) || topA > top && top < bottom;
+        });
         if (index !== -1) {
             return index;
         }
@@ -112,7 +117,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
                     for (let j = 0; j < lengthB; j++) {
                         const nextX = nextAxisX[j];
-                        if (i === 0 || aboveRange(nextX.linear.left, columnRight[i - 1])) {
+                        const { left, right } = nextX.linear;
+                        if (i === 0 || aboveRange(left, columnRight[i - 1])) {
                             if (columns[i] === undefined) {
                                 columns[i] = [];
                             }
@@ -135,15 +141,15 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                 let minLeft = Number.POSITIVE_INFINITY;
                                 let maxRight = Number.NEGATIVE_INFINITY;
                                 columns[endIndex].forEach(item => {
-                                    const { left, right } = item.linear;
-                                    if (left < minLeft) {
-                                        minLeft = left;
+                                    const { left: leftA, right: rightA } = item.linear;
+                                    if (leftA < minLeft) {
+                                        minLeft = leftA;
                                     }
-                                    if (right > maxRight) {
-                                        maxRight = right;
+                                    if (rightA > maxRight) {
+                                        maxRight = rightA;
                                     }
                                 });
-                                if (Math.floor(nextX.linear.left) > Math.ceil(minLeft) && Math.floor(nextX.linear.right) > Math.ceil(maxRight)) {
+                                if (Math.floor(left) > Math.ceil(minLeft) && Math.floor(right) > Math.ceil(maxRight)) {
                                     const index = getRowIndex(columns, nextX);
                                     if (index !== -1) {
                                         for (let k = columns.length - 1; k >= 0; k--) {
@@ -158,7 +164,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                         }
-                        columnRight[i] = Math.max(nextX.linear.right, columnRight[i]);
+                        columnRight[i] = Math.max(right, columnRight[i]);
                     }
                 }
                 const lengthC = columnRight.length;
@@ -210,7 +216,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         children[j] = [];
                     }
                     if (!item['spacer']) {
-                        const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(EXT_NAME.GRID, 'cellData'));
+                        const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(GRID, 'cellData'));
                         let rowSpan = 1;
                         let columnSpan = 1 + spacer;
                         for (let k = i + 1; k < columnCount; k++) {
@@ -236,11 +242,14 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         if (columnEnd.length) {
                             const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
                             for (const sibling of item.documentParent.naturalChildren as T[]) {
-                                if (!assigned.has(sibling) && sibling.visible && !sibling.rendered && aboveRange(sibling.linear.left, item.linear.right) && belowRange(sibling.linear.right, columnEnd[l])) {
-                                    if (data.siblings === undefined) {
-                                        data.siblings = [];
+                                if (!assigned.has(sibling) && sibling.visible && !sibling.rendered) {
+                                    const linear = sibling.linear;
+                                    if (aboveRange(linear.left, item.linear.right) && belowRange(linear.right, columnEnd[l])) {
+                                        if (data.siblings === undefined) {
+                                            data.siblings = [];
+                                        }
+                                        data.siblings.push(sibling);
                                     }
-                                    data.siblings.push(sibling);
                                 }
                             }
                         }
@@ -252,7 +261,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         data.cellEnd = data.rowEnd && j === rowCount - 1;
                         data.index = i;
                         spacer = 0;
-                        item.data(EXT_NAME.GRID, 'cellData', data);
+                        item.data(GRID, 'cellData', data);
                         children[j].push(item);
                         assigned.add(item);
                     }
@@ -277,13 +286,13 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 if (hasLength && hasPercent && group.length > 1) {
-                    const cellData: GridCellData<T> = group[0].data(EXT_NAME.GRID, 'cellData');
+                    const cellData: GridCellData<T> = group[0].data(GRID, 'cellData');
                     if (cellData?.rowSpan === 1) {
                         let siblings: T[] = cellData.siblings ? cellData.siblings.slice(0) : [];
                         const length = group.length;
                         for (let i = 1; i < length; i++) {
                             const item = group[i];
-                            const siblingData: GridCellData<T> = item.data(EXT_NAME.GRID, 'cellData');
+                            const siblingData: GridCellData<T> = item.data(GRID, 'cellData');
                             if (siblingData?.rowSpan === 1) {
                                 siblings.push(item);
                                 if (siblingData.siblings) {
@@ -316,7 +325,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 node.modifyBox(BOX_STANDARD.PADDING_BOTTOM);
                 node.modifyBox(BOX_STANDARD.PADDING_LEFT);
             }
-            node.data(EXT_NAME.GRID, 'columnCount', columnCount);
+            node.data(GRID, 'columnCount', columnCount);
         }
         return undefined;
     }

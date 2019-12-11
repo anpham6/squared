@@ -24,7 +24,7 @@ const system = <FunctionMap<any>> {};
 let main: Application;
 let framework: AppFramework<Node>;
 
-const checkMain = () => !!main && !main.initializing && main.length > 0;
+const checkMain = () => main?.initializing === false && main.length > 0;
 
 export function setFramework(value: AppFramework<Node>, cached = false) {
     const reloading = framework !== undefined;
@@ -171,17 +171,15 @@ export function configure(value: ExtensionRequest, options: {}) {
 }
 
 export function retrieve(value: string) {
-    return main ? main.extensionManager.retrieve(value) : null;
+    return main?.extensionManager.retrieve(value) || null;
 }
 
 export function reset() {
-    if (main) {
-        main.reset();
-    }
+    main?.reset();
 }
 
 export function ready() {
-    return !!main && !main.initializing && !main.closed;
+    return main?.initializing === false && !main.closed;
 }
 
 export function close() {
@@ -218,7 +216,7 @@ export function saveToArchive(value?: string) {
 }
 
 export function toString() {
-    return main ? main.toString() : '';
+    return main?.toString() || '';
 }
 
 export function apply(value: any, options: {}) {

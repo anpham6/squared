@@ -19,10 +19,10 @@ export default abstract class Accessibility<T extends NodeUI> extends ExtensionU
                         break;
                     case 'INPUT_RADIO':
                     case 'INPUT_CHECKBOX':
-                        const element = <HTMLInputElement> node.element;
+                        const id = node.elementId;
                         [node.nextSibling, node.previousSibling].some((sibling: T) => {
                             if (sibling?.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
-                                if (element.id && element.id === (<HTMLLabelElement> sibling.element).htmlFor) {
+                                if (id && id === (<HTMLLabelElement> sibling.element).htmlFor) {
                                     node.companion = sibling;
                                 }
                                 else if (sibling.textElement && sibling.documentParent.tagName === 'LABEL') {
@@ -32,12 +32,13 @@ export default abstract class Accessibility<T extends NodeUI> extends ExtensionU
                                 else if (sibling.plainText) {
                                     node.companion = sibling;
                                 }
-                                if (node.companion) {
-                                    if (!this.options.showLabel) {
-                                        sibling.hide();
-                                    }
-                                    return true;
+                                else {
+                                    return false;
                                 }
+                                if (!this.options.showLabel) {
+                                    sibling.hide();
+                                }
+                                return true;
                             }
                             return false;
                         });

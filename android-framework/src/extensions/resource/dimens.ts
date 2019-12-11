@@ -32,8 +32,10 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
         for (const node of this.application.session.cache) {
             if (node.visible) {
                 const containerName = node.containerName.toLowerCase();
-                if (groups[containerName] === undefined) {
-                    groups[containerName] = {};
+                let group = groups[containerName];
+                if (group === undefined) {
+                    group = {};
+                    groups[containerName] = group;
                 }
                 for (const namespace of NAMESPACE_ATTR) {
                     const obj = node.namespace(namespace);
@@ -42,10 +44,12 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                             const value = obj[attr];
                             if (REGEXP_UNIT.test(value)) {
                                 const dimen = `${namespace},${attr},${value}`;
-                                if (groups[containerName][dimen] === undefined) {
-                                    groups[containerName][dimen] = [];
+                                let data = group[dimen];
+                                if (data === undefined) {
+                                    data = [];
+                                    group[dimen] = data;
                                 }
-                                groups[containerName][dimen].push(node);
+                                data.push(node);
                             }
                         }
                     }
@@ -73,11 +77,11 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 let content = layout.content;
                 let match: RegExpExecArray | null;
                 while ((match = REGEXP_UNIT_ATTR.exec(content)) !== null) {
-                    if (match[1] !== 'text') {
-                        const value = match[2];
-                        const key = getResourceName(dimens, 'custom_' + convertUnderscore(match[1]), value);
+                    const [original, name, value] = match;
+                    if (name !== 'text') {
+                        const key = getResourceName(dimens, 'custom_' + convertUnderscore(name), value);
+                        content = content.replace(original, original.replace(value, '@dimen/' + key));
                         dimens.set(key, value);
-                        content = content.replace(match[0], match[0].replace(match[2], '@dimen/' + key));
                     }
                 }
                 layout.content = content;

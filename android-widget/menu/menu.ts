@@ -156,7 +156,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         const android = options.android;
         const element = <HTMLElement> node.element;
         let controlName: string;
-        let title = '';
+        let title: string;
         if (node.tagName === 'NAV') {
             controlName = NAVIGATION.MENU;
             title = getTitle(node, element);

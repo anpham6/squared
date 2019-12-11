@@ -44,22 +44,30 @@ export function getDocumentId(value: string) {
 
 export function getHorizontalBias(node: View) {
     const parent = node.documentParent;
-    const left = Math.max(0, node.actualRect('left', 'bounds') - parent.box.left);
-    const right = Math.max(0, parent.box.right - node.actualRect('right', 'bounds'));
+    const box = parent.box;
+    const left = Math.max(0, node.actualRect('left', 'bounds') - box.left);
+    const right = Math.max(0, box.right - node.actualRect('right', 'bounds'));
     return calculateBias(left, right, node.localSettings.floatPrecision);
 }
 
 export function getVerticalBias(node: View) {
     const parent = node.documentParent;
-    const top = Math.max(0, node.actualRect('top', 'bounds') - parent.box.top);
-    const bottom = Math.max(0, parent.box.bottom - node.actualRect('bottom', 'bounds'));
+    const box = parent.box;
+    const top = Math.max(0, node.actualRect('top', 'bounds') - box.top);
+    const bottom = Math.max(0, box.bottom - node.actualRect('bottom', 'bounds'));
     return calculateBias(top, bottom, node.localSettings.floatPrecision);
 }
 
 export function createViewAttribute(options?: ExternalData, android = {}, app = {}): ViewAttribute {
     const result = <ViewAttribute> { android, app };
     if (options) {
-        Object.assign(result, options);
+        const { android: androidA, app: appA } = options;
+        if (androidA) {
+            Object.assign(result.android, androidA);
+        }
+        if (appA) {
+            Object.assign(result.app, appA);
+        }
     }
     return result;
 }

@@ -61,13 +61,11 @@ export default class BottomNavigation<T extends android.base.View> extends squar
     public afterParseDocument() {
         for (const node of this.subscribers) {
             const renderParent = node.renderParent as T;
-            if (renderParent) {
-                if (!renderParent.hasPX('width')) {
-                    renderParent.setLayoutWidth('match_parent');
-                }
-                if (!renderParent.hasPX('height')) {
-                    renderParent.setLayoutHeight('match_parent');
-                }
+            if (!renderParent.hasPX('width')) {
+                renderParent.setLayoutWidth('match_parent');
+            }
+            if (!renderParent.hasPX('height')) {
+                renderParent.setLayoutHeight('match_parent');
             }
             const menu = optionalAsString(BottomNavigation.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
             if (menu !== '') {

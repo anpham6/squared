@@ -1003,7 +1003,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const value = this[dimension][direction] as number;
         if (this.inputElement || all) {
             const companion = this.companion;
-            if (companion && !companion.visible) {
+            if (companion?.visible === false) {
                 const outer = companion[dimension][direction] as number;
                 switch (direction) {
                     case 'top':
@@ -1205,7 +1205,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     set renderAs(value) {
-        if (value && !value.rendered && !this.rendered) {
+        if (!this.rendered && value?.rendered === false) {
             this._renderAs = value;
         }
     }

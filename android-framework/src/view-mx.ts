@@ -82,7 +82,7 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean, autoPaddi
     }
     if (autoPadding && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
         if (node.cssTry('white-space', 'nowrap')) {
-            const offset = (lineHeight - (<Element> node.element).getBoundingClientRect().height) / 2;
+            const offset = (lineHeight - node.boundingClientRect.height) / 2;
             const upper = Math.round(offset);
             if (upper > 0) {
                 node.modifyBox(BOX_STANDARD.PADDING_TOP, upper);
@@ -112,7 +112,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
         }
         else if (!inlineStyle && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
             if (node.cssTry('white-space', 'nowrap')) {
-                offset = (lineHeight - (<Element> node.element).getBoundingClientRect().height) / 2;
+                offset = (lineHeight - node.boundingClientRect.height) / 2;
                 usePadding = false;
                 node.cssFinally('white-space');
             }
@@ -769,7 +769,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         layoutWidth = 'match_parent';
                                     }
                                     else if (this.styleElement && this.cssTry('display', 'inline-block')) {
-                                        if ((<Element> this.element).getBoundingClientRect().width < this.bounds.width) {
+                                        if (this.boundingClientRect.width < this.bounds.width) {
                                             layoutWidth = 'match_parent';
                                         }
                                         this.cssFinally('display');
@@ -1640,7 +1640,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else {
                     if (this.multiline && this.cssTry('white-space', 'nowrap')) {
-                        result = (<Element> this.element).getBoundingClientRect().height;
+                        result = this.boundingClientRect.height;
                         this.cssFinally('white-space');
                     }
                     else if (this.hasHeight) {

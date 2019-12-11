@@ -209,65 +209,63 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
     if (!node.inputElement && !node.imageOrSvgElement) {
         const documentParent = node.documentParent;
         const renderParent = <View> node.renderParent;
-        if (renderParent) {
-            function setAlignmentBlock() {
-                if (renderParent.nodeGroup) {
-                    renderParent.addAlign(NODE_ALIGNMENT.BLOCK);
-                    renderParent.unsetCache('blockStatic');
-                }
+        function setAlignmentBlock() {
+            if (renderParent.nodeGroup) {
+                renderParent.addAlign(NODE_ALIGNMENT.BLOCK);
+                renderParent.unsetCache('blockStatic');
             }
-            if (!node.blockWidth && !documentParent.flexElement) {
-                const minWH = node.cssInitial(horizontal ? 'minWidth' : 'minHeight', true);
-                if (isLength(minWH, true) && minWH !== '0px') {
-                    let valid = false;
-                    if (horizontal) {
-                        if (node.ascend(item => item.hasPX('width') || item.blockStatic).length) {
-                            node.setLayoutWidth('0px', false);
-                            valid = node.flexibleWidth;
-                            setAlignmentBlock();
-                        }
-                    }
-                    else if ((node.absoluteParent || documentParent).hasHeight && !node.hasPX('height')) {
-                        node.setLayoutHeight('0px', false);
-                        valid = node.flexibleHeight;
-                    }
-                    if (valid) {
-                        node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(node.parseUnit(minWH, dimension.toLowerCase())));
-                        node.css(horizontal ? 'minWidth' : 'minHeight', 'auto');
-                    }
-                }
-            }
-            const maxWH = node.cssInitial(horizontal ? 'maxWidth' : 'maxHeight', true);
-            let contentBox = 0;
-            if (isLength(maxWH, true)) {
+        }
+        if (!node.blockWidth && !documentParent.flexElement) {
+            const minWH = node.cssInitial(horizontal ? 'minWidth' : 'minHeight', true);
+            if (isLength(minWH, true) && minWH !== '0px') {
                 let valid = false;
                 if (horizontal) {
-                    if (node.outerWrapper || node.ascend(item => item.hasPX('width') || item.blockStatic).length) {
-                        node.setLayoutWidth(renderParent.flexibleWidth ? 'match_parent' : '0px', node.innerWrapped && node.innerWrapped.naturalChild);
+                    if (node.ascend(item => item.hasPX('width') || item.blockStatic).length) {
+                        node.setLayoutWidth('0px', false);
                         valid = node.flexibleWidth;
                         setAlignmentBlock();
-                        if (valid && !isPercent(maxWH)) {
-                            contentBox += node.contentBoxWidth;
-                        }
                     }
                 }
                 else if ((node.absoluteParent || documentParent).hasHeight && !node.hasPX('height')) {
-                    node.setLayoutHeight(renderParent.flexibleHeight ? 'match_parent' : '0px', node.innerWrapped && node.innerWrapped.naturalChild);
+                    node.setLayoutHeight('0px', false);
                     valid = node.flexibleHeight;
-                    if (valid && !isPercent(maxWH)) {
-                        contentBox += node.contentBoxHeight;
-                    }
                 }
                 if (valid) {
-                    const maxDimension = node.parseUnit(maxWH, dimension.toLowerCase());
-                    node.app(horizontal ? 'layout_constraintWidth_max' : 'layout_constraintHeight_max', formatPX(maxDimension + contentBox));
-                    if (horizontal && node.layoutVertical) {
-                        node.each(item => {
-                            if (item.textElement && !item.hasPX('maxWidth')) {
-                                item.css('maxWidth', formatPX(maxDimension));
-                            }
-                        });
+                    node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(node.parseUnit(minWH, dimension.toLowerCase())));
+                    node.css(horizontal ? 'minWidth' : 'minHeight', 'auto');
+                }
+            }
+        }
+        const maxWH = node.cssInitial(horizontal ? 'maxWidth' : 'maxHeight', true);
+        let contentBox = 0;
+        if (isLength(maxWH, true)) {
+            let valid = false;
+            if (horizontal) {
+                if (node.outerWrapper || node.ascend(item => item.hasPX('width') || item.blockStatic).length) {
+                    node.setLayoutWidth(renderParent.flexibleWidth ? 'match_parent' : '0px', !!node.innerWrapped?.naturalChild);
+                    valid = node.flexibleWidth;
+                    setAlignmentBlock();
+                    if (valid && !isPercent(maxWH)) {
+                        contentBox += node.contentBoxWidth;
                     }
+                }
+            }
+            else if ((node.absoluteParent || documentParent).hasHeight && !node.hasPX('height')) {
+                node.setLayoutHeight(renderParent.flexibleHeight ? 'match_parent' : '0px', !!node.innerWrapped?.naturalChild);
+                valid = node.flexibleHeight;
+                if (valid && !isPercent(maxWH)) {
+                    contentBox += node.contentBoxHeight;
+                }
+            }
+            if (valid) {
+                const maxDimension = node.parseUnit(maxWH, dimension.toLowerCase());
+                node.app(horizontal ? 'layout_constraintWidth_max' : 'layout_constraintHeight_max', formatPX(maxDimension + contentBox));
+                if (horizontal && node.layoutVertical) {
+                    node.each(item => {
+                        if (item.textElement && !item.hasPX('maxWidth')) {
+                            item.css('maxWidth', formatPX(maxDimension));
+                        }
+                    });
                 }
             }
         }
@@ -598,7 +596,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const settings = this.userSettings;
         DEFAULT_VIEWSETTINGS = {
             targetAPI: settings.targetAPI || BUILD_ANDROID.LATEST,
-            supportRTL: typeof settings.supportRTL === 'boolean' ? settings.supportRTL : true,
+            supportRTL: !!settings.supportRTL,
             floatPrecision: this.localSettings.precision.standardFloat
         };
         super.init();
@@ -1489,27 +1487,28 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (options === undefined) {
             options = createViewAttribute();
         }
+        const android = options.android;
         if (isPercent(width)) {
-            options.android.layout_columnWeight = truncate(parseFloat(width) / 100, this.localSettings.precision.standardFloat);
+            android.layout_columnWeight = truncate(parseFloat(width) / 100, this.localSettings.precision.standardFloat);
             width = '0px';
         }
         if (height && isPercent(height)) {
-            options.android.layout_rowWeight = truncate(parseFloat(height) / 100, this.localSettings.precision.standardFloat);
+            android.layout_rowWeight = truncate(parseFloat(height) / 100, this.localSettings.precision.standardFloat);
             height = '0px';
         }
         if (columnSpan) {
-            options.android.layout_columnSpan = columnSpan.toString();
+            android.layout_columnSpan = columnSpan.toString();
         }
         if (rowSpan) {
-            options.android.layout_rowSpan = rowSpan.toString();
+            android.layout_rowSpan = rowSpan.toString();
         }
         return this.renderNodeStatic(CONTAINER_ANDROID.SPACE, options, width, height || undefined);
     }
 
     public addGuideline(node: T, parent: T, orientation?: string, percent = false, opposite = false) {
         const absoluteParent = node.absoluteParent as T;
-        const boxParent = parent.nodeGroup && !(node.documentParent as T).hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
         const linear = node.linear;
+        const boxParent = parent.nodeGroup && !(node.documentParent as T).hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
         GUIDELINE_AXIS.forEach(value => {
             if (!node.constraint[value] && (!orientation || value === orientation)) {
                 const horizontal = value === STRING_ANDROID.HORIZONTAL;
@@ -1659,7 +1658,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.anchor(LT, 'parent', true);
                     if (location < 0) {
                         const innerWrapped = node.innerWrapped;
-                        if (innerWrapped && !innerWrapped.pageFlow) {
+                        if (innerWrapped?.pageFlow === false) {
                             let boxMargin = 0;
                             switch (LT) {
                                 case 'top':
@@ -1937,39 +1936,37 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             const boxWidth = (() => {
                 const renderParent = node.renderParent as T;
-                if (renderParent) {
-                    if (renderParent.overflowY) {
-                        return renderParent.box.width;
-                    }
-                    else {
-                        const parent = node.actualParent as T;
-                        if (parent) {
-                            if (parent === renderParent && parent.blockStatic && node.naturalElement && node.inlineStatic) {
-                                const box = parent.box;
-                                return box.width - (node.linear.left - box.left);
-                            }
-                            else if (parent.floatContainer) {
-                                const { containerType, alignmentType } = this.containerTypeVerticalMargin;
-                                const container = node.ascend((item: T) => item.of(containerType, alignmentType), parent, 'renderParent');
-                                if (container.length) {
-                                    const box = node.box;
-                                    let leftOffset = 0;
-                                    let rightOffset = 0;
-                                    for (const item of parent.naturalElements as T[]) {
-                                        const linear = item.linear;
-                                        if (item.floating && !children.includes(item) && node.intersectY(linear)) {
-                                            if (item.float === 'left') {
-                                                if (Math.floor(linear.right) > box.left) {
-                                                    leftOffset = Math.max(leftOffset, linear.right - box.left);
-                                                }
-                                            }
-                                            else if (item.float === 'right' && box.right > Math.ceil(linear.left)) {
-                                                rightOffset = Math.max(rightOffset, box.right - linear.left);
+                if (renderParent.overflowY) {
+                    return renderParent.box.width;
+                }
+                else {
+                    const parent = node.actualParent as T;
+                    if (parent) {
+                        if (parent === renderParent && parent.blockStatic && node.naturalElement && node.inlineStatic) {
+                            const box = parent.box;
+                            return box.width - (node.linear.left - box.left);
+                        }
+                        else if (parent.floatContainer) {
+                            const { containerType, alignmentType } = this.containerTypeVerticalMargin;
+                            const container = node.ascend((item: T) => item.of(containerType, alignmentType), parent, 'renderParent');
+                            if (container.length) {
+                                const box = node.box;
+                                let leftOffset = 0;
+                                let rightOffset = 0;
+                                for (const item of parent.naturalElements as T[]) {
+                                    const linear = item.linear;
+                                    if (item.floating && !children.includes(item) && node.intersectY(linear)) {
+                                        if (item.float === 'left') {
+                                            if (Math.floor(linear.right) > box.left) {
+                                                leftOffset = Math.max(leftOffset, linear.right - box.left);
                                             }
                                         }
+                                        else if (item.float === 'right' && box.right > Math.ceil(linear.left)) {
+                                            rightOffset = Math.max(rightOffset, box.right - linear.left);
+                                        }
                                     }
-                                    return box.width - leftOffset - rightOffset;
                                 }
+                                return box.width - leftOffset - rightOffset;
                             }
                         }
                     }
@@ -2511,7 +2508,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 break;
                             case 'middle':
-                                if (baseline && !baseline.textElement || textBottom) {
+                                if (baseline?.textElement === false || textBottom) {
                                     alignTop = true;
                                 }
                                 else {

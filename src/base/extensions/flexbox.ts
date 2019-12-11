@@ -12,9 +12,10 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute<T extends NodeUI>(node: T, children: T[]): FlexboxData<T> {
         const wrap = node.css('flexWrap');
         const direction = node.css('flexDirection');
+        const directionRow = direction.startsWith('row');
         return {
-            directionRow: direction.startsWith('row'),
-            directionColumn: direction.startsWith('column'),
+            directionRow,
+            directionColumn: !directionRow,
             directionReverse: direction.endsWith('reverse'),
             wrap: wrap.startsWith('wrap'),
             wrapReverse: wrap === 'wrap-reverse',
@@ -43,7 +44,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 for (const item of children) {
                     if (item.cssTry('align-self', 'start')) {
                         if (item.cssTry('justify-self', 'start')) {
-                            const rect = (<Element> item.element).getBoundingClientRect();
+                            const rect = item.boundingClientRect;
                             const bounds = item.initial.bounds;
                             if (bounds) {
                                 bounds.width = rect.width;
@@ -79,11 +80,13 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 method = 'intersectX';
             }
             children.sort((a, b) => {
+                const linearA = a.linear;
+                const linearB = b.linear;
                 if (!a[method](b.bounds, 'bounds')) {
-                    return a.linear[align] < b.linear[align] ? -1 : 1;
+                    return linearA[align] < linearB[align] ? -1 : 1;
                 }
-                else if (!withinRange(a.linear[sort], b.linear[sort])) {
-                    return a.linear[sort] < b.linear[sort] ? -1 : 1;
+                else if (!withinRange(linearA[sort], linearB[sort])) {
+                    return linearA[sort] < linearB[sort] ? -1 : 1;
                 }
                 return 0;
             });
@@ -104,7 +107,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             }
             node.clear();
             let maxCount = 0;
-            let offset = 0;
+            let offset: number;
             length = rows.length;
             if (length > 1) {
                 const boxSize = node.box[size];

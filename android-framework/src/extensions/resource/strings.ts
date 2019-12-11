@@ -22,10 +22,11 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
     public readonly eventOnly = true;
 
     public afterResources() {
+        const numberResourceValue = this.options.numberResourceValue;
         const setTextValue = (node: T, attr: string, name: string, value: string) => {
-            name = Resource.addString(value, name, this.options.numberResourceValue);
+            name = Resource.addString(value, name, numberResourceValue);
             if (name !== '') {
-                node.android(attr, this.options.numberResourceValue || !isNumber(name) ? '@string/' + name : name, false);
+                node.android(attr, numberResourceValue || !isNumber(name) ? '@string/' + name : name, false);
             }
         };
         for (const node of this.application.processing.cache) {

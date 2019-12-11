@@ -73,15 +73,24 @@ export default class Resource<T extends android.base.View> extends squared.base.
     }
 
     public static addTheme(...values: StyleAttribute[]) {
+        const themes = STORED.themes;
         for (const theme of values) {
-            const output = theme.output;
-            const themes = STORED.themes;
-            const path = output && isString(output.path) ? output.path.trim() : 'res/values';
-            const file = output && isString(output.file) ? output.file.trim() : 'themes.xml';
-            const filename = trimString(path.trim(), '/') + '/' + trimString(file.trim(), '/');
+            const { items, output } = theme;
+            let path = 'res/values';
+            let file = 'themes.xml';
+            if (output) {
+                if (isString(output.path)) {
+                    path = output.path.trim();
+                }
+                if (isString(output.file)) {
+                    file = output.file.trim();
+                }
+            }
+            const filename = trimString(path, '/') + '/' + trimString(file, '/');
             const storedFile = themes.get(filename) || new Map<string, StyleAttribute>();
+            let name = theme.name;
             let appTheme = '';
-            if (theme.name === '' || theme.name.charAt(0) === '.') {
+            if (name === '' || name.charAt(0) === '.') {
                 found: {
                     for (const data of themes.values()) {
                         for (const style of data.values()) {
@@ -97,18 +106,20 @@ export default class Resource<T extends android.base.View> extends squared.base.
                 }
             }
             else {
-                appTheme = theme.name;
+                appTheme = name;
             }
-            theme.name = appTheme + (theme.name.charAt(0) === '.' ? theme.name : '');
-            Resource.formatOptions(theme.items);
-            const storedTheme = <StyleAttribute> storedFile.get(theme.name);
+            name = appTheme + (name.charAt(0) === '.' ? name : '');
+            theme.name = name;
+            Resource.formatOptions(items);
+            const storedTheme = <StyleAttribute> storedFile.get(name);
             if (storedTheme) {
-                for (const attr in theme.items) {
-                    storedTheme.items[attr] = theme.items[attr];
+                const storedItems = storedTheme.items;
+                for (const attr in items) {
+                    storedItems[attr] = items[attr];
                 }
             }
             else {
-                storedFile.set(theme.name, theme);
+                storedFile.set(name, theme);
             }
             themes.set(filename, storedFile);
         }

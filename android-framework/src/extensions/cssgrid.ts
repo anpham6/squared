@@ -17,8 +17,9 @@ const { CHAR } = $lib.regex;
 const { captureMap, convertInt, flatMultiArray, objectMap } = $lib.util;
 
 const $base_lib = squared.base.lib;
-const { EXT_NAME } = $base_lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
+
+const { CSS_GRID } = $base_lib.constant.EXT_NAME;
 
 const REGEXP_ALIGNSELF = /(start|end|center|baseline)/;
 const REGEXP_JUSTIFYSELF = /(start|left|center|right|end)/;
@@ -190,7 +191,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const mainData: CssGridData<T> = node.data(EXT_NAME.CSS_GRID, 'mainData');
+        const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
             const layout = new $LayoutUI(
                 parent,
@@ -224,8 +225,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     }
 
     public processChild(node: T, parent: T) {
-        const mainData: CssGridData<T> = parent.data(EXT_NAME.CSS_GRID, 'mainData');
-        const cellData: CssGridCellData = node.data(EXT_NAME.CSS_GRID, 'cellData');
+        const mainData: CssGridData<T> = parent.data(CSS_GRID, 'mainData');
+        const cellData: CssGridCellData = node.data(CSS_GRID, 'cellData');
         let renderAs: T | undefined;
         let outputAs: NodeXmlTemplate<T> | undefined;
         if (mainData && cellData) {
@@ -456,7 +457,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     const rowCount = mainData.rowData.length;
                     for (const item of flatMultiArray<T>(mainData.rowData[rowStart])) {
                         if (item !== node) {
-                            const data: CssGridCellData = item.data(EXT_NAME.CSS_GRID, 'cellData');
+                            const data: CssGridCellData = item.data(CSS_GRID, 'cellData');
                             if (data && (rowStart === 0 || data.rowSpan < rowCount) && data.rowSpan > rowSpan) {
                                 return true;
                             }
@@ -485,7 +486,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     }
 
     public postBaseLayout(node: T) {
-        const mainData: CssGridData<T> = node.data(EXT_NAME.CSS_GRID, 'mainData');
+        const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
             if (node.hasWidth && mainData.justifyContent !== 'normal') {
                 setContentSpacing(node, mainData, mainData.justifyContent, true, 'width', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT);
@@ -532,7 +533,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     }
 
     public postOptimize(node: T) {
-        const mainData: CssGridData<T> = node.data(EXT_NAME.CSS_GRID, 'mainData');
+        const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
             const controller = <android.base.Controller<T>> this.controller;
             const { children, column } = mainData;

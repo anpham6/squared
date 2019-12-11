@@ -16,8 +16,9 @@ const $base = squared.base;
 const { NodeUI } = $base;
 
 const $base_lib = $base.lib;
-const { EXT_NAME } = $base_lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
+
+const { FLEXBOX } = $base_lib.constant.EXT_NAME;
 
 type FlexBasis = {
     item: View;
@@ -142,7 +143,7 @@ const getAutoMargin = (node: View) => node.innerWrapped ? node.innerWrapped.auto
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const mainData: FlexboxData<T> = node.data(EXT_NAME.FLEXBOX, 'mainData');
+        const mainData: FlexboxData<T> = node.data(FLEXBOX, 'mainData');
         if (mainData.directionRow && mainData.rowCount === 1 || mainData.directionColumn && mainData.columnCount === 1) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;
             node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
@@ -190,7 +191,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         else {
             const autoMargin = node.autoMargin;
             if (autoMargin.horizontal || autoMargin.vertical && node.hasHeight) {
-                const mainData: FlexboxData<T> = parent.data(EXT_NAME.FLEXBOX, 'mainData');
+                const mainData: FlexboxData<T> = parent.data(FLEXBOX, 'mainData');
                 if (mainData) {
                     const index = mainData.children.findIndex(item => item === node);
                     if (index !== -1) {
@@ -229,7 +230,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     }
 
     public postBaseLayout(node: T) {
-        const mainData: FlexboxData<T> = node.data(EXT_NAME.FLEXBOX, 'mainData');
+        const mainData: FlexboxData<T> = node.data(FLEXBOX, 'mainData');
         if (mainData) {
             const { alignContent, children, directionColumn, directionReverse, directionRow, justifyContent, wrap, wrapReverse } = mainData;
             const chainHorizontal: T[][] = [];
@@ -572,7 +573,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 }
                                                 else if ((chain.naturalElement ? (chain.initial.bounds as Dimension)[HWL] : Number.POSITIVE_INFINITY) < maxSize) {
                                                     setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px');
-                                                    if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
+                                                    if (innerWrapped?.autoMargin[orientation] === false) {
                                                         setLayoutWeightOpposing(innerWrapped, 'match_parent');
                                                     }
                                                 }

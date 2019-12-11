@@ -41,7 +41,12 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
             const path = this.path;
             if (path) {
                 const element = options?.element;
-                this.animateSequentially(this.getAnimateShape(element || this.element), element ? undefined : this.getAnimateTransform(options), path, options);
+                if (element) {
+                    this.animateSequentially(this.getAnimateShape(element), undefined, path, options);
+                }
+                else {
+                    this.animateSequentially(this.getAnimateShape(this.element), this.getAnimateTransform(options), path, options);
+                }
             }
         }
     }

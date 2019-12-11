@@ -12,13 +12,14 @@ const { formatPX } = $lib.css;
 const { captureMap, withinRange } = $lib.util;
 
 const $base_lib = squared.base.lib;
-const { EXT_NAME } = $base_lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
+
+const { GRID } = $base_lib.constant.EXT_NAME;
 
 function transferData(parent: View, siblings: View[])  {
     const data = squared.base.extensions.Grid.createDataCellAttribute();
     for (const item of siblings) {
-        const source: GridCellData<View> = item.data(EXT_NAME.GRID, 'cellData');
+        const source: GridCellData<View> = item.data(GRID, 'cellData');
         if (source) {
             if (source.cellStart) {
                 data.cellStart = true;
@@ -32,16 +33,16 @@ function transferData(parent: View, siblings: View[])  {
             if (source.rowStart) {
                 data.rowStart = true;
             }
-            item.data(EXT_NAME.GRID, 'cellData', null);
+            item.data(GRID, 'cellData', null);
         }
     }
-    parent.data(EXT_NAME.GRID, 'cellData', data);
+    parent.data(GRID, 'cellData', data);
 }
 
 export default class <T extends View> extends squared.base.extensions.Grid<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const columnCount: number = node.data(EXT_NAME.GRID, 'columnCount');
+        const columnCount: number = node.data(GRID, 'columnCount');
         if (columnCount) {
             const layout = new $LayoutUI(
                 parent,
@@ -60,7 +61,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const cellData: GridCellData<T> = node.data(EXT_NAME.GRID, 'cellData');
+        const cellData: GridCellData<T> = node.data(GRID, 'cellData');
         if (cellData) {
             const siblings = cellData.siblings?.slice(0);
             let layout: $LayoutUI<T> | undefined;
@@ -112,14 +113,14 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
 
     public postConstraints(node: T) {
         if (node.css('borderCollapse') !== 'collapse') {
-            const columnCount: number = node.data(EXT_NAME.GRID, 'columnCount');
+            const columnCount: number = node.data(GRID, 'columnCount');
             if (columnCount) {
                 let paddingTop = 0;
                 let paddingRight = 0;
                 let paddingBottom = 0;
                 let paddingLeft = 0;
                 node.renderEach(item => {
-                    const cellData: GridCellData<T> = item.data(EXT_NAME.GRID, 'cellData');
+                    const cellData: GridCellData<T> = item.data(GRID, 'cellData');
                     if (cellData) {
                         const parent = item.actualParent as T;
                         if (!parent.visible) {

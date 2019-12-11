@@ -71,12 +71,12 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                     content: controller.renderNodeStatic('include', { layout: '@layout/' + openData.name }, '', ''),
                                     indent: true
                                 };
-                                if (!merge && !openData.item.documentRoot) {
-                                    openData.item.documentRoot = true;
-                                }
                                 let content = controller.cascadeDocument(templates, depth);
                                 if (merge) {
                                     content = controller.getEnclosingXmlTag('merge', getRootNs(content), content);
+                                }
+                                else {
+                                    openData.item.documentRoot = true;
                                 }
                                 application.saveDocument(openData.name as string, content, '', Number.POSITIVE_INFINITY);
                                 close.splice(j, 1);

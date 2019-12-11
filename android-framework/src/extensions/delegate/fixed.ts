@@ -160,10 +160,11 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
 
     public postConstraints(node: T) {
         node.each((item: T) => {
-            if (!item.constraint.horizontal) {
+            const constraint = item.constraint;
+            if (!constraint.horizontal) {
                 item.anchor('left', 'parent');
             }
-            if (!item.constraint.vertical) {
+            if (!constraint.vertical) {
                 item.anchor('top', 'parent');
             }
         });

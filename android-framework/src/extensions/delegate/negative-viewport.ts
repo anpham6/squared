@@ -12,14 +12,14 @@ export default class NegativeViewport<T extends View> extends squared.base.Exten
     }
 
     public condition(node: T, parent: T) {
-        if (parent.naturalElement && parent.documentRoot) {
-            const { top, right, bottom, left, linear, marginLeft, marginTop } = node;
+        if (parent.documentRoot) {
             const box = parent.box;
+            const linear = node.linear;
             return (
-                Math.ceil(linear.left) < Math.floor(box.left) && (left < 0 || marginLeft < 0 || !node.hasPX('left') && right > 0) ||
-                Math.floor(linear.right) > Math.ceil(box.right) && (left > 0 || marginLeft > 0 || !node.hasPX('left') && right < 0) ||
-                Math.ceil(linear.top) < Math.floor(box.top) && (top < 0 || marginTop < 0 || !node.hasPX('top') && bottom > 0) ||
-                Math.floor(linear.bottom) > Math.ceil(box.bottom) && (top > 0 || marginTop > 0 || !node.hasPX('top') && bottom < 0) && parent.hasPX('height')
+                Math.ceil(linear.left) < Math.floor(box.left) && (node.left < 0 || node.marginLeft < 0 || !node.hasPX('left') && node.right > 0) ||
+                Math.floor(linear.right) > Math.ceil(box.right) && (node.left > 0 || node.marginLeft > 0 || !node.hasPX('left') && node.right < 0) ||
+                Math.ceil(linear.top) < Math.floor(box.top) && (node.top < 0 || node.marginTop < 0 || !node.hasPX('top') && node.bottom > 0) ||
+                Math.floor(linear.bottom) > Math.ceil(box.bottom) && (node.top > 0 || node.marginTop > 0 || !node.hasPX('top') && node.bottom < 0) && parent.hasPX('height')
             );
         }
         return false;
