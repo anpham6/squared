@@ -49,7 +49,7 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     }
 
     public is(node: T) {
-        return node.styleElement ? this.tagNames.length === 0 || this.tagNames.includes((<HTMLElement> node.element).tagName) : false;
+        return node.styleElement ? this.tagNames.length === 0 || this.tagNames.includes(node.toElementString('tagName')) : false;
     }
 
     public included(element: HTMLElement) {

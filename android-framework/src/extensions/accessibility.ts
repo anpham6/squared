@@ -15,7 +15,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
                                 if (sibling?.visible && sibling.pageFlow) {
                                     const element = <HTMLInputElement> node.element;
                                     const labelElement = <HTMLLabelElement> sibling.element;
-                                    const labelParent = sibling.documentParent.tagName === 'LABEL' ? sibling.documentParent as T : undefined;
+                                    const labelParent = sibling.documentParent.tagName === 'LABEL' && sibling.documentParent as T;
                                     if (element.id && element.id === labelElement.htmlFor) {
                                         sibling.android('labelFor', node.documentId);
                                         return true;

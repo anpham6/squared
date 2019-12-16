@@ -212,8 +212,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _boxAdjustment?: BoxModel;
         protected _boxReset?: BoxModel;
 
-        private _containerType = 0;
         private _api = BUILD_ANDROID.LATEST;
+        private _localization = false;
+        private _containerType = 0;
         private __android: StringMap = {};
         private __app: StringMap = {};
 
@@ -228,28 +229,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (afterInit) {
                 afterInit(this);
             }
+            this._localization = this.hasProcedure(NODE_PROCEDURE.LOCALIZATION) && this.localSettings.supportRTL;
         }
 
         public android(attr: string, value?: string, overwrite = true) {
             if (value) {
-                if (this._api < BUILD_ANDROID.LATEST) {
-                    const result: ObjectMap<string | boolean> = {};
-                    if (!this.supported(attr, result)) {
-                        return '';
-                    }
-                    if (Object.keys(result).length) {
-                        if (isString(result.attr)) {
-                            attr = result.attr;
-                        }
-                        if (isString(result.value)) {
-                            value = result.value;
-                        }
-                        if (typeof result.overwrite === 'boolean') {
-                            overwrite = result.overwrite;
-                        }
-                    }
-                }
                 this.attr('android', attr, value, overwrite);
+                return value;
             }
             return this.__android[attr] || '';
         }
@@ -257,6 +243,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public app(attr: string, value?: string, overwrite = true) {
             if (value) {
                 this.attr('app', attr, value, overwrite);
+                return value;
             }
             return this.__app[attr] || '';
         }
@@ -489,24 +476,49 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const all = objs.length === 0;
             let requireId = false;
             let id = '';
-            for (const value of namespaces) {
-                if (all || objs.includes(value)) {
-                    const obj: StringMap = this['__' + value];
+            for (const namespace of namespaces) {
+                if (all || objs.includes(namespace)) {
+                    const obj: StringMap = this['__' + namespace];
                     if (obj) {
-                        const prefix = value + ':';
-                        switch (value) {
+                        const prefix = namespace + ':';
+                        switch (namespace) {
                             case '_':
                                 for (const attr in obj) {
                                     result.push(`${attr}="${obj[attr]}"`);
                                 }
                                 break;
                             case 'android':
-                                for (const attr in obj) {
-                                    if (attr === 'id') {
-                                        id = obj[attr];
+                                if (this._api < BUILD_ANDROID.LATEST) {
+                                    for (let attr in obj) {
+                                        if (attr === 'id') {
+                                            id = obj[attr];
+                                        }
+                                        else {
+                                            const data: ObjectMap<string | boolean> = {};
+                                            let value = obj[attr];
+                                            if (!this.supported(attr, data)) {
+                                                continue;
+                                            }
+                                            if (Object.keys(data).length) {
+                                                if (isString(data.attr)) {
+                                                    attr = data.attr;
+                                                }
+                                                if (isString(data.value)) {
+                                                    value = data.value;
+                                                }
+                                            }
+                                            result.push(prefix + `${attr}="${value}"`);
+                                        }
                                     }
-                                    else {
-                                        result.push(prefix + `${attr}="${obj[attr]}"`);
+                                }
+                                else {
+                                    for (const attr in obj) {
+                                        if (attr === 'id') {
+                                            id = obj[attr];
+                                        }
+                                        else {
+                                            result.push(prefix + `${attr}="${obj[attr]}"`);
+                                        }
                                     }
                                 }
                                 requireId = true;
@@ -528,10 +540,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public localizeString(value: string) {
-            if (this.hasProcedure(NODE_PROCEDURE.LOCALIZATION)) {
-                return localizeString(value, this.localSettings.supportRTL, this._api);
-            }
-            return value;
+            return this._localization ? localizeString(value, true, this._api) : value;
         }
 
         public hide(invisible?: boolean) {
@@ -917,7 +926,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             adjustViewBounds = true;
                         }
                         else if (this.imageElement) {
-                            width = (<HTMLImageElement> this.element).naturalWidth;
+                            width = this.toElementInt('naturalWidth');
                         }
                     }
                     else {
@@ -947,7 +956,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             adjustViewBounds = true;
                         }
                         else if (this.imageElement) {
-                            height = (<HTMLImageElement> this.element).naturalHeight;
+                            height = this.toElementInt('naturalHeight');
                         }
                         else {
                             height = this.parseUnit(maxHeight, 'height');
@@ -1417,8 +1426,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (this.styleElement) {
                 const dataset = getDataSet(<HTMLElement> this.element, 'android');
                 for (const name in dataset) {
-                    const obj = name === 'attr' ? 'android'
-                                                : REGEXP_DATASETATTR.test(name) ? capitalize(name.substring(4), false) : '';
+                    const obj = name === 'attr' ? 'android' : (REGEXP_DATASETATTR.test(name) ? capitalize(name.substring(4), false) : '');
                     if (obj !== '') {
                         for (const values of dataset[name].split(';')) {
                             const [key, value] = values.split('::');
@@ -1663,7 +1671,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 break;
                             case CONTAINER_ANDROID.SELECT:
                                 result += 4;
-                                result /= (<HTMLSelectElement> this.element).size || 1;
+                                result /= this.toElementInt('size') || 1;
                                 break;
                         }
                     }

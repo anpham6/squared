@@ -22,7 +22,7 @@ export default abstract class Accessibility<T extends NodeUI> extends ExtensionU
                         const id = node.elementId;
                         [node.nextSibling, node.previousSibling].some((sibling: T) => {
                             if (sibling?.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
-                                if (id && id === (<HTMLLabelElement> sibling.element).htmlFor) {
+                                if (id && id === sibling.toElementString('htmlFor')) {
                                     node.companion = sibling;
                                 }
                                 else if (sibling.textElement && sibling.documentParent.tagName === 'LABEL') {

@@ -80,7 +80,7 @@ function getTitle(node: View, element: HTMLElement) {
     return '';
 }
 
-const hasInputType = (node: View, value: string) => node.some(item => (<HTMLInputElement> item.element).type === value);
+const hasInputType = (node: View, value: string) => node.some(item => item.toElementString('type') === value);
 
 export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly cascadeAll = true;

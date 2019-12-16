@@ -77,7 +77,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         const ordered = node.tagName === 'OL';
-        let i = ordered && (<HTMLOListElement> node.element).start || 1;
+        let i = ordered && node.toElementInt('start') || 1;
         node.each((item: T) => {
             const mainData = List.createDataAttribute();
             const value = item.css('listStyleType');
@@ -88,7 +88,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 else {
                     if (ordered && listItem && item.tagName === 'LI') {
-                        i = (<HTMLLIElement> item.element).value || i;
+                        i = item.toElementInt('value', i);
                     }
                     let ordinal = convertListStyle(value, i);
                     if (ordinal === '') {

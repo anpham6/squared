@@ -55,7 +55,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         if (mainData) {
             const { application, controller } = this;
             const firstChild = parent.firstStaticChild === node;
-            const ordinalValue = mainData.ordinal;
+            const ordinalValue = mainData.ordinal || '';
             let minWidth = node.marginLeft;
             let columnCount = 0;
             let adjustPadding = false;
@@ -121,8 +121,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 let left = 0;
                 let image: string | undefined;
                 if (mainData.imageSrc !== '') {
+                    const resource = <android.base.Resource<T>> this.resource;
                     if (mainData.imagePosition) {
-                        ({ top, left } = getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize, this.resource.getImage(mainData.imageSrc)));
+                        ({ top, left } = getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize, resource.getImage(mainData.imageSrc)));
                         gravity = 'left';
                         if (node.marginLeft < 0) {
                             resetPadding = node.marginLeft;
@@ -139,14 +140,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         }
                         minWidth = 0;
                     }
-                    image = (<android.base.Resource<T>> this.resource).addImageSrc(mainData.imageSrc);
+                    image = resource.addImageSrc(mainData.imageSrc);
                 }
                 if (gravity === 'left') {
                     minWidth += node.paddingLeft - left;
                     node.modifyBox(BOX_STANDARD.PADDING_LEFT);
                 }
                 else {
-                    const length = ordinalValue ? ordinalValue.length : 1;
+                    const length = ordinalValue.length || 1;
                     paddingRight = Math.max(minWidth / (image ? 6 : length * 4), 4);
                 }
                 const options = createViewAttribute();

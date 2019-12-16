@@ -427,6 +427,25 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return isNaN(value) ? fallback : value;
     }
 
+    public toElementInt(attr: string, fallback = NaN) {
+        const value = parseInt(this._element?.[attr]);
+        return !isNaN(value) ? value : fallback;
+    }
+
+    public toElementFloat(attr: string, fallback = NaN) {
+        const value = parseFloat(this._element?.[attr]);
+        return !isNaN(value) ? value : fallback;
+    }
+
+    public toElementBoolean(attr: string, fallback = false) {
+        const value = this._element?.[attr];
+        return typeof value === 'boolean' ? value : fallback;
+    }
+
+    public toElementString(attr: string, fallback = '') {
+        return (this._element?.[attr] || fallback).toString();
+    }
+
     public parseUnit(value: string, dimension = 'width', parent = true) {
         if (value) {
             if (isPercent(value)) {
@@ -716,12 +735,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         break;
                                     case ':checked':
                                         if (tagName === 'INPUT') {
-                                            if (!(<HTMLInputElement> node.element).checked) {
+                                            if (!node.toElementBoolean('checked')) {
                                                 return false;
                                             }
                                         }
                                         else if (tagName === 'OPTION') {
-                                            if (!(<HTMLOptionElement> node.element).selected) {
+                                            if (!node.toElementBoolean('selected')) {
                                                 return false;
                                             }
                                         }
@@ -730,12 +749,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         }
                                         break;
                                     case ':enabled':
-                                        if (!node.inputElement || (<HTMLInputElement> node.element).disabled) {
+                                        if (!node.inputElement || node.toElementBoolean('disabled')) {
                                             return false;
                                         }
                                         break;
                                     case ':disabled':
-                                        if (!node.inputElement || !(<HTMLInputElement> node.element).disabled) {
+                                        if (!node.inputElement || !node.toElementBoolean('disabled')) {
                                             return false;
                                         }
                                         break;
@@ -754,17 +773,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         break;
                                     }
                                     case ':required':
-                                        if (!node.inputElement || tagName === 'BUTTON' || !(<HTMLInputElement> node.element).required) {
+                                        if (!node.inputElement || tagName === 'BUTTON' || !node.toElementBoolean('required')) {
                                             return false;
                                         }
                                         break;
                                     case ':optional':
-                                        if (!node.inputElement || tagName === 'BUTTON' || (<HTMLInputElement> node.element).required) {
+                                        if (!node.inputElement || tagName === 'BUTTON' || node.toElementBoolean('required')) {
                                             return false;
                                         }
                                         break;
                                     case ':placeholder-shown': {
-                                        if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && (<HTMLInputElement | HTMLTextAreaElement> node.element).placeholder)) {
+                                        if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && node.toElementString('placeholder') !== '')) {
                                             return false;
                                         }
                                         break;
@@ -876,7 +895,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             }
                                         }
                                         else if (tagName === 'PROGRESS') {
-                                            if ((<HTMLProgressElement> node.element).value !== -1) {
+                                            if (node.toElementInt('value', -1) !== -1) {
                                                 return false;
                                             }
                                         }

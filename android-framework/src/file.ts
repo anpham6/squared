@@ -119,7 +119,7 @@ export default class File<T extends android.base.View> extends squared.base.File
         for (const [name, innerText] of Array.from(STORED.strings.entries()).sort(caseInsensitive)) {
             item.string.push(<ItemValue> { name, innerText });
         }
-        const result = [
+        return this.checkFileAssets([
             replaceTab(
                 applyTemplate('resources', STRING_TMPL, [item]),
                 this.userSettings.insertSpaces,
@@ -127,8 +127,7 @@ export default class File<T extends android.base.View> extends squared.base.File
             ),
             this.directory.string,
             'strings.xml'
-        ];
-        return this.checkFileAssets(result, options);
+        ], options);
     }
 
     public resourceStringArrayToXml(options: FileOutputOptions = {}) {
@@ -140,7 +139,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                     item: objectMap<string, {}>(values, innerText => ({ innerText }))
                 });
             }
-            const result = [
+            return this.checkFileAssets([
                 replaceTab(
                     applyTemplate('resources', STRINGARRAY_TMPL, [item]),
                     this.userSettings.insertSpaces,
@@ -148,21 +147,19 @@ export default class File<T extends android.base.View> extends squared.base.File
                 ),
                 this.directory.string,
                 'string_arrays.xml'
-            ];
-            return this.checkFileAssets(result, options);
+            ], options);
         }
         return [];
     }
 
     public resourceFontToXml(options: FileOutputOptions = {}) {
-        const result: string[] = [];
-        const fonts = Array.from(STORED.fonts.entries());
-        if (fonts.length) {
+        if (STORED.fonts.size) {
             const resource = this.resource;
             const { insertSpaces, targetAPI } = this.userSettings;
-            const xmlns = XMLNS_ANDROID[targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
+            const xmlns = targetAPI < BUILD_ANDROID.OREO ? XMLNS_ANDROID.app : XMLNS_ANDROID.android;
             const pathname = this.directory.font;
-            for (const [name, font] of fonts.sort()) {
+            const result: string[] = [];
+            for (const [name, font] of Array.from(STORED.fonts.entries()).sort()) {
                 const item: ExternalData = {
                     'xmlns:android': xmlns,
                     font: []
@@ -200,8 +197,9 @@ export default class File<T extends android.base.View> extends squared.base.File
                 result.push(output, pathname, name + '.xml');
             }
             this.checkFileAssets(result, options);
+            return result;
         }
-        return result;
+        return [];
     }
 
     public resourceColorToXml(options: FileOutputOptions = {}) {
@@ -210,15 +208,14 @@ export default class File<T extends android.base.View> extends squared.base.File
             for (const [innerText, name] of Array.from(STORED.colors.entries()).sort()) {
                 item.color.push(<ItemValue> { name, innerText });
             }
-            const result = [
+            return this.checkFileAssets([
                 replaceTab(
                     applyTemplate('resources', COLOR_TMPL, [item]),
                     this.userSettings.insertSpaces
                 ),
                 this.directory.string,
                 'colors.xml'
-            ];
-            return this.checkFileAssets(result, options);
+            ], options);
         }
         return [];
     }
@@ -298,21 +295,20 @@ export default class File<T extends android.base.View> extends squared.base.File
             for (const [name, value] of Array.from(STORED.dimens.entries()).sort()) {
                 item.dimen.push({ name, innerText: convertPixels ? convertLength(value, resolutionDPI, false) : value });
             }
-            const result = [
+            return this.checkFileAssets([
                 replaceTab(applyTemplate('resources', DIMEN_TMPL, [item])),
                 this.directory.string,
                 'dimens.xml'
-            ];
-            return this.checkFileAssets(result, options);
+            ], options);
         }
         return [];
     }
 
     public resourceDrawableToXml(options: FileOutputOptions = {}) {
-        const result: string[] = [];
         if (STORED.drawables.size) {
             const { convertPixels, insertSpaces, resolutionDPI } = this.userSettings;
             const directory = this.directory.image;
+            const result: string[] = [];
             for (const [name, value] of STORED.drawables.entries()) {
                 result.push(
                     replaceTab(
@@ -327,9 +323,9 @@ export default class File<T extends android.base.View> extends squared.base.File
                     name + '.xml'
                 );
             }
-            this.checkFileAssets(result, options);
+            return this.checkFileAssets(result, options);
         }
-        return result;
+        return [];
     }
 
     public resourceDrawableImageToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {

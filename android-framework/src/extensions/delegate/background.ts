@@ -13,7 +13,7 @@ const { XML } = $lib.regex;
 
 const { NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
-const isFullScreen = (node: View) => node.visibleStyle.borderWidth && !node.inline && !node.hasPX('width') && (node.backgroundColor !== '' || (<HTMLBodyElement> node.element).scrollHeight < window.innerHeight) && node.css('height') !== '100%' && node.css('minHeight') !== '100%';
+const isFullScreen = (node: View) => node.visibleStyle.borderWidth && !node.inline && !node.hasPX('width') && (node.backgroundColor !== '' || node.toElementInt('scrollHeight') < window.innerHeight) && node.css('height') !== '100%' && node.css('minHeight') !== '100%';
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly removeIs = true;
@@ -27,7 +27,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             return true;
         }
         else {
-            const scrollHeight = (<HTMLBodyElement> node.element).scrollHeight;
+            const scrollHeight = node.toElementInt('scrollHeight');
             const backgroundImage = $ResourceUI.parseBackgroundImage(node);
             if (backgroundImage) {
                 const backgroundRepeat = node.css('backgroundRepeat').split(XML.SEPARATOR);
@@ -47,10 +47,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                     }
                 }
             }
-            if (node.documentBody) {
-                const parent = node.actualParent as T;
-                return parent.tagName === 'HTML' && parent.visibleStyle.background;
-            }
+            return node.documentBody && (node.actualParent as T).visibleStyle.background;
         }
         return false;
     }
@@ -68,7 +65,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         }
         else {
             if (height !== '100%' && minHeight !== '100%') {
-                const offsetHeight = (<HTMLHtmlElement> parent.element).offsetHeight;
+                const offsetHeight = parent.toElementInt('offsetHeight');
                 if (offsetHeight < window.innerHeight) {
                     backgroundSize = `auto ${offsetHeight}px`;
                 }

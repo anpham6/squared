@@ -461,6 +461,10 @@ declare namespace base {
         cssFinally(attr: string): boolean;
         toInt(attr: string, initial?: boolean, fallback?: number): number;
         toFloat(attr: string, initial?: boolean, fallback?: number): number;
+        toElementInt(attr: string, fallback?: number): number;
+        toElementFloat(attr: string, fallback?: number): number;
+        toElementBoolean(attr: string, fallback?: boolean): boolean;
+        toElementString(attr: string, fallback?: string): string;
         parseUnit(value: string, dimension?: string, parent?: boolean): number;
         convertPX(value: string, dimension?: string, parent?: boolean): string;
         has(attr: string, checkType?: number, options?: {}): boolean;

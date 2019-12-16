@@ -96,7 +96,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
 
     public postBaseLayout(node: T) {
         node.renderEach((item: T) => {
-            if (item.naturalElement && (<HTMLInputElement> item.element).checked) {
+            if (item.naturalElement && item.toElementBoolean('checked')) {
                 node.android('checkedButton', item.documentId);
             }
         });

@@ -122,17 +122,17 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
                 }
             }
-            const maxWidthHeight: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
-            if (maxWidthHeight) {
-                const wrapped = maxWidthHeight.container;
+            const subData: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
+            if (subData) {
+                const wrapped = subData.container;
                 if (wrapped) {
-                    if (maxWidthHeight.width) {
+                    if (subData.width) {
                         container.css('maxWidth', node.css('maxWidth'));
                         container.setLayoutWidth('0px');
                         container.contentBoxWidth = node.contentBoxWidth;
                         node.setLayoutWidth('wrap_content');
                     }
-                    if (maxWidthHeight.height) {
+                    if (subData.height) {
                         container.css('maxHeight', node.css('maxHeight'));
                         container.setLayoutHeight('0px');
                         container.contentBoxHeight = node.contentBoxHeight;

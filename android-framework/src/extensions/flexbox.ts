@@ -138,7 +138,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
     return result;
 }
 
-const getAutoMargin = (node: View) => node.innerWrapped ? node.innerWrapped.autoMargin : node.autoMargin;
+const getAutoMargin = (node: View) => node.innerWrapped?.autoMargin || node.autoMargin;
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T) {

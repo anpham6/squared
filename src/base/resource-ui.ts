@@ -882,10 +882,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 if (item) {
                     if (item.htmlElement && attr === 'innerHTML') {
                         if (item.lineBreak) {
-                            value = value.replace(new RegExp(`\\s*${(<Element> item.element).outerHTML}\\s*`), '\\n');
+                            value = value.replace(new RegExp(`\\s*${item.toElementString('outerHTML')}\\s*`), '\\n');
                         }
                         else {
-                            value = value.replace((<Element> item.element).outerHTML, item.pageFlow && item.textContent.trim() !== '' ? STRING_SPACE : '');
+                            value = value.replace(item.toElementString('outerHTML'), item.pageFlow && item.textContent.trim() !== '' ? STRING_SPACE : '');
                         }
                         continue;
                     }

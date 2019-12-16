@@ -34,7 +34,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     const data = item.data(TABLE, 'cellData');
                     if (UNITZERO.test(item.css('width'))) {
                         item.setLayoutWidth('0px');
-                        item.android('layout_columnWeight', ((<HTMLTableCellElement> item.element).colSpan || 1).toString());
+                        item.android('layout_columnWeight', item.toElementString('colSpan', '1'));
                     }
                     else {
                         const expand: boolean | undefined = data.expand;
