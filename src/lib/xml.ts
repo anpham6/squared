@@ -1,5 +1,5 @@
 import { ESCAPE } from './regex';
-import { joinMap } from './util';
+import { isPlainObject, joinMap } from './util';
 
 type XMLTagData = {
     tag: string;
@@ -124,11 +124,12 @@ export function applyTemplate(tagName: string, template: ExternalData, children:
             let innerText = '';
             const childDepth = depth + (nested ? i : 0) + 1;
             for (const name in descend) {
-                if (Array.isArray(item[name])) {
-                    innerText += applyTemplate(name, descend, item[name], childDepth);
+                const value = item[name];
+                if (Array.isArray(value)) {
+                    innerText += applyTemplate(name, descend, value, childDepth);
                 }
-                else if (typeof item[name] === 'object') {
-                    innerText += applyTemplate(name, descend, [item[name]], childDepth);
+                else if (isPlainObject(value)) {
+                    innerText += applyTemplate(name, descend, [value], childDepth);
                 }
             }
             if (innerText !== '') {

@@ -184,8 +184,12 @@ export function isArray<T>(value: any): value is Array<T> {
     return Array.isArray(value) && value.length > 0;
 }
 
+export function isObject(value: any): value is {} {
+    return typeof value === 'object' && value !== null;
+}
+
 export function isPlainObject(value: any): value is {} {
-    return typeof value === 'object' && value !== null && value.constructor === Object;
+    return isObject(value) && value.constructor === Object;
 }
 
 export function isEqual(source: any, values: any) {
@@ -266,7 +270,7 @@ export function cloneObject(data: {}, result = {}, array = false) {
 export function optional(obj: UndefNull<object>, value: string, type?: string) {
     let valid = false;
     let result: any;
-    if (typeof obj === 'object' && obj !== null) {
+    if (isObject(obj)) {
         result = obj;
         const attrs = value.split('.');
         let i = 0;
@@ -274,10 +278,9 @@ export function optional(obj: UndefNull<object>, value: string, type?: string) {
             result = result[attrs[i]];
         }
         while (
-            result !== null &&
             result !== undefined &&
-            ++i < attrs.length &&
-            typeof result === 'object'
+            isObject(result) &&
+            ++i < attrs.length
         );
         valid = i === attrs.length && result !== undefined && result !== null;
     }
@@ -285,10 +288,9 @@ export function optional(obj: UndefNull<object>, value: string, type?: string) {
         case 'object':
             return valid ? result : null;
         case 'number':
-            result = parseFloat(result);
-            return valid && !isNaN(result) ? result : 0;
+            return valid ? parseFloat(result) : NaN;
         case 'boolean':
-            return valid && result === true;
+            return result === true;
         default:
             return valid ? result.toString() : '';
     }
@@ -434,7 +436,7 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
                     current = {};
                     current[name] = current;
                 }
-                else if (typeof value === 'object') {
+                else if (isObject(value)) {
                     current = value;
                 }
                 else {

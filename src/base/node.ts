@@ -7,7 +7,7 @@ const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, isLe
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
 const { CHAR, CSS, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, setElementCache } = $lib.session;
-const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, filterArray, hasBit, hasValue, isNumber, spliceArray, spliceString } = $lib.util;
+const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, filterArray, hasBit, hasValue, isNumber, isObject, spliceArray, spliceString } = $lib.util;
 
 type T = Node;
 
@@ -116,7 +116,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public data(name: string, attr: string, value?: any, overwrite = true) {
         const data = this._data;
         if (hasValue(value)) {
-            if (typeof data[name] !== 'object') {
+            if (!isObject(data[name])) {
                 data[name] = {};
             }
             if (overwrite || data[name][attr] === undefined) {
@@ -128,7 +128,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             return undefined;
         }
         const stored: {} = data[name];
-        return typeof stored === 'object' && stored !== null ? stored[attr] : undefined;
+        return isObject(stored) ? stored[attr] : undefined;
     }
 
     public unsetCache(...attrs: string[]) {

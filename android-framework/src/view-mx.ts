@@ -98,39 +98,41 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
         setMultiline(node, lineHeight, false, true);
     }
     else if ((node.renderChildren.length === 0 || node.inline) && (node.pageFlow || node.textContent.length)) {
-        let offset = 0;
-        let usePadding = true;
         if (inlineStyle && !node.inline && node.inlineText) {
             setMinHeight(node, lineHeight);
             setMultiline(node, lineHeight, false, false);
         }
-        else if (!inlineStyle && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
-            if (node.cssTry('white-space', 'nowrap')) {
-                offset = (lineHeight - node.boundingClientRect.height) / 2;
-                usePadding = false;
-                node.cssFinally('white-space');
-            }
-            node.cssFinally('line-height');
-        }
         else {
-            const bounds = node.bounds;
-            if (node.plainText && <number> bounds.numberOfLines > 1) {
-                node.android('minHeight', formatPX(bounds.height / <number> bounds.numberOfLines));
-                node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
-                return;
+            let offset = 0;
+            let usePadding = true;
+            if (!inlineStyle && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
+                if (node.cssTry('white-space', 'nowrap')) {
+                    offset = (lineHeight - node.boundingClientRect.height) / 2;
+                    usePadding = false;
+                    node.cssFinally('white-space');
+                }
+                node.cssFinally('line-height');
             }
             else {
-                offset = (lineHeight - bounds.height) / 2;
+                const bounds = node.bounds;
+                if (node.plainText && <number> bounds.numberOfLines > 1) {
+                    node.android('minHeight', formatPX(bounds.height / <number> bounds.numberOfLines));
+                    node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
+                    return;
+                }
+                else {
+                    offset = (lineHeight - bounds.height) / 2;
+                }
             }
-        }
-        const upper = Math.round(offset);
-        if (upper > 0) {
-            const boxPadding = usePadding && node.textElement && !node.plainText && !inlineStyle;
-            if (top) {
-                node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.MARGIN_TOP, upper);
-            }
-            if (bottom) {
-                node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_BOTTOM : BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
+            const upper = Math.round(offset);
+            if (upper > 0) {
+                const boxPadding = usePadding && node.textElement && !node.plainText && !inlineStyle;
+                if (top) {
+                    node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.MARGIN_TOP, upper);
+                }
+                if (bottom) {
+                    node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_BOTTOM : BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
+                }
             }
         }
     }
@@ -228,16 +230,20 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public android(attr: string, value?: string, overwrite = true) {
             if (value) {
-                this.attr('android', attr, value, overwrite);
-                return value;
+                value = this.attr('android', attr, value, overwrite);
+                if (value !== '') {
+                    return value;
+                }
             }
             return this.__android[attr] || '';
         }
 
         public app(attr: string, value?: string, overwrite = true) {
             if (value) {
-                this.attr('app', attr, value, overwrite);
-                return value;
+                value = this.attr('app', attr, value, overwrite);
+                if (value !== '') {
+                    return value;
+                }
             }
             return this.__app[attr] || '';
         }

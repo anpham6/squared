@@ -817,6 +817,7 @@ declare namespace lib {
         function isNumber(value: any): boolean;
         function isString(value: any): value is string;
         function isArray<T>(value: any): value is Array<T>;
+        function isObject(value: any): value is {};
         function isPlainObject(value: any): value is {};
         function isEqual(source: any, values: any): boolean;
         function includes(source: string | undefined, value: string, delimiter?: string): boolean;

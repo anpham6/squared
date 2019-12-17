@@ -11,7 +11,7 @@ const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, formatPX, isLength } = $lib.css;
 const { assignRect, isTextNode, newBoxModel } = $lib.dom;
 const { isEqual } = $lib.math;
 const { getElementAsNode } = $lib.session;
-const { aboveRange, assignEmptyProperty, belowRange, cloneObject, filterArray, hasBit, isArray, searchObject, withinRange } = $lib.util;
+const { aboveRange, assignEmptyProperty, belowRange, cloneObject, filterArray, hasBit, isArray, isPlainObject, searchObject, withinRange } = $lib.util;
 
 type T = NodeUI;
 
@@ -409,7 +409,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (!overwrite && obj[attr]) {
                 return '';
             }
-            obj[attr] = value.toString();
+            obj[attr] = value;
             return value;
         }
         else {
@@ -419,7 +419,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public unsafe(name: string, value?: any): any {
         if (value !== undefined) {
-            this['_' + name] =  value;
+            this['_' + name] = value;
         }
         else {
             return this['_' + name];
@@ -452,10 +452,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public apply(options: {}) {
         for (const name in options) {
-            const obj = options[name];
-            if (typeof obj === 'object') {
-                for (const attr in obj) {
-                    this.attr(name, attr, obj[attr]);
+            const data = options[name];
+            if (isPlainObject(data)) {
+                for (const attr in data) {
+                    this.attr(name, attr, data[attr]);
                 }
                 delete options[name];
             }

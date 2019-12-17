@@ -1,4 +1,4 @@
-const { hasBit } = squared.lib.util;
+const { hasBit, isObject } = squared.lib.util;
 
 export default abstract class ExtensionManager<T extends squared.base.Node> implements squared.base.ExtensionManager<T> {
     protected constructor(public readonly application: squared.base.Application<T>) {
@@ -55,7 +55,7 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
 
     public optionValue(name: string, attr: string) {
         const options = this.retrieve(name)?.options;
-        if (typeof options === 'object') {
+        if (isObject(options)) {
             return options[attr];
         }
         return undefined;
