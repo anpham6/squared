@@ -659,11 +659,19 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     boxStyle.borderRadius = borderRadius;
                 }
             }
-            if (!node.css('border').startsWith('0px none')) {
-                setBorderStyle('borderTop', BOX_BORDER[0]);
-                setBorderStyle('borderRight', BOX_BORDER[1]);
-                setBorderStyle('borderBottom', BOX_BORDER[2]);
-                setBorderStyle('borderLeft', BOX_BORDER[3]);
+            if (node.visibleStyle.borderWidth) {
+                if (node.borderTopWidth > 0) {
+                    setBorderStyle('borderTop', BOX_BORDER[0]);
+                }
+                if (node.borderRightWidth > 0) {
+                    setBorderStyle('borderRight', BOX_BORDER[1]);
+                }
+                if (node.borderBottomWidth > 0) {
+                    setBorderStyle('borderBottom', BOX_BORDER[2]);
+                }
+                if (node.borderLeftWidth > 0) {
+                    setBorderStyle('borderLeft', BOX_BORDER[3]);
+                }
             }
             setBorderStyle('outline', BOX_BORDER[4]);
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
@@ -674,8 +682,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 backgroundColor = node.css('backgroundColor');
             }
             if (backgroundColor !== '') {
-                const color = parseColor(backgroundColor);
-                boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
+                boxStyle.backgroundColor = parseColor(backgroundColor)?.valueAsRGBA || '';
             }
             node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
         }

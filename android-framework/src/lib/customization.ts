@@ -5,16 +5,18 @@ import { BUILD_ANDROID } from './enumeration';
 
 import View from '../view';
 
-interface Customizations {
-    [index: number]: {
-        android: ObjectMap<boolean | CustomizationResult>;
-        assign: {
-            [namespace: string]: ObjectMap<StringMap>;
-        };
+export interface Customizations {
+    [index: number]: CustomizationsData;
+}
+
+export interface CustomizationsData {
+    android: ObjectMap<boolean | CustomizationResult>;
+    assign: {
+        [namespace: string]: ObjectMap<StringMap>;
     };
 }
 
-interface Deprecations {
+export interface Deprecations {
     android: ObjectMap<CustomizationResult>;
 }
 

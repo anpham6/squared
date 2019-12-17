@@ -18,10 +18,7 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     public setBounds() {
         if (this.length) {
-            const bounds = <BoxRectDimension> NodeUI.outerRegion(this);
-            bounds.width = bounds.right - bounds.left;
-            bounds.height = bounds.bottom - bounds.top;
-            this._bounds = bounds;
+            this._bounds = NodeUI.outerRegion(this);
         }
     }
 

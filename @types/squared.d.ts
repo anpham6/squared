@@ -587,7 +587,7 @@ declare namespace base {
 
     class NodeUI implements NodeUI {
         public static linearData<T>(list: T[], clearOnly?: boolean): LinearData<T>;
-        public static outerRegion<T>(node: T): BoxRect;
+        public static outerRegion<T>(node: T): BoxRectDimension;
         public static baseline<T>(list: T[], text?: boolean): T | null;
         public static partitionRows<T>(list: T[], parent?: T): T[][];
         constructor(id: number, sessionId?: string, element?: Element);

@@ -12,6 +12,8 @@ const { getNamedItem } = $lib.dom;
 const { maxArray } = $lib.math;
 const { isNumber, replaceMap, withinRange } = $lib.util;
 
+type T = NodeUI;
+
 const enum LAYOUT_TABLE {
     NONE = 0,
     STRETCH = 1,
@@ -22,6 +24,12 @@ const enum LAYOUT_TABLE {
 
 const TABLE = EXT_NAME.TABLE;
 const REGEXP_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
+
+function setAutoWidth(node: T, td: T, data: ExternalData) {
+    data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
+    data.expand = true;
+}
+const setBoundsWidth = (td: T) => td.css('width', formatPX(td.bounds.width), true);
 
 export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute(node: NodeUI): TableData {
@@ -37,30 +45,28 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         const mainData = Table.createDataAttribute(node);
-        let table: T[] = [];
         const thead: T[] = [];
         const tbody: T[] = [];
         const tfoot: T[] = [];
-        function setAutoWidth(td: T, data: ExternalData) {
-            data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
-            data.expand = true;
-        }
+        let table: T[] = [];
         function inheritStyles(section: T[]) {
             if (section.length) {
-                for (const item of section[0].cascade() as T[]) {
-                    const tagName = item.tagName;
-                    if (tagName === 'TH' || tagName === 'TD') {
-                        item.inherit(section[0], 'styleMap');
-                        item.unsetCache('visibleStyle');
+                const parent = section[0];
+                for (const item of parent.cascade() as T[]) {
+                    switch (item.tagName) {
+                        case 'TH':
+                        case 'TD':
+                            item.inherit(parent, 'styleMap');
+                            item.unsetCache('visibleStyle');
+                            break;
                     }
                 }
-                table = table.concat(section[0].children as T[]);
+                table = table.concat(parent.children as T[]);
                 for (const item of section) {
                     item.hide();
                 }
             }
         }
-        const setBoundsWidth = (td: T) => td.css('width', formatPX(td.bounds.width), true);
         node.each((item: T) => {
             switch (item.tagName) {
                 case 'THEAD':
@@ -361,7 +367,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                     data.downsized = true;
                                 }
                                 else {
-                                    setAutoWidth(td, data);
+                                    setAutoWidth(node, td, data);
                                 }
                             }
                             else if (isPercent(columnWidth)) {
@@ -381,7 +387,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                                 else {
                                     if (mainData.layoutFixed) {
-                                        setAutoWidth(td, data);
+                                        setAutoWidth(node, td, data);
                                         data.downsized = true;
                                     }
                                     else {

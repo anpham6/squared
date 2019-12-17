@@ -21,16 +21,18 @@ const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'cle
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
-    public static outerRegion(node: T): BoxRect {
+    public static outerRegion(node: T): BoxRectDimension {
         let top = Number.POSITIVE_INFINITY;
         let right = Number.NEGATIVE_INFINITY;
         let bottom = Number.NEGATIVE_INFINITY;
         let left = Number.POSITIVE_INFINITY;
+        let negativeRight = Number.NEGATIVE_INFINITY;
+        let negativeBottom = Number.NEGATIVE_INFINITY;
+        let actualTop: number;
+        let actualRight: number;
+        let actualBottom: number;
+        let actualLeft: number;
         node.each((item: T) => {
-            let actualTop: number;
-            let actualRight: number;
-            let actualBottom: number;
-            let actualLeft: number;
             if (item.companion) {
                 actualTop = item.actualRect('top', 'linear', true);
                 actualRight = item.actualRect('right', 'linear', true);
@@ -39,6 +41,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             else {
                 ({ top: actualTop, right: actualRight, bottom: actualBottom, left: actualLeft } = item.linear);
+                if (item.marginRight < 0) {
+                    const value = actualRight + Math.abs(item.marginRight);
+                    if (value > negativeRight) {
+                        negativeRight = value;
+                    }
+                }
+                if (item.marginBottom < 0) {
+                    const value = actualBottom + Math.abs(item.marginBottom);
+                    if (value > negativeBottom) {
+                        negativeBottom = value;
+                    }
+                }
             }
             if (actualTop < top) {
                 top = actualTop;
@@ -57,7 +71,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             top,
             right,
             bottom,
-            left
+            left,
+            width: Math.max(right, negativeRight) - left,
+            height: Math.max(bottom, negativeBottom) - top
         };
     }
 

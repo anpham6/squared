@@ -171,6 +171,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'float':
                         cached.floating = undefined;
                         break;
+                    case 'visibleStyle':
+                        cached.borderTopWidth = undefined;
+                        cached.borderRightWidth = undefined;
+                        cached.borderBottomWidth = undefined;
+                        cached.borderLeftWidth = undefined;
+                        cached.backgroundColor = undefined;
+                        cached.backgroundImage = undefined;
+                        break;
                     default:
                         if (attr.startsWith('margin')) {
                             cached.autoMargin = undefined;
