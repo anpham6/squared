@@ -2,7 +2,7 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { CSS, STRING, UNIT, XML } from './regex';
 
-import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertInt, convertRoman, fromLastIndexOf, isString, replaceMap, resolvePath, spliceString } from './util';
+import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertRoman, fromLastIndexOf, isString, replaceMap, resolvePath, spliceString } from './util';
 
 type CSSKeyframesData = squared.lib.css.CSSKeyframesData;
 
@@ -308,8 +308,13 @@ export function validMediaRule(value: string, fontSize?: number) {
                         case 'aspect-ratio':
                         case 'min-aspect-ratio':
                         case 'max-aspect-ratio':
-                            const [width, height] = replaceMap<string, number>(rule.split('/'), ratio => parseInt(ratio));
-                            valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
+                            if (rule) {
+                                const [width, height] = replaceMap<string, number>(rule.split('/'), ratio => parseInt(ratio));
+                                valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
+                            }
+                            else {
+                                valid = false;
+                            }
                             break;
                         case 'width':
                         case 'min-width':
@@ -320,31 +325,36 @@ export function validMediaRule(value: string, fontSize?: number) {
                             valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
                             break;
                         case 'orientation':
-                            valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
+                            valid = rule !== undefined && (rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight);
                             break;
                         case 'resolution':
                         case 'min-resolution':
                         case 'max-resolution':
-                            let resolution = parseFloat(rule);
-                            if (rule.endsWith('dpcm')) {
-                                resolution *= 2.54;
+                            if (rule) {
+                                let resolution = parseFloat(rule);
+                                if (rule.endsWith('dpcm')) {
+                                    resolution *= 2.54;
+                                }
+                                else if (rule.endsWith('dppx') || rule.endsWith('x')) {
+                                    resolution *= 96;
+                                }
+                                valid = compareRange(operation, getDeviceDPI(), resolution);
                             }
-                            else if (rule.endsWith('dppx') || rule.endsWith('x')) {
-                                resolution *= 96;
+                            else {
+                                valid = false;
                             }
-                            valid = compareRange(operation, getDeviceDPI(), resolution);
                             break;
                         case 'grid':
                             valid = rule === '0';
                             break;
                         case 'color':
-                            valid = rule === undefined || convertInt(rule) > 0;
+                            valid = rule === undefined || parseInt(rule) > 0;
                             break;
                         case 'min-color':
-                            valid = convertInt(rule) <= screen.colorDepth / 3;
+                            valid = parseInt(rule) <= screen.colorDepth / 3;
                             break;
                         case 'max-color':
-                            valid = convertInt(rule) >= screen.colorDepth / 3;
+                            valid = parseInt(rule) >= screen.colorDepth / 3;
                             break;
                         case 'color-index':
                         case 'min-color-index':
@@ -354,7 +364,7 @@ export function validMediaRule(value: string, fontSize?: number) {
                             break;
                         case 'max-color-index':
                         case 'max-monochrome':
-                            valid = convertInt(rule) >= 0;
+                            valid = parseInt(rule) >= 0;
                             break;
                         default:
                             valid = false;

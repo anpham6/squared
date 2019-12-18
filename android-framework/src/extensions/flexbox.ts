@@ -62,7 +62,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
     if (items.length > 1 && (horizontal || percent)) {
         const groupBasis: FlexBasis[] = [];
         const percentage: View[] = [];
-        let maxBasis!: View;
+        let maxBasis: View | undefined;
         let maxBasisUnit = 0;
         let maxDimension = 0;
         let maxRatio = NaN;

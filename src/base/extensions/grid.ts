@@ -16,8 +16,8 @@ function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     const topA = target.linear.top;
     for (const column of columns) {
         const index = column.findIndex(item => {
-            const { top, bottom } = item.linear;
-            return withinRange(topA, top) || topA > top && top < bottom;
+            const top = item.linear.top;
+            return withinRange(topA, top) || topA > top && topA < item.linear.bottom;
         });
         if (index !== -1) {
             return index;

@@ -11,7 +11,7 @@ const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, formatPX, isLength } = $lib.css;
 const { assignRect, isTextNode, newBoxModel } = $lib.dom;
 const { isEqual } = $lib.math;
 const { getElementAsNode } = $lib.session;
-const { aboveRange, assignEmptyProperty, belowRange, cloneObject, filterArray, hasBit, isArray, isPlainObject, searchObject, withinRange } = $lib.util;
+const { aboveRange, assignEmptyProperty, belowRange, cloneObject, filterArray, hasBit, isArray, searchObject, withinRange } = $lib.util;
 
 type T = NodeUI;
 
@@ -374,6 +374,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract setLayout(width?: number, height?: number): void;
     public abstract setAlignment(): void;
     public abstract setBoxSpacing(): void;
+    public abstract apply(options: {}): void;
     public abstract clone(id?: number, attributes?: boolean, position?: boolean): T;
     public abstract extractAttributes(depth?: number): string;
     public abstract alignParent(position: string): boolean;
@@ -397,7 +398,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public attr(name: string, attr: string, value?: string, overwrite = true): string {
-        let obj = this['__' + name];
+        let obj: StringMap = this['__' + name];
         if (value) {
             if (obj === undefined) {
                 if (!this._namespaces.includes(name)) {
@@ -407,9 +408,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 this['__' + name] = obj;
             }
             if (!overwrite && obj[attr]) {
-                return '';
+                value = obj[attr];
             }
-            obj[attr] = value;
+            else {
+                obj[attr] = value;
+            }
             return value;
         }
         else {
@@ -446,18 +449,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else {
                     delete obj[attr];
                 }
-            }
-        }
-    }
-
-    public apply(options: {}) {
-        for (const name in options) {
-            const data = options[name];
-            if (isPlainObject(data)) {
-                for (const attr in data) {
-                    this.attr(name, attr, data[attr]);
-                }
-                delete options[name];
             }
         }
     }
@@ -1409,7 +1400,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get preserveWhiteSpace() {
         let result = this._cached.whiteSpace;
         if (result === undefined) {
-            result = this.cssAny('whiteSpace', 'pre', 'pre-wrap');
+            const value = this.css('whiteSpace');
+            result = value === 'pre' || value === 'pre-wrap';
             this._cached.whiteSpace = result;
         }
         return result;

@@ -166,7 +166,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             return false;
         }
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
-            if (value && value !== 'none' && value !== 'auto') {
+            if (value !== '' && value !== 'none' && value !== 'auto') {
                 CACHE_PATTERN.NAMED.lastIndex = 0;
                 const data = index === 0 ? mainData.row : mainData.column;
                 const { name, repeat, unit, unitMin } = data;

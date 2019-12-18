@@ -81,14 +81,14 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
         node.each((item: T) => {
             const mainData = List.createDataAttribute();
             const value = item.css('listStyleType');
-            const listItem = item.display === 'list-item';
-            if (listItem || value && value !== 'none' || hasSingleImage(item)) {
+            const enabled = item.display === 'list-item';
+            if (enabled || value !== '' && value !== 'none' || hasSingleImage(item)) {
                 if (item.has('listStyleImage')) {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
                 else {
-                    if (ordered && listItem && item.tagName === 'LI') {
-                        i = item.toElementInt('value', i);
+                    if (ordered && enabled && item.tagName === 'LI') {
+                        i = item.toElementInt('value') || i;
                     }
                     let ordinal = convertListStyle(value, i);
                     if (ordinal === '') {
@@ -106,7 +106,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                     src = item.backgroundImage;
                                     position = item.css('backgroundPosition');
                                 }
-                                if (src && src !== 'none') {
+                                if (src !== '' && src !== 'none') {
                                     mainData.imageSrc = src;
                                     mainData.imagePosition = position;
                                     item.exclude(NODE_RESOURCE.IMAGE_SOURCE);
@@ -122,7 +122,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     }
                     mainData.ordinal = ordinal;
                 }
-                if (listItem) {
+                if (enabled) {
                     i++;
                 }
             }

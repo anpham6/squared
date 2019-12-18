@@ -110,11 +110,12 @@ export interface ExtensionDependency {
 }
 
 export interface ExtensionResult<T extends NodeUI> {
-    parentAs?: T;
     output?: NodeTemplate<T>;
+    parent?: T;
+    outerParent?: T;
+    parentAs?: T;
     renderAs?: T;
     outputAs?: NodeTemplate<T>;
-    parent?: T;
     complete?: boolean;
     next?: boolean;
     include?: boolean;

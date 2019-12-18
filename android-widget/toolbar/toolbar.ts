@@ -283,7 +283,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         if (appBarNode) {
             return {
                 output,
-                parentAs: node.parent as T,
+                outerParent: node.parent as T,
                 renderAs: appBarNode,
                 outputAs
             };

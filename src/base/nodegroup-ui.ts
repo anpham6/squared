@@ -93,7 +93,8 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get pageFlow() {
         if (this._cached.pageFlow === undefined) {
-            this._cached.pageFlow = !this.cssAny('position', 'absolute', 'fixed');
+            const value = this.css('position');
+            this._cached.pageFlow = value !== 'absolute' && value !== 'fixed';
         }
         return this._cached.pageFlow;
     }

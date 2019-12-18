@@ -315,8 +315,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssAny(attr: string, ...values: string[]) {
+        const styleValue = this.css(attr);
         for (const value of values) {
-            if (this.css(attr) === value) {
+            if (styleValue === value) {
                 return true;
             }
         }
@@ -2438,19 +2439,36 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     borderWidth: false,
                     backgroundImage: false,
                     backgroundColor: false,
-                    backgroundRepeat: false
+                    backgroundRepeat: false,
+                    backgroundRepeatX: false,
+                    backgroundRepeatY: false
                 };
             }
             else {
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
                 const backgroundColor = this.backgroundColor !== '';
                 const backgroundImage = this.backgroundImage !== '';
+                let backgroundRepeatX = false;
+                let backgroundRepeatY = false;
+                if (backgroundImage) {
+                    for (const repeat of this.css('backgroundRepeat').split(XML.SEPARATOR)) {
+                        const [repeatX, repeatY] = repeat.split(' ');
+                        if (!backgroundRepeatX) {
+                            backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x';
+                        }
+                        if (!backgroundRepeatY) {
+                            backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
+                        }
+                    }
+                }
                 result = {
                     background: borderWidth || backgroundImage || backgroundColor,
                     borderWidth,
                     backgroundImage,
                     backgroundColor,
-                    backgroundRepeat: this.css('backgroundRepeat') !== 'no-repeat'
+                    backgroundRepeat: backgroundRepeatX || backgroundRepeatY,
+                    backgroundRepeatX,
+                    backgroundRepeatY
                 };
             }
             this._cached.visibleStyle = result;

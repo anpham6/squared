@@ -20,33 +20,33 @@ function formatObject(obj: {}, numberAlias = false) {
                 formatObject(obj, numberAlias);
             }
             else {
-                let value = obj[attr].toString();
-                switch (attr) {
-                    case 'text':
-                        if (!value.startsWith('@string/')) {
-                            value = Resource.addString(value, '', numberAlias);
-                            if (value !== '') {
-                                obj[attr] = '@string/' + value;
-                                continue;
+                let value: string = obj[attr]?.toString();
+                if (value) {
+                    switch (attr) {
+                        case 'text':
+                            if (!value.startsWith('@string/')) {
+                                value = Resource.addString(value, '', numberAlias);
+                                if (value !== '') {
+                                    obj[attr] = '@string/' + value;
+                                }
                             }
-                        }
-                        break;
-                    case 'src':
-                    case 'srcCompat':
-                        if (COMPONENT.PROTOCOL.test(value)) {
-                            value = Resource.addImage({ mdpi: value });
-                            if (value !== '') {
-                                obj[attr] = '@drawable/' + value;
-                                continue;
+                            continue;
+                        case 'src':
+                        case 'srcCompat':
+                            if (COMPONENT.PROTOCOL.test(value)) {
+                                value = Resource.addImage({ mdpi: value });
+                                if (value !== '') {
+                                    obj[attr] = '@drawable/' + value;
+                                }
                             }
+                            continue;
+                    }
+                    const color = parseColor(value);
+                    if (color) {
+                        const colorName = Resource.addColor(color);
+                        if (colorName !== '') {
+                            obj[attr] = '@color/' + colorName;
                         }
-                        break;
-                }
-                const color = parseColor(value);
-                if (color) {
-                    const colorName = Resource.addColor(color);
-                    if (colorName !== '') {
-                        obj[attr] = '@color/' + colorName;
                     }
                 }
             }
@@ -269,9 +269,10 @@ export default class Resource<T extends android.base.View> extends squared.base.
                 result.mdpi = element.src;
             }
         }
-        if (result.mdpi) {
+        const mdpi = result.mdpi;
+        if (mdpi) {
             const resource = this.application.resourceHandler;
-            const rawData = resource.getRawData(result.mdpi);
+            const rawData = resource.getRawData(mdpi);
             if (rawData?.base64) {
                 if (rawData.filename.toLowerCase().endsWith('.svg')) {
                     return '';

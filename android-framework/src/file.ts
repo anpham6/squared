@@ -113,11 +113,12 @@ export default class File<T extends android.base.View> extends squared.base.File
 
     public resourceStringToXml(options: FileOutputOptions = {}) {
         const item: ObjectMap<StringMap[]> = { string: [] };
+        const itemArray = item.string;
         if (!STORED.strings.has('app_name')) {
-            item.string.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
+            itemArray.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
         }
         for (const [name, innerText] of Array.from(STORED.strings.entries()).sort(caseInsensitive)) {
-            item.string.push(<ItemValue> { name, innerText });
+            itemArray.push(<ItemValue> { name, innerText });
         }
         return this.checkFileAssets([
             replaceTab(
@@ -133,8 +134,9 @@ export default class File<T extends android.base.View> extends squared.base.File
     public resourceStringArrayToXml(options: FileOutputOptions = {}) {
         if (STORED.arrays.size) {
             const item: ObjectMap<any[]> = { 'string-array': [] };
+            const itemArray = item['string-array'];
             for (const [name, values] of Array.from(STORED.arrays.entries()).sort()) {
-                item['string-array'].push({
+                itemArray.push({
                     name,
                     item: objectMap<string, {}>(values, innerText => ({ innerText }))
                 });
@@ -164,6 +166,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                     'xmlns:android': xmlns,
                     font: []
                 };
+                const itemArray = item.font;
                 for (const attr in font) {
                     const [fontFamily, fontStyle, fontWeight] = attr.split('|');
                     let fontName = name;
@@ -176,17 +179,17 @@ export default class File<T extends android.base.View> extends squared.base.File
                             fontName += '_' + font[attr];
                         }
                     }
-                    item.font.push({
+                    itemArray.push({
                         font: '@font/' + fontName,
                         fontStyle,
                         fontWeight
                     });
-                    const src = resource.getFont(fontFamily, fontStyle, fontWeight);
-                    if (src?.srcUrl) {
+                    const uri = resource.getFont(fontFamily, fontStyle, fontWeight)?.srcUrl;
+                    if (uri) {
                         this.addAsset({
                             pathname,
-                            filename: fontName + '.' + fromLastIndexOf(src.srcUrl, '.').toLowerCase(),
-                            uri: src.srcUrl
+                            filename: fontName + '.' + fromLastIndexOf(uri, '.').toLowerCase(),
+                            uri
                         });
                     }
                 }
@@ -205,8 +208,9 @@ export default class File<T extends android.base.View> extends squared.base.File
     public resourceColorToXml(options: FileOutputOptions = {}) {
         if (STORED.colors.size) {
             const item: ObjectMap<ItemValue[]> = { color: [] };
+            const itemArray = item.color;
             for (const [innerText, name] of Array.from(STORED.colors.entries()).sort()) {
-                item.color.push(<ItemValue> { name, innerText });
+                itemArray.push(<ItemValue> { name, innerText });
             }
             return this.checkFileAssets([
                 replaceTab(
@@ -224,16 +228,18 @@ export default class File<T extends android.base.View> extends squared.base.File
         const result: string[] = [];
         if (STORED.styles.size) {
             const item: ObjectMap<any[]> = { style: [] };
+            const itemArray = item.style;
             for (const style of Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
-                if (Array.isArray(style.items)) {
-                    const styleItem: ItemValue[] = [];
-                    for (const obj of style.items.sort((a, b) => a.key >= b.key ? 1 : -1)) {
-                        styleItem.push({ name: obj.key, innerText: obj.value });
+                const styleArray = style.items;
+                if (Array.isArray(styleArray)) {
+                    const itemStyle: ItemValue[] = [];
+                    for (const obj of styleArray.sort((a, b) => a.key >= b.key ? 1 : -1)) {
+                        itemStyle.push({ name: obj.key, innerText: obj.value });
                     }
-                    item.style.push({
+                    itemArray.push({
                         name: style.name,
                         parent: style.parent,
-                        item: styleItem
+                        item: itemStyle
                     });
                 }
             }
@@ -253,17 +259,18 @@ export default class File<T extends android.base.View> extends squared.base.File
                 const match = REGEXP_FILENAME.exec(filename);
                 if (match) {
                     const item: ObjectMap<any[]> = { style: [] };
+                    const itemArray = item.style;
                     for (const [themeName, themeData] of theme.entries()) {
-                        const themeItem: ItemValue[] = [];
+                        const themeArray: ItemValue[] = [];
                         const items = themeData.items;
                         for (const name in items) {
-                            themeItem.push({ name, innerText: items[name] });
+                            themeArray.push({ name, innerText: items[name] });
                         }
                         if (!appTheme[filename] || themeName !== manifestThemeName || item.length) {
-                            item.style.push({
+                            itemArray.push({
                                 name: themeName,
                                 parent: themeData.parent,
-                                item: themeItem
+                                item: themeArray
                             });
                         }
                         if (themeName === manifestThemeName) {
@@ -290,10 +297,11 @@ export default class File<T extends android.base.View> extends squared.base.File
 
     public resourceDimenToXml(options: FileOutputOptions = {}) {
         if (STORED.dimens.size) {
-            const item: ObjectMap<any[]> = { dimen: [] };
             const { convertPixels, resolutionDPI } = this.userSettings;
+            const item: ObjectMap<any[]> = { dimen: [] };
+            const itemArray = item.dimen;
             for (const [name, value] of Array.from(STORED.dimens.entries()).sort()) {
-                item.dimen.push({ name, innerText: convertPixels ? convertLength(value, resolutionDPI, false) : value });
+                itemArray.push({ name, innerText: convertPixels ? convertLength(value, resolutionDPI, false) : value });
             }
             return this.checkFileAssets([
                 replaceTab(applyTemplate('resources', DIMEN_TMPL, [item])),
@@ -329,9 +337,9 @@ export default class File<T extends android.base.View> extends squared.base.File
     }
 
     public resourceDrawableImageToXml({ copyTo, archiveTo, callback }: FileOutputOptions = {}) {
-        const result: string[] = [];
         if (STORED.images.size) {
             const directory = this.directory.image;
+            const result: string[] = [];
             for (const [name, images] of STORED.images.entries()) {
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
@@ -363,8 +371,9 @@ export default class File<T extends android.base.View> extends squared.base.File
                     this.archiving(archiveTo, assets);
                 }
             }
+            return result;
         }
-        return result;
+        return [];
     }
 
     public resourceAnimToXml(options: FileOutputOptions = {}) {
@@ -390,10 +399,10 @@ export default class File<T extends android.base.View> extends squared.base.File
             const layouts: FileAsset[] = [];
             const length = assets.length;
             for (let i = 0; i < length; i++) {
-                const layout = assets[i];
-                result[layout.filename] = [layout.content];
+                const { content, filename, pathname } = assets[i];
+                result[filename] = [content];
                 if (archiveTo) {
-                    layouts.push(createFileAsset(layout.pathname, i === 0 ? this.userSettings.outputMainFileName : layout.filename + '.xml', layout.content));
+                    layouts.push(createFileAsset(pathname, i === 0 ? this.userSettings.outputMainFileName : filename + '.xml', content));
                 }
             }
             if (copyTo) {
@@ -410,7 +419,8 @@ export default class File<T extends android.base.View> extends squared.base.File
         const result: FileAsset[] = [];
         const length = assets.length;
         for (let i = 0; i < length; i++) {
-            result.push(createFileAsset(assets[i].pathname, i === 0 ? this.userSettings.outputMainFileName : assets[i].filename + '.xml', assets[i].content));
+            const item = assets[i];
+            result.push(createFileAsset(item.pathname, i === 0 ? this.userSettings.outputMainFileName : item.filename + '.xml', item.content));
         }
         return result.concat(
             getFileAssets(this.resourceStringToXml()),

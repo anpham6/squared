@@ -125,8 +125,8 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public processNode(node: T, parent: T) {
-        const parentAs = this.application.createNode(undefined, false);
-        parentAs.actualParent = parent.actualParent;
+        const outerParent = this.application.createNode(undefined, false);
+        outerParent.actualParent = parent.actualParent;
         node.documentRoot = true;
         node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
         node.setControlType(NAVIGATION.MENU, CONTAINER_NODE.INLINE);
@@ -134,7 +134,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         for (const item of node.cascade()) {
             this.addDescendant(item as T);
         }
-        node.render(parentAs);
+        node.render(outerParent);
         node.dataset.pathname = 'res/menu';
         return {
             output: <NodeXmlTemplate<T>> {
@@ -142,7 +142,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                 node,
                 controlName: NAVIGATION.MENU
             },
-            parentAs,
+            outerParent,
             complete: true
         };
     }

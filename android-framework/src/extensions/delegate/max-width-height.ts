@@ -19,7 +19,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     }
 
     public condition(node: T, parent: T) {
-        if (!node.support.maxWidth) {
+        if (!node.support.maxDimension) {
             const width = !isNaN(node.width) && node.hasPX('maxWidth') && !parent.hasAlign(NODE_ALIGNMENT.COLUMN);
             const height = !isNaN(node.height) && node.hasPX('maxHeight') && parent.hasHeight;
             if (width || height) {

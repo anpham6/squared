@@ -32,20 +32,22 @@ let DEFAULT_VIEWSETTINGS!: LocalSettings;
 function sortHorizontalFloat(list: View[]) {
     if (list.some(node => node.floating)) {
         list.sort((a, b) => {
-            const floatA = a.floating;
-            const floatB = b.floating;
-            if (floatA && floatB) {
-                if (a.float !== b.float) {
-                    return a.float === 'left' ? -1 : 1;
+            const floatingA = a.floating;
+            const floatingB = b.floating;
+            if (floatingA && floatingB) {
+                const floatA = a.float;
+                const floatB = b.float;
+                if (floatA !== floatB) {
+                    return floatA === 'left' ? -1 : 1;
                 }
-                else if (a.float === 'right' && b.float === 'right') {
+                else if (floatA === 'right' && floatB === 'right') {
                     return 1;
                 }
             }
-            else if (floatA) {
+            else if (floatingA) {
                 return a.float === 'left' ? -1 : 1;
             }
-            else if (floatB) {
+            else if (floatingB) {
                 return b.float === 'left' ? 1 : -1;
             }
             return 0;
@@ -56,8 +58,10 @@ function sortHorizontalFloat(list: View[]) {
 function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
     if (templates.length > 1) {
         templates.sort((a, b) => {
-            const above = <View> a.node.innerWrapped || a.node;
-            const below = <View> b.node.innerWrapped || b.node;
+            const nodeA = a.node;
+            const nodeB = b.node;
+            const above = <View> nodeA.innerWrapped || nodeA;
+            const below = <View> nodeB.innerWrapped || nodeB;
             if (above.absoluteParent === below.absoluteParent) {
                 if (above.zIndex === below.zIndex) {
                     return above.childIndex < below.childIndex ? -1 : 1;
@@ -190,7 +194,7 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
             return true;
         }
     }
-    else if (node.float === 'right' && previous.float === 'right') {
+    else if (node.float === 'right') {
         if (previous.marginLeft < 0) {
             const left = Math.abs(previous.marginLeft);
             const width = previous.actualWidth;
@@ -855,17 +859,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public checkFrameHorizontal(layout: squared.base.LayoutUI<T>) {
         const floated = layout.floated;
-        if (floated.size === 2) {
+        if (floated.size === 2 || (floated.has('right') || floated.size === 1 && layout.node.cssAscend('textAlign', true) === 'center') && layout.some(node => node.pageFlow)) {
             return true;
         }
-        else {
-            if ((floated.has('right') || floated.size === 1 && layout.node.cssAscend('textAlign', true) === 'center') && layout.some(node => node.pageFlow)) {
-                return true;
-            }
-            else if (floated.has('left') && !layout.linearX) {
-                const node = layout.item(0) as T;
-                return node.pageFlow && node.floating;
-            }
+        else if (floated.has('left') && !layout.linearX) {
+            const node = layout.item(0) as T;
+            return node.pageFlow && node.floating;
         }
         return false;
     }
@@ -1066,8 +1065,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 break;
             case CONTAINER_NODE.GRID:
-                options.android.rowCount = layout.rowCount ? layout.rowCount.toString() : '';
-                options.android.columnCount = layout.columnCount ? layout.columnCount.toString() : '2';
+                const { columnCount, rowCount } = layout;
+                const android = options.android;
+                if (rowCount > 0) {
+                    android.rowCount = rowCount.toString();
+                }
+                android.columnCount = columnCount > 0 ? columnCount.toString() : '2';
                 valid = true;
                 break;
             case CONTAINER_NODE.FRAME:
@@ -1344,8 +1347,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const offset = node.actualHeight * this.localSettings.deviations.legendBottomOffset;
                 node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                const linear = node.unsafe('linear');
-                linear.bottom += offset;
+                node.linear.bottom += offset;
                 break;
             }
             case 'METER':
@@ -1867,8 +1869,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (renderTemplates) {
                 const length = renderTemplates.length;
                 for (let i = 0; i < length; i++) {
-                    const template = renderTemplates[i];
-                    if (template?.node === node) {
+                    if (renderTemplates[i]?.node === node) {
                         node.renderChildren.splice(i, 1);
                         renderTemplates.splice(i, 1);
                         break;
@@ -1912,9 +1913,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     protected processRelativeHorizontal(node: T, children: T[]) {
         const rowsLeft: T[][] = [];
         const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
-        let rowsRight: T[][] | undefined;
         let alignmentMultiLine = false;
         let sortPositionAuto = false;
+        let rowsRight: T[][] | undefined;
         if (node.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             let previous: T | undefined;
             for (const item of children) {
@@ -2129,7 +2130,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             return true;
                         };
-                        if (adjustFloatingNegativeMargin(item, previous)) {
+                        if (previous.floating && adjustFloatingNegativeMargin(item, previous)) {
                             alignSibling = '';
                         }
                         const viewGroup = item.nodeGroup && !item.hasAlign(NODE_ALIGNMENT.SEGMENTED);

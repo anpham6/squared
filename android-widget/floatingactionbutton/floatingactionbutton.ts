@@ -58,7 +58,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);
         node.exclude(NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET);
         Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-        let parentAs: T | undefined;
+        let outerParent: T | undefined;
         if (!node.pageFlow || target) {
             const horizontalBias = getHorizontalBias(node);
             const verticalBias = getVerticalBias(node);
@@ -107,9 +107,9 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                 const layoutGravity = node.android('layout_gravity');
                 let anchor = parent.documentId;
                 if (parent.controlName === (node.localSettings.targetAPI < BUILD_ANDROID.Q ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
-                    const outerParent: string = parent.data(WIDGET_NAME.TOOLBAR, 'outerParent');
-                    if (outerParent) {
-                        anchor = outerParent;
+                    const value: string = parent.data(WIDGET_NAME.TOOLBAR, 'outerParent');
+                    if (value) {
+                        anchor = value;
                     }
                 }
                 if (layoutGravity !== '') {
@@ -119,7 +119,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                 node.app('layout_anchor', anchor);
                 node.exclude(0, NODE_PROCEDURE.ALIGNMENT);
                 node.render(this.application.resolveTarget(target));
-                parentAs = node.renderParent as T;
+                outerParent = node.renderParent as T;
             }
         }
         if (!target) {
@@ -127,7 +127,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         }
         node.apply(options);
         return {
-            parentAs,
+            outerParent,
             output: <NodeXmlTemplate<T>> {
                 type: NODE_TEMPLATE.XML,
                 node,

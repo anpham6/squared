@@ -21,6 +21,5 @@ export interface ViewAttribute {
 }
 
 export interface SupportAndroid extends Support {
-    maxWidth: boolean;
-    maxHeight: boolean;
+    maxDimension: boolean;
 }

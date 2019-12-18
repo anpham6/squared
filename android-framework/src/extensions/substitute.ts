@@ -11,6 +11,8 @@ const { getDataSet } = squared.lib.css;
 
 const { NODE_ALIGNMENT, NODE_TEMPLATE } =  squared.base.lib.enumeration;
 
+let EXT_NAME: string;
+
 export default class Substitute<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(
         name: string,
@@ -20,11 +22,11 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
     {
         super(name, framework, options, tagNames);
         this.require(EXT_ANDROID.EXTERNAL, true);
+        EXT_NAME = name;
     }
 
     public processNode(node: T, parent: T) {
-        const name = this.name;
-        const data = getDataSet(<HTMLElement> node.element, name);
+        const data = getDataSet(<HTMLElement> node.element, EXT_NAME);
         const controlName = data.tag;
         if (controlName) {
             node.containerType = node.blockStatic ? CONTAINER_NODE.BLOCK : CONTAINER_NODE.INLINE;
@@ -36,7 +38,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
                 node.each((item: T) => {
                     if (item.styleElement) {
                         const dataset = item.dataset;
-                        dataset.use = name;
+                        dataset.use = EXT_NAME;
                         dataset.androidSubstituteTag = tagChild;
                     }
                 });

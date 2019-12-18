@@ -92,6 +92,8 @@ export interface VisibleStyle {
     backgroundImage: boolean;
     backgroundColor: boolean;
     backgroundRepeat: boolean;
+    backgroundRepeatX: boolean;
+    backgroundRepeatY: boolean;
 }
 
 export interface Support {

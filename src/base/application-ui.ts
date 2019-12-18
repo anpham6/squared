@@ -1176,10 +1176,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 if (result) {
                                     const { output, renderAs, outputAs } = result;
                                     if (output) {
-                                        this.addLayoutTemplate(result.parentAs || parentY, nodeY, output);
+                                        this.addLayoutTemplate(result.outerParent || parentY, nodeY, output);
                                     }
                                     if (renderAs && outputAs) {
-                                        this.addLayoutTemplate(parentY, renderAs, outputAs);
+                                        this.addLayoutTemplate(result.parentAs || parentY, renderAs, outputAs);
                                     }
                                     parentY = result.parent || parentY;
                                     next = result.next === true;
@@ -1212,10 +1212,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         if (result) {
                                             const { output, renderAs, outputAs, include } = result;
                                             if (output) {
-                                                this.addLayoutTemplate(result.parentAs || parentY, nodeY, output);
+                                                this.addLayoutTemplate(result.outerParent || parentY, nodeY, output);
                                             }
                                             if (renderAs && outputAs) {
-                                                this.addLayoutTemplate(parentY, renderAs, outputAs);
+                                                this.addLayoutTemplate(result.parentAs || parentY, renderAs, outputAs);
                                             }
                                             parentY = result.parent || parentY;
                                             if (output && include !== false || include) {
