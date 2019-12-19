@@ -1,4 +1,4 @@
-/* squared.svg 1.3.5
+/* squared.svg 1.3.6
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -110,9 +110,10 @@
                     REGEXP_TRANSFORM[name].lastIndex = 0;
                     let match;
                     while ((match = REGEXP_TRANSFORM[name].exec(transform)) !== null) {
-                        const isX = match[1].endsWith('X');
-                        const isY = match[1].endsWith('Y');
-                        if (match[1].startsWith('rotate')) {
+                        const attr = match[1];
+                        const isX = attr.endsWith('X');
+                        const isY = attr.endsWith('Y');
+                        if (attr.startsWith('rotate')) {
                             const angle = convertAngle(match[2], match[3]);
                             const matrix = MATRIX.rotate(angle);
                             if (isX) {
@@ -127,7 +128,7 @@
                             }
                             ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
                         }
-                        else if (match[1].startsWith('skew')) {
+                        else if (attr.startsWith('skew')) {
                             const x = isY ? 0 : convertAngle(match[2], match[3]);
                             const y = isY ? convertAngle(match[2], match[3]) : (match[4] && match[5] ? convertAngle(match[4], match[5]) : 0);
                             const matrix = MATRIX.skew(x, y);
@@ -144,13 +145,13 @@
                                 }
                             }
                         }
-                        else if (match[1].startsWith('scale')) {
+                        else if (attr.startsWith('scale')) {
                             const x = isY ? undefined : parseFloat(match[2]);
                             const y = isY ? parseFloat(match[2]) : (!isX && match[3] ? parseFloat(match[3]) : x);
                             const matrix = MATRIX.scale(x, isX ? undefined : y);
                             ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, matrix, 0, !isY, !isX);
                         }
-                        else if (match[1].startsWith('translate')) {
+                        else if (attr.startsWith('translate')) {
                             const fontSize = getFontSize(element);
                             const arg1 = parseUnit(match[2], fontSize);
                             const arg2 = (!isX && match[3] ? parseUnit(match[3], fontSize) : 0);
@@ -159,7 +160,7 @@
                             const matrix = MATRIX.translate(x, y);
                             ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, matrix, 0);
                         }
-                        else if (match[1].startsWith('matrix')) {
+                        else if (attr.startsWith('matrix')) {
                             const matrix = TRANSFORM.matrix(element, value);
                             if (matrix) {
                                 ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix);
@@ -2827,6 +2828,7 @@
         return value;
     }
     function getPathData(entries, path, parent, forwardMap, precision) {
+        var _a;
         const result = [];
         const tagName = path.element.tagName;
         let baseVal;
@@ -2859,12 +2861,7 @@
             for (const attr of baseVal) {
                 let value = data.get(attr);
                 if (value === undefined) {
-                    if (value === undefined) {
-                        value = getForwardValue(forwardMap[attr], key);
-                    }
-                    if (value === undefined) {
-                        value = path.getBaseValue(attr);
-                    }
+                    value = (_a = getForwardValue(forwardMap[attr], key), (_a !== null && _a !== void 0 ? _a : path.getBaseValue(attr)));
                 }
                 if (value !== undefined) {
                     values.push(value);
@@ -3355,10 +3352,12 @@
                     const groupActive = new Set();
                     let setterTotal = 0;
                     function insertSetter(item) {
-                        if (setterAttributeMap[item.attributeName] === undefined) {
-                            setterAttributeMap[item.attributeName] = [];
+                        let setter = setterAttributeMap[item.attributeName];
+                        if (setter === undefined) {
+                            setter = [];
+                            setterAttributeMap[item.attributeName] = setter;
                         }
-                        setterAttributeMap[item.attributeName].push(item);
+                        setter.push(item);
                         setterTotal++;
                     }
                     {
@@ -3462,10 +3461,7 @@
                         let infiniteResult;
                         function getForwardItem(attr) {
                             const map = forwardMap[attr];
-                            if (map) {
-                                return map[map.length - 1];
-                            }
-                            return undefined;
+                            return map && map[map.length - 1];
                         }
                         for (const attr in groupName) {
                             const baseMap = new Map();
@@ -7638,7 +7634,12 @@
                 const path = this.path;
                 if (path) {
                     const element = (_a = options) === null || _a === void 0 ? void 0 : _a.element;
-                    this.animateSequentially(this.getAnimateShape(element || this.element), element ? undefined : this.getAnimateTransform(options), path, options);
+                    if (element) {
+                        this.animateSequentially(this.getAnimateShape(element), undefined, path, options);
+                    }
+                    else {
+                        this.animateSequentially(this.getAnimateShape(this.element), this.getAnimateTransform(options), path, options);
+                    }
                 }
             }
         }

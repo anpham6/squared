@@ -1,4 +1,4 @@
-/* android.widget.bottomnavigation 1.3.5
+/* android.widget.bottomnavigation 1.3.6
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -53,13 +53,11 @@ this.android.widget.bottomnavigation = (function () {
         afterParseDocument() {
             for (const node of this.subscribers) {
                 const renderParent = node.renderParent;
-                if (renderParent) {
-                    if (!renderParent.hasPX('width')) {
-                        renderParent.setLayoutWidth('match_parent');
-                    }
-                    if (!renderParent.hasPX('height')) {
-                        renderParent.setLayoutHeight('match_parent');
-                    }
+                if (!renderParent.hasPX('width')) {
+                    renderParent.setLayoutWidth('match_parent');
+                }
+                if (!renderParent.hasPX('height')) {
+                    renderParent.setLayoutHeight('match_parent');
                 }
                 const menu = optionalAsString(BottomNavigation.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
                 if (menu !== '') {

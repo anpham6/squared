@@ -1,4 +1,4 @@
-/* squared 1.3.5
+/* squared 1.3.6
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -245,8 +245,11 @@
     function isArray(value) {
         return Array.isArray(value) && value.length > 0;
     }
+    function isObject(value) {
+        return typeof value === 'object' && value !== null;
+    }
     function isPlainObject(value) {
-        return typeof value === 'object' && value !== null && value.constructor === Object;
+        return isObject(value) && value.constructor === Object;
     }
     function isEqual(source, values) {
         if (source === values) {
@@ -321,26 +324,24 @@
     function optional(obj, value, type) {
         let valid = false;
         let result;
-        if (typeof obj === 'object' && obj !== null) {
+        if (isObject(obj)) {
             result = obj;
             const attrs = value.split('.');
             let i = 0;
             do {
                 result = result[attrs[i]];
-            } while (result !== null &&
-                result !== undefined &&
-                ++i < attrs.length &&
-                typeof result === 'object');
+            } while (result !== undefined &&
+                isObject(result) &&
+                ++i < attrs.length);
             valid = i === attrs.length && result !== undefined && result !== null;
         }
         switch (type) {
             case 'object':
                 return valid ? result : null;
             case 'number':
-                result = parseFloat(result);
-                return valid && !isNaN(result) ? result : 0;
+                return valid ? parseFloat(result) : NaN;
             case 'boolean':
-                return valid && result === true;
+                return result === true;
             default:
                 return valid ? result.toString() : '';
         }
@@ -457,19 +458,20 @@
             let current = dest;
             for (let i = 0;; i++) {
                 const name = attrs[i];
+                const value = current[name];
                 if (i === attrs.length - 2) {
-                    if (!hasValue(current[name])) {
+                    if (!hasValue(value)) {
                         current[name] = attrs[i + 1];
                     }
                     break;
                 }
                 else if (isString(name)) {
-                    if (current[name] === undefined || current[name] === null) {
-                        current[name] = {};
-                        current = current[name];
+                    if (value === undefined || value === null) {
+                        current = {};
+                        current[name] = current;
                     }
-                    else if (typeof current[name] === 'object') {
-                        current = current[name];
+                    else if (isObject(value)) {
+                        current = value;
                     }
                     else {
                         break;
@@ -500,14 +502,16 @@
                 let valueA = a;
                 let valueB = b;
                 for (const name of namespaces) {
-                    if (valueA[name] !== undefined && valueB[name] !== undefined) {
-                        valueA = valueA[name];
-                        valueB = valueB[name];
+                    const vA = valueA[name];
+                    const vB = valueB[name];
+                    if (vA !== undefined && vB !== undefined) {
+                        valueA = vA;
+                        valueB = vB;
                     }
-                    else if (valueA[name] === undefined && valueB[name] === undefined) {
+                    else if (vA === undefined && vB === undefined) {
                         return 0;
                     }
-                    else if (valueA[name] !== undefined) {
+                    else if (vA !== undefined) {
                         return -1;
                     }
                     else {
@@ -693,6 +697,7 @@
         isNumber: isNumber,
         isString: isString,
         isArray: isArray,
+        isObject: isObject,
         isPlainObject: isPlainObject,
         isEqual: isEqual,
         includes: includes,
@@ -3411,8 +3416,8 @@
         const min = Math.min(r, g, b);
         const max = Math.max(r, g, b);
         let h = (max + min) / 2;
-        let s = h;
         const l = h;
+        let s;
         if (max === min) {
             h = 0;
             s = 0;
@@ -3749,8 +3754,13 @@
                             case 'aspect-ratio':
                             case 'min-aspect-ratio':
                             case 'max-aspect-ratio':
-                                const [width, height] = replaceMap(rule.split('/'), ratio => parseInt(ratio));
-                                valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
+                                if (rule) {
+                                    const [width, height] = replaceMap(rule.split('/'), ratio => parseInt(ratio));
+                                    valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
+                                }
+                                else {
+                                    valid = false;
+                                }
                                 break;
                             case 'width':
                             case 'min-width':
@@ -3761,31 +3771,36 @@
                                 valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
                                 break;
                             case 'orientation':
-                                valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
+                                valid = rule !== undefined && (rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight);
                                 break;
                             case 'resolution':
                             case 'min-resolution':
                             case 'max-resolution':
-                                let resolution = parseFloat(rule);
-                                if (rule.endsWith('dpcm')) {
-                                    resolution *= 2.54;
+                                if (rule) {
+                                    let resolution = parseFloat(rule);
+                                    if (rule.endsWith('dpcm')) {
+                                        resolution *= 2.54;
+                                    }
+                                    else if (rule.endsWith('dppx') || rule.endsWith('x')) {
+                                        resolution *= 96;
+                                    }
+                                    valid = compareRange(operation, getDeviceDPI(), resolution);
                                 }
-                                else if (rule.endsWith('dppx') || rule.endsWith('x')) {
-                                    resolution *= 96;
+                                else {
+                                    valid = false;
                                 }
-                                valid = compareRange(operation, getDeviceDPI(), resolution);
                                 break;
                             case 'grid':
                                 valid = rule === '0';
                                 break;
                             case 'color':
-                                valid = rule === undefined || convertInt(rule) > 0;
+                                valid = rule === undefined || parseInt(rule) > 0;
                                 break;
                             case 'min-color':
-                                valid = convertInt(rule) <= screen.colorDepth / 3;
+                                valid = parseInt(rule) <= screen.colorDepth / 3;
                                 break;
                             case 'max-color':
-                                valid = convertInt(rule) >= screen.colorDepth / 3;
+                                valid = parseInt(rule) >= screen.colorDepth / 3;
                                 break;
                             case 'color-index':
                             case 'min-color-index':
@@ -3795,7 +3810,7 @@
                                 break;
                             case 'max-color-index':
                             case 'max-monochrome':
-                                valid = convertInt(rule) >= 0;
+                                valid = parseInt(rule) >= 0;
                                 break;
                             default:
                                 valid = false;
@@ -4922,11 +4937,12 @@
                 let innerText = '';
                 const childDepth = depth + (nested ? i : 0) + 1;
                 for (const name in descend) {
-                    if (Array.isArray(item[name])) {
-                        innerText += applyTemplate(name, descend, item[name], childDepth);
+                    const value = item[name];
+                    if (Array.isArray(value)) {
+                        innerText += applyTemplate(name, descend, value, childDepth);
                     }
-                    else if (typeof item[name] === 'object') {
-                        innerText += applyTemplate(name, descend, [item[name]], childDepth);
+                    else if (isPlainObject(value)) {
+                        innerText += applyTemplate(name, descend, [value], childDepth);
                     }
                 }
                 if (innerText !== '') {
@@ -5096,7 +5112,7 @@
     const system = {};
     let main;
     let framework;
-    const checkMain = () => !!main && !main.initializing && main.length > 0;
+    const checkMain = () => { var _a; return ((_a = main) === null || _a === void 0 ? void 0 : _a.initializing) === false && main.length > 0; };
     function setFramework(value, cached = false) {
         const reloading = framework !== undefined;
         if (framework !== value) {
@@ -5236,15 +5252,16 @@
         return false;
     }
     function retrieve(value) {
-        return main ? main.extensionManager.retrieve(value) : null;
+        var _a;
+        return ((_a = main) === null || _a === void 0 ? void 0 : _a.extensionManager.retrieve(value)) || null;
     }
     function reset() {
-        if (main) {
-            main.reset();
-        }
+        var _a;
+        (_a = main) === null || _a === void 0 ? void 0 : _a.reset();
     }
     function ready() {
-        return !!main && !main.initializing && !main.closed;
+        var _a;
+        return ((_a = main) === null || _a === void 0 ? void 0 : _a.initializing) === false && !main.closed;
     }
     function close() {
         if (checkMain()) {
@@ -5276,7 +5293,8 @@
         }
     }
     function toString() {
-        return main ? main.toString() : '';
+        var _a;
+        return ((_a = main) === null || _a === void 0 ? void 0 : _a.toString()) || '';
     }
     function apply(value, options) {
         return include(value, options);

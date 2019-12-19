@@ -1,4 +1,4 @@
-/* android.widget.menu 1.3.5
+/* android.widget.menu 1.3.6
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -77,7 +77,7 @@ this.android.widget.menu = (function () {
         }
         return '';
     }
-    const hasInputType = (node, value) => node.some(item => item.element.type === value);
+    const hasInputType = (node, value) => node.some(item => item.toElementString('type') === value);
     class Menu extends squared.base.ExtensionUI {
         constructor(name, framework, options, tagNames) {
             super(name, framework, options, tagNames);
@@ -112,8 +112,8 @@ this.android.widget.menu = (function () {
             return this.included(node.element);
         }
         processNode(node, parent) {
-            const parentAs = this.application.createNode(undefined, false);
-            parentAs.actualParent = parent.actualParent;
+            const outerParent = this.application.createNode(undefined, false);
+            outerParent.actualParent = parent.actualParent;
             node.documentRoot = true;
             node.addAlign(4 /* AUTO_LAYOUT */);
             node.setControlType(NAVIGATION.MENU, CONTAINER_NODE.INLINE);
@@ -121,7 +121,7 @@ this.android.widget.menu = (function () {
             for (const item of node.cascade()) {
                 this.addDescendant(item);
             }
-            node.render(parentAs);
+            node.render(outerParent);
             node.dataset.pathname = 'res/menu';
             return {
                 output: {
@@ -129,7 +129,7 @@ this.android.widget.menu = (function () {
                     node,
                     controlName: NAVIGATION.MENU
                 },
-                parentAs,
+                outerParent,
                 complete: true
             };
         }
@@ -142,7 +142,7 @@ this.android.widget.menu = (function () {
             const android = options.android;
             const element = node.element;
             let controlName;
-            let title = '';
+            let title;
             if (node.tagName === 'NAV') {
                 controlName = NAVIGATION.MENU;
                 title = getTitle(node, element);

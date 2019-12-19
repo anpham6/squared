@@ -1,4 +1,4 @@
-/* android.widget.toolbar 1.3.5
+/* android.widget.toolbar 1.3.6
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -257,7 +257,7 @@ this.android.widget.toolbar = (function () {
             if (appBarNode) {
                 return {
                     output,
-                    parentAs: node.parent,
+                    outerParent: node.parent,
                     renderAs: appBarNode,
                     outputAs
                 };

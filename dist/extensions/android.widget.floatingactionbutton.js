@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 1.3.5
+/* android.widget.floatingactionbutton 1.3.6
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -55,7 +55,7 @@ this.android.widget.floatingactionbutton = (function () {
             node.setControlType(controlName, CONTAINER_NODE.BUTTON);
             node.exclude(NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET);
             Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-            let parentAs;
+            let outerParent;
             if (!node.pageFlow || target) {
                 const horizontalBias = getHorizontalBias(node);
                 const verticalBias = getVerticalBias(node);
@@ -104,9 +104,9 @@ this.android.widget.floatingactionbutton = (function () {
                     const layoutGravity = node.android('layout_gravity');
                     let anchor = parent.documentId;
                     if (parent.controlName === (node.localSettings.targetAPI < 29 /* Q */ ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
-                        const outerParent = parent.data("android.widget.toolbar" /* TOOLBAR */, 'outerParent');
-                        if (outerParent) {
-                            anchor = outerParent;
+                        const value = parent.data("android.widget.toolbar" /* TOOLBAR */, 'outerParent');
+                        if (value) {
+                            anchor = value;
                         }
                     }
                     if (layoutGravity !== '') {
@@ -116,7 +116,7 @@ this.android.widget.floatingactionbutton = (function () {
                     node.app('layout_anchor', anchor);
                     node.exclude(0, NODE_PROCEDURE.ALIGNMENT);
                     node.render(this.application.resolveTarget(target));
-                    parentAs = node.renderParent;
+                    outerParent = node.renderParent;
                 }
             }
             if (!target) {
@@ -124,7 +124,7 @@ this.android.widget.floatingactionbutton = (function () {
             }
             node.apply(options);
             return {
-                parentAs,
+                outerParent,
                 output: {
                     type: 1 /* XML */,
                     node,
