@@ -18,8 +18,9 @@ export function capitalizeString(value: string) {
     const result = value.split('');
     let match: RegExpMatchArray | null;
     while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
-        if (match.index !== undefined) {
-            result[match.index] = match[1].charAt(0).toUpperCase();
+        const index = match.index;
+        if (index !== undefined) {
+            result[index] = match[1].charAt(0).toUpperCase();
         }
     }
     return result.join('');
@@ -30,8 +31,12 @@ export function lowerCaseString(value: string) {
     let result = value;
     let match: RegExpMatchArray | null;
     while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
-        if (match.index !== undefined && !XML.ENTITY.test(match[1])) {
-            result = (match.index > 0 ? result.substring(0, match.index) : '') + value.substring(match.index, match.index + match[1].length).toLowerCase() + result.substring(match.index + match[1].length);
+        const index = match.index;
+        if (index !== undefined) {
+            const word = match[1];
+            if (!XML.ENTITY.test(word)) {
+                result = (index > 0 ? result.substring(0, match.index) : '') + value.substring(index, index + word.length).toLowerCase() + result.substring(index + word.length);
+            }
         }
     }
     return result;
@@ -45,8 +50,9 @@ export function spliceString(value: string, index: number, length: number) {
 }
 
 export function convertUnderscore(value: string) {
-    if (CACHE_UNDERSCORE[value]) {
-        return CACHE_UNDERSCORE[value];
+    const cacheData = CACHE_UNDERSCORE[value];
+    if (cacheData) {
+        return cacheData;
     }
     let result = value[0].toLowerCase();
     let lower = true;
@@ -67,8 +73,9 @@ export function convertUnderscore(value: string) {
 }
 
 export function convertCamelCase(value: string, char = '-') {
-    if (CACHE_CAMELCASE[value]) {
-        return CACHE_CAMELCASE[value];
+    const cacheData = CACHE_CAMELCASE[value];
+    if (cacheData) {
+        return cacheData;
     }
     let result = '';
     let previous = '';
@@ -110,8 +117,8 @@ export function convertFloat(value: string) {
 
 export function convertAlpha(value: number) {
     if (value >= 0) {
-        const length = ALPHABET.length;
         let result = '';
+        const length = ALPHABET.length;
         while (value >= length) {
             const base = Math.floor(value / length);
             if (base > 1 && base <= length) {
@@ -209,8 +216,10 @@ export function isEqual(source: any, values: any) {
     }
     else if (Object.keys(source).length === Object.keys(values).length) {
         for (const attr in source) {
-            if (source[attr] !== values[attr]) {
-                if (isPlainObject(source[attr]) && isPlainObject(values[attr]) && isEqual(source[attr], values[attr])) {
+            const a = source[attr];
+            const b = values[attr];
+            if (a !== b) {
+                if (isPlainObject(a) && isPlainObject(b) && isEqual(a, b)) {
                     continue;
                 }
                 return false;
@@ -315,7 +324,7 @@ export function optionalAsBoolean(obj: UndefNull<object>, value: string): boolea
 export function resolvePath(value: string, href?: string) {
     if (!COMPONENT.PROTOCOL.test(value)) {
         const origin = location.origin;
-        let pathname = (href && href.replace(origin, '') || location.pathname).split('/');
+        let pathname = (href?.replace(origin, '') || location.pathname).split('/');
         pathname.pop();
         if (value.charAt(0) === '/') {
             value = origin + value;

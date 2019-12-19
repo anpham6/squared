@@ -190,10 +190,8 @@ const ATTRIBUTE_ANDROID = {
 };
 
 function getPathInterpolator(keySplines: string[] | undefined, index: number): string {
-    if (keySplines && keySplines[index]) {
-        return INTERPOLATOR_ANDROID[keySplines[index]] || createPathInterpolator(keySplines[index]);
-    }
-    return '';
+    const name = keySplines?.[index];
+    return name ? INTERPOLATOR_ANDROID[name] || createPathInterpolator(name) : '';
 }
 
 function getPaintAttribute(value: string) {
@@ -1257,7 +1255,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                             if (options.valueType === 'floatType') {
                                                                 valueTo = truncate(valueTo, floatPrecisionValue);
                                                             }
-                                                            if (transformOrigin && transformOrigin[j]) {
+                                                            if (transformOrigin?.[j]) {
                                                                 let direction: string | undefined;
                                                                 let translateTo = 0;
                                                                 if (propertyName.endsWith('X')) {

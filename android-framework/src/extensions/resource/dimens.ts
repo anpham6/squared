@@ -18,7 +18,8 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
             return storedName;
         }
     }
-    return map.has(name) && map.get(name) !== value ? Resource.generateId('dimen', name) : name;
+    const previous = map.get(name);
+    return previous !== undefined && previous !== value ? Resource.generateId('dimen', name) : name;
 }
 
 const getDisplayName = (value: string) => fromLastIndexOf(value, '.');

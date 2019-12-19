@@ -8,7 +8,7 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 
 const $lib = squared.lib;
 const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, formatPX, isLength } = $lib.css;
-const { assignRect, isTextNode, newBoxModel } = $lib.dom;
+const { isTextNode, newBoxModel } = $lib.dom;
 const { isEqual } = $lib.math;
 const { getElementAsNode } = $lib.session;
 const { aboveRange, assignEmptyProperty, belowRange, cloneObject, filterArray, hasBit, isArray, searchObject, withinRange } = $lib.util;
@@ -511,9 +511,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             switch (name) {
                 case 'base':
                     this._documentParent = node.documentParent;
-                    this._bounds = assignRect(node.bounds);
-                    this._linear = assignRect(node.linear);
-                    this._box = assignRect(node.box);
+                    this._bounds =  { ...node.bounds };
+                    this._linear = { ...node.linear };
+                    this._box = { ...node.box };
                     this._boxReset = newBoxModel();
                     this._boxAdjustment = newBoxModel();
                     if (this.depth === -1) {

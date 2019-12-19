@@ -65,10 +65,12 @@ export function truncateFraction(value: number) {
     if (value !== Math.floor(value)) {
         const match = REGEXP_TRUNCATE.exec(convertDecimalNotation(value));
         if (match) {
-            if (match[2] === '') {
+            const trailing = match[2];
+            if (trailing === '') {
                 return Math.round(value);
             }
-            return parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
+            const leading = match[1];
+            return parseFloat(value.toPrecision((leading !== '0' ? leading.length : 0) + trailing.length));
         }
     }
     return value;

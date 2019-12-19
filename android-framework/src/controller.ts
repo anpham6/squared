@@ -1433,8 +1433,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
                 break;
             case CONTAINER_ANDROID.EDIT: {
-                const list = (<HTMLInputElement> node.element).list;
-                if (list && list.children.length) {
+                if ((<HTMLInputElement> node.element).list?.children.length) {
                     controlName = CONTAINER_ANDROID.EDIT_LIST;
                     node.controlName = controlName;
                 }

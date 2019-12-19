@@ -112,8 +112,7 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get float() {
         if (this._cached.float === undefined) {
-            this._cached.float = !this.floating ? 'none'
-                                                : this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left';
+            this._cached.float = !this.floating ? 'none' : (this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left');
         }
         return this._cached.float;
     }
@@ -128,8 +127,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     get display() {
         return (
             super.display ||
-            this.some(node => node.blockStatic) ? 'block'
-                                                : this.blockDimension ? 'inline-block' : 'inline'
+            this.some(node => node.blockStatic) ? 'block' : (this.blockDimension ? 'inline-block' : 'inline')
         );
     }
 

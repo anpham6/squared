@@ -8,6 +8,7 @@ import { BOX_STANDARD } from '../lib/enumeration';
 
 const $lib = squared.lib;
 const { isLength, isPercent } = $lib.css;
+const { assignRect } = $lib.dom;
 const { CHAR } = $lib.regex;
 const { convertInt, isNumber, trimString, withinRange } = $lib.util;
 
@@ -871,7 +872,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             bounds.height = rect.height;
                         }
                         else {
-                            item.initial.bounds = rect;
+                            item.initial.bounds = assignRect(rect);
                         }
                     });
                     node.cssFinally('display');

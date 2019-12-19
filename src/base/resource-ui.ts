@@ -713,7 +713,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 fontStyle: node.css('fontStyle'),
                 fontSize: formatPX(node.fontSize),
                 fontWeight,
-                color: color ? color.valueAsRGBA : ''
+                color: color?.valueAsRGBA || ''
             });
         }
     }

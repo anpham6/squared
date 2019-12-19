@@ -108,7 +108,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         const bounds = this._bounds;
         if (bounds) {
-            initial.bounds = assignRect(bounds);
+            initial.bounds = { ...bounds };
         }
         initial.iteration++;
     }
@@ -387,8 +387,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssSpecificity(attr: string) {
         if (this.styleElement) {
             const element = <Element> this._element;
-            const data: ObjectMap<number> = getElementCache(this.pseudoElement ? <Element> element.parentElement : element, 'styleSpecificity' + Node.getPseudoElt(this), this.sessionId);
-            return data && data[attr] || 0;
+            return getElementCache(this.pseudoElement ? <Element> element.parentElement : element, 'styleSpecificity' + Node.getPseudoElt(this), this.sessionId)?.[attr] as number || 0;
         }
         return 0;
     }
@@ -530,14 +529,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public setBounds(cache = true) {
         if (this.styleElement) {
-            this._bounds = assignRect(actualClientRect(<Element> this._element, this.sessionId, cache), true);
+            this._bounds = assignRect(actualClientRect(<Element> this._element, this.sessionId, cache));
             if (this.documentBody && this.marginTop === 0) {
                 this._bounds.top = 0;
             }
         }
         else if (this.plainText) {
             const rect = getRangeClientRect(<Element> this._element);
-            const bounds = assignRect(rect, true);
+            const bounds = assignRect(rect);
             const numberOfLines = rect.numberOfLines as number;
             bounds.numberOfLines = numberOfLines;
             this._bounds = bounds;

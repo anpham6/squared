@@ -6,6 +6,7 @@ import NodeUI from '../node-ui';
 import { EXT_NAME } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
 
+const { assignRect } = squared.lib.dom;
 const { withinRange } = squared.lib.util;
 
 export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
@@ -51,7 +52,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                                 bounds.height = rect.height;
                             }
                             else {
-                                item.initial.bounds = rect;
+                                item.initial.bounds = assignRect(rect);
                             }
                             item.cssFinally('justify-self');
                         }

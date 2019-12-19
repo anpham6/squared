@@ -49,7 +49,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             const target = element.dataset.target;
             if (target) {
                 const targetElement = document.getElementById(target);
-                if (element.parentElement !== targetElement && targetElement && !includes(targetElement.dataset.use, WIDGET_NAME.COORDINATOR)) {
+                if (targetElement && element.parentElement !== targetElement && !includes(targetElement.dataset.use, WIDGET_NAME.COORDINATOR)) {
                     (<squared.base.ApplicationUI<T>> this.application).rootElements.add(element);
                 }
             }

@@ -17,13 +17,10 @@ export function isPlatform(value: string | number) {
     if (typeof value === 'string') {
         return platform.indexOf(value.toLowerCase()) !== -1;
     }
-    else if (hasBit(value, PLATFORM.MAC) && /mac|iphone|ipad/.test(platform)) {
-        return true;
-    }
-    else if (hasBit(value, PLATFORM.WINDOWS) && platform.indexOf('windows') !== -1) {
-        return true;
-    }
-    return false;
+    return (
+        hasBit(value, PLATFORM.WINDOWS) && platform.indexOf('windows') !== -1 ||
+        hasBit(value, PLATFORM.MAC) && /mac|iphone|ipad/.test(platform)
+    );
 }
 
 export function isUserAgent(value: string | number) {

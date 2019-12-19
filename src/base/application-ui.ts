@@ -1574,14 +1574,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             staticRows.push(current);
         }
         if (!layoutVertical) {
+            const node = layout.node;
             for (let i = 0; i < Math.max(floatedRows.length, staticRows.length); i++) {
                 const pageFlow = staticRows[i] || [];
                 if (floatedRows[i] === null && pageFlow.length) {
                     const layoutType = controller.containerTypeVertical;
                     layoutType.alignmentType |= NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK;
                     this.addLayout(new LayoutUI(
-                        layout.node,
-                        controller.createNodeGroup(pageFlow[0], pageFlow, layout.node),
+                        node,
+                        controller.createNodeGroup(pageFlow[0], pageFlow, node),
                         layoutType.containerType,
                         layoutType.alignmentType,
                         pageFlow
@@ -1591,9 +1592,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     const floating = floatedRows[i] || [];
                     if (pageFlow.length || floating.length) {
                         const verticalMargin = controller.containerTypeVerticalMargin;
-                        const basegroup = controller.createNodeGroup(floating[0] || pageFlow[0], [], layout.node);
+                        const basegroup = controller.createNodeGroup(floating[0] || pageFlow[0], [], node);
                         const layoutGroup = new LayoutUI(
-                            layout.node,
+                            node,
                             basegroup,
                             verticalMargin.containerType,
                             verticalMargin.alignmentType
@@ -1615,21 +1616,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         basegroup.init();
                         layoutGroup.itemCount = children.length;
                         this.addLayout(layoutGroup);
-                        for (let node of children) {
-                            if (!node.nodeGroup) {
-                                node = controller.createNodeGroup(node, [node], basegroup, true);
+                        for (let item of children) {
+                            if (!item.nodeGroup) {
+                                item = controller.createNodeGroup(item, [item], basegroup, true);
                             }
                             this.addLayout(new LayoutUI(
                                 basegroup,
-                                node,
+                                item,
                                 containerType,
                                 alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
-                                node.children as T[]
+                                item.children as T[]
                             ));
                         }
                         if (pageFlow.length && floating.length) {
                             const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
-                            this.setFloatPadding(layout.node, subgroup as T, pageFlow, leftAbove, rightAbove);
+                            this.setFloatPadding(node, subgroup as T, pageFlow, leftAbove, rightAbove);
                         }
                     }
                 }

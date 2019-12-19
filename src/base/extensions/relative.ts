@@ -92,7 +92,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 if (item === node) {
                     if (preceding) {
                         if (renderParent.layoutVertical && (node.top !== 0 || node.bottom !== 0)) {
-                            const bounds = assignRect(node.boundingClientRect, true);
+                            const bounds = assignRect(node.boundingClientRect);
                             if (top !== 0) {
                                 top -= bounds.top - node.bounds.top;
                             }
@@ -101,7 +101,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                             }
                         }
                         if (renderParent.layoutHorizontal && (node.left !== 0 || node.right !== 0) && node.alignSibling('leftRight') === '') {
-                            const bounds = assignRect(node.boundingClientRect, true);
+                            const bounds = assignRect(node.boundingClientRect);
                             if (left !== 0) {
                                 left -= bounds.left - node.bounds.left;
                             }

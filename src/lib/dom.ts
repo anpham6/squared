@@ -69,7 +69,7 @@ export function newBoxModel(): BoxModel {
     };
 }
 
-export function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition = false): BoxRectDimension {
+export function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition = true): BoxRectDimension {
     const result = {
         top: rect.top,
         right: rect.right,

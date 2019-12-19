@@ -115,8 +115,9 @@ export function applyTemplate(tagName: string, template: ExternalData, children:
         const descend = tag['>'];
         if (attrs) {
             for (const attr of attrs) {
-                if (item[attr]) {
-                    output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${item[attr]}"`;
+                const value = item[attr];
+                if (value) {
+                    output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${value}"`;
                 }
             }
         }

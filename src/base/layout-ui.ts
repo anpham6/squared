@@ -116,11 +116,11 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     get linearX() {
-        return this._linearX !== undefined ? this._linearX : true;
+        return this._linearX ?? true;
     }
 
     get linearY() {
-        return this._linearY !== undefined ? this._linearY : false;
+        return this._linearY ?? false;
     }
 
     get floated() {
