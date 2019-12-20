@@ -17,16 +17,12 @@ type NodeUI = squared.base.NodeUI;
 
 const STRING_SPACE = '&#160;';
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
-const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
-let REGEXP_COLORSTOP: RegExp | undefined;
+const REGEX_URL = /^url/;
+const REGEX_NOBREAKSPACE = /\u00A0/g;
+const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
+const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
-    if (REGEXP_COLORSTOP) {
-        REGEXP_COLORSTOP.lastIndex = 0;
-    }
-    else {
-        REGEXP_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
-    }
     const item = <RadialGradient> gradient;
     const repeating = item.repeating === true;
     let extent = 1;
@@ -41,24 +37,27 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     const result: ColorStop[] = [];
     let match: RegExpExecArray | null;
     let previousOffset = 0;
-    while ((match = REGEXP_COLORSTOP.exec(value)) !== null) {
+    while ((match = REGEX_COLORSTOP.exec(value)) !== null) {
         const color = parseColor(match[1], 1, true);
         if (color) {
             let offset = -1;
             if (gradient.type === 'conic') {
-                if (match[3] && match[4]) {
-                    offset = convertAngle(match[3], match[4]) / 360;
+                const angle = match[3];
+                const unit = match[4];
+                if (angle && unit) {
+                    offset = convertAngle(angle, unit) / 360;
                 }
             }
-            else if (match[2]) {
-                if (isPercent(match[2])) {
-                    offset = parseFloat(match[2]) / 100;
+            else {
+                const unit = match[2];
+                if (isPercent(unit)) {
+                    offset = parseFloat(unit) / 100;
                 }
                 else {
-                    if (isLength(match[2])) {
-                        offset = node.parseUnit(match[2], item.horizontal ? 'width' : 'height', false) / size;
+                    if (isLength(unit)) {
+                        offset = node.parseUnit(unit, item.horizontal ? 'width' : 'height', false) / size;
                     }
-                    else if (isCalc(match[2])) {
+                    else if (isCalc(unit)) {
                         offset = calculate(match[6], size, node.fontSize) / size;
                     }
                 }
@@ -128,12 +127,14 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     else if (percent < 1) {
         result.push({ ...result[length - 1], offset: 1 });
     }
+    REGEX_COLORSTOP.lastIndex = 0;
     return result;
 }
 
 function getAngle(value: string, fallback = 0) {
+    value = value.trim();
     if (value) {
-        let degree = parseAngle(value.trim());
+        let degree = parseAngle(value);
         if (degree < 0) {
             degree += 360;
         }
@@ -142,15 +143,15 @@ function getAngle(value: string, fallback = 0) {
     return fallback;
 }
 
-function replaceWhiteSpace(parent: NodeUI | undefined, node: NodeUI, value: string): [string, boolean] {
-    value = value.replace(/\u00A0/g, STRING_SPACE);
+function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean] {
+    value = value.replace(REGEX_NOBREAKSPACE, STRING_SPACE);
     switch (node.css('whiteSpace')) {
         case 'nowrap':
             value = value.replace(/\n/g, ' ');
             break;
         case 'pre':
         case 'pre-wrap':
-            if (parent?.layoutVertical === false) {
+            if (node.renderParent?.layoutVertical === false) {
                 value = value.replace(/^\s*?\n/, '');
             }
             value = value
@@ -163,12 +164,19 @@ function replaceWhiteSpace(parent: NodeUI | undefined, node: NodeUI, value: stri
                 .replace(/[ ]+/g, ' ');
             break;
         default:
-            const { previousSibling, nextSibling } = node;
-            if (previousSibling && (previousSibling.lineBreak || previousSibling.blockStatic) || node.onlyChild && node.htmlElement) {
-                value = value.replace(CHAR.LEADINGSPACE, '');
+            if (node.onlyChild && node.htmlElement) {
+                value = value
+                    .replace(CHAR.LEADINGSPACE, '')
+                    .replace(CHAR.TRAILINGSPACE, '');
             }
-            if (nextSibling && (nextSibling.lineBreak || nextSibling.blockStatic) || node.onlyChild && node.htmlElement) {
-                value = value.replace(CHAR.TRAILINGSPACE, '');
+            else {
+                const { previousSibling, nextSibling } = node;
+                if (previousSibling && (previousSibling.lineBreak || previousSibling.blockStatic)) {
+                    value = value.replace(CHAR.LEADINGSPACE, '');
+                }
+                if (nextSibling && (nextSibling.lineBreak || nextSibling.blockStatic)) {
+                    value = value.replace(CHAR.TRAILINGSPACE, '');
+                }
             }
             return [value, false];
     }
@@ -276,13 +284,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static parseBackgroundImage(node: NodeUI) {
         const backgroundImage = node.backgroundImage;
         if (backgroundImage !== '') {
-            REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
             const images: (string | Gradient)[] = [];
             let match: RegExpExecArray | null;
             let i = 0;
-            while ((match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) !== null) {
-                if (match[0] === 'initial' || match[0].startsWith('url')) {
-                    images.push(match[0]);
+            while ((match = REGEX_BACKGROUNDIMAGE.exec(backgroundImage)) !== null) {
+                const value = match[0];
+                if (REGEX_URL.test(value) || value === 'initial') {
+                    images.push(value);
                 }
                 else {
                     const repeating = match[1] === 'repeating';
@@ -297,9 +305,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             const conic = <ConicGradient> {
                                 type,
                                 dimension,
-                                angle: getAngle(direction)
+                                angle: getAngle(direction),
+                                center: getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension)
                             };
-                            conic.center = getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension);
                             conic.colorStops = parseColorStops(node, conic, match[4]);
                             gradient = conic;
                             break;
@@ -307,82 +315,79 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         case 'radial': {
                             const { width, height } = dimension;
                             const position = getGradientPosition(direction);
-                            const radial = <RadialGradient> {
-                                type,
-                                repeating,
-                                horizontal: node.actualWidth <= node.actualHeight,
-                                dimension
-                            };
                             const center = getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension);
                             const { left, top } = center;
-                            radial.center = center;
-                            radial.closestCorner = Number.POSITIVE_INFINITY;
-                            radial.farthestCorner = Number.NEGATIVE_INFINITY;
                             let shape = 'ellipse';
+                            let closestSide = top;
+                            let farthestSide = top;
+                            let closestCorner = Number.POSITIVE_INFINITY;
+                            let farthestCorner = Number.NEGATIVE_INFINITY;
+                            let radius = 0;
+                            let radiusExtent = 0;
                             if (position) {
-                                const radius = position[1] && position[1].trim();
-                                if (radius) {
-                                    if (radius.startsWith('circle')) {
+                                const name = position[1]?.trim();
+                                if (name) {
+                                    if (name.startsWith('circle')) {
                                         shape = 'circle';
                                     }
                                     else {
-                                        const radiusXY = radius.split(' ');
                                         let minRadius = Number.POSITIVE_INFINITY;
+                                        const radiusXY = name.split(' ');
                                         const length = radiusXY.length;
                                         for (let j = 0; j < length; j++) {
-                                            const axisRadius = node.parseUnit(radiusXY[j], j === 0 ? 'width' : 'height', false);
-                                            if (axisRadius < minRadius) {
-                                                minRadius = axisRadius;
-                                            }
+                                            minRadius = Math.min(node.parseUnit(radiusXY[j], j === 0 ? 'width' : 'height', false), minRadius);
                                         }
-                                        radial.radius = minRadius;
-                                        radial.radiusExtent = minRadius;
+                                        radius = minRadius;
+                                        radiusExtent = minRadius;
                                         if (length === 1 || radiusXY[0] === radiusXY[1]) {
                                             shape = 'circle';
                                         }
                                     }
                                 }
                             }
-                            radial.shape = shape;
                             for (const corner of [[0, 0], [width, 0], [width, height], [0, height]]) {
                                 const length = Math.round(Math.sqrt(Math.pow(Math.abs(corner[0] - left), 2) + Math.pow(Math.abs(corner[1] - top), 2)));
-                                if (length < radial.closestCorner) {
-                                    radial.closestCorner = length;
-                                }
-                                if (length > radial.farthestCorner) {
-                                    radial.farthestCorner = length;
-                                }
+                                closestCorner = Math.min(length, closestCorner);
+                                farthestCorner = Math.max(length, farthestCorner);
                             }
-                            radial.closestSide = top;
-                            radial.farthestSide = top;
                             for (const side of [width - left, height - top, left]) {
-                                if (side < radial.closestSide) {
-                                    radial.closestSide = side;
-                                }
-                                if (side > radial.farthestSide) {
-                                    radial.farthestSide = side;
-                                }
+                                closestSide = Math.min(side, closestSide);
+                                farthestSide = Math.max(side, farthestSide);
                             }
-                            if (!radial.radius && !radial.radiusExtent) {
-                                radial.radius = radial.farthestCorner;
-                                const extent = position && position[1] ? position[1].split(' ').pop() : '';
+                            const radial = <RadialGradient> {
+                                type,
+                                repeating,
+                                horizontal: node.actualWidth <= node.actualHeight,
+                                dimension,
+                                shape,
+                                center,
+                                closestSide,
+                                farthestSide,
+                                closestCorner,
+                                farthestCorner
+                            };
+                            if (radius === 0 && radiusExtent === 0) {
+                                radius = farthestCorner;
+                                const extent = position?.[1]?.split(' ').pop() || '';
                                 switch (extent) {
                                     case 'closest-corner':
                                     case 'closest-side':
                                     case 'farthest-side':
                                         const length = radial[convertCamelCase(extent)];
                                         if (repeating) {
-                                            radial.radiusExtent = length;
+                                            radiusExtent = length;
                                         }
                                         else {
-                                            radial.radius = length;
+                                            radius = length;
                                         }
                                         break;
                                     default:
-                                        radial.radiusExtent = radial.farthestCorner;
+                                        radiusExtent = farthestCorner;
                                         break;
                                 }
                             }
+                            radial.radius = radius;
+                            radial.radiusExtent = radiusExtent;
                             radial.colorStops = parseColorStops(node, radial, match[4]);
                             gradient = radial;
                             break;
@@ -420,14 +425,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     }
                                     break;
                             }
-                            const linear = <LinearGradient> {
-                                type,
-                                repeating,
-                                horizontal: angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315,
-                                dimension,
-                                angle
-                            };
-                            linear.colorStops = parseColorStops(node, linear, match[4]);
                             let x = truncateFraction(offsetAngleX(angle, width));
                             let y = truncateFraction(offsetAngleY(angle, height));
                             if (x !== width && y !== height && !isEqual(Math.abs(x), Math.abs(y))) {
@@ -458,7 +455,15 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     )
                                 );
                             }
-                            linear.angleExtent = { x, y };
+                            const linear = <LinearGradient> {
+                                type,
+                                repeating,
+                                horizontal: angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315,
+                                dimension,
+                                angle,
+                                angleExtent: { x, y }
+                            };
+                            linear.colorStops = parseColorStops(node, linear, match[4]);
                             gradient = linear;
                             break;
                         }
@@ -467,6 +472,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 i++;
             }
+            REGEX_BACKGROUNDIMAGE.lastIndex = 0;
             if (images.length) {
                 return images;
             }
@@ -510,13 +516,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static isInheritedStyle(node: NodeUI, attr: string) {
-        if (node.styleElement) {
-            const parent = node.actualParent;
-            if (parent && node.cssInitial(attr) === '') {
-                return node.style[attr] === parent.style[attr];
-            }
-        }
-        return false;
+        return node.styleElement && node.cssInitial(attr) === '' && node.style[attr] === node.actualParent?.style[attr];
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak = false, trim = false) {
@@ -540,8 +540,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     private static getStoredName(asset: string, value: any): string {
-        if (ResourceUI.STORED[asset]) {
-            for (const [name, data] of ResourceUI.STORED[asset].entries()) {
+        const stored = ResourceUI.STORED[asset];
+        if (stored) {
+            for (const [name, data] of stored.entries()) {
                 if (isEqualObject(value, data)) {
                     return name;
                 }
@@ -565,13 +566,11 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public writeRawImage(filename: string, base64: string) {
-        if (this.fileHandler) {
-            this.fileHandler.addAsset({
-                pathname: this.controllerSettings.directory.image,
-                filename,
-                base64
-            });
-        }
+        this.fileHandler?.addAsset({
+            pathname: this.controllerSettings.directory.image,
+            filename,
+            base64
+        });
     }
 
     public setBoxStyle(node: T) {
@@ -689,7 +688,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public setFontStyle(node: T) {
-        if (((node.textElement || node.inlineText) && (!node.textEmpty || node.visibleStyle.background) || node.inputElement) && node.visible) {
+        if (((node.textElement || node.inlineText) && (!node.textEmpty || node.visibleStyle.background) || node.inputElement)) {
             const color = parseColor(node.css('color'));
             let fontWeight = node.css('fontWeight');
             if (!isNumber(fontWeight)) {
@@ -719,8 +718,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public setValueString(node: T) {
-        if (node.visible && !node.svgElement) {
-            const renderParent = node.renderParent;
+        if (!node.svgElement) {
             const element = <HTMLInputElement> node.element;
             if (element) {
                 let key = '';
@@ -799,17 +797,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         const textContent = node.textContent;
                         if (node.plainText || node.pseudoElement) {
                             key = textContent.trim();
-                            [value] = replaceWhiteSpace(renderParent, node, textContent.replace(/&/g, '&amp;'));
+                            [value] = replaceWhiteSpace(node, textContent.replace(/&/g, '&amp;'));
                             inlined = true;
                             trimming = !(node.actualParent as T).preserveWhiteSpace;
                         }
                         else if (node.inlineText) {
                             key = textContent.trim();
-                            [value, inlined] = replaceWhiteSpace(
-                                renderParent,
-                                node,
-                                this.removeExcludedFromText(element, node.sessionId)
-                            );
+                            [value, inlined] = replaceWhiteSpace(node, this.removeExcludedFromText(element, node.sessionId));
                             trimming = true;
                         }
                         else if (node.naturalElements.length === 0 && textContent && textContent.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
@@ -914,7 +908,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             }
         }
         if (attr === 'innerHTML') {
-            value = value.replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
+            return value.replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
         }
         return value;
     }

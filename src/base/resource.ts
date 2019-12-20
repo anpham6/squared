@@ -33,13 +33,17 @@ export default abstract class Resource<T extends squared.base.Node> implements s
 
     public addImage(element: HTMLImageElement | undefined) {
         if (element?.complete) {
-            if (element.src.startsWith('data:image/')) {
-                const match = new RegExp(`^${STRING.DATAURI}$`).exec(element.src);
-                if (match && match[1] && match[2]) {
-                    this.addRawData(element.src, match[1], match[2], match[3], element.naturalWidth, element.naturalHeight);
+            const uri = element.src;
+            if (uri.startsWith('data:image/')) {
+                const match = new RegExp(`^${STRING.DATAURI}$`).exec(uri);
+                if (match) {
+                    const mimeType = match[1];
+                    const encoding = match[2];
+                    if (mimeType && encoding) {
+                        this.addRawData(uri, mimeType, encoding, match[3], element.naturalWidth, element.naturalHeight);
+                    }
                 }
             }
-            const uri = element.src;
             if (uri !== '') {
                 Resource.ASSETS.images.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
             }
@@ -53,7 +57,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public addFont(data: CSSFontFaceData) {
         const fonts = Resource.ASSETS.fonts;
         const fontFamily = data.fontFamily.trim().toLowerCase();
-        data.fontFamily =  fontFamily;
+        data.fontFamily = fontFamily;
         const items = fonts.get(fontFamily) || [];
         items.push(data);
         fonts.set(fontFamily, items);
@@ -68,7 +72,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         return undefined;
     }
 
-    public addRawData(dataURI: string, mimeType: string, encoding: string, content: string, width = 0, height = 0) {
+    public addRawData(uri: string, mimeType: string, encoding: string, content: string, width = 0, height = 0) {
         mimeType = mimeType.toLowerCase();
         encoding = encoding.toLowerCase();
         let base64: string | undefined;
@@ -82,12 +86,13 @@ export default abstract class Resource<T extends squared.base.Node> implements s
             content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
         }
         const imageFormat = this.controllerSettings.supported.imageFormat;
-        const pathname = dataURI.startsWith(location.origin) ? dataURI.substring(location.origin.length + 1, dataURI.lastIndexOf('/')) : '';
+        const origin = location.origin;
+        const pathname = uri.startsWith(origin) ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '';
         const getFileName = () => buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
         let filename: string | undefined;
         if (imageFormat === '*') {
-            if (dataURI.startsWith(location.origin)) {
-                filename = fromLastIndexOf(dataURI, '/');
+            if (uri.startsWith(origin)) {
+                filename = fromLastIndexOf(uri, '/');
             }
             else {
                 let extension = mimeType.split('/').pop();
@@ -100,18 +105,13 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         else {
             for (const extension of imageFormat) {
                 if (mimeType.indexOf(extension) !== -1) {
-                    if (dataURI.endsWith('.' + extension)) {
-                        filename = fromLastIndexOf(dataURI, '/');
-                    }
-                    else {
-                        filename = getFileName() + '.' + extension;
-                    }
+                    filename = uri.endsWith('.' + extension) ? fromLastIndexOf(uri, '/') : getFileName() + '.' + extension;
                     break;
                 }
             }
         }
         if (filename) {
-            Resource.ASSETS.rawData.set(dataURI, {
+            Resource.ASSETS.rawData.set(uri, {
                 pathname,
                 filename,
                 content,
@@ -125,14 +125,14 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         return '';
     }
 
-    public getRawData(dataURI: string) {
-        if (dataURI.startsWith('url(')) {
-            const match = CSS.URL.exec(dataURI);
+    public getRawData(uri: string) {
+        if (uri.startsWith('url(')) {
+            const match = CSS.URL.exec(uri);
             if (match) {
-                dataURI = match[1];
+                uri = match[1];
             }
         }
-        return Resource.ASSETS.rawData.get(dataURI);
+        return Resource.ASSETS.rawData.get(uri);
     }
 
     public setFileHandler(instance: squared.base.File<T>) {

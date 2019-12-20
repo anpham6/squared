@@ -172,8 +172,8 @@ declare namespace base {
         getImage(src: string): ImageAsset | undefined;
         addFont(data: squared.lib.css.CSSFontFaceData): void;
         getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): squared.lib.css.CSSFontFaceData | undefined;
-        addRawData(dataURI: string, mimeType: string, encoding: string, content: string): string;
-        getRawData(dataURI: string): RawAsset | undefined;
+        addRawData(uri: string, mimeType: string, encoding: string, content: string): string;
+        getRawData(uri: string): RawAsset | undefined;
         setFileHandler(instance: File<T>): void;
     }
 

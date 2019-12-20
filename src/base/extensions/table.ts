@@ -23,7 +23,7 @@ const enum LAYOUT_TABLE {
 }
 
 const TABLE = EXT_NAME.TABLE;
-const REGEXP_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
+const REGEX_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
 
 function setAutoWidth(node: T, td: T, data: ExternalData) {
     data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
@@ -134,7 +134,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         if (backgroundImage && backgroundImage !== 'none') {
                             td.css('backgroundImage', backgroundImage, true);
                         }
-                        if (backgroundColor && !REGEXP_BACKGROUND.test(backgroundColor)) {
+                        if (backgroundColor && !REGEX_BACKGROUND.test(backgroundColor)) {
                             td.css('backgroundColor', backgroundColor, true);
                         }
                     }
@@ -143,7 +143,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         if (value !== '') {
                             td.css('backgroundImage', value, true);
                         }
-                        value = getInheritedStyle(element, 'backgroundColor', REGEXP_BACKGROUND, 'TABLE');
+                        value = getInheritedStyle(element, 'backgroundColor', REGEX_BACKGROUND, 'TABLE');
                         if (value !== '') {
                             td.css('backgroundColor', value, true);
                         }

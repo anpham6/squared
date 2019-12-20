@@ -36,10 +36,7 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {
-        options = {
-            ...options,
-            element: this.shapeElement
-        };
+        options = { ...options, element: this.shapeElement };
         if (this.animations.length) {
             this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
         }
@@ -47,23 +44,23 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     }
 
     get transforms() {
-        let transforms = super.transforms;
+        let result = super.transforms;
         if (!this.__get_transforms) {
-            transforms = transforms.concat(this.getTransforms(this.shapeElement));
-            this._transforms = transforms;
+            result = result.concat(this.getTransforms(this.shapeElement));
+            this._transforms = result;
             this.__get_transforms = true;
         }
-        return transforms;
+        return result;
     }
 
     get animations() {
-        let animations = <SvgAnimation[]> super.animations;
+        let result = <SvgAnimation[]> super.animations;
         if (!this.__get_animations) {
-            animations = animations.concat(<SvgAnimation[]> this.getAnimations(this.shapeElement));
-            this._animations = animations;
+            result = result.concat(<SvgAnimation[]> this.getAnimations(this.shapeElement));
+            this._animations = result;
             this.__get_animations = true;
         }
-        return animations;
+        return result;
     }
 
     get instanceType() {

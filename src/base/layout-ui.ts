@@ -44,7 +44,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
                 this._linearY = linearData.linearY;
             }
             else {
-                this._linearY = (children[0] as T).blockStatic;
+                this._linearY = children[0].blockStatic;
                 this._linearX = !this._linearY;
             }
             let A = 0;

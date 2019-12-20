@@ -9,7 +9,7 @@ const { CHAR, COMPONENT, CSS, XML } = $lib.regex;
 const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, trimString } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> squared.base.ResourceUI.STORED;
-const REGEXP_NONWORD = /[^\w+]/g;
+const REGEX_NONWORD = /[^\w+]/g;
 let CACHE_IMAGE: StringMap = {};
 let IMAGE_FORMAT!: string[];
 
@@ -69,7 +69,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
         if (CHAR.LEADINGNUMBER.test(value)) {
             value = '__' + value;
         }
-        return value.replace(REGEXP_NONWORD, '_');
+        return value.replace(REGEX_NONWORD, '_');
     }
 
     public static addTheme(...values: StyleAttribute[]) {

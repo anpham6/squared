@@ -185,10 +185,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     const byCoords = SvgBuild.parseCoordinates(by);
                     if (byCoords.length) {
                         if (this.from === '') {
-                            const baseValue = this.baseValue;
-                            if (baseValue) {
-                                this.from = baseValue;
-                            }
+                            this.from = this.baseValue || '';
                             this.evaluateStart = true;
                         }
                         const fromCoords = SvgBuild.parseCoordinates(this.from);
@@ -229,9 +226,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             switch (mode) {
                 case 'discrete':
                     if (keyTimesBase.length === 2 && keyTimesBase[0] === 0) {
-                        const valuesBase = this.values;
                         let keyTimes: number[] = [];
                         let values: string[] = [];
+                        const valuesBase = this.values;
                         const length = keyTimesBase.length;
                         for (let i = 0; i < length - 1; i++) {
                             const result = SvgAnimate.convertStepTimingFunction(attributeName || this.attributeName, 'step-end', keyTimesBase, valuesBase, i, getFontSize(animationElement));
@@ -529,7 +526,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (this._setterType) {
             return true;
         }
-        else if (this.animationElement !== null && this.duration === 0) {
+        else if (this.animationElement && this.duration === 0) {
             const keyTimes = this.keyTimes;
             return keyTimes.length >= 2 && keyTimes[0] === 0 && this.values[0] !== '';
         }

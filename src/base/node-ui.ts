@@ -648,8 +648,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public setExclusions() {
         if (this.styleElement) {
-            const parent = this.actualParent;
-            const dataset = parent?.dataset || {};
+            const dataset = this.actualParent?.dataset || {};
             const parseExclusions = (attr: string, enumeration: {}) => {
                 let exclude = this.dataset[attr] || '';
                 let offset = 0;
@@ -657,9 +656,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     exclude += (exclude !== '' ? '|' : '') + dataset[attr + 'Child'];
                 }
                 if (exclude !== '') {
-                    for (let name of exclude.split('|')) {
-                        name = name.trim().toUpperCase();
-                        const value = enumeration[name];
+                    for (const name of exclude.split(/\s*|\s*/)) {
+                        const value = enumeration[name.toUpperCase()];
                         if (value && !hasBit(offset, value)) {
                             offset |= value;
                         }
@@ -889,38 +887,40 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (offset !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
-                if (offset === undefined) {
-                    if (this._boxReset === undefined) {
-                        this._boxReset = newBoxModel();
+                const setBoxReset = () => {
+                    let boxReset = this._boxReset;
+                    if (boxReset === undefined) {
+                        boxReset = newBoxModel();
+                        this._boxReset = boxReset;
                     }
-                    this._boxReset[attr] = 1;
+                    boxReset[attr] = 1;
+                };
+                if (offset === undefined) {
+                    setBoxReset();
                 }
                 else {
-                    if (this._boxAdjustment === undefined) {
-                        this._boxAdjustment = newBoxModel();
+                    let boxAdjustment = this._boxAdjustment;
+                    if (boxAdjustment === undefined) {
+                        boxAdjustment = newBoxModel();
+                        this._boxAdjustment = boxAdjustment;
                     }
                     if (!negative) {
-                        if (this[attr] + this._boxAdjustment[attr] + offset <= 0) {
-                            if (this._boxReset === undefined) {
-                                this._boxReset = newBoxModel();
-                            }
-                            this._boxReset[attr] = 1;
-                            this._boxAdjustment[attr] = 0;
+                        if (this[attr] + boxAdjustment[attr] + offset <= 0) {
+                            setBoxReset();
+                            boxAdjustment[attr] = 0;
                         }
                         else {
-                            this._boxAdjustment[attr] += offset;
+                            boxAdjustment[attr] += offset;
                         }
                     }
                     else {
-                        this._boxAdjustment[attr] += offset;
+                        boxAdjustment[attr] += offset;
                     }
                 }
-                if (this._boxRegister) {
-                    const nodes = this._boxRegister[region];
-                    if (nodes) {
-                        for (const node of nodes) {
-                            node.modifyBox(region, offset, negative);
-                        }
+                const nodes = this._boxRegister?.[region];
+                if (nodes) {
+                    for (const node of nodes) {
+                        node.modifyBox(region, offset, negative);
                     }
                 }
             }
@@ -929,18 +929,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public getBox(region: number): [number, number] {
         const attr = CSS_SPACING.get(region);
-        return attr ? [this._boxReset ? this._boxReset[attr] : 0, this._boxAdjustment ? this._boxAdjustment[attr] : 0] : [0, 0];
+        return attr ? [this._boxReset?.[attr] || 0, this._boxAdjustment?.[attr] || 0] : [0, 0];
     }
 
     public resetBox(region: number, node?: T) {
-        if (this._boxReset === undefined) {
-            this._boxReset = newBoxModel();
+        let boxReset = <BoxModel> this._boxReset;
+        if (boxReset === undefined) {
+            boxReset = newBoxModel();
+            this._boxReset = boxReset;
         }
-        const boxReset = this._boxReset;
         const applyReset = (attrs: string[], start: number) => {
             for (let i = 0; i < 4; i++) {
-                if (boxReset[attrs[i]] === 0) {
-                    boxReset[attrs[i]] = 1;
+                const name = attrs[i];
+                if (boxReset[name] === 0) {
+                    boxReset[name] = 1;
                     if (node) {
                         const key = CSS_SPACING_KEYS[i + start];
                         const attr = CSS_SPACING.get(key) as string;
@@ -993,25 +995,28 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public registerBox(region: number, node?: T) {
-        if (this._boxRegister === undefined) {
-            this._boxRegister = {};
+        let boxRegister = this._boxRegister;
+        if (boxRegister === undefined) {
+            boxRegister = {};
+            this._boxRegister = boxRegister;
         }
-        const register = this._boxRegister;
-        if (register[region] === undefined) {
-            register[region] = new Set();
+        let result = boxRegister[region];
+        if (result === undefined) {
+            result = new Set();
+            boxRegister[region] = result;
         }
         if (node) {
-            register[region].add(node);
+            result.add(node);
         }
-        return register[region];
+        return result;
     }
 
     public actualRect(direction: string, dimension = 'linear', all = false) {
-        const value = this[dimension][direction] as number;
+        const value: number = this[dimension][direction];
         if (this.inputElement || all) {
             const companion = this.companion;
             if (companion?.visible === false) {
-                const outer = companion[dimension][direction] as number;
+                const outer: number = companion[dimension][direction];
                 switch (direction) {
                     case 'top':
                     case 'left':
@@ -1150,7 +1155,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get naturalChild() {
-        return !!this._element?.parentElement;
+        const element = this._element;
+        return element ? element.parentElement !== null : false;
     }
 
     get pseudoElement() {
@@ -1375,23 +1381,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get onlyChild() {
-        const renderParent = this.renderParent;
-        if (renderParent) {
-            return renderParent.length === 1;
-        }
-        else {
-            const parent = this.parent;
-            if (parent && parent.id !== 0) {
-                return parent.length === 1;
-            }
-        }
-        return false;
+        const parent = this.renderParent || this.parent;
+        return parent !== undefined && parent.length === 1 && parent.id !== 0;
     }
 
     get textEmpty() {
         let result = this._cached.textEmpty;
         if (result === undefined) {
-            result = this.styleElement && (this.textContent === '' || !this.preserveWhiteSpace && !this.pseudoElement && this.textContent.trim() === '') && !this.imageElement && !this.svgElement && this.tagName !== 'HR';
+            if (this.styleElement && !this.imageElement && !this.svgElement && this.tagName !== 'HR') {
+                const value = this.textContent;
+                result = value === '' || !this.preserveWhiteSpace && !this.pseudoElement && value.trim() === '';
+            }
+            else {
+                result = false;
+            }
             this._cached.textEmpty = result;
         }
         return result;

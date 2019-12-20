@@ -20,8 +20,8 @@ type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-const REGEXP_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
-const REGEXP_DOUBLEQUOTE = /"/g;
+const REGEX_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
+const REGEX_DOUBLEQUOTE = /"/g;
 const FONT_ANDROID = {
     'sans-serif': BUILD_ANDROID.ICE_CREAM_SANDWICH,
     'sans-serif-thin': BUILD_ANDROID.JELLYBEAN,
@@ -148,7 +148,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (companion?.tagName === 'LABEL' && !companion.visible) {
                     node = companion as T;
                 }
-                fontFamily.replace(REGEXP_DOUBLEQUOTE, '').split(XML.SEPARATOR).some((value, index, array) => {
+                fontFamily.replace(REGEX_DOUBLEQUOTE, '').split(XML.SEPARATOR).some((value, index, array) => {
                     value = trimString(value, "'").toLowerCase();
                     let fontName = value;
                     let customFont = false;
@@ -454,7 +454,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             let parent = '';
             let items: StringValue[] | undefined;
             value.split('.').forEach((tag, index, array) => {
-                const match = REGEXP_TAGNAME.exec(tag);
+                const match = REGEX_TAGNAME.exec(tag);
                 if (match) {
                     const styleData = resourceMap[match[1].toUpperCase()][convertInt(match[2])];
                     if (styleData) {

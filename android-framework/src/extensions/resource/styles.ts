@@ -10,7 +10,7 @@ const { XML } = $lib.regex;
 const { capitalize, trimString } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-const REGEXP_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;
+const REGEX_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;
 
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
@@ -61,7 +61,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                             }
                             const common: string[] = [];
                             for (const attr of attrMap.keys()) {
-                                const match = REGEXP_ATTRIBUTE.exec(attr);
+                                const match = REGEX_ATTRIBUTE.exec(attr);
                                 if (match) {
                                     for (const item of renderChildren) {
                                         item.delete(match[1], match[2]);

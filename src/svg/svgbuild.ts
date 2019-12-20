@@ -8,7 +8,7 @@ const { isAngle, parseAngle } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = $lib.math;
 const { CHAR, STRING, XML } = $lib.regex;
-const { convertWord, hasBit, isString, replaceMap } = $lib.util;
+const { convertWord, hasBit, isString } = $lib.util;
 
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
@@ -28,8 +28,8 @@ type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
-const REGEXP_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
-const REGEXP_COMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
+const REGEX_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
+const REGEX_COMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
@@ -297,7 +297,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (commands.length) {
             let points = SvgBuild.getPathPoints(commands);
             if (points.length) {
-                const transformed = transforms && transforms.length > 0;
+                const transformed = !!transforms && transforms.length > 0;
                 if (transformed) {
                     points = SvgBuild.applyTransforms(<SvgTransform[]> transforms, points, parent && TRANSFORM.origin(parent.element));
                 }
@@ -407,11 +407,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static getPathCommands(value: string) {
-        REGEXP_COMMAND.lastIndex = 0;
+        value = value.trim();
         const result: SvgPathCommand[] = [];
         let match: RegExpExecArray | null;
-        value = value.trim();
-        while ((match = REGEXP_COMMAND.exec(value)) !== null) {
+        while ((match = REGEX_COMMAND.exec(value)) !== null) {
             if (result.length === 0 && match[1].toUpperCase() !== 'M') {
                 break;
             }
@@ -553,6 +552,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 });
             }
         }
+        REGEX_COMMAND.lastIndex = 0;
         return result;
     }
 
@@ -669,7 +669,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         }
                         case 'A': {
                             const pt = points.shift();
-                            if (pt?.rx !== undefined && pt.ry !== undefined) {
+                            if (pt) {
                                 coordinates[0] = pt.x;
                                 coordinates[1] = pt.y;
                                 item.radiusX = pt.rx;
@@ -769,13 +769,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 }
             }
             for (const pt of result) {
-                const x = pt.x;
-                pt.x = MATRIX.applyX(m, x, pt.y + y1) + x2;
-                pt.y = MATRIX.applyY(m, x + x1, pt.y) + y2;
-                if (item.type === SVGTransform.SVG_TRANSFORM_SCALE && pt.rx !== undefined && pt.ry !== undefined) {
-                    const rx = pt.rx;
-                    pt.rx = MATRIX.applyX(m, rx, pt.ry + y1);
-                    pt.ry = MATRIX.applyY(m, rx + x1, pt.ry);
+                const { x, y } = pt;
+                pt.x = MATRIX.applyX(m, x, y + y1) + x2;
+                pt.y = MATRIX.applyY(m, x + x1, y) + y2;
+                if (item.type === SVGTransform.SVG_TRANSFORM_SCALE) {
+                    const { rx, ry } = pt;
+                    if (rx !== undefined && ry !== undefined) {
+                        pt.rx = MATRIX.applyX(m, rx, ry + y1);
+                        pt.ry = MATRIX.applyY(m, rx + x1, ry);
+                    }
                 }
             }
         }
@@ -783,58 +785,62 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static convertTransforms(transform: SVGTransformList) {
-        const result: SvgTransform[] = [];
-        for (let i = 0; i < transform.numberOfItems; i++) {
-            const item = transform.getItem(i);
-            result.push(TRANSFORM.create(item.type, item.matrix, item.angle));
+        const length = transform.numberOfItems;
+        const result: SvgTransform[] = new Array(length);
+        for (let i = 0, k = 0; i < length; i++) {
+            const { type, matrix, angle } = transform.getItem(i);
+            result[k++] = TRANSFORM.create(type, matrix, angle);
         }
         return result;
     }
 
     public static clonePoints(values: SvgPoint[] | SVGPointList) {
-        const result: SvgPoint[] = [];
         if (Array.isArray(values)) {
-            for (const pt of values) {
-                const item: SvgPoint = { x: pt.x, y: pt.y };
-                if (pt.rx !== undefined && pt.ry !== undefined) {
-                    item.rx = pt.rx;
-                    item.ry = pt.ry;
+            const length = values.length;
+            const result: SvgPoint[] = new Array(length);
+            for (let i = 0, k = 0; i < length; i++) {
+                const { x, y, rx, ry } = values[i];
+                const item: SvgPoint = { x, y };
+                if (rx !== undefined && ry !== undefined) {
+                    item.rx = rx;
+                    item.ry = ry;
                 }
-                result.push(item);
+                result[k++] = item;
             }
+            return result;
         }
         else {
             const length = values.numberOfItems;
-            for (let i = 0; i < length; i++) {
-                const pt = values.getItem(i);
-                result.push({ x: pt.x, y: pt.y });
+            const result: SvgPoint[] = new Array(length);
+            for (let i = 0, k = 0; i < length; i++) {
+                const { x, y } = values.getItem(i);
+                result[k++] = { x, y };
             }
+            return result;
         }
-        return result;
     }
 
     public static minMaxPoints(values: Point[]) {
-        let minX = values[0].x;
-        let maxX = minX;
-        let minY = values[0].y;
-        let maxY = minY;
+        let { x, y } = values[0];
+        let maxX = x;
+        let maxY = y;
         const length = values.length;
         for (let i = 1; i < length; i++) {
             const pt = values[i];
-            if (pt.x < minX) {
-                minX = pt.x;
+            if (pt.x < x) {
+                x = pt.x;
             }
             else if (pt.x > maxX) {
                 maxX = pt.x;
             }
-            if (pt.y < minY) {
-                minY = pt.y;
+            if (pt.y < y) {
+                y = pt.y;
             }
             else if (pt.y > maxY) {
                 maxY = pt.y;
             }
         }
-        return [minX, minY, maxX, maxY];
+        return [x, y, maxX, maxY];
     }
 
     public static centerPoints(...values: SvgPoint[]): SvgPoint {
@@ -846,38 +852,42 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static convertPoints(values: number[]) {
-        const result: Point[] = [];
         const length = values.length;
         if (length % 2 === 0) {
-            for (let i = 0; i < length; i += 2) {
-                result.push({
+            const result: Point[] = new Array(length / 2);
+            for (let i = 0, k = 0; i < length; i += 2) {
+                result[k++] = {
                     x: values[i],
                     y: values[i + 1]
-                });
+                };
             }
+            return result;
         }
-        return result;
+        return [];
     }
 
     public static parsePoints(value: string) {
         const result: Point[] = [];
         for (const coords of value.trim().split(CHAR.SPACE)) {
-            const [x, y] = replaceMap<string, number>(coords.split(XML.SEPARATOR), pt => parseFloat(pt));
-            result.push({ x, y });
+            const points = coords.split(XML.SEPARATOR);
+            result.push({
+                x: parseFloat(points[0]),
+                y: parseFloat(points[1])
+            });
         }
         return result;
     }
 
     public static parseCoordinates(value: string) {
-        REGEXP_DECIMAL.lastIndex = 0;
         const result: number[] = [];
         let match: RegExpExecArray | null;
-        while ((match = REGEXP_DECIMAL.exec(value)) !== null) {
+        while ((match = REGEX_DECIMAL.exec(value)) !== null) {
             const coord = parseFloat(match[0]);
             if (!isNaN(coord)) {
                 result.push(coord);
             }
         }
+        REGEX_DECIMAL.lastIndex = 0;
         return result;
     }
 
@@ -887,6 +897,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(value), true));
         }
         const result = this.minMaxPoints(points);
-        return { top: result[1], right: result[2], bottom: result[3], left: result[0] };
+        return {
+            top: result[1],
+            right: result[2],
+            bottom: result[3],
+            left: result[0]
+        };
     }
 }

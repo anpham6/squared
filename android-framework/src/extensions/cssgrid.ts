@@ -21,8 +21,8 @@ const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_li
 
 const { CSS_GRID } = $base_lib.constant.EXT_NAME;
 
-const REGEXP_ALIGNSELF = /(start|end|center|baseline)/;
-const REGEXP_JUSTIFYSELF = /(start|left|center|right|end)/;
+const REGEX_ALIGNSELF = /(start|end|center|baseline)/;
+const REGEX_JUSTIFYSELF = /(start|left|center|right|end)/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
@@ -392,7 +392,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 return [cellStart, cellSpan];
             }
             const { alignSelf, justifySelf } = node.flexbox;
-            if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf)) {
+            if (REGEX_ALIGNSELF.test(alignSelf) || REGEX_JUSTIFYSELF.test(justifySelf)) {
                 renderAs = this.application.createNode();
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -470,7 +470,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 target.css('minHeight', formatPX(node.actualHeight), true);
             }
             else if (!target.hasPX('height') && !(row.length === 1 && mainData.alignContent === 'space-between')) {
-                if (!REGEXP_ALIGNSELF.test(mainData.alignItems)) {
+                if (!REGEX_ALIGNSELF.test(mainData.alignItems)) {
                     target.mergeGravity('layout_gravity', 'fill_vertical');
                 }
                 if (mainData.alignContent === 'normal' && parent.hasHeight && mainData.rowSpanMultiple.length === 0) {

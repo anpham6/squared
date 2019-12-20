@@ -2368,7 +2368,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const lengthA = baselineAlign.length;
                     if (baseline) {
                         baseline.baselineActive = true;
-                        if (lengthA) {
+                        if (lengthA > 0) {
                             adjustBaseline(baseline, baselineAlign);
                         }
                         else if (baseline.textElement && maxCenterHeight > baseline.actualHeight) {
@@ -2578,7 +2578,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         if (baseline) {
-            if (tallest !== baseline && tallest && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
+            if (tallest && tallest !== baseline && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
                 switch (tallest.verticalAlign) {
                     case 'middle':
                         baseline.anchorParent(STRING_ANDROID.VERTICAL, undefined, undefined, true);
@@ -2825,120 +2825,120 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || item.autoMargin.left === true);
             let aboveRowEnd: T | undefined;
             let currentRowBottom: T | undefined;
-            [floatingLeft, floatingRight].forEach(seg => {
+            const applyLayout = (seg: T[], reverse: boolean) => {
                 const lengthA = seg.length;
-                if (lengthA === 0) {
-                    return;
-                }
-                const reverse = seg === floatingRight;
-                const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
-                const rowStart = seg[0];
-                const rowEnd = seg[lengthA - 1];
-                rowStart.anchor(anchorStart, 'parent');
-                if (!floating && parent.css('textAlign') === 'center') {
-                    rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread');
-                }
-                else if (lengthA > 1) {
-                    if (reverse) {
-                        rowEnd.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', 1);
+                if (lengthA > 0) {
+                    const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
+                    const rowStart = seg[0];
+                    const rowEnd = seg[lengthA - 1];
+                    rowStart.anchor(anchorStart, 'parent');
+                    if (!floating && parent.css('textAlign') === 'center') {
+                        rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread');
                     }
-                    else {
-                        rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL);
-                    }
-                }
-                if (lengthA > 1 || rowEnd.autoMargin.leftRight) {
-                    rowEnd.anchor(anchorEnd, 'parent');
-                }
-                for (let j = 0; j < lengthA; j++) {
-                    const chain = seg[j];
-                    const previous = seg[j - 1];
-                    const next = seg[j + 1];
-                    if (i === 0) {
-                        if (length === 1) {
-                            chain.anchorParent(STRING_ANDROID.VERTICAL);
-                            if (!chain.autoMargin.topBottom) {
-                                chain.anchorStyle(STRING_ANDROID.VERTICAL, 'packed', chain.autoMargin.top ? 1 : 0);
-                            }
+                    else if (lengthA > 1) {
+                        if (reverse) {
+                            rowEnd.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', 1);
                         }
                         else {
-                            chain.anchor('top', 'parent');
+                            rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL);
                         }
                     }
-                    else if (!bottomFloating && i === length - 1) {
-                        chain.anchor('bottom', 'parent');
+                    if (lengthA > 1 || rowEnd.autoMargin.leftRight) {
+                        rowEnd.anchor(anchorEnd, 'parent');
                     }
-                    if (chain.autoMargin.leftRight) {
-                        chain.anchorParent(STRING_ANDROID.HORIZONTAL);
-                    }
-                    else {
-                        if (previous) {
-                            if (!previous.pageFlow && previous.positionAuto) {
-                                let found: T | undefined;
-                                for (let k = j - 2; k >= 0; k--) {
-                                    found = seg[k];
-                                    if (found.pageFlow) {
-                                        break;
-                                    }
-                                    else {
-                                        found = undefined;
-                                    }
-                                }
-                                if (found) {
-                                    chain.anchor(chainStart, found.documentId);
-                                }
-                                else {
-                                    chain.anchor(anchorStart, 'parent');
+                    for (let j = 0; j < lengthA; j++) {
+                        const chain = seg[j];
+                        const previous = seg[j - 1];
+                        const next = seg[j + 1];
+                        if (i === 0) {
+                            if (length === 1) {
+                                chain.anchorParent(STRING_ANDROID.VERTICAL);
+                                if (!chain.autoMargin.topBottom) {
+                                    chain.anchorStyle(STRING_ANDROID.VERTICAL, 'packed', chain.autoMargin.top ? 1 : 0);
                                 }
                             }
                             else {
-                                chain.anchor(chainStart, previous.documentId);
+                                chain.anchor('top', 'parent');
                             }
                         }
-                        if (next) {
-                            chain.anchor(chainEnd, next.documentId);
+                        else if (!bottomFloating && i === length - 1) {
+                            chain.anchor('bottom', 'parent');
                         }
-                    }
-                    Controller.setConstraintDimension(chain);
-                    if (floating) {
-                        if (i > 0 && j === 0) {
-                            let checkBottom = false;
-                            for (const item of previousSiblings) {
-                                if (Math.ceil(chain.linear.top) < Math.floor(item.linear.bottom)) {
-                                    checkBottom = true;
-                                    break;
-                                }
-                            }
-                            if (checkBottom) {
-                                aboveRowEnd = previousRow[previousRow.length - 1];
-                                for (let k = previousSiblings.length - 2; k >= 0; k--) {
-                                    const aboveBefore = previousSiblings[k];
-                                    if (aboveBefore.linear.bottom > aboveRowEnd.linear.bottom) {
-                                        if (reverse && Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(parent.box[anchorEnd]) < chain.linear.width) {
-                                            continue;
-                                        }
-                                        const adjacent = previousSiblings[k + 1];
-                                        chain.anchor(anchorStart, adjacent.documentId, true);
-                                        if (reverse) {
-                                            chain.modifyBox(BOX_STANDARD.MARGIN_RIGHT, -adjacent.marginRight, false);
+                        if (chain.autoMargin.leftRight) {
+                            chain.anchorParent(STRING_ANDROID.HORIZONTAL);
+                        }
+                        else {
+                            if (previous) {
+                                if (!previous.pageFlow && previous.positionAuto) {
+                                    let found: T | undefined;
+                                    for (let k = j - 2; k >= 0; k--) {
+                                        found = seg[k];
+                                        if (found.pageFlow) {
+                                            break;
                                         }
                                         else {
-                                            chain.modifyBox(BOX_STANDARD.MARGIN_LEFT, -adjacent.marginLeft, false);
+                                            found = undefined;
                                         }
-                                        rowStart.anchorDelete(chainEnd);
-                                        rowEnd.anchorDelete(anchorEnd);
-                                        rowStart.delete('app', 'layout_constraintHorizontal_chainStyle', 'layout_constraintHorizontal_bias');
-                                        if (currentRowBottom === undefined) {
-                                            currentRowBottom = chain;
-                                            bottomFloating = true;
-                                        }
+                                    }
+                                    if (found) {
+                                        chain.anchor(chainStart, found.documentId);
+                                    }
+                                    else {
+                                        chain.anchor(anchorStart, 'parent');
+                                    }
+                                }
+                                else {
+                                    chain.anchor(chainStart, previous.documentId);
+                                }
+                            }
+                            if (next) {
+                                chain.anchor(chainEnd, next.documentId);
+                            }
+                        }
+                        Controller.setConstraintDimension(chain);
+                        if (floating) {
+                            if (i > 0 && j === 0) {
+                                let checkBottom = false;
+                                for (const item of previousSiblings) {
+                                    if (Math.ceil(chain.linear.top) < Math.floor(item.linear.bottom)) {
+                                        checkBottom = true;
                                         break;
+                                    }
+                                }
+                                if (checkBottom) {
+                                    aboveRowEnd = previousRow[previousRow.length - 1];
+                                    for (let k = previousSiblings.length - 2; k >= 0; k--) {
+                                        const aboveBefore = previousSiblings[k];
+                                        if (aboveBefore.linear.bottom > aboveRowEnd.linear.bottom) {
+                                            if (reverse && Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(parent.box[anchorEnd]) < chain.linear.width) {
+                                                continue;
+                                            }
+                                            const adjacent = previousSiblings[k + 1];
+                                            chain.anchor(anchorStart, adjacent.documentId, true);
+                                            if (reverse) {
+                                                chain.modifyBox(BOX_STANDARD.MARGIN_RIGHT, -adjacent.marginRight, false);
+                                            }
+                                            else {
+                                                chain.modifyBox(BOX_STANDARD.MARGIN_LEFT, -adjacent.marginLeft, false);
+                                            }
+                                            rowStart.anchorDelete(chainEnd);
+                                            rowEnd.anchorDelete(anchorEnd);
+                                            rowStart.delete('app', 'layout_constraintHorizontal_chainStyle', 'layout_constraintHorizontal_bias');
+                                            if (currentRowBottom === undefined) {
+                                                currentRowBottom = chain;
+                                                bottomFloating = true;
+                                            }
+                                            break;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            });
+            };
+            applyLayout(floatingLeft, false);
+            applyLayout(floatingRight, true);
             if (floating) {
                 previousSiblings = previousSiblings.concat(floatingLeft, floatingRight);
             }

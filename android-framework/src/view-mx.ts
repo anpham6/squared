@@ -19,9 +19,9 @@ const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.
 
 type T = android.base.View;
 
-const REGEXP_DATASETATTR = /^attr[A-Z]/;
-const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
-const REGEXP_VALIDSTRING = /[^\w$\-_.]/g;
+const REGEX_DATASETATTR = /^attr[A-Z]/;
+const REGEX_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
+const REGEX_VALIDSTRING = /[^\w$\-_.]/g;
 
 function checkTextAlign(value: string, ignoreStart: boolean) {
     switch (value) {
@@ -257,7 +257,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public formatted(value: string, overwrite = true) {
-            const match = REGEXP_FORMATTED.exec(value);
+            const match = REGEX_FORMATTED.exec(value);
             if (match) {
                 this.attr(match[1] || '_', match[2], match[3], overwrite);
             }
@@ -570,7 +570,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public clone(id?: number, attributes = false, position = false): T {
+        public clone(id?: number, attributes = true, position = false): T {
             const node = new View(id || this.id, this.sessionId, this.element || undefined);
             node.localSettings = { ...this.localSettings };
             if (id !== undefined) {
@@ -595,6 +595,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             if (position) {
+                node.anchorClear();
                 const documentId = this.documentId;
                 if (node.anchor('left', documentId)) {
                     node.modifyBox(BOX_STANDARD.MARGIN_LEFT);
@@ -604,7 +605,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     node.modifyBox(BOX_STANDARD.MARGIN_TOP);
                     Object.assign(node.unsafe('boxAdjustment'), { marginTop: 0 });
                 }
-                node.anchorClear();
             }
             node.saveAsInitial();
             return node;
@@ -624,7 +624,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     const elementId = this.elementId;
                     const value = elementId !== '' ? elementId.trim() : getNamedItem(<HTMLElement> this.element, 'name');
                     if (value !== '') {
-                        name = value.replace(REGEXP_VALIDSTRING, '_').toLowerCase();
+                        name = value.replace(REGEX_VALIDSTRING, '_').toLowerCase();
                         if (name === 'parent' || RESERVED_JAVA.includes(name)) {
                             name = '_' + name;
                         }
@@ -965,11 +965,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             this.setLayoutHeight('match_parent');
                             adjustViewBounds = true;
                         }
-                        else if (this.imageElement) {
-                            height = this.toElementInt('naturalHeight');
-                        }
                         else {
-                            height = this.parseUnit(maxHeight, 'height');
+                            height = this.imageElement ? this.toElementInt('naturalHeight') : this.parseUnit(maxHeight, 'height');
                         }
                     }
                     else {
@@ -1428,7 +1425,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (this.styleElement) {
                 const dataset = getDataSet(<HTMLElement> this.element, 'android');
                 for (const namespace in dataset) {
-                    const name = namespace === 'attr' ? 'android' : (REGEXP_DATASETATTR.test(namespace) ? capitalize(namespace.substring(4), false) : '');
+                    const name = namespace === 'attr' ? 'android' : (REGEX_DATASETATTR.test(namespace) ? capitalize(namespace.substring(4), false) : '');
                     if (name !== '') {
                         for (const values of dataset[namespace].split(';')) {
                             const [key, value] = values.split('::');

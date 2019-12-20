@@ -219,8 +219,11 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         if (typeof callback === 'function') {
                             callback(result);
                         }
-                        if (result.system && this.userSettings.showErrorMessages) {
-                            alert(result.application + '\n\n' + result.system);
+                        if (this.userSettings.showErrorMessages) {
+                            const { application, system } = result;
+                            if (system) {
+                                alert(application + '\n\n' + system);
+                            }
                         }
                     }
                 })
@@ -262,8 +265,11 @@ export default abstract class File<T extends squared.base.Node> implements squar
                                 .then((response: Response) => response.blob())
                                 .then((blob: Blob) => File.downloadFile(blob, fromLastIndexOf(zipname, '/')));
                         }
-                        else if (result.system && this.userSettings.showErrorMessages) {
-                            alert(result.application + '\n\n' + result.system);
+                        else if (this.userSettings.showErrorMessages) {
+                            const { application, system } = result;
+                            if (system) {
+                                alert(application + '\n\n' + system);
+                            }
                         }
                     }
                 })

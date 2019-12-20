@@ -25,9 +25,9 @@ type ItemValue = {
 };
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-const REGEXP_FILENAME = /^(.+)\/(.+?\.\w+)$/;
-const REGEXP_DRAWABLE_UNIT = /"(-?[\d.]+)px"/g;
-const REGEXP_THEME_UNIT = />(-?[\d.]+)px</g;
+const REGEX_FILENAME = /^(.+)\/(.+?\.\w+)$/;
+const REGEX_DRAWABLE_UNIT = /"(-?[\d.]+)px"/g;
+const REGEX_THEME_UNIT = />(-?[\d.]+)px</g;
 
 function getFileAssets(items: string[]) {
     const length = items.length;
@@ -58,9 +58,9 @@ function getImageAssets(items: string[]) {
 
 const createFileAsset = (pathname: string, filename: string, content: string): FileAsset => ({ pathname, filename, content });
 
-const replaceDrawableLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEXP_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], dpi, false) + '"') : value;
+const replaceDrawableLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEX_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], dpi, false) + '"') : value;
 
-const replaceThemeLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEXP_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], dpi, false) + '<') : value;
+const replaceThemeLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEX_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], dpi, false) + '<') : value;
 
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
@@ -256,7 +256,7 @@ export default class File<T extends android.base.View> extends squared.base.File
             const { convertPixels, insertSpaces, manifestThemeName, resolutionDPI } = this.userSettings;
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of STORED.themes.entries()) {
-                const match = REGEXP_FILENAME.exec(filename);
+                const match = REGEX_FILENAME.exec(filename);
                 if (match) {
                     const item: ObjectMap<any[]> = { style: [] };
                     const itemArray = item.style;

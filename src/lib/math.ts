@@ -1,11 +1,11 @@
 import { CHAR } from './regex';
 
-const REGEXP_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
-const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
-const REGEXP_TRUNCATECACHE = {};
+const REGEX_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
+const REGEX_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+const REGEX_TRUNCATECACHE = {};
 
 function convertDecimalNotation(value: number) {
-    const match = REGEXP_DECIMALNOTATION.exec(value.toString());
+    const match = REGEX_DECIMALNOTATION.exec(value.toString());
     if (match) {
         return parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0';
     }
@@ -63,7 +63,7 @@ export function truncate(value: number | string, precision = 3) {
 
 export function truncateFraction(value: number) {
     if (value !== Math.floor(value)) {
-        const match = REGEXP_TRUNCATE.exec(convertDecimalNotation(value));
+        const match = REGEX_TRUNCATE.exec(convertDecimalNotation(value));
         if (match) {
             const trailing = match[2];
             if (trailing === '') {
@@ -82,10 +82,10 @@ export function truncateTrailingZero(value: string) {
 }
 
 export function truncateString(value: string, precision = 3) {
-    let pattern = REGEXP_TRUNCATECACHE[precision];
+    let pattern = REGEX_TRUNCATECACHE[precision];
     if (pattern === undefined) {
         pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
-        REGEXP_TRUNCATECACHE[precision] = pattern;
+        REGEX_TRUNCATECACHE[precision] = pattern;
     }
     else {
         pattern.lastIndex = 0;

@@ -22,7 +22,7 @@ interface AttributeData extends NumberValue {
 }
 
 const STRING_CUBICBEZIER = 'cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)';
-const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
+const REGEX_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
 const KEYFRAME_MAP = getKeyframeRules();
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
@@ -37,12 +37,12 @@ const ANIMATION_DEFAULT = {
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
-        REGEXP_TIMINGFUNCTION.lastIndex = 0;
         const result: string[] = [];
         let match: RegExpMatchArray | null;
-        while ((match = REGEXP_TIMINGFUNCTION.exec(value)) !== null) {
+        while ((match = REGEX_TIMINGFUNCTION.exec(value)) !== null) {
             result.push(match[1]);
         }
+        REGEX_TIMINGFUNCTION.lastIndex = 0;
         return result;
     }
     else {
@@ -227,7 +227,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             for (const transform of sortAttribute(attrMap['transform'])) {
                                 const transforms = TRANSFORM.parse(element, transform.value);
                                 if (transforms) {
-                                    const origin = getKeyframeOrigin(transform.key);
+                                    const key = transform.key;
+                                    const origin = getKeyframeOrigin(key);
                                     for (const item of transforms) {
                                         const m = item.matrix;
                                         let name: string;
@@ -241,7 +242,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             case SVGTransform.SVG_TRANSFORM_SCALE:
                                                 name = 'scale';
                                                 value = m.a + ' ' + m.d + ' ' + (origin ? origin.x + ' ' + origin.y : '0 0');
-                                                if (origin && (transform.key !== 0 || origin.x !== 0 || origin.y !== 0)) {
+                                                if (origin && (key !== 0 || origin.x !== 0 || origin.y !== 0)) {
                                                     transformOrigin = {
                                                         x: origin.x * (1 - m.a),
                                                         y: origin.y * (1 - m.d)
@@ -255,7 +256,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             case SVGTransform.SVG_TRANSFORM_SKEWX:
                                                 name = 'skewX';
                                                 value = item.angle.toString();
-                                                if (origin && (transform.key !== 0 || origin.y !== 0)) {
+                                                if (origin && (key !== 0 || origin.y !== 0)) {
                                                     transformOrigin = {
                                                         x: origin.y * m.c * -1,
                                                         y: 0
@@ -265,7 +266,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             case SVGTransform.SVG_TRANSFORM_SKEWY:
                                                 name = 'skewY';
                                                 value = item.angle.toString();
-                                                if (origin && (transform.key !== 0 || origin.x !== 0)) {
+                                                if (origin && (key !== 0 || origin.x !== 0)) {
                                                     transformOrigin = {
                                                         x: 0,
                                                         y: origin.x * m.b * -1
@@ -280,7 +281,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             attrData = [];
                                             attrMap[name] = attrData;
                                         }
-                                        const index = attrData.findIndex(previous => previous.key === transform.key);
+                                        const index = attrData.findIndex(previous => previous.key === key);
                                         if (index !== -1) {
                                             const indexData = attrData[index];
                                             indexData.value = value;
@@ -288,7 +289,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         }
                                         else {
                                             attrData.push({
-                                                key: transform.key,
+                                                key,
                                                 value,
                                                 transformOrigin
                                             });
@@ -510,24 +511,30 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this._name = value;
         }
         get name() {
-            if (this._name === undefined) {
-                this._name = SvgBuild.setName(this.element);
+            let result = this._name;
+            if (result === undefined) {
+                result = SvgBuild.setName(this.element);
+                this._name = result;
             }
-            return this._name;
+            return result;
         }
 
         get transforms() {
-            if (this._transforms === undefined) {
-                this._transforms = this.getTransforms();
+            let result = this._transforms;
+            if (result === undefined) {
+                result = this.getTransforms();
+                this._transforms = result;
             }
-            return this._transforms;
+            return result;
         }
 
         get animations() {
-            if (this._animations === undefined) {
-                this._animations = this.getAnimations();
+            let result = this._animations;
+            if (result === undefined) {
+                result = this.getAnimations();
+                this._animations = result;
             }
-            return this._animations;
+            return result;
         }
 
         get visible() {

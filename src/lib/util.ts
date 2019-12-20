@@ -14,7 +14,6 @@ export function capitalize(value: string, upper = true) {
 }
 
 export function capitalizeString(value: string) {
-    XML.BREAKWORD_G.lastIndex = 0;
     const result = value.split('');
     let match: RegExpMatchArray | null;
     while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
@@ -23,11 +22,11 @@ export function capitalizeString(value: string) {
             result[index] = match[1].charAt(0).toUpperCase();
         }
     }
+    XML.BREAKWORD_G.lastIndex = 0;
     return result.join('');
 }
 
 export function lowerCaseString(value: string) {
-    XML.BREAKWORD_G.lastIndex = 0;
     let result = value;
     let match: RegExpMatchArray | null;
     while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
@@ -39,6 +38,7 @@ export function lowerCaseString(value: string) {
             }
         }
     }
+    XML.BREAKWORD_G.lastIndex = 0;
     return result;
 }
 

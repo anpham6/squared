@@ -10,7 +10,7 @@ const $lib = squared.lib;
 const { truncate } = $lib.math;
 const { isPlainObject } = $lib.util;
 
-const REGEXP_ID = /^@\+?id\//;
+const REGEX_ID = /^@\+?id\//;
 
 function calculateBias(start: number, end: number, accuracy = 4) {
     if (start === 0) {
@@ -39,7 +39,7 @@ export function convertLength(value: string, dpi = 160, font = false, precision 
 }
 
 export function getDocumentId(value: string) {
-    return value.replace(REGEXP_ID, '');
+    return value.replace(REGEX_ID, '');
 }
 
 export function getHorizontalBias(node: View) {

@@ -277,16 +277,15 @@ export function validMediaRule(value: string, fontSize?: number) {
             case 'only screen':
                 return true;
             default: {
-                if (CACHE_PATTERN.MEDIA_RULE) {
-                    CACHE_PATTERN.MEDIA_RULE.lastIndex = 0;
-                }
-                else {
+                if (CACHE_PATTERN.MEDIA_RULE === undefined) {
                     CACHE_PATTERN.MEDIA_RULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
                     CACHE_PATTERN.MEDIA_CONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
                 }
+                else {
+                    CACHE_PATTERN.MEDIA_RULE.lastIndex = 0;
+                }
                 let match: RegExpExecArray | null;
                 while ((match = CACHE_PATTERN.MEDIA_RULE.exec(value)) !== null) {
-                    CACHE_PATTERN.MEDIA_CONDITION.lastIndex = 0;
                     const negate = match[1] === 'not';
                     let subMatch: RegExpExecArray | null;
                     let valid = false;
@@ -373,6 +372,7 @@ export function validMediaRule(value: string, fontSize?: number) {
                             break;
                         }
                     }
+                    CACHE_PATTERN.MEDIA_CONDITION.lastIndex = 0;
                     if (!negate && valid || negate && !valid) {
                         return true;
                     }

@@ -8,8 +8,8 @@ type XMLTagData = {
     closing: boolean;
 };
 
-const REGEXP_INDENT = /^(\t+)(.*)$/;
-const REGEXP_FORMAT = {
+const REGEX_INDENT = /^(\t+)(.*)$/;
+const REGEX_FORMAT = {
     ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
     OPENTAG: /\s*>$/,
     CLOSETAG: /\/>\n*$/,
@@ -78,7 +78,7 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
     if (spaces > 0) {
         if (preserve) {
             return joinMap(value.split('\n'), line => {
-                const match = REGEXP_INDENT.exec(line);
+                const match = REGEX_INDENT.exec(line);
                 if (match) {
                     return ' '.repeat(spaces * match[1].length) + match[2];
                 }
@@ -180,7 +180,7 @@ export function applyTemplate(tagName: string, template: ExternalData, children:
 export function formatTemplate(value: string, closeEmpty = true, startIndent = -1, char = '\t') {
     const lines: XMLTagData[] = [];
     let match: RegExpExecArray | null;
-    while ((match = REGEXP_FORMAT.ITEM.exec(value)) !== null) {
+    while ((match = REGEX_FORMAT.ITEM.exec(value)) !== null) {
         lines.push({
             tag: match[1],
             closing: !!match[2],
@@ -200,11 +200,11 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
             }
             else {
                 previous++;
-                if (!REGEXP_FORMAT.CLOSETAG.exec(line.tag)) {
+                if (!REGEX_FORMAT.CLOSETAG.exec(line.tag)) {
                     if (closeEmpty && line.value.trim() === '') {
                         const next = lines[i + 1];
                         if (next?.closing && next.tagName === line.tagName) {
-                            line.tag = line.tag.replace(REGEXP_FORMAT.OPENTAG, ' />');
+                            line.tag = line.tag.replace(REGEX_FORMAT.OPENTAG, ' />');
                             i++;
                         }
                         else {
@@ -233,7 +233,7 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
 
 export function replaceCharacterData(value: string, tab = false) {
     value = value
-        .replace(REGEXP_FORMAT.NBSP, '&#160;')
+        .replace(REGEX_FORMAT.NBSP, '&#160;')
         .replace(ESCAPE.NONENTITY, '&amp;');
     const length = value.length;
     const char = new Array(length);

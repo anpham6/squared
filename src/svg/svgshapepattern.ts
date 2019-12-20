@@ -38,11 +38,10 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     public build(options?: SvgBuildOptions) {
         const element = options?.element || <SVGGeometryElement> this.element;
         const path = new SvgPath(element);
-        path.build(options);
+        path.build({ ...options });
         const pathValue = path.value;
         if (pathValue) {
             const precision = options?.precision;
-            options = { ...options };
             this.clipRegion = pathValue;
             if (path.clipPath) {
                 this.clipRegion = path.clipPath;
@@ -82,7 +81,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 do {
                     const x = boundingX + i * tileWidth - offsetX;
                     const pattern = new SvgPattern(element, patternElement);
-                    pattern.build(options);
+                    pattern.build({ ...options });
                     for (const item of pattern.cascade()) {
                         if (SvgBuild.isShape(item)) {
                             item.setPath();
@@ -95,8 +94,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                                 else {
                                     patternPath.refitBaseValue(x, y, precision);
                                 }
-                                options.transforms = item.transforms;
-                                patternPath.build(options);
+                                patternPath.build({ ...options, transforms: item.transforms });
                                 patternPath.fillOpacity = (parseFloat(patternPath.fillOpacity) * parseFloat(fillOpacity)).toString();
                                 patternPath.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (patternPath.clipPath !== '' ? ';' + patternPath.clipPath : '');
                             }
@@ -203,38 +201,34 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
 
     get offsetX() {
         const baseVal = this.patternElement.x.baseVal;
-        let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            value = this.patternWidth * getPercent(baseVal.valueAsString);
+            return this.patternWidth * getPercent(baseVal.valueAsString);
         }
-        return value || baseVal.value;
+        return baseVal.value;
     }
 
     get offsetY() {
         const baseVal = this.patternElement.y.baseVal;
-        let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            value = this.patternHeight * getPercent(baseVal.valueAsString);
+            return this.patternHeight * getPercent(baseVal.valueAsString);
         }
-        return value || baseVal.value;
+        return baseVal.value;
     }
 
     get tileWidth() {
         const baseVal = this.patternElement.width.baseVal;
-        let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            value = this.patternWidth * getPercent(baseVal.valueAsString);
+            return this.patternWidth * getPercent(baseVal.valueAsString);
         }
-        return value || baseVal.value;
+        return baseVal.value;
     }
 
     get tileHeight() {
         const baseVal = this.patternElement.height.baseVal;
-        let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            value = this.patternHeight * getPercent(baseVal.valueAsString);
+            return this.patternHeight * getPercent(baseVal.valueAsString);
         }
-        return value || baseVal.value;
+        return baseVal.value;
     }
 
     get instanceType() {

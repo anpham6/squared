@@ -77,7 +77,8 @@ function convertToFraction(values: TimelineEntries) {
     const length = values.length;
     const timeTotal = values[length - 1][0];
     for (let i = 0; i < length; i++) {
-        let fraction = values[i][0] / timeTotal;
+        const item = values[i];
+        let fraction = item[0] / timeTotal;
         if (fraction > 0) {
             for (let j = 7; ; j++) {
                 const value = parseFloat(fraction.toString().substring(0, j));
@@ -87,7 +88,7 @@ function convertToFraction(values: TimelineEntries) {
                 }
             }
         }
-        values[i][0] = fraction;
+        item[0] = fraction;
         previous.add(fraction);
     }
     return values;
@@ -108,7 +109,7 @@ function convertToAnimateValue(value: AnimateValue, fromString = false) {
     return fromString && typeof value === 'string' ? '' : value;
 }
 
-function getForwardValue(items: ForwardValue[], time: number) {
+function getForwardValue(items: ForwardValue[] | undefined, time: number) {
     let value: AnimateValue | undefined;
     if (items) {
         for (const item of items) {
@@ -222,10 +223,7 @@ function getLinePoints(values: number[]): Point[] {
 }
 
 function getRectPoints(values: number[]): Point[] {
-    const width = values[0];
-    const height = values[1];
-    const x = values[2];
-    const y = values[3];
+    const [width, height, x, y] = values;
     return [
         { x, y },
         { x: x + width, y },
@@ -239,11 +237,8 @@ function createKeyTimeMap(map: TimelineMap, keyTimes: number[], forwardMap: Forw
     for (const keyTime of keyTimes) {
         const values = new Map<string, AnimateValue>();
         for (const attr in map) {
-            let value: AnimateValue | undefined;
-            if (map[attr].has(keyTime)) {
-                value = <AnimateValue> map[attr].get(keyTime);
-            }
-            else {
+            let value: AnimateValue | undefined = map[attr].get(keyTime);
+            if (value === undefined) {
                 value = getForwardValue(forwardMap[attr], keyTime);
             }
             if (value !== undefined) {
@@ -273,21 +268,21 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
             if (item.additiveSum && typeof baseValue === 'string') {
                 const baseArray = replaceMap<string, number>(baseValue.split(CHAR.SPACE), value => parseFloat(value));
                 const valuesArray = objectMap<string, number[]>(values, value => replaceMap<string, number>(value.trim().split(CHAR.SPACE), pt => parseFloat(pt)));
-                const lengthA = baseArray.length;
-                if (valuesArray.every(value => value.length === lengthA)) {
+                const length = baseArray.length;
+                if (valuesArray.every(value => value.length === length)) {
                     const result = valuesArray[index];
                     if (!item.accumulateSum) {
                         iteration = 0;
                     }
-                    for (let i = 0; i < lengthA; i++) {
+                    for (let i = 0; i < length; i++) {
                         result[i] += baseArray[i];
                     }
-                    const lengthB = valuesArray.length;
+                    const lengthA = valuesArray.length;
                     for (let i = 0; i < iteration; i++) {
-                        for (let j = 0; j < lengthB; j++) {
+                        for (let j = 0; j < lengthA; j++) {
                             const value = valuesArray[j];
-                            const lengthC = value.length;
-                            for (let k = 0; k < lengthC; k++) {
+                            const lengthB = value.length;
+                            for (let k = 0; k < lengthB; k++) {
                                 result[k] += value[k];
                             }
                         }
@@ -342,9 +337,11 @@ function getItemSplitValue(fraction: number, previousFraction: number, previousV
         else if (Array.isArray(previousValue) && Array.isArray(nextValue)) {
             const result: Point[] = [];
             for (let i = 0; i < Math.min(previousValue.length, nextValue.length); i++) {
+                const previous = previousValue[i];
+                const next = nextValue[i];
                 result.push({
-                    x: getItemSplitValue(fraction, previousFraction, previousValue[i].x, nextFraction, nextValue[i].x) as number,
-                    y: getItemSplitValue(fraction, previousFraction, previousValue[i].y, nextFraction, nextValue[i].y) as number
+                    x: getItemSplitValue(fraction, previousFraction, previous.x, nextFraction, next.x) as number,
+                    y: getItemSplitValue(fraction, previousFraction, previous.y, nextFraction, next.y) as number
                 });
             }
             return result;
@@ -360,13 +357,7 @@ function insertSplitValue(item: SvgAnimate, actualTime: number, baseValue: Anima
     }
     const duration = item.duration;
     const offset = actualTime - (delay + duration * iteration);
-    let fraction: number;
-    if (offset === 0) {
-        fraction = index === 0 ? 0 : 1;
-    }
-    else {
-        fraction = clampRange(offset / duration);
-    }
+    const fraction = offset === 0 ? (index === 0 ? 0 : 1) : clampRange(offset / duration);
     let previousIndex = -1;
     let nextIndex = -1;
     const length = keyTimes.length;
@@ -453,7 +444,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, item: SvgAnimate, s
                                         keyTimes.push(resultTime);
                                         values.push(splitValue);
                                         if (keySplines) {
-                                            keySplines.push(joined && sub.keySplines && sub.keySplines[k] || '');
+                                            keySplines.push(joined && sub.keySplines?.[k] || '');
                                         }
                                     }
                                 }
@@ -525,7 +516,7 @@ function insertInterpolator(item: SvgAnimate, time: number, keySplines: string[]
         }
         index--;
     }
-    const value = keySplines && keySplines[index];
+    const value = keySplines?.[index];
     if (value) {
         map.set(time, value);
     }
@@ -554,9 +545,9 @@ function getStartItemValues(map: SvgAnimationIntervalMap, item: SvgAnimate, base
 
 function setTransformOrigin(map: TransformOriginMap, item: SvgAnimate, time: number, index: number) {
     if (SvgBuild.asAnimateTransform(item)) {
-        const transformOrigin = item.transformOrigin;
-        if (transformOrigin && transformOrigin[index]) {
-            map.set(time, transformOrigin[index]);
+        const point = item.transformOrigin?.[index];
+        if (point) {
+            map.set(time, point);
         }
     }
 }
@@ -757,14 +748,16 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     let repeatingDuration = 0;
                     for (const item of staggered) {
                         const attr = item.attributeName;
-                        if (groupName[attr] === undefined) {
-                            groupName[attr] = new Map<number, SvgAnimate[]>();
+                        let groupData = groupName[attr];
+                        if (groupData === undefined) {
+                            groupData = new Map<number, SvgAnimate[]>();
+                            groupName[attr] = groupData;
                             groupAttributeMap[attr] = [];
                         }
-                        const group = groupName[attr].get(item.delay) || [];
+                        const group = groupData.get(item.delay) || [];
                         group.push(item);
                         groupAttributeMap[attr].push(item);
-                        groupName[attr].set(item.delay, group);
+                        groupData.set(item.delay, group);
                     }
                     for (const attr in groupName) {
                         const groupDelay = new Map<number, SvgAnimate[]>();
@@ -796,7 +789,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     let infiniteResult: KeyTimeMap | undefined;
                     function getForwardItem(attr: string): ForwardValue | undefined {
                         const map = forwardMap[attr];
-                        return map && map[map.length - 1];
+                        return map?.[map.length - 1];
                     }
                     for (const attr in groupName) {
                         const baseMap = new Map<number, AnimateValue>();
@@ -840,11 +833,10 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             previousComplete = item;
                             if (item.fillForwards) {
                                 setFreezeValue(actualMaxTime, baseValue, item.type, item);
-                                const group = item.group;
-                                if (group.ordering) {
+                                const { name, ordering } = item.group;
+                                if (ordering) {
                                     const duration = item.getTotalDuration();
-                                    const name = group.name;
-                                    for (const previous of group.ordering) {
+                                    for (const previous of ordering) {
                                         if (previous.name === name) {
                                             return true;
                                         }
@@ -905,15 +897,16 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 setterData,
                                 set => set.delay >= delayTime && set.delay < endTime,
                                 (set: SvgAnimate) => {
+                                    const to = set.to;
                                     if (set.animationElement) {
                                         removeIncomplete();
                                     }
                                     if (incomplete.length === 0) {
-                                        baseValue = set.to;
+                                        baseValue = to;
                                     }
-                                    setFreezeValue(set.delay, set.to, set.type, set);
+                                    setFreezeValue(set.delay, to, set.type, set);
                                     if (set.delay === delayTime) {
-                                        replaceValue = transforming ? set.to : convertToAnimateValue(set.to);
+                                        replaceValue = transforming ? to : convertToAnimateValue(to);
                                     }
                                     else {
                                         maxTime = setSetterValue(set);
@@ -933,14 +926,14 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         if (previous.fillForwards) {
                                             setFreezeValue(previous.getTotalDuration(), previous.valueTo, previous.type, previous);
                                             if (delayIndex !== undefined && itemIndex !== undefined) {
-                                                const lengthA = groupDelay.length;
-                                                for (let i = delayIndex; i < lengthA; i++) {
+                                                const length = groupDelay.length;
+                                                for (let i = delayIndex; i < length; i++) {
                                                     if (i !== delayIndex) {
                                                         itemIndex = -1;
                                                     }
                                                     const data = groupData[i];
-                                                    const lengthB = data.length;
-                                                    for (let j = itemIndex + 1; j < lengthB; j++) {
+                                                    const lengthA = data.length;
+                                                    for (let j = itemIndex + 1; j < lengthA; j++) {
                                                         const next = data[j];
                                                         if (previous.group.id > next.group.id) {
                                                             next.addState(SYNCHRONIZE_STATE.COMPLETE);
@@ -987,10 +980,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                             const forwardItem = getForwardItem(attr);
                             if (value !== '' && (forwardItem === undefined || time >= forwardItem.time)) {
-                                if (forwardMap[attr] === undefined) {
-                                    forwardMap[attr] = [];
+                                let map = forwardMap[attr];
+                                if (map === undefined) {
+                                    map = [];
+                                    forwardMap[attr] = map;
                                 }
-                                forwardMap[attr].push({
+                                map.push({
                                     key: type,
                                     value,
                                     time
@@ -1027,14 +1022,15 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         }
                         function removeInvalid(items: SvgAnimation[]) {
                             for (let i = 0; i < groupDelay.length; i++) {
+                                const data = groupData[i];
                                 if (items.length) {
-                                    for (let j = 0; j < groupData[i].length; j++) {
-                                        if (items.includes(groupData[i][j])) {
-                                            groupData[i].splice(j--, 1);
+                                    for (let j = 0; j < data.length; j++) {
+                                        if (items.includes(data[j])) {
+                                            data.splice(j--, 1);
                                         }
                                     }
                                 }
-                                if (groupData[i].length === 0) {
+                                if (data.length === 0) {
                                     groupData.splice(i, 1);
                                     groupDelay.splice(i--, 1);
                                 }
@@ -1058,11 +1054,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             const totalDuration = backwards.getTotalDuration();
                             const removeable: SvgAnimate[] = [];
                             for (let i = 0; i < groupDelay.length; i++) {
-                                for (let j = 0; j < groupData[i].length; j++) {
-                                    const item = groupData[i][j];
+                                const data = groupData[i];
+                                for (let j = 0; j < data.length; j++) {
+                                    const item = data[j];
                                     if (playing) {
                                         if (item === backwards && (i !== 0 || j !== 0)) {
-                                            groupData[i].splice(j--, 1);
+                                            data.splice(j--, 1);
                                             groupDelay.unshift(backwards.delay);
                                             groupData.unshift([backwards]);
                                             continue;
@@ -1077,7 +1074,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                     }
                                     if (item.animationElement && item.delay <= backwards.delay) {
-                                        groupData[i].splice(j--, 1);
+                                        data.splice(j--, 1);
                                         queueIncomplete(item);
                                     }
                                 }
@@ -1086,11 +1083,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             backwards.addState(SYNCHRONIZE_STATE.BACKWARDS);
                         }
                         if (!transforming) {
-                            if (forwardMap[attr] === undefined && baseValueMap[attr] !== undefined) {
-                                setFreezeValue(0, baseValueMap[attr], 0);
+                            const value = baseValueMap[attr];
+                            if (forwardMap[attr] === undefined && value !== undefined) {
+                                setFreezeValue(0, value, 0);
                             }
                             if (baseValue === undefined) {
-                                baseValue = getForwardItem(attr)?.value || baseValueMap[attr];
+                                baseValue = getForwardItem(attr)?.value || value;
                             }
                         }
                         sortSetterData();
@@ -1109,13 +1107,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             const previousTime = set.delay - 1;
                                             if (previous === undefined) {
                                                 if (!baseMap.has(0)) {
-                                                    let value: AnimateValue | undefined;
-                                                    if (transforming && SvgBuild.isAnimateTransform(set)) {
-                                                        value = TRANSFORM.typeAsValue(set.type);
-                                                    }
-                                                    else {
-                                                        value = baseValueMap[attr];
-                                                    }
+                                                    const value: AnimateValue | undefined = transforming && SvgBuild.isAnimateTransform(set) ? TRANSFORM.typeAsValue(set.type) : baseValueMap[attr];
                                                     if (value !== undefined) {
                                                         setSetterValue(set, 0, value);
                                                         setSetterValue(set, previousTime, value);
@@ -1140,12 +1132,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                         }
                         attributeEnd: {
-                            const lengthA = groupDelay.length;
-                            for (let i = 0; i < lengthA; i++) {
-                                const dataA = groupData[i];
+                            const length = groupDelay.length;
+                            for (let i = 0; i < length; i++) {
+                                const data = groupData[i];
                                 let delay = groupDelay[i];
-                                for (let j = 0; j < dataA.length; j++) {
-                                    const item = dataA[j];
+                                for (let j = 0; j < data.length; j++) {
+                                    const item = data[j];
                                     if (item.hasState(SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID)) {
                                         continue;
                                     }
@@ -1200,10 +1192,10 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                         if (checkDelay) {
                                             nextDelay: {
-                                                for (let k = i + 1; k < lengthA; k++) {
+                                                for (let k = i + 1; k < length; k++) {
                                                     const dataB = groupData[k];
-                                                    const lengthB = dataB.length;
-                                                    for (let l = 0; l < lengthB; l++) {
+                                                    const lengthA = dataB.length;
+                                                    for (let l = 0; l < lengthA; l++) {
                                                         const next = dataB[l];
                                                         if (next.group.ordering) {
                                                             nextDelayTime = next.delay;
@@ -1226,11 +1218,11 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                     }
                                     else {
-                                        for (let k = i + 1; k < lengthA; k++) {
+                                        for (let k = i + 1; k < length; k++) {
                                             const value = groupDelay[k];
                                             if (value !== Number.POSITIVE_INFINITY) {
-                                                const data = groupData[k];
-                                                if (data.length && !data.every(next => next.hasState(SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID))) {
+                                                const dataA = groupData[k];
+                                                if (dataA.length && !dataA.every(next => next.hasState(SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID))) {
                                                     nextDelayTime = value;
                                                     break;
                                                 }
@@ -1290,10 +1282,10 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 let keySplines: string[] | undefined;
                                                 if (item.partialType) {
                                                     if (item.getIntervalEndTime(actualMaxTime) < maxThreadTime && (incomplete.length || j < groupData[i].length - 1)) {
-                                                        for (let l = j + 1; l < dataA.length; l++) {
-                                                            queueIncomplete(dataA[l]);
+                                                        for (let l = j + 1; l < data.length; l++) {
+                                                            queueIncomplete(data[l]);
                                                         }
-                                                        dataA.length = 0;
+                                                        data.length = 0;
                                                         sortIncomplete();
                                                         [keyTimes, values, keySplines] = appendPartialKeyTimes(intervalMap, item, actualMaxTime, maxThreadTime, values, baseValue, incomplete);
                                                     }
@@ -1306,8 +1298,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                     keyTimes = item.keyTimes;
                                                     keySplines = item.keySplines;
                                                 }
-                                                const lengthB = keyTimes.length;
-                                                for (let l = 0; l < lengthB; l++) {
+                                                const lengthA = keyTimes.length;
+                                                for (let l = 0; l < lengthA; l++) {
                                                     const keyTime = keyTimes[l];
                                                     let time = -1;
                                                     let value = getItemValue(item, values, k, l, baseValue);
@@ -1315,14 +1307,14 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                         if (iterationFraction === keyTime) {
                                                             iterationFraction = -1;
                                                         }
-                                                        else if (l === lengthB - 1) {
+                                                        else if (l === lengthA - 1) {
                                                             time = totalDuration;
                                                             actualMaxTime = time;
                                                             value = getItemSplitValue(iterationFraction, keyTimes[l - 1], getItemValue(item, values, k, l - 1, baseValue), keyTime, value);
                                                             iterationFraction = -1;
                                                         }
                                                         else if (iterationFraction > keyTime) {
-                                                            for (let m = l + 1; m < lengthB; m++) {
+                                                            for (let m = l + 1; m < lengthA; m++) {
                                                                 if (iterationFraction <= keyTimes[m]) {
                                                                     time = totalDuration;
                                                                     actualMaxTime = time;
@@ -1339,7 +1331,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                             continue;
                                                         }
                                                         if (time === maxThreadTime) {
-                                                            complete = k === iterationTotal - 1 && l === lengthB - 1;
+                                                            complete = k === iterationTotal - 1 && l === lengthA - 1;
                                                             actualMaxTime = time;
                                                         }
                                                         else {
@@ -1457,11 +1449,11 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         if (!infinite && checkComplete(item, nextDelayTime)) {
                                             break attributeEnd;
                                         }
-                                        for (let k = i; k < lengthA; k++) {
+                                        for (let k = i; k < length; k++) {
                                             if (groupDelay[k] < actualMaxTime) {
-                                                const dataB = groupData[k];
-                                                for (let l = 0; l < dataB.length; l++) {
-                                                    const next = dataB[l];
+                                                const dataA = groupData[k];
+                                                for (let l = 0; l < dataA.length; l++) {
+                                                    const next = dataA[l];
                                                     const nextDuration = next.getTotalDuration();
                                                     if (nextDuration > actualMaxTime && !next.hasState(SYNCHRONIZE_STATE.INTERRUPTED, SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID)) {
                                                         queueIncomplete(next);
@@ -1471,7 +1463,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                     }
                                                 }
                                                 groupDelay[k] = Number.POSITIVE_INFINITY;
-                                                dataB.length = 0;
+                                                dataA.length = 0;
                                             }
                                         }
                                         if (incomplete.length && actualMaxTime < nextDelayTime) {
@@ -1496,8 +1488,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 sortIncomplete();
                                 while (incomplete.length) {
                                     const item = <SvgAnimate> incomplete.shift();
-                                    const delay = item.delay;
-                                    const duration = item.duration;
+                                    const { delay, duration } = item;
                                     const durationTotal = maxTime - delay;
                                     let maxThreadTime = Number.POSITIVE_INFINITY;
                                     function insertKeyTimes() {
@@ -1514,16 +1505,15 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             checkPartialKeyTimes(keyTimes, values, keySplines, baseValueMap[attr]);
                                         }
                                         else {
-                                            keyTimes = item.keyTimes;
-                                            keySplines = item.keySplines;
+                                            ({ keyTimes, keySplines } = item);
                                         }
                                         const startTime = maxTime + 1;
                                         let j = Math.floor(durationTotal / duration);
                                         let joined = false;
                                         const insertIntermediateValue = (time: number, index: number) => insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, j, index, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                         do {
-                                            const lengthC = keyTimes.length;
-                                            for (let k = 0; k < lengthC; k++) {
+                                            const lengthA = keyTimes.length;
+                                            for (let k = 0; k < lengthA; k++) {
                                                 let time = getItemTime(delay, duration, keyTimes, j, k);
                                                 if (!joined && time >= maxTime) {
                                                     [maxTime, baseValue] = insertIntermediateValue(maxTime, k);
@@ -1616,14 +1606,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 maxTime = time;
                             }
                             repeatingEndTime = Math.max(repeatingEndTime, maxTime);
-                            if (forwardMap[attr]) {
-                                forwardMap[attr].sort((a, b) => {
-                                    if (a.time === b.time) {
-                                        return 0;
-                                    }
-                                    return a.time < b.time ? -1 : 1;
-                                });
-                            }
+                            forwardMap[attr]?.sort((a, b) => {
+                                if (a.time === b.time) {
+                                    return 0;
+                                }
+                                return a.time < b.time ? -1 : 1;
+                            });
                         }
                         if (Object.keys(infiniteMap).length) {
                             const delay: number[] = [];
@@ -1749,14 +1737,15 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         const keyTimes: number[] = [];
                         const duration: number[] = [];
                         for (const attr in infiniteMap) {
-                            duration.push(infiniteMap[attr].duration);
-                            infiniteAnimations.push(infiniteMap[attr]);
+                            const map = infiniteMap[attr];
+                            duration.push(map.duration);
+                            infiniteAnimations.push(map);
                         }
                         const maxDuration = nextMultiple(duration);
                         for (const item of infiniteAnimations) {
                             const attr = item.attributeName;
                             timelineMap[attr] = new Map<number, AnimateValue>();
-                            let baseValue = repeatingMap[attr].has(repeatingMaxTime[attr]) ? <AnimateValue> repeatingMap[attr].get(repeatingMaxTime[attr]) : baseValueMap[attr];
+                            let baseValue: AnimateValue = repeatingMap[attr].get(repeatingMaxTime[attr]) ?? baseValueMap[attr];
                             const values = getStartItemValues(intervalMap, item, baseValue);
                             let maxTime = 0;
                             let i = 0;
@@ -1863,22 +1852,23 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             return;
                                         }
                                         let previousEndTime = 0;
-                                        const lengthC = transformMap.length;
-                                        for (let i = 0; i < lengthC; i++) {
+                                        const length = transformMap.length;
+                                        for (let i = 0; i < length; i++) {
                                             const entries = Array.from(transformMap[i].entries());
-                                            let delay = entries[0][0];
+                                            const itemA = entries[0];
+                                            let delay = itemA[0];
                                             if (entries.length === 1) {
-                                                if (i < lengthC - 1) {
-                                                    entries.push([transformMap[i + 1].keys().next().value, entries[0][1]]);
+                                                if (i < length - 1) {
+                                                    entries.push([transformMap[i + 1].keys().next().value, itemA[1]]);
                                                 }
                                                 else {
-                                                    entries.push([delay + 1, entries[0][1]]);
+                                                    entries.push([delay + 1, itemA[1]]);
                                                 }
                                             }
                                             const endTime = entries[entries.length - 1][0];
                                             let duration = endTime - delay;
                                             const animate = new SvgAnimateTransform();
-                                            animate.type = entries[0][1].keys().next().value as number;
+                                            animate.type = itemA[1].keys().next().value as number;
                                             const lengthD = entries.length;
                                             for (let j = 0; j < lengthD; j++) {
                                                 const item = entries[j];
@@ -1953,7 +1943,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 }
                                 else if (isFromToFormat(transforming, keyTimeMode)) {
                                     const entries = Array.from(result.entries());
-                                    for (let i = 0; i < entries.length - 1; i++) {
+                                    const length = entries.length - 1;
+                                    for (let i = 0; i < length; i++) {
                                         const [keyTimeFrom, dataFrom] = entries[i];
                                         const [keyTimeTo, dataTo] = entries[i + 1];
                                         let object: SvgAnimate | undefined;
@@ -1961,7 +1952,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         if (transforming) {
                                             const animate = new SvgAnimateTransform();
                                             if (repeating) {
-                                                for (let j = 0; j < timeRange.length - 1; j++) {
+                                                const lengthA = timeRange.length - 1;
+                                                for (let j = 0; j < lengthA; j++) {
                                                     const previous = timeRange[j];
                                                     const next = timeRange[j + 1];
                                                     if (previous[1] === next[1] && keyTimeFrom >= previous[0] && keyTimeTo <= next[0]) {

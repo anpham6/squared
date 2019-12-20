@@ -50,50 +50,28 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
             this._x = value;
         }
         get x() {
-            if (this._x !== undefined) {
-                return this._x;
-            }
-            else {
-                const element = this._getElement();
-                if (element) {
-                    return element.x.baseVal.value;
-                }
-                return 0;
-            }
+            return this._x ?? (this._getElement()?.x.baseVal.value || 0);
         }
 
         set y(value) {
             this._y = value;
         }
         get y() {
-            if (this._y !== undefined) {
-                return this._y;
-            }
-            else {
-                const element = this._getElement();
-                if (element) {
-                    return element.y.baseVal.value;
-                }
-                return 0;
-            }
+            return this._y ?? (this._getElement()?.y.baseVal.value || 0);
         }
 
         set width(value) {
             this._width = value;
         }
         get width() {
-            if (this._width !== undefined) {
-                return this._width;
+            const result = this._width;
+            if (result !== undefined) {
+                return result;
             }
             else {
                 const element = this._getElement();
                 if (element) {
-                    if (hasUnsupportedAccess(element)) {
-                        return element.getBoundingClientRect().width;
-                    }
-                    else {
-                        return element.width.baseVal.value;
-                    }
+                    return hasUnsupportedAccess(element) ? element.getBoundingClientRect().width : element.width.baseVal.value;
                 }
                 return 0;
             }
@@ -103,18 +81,14 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
             this._height = value;
         }
         get height() {
-            if (this._height !== undefined) {
-                return this._height;
+            const result = this._height;
+            if (result !== undefined) {
+                return result;
             }
             else {
                 const element = this._getElement();
                 if (element) {
-                    if (hasUnsupportedAccess(element)) {
-                        return element.getBoundingClientRect().height;
-                    }
-                    else {
-                        return element.height.baseVal.value;
-                    }
+                    return hasUnsupportedAccess(element) ? element.getBoundingClientRect().height : element.height.baseVal.value;
                 }
                 return 0;
             }

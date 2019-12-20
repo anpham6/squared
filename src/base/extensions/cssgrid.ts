@@ -168,7 +168,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
             if (value !== '' && value !== 'none' && value !== 'auto') {
-                CACHE_PATTERN.NAMED.lastIndex = 0;
                 const data = index === 0 ? mainData.row : mainData.column;
                 const { name, repeat, unit, unitMin } = data;
                 let match: RegExpMatchArray | null;
@@ -195,9 +194,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     CACHE_PATTERN.CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
                                     CACHE_PATTERN.CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
                                     CACHE_PATTERN.CELL_NAMED = new RegExp('\\[([\\w\\-\\s]+)\\]');
-                                }
-                                else {
-                                    CACHE_PATTERN.REPEAT.lastIndex = 0;
                                 }
                                 const repeating: RepeatItem[] = [];
                                 let subMatch: RegExpMatchArray | null;
@@ -236,6 +232,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         }
                                     }
                                 }
+                                CACHE_PATTERN.REPEAT.lastIndex = 0;
                             }
                         }
                         else if (command.charAt(0) === '[') {
@@ -268,6 +265,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         (index === 2 ? mainData.row : mainData.column).auto.push(node.convertPX(command));
                     }
                 }
+                CACHE_PATTERN.NAMED.lastIndex = 0;
             }
         });
         if (horizontal) {

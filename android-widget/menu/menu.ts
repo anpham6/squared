@@ -14,7 +14,7 @@ const { Resource } = android.base;
 
 type View = android.base.View;
 
-const REGEXP_ITEM = {
+const REGEX_ITEM = {
     id: /^@\+id\/\w+$/,
     title: /^.+$/,
     titleCondensed: /^.+$/,
@@ -34,7 +34,7 @@ const REGEXP_ITEM = {
     menuCategory: /^(container|system|secondary|alternative)$/,
     orderInCategory: /^\d+$/
 };
-const REGEXP_GROUP = {
+const REGEX_GROUP = {
     id: /^@\+id\/\w+$/,
     checkableBehavior: /^(none|all|single)$/,
     visible: /^(true|false)$/,
@@ -189,10 +189,10 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                 break;
             case NAVIGATION.GROUP:
                 node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
-                parseDataSet(REGEXP_GROUP, element, options);
+                parseDataSet(REGEX_GROUP, element, options);
                 break;
             case NAVIGATION.ITEM:
-                parseDataSet(REGEXP_ITEM, element, options);
+                parseDataSet(REGEX_ITEM, element, options);
                 if (!android.icon) {
                     const resource = <android.base.Resource<T>> this.resource;
                     let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);

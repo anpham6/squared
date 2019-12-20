@@ -18,11 +18,7 @@ export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgS
     }
 
     public build(options?: SvgBuildOptions) {
-        options = {
-            ...options,
-            element: this.shapeElement
-        };
-        super.build(options);
+        super.build({ ...options, element: this.shapeElement });
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {

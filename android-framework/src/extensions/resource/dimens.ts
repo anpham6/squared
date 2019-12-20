@@ -9,8 +9,8 @@ const { convertUnderscore, fromLastIndexOf } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const NAMESPACE_ATTR = ['android', 'app'];
-const REGEXP_UNIT = /\dpx$/;
-const REGEXP_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/;
+const REGEX_UNIT = /\dpx$/;
+const REGEX_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/;
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     for (const [storedName, storedValue] of map.entries()) {
@@ -43,7 +43,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                     for (const attr in obj) {
                         if (attr !== 'text') {
                             const value = obj[attr];
-                            if (REGEXP_UNIT.test(value)) {
+                            if (REGEX_UNIT.test(value)) {
                                 const dimen = `${namespace},${attr},${value}`;
                                 let data = group[dimen];
                                 if (data === undefined) {
@@ -77,7 +77,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             for (const layout of this.application.layouts) {
                 let content = layout.content;
                 let match: RegExpExecArray | null;
-                while ((match = REGEXP_UNIT_ATTR.exec(content)) !== null) {
+                while ((match = REGEX_UNIT_ATTR.exec(content)) !== null) {
                     const [original, name, value] = match;
                     if (name !== 'text') {
                         const key = getResourceName(dimens, 'custom_' + convertUnderscore(name), value);
