@@ -510,10 +510,12 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
 }
 
 export function flatArray<T>(list: any[]): T[] {
-    for (let i = 0; i < list.length; i++) {
+    let length = list.length;
+    for (let i = 0; i < length; i++) {
         const item = list[i];
         if (item === undefined || item === null) {
             list.splice(i--, 1);
+            length--;
         }
     }
     return list;

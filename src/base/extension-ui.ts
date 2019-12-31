@@ -21,6 +21,8 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
         return null;
     }
 
+    public init?: (element: HTMLElement) => boolean;
+
     public controller!: squared.base.ControllerUI<T>;
     public resource!: squared.base.ResourceUI<T>;
     public tagNames: string[];
@@ -54,10 +56,6 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
 
     public included(element: HTMLElement) {
         return includes(element.dataset.use, this.name);
-    }
-
-    public init(element: HTMLElement) {
-        return false;
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> | undefined {

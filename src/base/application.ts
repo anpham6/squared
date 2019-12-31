@@ -318,10 +318,12 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected createRootNode(element: HTMLElement) {
         const processing = this.processing;
-        processing.cache.clear();
+        const cache = processing.cache;
+        cache.clear();
         processing.excluded.clear();
         this._cascadeAll = false;
-        const node = this.cascadeParentNode(element);
+        const extensions = this.extensionsCascade;
+        const node = this.cascadeParentNode(element, 0, extensions.length ? extensions : undefined);
         if (node) {
             const parent = new NodeConstructor(0, processing.sessionId, element.parentElement || document.body, this.controllerHandler.afterInsertNode);
             node.parent = parent;
@@ -330,11 +332,11 @@ export default abstract class Application<T extends Node> implements squared.bas
             node.documentRoot = true;
         }
         processing.node = node;
-        processing.cache.afterAppend = undefined;
+        cache.afterAppend = undefined;
         return node;
     }
 
-    protected cascadeParentNode(parentElement: HTMLElement, depth = 0) {
+    protected cascadeParentNode(parentElement: HTMLElement, depth: number, extensions?: Extension<T>[]) {
         const node = this.insertNode(parentElement);
         if (node) {
             const { controllerHandler: controller, processing } = this;
@@ -362,7 +364,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 else if (controller.includeElement(element)) {
-                    child = this.cascadeParentNode(element, depth + 1);
+                    child = this.cascadeParentNode(element, depth + 1, extensions);
                     if (child) {
                         elements[k++] = child;
                         CACHE.append(child);
@@ -680,6 +682,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                 break;
             }
         }
+    }
+
+    get extensionsCascade() {
+        return <Extension<T>[]> [];
     }
 
     get nextId() {

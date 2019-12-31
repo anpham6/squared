@@ -55,6 +55,7 @@ declare namespace base {
         readonly processing: AppProcessing<T>;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
+        readonly extensionsCascade: Extension<T>[];
         readonly nextId: number;
         readonly length: number;
         reset(): void;
@@ -230,8 +231,8 @@ declare namespace base {
         readonly eventOnly: boolean;
         readonly cascadeAll: boolean;
         readonly removeIs: boolean;
+        init?(element: HTMLElement): boolean;
         included(element: HTMLElement): boolean;
-        init(element: HTMLElement): boolean;
         is(node: T): boolean;
         condition(node: T, parent?: T): boolean;
         processNode(node: T, parent: T): ExtensionResult<T> | undefined;

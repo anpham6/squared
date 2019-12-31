@@ -13,7 +13,7 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 const $lib = squared.lib;
 const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule, isLength, resolveURL } = $lib.css;
 const { getNamedItem, getRangeClientRect, isTextNode, removeElementsByClassName } = $lib.dom;
-const { aboveRange, captureMap, convertFloat, convertInt, convertWord, filterArray, fromLastIndexOf, hasBit, isString, partitionArray, spliceArray, trimString } = $lib.util;
+const { aboveRange, captureMap, convertFloat, convertInt, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;
 const { XML } = $lib.regex;
 const { getElementCache, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -48,7 +48,7 @@ function prioritizeExtensions<T extends NodeUI>(value: string | undefined, exten
             }
         }
         if (result.length) {
-            return spliceArray(result, item => item === undefined).concat(untagged);
+            return flatArray<ExtensionUI<T>>(result).concat(untagged);
         }
     }
     return extensions;
@@ -489,7 +489,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this._layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(parentElement: HTMLElement, depth = 0) {
+    protected cascadeParentNode(parentElement: HTMLElement, depth: number, extensions?: ExtensionUI<T>[]) {
         const node = this.insertNode(parentElement);
         if (node && (node.display !== 'none' || depth === 0 || node.outerExtensionElement)) {
             node.depth = depth;
@@ -547,9 +547,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 else if (controller.includeElement(element)) {
-                    prioritizeExtensions(element.dataset.use, this.extensions).some(item => item.init(element));
+                    if (extensions) {
+                        prioritizeExtensions(element.dataset.use, extensions).some(item => (<any> item.init)(element));
+                    }
                     if (!this.rootElements.has(element)) {
-                        child = this.cascadeParentNode(element, depth + 1);
+                        child = this.cascadeParentNode(element, depth + 1, extensions);
                         if (child && (!child.excluded || child.tagName === 'WBR')) {
                             inlineText = false;
                         }
@@ -1184,7 +1186,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (nodeY.styleElement) {
-                            const prioritized = prioritizeExtensions((<HTMLElement> nodeY.element).dataset.use, extensions);
                             let next = false;
                             function removeExtension(item: ExtensionUI<T>) {
                                 const index = extensions.indexOf(item);
@@ -1193,7 +1194,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     extensions.splice(index, 1);
                                 }
                             }
-                            for (const item of prioritized) {
+                            for (const item of prioritizeExtensions(nodeY.dataset.use, extensions)) {
                                 if (item.is(nodeY)) {
                                     if (item.removeIs) {
                                         removeExtension(item);
@@ -1730,6 +1731,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     get rendered() {
         return this.session.cache.filter((node: T) => node.visible && node.renderParent !== undefined);
+    }
+
+    get extensionsCascade() {
+        return this.extensions.filter(item => !!item.init);
     }
 
     get length() {
