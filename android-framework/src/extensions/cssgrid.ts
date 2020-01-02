@@ -49,7 +49,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
     const unit = data.unit;
     const length = unit.length;
     let value = 0;
-    if (length > 0) {
+    if (length) {
         const dimension = horizontal ? 'width' : 'height';
         for (let i = 0; i < length; i++) {
             const unitPX = unit[i];

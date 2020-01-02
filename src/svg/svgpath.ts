@@ -429,14 +429,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 case 'polyline':
                     const commands = SvgBuild.getPathCommands(this.value);
                     const length = commands.length;
-                    if (length > 0) {
+                    if (length) {
                         const pathStart = commands[0];
                         const pathStartPoint = pathStart.start;
                         const pathEnd = commands[length - 1];
                         const pathEndPoint = pathEnd.end;
                         const name = pathEnd.key.toUpperCase();
-                        const leading = data.leading;
-                        const trailing = data.trailing;
+                        const { leading, trailing } = data;
                         let modified = false;
                         if (name !== 'Z' && (pathStartPoint.x !== pathEndPoint.x || pathStartPoint.y !== pathEndPoint.y)) {
                             if (leading > 0) {
@@ -768,13 +767,14 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     const { keyTimes, keySplines } = item;
                                     const timingFunction = item.timingFunction;
                                     for (let j = 0; j < dashTotal; j++) {
-                                        group[j].values = values[j];
-                                        group[j].keyTimes = keyTimes;
+                                        const data = group[j];
+                                        data.values = values[j];
+                                        data.keyTimes = keyTimes;
                                         if (keySplines) {
-                                            group[j].keySplines = keySplines;
+                                            data.keySplines = keySplines;
                                         }
                                         else if (timingFunction) {
-                                            group[j].timingFunction = timingFunction;
+                                            data.timingFunction = timingFunction;
                                         }
                                     }
                                     if (item.fillReplace) {
@@ -865,6 +865,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         const segDuration = j > 0 ? (keyTimeTo - keyTimesBase[j - 1]) * duration : 0;
                                         const offsetTotal = offsetValue * flattenData.lengthRatio;
                                         const getKeyTimeIncrement = (offset: number) => ((offset / offsetTotal) * segDuration) / duration;
+                                        const isDuplicateFraction = () => j > 0 && values[values.length - 1] === (increasing ? '1' : '0');
                                         function setFinalValue(offset: number, checkInvert = false) {
                                             finalValue = (offsetRemaining - offset) / extendedLength;
                                             if (checkInvert) {
@@ -880,17 +881,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                     }
                                                 }
                                             }
-                                        }
-                                        function isDuplicateFraction() {
-                                            if (j > 0) {
-                                                if (increasing) {
-                                                    return values[values.length - 1] === '1';
-                                                }
-                                                else {
-                                                    return values[values.length - 1] === '0';
-                                                }
-                                            }
-                                            return false;
                                         }
                                         function insertFractionKeyTime() {
                                             if (!isDuplicateFraction()) {

@@ -116,7 +116,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 const item = children[i];
                 if (item instanceof SVGAnimationElement) {
                     const begin = getNamedItem(item, 'begin');
-                    if (begin !== '' && /^[a-zA-Z]+$/.test(begin)) {
+                    if (/^[a-zA-Z]+$/.test(begin)) {
                         continue;
                     }
                     const times = begin ? sortNumber(replaceMap<string, number>(begin.split(';'), value => SvgAnimation.convertClockTime(value))) : [0];
@@ -156,7 +156,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
             const animationName = parseAttribute(element, 'animation-name');
             length = animationName.length;
-            if (length > 0) {
+            if (length) {
                 const cssData: ObjectMap<string[]> = {};
                 const groupName: SvgAnimate[] = [];
                 const groupOrdering: SvgAnimationAttribute[] = [];
@@ -198,10 +198,6 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             const key = parseFloat(percent) / 100;
                             const data = keyframes[percent];
                             for (const name in data) {
-                                const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
-                                if (map[name] === undefined) {
-                                    map[name] = [];
-                                }
                                 let value: any = data[name];
                                 if (value) {
                                     if (isCalc(value)) {
@@ -211,7 +207,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         value = parseVar(element, value);
                                     }
                                     if (value !== undefined) {
-                                        map[name].push({ key, value: value.toString() });
+                                        const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
+                                        let section = map[name];
+                                        if (data === undefined) {
+                                            section = [];
+                                            map[name] = section;
+                                        }
+                                        section.push({ key, value: value.toString() });
                                     }
                                 }
                             }
@@ -411,18 +413,21 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const lengthA = animation.length;
                                 for (let j = 0; j < lengthA; j++) {
                                     const item = animation[j];
-                                    keyTimes.push(item.key);
+                                    const key = item.key;
+                                    keyTimes.push(key);
                                     values.push(item.value);
                                     if (includeKeySplines && j < lengthA - 1) {
-                                        const spline = keyframeMap['animation-timing-function']?.find(timing => timing.key === item.key);
-                                        keySplines.push(spline ? spline.value : timingFunction);
+                                        const spline = keyframeMap['animation-timing-function']?.find(timing => timing.key === key);
+                                        keySplines.push(spline?.value || timingFunction);
                                     }
                                     const transformOrigin = item.transformOrigin;
                                     if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
-                                        if (animate.transformOrigin === undefined) {
-                                            animate.transformOrigin = [];
+                                        let origin = animate.transformOrigin;
+                                        if (origin === undefined) {
+                                            origin = [];
+                                            animate.transformOrigin = origin;
                                         }
-                                        animate.transformOrigin[j] = transformOrigin;
+                                        origin[j] = transformOrigin;
                                     }
                                 }
                                 if (keyTimes[0] !== 0) {
@@ -439,19 +444,21 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     const keySplinesData: string[] = [];
                                     const lengthB = keyTimes.length;
                                     for (let j = 0; j < lengthB; j++) {
+                                        const time = keyTimes[j];
+                                        const value = values[j];
                                         if (j < lengthB - 1) {
-                                            const segDuration = (keyTimes[j + 1] - keyTimes[j]) * duration;
+                                            const segDuration = (keyTimes[j + 1] - time) * duration;
                                             let keySpline = keySplines[j];
                                             if (KEYSPLINE_NAME[keySpline]) {
                                                 keySpline = KEYSPLINE_NAME[keySpline];
                                             }
                                             else if (keySpline.startsWith('step')) {
-                                                if (values[j] !== '') {
+                                                if (value !== '') {
                                                     const steps = SvgAnimate.convertStepTimingFunction(name, keySpline, keyTimes, values, j, getFontSize(element));
                                                     if (steps) {
                                                         const offset = keyTimes[j + 1] === 1 ? 1 : 0;
                                                         for (let k = 0; k < steps[0].length - offset; k++) {
-                                                            let keyTime = (keyTimes[j] + steps[0][k] * segDuration) / duration;
+                                                            let keyTime = (time + steps[0][k] * segDuration) / duration;
                                                             if (keyTimesData.includes(keyTime)) {
                                                                 keyTime += 1 / 1000;
                                                             }
@@ -470,8 +477,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             }
                                             keySplinesData.push(keySpline);
                                         }
-                                        keyTimesData.push(keyTimes[j]);
-                                        valuesData.push(values[j]);
+                                        keyTimesData.push(time);
+                                        valuesData.push(value);
                                     }
                                     animate.values = valuesData;
                                     animate.keyTimes = keyTimesData;

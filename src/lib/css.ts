@@ -55,7 +55,7 @@ export function getStyle(element: Element | null, pseudoElt = ''): CSSStyleDecla
 }
 
 export function getFontSize(element: Element | null) {
-    return parseFloat(getStyle(element).getPropertyValue('font-size')) || undefined;
+    return parseFloat(getStyle(element).getPropertyValue('font-size'));
 }
 
 export function hasComputedStyle(element: Element): element is HTMLElement {
@@ -478,7 +478,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                         }
                         else if (isLength(sizeW)) {
                             const length = parseUnit(sizeW, fontSize);
-                            if (length > 0) {
+                            if (length) {
                                 width = length;
                             }
                         }
@@ -490,7 +490,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                         }
                         else if (isLength(sizeH)) {
                             const length = parseUnit(sizeH, fontSize);
-                            if (length > 0) {
+                            if (length) {
                                 percent = length / imageDimension.height;
                             }
                         }
@@ -506,7 +506,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                         }
                         else if (isLength(sizeH)) {
                             const length = parseUnit(sizeH, fontSize);
-                            if (length > 0) {
+                            if (length) {
                                 height = length;
                             }
                         }
@@ -518,7 +518,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                         }
                         else if (isLength(sizeW)) {
                             const length = parseUnit(sizeW, fontSize);
-                            if (length > 0) {
+                            if (length) {
                                 percent = length / imageDimension.width;
                             }
                         }
@@ -984,7 +984,7 @@ export function parseUnit(value: string, fontSize?: number) {
                 case undefined:
                 case 'em':
                 case 'ch':
-                    result *= fontSize || getFontSize(document.body) || 16;
+                    result *= fontSize !== undefined && !isNaN(fontSize) ? fontSize : (getFontSize(document.body) || 16);
                     break;
                 case 'rem':
                     result *= getFontSize(document.body) || 16;

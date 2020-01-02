@@ -701,7 +701,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 layout.setContainerType(getRelativeVertical(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
             }
         }
-        else if (layout.some(item => item.alignedVertically(item.childIndex > 0 ? layout.children.slice(0, item.childIndex) : undefined, layout.cleared) > 0)) {
+        else if (layout.some((item, index) => item.alignedVertically(index > 0 ? layout.children.slice(0, index) : undefined, layout.cleared) > 0)) {
             layout.setContainerType(getRelativeVertical(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
         }
         else {

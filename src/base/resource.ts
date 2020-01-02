@@ -25,10 +25,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         for (const name in Resource.ASSETS) {
             Resource.ASSETS[name].clear();
         }
-        const fileHandler = this.fileHandler;
-        if (fileHandler) {
-            fileHandler.reset();
-        }
+        this.fileHandler?.reset();
     }
 
     public addImage(element: HTMLImageElement | undefined) {
@@ -95,7 +92,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
                 filename = fromLastIndexOf(uri, '/');
             }
             else {
-                let extension = mimeType.split('/').pop();
+                let extension = mimeType.split('/').pop() as string;
                 if (extension === 'svg+xml') {
                     extension = 'svg';
                 }
@@ -130,6 +127,9 @@ export default abstract class Resource<T extends squared.base.Node> implements s
             const match = CSS.URL.exec(uri);
             if (match) {
                 uri = match[1];
+            }
+            else {
+                return undefined;
             }
         }
         return Resource.ASSETS.rawData.get(uri);

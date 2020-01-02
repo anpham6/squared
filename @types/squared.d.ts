@@ -283,7 +283,7 @@ declare namespace base {
 
     class File<T extends Node> implements File<T> {
         public static getMimeType(value: string): string;
-        public static downloadFile(data: Blob, filename: string, mime?: string): void;
+        public static downloadFile(data: Blob, filename: string, mimeType?: string): void;
     }
 
     interface FileUI<T extends NodeUI> extends File<T> {
@@ -437,18 +437,19 @@ declare namespace base {
         readonly nextElementSibling: Node | null;
         readonly attributes: StringMap;
         readonly boundingClientRect: DOMRect;
+        readonly textStyle: StringMap;
         readonly center: Point;
         init(): void;
         saveAsInitial(overwrite?: boolean): void;
         data(name: string, attr: string, value?: any, overwrite?: boolean): any;
         unsetCache(...attrs: string[]): void;
         ascend(condition?: (item: Node) => boolean, parent?: Node, attr?: string): Node[];
-        intersectX(rect: BoxRectDimension, dimension?: string): boolean;
-        intersectY(rect: BoxRectDimension, dimension?: string): boolean;
-        withinX(rect: BoxRectDimension, dimension?: string): boolean;
-        withinY(rect: BoxRectDimension, dimension?: string): boolean;
-        outsideX(rect: BoxRectDimension, dimension?: string): boolean;
-        outsideY(rect: BoxRectDimension, dimension?: string): boolean;
+        intersectX(rect: BoxRectDimension, dimension?: BoxType): boolean;
+        intersectY(rect: BoxRectDimension, dimension?: BoxType): boolean;
+        withinX(rect: BoxRectDimension, dimension?: BoxType): boolean;
+        withinY(rect: BoxRectDimension, dimension?: BoxType): boolean;
+        outsideX(rect: BoxRectDimension, dimension?: BoxType): boolean;
+        outsideY(rect: BoxRectDimension, dimension?: BoxType): boolean;
         css(attr: string, value?: string, cache?: boolean): string;
         cssApply(values: StringMap, cache?: boolean): this;
         cssInitial(attr: string, modified?: boolean, computed?: boolean): string;
@@ -471,7 +472,6 @@ declare namespace base {
         has(attr: string, checkType?: number, options?: {}): boolean;
         hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
         setBounds(cache?: boolean): void;
-        getTextStyle(): StringMap;
         querySelector(value: string): Node | null;
         querySelectorAll(value: string, resultCount?: number): Node[];
     }
@@ -713,7 +713,7 @@ declare namespace lib {
         export import BOX_PADDING = $css.BOX_PADDING;
         export import BOX_BORDER = $css.BOX_BORDER;
         function getStyle(element: Element | null, pseudoElt?: string): CSSStyleDeclaration;
-        function getFontSize(element: Element | null): number | undefined;
+        function getFontSize(element: Element | null): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
         function parseSelectorText(value: string): string;
@@ -821,7 +821,7 @@ declare namespace lib {
         function isObject(value: any): value is {};
         function isPlainObject(value: any): value is {};
         function isEqual(source: any, values: any): boolean;
-        function includes(source: string | undefined, value: string, delimiter?: string): boolean;
+        function includes(source: string | undefined, value: string, delimiter?: RegExp): boolean;
         function cloneInstance<T>(value: T): T;
         function cloneArray(data: any[], result?: any[], object?: boolean): any[];
         function cloneObject(data: {}, result?: {}, array?: boolean): {};

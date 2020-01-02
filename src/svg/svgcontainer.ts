@@ -186,11 +186,11 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     public refitPoints(values: SvgPoint[]) {
+        const unit = this.aspectRatio.unit;
         for (const pt of values) {
             pt.x = this.refitX(pt.x);
             pt.y = this.refitY(pt.y);
             if (pt.rx !== undefined && pt.ry !== undefined) {
-                const unit = this.aspectRatio.unit;
                 pt.rx *= unit;
                 pt.ry *= unit;
             }

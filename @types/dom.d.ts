@@ -144,3 +144,5 @@ interface QueryAttribute extends StringValue {
     symbol?: string;
     caseInsensitive: boolean;
 }
+
+type BoxType = "bounds" | "box" | "linear";

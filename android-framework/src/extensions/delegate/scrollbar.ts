@@ -79,7 +79,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             }
         }
         const length = overflow.length;
-        if (length > 0) {
+        if (length) {
             for (let i = 0; i < length; i++) {
                 let container: T;
                 if (i === 0) {

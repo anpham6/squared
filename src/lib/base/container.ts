@@ -88,15 +88,17 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         const length = children.length;
         if (typeof predicate === 'string') {
             for (let i = 0; i < length; i++) {
-                if (children[i][predicate] === value) {
-                    return children[i];
+                const item = children[i];
+                if (item[predicate] === value) {
+                    return item;
                 }
             }
         }
         else {
             for (let i = 0; i < length; i++) {
-                if (predicate(children[i], i, children)) {
-                    return children[i];
+                const item = children[i];
+                if (predicate(item, i, children)) {
+                    return item;
                 }
             }
         }
@@ -118,7 +120,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     public every(predicate: IteratorPredicate<T, boolean>) {
         const children = this._children;
         const length = children.length;
-        if (length > 0) {
+        if (length) {
             for (let i = 0; i < length; i++) {
                 if (!predicate(children[i], i, children)) {
                     return false;

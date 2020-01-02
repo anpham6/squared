@@ -6,7 +6,7 @@ import { WIDGET_NAME } from '../lib/constant';
 const $lib = squared.lib;
 const { formatPX } = $lib.css;
 const { getElementAsNode } = $lib.session;
-const { assignEmptyValue, includes, optionalAsString } = $lib.util;
+const { assignEmptyValue, includes, isString, optionalAsString } = $lib.util;
 
 const { NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -41,9 +41,12 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             const length = children.length;
             for (let i = 0; i < length; i++) {
                 const item = <HTMLElement> children[i];
-                if (item.tagName === 'NAV' && !includes(item.dataset.use, EXT_ANDROID.EXTERNAL)) {
-                    item.dataset.use = (item.dataset.use ? item.dataset.use + ', ' : '') + EXT_ANDROID.EXTERNAL;
-                    break;
+                if (item.tagName === 'NAV') {
+                    const use = item.dataset.use;
+                    if (!includes(use, EXT_ANDROID.EXTERNAL)) {
+                        item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
+                        break;
+                    }
                 }
             }
             const target = element.dataset.target;
@@ -121,8 +124,9 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         if (hasAppBar) {
             if (hasMenu) {
                 const app = toolbarOptions.app;
-                if (app.popupTheme) {
-                    popupOverlay = app.popupTheme.replace('@style/', '');
+                const popupTheme = app.popupTheme;
+                if (popupTheme) {
+                    popupOverlay = popupTheme.replace('@style/', '');
                 }
                 app.popupTheme = '@style/' + settings.manifestThemeName + '.PopupOverlay';
             }
@@ -167,7 +171,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             appBarNode = this.createPlaceholder(node, appBarChildren, target);
             appBarNode.parent = parent;
             let id = android.id;
-            if (id) {
+            if (isString(id)) {
                 appBarNode.controlId = getDocumentId(id);
                 delete android.id;
             }
@@ -315,10 +319,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             const optionsActionBar = createStyleAttribute({ name: '.NoActionBar', output: options.output });
             const optionsAppBar = createStyleAttribute({ name: '.AppBarOverlay', output: options.output });
             const optionsPopup = createStyleAttribute({ name: '.PopupOverlay', output: options.output });
+            const optionsActionBarItems = optionsActionBar.items;
             assignEmptyValue(options, 'name', settings.manifestThemeName);
             assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
-            assignEmptyValue(optionsActionBar.items, 'windowActionBar', 'false');
-            assignEmptyValue(optionsActionBar.items, 'windowNoTitle', 'true');
+            assignEmptyValue(optionsActionBarItems, 'windowActionBar', 'false');
+            assignEmptyValue(optionsActionBarItems, 'windowNoTitle', 'true');
             assignEmptyValue(optionsAppBar, 'parent', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
             assignEmptyValue(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
             Resource.addTheme(options, optionsActionBar, optionsAppBar, optionsPopup);

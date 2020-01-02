@@ -622,7 +622,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let name: string | undefined;
                 if (this.styleElement) {
                     const elementId = this.elementId;
-                    const value = elementId !== '' ? elementId.trim() : getNamedItem(<HTMLElement> this.element, 'name');
+                    const value = elementId?.trim() || getNamedItem(<HTMLElement> this.element, 'name');
                     if (value !== '') {
                         name = value.replace(REGEX_VALIDSTRING, '_').toLowerCase();
                         if (name === 'parent' || RESERVED_JAVA.includes(name)) {

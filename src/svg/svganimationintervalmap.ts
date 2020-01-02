@@ -76,7 +76,8 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             const attributeName = getAttributeName(keyName);
             const backwards = <SvgAnimate> animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => a.group.id < b.group.id ? 1 : -1)[0];
             if (backwards) {
-                insertIntervalValue(keyName, 0, backwards.values[0], backwards.delay, backwards, backwards.delay === 0, false, FILL_MODE.BACKWARDS);
+                const delay = backwards.delay;
+                insertIntervalValue(keyName, 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
             }
         }
         for (const item of animations) {
@@ -85,10 +86,11 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 insertIntervalValue(keyName, -1, item.baseValue);
             }
             if (item.setterType) {
-                const fillReplace = item.fillReplace && item.duration > 0;
-                insertIntervalValue(keyName, item.delay, item.to, fillReplace ? item.delay + item.duration : 0, item, fillReplace, !fillReplace, FILL_MODE.FREEZE);
+                const { delay, duration } = item;
+                const fillReplace = item.fillReplace && duration > 0;
+                insertIntervalValue(keyName, delay, item.to, fillReplace ? delay + duration : 0, item, fillReplace, !fillReplace, FILL_MODE.FREEZE);
                 if (fillReplace) {
-                    insertIntervalValue(keyName, item.delay + item.duration, '', 0, item, false, true, FILL_MODE.FREEZE);
+                    insertIntervalValue(keyName, delay + duration, '', 0, item, false, true, FILL_MODE.FREEZE);
                 }
             }
             else if (SvgBuild.isAnimate(item) && item.duration > 0) {

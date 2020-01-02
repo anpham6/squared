@@ -35,7 +35,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     public init() {
         const children = this.children;
         const length = children.length;
-        if (length > 0) {
+        if (length) {
             if (length > 1) {
                 const linearData = NodeUI.linearData(children);
                 this._floated = linearData.floated;
@@ -132,20 +132,21 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     get singleRowAligned() {
-        if (this._singleRow === undefined) {
+        let result = this._singleRow;
+        if (result === undefined) {
             const length = this.length;
-            if (length > 0) {
-                this._singleRow = true;
+            if (length) {
+                result = true;
                 if (length > 1) {
                     let previousBottom = Number.POSITIVE_INFINITY;
                     for (const node of this.children) {
                         if (node.multiline || node.blockStatic) {
-                            this._singleRow = false;
+                            result = false;
                             break;
                         }
                         else {
                             if (aboveRange(node.linear.top, previousBottom)) {
-                                this._singleRow = false;
+                                result = false;
                                 break;
                             }
                             previousBottom = node.linear.bottom;
@@ -154,10 +155,11 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
                 }
             }
             else {
-                return false;
+                result = false;
             }
+            this._singleRow = result;
         }
-        return this._singleRow;
+        return result;
     }
 
     get unknownAligned() {

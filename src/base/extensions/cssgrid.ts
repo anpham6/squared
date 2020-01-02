@@ -152,14 +152,15 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         rowData[i] = data;
                     }
                     for (let j = placement[horizontal ? 1 : 0] - 1; j < placement[horizontal ? 3 : 2] - 1; j++) {
-                        if (cellsPerRow[i] === undefined) {
-                            cellsPerRow[i] = 0;
+                        let row = data[j];
+                        let count = cellsPerRow[i] || 0;
+                        if (row === undefined) {
+                            row = [];
+                            data[j] = row;
+                            count++;
                         }
-                        if (data[j] === undefined) {
-                            data[j] = [];
-                            cellsPerRow[i]++;
-                        }
-                        (data[j] as T[]).push(item);
+                        cellsPerRow[i] = count;
+                        row.push(item);
                     }
                 }
                 return true;
@@ -685,13 +686,14 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             const range: [number, number][] = [];
                             let span = 0;
                             for (let j = 0, k = -1; j < COLUMN_COUNT; j++) {
-                                if (data[j] === undefined) {
+                                const row = data[j];
+                                if (row === undefined) {
                                     if (k === -1) {
                                         k = j;
                                     }
                                     span++;
                                 }
-                                if (data[j] || j === COLUMN_COUNT - 1) {
+                                if (row || j === COLUMN_COUNT - 1) {
                                     if (span >= COLUMN_SPAN) {
                                         range.push([k, k + span]);
                                     }
@@ -710,18 +712,18 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             break;
                         }
                     }
-                    const lengthA = available.length;
-                    if (lengthA > 0) {
+                    const length = available.length;
+                    if (length) {
                         const data = available[0];
                         if (data[0][1] === -1) {
                             PLACEMENT[colA] = 1;
                         }
-                        else if (lengthA === m - l) {
-                            if (lengthA > 1) {
+                        else if (length === m - l) {
+                            if (length > 1) {
                                 found: {
                                     for (const outside of data) {
                                         for (let i = outside[0]; i < outside[1]; i++) {
-                                            for (let j = 1; j < lengthA; j++) {
+                                            for (let j = 1; j < length; j++) {
                                                 const lengthB = available[j].length;
                                                 for (let k = 0; k < lengthB; k++) {
                                                     const inside = available[j][k];
@@ -802,9 +804,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 columnCount = Math.max(lengthD, columnCount);
                 for (let i = 0; i < lengthD; i++) {
                     const column = data[i];
-                    if (unitTotal[i] === undefined) {
-                        unitTotal[i] = 0;
-                    }
+                    let count = unitTotal[i] || 0;
                     if (column) {
                         let maxDimension = 0;
                         for (const item of column) {
@@ -813,8 +813,9 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 children.push(item);
                             }
                         }
-                        unitTotal[i] += maxDimension;
+                        count += maxDimension;
                     }
+                    unitTotal[i] = count;
                 }
             }
             if (children.length === node.length) {

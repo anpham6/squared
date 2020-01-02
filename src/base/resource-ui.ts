@@ -133,7 +133,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
 
 function getAngle(value: string, fallback = 0) {
     value = value.trim();
-    if (value) {
+    if (value !== '') {
         let degree = parseAngle(value);
         if (degree < 0) {
             degree += 360;
@@ -215,7 +215,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         if (start === 1) {
             name += '_' + i;
         }
-        const previous = this.ASSETS.ids.get(section) || [];
+        const ids = this.ASSETS.ids;
+        const previous = ids.get(section) || [];
         do {
             if (!previous.includes(name)) {
                 previous.push(name);
@@ -226,7 +227,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             }
         }
         while (true);
-        this.ASSETS.ids.set(section, previous);
+        ids.set(section, previous);
         return name;
     }
 
@@ -520,8 +521,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak = false, trim = false) {
-        if (node.naturalElements.length) {
-            return node.naturalElements.some(item => item.lineBreak);
+        const naturalElements = node.naturalElements;
+        if (naturalElements.length) {
+            return naturalElements.some(item => item.lineBreak);
         }
         else if (!lineBreak && node.naturalChild) {
             const element = <Element> node.element;
@@ -584,7 +586,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             function setBorderStyle(attr: string, border: string[]) {
                 const style = node.css(border[0]) || 'none';
                 let width = formatPX(attr !== 'outline' ? node[border[1]] : convertFloat(node.style[border[1]]));
-                let color = node.css(border[2]) || 'initial';
+                let color: string | ColorData | undefined = node.css(border[2]) || 'initial';
                 switch (color) {
                     case 'initial':
                         color = 'rgb(0, 0, 0)';
@@ -598,12 +600,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     if (width === '2px' && (style === 'inset' || style === 'outset')) {
                         width = '1px';
                     }
-                    const borderColor = parseColor(color, 1, true);
-                    if (borderColor) {
+                    color = parseColor(color, 1, true);
+                    if (color) {
                         boxStyle[attr] = <BorderAttribute> {
                             width,
                             style,
-                            color: borderColor
+                            color
                         };
                     }
                 }
@@ -641,16 +643,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 const [G, H] = node.css('borderBottomLeftRadius').split(' ');
                 const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
                 const horizontal = node.actualWidth >= node.actualHeight;
-                if (borderRadius.every(radius => radius === borderRadius[0])) {
-                    if (borderRadius[0] === '0px' || borderRadius[0] === '') {
-                        borderRadius.length = 0;
-                    }
-                    else {
-                        borderRadius.length = 1;
-                    }
+                const radius = borderRadius[0];
+                if (borderRadius.every(value => value === radius)) {
+                    borderRadius.length = radius === '0px' || radius === '' ? 0 : 1;
                 }
                 const length = borderRadius.length;
-                if (length > 0) {
+                if (length) {
                     const dimension = horizontal ? 'width' : 'height';
                     for (let i = 0; i < length; i++) {
                         borderRadius[i] = node.convertPX(borderRadius[i], dimension, false);
@@ -688,7 +686,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public setFontStyle(node: T) {
-        if (((node.textElement || node.inlineText) && (!node.textEmpty || node.visibleStyle.background) || node.inputElement)) {
+        if ((node.textElement || node.inlineText) && (!node.textEmpty || node.visibleStyle.background) || node.inputElement) {
             const color = parseColor(node.css('color'));
             let fontWeight = node.css('fontWeight');
             if (!isNumber(fontWeight)) {
@@ -821,8 +819,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             }
                             else if (previousSibling.naturalElement) {
                                 const textContent = previousSibling.textContent;
-                                if (textContent.length) {
-                                    previousSpaceEnd = textContent.charCodeAt(textContent.length - 1) === 32;
+                                const length = textContent.length;
+                                if (length) {
+                                    previousSpaceEnd = textContent.charCodeAt(length - 1) === 32;
                                 }
                             }
                         }

@@ -759,7 +759,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             function insertTargetAnimation(name: string, targetSetTemplate: SetTemplate) {
                 const templateSet = targetSetTemplate.set;
                 const length = templateSet.length;
-                if (length > 0) {
+                if (length) {
                     let modified = false;
                     if (length > 1 && templateSet.every(item => item.ordering === '')) {
                         const setData: SetTemplate = {
@@ -1562,7 +1562,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
             }
         }
-        if (length > 0) {
+        if (length) {
             result[length - 1].include = output;
             return applyTemplate('group', VECTOR_GROUP, result, depth + 1);
         }

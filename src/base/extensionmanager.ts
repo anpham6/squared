@@ -7,7 +7,7 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
     public include(ext: squared.base.Extension<T>) {
         const application = this.application;
         const extensions = application.extensions;
-        const name = ext.name;
+        let name = ext.name;
         const index = extensions.findIndex(item => item.name === name);
         if (index !== -1) {
             extensions[index] = ext;
@@ -17,10 +17,13 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
             const framework = ext.framework;
             if (framework > 0) {
                 for (const item of ext.dependencies) {
-                    if (item.preload && this.retrieve(item.name) === null) {
-                        const extension = application.builtInExtensions[item.name];
-                        if (extension) {
-                            this.include(extension);
+                    if (item.preload) {
+                        name = item.name;
+                        if (this.retrieve(name) === null) {
+                            const extension = application.builtInExtensions[name];
+                            if (extension) {
+                                this.include(extension);
+                            }
                         }
                     }
                 }
@@ -61,10 +64,7 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
 
     public optionValueAsObject(name: string, attr: string) {
         const value = this.optionValue(name, attr);
-        if (typeof value === 'object') {
-            return value as object;
-        }
-        return null;
+        return isObject(value) ? value : null;
     }
 
     public optionValueAsString(name: string, attr: string) {

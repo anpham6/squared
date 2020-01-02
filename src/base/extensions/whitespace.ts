@@ -8,7 +8,7 @@ const $lib = squared.lib;
 const { formatPX } = $lib.css;
 const { hasBit } = $lib.util;
 
-const DOCTYPE_HTML = document.doctype !== null && document.doctype.name === 'html';
+const DOCTYPE_HTML = document.doctype?.name === 'html';
 
 function setSpacingOffset(node: NodeUI, region: number, value: number, adjustment = 0) {
     let offset: number;
@@ -223,8 +223,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         const previousSiblings = current.previousSiblings({ floating: false });
                         const lengthA = previousSiblings.length;
                         if (lengthA > 0) {
-                            const previous = previousSiblings[lengthA - 1];
                             let inheritedTop = false;
+                            const previous = previousSiblings[lengthA - 1];
                             if (isBlockElement(previous, true)) {
                                 let marginBottom = previous.marginBottom;
                                 let marginTop = current.marginTop;
@@ -348,8 +348,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
         }
         for (const node of this.application.processing.excluded) {
             if (node.lineBreak && !node.lineBreakTrailing && !processed.has(node.id)) {
-                const previousSiblings = node.previousSiblings({ floating: false });
                 let valid = false;
+                const previousSiblings = node.previousSiblings({ floating: false });
                 if (previousSiblings.length) {
                     const actualParent = node.actualParent as T;
                     const nextSiblings = node.nextSiblings({ floating: false });
@@ -388,16 +388,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         if (inline) {
                             aboveLineBreak = previousSiblings[0] as T;
                             if (previousSiblings.length === 1) {
-                                if ((aboveLineBreak as T).lineBreak) {
-                                    aboveLineBreak = node;
-                                }
-                                else {
-                                    aboveLineBreak = undefined;
-                                }
+                                aboveLineBreak = aboveLineBreak.lineBreak ? node : undefined;
                             }
-                            if (aboveLineBreak) {
-                                aboveLineBreak.setBounds(false);
-                            }
+                            aboveLineBreak?.setBounds(false);
                         }
                         let aboveParent = above.renderParent;
                         let belowParent = below.renderParent;
@@ -480,8 +473,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     }
 
     public afterConstraints() {
-        const cache = this.application.processing.cache;
-        for (const node of cache) {
+        for (const node of this.application.processing.cache) {
             if (node.pageFlow) {
                 const renderParent = node.renderParent;
                 if (renderParent && node.styleElement && node.inlineVertical && !node.positioned && !node.documentParent.layoutElement && !renderParent.tableElement) {
@@ -527,10 +519,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         }
                                         for (const item of row) {
                                             if (item.blockDimension && !item.floating) {
-                                                const bottom = item.actualRect('bottom');
-                                                if (bottom > maxBottom) {
-                                                    maxBottom = bottom;
-                                                }
+                                                maxBottom = Math.max(item.actualRect('bottom'), maxBottom);
                                             }
                                         }
                                         if (maxBottom === Number.NEGATIVE_INFINITY) {
@@ -555,10 +544,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             maxBottom = Number.NEGATIVE_INFINITY;
                                         }
                                         else if (item.blockDimension && !item.floating) {
-                                            const bottom = item.actualRect('bottom');
-                                            if (bottom > maxBottom) {
-                                                maxBottom = bottom;
-                                            }
+                                            maxBottom = Math.max(item.actualRect('bottom'), maxBottom);
                                         }
                                     }
                                     if (maxBottom !== Number.NEGATIVE_INFINITY && top > maxBottom) {

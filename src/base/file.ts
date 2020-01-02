@@ -155,8 +155,8 @@ export default abstract class File<T extends squared.base.Node> implements squar
         }
     }
 
-    public static downloadFile(data: Blob, filename: string, mime?: string) {
-        const blob = new Blob([data], { type: mime || 'application/octet-stream' });
+    public static downloadFile(data: Blob, filename: string, mimeType?: string) {
+        const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
         const element = document.createElement('a');
         element.style.setProperty('display', 'none');
@@ -183,13 +183,14 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public addAsset(data: Optional<RawAsset>) {
         if (data.content || data.uri || data.base64) {
+            const assets = this.assets;
             const { pathname, filename } = data;
-            const index = this.assets.findIndex(item => item.pathname === pathname && item.filename === filename);
+            const index = assets.findIndex(item => item.pathname === pathname && item.filename === filename);
             if (index !== -1) {
-                Object.assign(this.assets[index], data);
+                Object.assign(assets[index], data);
             }
             else {
-                this.assets.push(<RawAsset> data);
+                assets.push(<RawAsset> data);
             }
         }
     }
@@ -202,12 +203,12 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (location.protocol.startsWith('http')) {
             assets = assets.concat(this.assets);
             if (assets.length) {
-                const settings = this.userSettings;
+                const { outputDirectory, outputArchiveTimeout } = this.userSettings;
                 fetch(
                     '/api/assets/copy' +
                     '?to=' + encodeURIComponent(directory.trim()) +
-                    '&directory=' + encodeURIComponent(trimString(settings.outputDirectory, '/')) +
-                    '&timeout=' + settings.outputArchiveTimeout, {
+                    '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
+                    '&timeout=' + outputArchiveTimeout, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                         body: JSON.stringify(assets)
@@ -239,18 +240,18 @@ export default abstract class File<T extends squared.base.Node> implements squar
         }
     }
 
-    public archiving(filename: string, assets: FileAsset[], appendTo?: string) {
+    public archiving(filename: string, assets: FileAsset[], appendTo = '') {
         if (location.protocol.startsWith('http')) {
             assets = assets.concat(this.assets);
             if (assets.length) {
-                const settings = this.userSettings;
+                const { outputDirectory, outputArchiveFormat, outputArchiveTimeout } = this.userSettings;
                 fetch(
                     '/api/assets/archive' +
                     '?filename=' + encodeURIComponent(filename.trim()) +
-                    '&directory=' + encodeURIComponent(trimString(settings.outputDirectory, '/')) +
-                    '&format=' + settings.outputArchiveFormat +
-                    (appendTo ? '&append_to=' + encodeURIComponent(appendTo.trim()) : '') +
-                    '&timeout=' + settings.outputArchiveTimeout, {
+                    '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
+                    '&format=' + outputArchiveFormat +
+                    '&append_to=' + encodeURIComponent(appendTo.trim()) +
+                    '&timeout=' + outputArchiveTimeout, {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                         body: JSON.stringify(assets)

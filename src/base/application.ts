@@ -28,11 +28,6 @@ let REGEX_FONT_WEIGHT!: RegExp;
 let REGEX_URL!: RegExp;
 let NodeConstructor!: Constructor<Node>;
 
-function parseConditionText(rule: string, value: string) {
-    const match = new RegExp(`^@${rule}([^{]+)`).exec(value);
-    return match ? match[1].trim() : value;
-}
-
 async function getImageSvgAsync(value: string) {
     const response = await fetch(value, {
         method: 'GET',
@@ -40,6 +35,8 @@ async function getImageSvgAsync(value: string) {
     });
     return response.text();
 }
+
+const parseConditionText = (rule: string, value: string) => new RegExp(`^@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public controllerHandler: Controller<T>;
@@ -166,9 +163,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (preloadImages) {
             for (const element of this.rootElements) {
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
-                    const { width, height, src: uri } = image;
+                    const uri = image.src;
                     if (uri !== '') {
-                        ASSETS.images.set(uri, { width, height, uri });
+                        ASSETS.images.set(uri, { width: image.width, height: image.height, uri });
                     }
                 });
             }
@@ -653,7 +650,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         const styleMatch = REGEX_FONT_STYLE.exec(attr);
                         const weightMatch = REGEX_FONT_WEIGHT.exec(attr);
                         const fontFamily = familyMatch[1].trim();
-                        const fontStyle = styleMatch ? styleMatch[1].toLowerCase() : 'normal';
+                        const fontStyle = styleMatch?.[1].toLowerCase() || 'normal';
                         const fontWeight = weightMatch ? parseInt(weightMatch[1]) : 400;
                         for (const value of srcMatch[1].split(XML.SEPARATOR)) {
                             const urlMatch = REGEX_URL.exec(value);

@@ -80,9 +80,12 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             if (name) {
                 data.filename = name;
             }
-            else if (data.filename.indexOf('.') === -1) {
-                data.pathname += '/' + data.filename;
-                data.filename = 'index.html';
+            else {
+                const filename = data.filename;
+                if (filename.indexOf('.') === -1) {
+                    data.pathname += '/' + filename;
+                    data.filename = 'index.html';
+                }
             }
             if (this.validFile(data)) {
                 data.uri = href;
@@ -228,14 +231,16 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     get outputFileExclusions() {
-        if (this._outputFileExclusions === undefined) {
+        let result = this._outputFileExclusions;
+        if (result === undefined) {
             const exclusions: RegExp[] = [];
             for (const value of this.userSettings.outputFileExclusions) {
                 exclusions.push(convertFileMatch(value));
             }
-            this._outputFileExclusions = exclusions;
+            result = exclusions;
+            this._outputFileExclusions = result;
         }
-        return this._outputFileExclusions;
+        return result;
     }
 
     get userSettings() {

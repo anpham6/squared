@@ -22,12 +22,9 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
         if (element) {
             const toolbar = getElementAsNode<T>(element, node.sessionId);
             if (toolbar) {
-                const extension = extensionManager.retrieve(WIDGET_NAME.TOOLBAR);
-                if (extension) {
-                    const data = extension.options[toolbar.elementId];
-                    if (data && 'collapsingToolbar' in data) {
-                        node.android('fitsSystemWindows', 'true');
-                    }
+                const data = extensionManager.retrieve(WIDGET_NAME.TOOLBAR)?.options[toolbar.elementId];
+                if (data && 'collapsingToolbar' in data) {
+                    node.android('fitsSystemWindows', 'true');
                 }
             }
         }

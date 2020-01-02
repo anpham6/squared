@@ -22,7 +22,7 @@ export default class Application<T extends chrome.base.View> extends squared.bas
         }
         const node = this.createNode(element, false);
         if (node.plainText && parent) {
-            node.cssApply(parent.getTextStyle());
+            node.cssApply(parent.textStyle);
         }
         return node;
     }

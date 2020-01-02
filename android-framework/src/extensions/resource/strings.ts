@@ -33,9 +33,9 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
                     case 'SELECT': {
-                        const arrayName = this.createOptionArray(<HTMLSelectElement> node.element, node.controlId);
-                        if (arrayName !== '') {
-                            node.android('entries', '@array/' + arrayName);
+                        const name = this.createOptionArray(<HTMLSelectElement> node.element, node.controlId);
+                        if (name !== '') {
+                            node.android('entries', '@array/' + name);
                         }
                         break;
                     }

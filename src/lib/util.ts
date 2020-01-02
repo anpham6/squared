@@ -43,10 +43,7 @@ export function lowerCaseString(value: string) {
 }
 
 export function spliceString(value: string, index: number, length: number) {
-    if (index === 0) {
-        return value.substring(length);
-    }
-    return value.substring(0, index) + value.substring(index + length);
+    return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
 }
 
 export function convertUnderscore(value: string) {
@@ -60,7 +57,7 @@ export function convertUnderscore(value: string) {
     for (let i = 1; i < length; i++) {
         const ch = value[i];
         const upper = ch === ch.toUpperCase();
-        if (ch !== '_' && lower && upper) {
+        if (lower && upper && ch !== '_') {
             result += '_' + ch.toLowerCase();
         }
         else {
@@ -230,10 +227,10 @@ export function isEqual(source: any, values: any) {
     return false;
 }
 
-export function includes(source: string | undefined, value: string, delimiter = ',') {
+export function includes(source: string | undefined, value: string, delimiter = XML.SEPARATOR) {
     if (source) {
         for (const name of source.split(delimiter)) {
-            if (name.trim() === value) {
+            if (name === value) {
                 return true;
             }
         }
@@ -560,9 +557,10 @@ export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boo
 
 export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>) {
     for (let i = 0; i < list.length; i++) {
-        if (predicate(list[i], i, list)) {
+        const item = list[i];
+        if (predicate(item, i, list)) {
             if (callback) {
-                callback(list[i], i, list);
+                callback(item, i, list);
             }
             list.splice(i--, 1);
         }
@@ -575,8 +573,9 @@ export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
     const result: T[] = new Array(length);
     let j = 0;
     for (let i = 0; i < length; i++) {
-        if (predicate(list[i], i, list)) {
-            result[j++] = list[i];
+        const item = list[i];
+        if (predicate(item, i, list)) {
+            result[j++] = item;
         }
     }
     result.length = j;
@@ -585,7 +584,7 @@ export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
 
 export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
     const length = list.length;
-    if (length > 0) {
+    if (length) {
         let baseValue!: any;
         for (let i = 0; i < length; i++) {
             const value = predicate(list[i], i, list);
@@ -620,8 +619,9 @@ export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boole
     const result: U[] = new Array(length);
     let j = 0;
     for (let i = 0; i < length; i++) {
-        if (predicate(list[i], i, list)) {
-            result[j++] = callback(list[i], i, list);
+        const item = list[i];
+        if (predicate(item, i, list)) {
+            result[j++] = callback(item, i, list);
         }
     }
     result.length = j;
@@ -660,8 +660,9 @@ export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, c
 export function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
     const length = list.length;
     for (let i = 0; i < length; i++) {
-        if (predicate(list[i], i, list)) {
-            const value = callback(list[i], i, list);
+        const item = list[i];
+        if (predicate(item, i, list)) {
+            const value = callback(item, i, list);
             if (value === false) {
                 break;
             }

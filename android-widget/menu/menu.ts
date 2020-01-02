@@ -99,7 +99,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         if (this.included(element)) {
             const children = element.children;
             const length = children.length;
-            if (length > 0) {
+            if (length) {
                 const tagName = children[0].tagName;
                 for (let i = 1; i < length; i++) {
                     if (children[i].tagName !== tagName) {

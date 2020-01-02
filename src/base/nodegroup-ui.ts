@@ -24,20 +24,22 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     public previousSiblings(options?: SiblingOptions) {
         const node = <NodeUI> (this._initial.children || this.children)[0];
-        return node ? node.previousSiblings(options) : [];
+        return node?.previousSiblings(options) || [];
     }
 
     public nextSiblings(options?: SiblingOptions) {
         const children = this._initial.children || this.children;
         const node = <NodeUI> children[children.length - 1];
-        return node ? node.nextSiblings(options) : [];
+        return node?.nextSiblings(options) || [];
     }
 
     get block() {
-        if (this._cached.block === undefined) {
-            this._cached.block = this.some(node => node.block);
+        let result = this._cached.block;
+        if (result === undefined) {
+            result = this.some(node => node.block);
+            this._cached.block = result;
         }
-        return this._cached.block;
+        return result;
     }
 
     get blockStatic() {
@@ -57,78 +59,93 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get blockDimension() {
-        if (this._cached.blockDimension === undefined) {
-            this._cached.blockDimension = this.some(node => node.blockDimension);
+        let result = this._cached.blockDimension;
+        if (result === undefined) {
+            result = this.some(node => node.blockDimension);
+            this._cached.blockDimension = result;
         }
-        return this._cached.blockDimension;
+        return result;
     }
 
     get inline() {
-        if (this._cached.inline === undefined) {
-            this._cached.inline = this.every(node => node.inline);
+        let result = this._cached.inline;
+        if (result === undefined) {
+            result = this.every(node => node.inline);
+            this._cached.inline = result;
         }
-        return this._cached.inline;
+        return result;
     }
 
     get inlineStatic() {
-        if (this._cached.inlineStatic === undefined) {
-            this._cached.inlineStatic = this.every(node => node.inlineStatic);
+        let result = this._cached.inlineStatic;
+        if (result === undefined) {
+            result = this.every(node => node.inlineStatic);
+            this._cached.inlineStatic = result;
         }
-        return this._cached.inlineStatic;
+        return result;
     }
 
     get inlineVertical() {
-        if (this._cached.inlineVertical === undefined) {
-            this._cached.inlineVertical = this.every(node => node.inlineVertical);
+        let result = this._cached.inlineVertical;
+        if (result === undefined) {
+            result = this.every(node => node.inlineVertical);
+            this._cached.inlineVertical = result;
         }
-        return this._cached.inlineVertical;
+        return result;
     }
 
     get inlineFlow() {
-        if (this._cached.inlineStatic === undefined) {
-            this._cached.inlineStatic = this.inlineStatic || this.hasAlign(NODE_ALIGNMENT.SEGMENTED);
+        let result = this._cached.inlineStatic;
+        if (result === undefined) {
+            result = this.inlineStatic || this.hasAlign(NODE_ALIGNMENT.SEGMENTED);
+            this._cached.inlineStatic = result;
         }
-        return this._cached.inlineStatic;
+        return result;
     }
 
     get pageFlow() {
-        if (this._cached.pageFlow === undefined) {
+        let result = this._cached.pageFlow;
+        if (result === undefined) {
             const value = this.css('position');
-            this._cached.pageFlow = value !== 'absolute' && value !== 'fixed';
+            result = value !== 'absolute' && value !== 'fixed';
+            this._cached.pageFlow = result;
         }
-        return this._cached.pageFlow;
+        return result;
     }
 
     set baseline(value) {
         this._cached.baseline = value;
     }
     get baseline() {
-        if (this._cached.baseline === undefined) {
+        let result = this._cached.baseline;
+        if (result === undefined) {
             const value = this.cssInitial('verticalAlign', true);
-            this._cached.baseline = value !== '' ? value === 'baseline' : this.layoutHorizontal && this.every(node => node.baseline);
+            result = value !== '' ? value === 'baseline' : this.layoutHorizontal && this.every(node => node.baseline);
+            this._cached.baseline = result;
         }
-        return this._cached.baseline;
+        return result;
     }
 
     get float() {
-        if (this._cached.float === undefined) {
-            this._cached.float = !this.floating ? 'none' : (this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left');
+        let result = this._cached.float;
+        if (result === undefined) {
+            result = !this.floating ? 'none' : (this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left');
+            this._cached.float = result;
         }
-        return this._cached.float;
+        return result;
     }
 
     get floating() {
-        if (this._cached.floating === undefined) {
-            this._cached.floating = this.every(node => node.floating);
+        let result = this._cached.floating;
+        if (result === undefined) {
+            result = this.every(node => node.floating);
+            this._cached.floating = result;
         }
-        return this._cached.floating;
+        return result;
     }
 
     get display() {
-        return (
-            super.display ||
-            this.some(node => node.blockStatic) ? 'block' : (this.blockDimension ? 'inline-block' : 'inline')
-        );
+        return super.display || (this.some(node => node.blockStatic) ? 'block' : (this.blockDimension ? 'inline-block' : 'inline'));
     }
 
     get firstChild() {

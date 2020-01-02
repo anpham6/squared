@@ -138,12 +138,11 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     private setOffsetPath() {
-        if (this._offsetPath === undefined && this.path) {
-            const rotateData = this.rotateData;
+        if (this._offsetPath === undefined && isString(this.path)) {
+            const { duration, rotateData } = this;
             let offsetPath = SvgBuild.getOffsetPath(this.path, rotateData && this.rotate);
             let distance = offsetPath.length;
             if (distance > 0) {
-                const duration = this.duration;
                 let increment = 1;
                 if (duration >= distance) {
                     increment = duration / distance;
@@ -168,8 +167,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     offsetPath = result;
                     distance = result.length;
                 }
-                const keyPoints = this.keyPoints;
-                const framesPerSecond = this.framesPerSecond;
+                const { framesPerSecond, keyPoints } = this;
                 const fps = framesPerSecond ? 1000 / framesPerSecond : 0;
                 if (keyPoints.length) {
                     const length = distance - 1;
@@ -375,28 +373,30 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     set keyTimes(value) {
-        if (!this.path) {
+        if (!isString(this.path)) {
             super.keyTimes = value;
         }
     }
     get keyTimes() {
         this.setOffsetPath();
-        if (this._offsetPath) {
+        const path = this._offsetPath;
+        if (path) {
             const duration = this.duration;
-            return objectMap<SvgOffsetPath, number>(this._offsetPath, item => item.key / duration);
+            return objectMap<SvgOffsetPath, number>(path, item => item.key / duration);
         }
         return super.keyTimes;
     }
 
     set values(value) {
-        if (!this.path) {
+        if (!isString(this.path)) {
             super.values = value;
         }
     }
     get values() {
         this.setOffsetPath();
-        if (this._offsetPath) {
-            return objectMap<SvgOffsetPath, string>(this._offsetPath, item => {
+        const path = this._offsetPath;
+        if (path) {
+            return objectMap<SvgOffsetPath, string>(path, item => {
                 const { x, y } = item.value;
                 return x + ' ' + y;
             });
@@ -406,17 +406,20 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
 
     get rotateValues() {
         this.setOffsetPath();
-        if (this._offsetPath) {
-            return objectMap<SvgOffsetPath, number>(this._offsetPath, item => item.rotate);
+        const path = this._offsetPath;
+        if (path) {
+            return objectMap<SvgOffsetPath, number>(path, item => item.rotate);
         }
         return undefined;
     }
 
     get keyPoints() {
-        if (this._keyPoints === undefined) {
-            this._keyPoints = [];
+        let result = this._keyPoints;
+        if (result === undefined) {
+            result = [];
+            this._keyPoints = result;
         }
-        return this._keyPoints;
+        return result;
     }
 
     set reverse(value) {
@@ -498,13 +501,14 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     get offsetLength() {
-        if (this._offsetLength === 0) {
+        let result = this._offsetLength;
+        if (result === 0) {
             const path = this.path;
             if (path) {
-                this._offsetLength = getPathLength(path);
+                result = getPathLength(path);
             }
         }
-        return this._offsetLength;
+        return result;
     }
 
     get instanceType() {

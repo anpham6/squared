@@ -33,6 +33,8 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
 
     protected _application!: squared.base.ApplicationUI<T>;
 
+    private _isAll = false;
+
     constructor(
         name: string,
         framework: number,
@@ -41,17 +43,15 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     {
         super(name, framework, options);
         this.tagNames = tagNames;
+        this._isAll = tagNames.length === 0;
     }
 
     public condition(node: T, parent?: T) {
-        if (node.styleElement) {
-            return node.dataset.use ? this.included(<HTMLElement> node.element) : this.tagNames.length > 0;
-        }
-        return false;
+        return node.dataset.use ? this.included(<HTMLElement> node.element) : !this._isAll;
     }
 
     public is(node: T) {
-        return node.styleElement ? this.tagNames.length === 0 || this.tagNames.includes(node.toElementString('tagName')) : false;
+        return this._isAll || this.tagNames.includes(node.tagName);
     }
 
     public included(element: HTMLElement) {

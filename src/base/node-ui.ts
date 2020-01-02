@@ -79,8 +79,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static baseline<T extends NodeUI>(list: T[], text = false) {
         list = filterArray(list, item => {
-            if ((item.baseline || isLength(item.verticalAlign)) && (!text || item.textElement)) {
-                return !item.floating && !item.baselineAltered && (item.naturalChild && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline));
+            if ((item.baseline || isLength(item.verticalAlign)) && (!text || item.textElement) && !item.floating && !item.baselineAltered) {
+                return item.naturalChild && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline);
             }
             return false;
         });
@@ -197,7 +197,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
             const length = nodes.length;
-            if (length > 0) {
+            if (length) {
                 if (!clearOnly) {
                     const siblings = [nodes[0]];
                     let x = 1;
@@ -416,7 +416,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return value;
         }
         else {
-            return obj && obj[attr] || '';
+            return obj?.[attr] || '';
         }
     }
 
@@ -463,8 +463,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockedAttr(name: string, attr: string) {
-        const locked = this._locked[name];
-        return locked && locked[attr] || false;
+        return this._locked[name]?.[attr] || false;
     }
 
     public render(parent?: T) {
@@ -473,12 +472,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public renderEach(predicate: IteratorPredicate<T, void>) {
-        const renderChildren = this.renderChildren;
-        const length = renderChildren.length;
+        const children = this.renderChildren;
+        const length = children.length;
         for (let i = 0; i < length; i++) {
-            const item = renderChildren[i];
+            const item = children[i];
             if (item.visible) {
-                predicate(item, i, renderChildren);
+                predicate(item, i, children);
             }
         }
         return this;
@@ -554,7 +553,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
                     break;
                 case 'textStyle':
-                    this.cssApply(node.getTextStyle());
+                    this.cssApply(node.textStyle);
                     this.fontSize = node.fontSize;
                     break;
                 case 'boxStyle':
@@ -652,14 +651,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const parseExclusions = (attr: string, enumeration: {}) => {
                 let exclude = this.dataset[attr] || '';
                 let offset = 0;
-                if (dataset[attr + 'Child']) {
-                    exclude += (exclude !== '' ? '|' : '') + dataset[attr + 'Child'];
+                const value = dataset[attr + 'Child'];
+                if (value) {
+                    exclude += (exclude !== '' ? '|' : '') + value;
                 }
                 if (exclude !== '') {
                     for (const name of exclude.split(/\s*|\s*/)) {
-                        const value = enumeration[name.toUpperCase()];
-                        if (value && !hasBit(offset, value)) {
-                            offset |= value;
+                        const i: number = enumeration[name.toUpperCase()] || 0;
+                        if (i > 0 && !hasBit(offset, i)) {
+                            offset |= i;
                         }
                     }
                 }
@@ -969,28 +969,27 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public transferBox(region: number, node: T) {
-        if (this._boxAdjustment === undefined) {
-            this._boxAdjustment = newBoxModel();
+        let boxAdjustment = <BoxModel> this._boxAdjustment;
+        if (boxAdjustment === undefined) {
+            boxAdjustment = newBoxModel();
+            this._boxAdjustment = boxAdjustment;
         }
-        const boxAdjustment = this._boxAdjustment;
-        if (boxAdjustment) {
-            const applyReset = (attrs: string[], start: number) => {
-                for (let i = 0; i < 4; i++) {
-                    const value: number = boxAdjustment[attrs[i]];
-                    if (value > 0) {
-                        const key = CSS_SPACING_KEYS[i + start];
-                        node.modifyBox(key, value, false);
-                        this.registerBox(key, node);
-                        boxAdjustment[attrs[i]] = 0;
-                    }
+        const applyReset = (attrs: string[], start: number) => {
+            for (let i = 0; i < 4; i++) {
+                const value: number = boxAdjustment[attrs[i]];
+                if (value > 0) {
+                    const key = CSS_SPACING_KEYS[i + start];
+                    node.modifyBox(key, value, false);
+                    this.registerBox(key, node);
+                    boxAdjustment[attrs[i]] = 0;
                 }
-            };
-            if (hasBit(region, BOX_STANDARD.MARGIN)) {
-                applyReset(BOX_MARGIN, 0);
             }
-            if (hasBit(region, BOX_STANDARD.PADDING)) {
-                applyReset(BOX_PADDING, 4);
-            }
+        };
+        if (hasBit(region, BOX_STANDARD.MARGIN)) {
+            applyReset(BOX_MARGIN, 0);
+        }
+        if (hasBit(region, BOX_STANDARD.PADDING)) {
+            applyReset(BOX_PADDING, 4);
         }
     }
 
@@ -1155,8 +1154,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get naturalChild() {
-        const element = this._element;
-        return element ? element.parentElement !== null : false;
+        let result = this._cached.naturalChild;
+        if (result === undefined) {
+            result = !!this._element?.parentElement;
+            this._cached.naturalChild = result;
+        }
+        return result;
     }
 
     get pseudoElement() {
@@ -1268,7 +1271,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textContent() {
         let result = this._cached.textContent;
         if (result === undefined) {
-            result = this.naturalChild && this._element ? (<Element> this._element).textContent as string : '';
+            result = this.naturalChild ? (<Element> this._element).textContent as string : '';
             this._cached.textContent = result;
         }
         return result;
@@ -1320,20 +1323,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._siblingsLeading = value;
     }
     get siblingsLeading() {
-        if (this._siblingsLeading === undefined) {
-            this._siblingsLeading = this.previousSiblings();
-        }
-        return this._siblingsLeading;
+        return this._siblingsLeading || this.previousSiblings();
     }
 
     set siblingsTrailing(value) {
         this._siblingsTrailing = value;
     }
     get siblingsTrailing() {
-        if (this._siblingsTrailing === undefined) {
-            this._siblingsTrailing = this.nextSiblings();
-        }
-        return this._siblingsTrailing;
+        return this._siblingsTrailing || this.nextSiblings();
     }
 
     get previousSibling() {
@@ -1381,8 +1378,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get onlyChild() {
-        const parent = this.renderParent || this.parent;
-        return parent !== undefined && parent.length === 1 && parent.id !== 0;
+        if (!this.documentRoot) {
+            return (this.renderParent?.renderChildren.length ?? this.parent?.length) === 1;
+        }
+        return false;
     }
 
     get textEmpty() {

@@ -9,17 +9,9 @@ const { setElementCache } = $lib.session;
 export default class Controller<T extends View> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
     public afterInsertNode?: BindGeneric<T, void>;
     public readonly localSettings: ControllerSettings = {
-        svg: {
-            enabled: true
-        },
         supported: {
             fontFormat: '*',
             imageFormat: '*'
-        },
-        unsupported: {
-            cascade: new Set(),
-            tagName: new Set(),
-            excluded: new Set()
         }
     };
 

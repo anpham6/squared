@@ -99,7 +99,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         if (animationElement) {
             const value = getNamedItem(animationElement, attr);
             if (value !== '') {
-                if (equality !== undefined) {
+                if (isString(equality)) {
+                    equality = equality.trim();
                     this[attr + capitalize(equality)] = value === equality;
                 }
                 else {

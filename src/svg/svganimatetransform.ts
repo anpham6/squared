@@ -117,9 +117,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
             if (iterationCount !== -1 && duration > 0 && keyTimesBase.length) {
                 const durationTotal = duration * iterationCount;
                 invalid: {
-                    const keySplinesBase = this.keySplines;
-                    const valuesBase = this.values;
-                    const type = this.type;
+                    const { type, keySplines: keySplinesBase, values: valuesBase } = this;
                     const keyTimes: number[] = [];
                     const values: string[] = [];
                     const keySplines: string[] = [];

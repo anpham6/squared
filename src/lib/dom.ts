@@ -79,13 +79,14 @@ export function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scroll
         height: rect.height
     };
     if (scrollPosition) {
-        if (window.scrollY !== 0) {
-            result.top += window.scrollY;
-            result.bottom += window.scrollY;
+        const { scrollX, scrollY } = window;
+        if (scrollY !== 0) {
+            result.top += scrollY;
+            result.bottom += scrollY;
         }
-        if (window.scrollX !== 0) {
-            result.left += window.scrollX;
-            result.right += window.scrollX;
+        if (scrollX !== 0) {
+            result.left += scrollX;
+            result.right += scrollX;
         }
     }
     return result;
@@ -105,27 +106,27 @@ export function getRangeClientRect(element: Element) {
     }
     let bounds: BoxRectDimension;
     length = domRect.length;
-    if (length > 0) {
+    if (length) {
         bounds = assignRect(domRect[0]);
         let numberOfLines = 1;
         for (let i = 1 ; i < length; i++) {
-            const rect = domRect[i];
-            if (rect.left < bounds.left) {
-                bounds.left = rect.left;
+            const { left, right, top, bottom, width } = domRect[i];
+            if (left < bounds.left) {
+                bounds.left = left;
             }
-            if (rect.right > bounds.right) {
-                bounds.right = rect.right;
+            if (right > bounds.right) {
+                bounds.right = right;
             }
-            if (rect.top < bounds.top) {
-                bounds.top = rect.top;
+            if (top < bounds.top) {
+                bounds.top = top;
             }
-            else if (rect.top >= bounds.bottom) {
+            else if (top >= bounds.bottom) {
                 numberOfLines++;
             }
-            if (rect.bottom > bounds.bottom) {
-                bounds.bottom = rect.bottom;
+            if (bottom > bounds.bottom) {
+                bounds.bottom = bottom;
             }
-            bounds.width += rect.width;
+            bounds.width += width;
         }
         bounds.height = bounds.bottom - bounds.top;
         if (numberOfLines > 1) {
@@ -210,8 +211,7 @@ export function measureTextWidth(value: string, fontFamily: string, fontSize: nu
 }
 
 export function getNamedItem(element: Element, attr: string) {
-    const item = element.attributes.getNamedItem(attr);
-    return item ? item.value.trim() : '';
+    return element.attributes.getNamedItem(attr)?.value.trim() || '';
 }
 
 export function isTextNode(element: Element) {

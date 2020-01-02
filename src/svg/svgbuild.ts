@@ -357,7 +357,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             for (let key = 0; key <= totalLength; key++) {
                 const nextPoint = element.getPointAtLength(key);
                 if (keyPoints.length) {
-                    const index = keyPoints.findIndex(pt => {
+                    const index = keyPoints.findIndex((pt: Point) => {
                         const x = pt.x.toString();
                         const y = pt.y.toString();
                         return x === nextPoint.x.toPrecision(x.length - (x.indexOf('.') !== -1 ? 1 : 0)) && y === nextPoint.y.toPrecision(y.length - (y.indexOf('.') !== -1 ? 1 : 0));
@@ -409,15 +409,17 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static getPathCommands(value: string) {
         value = value.trim();
         const result: SvgPathCommand[] = [];
+        let first = true;
         let match: RegExpExecArray | null;
         while ((match = REGEX_COMMAND.exec(value)) !== null) {
-            if (result.length === 0 && match[1].toUpperCase() !== 'M') {
+            let key = match[1];
+            if (first && key.toUpperCase() !== 'M') {
                 break;
             }
             const coordinates = SvgBuild.parseCoordinates((match[2] || '').trim());
             let previousCommand: string | undefined;
             let previousPoint: Point | undefined;
-            if (result.length) {
+            if (!first) {
                 const previous = result[result.length - 1];
                 previousCommand = previous.key.toUpperCase();
                 previousPoint = previous.end;
@@ -427,10 +429,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let xAxisRotation: number | undefined;
             let largeArcFlag: number | undefined;
             let sweepFlag: number | undefined;
-            switch (match[1].toUpperCase()) {
+            switch (key.toUpperCase()) {
                 case 'M':
-                    if (result.length === 0) {
-                        match[1] = 'M';
+                    if (first) {
+                        key = 'M';
                     }
                 case 'L':
                     if (coordinates.length >= 2) {
@@ -444,7 +446,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                 case 'H':
                     if (previousPoint && coordinates.length) {
-                        coordinates[1] = match[1] === 'h' ? 0 : previousPoint.y;
+                        coordinates[1] = key === 'h' ? 0 : previousPoint.y;
                         coordinates.length = 2;
                         break;
                     }
@@ -454,7 +456,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 case 'V':
                     if (previousPoint && coordinates.length) {
                         const y = coordinates[0];
-                        coordinates[0] = match[1] === 'v' ? 0 : previousPoint.x;
+                        coordinates[0] = key === 'v' ? 0 : previousPoint.x;
                         coordinates[1] = y;
                         coordinates.length = 2;
                         break;
@@ -463,12 +465,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         continue;
                     }
                 case 'Z':
-                    if (result.length) {
+                    if (!first) {
                         const coordinatesData = result[0].coordinates;
                         coordinates[0] = coordinatesData[0];
                         coordinates[1] = coordinatesData[1];
                         coordinates.length = 2;
-                        match[1] = 'Z';
+                        key = 'Z';
                         break;
                     }
                     else {
@@ -526,7 +528,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             const length = coordinates.length;
             if (length >= 2) {
-                const relative = match[1] === match[1].toLowerCase();
+                const relative = key === key.toLowerCase();
                 const points: SvgPoint[] = [];
                 for (let i = 0; i < length; i += 2) {
                     let x = coordinates[i];
@@ -538,7 +540,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     points.push({ x, y });
                 }
                 result.push({
-                    key: match[1],
+                    key,
                     value: points,
                     start: points[0],
                     end: points[points.length - 1],
@@ -550,6 +552,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     largeArcFlag,
                     sweepFlag
                 });
+                first = false;
             }
         }
         REGEX_COMMAND.lastIndex = 0;
@@ -736,34 +739,35 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let x2 = 0;
             let y2 = 0;
             if (origin) {
+                const { x, y } = origin;
                 const method = item.method;
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_SCALE:
                         if (method.x) {
-                            x2 = origin.x * (1 - m.a);
+                            x2 = x * (1 - m.a);
                         }
                         if (method.y) {
-                            y2 = origin.y * (1 - m.d);
+                            y2 = y * (1 - m.d);
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWX:
                         if (method.y) {
-                            y1 -= origin.y;
+                            y1 -= y;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWY:
                         if (method.x) {
-                            x1 -= origin.x;
+                            x1 -= x;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
                         if (method.x) {
-                            x1 -= origin.x;
-                            x2 = origin.x + offsetAngleY(item.angle, origin.x);
+                            x1 -= x;
+                            x2 = x + offsetAngleY(item.angle, x);
                         }
                         if (method.y) {
-                            y1 -= origin.y;
-                            y2 = origin.y + offsetAngleY(item.angle, origin.y);
+                            y1 -= y;
+                            y2 = y + offsetAngleY(item.angle, y);
                         }
                         break;
                 }
@@ -869,10 +873,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static parsePoints(value: string) {
         const result: Point[] = [];
         for (const coords of value.trim().split(CHAR.SPACE)) {
-            const points = coords.split(XML.SEPARATOR);
+            const [x, y] = coords.split(XML.SEPARATOR);
             result.push({
-                x: parseFloat(points[0]),
-                y: parseFloat(points[1])
+                x: parseFloat(x),
+                y: parseFloat(y)
             });
         }
         return result;

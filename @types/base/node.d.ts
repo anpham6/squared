@@ -15,6 +15,7 @@ export interface CachedValue<T> {
     layoutElement?: boolean;
     flexElement?: boolean;
     gridElement?: boolean;
+    naturalChild?: boolean;
     pageFlow?: boolean;
     inlineFlow?: boolean;
     positionStatic?: boolean;

@@ -56,11 +56,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const clipPath = this.getAttribute('clip-path', true, false);
             if (clipPath !== '' && clipPath !== 'none') {
                 if (CACHE_PATTERN.polygon === undefined) {
-                    const percentage = STRING.LENGTH_PERCENTAGE;
+                    const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
                     CACHE_PATTERN.polygon = /polygon\(([^)]+)\)/;
-                    CACHE_PATTERN.inset = new RegExp(`inset\\(${percentage}\\s?${percentage}?\\s?${percentage}?\\s?${percentage}?\\)`);
-                    CACHE_PATTERN.circle = new RegExp(`circle\\(${percentage}(?: at ${percentage} ${percentage})?\\)`);
-                    CACHE_PATTERN.ellipse = new RegExp(`ellipse\\(${percentage} ${percentage}(?: at ${percentage} ${percentage})?\\)`);
+                    CACHE_PATTERN.inset = new RegExp(`inset\\(${PERCENTAGE}\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\)`);
+                    CACHE_PATTERN.circle = new RegExp(`circle\\(${PERCENTAGE}(?: at ${PERCENTAGE} ${PERCENTAGE})?\\)`);
+                    CACHE_PATTERN.ellipse = new RegExp(`ellipse\\(${PERCENTAGE} ${PERCENTAGE}(?: at ${PERCENTAGE} ${PERCENTAGE})?\\)`);
                 }
                 for (const name in CACHE_PATTERN) {
                     const match = CACHE_PATTERN[name].exec(clipPath);

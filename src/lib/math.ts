@@ -6,10 +6,7 @@ const REGEX_TRUNCATECACHE = {};
 
 function convertDecimalNotation(value: number) {
     const match = REGEX_DECIMALNOTATION.exec(value.toString());
-    if (match) {
-        return parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0';
-    }
-    return value.toString();
+    return match ? (parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0') : value.toString();
 }
 
 export function minArray(list: number[]): number {
@@ -93,10 +90,11 @@ export function truncateString(value: string, precision = 3) {
     let output = value;
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(value)) !== null) {
+        let trailing = match[1];
         if (parseInt(match[2]) >= 5) {
-            match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
+            trailing = truncateFraction((parseFloat(trailing) + 1 / Math.pow(10, precision))).toString();
         }
-        output = output.replace(match[0], truncateTrailingZero(match[1]));
+        output = output.replace(match[0], truncateTrailingZero(trailing));
     }
     return output;
 }
@@ -162,7 +160,7 @@ export function nextMultiple(values: number[], minimum = 0, offset?: number[]) {
         while (value < minimum) {
             value += increment;
         }
-        const start = offset ? offset[0] : 0;
+        const start = offset?.[0] || 0;
         let valid = false;
         while (!valid) {
             const total = start + value;

@@ -23,17 +23,9 @@ export interface UserUISettings extends UserSettings {
 }
 
 export interface ControllerSettings {
-    svg: {
-        enabled: boolean;
-    };
     supported: {
         fontFormat: '*' | string[];
         imageFormat: '*' | string[];
-    };
-    unsupported: {
-        cascade: Set<string>;
-        excluded: Set<string>;
-        tagName: Set<string>;
     };
 }
 
@@ -55,6 +47,14 @@ export interface ControllerUISettings extends ControllerSettings {
         meterBackgroundColor?: string;
         progressForegroundColor?: string;
         progressBackgroundColor?: string;
+    };
+    svg: {
+        enabled: boolean;
+    };
+    unsupported: {
+        cascade: Set<string>;
+        excluded: Set<string>;
+        tagName: Set<string>;
     };
     precision: {
         standardFloat: number;

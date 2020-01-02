@@ -78,18 +78,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             };
         }
         else {
+            const inputBorderColor = this.localSettings.style.inputBorderColor;
             styleMap = getElementCache(element, 'styleMap', sessionId) || {};
-            function checkBorderAttribute(index: number) {
-                for (let i = 0; i < 4; i++) {
-                    if (styleMap[BOX_BORDER[i][index]]) {
-                        return false;
-                    }
-                }
-                return true;
-            }
             const setBorderStyle = () => {
                 if (styleMap.border === undefined && checkBorderAttribute(0)) {
-                    const inputBorderColor = this.localSettings.style.inputBorderColor;
                     styleMap.border = 'outset 1px ' + inputBorderColor;
                     for (let i = 0; i < 4; i++) {
                         const border = BOX_BORDER[i];
@@ -118,6 +110,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     styleMap.paddingLeft = '6px';
                 }
             };
+            const checkBorderAttribute = (index: number) => !(styleMap[BOX_BORDER[0][index]] || styleMap[BOX_BORDER[1][index]] || styleMap[BOX_BORDER[2][index]] || styleMap[BOX_BORDER[3][index]]);
             const tagName = element.tagName;
             if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (tagName) {
@@ -180,7 +173,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     setBorderStyle();
                     break;
                 case 'BODY':
-                    if (styleMap.backgroundColor === undefined || styleMap.backgroundColor === 'initial') {
+                    const backgroundColor = styleMap.backgroundColor;
+                    if (backgroundColor === undefined || backgroundColor === 'initial') {
                         styleMap.backgroundColor = 'rgb(255, 255, 255)';
                     }
                     break;
@@ -332,10 +326,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public hasAppendProcessing(id?: number) {
-        if (id === undefined) {
-            return this._requireFormat;
-        }
-        return this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined;
+        return id === undefined ? this._requireFormat : (this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined);
     }
 
     public includeElement(element: Element) {
@@ -531,7 +522,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
             });
             const length = layers.length;
-            if (length > 0) {
+            if (length) {
                 const children = node.children as T[];
                 for (let j = 0, k = 0, l = 1; j < length; j++, k++) {
                     const order = layers[j];
@@ -571,8 +562,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 const parentA = a.documentParent;
                 const parentB = b.documentParent;
                 if (parentA !== parentB) {
-                    if (parentA.depth !== parentA.depth) {
-                        return parentA.depth < parentA.depth ? -1 : 1;
+                    const depthA = parentA.depth;
+                    const depthB = parentB.depth;
+                    if (depthA !== depthB) {
+                        return depthA < depthB ? -1 : 1;
                     }
                     else if (parentA.actualParent === parentB.actualParent) {
                         return parentA.childIndex < parentB.childIndex ? -1 : 1;

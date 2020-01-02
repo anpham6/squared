@@ -22,7 +22,7 @@ export function actualTextRangeRect(element: Element, sessionId: string, cache =
     }
     const length = element.childElementCount;
     let hidden: [HTMLElement, string][] | undefined;
-    if (length > 0) {
+    if (length) {
         for (let i = 0; i < length; i++) {
             const style = getStyle(element.children[i]);
             if (style.getPropertyValue('visibility') !== 'visible') {
