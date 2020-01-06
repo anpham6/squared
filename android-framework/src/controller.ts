@@ -262,12 +262,12 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
                 }
             }
             if (valid) {
-                const maxDimension = node.parseUnit(maxWH, dimension.toLowerCase());
-                node.app(horizontal ? 'layout_constraintWidth_max' : 'layout_constraintHeight_max', formatPX(maxDimension + contentBox));
+                const value = node.parseUnit(maxWH, dimension.toLowerCase());
+                node.app(horizontal ? 'layout_constraintWidth_max' : 'layout_constraintHeight_max', formatPX(value + contentBox));
                 if (horizontal && node.layoutVertical) {
                     node.each(item => {
                         if (item.textElement && !item.hasPX('maxWidth')) {
-                            item.css('maxWidth', formatPX(maxDimension));
+                            item.css('maxWidth', formatPX(value));
                         }
                     });
                 }

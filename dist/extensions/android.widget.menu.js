@@ -1,4 +1,4 @@
-/* android.widget.menu 1.3.6
+/* android.widget.menu 1.3.7
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -13,7 +13,7 @@ this.android.widget.menu = (function () {
     const { CONTAINER_NODE } = $lib.enumeration;
     const { createViewAttribute } = $lib.util;
     const { Resource } = android.base;
-    const REGEXP_ITEM = {
+    const REGEX_ITEM = {
         id: /^@\+id\/\w+$/,
         title: /^.+$/,
         titleCondensed: /^.+$/,
@@ -33,7 +33,7 @@ this.android.widget.menu = (function () {
         menuCategory: /^(container|system|secondary|alternative)$/,
         orderInCategory: /^\d+$/
     };
-    const REGEXP_GROUP = {
+    const REGEX_GROUP = {
         id: /^@\+id\/\w+$/,
         checkableBehavior: /^(none|all|single)$/,
         visible: /^(true|false)$/,
@@ -88,7 +88,7 @@ this.android.widget.menu = (function () {
             if (this.included(element)) {
                 const children = element.children;
                 const length = children.length;
-                if (length > 0) {
+                if (length) {
                     const tagName = children[0].tagName;
                     for (let i = 1; i < length; i++) {
                         if (children[i].tagName !== tagName) {
@@ -175,10 +175,10 @@ this.android.widget.menu = (function () {
                     break;
                 case NAVIGATION.GROUP:
                     node.addAlign(4 /* AUTO_LAYOUT */);
-                    parseDataSet(REGEXP_GROUP, element, options);
+                    parseDataSet(REGEX_GROUP, element, options);
                     break;
                 case NAVIGATION.ITEM:
-                    parseDataSet(REGEXP_ITEM, element, options);
+                    parseDataSet(REGEX_ITEM, element, options);
                     if (!android.icon) {
                         const resource = this.resource;
                         let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);

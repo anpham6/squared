@@ -2705,20 +2705,25 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get boundingClientRect() {
-        return (this.pseudoElement ? <DOMRect> this._bounds : this._element?.getBoundingClientRect()) || <DOMRect> newBoxRectDimension();
+        return (this.naturalElement ? this._element?.getBoundingClientRect() : <DOMRect> this._bounds) || <DOMRect> newBoxRectDimension();
     }
 
     get fontSize() {
         let result = this._fontSize;
         if (result === undefined) {
-            result = this.naturalElement ? parseFloat(this.style.getPropertyValue('font-size')) : parseUnit(this.css('fontSize'));
+            const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
+            result = this.naturalElement ? getFontSize(this.style) : parseUnit(this.css('fontSize'));
+            if (result === 0 && !this.naturalChild) {
+                const element = this.element;
+                result = element ? getFontSize(getStyle(element)) : NaN;
+            }
             while (isNaN(result)) {
                 const parent = this.actualParent;
                 if (parent) {
-                    result = parseFloat(parent.style.getPropertyValue('font-size'));
+                    result = getFontSize(parent.style);
                 }
                 else {
-                    result = parseFloat(getStyle(document.body).getPropertyValue('font-size'));
+                    result = getFontSize(getStyle(document.body));
                     break;
                 }
             }

@@ -1,4 +1,4 @@
-/* android.widget.drawer 1.3.6
+/* android.widget.drawer 1.3.7
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -27,12 +27,14 @@ this.android.widget.drawer = (function () {
             if (this.included(element)) {
                 const children = element.children;
                 const length = children.length;
-                if (length > 0) {
+                if (length) {
                     for (let i = 0; i < length; i++) {
                         const item = children[i];
-                        const use = item.dataset.use;
-                        if (item.tagName === 'NAV' && !includes(use, EXT_ANDROID.EXTERNAL)) {
-                            item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
+                        if (item.tagName === 'NAV') {
+                            const use = item.dataset.use;
+                            if (!includes(use, EXT_ANDROID.EXTERNAL)) {
+                                item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
+                            }
                         }
                     }
                     this.application.rootElements.add(element);

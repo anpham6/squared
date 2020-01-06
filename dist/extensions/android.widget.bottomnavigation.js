@@ -1,4 +1,4 @@
-/* android.widget.bottomnavigation 1.3.6
+/* android.widget.bottomnavigation 1.3.7
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};

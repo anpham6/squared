@@ -1,4 +1,4 @@
-/* chrome-framework 1.3.6
+/* chrome-framework 1.3.7
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -34,7 +34,7 @@ var chrome = (function () {
             }
             const node = this.createNode(element, false);
             if (node.plainText && parent) {
-                node.cssApply(parent.getTextStyle());
+                node.cssApply(parent.textStyle);
             }
             return node;
         }
@@ -55,17 +55,9 @@ var chrome = (function () {
             this.application = application;
             this.cache = cache;
             this.localSettings = {
-                svg: {
-                    enabled: true
-                },
                 supported: {
                     fontFormat: '*',
                     imageFormat: '*'
-                },
-                unsupported: {
-                    cascade: new Set(),
-                    tagName: new Set(),
-                    excluded: new Set()
                 }
             };
             this._elementMap = new Map();
@@ -171,9 +163,12 @@ var chrome = (function () {
                 if (name) {
                     data.filename = name;
                 }
-                else if (data.filename.indexOf('.') === -1) {
-                    data.pathname += '/' + data.filename;
-                    data.filename = 'index.html';
+                else {
+                    const filename = data.filename;
+                    if (filename.indexOf('.') === -1) {
+                        data.pathname += '/' + filename;
+                        data.filename = 'index.html';
+                    }
                 }
                 if (this.validFile(data)) {
                     data.uri = href;
@@ -311,14 +306,16 @@ var chrome = (function () {
             }
         }
         get outputFileExclusions() {
-            if (this._outputFileExclusions === undefined) {
+            let result = this._outputFileExclusions;
+            if (result === undefined) {
                 const exclusions = [];
                 for (const value of this.userSettings.outputFileExclusions) {
                     exclusions.push(convertFileMatch(value));
                 }
-                this._outputFileExclusions = exclusions;
+                result = exclusions;
+                this._outputFileExclusions = result;
             }
-            return this._outputFileExclusions;
+            return result;
         }
         get userSettings() {
             return this.resource.userSettings;
