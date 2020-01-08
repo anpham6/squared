@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
     squared.setFramework(android);
     const time = new Date().getTime();
     squared.parseDocument().then(function() {
-        squared.copyToDisk('/users/anpham/git/flexbox/');
+        squared.copyToDisk('C:\\Users\\An\\git\\flexbox/');
         console.log(new Date().getTime() - time);
     });
 });
