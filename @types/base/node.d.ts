@@ -1,3 +1,5 @@
+type Node = squared.base.Node;
+
 export interface InitialData<T> {
     iteration: number;
     bounds?: BoxRectDimension;
@@ -119,6 +121,12 @@ export interface SiblingOptions {
     pageFlow?: boolean;
     lineBreak?: boolean;
     excluded?: boolean;
+}
+
+export interface AscendOptions {
+    condition?: (item: Node) => boolean;
+    parent?: Node;
+    attr?: string;
 }
 
 export interface LinearData<T> {

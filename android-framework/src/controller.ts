@@ -224,7 +224,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
             if (isLength(minWH, true) && minWH !== '0px') {
                 let valid = false;
                 if (horizontal) {
-                    if (node.ascend(item => item.hasPX('width') || item.blockStatic).length) {
+                    if (node.ascend({ condition: item => item.hasPX('width') || item.blockStatic }).length) {
                         node.setLayoutWidth('0px', false);
                         valid = node.flexibleWidth;
                         setAlignmentBlock();
@@ -245,7 +245,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
         if (isLength(maxWH, true)) {
             let valid = false;
             if (horizontal) {
-                if (node.outerWrapper || node.ascend(item => item.hasPX('width') || item.blockStatic).length) {
+                if (node.outerWrapper || node.ascend({ condition: item => item.hasPX('width') || item.blockStatic }).length) {
                     node.setLayoutWidth(renderParent.flexibleWidth ? 'match_parent' : '0px', !!node.innerWrapped?.naturalChild);
                     valid = node.flexibleWidth;
                     setAlignmentBlock();
@@ -1948,7 +1948,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         else if (parent.floatContainer) {
                             const { containerType, alignmentType } = this.containerTypeVerticalMargin;
-                            const container = node.ascend((item: T) => item.of(containerType, alignmentType), parent, 'renderParent');
+                            const container = node.ascend({ condition: (item: T) => item.of(containerType, alignmentType), parent, attr: 'renderParent' });
                             if (container.length) {
                                 const box = node.box;
                                 let leftOffset = 0;

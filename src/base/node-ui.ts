@@ -203,13 +203,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     let x = 1;
                     let y = 1;
                     for (let i = 1; i < length; i++) {
-                        if (nodes[i].alignedVertically(siblings, cleared)) {
+                        const node = nodes[i];
+                        if (node.alignedVertically(siblings, cleared)) {
                             y++;
                         }
                         else {
                             x++;
                         }
-                        siblings.push(nodes[i]);
+                        siblings.push(node);
                     }
                     linearX = x === length;
                     linearY = y === length;
@@ -232,15 +233,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                         for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < length; i++) {
-                            const item = nodes[i];
-                            const { left, right } = item.linear;
+                            const node = nodes[i];
+                            const { left, right } = node.linear;
                             if (Math.floor(left) <= boxLeft) {
                                 j++;
                             }
                             if (Math.ceil(right) >= boxRight) {
                                 k++;
                             }
-                            if (!item.floating) {
+                            if (!node.floating) {
                                 if (left === floatLeft) {
                                     l++;
                                 }
@@ -256,7 +257,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 break;
                             }
                             const previous = nodes[i - 1];
-                            if (withinRange(left, previous.linear.left) || previous.floating && aboveRange(item.linear.top, previous.linear.bottom)) {
+                            if (withinRange(left, previous.linear.left) || previous.floating && aboveRange(node.linear.top, previous.linear.bottom)) {
                                 linearX = false;
                                 break;
                             }
@@ -394,7 +395,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public of(containerType: number, ...alignmentType: number[]) {
-        return this.containerType === containerType && alignmentType.some(value => this.hasAlign(value));
+        return this.is(containerType) && alignmentType.some(value => this.hasAlign(value));
     }
 
     public attr(name: string, attr: string, value?: string, overwrite = true): string {
@@ -656,7 +657,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     exclude += (exclude !== '' ? '|' : '') + value;
                 }
                 if (exclude !== '') {
-                    for (const name of exclude.split(/\s*|\s*/)) {
+                    for (const name of exclude.split(/\s*\|\s*/)) {
                         const i: number = enumeration[name.toUpperCase()] || 0;
                         if (i > 0 && !hasBit(offset, i)) {
                             offset |= i;
@@ -812,19 +813,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public previousSiblings(options: SiblingOptions = {}) {
         const { floating, pageFlow, lineBreak, excluded } = options;
         const result: T[] = [];
-        let element = this.element;
-        if (element) {
-            element = <Element> element.previousSibling;
-        }
-        else {
-            const node = this.firstChild;
-            if (node) {
-                element = <Element> node.element;
-                if (element) {
-                    element = element.previousSibling as Element;
-                }
-            }
-        }
+        let element = <Element> (this.element?.previousSibling || this.firstChild?.element?.previousSibling);
         while (element) {
             const node = getElementAsNode<T>(element, this.sessionId);
             if (node) {
@@ -849,19 +838,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public nextSiblings(options: SiblingOptions = {}) {
         const { floating, pageFlow, lineBreak, excluded } = options;
         const result: T[] = [];
-        let element = this._element;
-        if (element) {
-            element = <Element> element.nextSibling;
-        }
-        else {
-            const node = this.lastChild;
-            if (node) {
-                element = <Element> node.element;
-                if (element) {
-                    element = element.nextSibling as Element;
-                }
-            }
-        }
+        let element = <Element> (this.element?.nextSibling || this.lastChild?.element?.nextSibling);
         while (element) {
             const node = getElementAsNode<T>(element, this.sessionId);
             if (node) {
@@ -1156,7 +1133,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get naturalChild() {
         let result = this._cached.naturalChild;
         if (result === undefined) {
-            result = !!this._element?.parentElement;
+            result = this._element?.parentElement !== null ?? false;
             this._cached.naturalChild = result;
         }
         return result;

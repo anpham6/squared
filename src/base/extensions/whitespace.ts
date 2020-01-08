@@ -139,7 +139,7 @@ function resetMargin(node: NodeUI, value: number) {
         node.modifyBox(value);
     }
     else {
-        for (const outerWrapper of node.ascend(undefined, undefined, 'outerWrapper') as NodeUI[]) {
+        for (const outerWrapper of node.ascend({ attr: 'outerWrapper' }) as NodeUI[]) {
             if (outerWrapper.getBox(value)[1] >= offset) {
                 outerWrapper.modifyBox(value, -offset);
                 break;
@@ -432,7 +432,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                     else if (actualParent.visible) {
-                        if (!actualParent.documentRoot && actualParent.ascend(item => item.documentRoot, undefined, 'outerWrapper').length === 0) {
+                        if (!actualParent.documentRoot && actualParent.ascend({ condition: item => item.documentRoot, attr: 'outerWrapper' }).length === 0) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
                             const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
                             const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);

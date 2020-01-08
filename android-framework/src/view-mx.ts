@@ -203,8 +203,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _boxReset?: BoxModel;
 
         private _api = BUILD_ANDROID.LATEST;
-        private _localization = false;
         private _containerType = 0;
+        private _localization = false;
         private __android: StringMap = {};
         private __app: StringMap = {};
 
@@ -946,7 +946,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         width = this.parseUnit(maxWidth);
                     }
                 }
-                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend(item => item.hasPX('width')).length > 0 || !/\n/.test(this.textContent))) {
+                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length > 0 || !/\n/.test(this.textContent))) {
                     width = Math.ceil(this.bounds.width);
                 }
                 if (width >= 0) {

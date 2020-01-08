@@ -91,8 +91,8 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 return 0;
             });
-            let row: T[] = [children[0]];
             let rowStart = children[0];
+            let row: T[] = [rowStart];
             const rows: T[][] = [row];
             let length = children.length;
             for (let i = 1; i < length; i++) {

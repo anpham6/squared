@@ -583,7 +583,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.naturalElements = elements;
             this.cacheNodeChildren(node, children, inlineText);
             if (this.userSettings.createQuerySelectorMap && k > 0) {
-                node.queryMap = this.createQueryMap(elements, k);
+                node.queryMap = this.createQueryMap(elements);
             }
         }
         return node;

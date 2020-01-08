@@ -505,7 +505,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         let valid = adjacent.naturalElements.includes(item);
                         if (!valid) {
                             const nested = adjacent.cascade();
-                            valid = item.ascend(child => nested.includes(child)).length > 0;
+                            valid = item.ascend({ condition: child => nested.includes(child) }).length > 0;
                         }
                         if (valid) {
                             const index = adjacent.containerIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0);

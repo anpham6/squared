@@ -36,8 +36,8 @@ function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
     const repeat = data.repeat;
     const unitPX: string[] = [];
     const unitRepeat: string[] = [];
-    const lengthA = dimension.length;
-    for (let i = 0; i < lengthA; i++) {
+    const length = dimension.length;
+    for (let i = 0; i < length; i++) {
         if (repeat[i]) {
             unitRepeat.push(dimension[i]);
         }
@@ -45,14 +45,14 @@ function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
             unitPX.push(dimension[i]);
         }
     }
-    const lengthB = data.length;
-    const lengthC = lengthB - unitPX.length;
-    const lengthD = unitRepeat.length;
-    const result: string[] = new Array(lengthB);
-    for (let i = 0; i < lengthB; i++) {
+    const lengthA = data.length;
+    const lengthB = lengthA - unitPX.length;
+    const lengthC = unitRepeat.length;
+    const result: string[] = new Array(lengthA);
+    for (let i = 0; i < lengthA; i++) {
         if (repeat[i]) {
-            for (let j = 0, k = 0; j < lengthC; i++, j++, k++) {
-                if (k === lengthD) {
+            for (let j = 0, k = 0; j < lengthB; i++, j++, k++) {
+                if (k === lengthC) {
                     k = 0;
                 }
                 result[i] = unitRepeat[k];

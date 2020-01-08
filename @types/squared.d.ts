@@ -1,6 +1,6 @@
 import { AppHandler, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { GridCellData } from './base/extension';
-import { AutoMargin, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from './base/node';
+import { AutoMargin, AscendOptions, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
@@ -443,7 +443,7 @@ declare namespace base {
         saveAsInitial(overwrite?: boolean): void;
         data(name: string, attr: string, value?: any, overwrite?: boolean): any;
         unsetCache(...attrs: string[]): void;
-        ascend(condition?: (item: Node) => boolean, parent?: Node, attr?: string): Node[];
+        ascend(options: AscendOptions): Node[];
         intersectX(rect: BoxRectDimension, dimension?: BoxType): boolean;
         intersectY(rect: BoxRectDimension, dimension?: BoxType): boolean;
         withinX(rect: BoxRectDimension, dimension?: BoxType): boolean;

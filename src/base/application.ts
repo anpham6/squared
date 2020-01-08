@@ -345,10 +345,10 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (controller.preventNodeCascade(parentElement)) {
                 return node;
             }
-            const childNodes = parentElement.childNodes;
+            const { childElementCount, childNodes } = parentElement;
             const length = childNodes.length;
             const children: T[] = new Array(length);
-            const elements: T[] = new Array(parentElement.childElementCount);
+            const elements: T[] = new Array(childElementCount);
             let inlineText = true;
             let j = 0;
             let k = 0;
@@ -388,21 +388,21 @@ export default abstract class Application<T extends Node> implements squared.bas
             node.naturalElements = elements;
             node.inlineText = inlineText;
             if (this.userSettings.createQuerySelectorMap && k > 0) {
-                node.queryMap = this.createQueryMap(elements, k);
+                node.queryMap = this.createQueryMap(elements);
             }
         }
         return node;
     }
 
-    protected createQueryMap(elements: T[], length: number) {
+    protected createQueryMap(elements: T[]) {
         const result: T[][] = [elements];
-        for (let i = 0; i < length; i++) {
-            const childMap = elements[i].queryMap as T[][];
+        for (const item of elements) {
+            const childMap = item.queryMap as T[][];
             if (childMap) {
-                const lengthA = childMap.length;
-                for (let j = 0; j < lengthA; j++) {
-                    const k = j + 1;
-                    result[k] = result[k]?.concat(childMap[j]) || childMap[j];
+                const length = childMap.length;
+                for (let i = 0; i < length; i++) {
+                    const j = i + 1;
+                    result[j] = result[j]?.concat(childMap[i]) || childMap[i];
                 }
             }
         }

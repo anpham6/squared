@@ -155,7 +155,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             const cssStyle = attr + 'Style';
                             const cssColor = attr + 'Color';
                             const cssWidth = attr + 'Width';
-                            td.ascend(undefined, node).some((item: T) => {
+                            td.ascend({ parent: node }).some((item: T) => {
                                 if (item.has(cssStyle)) {
                                     td.css(cssStyle, item.css(cssStyle));
                                     td.css(cssColor, item.css(cssColor));
@@ -231,8 +231,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         }
         if (node.hasPX('width', false) && mapWidth.some(value => isPercent(value))) {
             replaceMap<string, string>(mapWidth, (value, index) => {
-                if (value === 'auto' && mapBounds[index] > 0) {
-                    return formatPX(mapBounds[index]);
+                if (value === 'auto') {
+                    const dimension = mapBounds[index];
+                    if (dimension > 0) {
+                        return formatPX(dimension);
+                    }
                 }
                 return value;
             });
@@ -342,8 +345,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const tr = table[i];
             let lastChild: T | undefined;
             for (const td of tr.duplicate() as T[]) {
-                const element = <HTMLTableCellElement> td.element;
-                const { rowSpan, colSpan } = element;
+                const { rowSpan, colSpan } = <HTMLTableCellElement> td.element;
                 const data: ExternalData = { rowSpan, colSpan };
                 for (let k = 0; k < rowSpan - 1; k++)  {
                     const l = (i + 1) + k;
