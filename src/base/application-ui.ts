@@ -7,6 +7,7 @@ import ExtensionUI from './extension-ui';
 import LayoutUI from './layout-ui';
 import NodeUI from './node-ui';
 import ResourceUI from './resource-ui';
+import FileUI from './file-ui';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
@@ -53,8 +54,6 @@ function prioritizeExtensions<T extends NodeUI>(value: string | undefined, exten
 }
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
-    public controllerHandler!: ControllerUI<T>;
-    public resourceHandler!: ResourceUI<T>;
     public readonly session: AppSessionUI<T> = {
         cache: new NodeList<T>(),
         excluded: new NodeList<T>(),
@@ -66,6 +65,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly builtInExtensions: ObjectMap<ExtensionUI<T>> = {};
     public readonly extensions: ExtensionUI<T>[] = [];
     public abstract userSettings: UserUISettings;
+    public readonly controllerHandler!: ControllerUI<T>;
+    public readonly resourceHandler!: ResourceUI<T>;
+    public readonly fileHandler!: FileUI<T>;
 
     private readonly _layouts: FileAsset[] = [];
     private readonly _localSettings!: ControllerUISettings;
@@ -79,23 +81,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         ExtensionManagerConstructor: Constructor<T>)
     {
         super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
-        this._localSettings = this.controllerHandler.localSettings;
-        this._excluded = this._localSettings.unsupported.excluded;
+        const localSettings = this.controllerHandler.localSettings;
+        this._localSettings = localSettings;
+        this._excluded = localSettings.unsupported.excluded;
     }
 
     public finalize() {
-        const controller = this.controllerHandler;
-        for (const [node, template] of this.session.targetQueue.entries()) {
-            const target = node.dataset.target;
-            if (target) {
-                const parent = this.resolveTarget(target);
-                if (parent) {
-                    node.render(parent);
-                    this.addLayoutTemplate(parent, node, template);
-                }
-                else if (node.renderParent === undefined) {
-                    this.session.cache.remove(node);
-                }
+        const { controllerHandler, session } = this;
+        for (const [node, template] of session.targetQueue.entries()) {
+            const parent = this.resolveTarget(node.dataset.target);
+            if (parent) {
+                node.render(parent);
+                this.addLayoutTemplate(parent, node, template);
+            }
+            else if (node.renderParent === undefined) {
+                session.cache.remove(node);
             }
         }
         const rendered = this.rendered;
@@ -107,7 +107,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 node.setAlignment();
             }
         }
-        controller.optimize(rendered);
+        controllerHandler.optimize(rendered);
         for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
                 ext.postOptimize(node);
@@ -122,7 +122,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             ext.beforeCascade();
         }
         const baseTemplate = this._localSettings.layout.baseTemplate;
-        for (const layout of this.session.documentRoot) {
+        for (const layout of session.documentRoot) {
             const node = layout.node;
             if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.naturalChildren.every(item => item.documentRoot)) {
                 continue;
@@ -131,7 +131,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (renderTemplates) {
                 this.saveDocument(
                     layout.layoutName,
-                    baseTemplate + controller.cascadeDocument(<NodeTemplate<T>[]> renderTemplates, 0),
+                    baseTemplate + controllerHandler.cascadeDocument(<NodeTemplate<T>[]> renderTemplates, 0),
                     node.dataset.pathname,
                     node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
                 );
@@ -139,7 +139,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         const layouts = this._layouts;
         this.resourceHandler.finalize(layouts);
-        controller.finalize(layouts);
+        controllerHandler.finalize(layouts);
         for (const ext of this.extensions) {
             ext.afterFinalize();
         }
@@ -191,11 +191,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     current = current.parentElement;
                 }
-                const controller = this.controllerHandler;
+                const controllerHandler = this.controllerHandler;
                 const children = element.children;
                 const length = children.length;
                 for (let i = 0; i < length; i++) {
-                    if (controller.visibleElement(<Element> children[i])) {
+                    if (controllerHandler.visibleElement(<Element> children[i])) {
                         return true;
                     }
                 }
@@ -253,11 +253,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public addLayout(layout: LayoutUI<T>) {
-        if (hasBit(layout.renderType, NODE_ALIGNMENT.FLOAT)) {
-            if (hasBit(layout.renderType, NODE_ALIGNMENT.HORIZONTAL)) {
+        const renderType = layout.renderType;
+        if (hasBit(renderType, NODE_ALIGNMENT.FLOAT)) {
+            if (hasBit(renderType, NODE_ALIGNMENT.HORIZONTAL)) {
                 layout = this.processFloatHorizontal(layout);
             }
-            else if (hasBit(layout.renderType, NODE_ALIGNMENT.VERTICAL)) {
+            else if (hasBit(renderType, NODE_ALIGNMENT.VERTICAL)) {
                 layout = this.processFloatVertical(layout);
             }
         }
@@ -324,7 +325,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public createCache(documentRoot: HTMLElement) {
         const node = this.createRootNode(documentRoot);
         if (node) {
-            const controller = this.controllerHandler;
+            const controllerHandler = this.controllerHandler;
             const cache = <NodeList<T>> this._cache;
             const parent = node.parent as T;
             const preAlignment: ObjectIndex<StringMap> = {};
@@ -452,8 +453,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 item.saveAsInitial();
             }
-            controller.evaluateNonStatic(node, cache);
-            controller.sortInitialCache(cache);
+            controllerHandler.evaluateNonStatic(node, cache);
+            controllerHandler.sortInitialCache(cache);
             return true;
         }
         return false;
@@ -471,15 +472,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.setResources();
     }
 
-    public resolveTarget(target: string) {
-        for (const parent of this._cache) {
-            if (parent.elementId === target || parent.controlId === target) {
-                return parent;
+    public resolveTarget(target: string | undefined) {
+        if (isString(target)) {
+            for (const parent of this._cache) {
+                if (parent.elementId === target || parent.controlId === target) {
+                    return parent;
+                }
             }
-        }
-        for (const parent of this.session.cache) {
-            if (parent.elementId === target || parent.controlId === target) {
-                return parent;
+            for (const parent of this.session.cache) {
+                if (parent.elementId === target || parent.controlId === target) {
+                    return parent;
+                }
             }
         }
         return undefined;
@@ -504,8 +507,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             }
-            const controller = this.controllerHandler;
-            if (controller.preventNodeCascade(parentElement)) {
+            const controllerHandler = this.controllerHandler;
+            if (controllerHandler.preventNodeCascade(parentElement)) {
                 return node;
             }
             const sessionId = this.processing.sessionId;
@@ -546,7 +549,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         child = this.insertNode(element, node);
                     }
                 }
-                else if (controller.includeElement(element)) {
+                else if (controllerHandler.includeElement(element)) {
                     if (extensions) {
                         prioritizeExtensions(element.dataset.use, extensions).some(item => (<any> item.init)(element));
                     }
@@ -571,6 +574,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 if (child) {
                     child.childIndex = j;
+                    child.naturalChild = true;
                     children[j++] = child;
                 }
             }
@@ -1293,12 +1297,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setResources() {
-        const resource = this.resourceHandler;
+        const resourceHandler = this.resourceHandler;
         for (const node of this._cache) {
-            resource.setBoxStyle(node);
+            resourceHandler.setBoxStyle(node);
             if (node.visible) {
-                resource.setFontStyle(node);
-                resource.setValueString(node);
+                resourceHandler.setFontStyle(node);
+                resourceHandler.setValueString(node);
             }
         }
         for (const ext of this.extensions) {
@@ -1307,8 +1311,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected processFloatHorizontal(layout: LayoutUI<T>) {
-        const controller = this.controllerHandler;
-        const { containerType, alignmentType } = controller.containerTypeVertical;
+        const controllerHandler = this.controllerHandler;
+        const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
         const cleared = layout.cleared;
         const layerIndex: Array<T[] | T[][]> = [];
         const inlineAbove: T[] = [];
@@ -1435,7 +1439,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (rightSub) {
             layerIndex.push(rightSub);
         }
-        layout.setType(controller.containerTypeVerticalMargin);
+        layout.setType(controllerHandler.containerTypeVerticalMargin);
         layout.itemCount = layerIndex.length;
         layout.add(NODE_ALIGNMENT.BLOCK);
         for (const item of layerIndex) {
@@ -1453,7 +1457,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     floatgroup = node;
                 }
                 else {
-                    floatgroup = controller.createNodeGroup(grouping[0], grouping, node);
+                    floatgroup = controllerHandler.createNodeGroup(grouping[0], grouping, node);
                     const group = new LayoutUI(
                         node,
                         floatgroup,
@@ -1470,7 +1474,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             for (const seg of segments) {
                 const node = floatgroup || layout.node;
                 const first = seg[0];
-                const target = controller.createNodeGroup(first, seg, node, true);
+                const target = controllerHandler.createNodeGroup(first, seg, node, true);
                 const group = new LayoutUI(
                     node,
                     target,
@@ -1483,7 +1487,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     groupNode.innerWrapped = first;
                     first.outerWrapper = groupNode;
                     if (first.percentWidth) {
-                        group.setType(controller.containerTypePercent);
+                        group.setType(controllerHandler.containerTypePercent);
                     }
                     else {
                         group.setContainerType(containerType, alignmentType);
@@ -1493,7 +1497,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     group.setContainerType(containerType, alignmentType | (group.unknownAligned ? NODE_ALIGNMENT.UNKNOWN : 0));
                 }
                 else {
-                    controller.processLayoutHorizontal(group);
+                    controllerHandler.processLayoutHorizontal(group);
                 }
                 this.addLayout(group);
                 if (seg === inlineAbove) {
@@ -1505,11 +1509,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected processFloatVertical(layout: LayoutUI<T>) {
-        const controller = this.controllerHandler;
-        const { containerType, alignmentType } = controller.containerTypeVertical;
+        const controllerHandler = this.controllerHandler;
+        const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
         if (layout.containerType !== 0) {
             const node = layout.node;
-            const parent = controller.createNodeGroup(node, [node], layout.parent);
+            const parent = controllerHandler.createNodeGroup(node, [node], layout.parent);
             this.addLayout(new LayoutUI(
                 parent,
                 node,
@@ -1578,10 +1582,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             for (let i = 0; i < length; i++) {
                 const pageFlow = staticRows[i] || [];
                 if (floatedRows[i] === null && pageFlow.length) {
-                    const layoutType = controller.containerTypeVertical;
+                    const layoutType = controllerHandler.containerTypeVertical;
                     this.addLayout(new LayoutUI(
                         node,
-                        controller.createNodeGroup(pageFlow[0], pageFlow, node),
+                        controllerHandler.createNodeGroup(pageFlow[0], pageFlow, node),
                         layoutType.containerType,
                         layoutType.alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
                         pageFlow
@@ -1590,8 +1594,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 else {
                     const floating = floatedRows[i] || [];
                     if (pageFlow.length || floating.length) {
-                        const verticalMargin = controller.containerTypeVerticalMargin;
-                        const basegroup = controller.createNodeGroup(floating[0] || pageFlow[0], [], node);
+                        const verticalMargin = controllerHandler.containerTypeVerticalMargin;
+                        const basegroup = controllerHandler.createNodeGroup(floating[0] || pageFlow[0], [], node);
                         const group = new LayoutUI(
                             node,
                             basegroup,
@@ -1601,7 +1605,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         const children: T[] = [];
                         let subgroup: T | undefined;
                         if (floating.length) {
-                            const floatgroup = controller.createNodeGroup(floating[0], floating, basegroup);
+                            const floatgroup = controllerHandler.createNodeGroup(floating[0], floating, basegroup);
                             group.add(NODE_ALIGNMENT.FLOAT);
                             if (pageFlow.length === 0 && floating.every(item => item.float === 'right')) {
                                 group.add(NODE_ALIGNMENT.RIGHT);
@@ -1609,7 +1613,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             children.push(floatgroup);
                         }
                         if (pageFlow.length) {
-                            subgroup = controller.createNodeGroup(pageFlow[0], pageFlow, basegroup);
+                            subgroup = controllerHandler.createNodeGroup(pageFlow[0], pageFlow, basegroup);
                             children.push(subgroup);
                         }
                         basegroup.init();
@@ -1617,7 +1621,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         this.addLayout(group);
                         for (let item of children) {
                             if (!item.nodeGroup) {
-                                item = controller.createNodeGroup(item, [item], basegroup, true);
+                                item = controllerHandler.createNodeGroup(item, [item], basegroup, true);
                             }
                             this.addLayout(new LayoutUI(
                                 basegroup,

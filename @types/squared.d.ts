@@ -45,15 +45,16 @@ declare function saveAllToDisk(): void;
 declare namespace base {
     interface Application<T extends Node> {
         framework: number;
-        controllerHandler: Controller<T>;
-        resourceHandler: Resource<T>;
-        extensionManager: ExtensionManager<T>;
         userSettings: UserSettings;
         initializing: boolean;
         closed: boolean;
         readonly session: AppSession<T>;
         readonly processing: AppProcessing<T>;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
+        readonly controllerHandler: Controller<T>;
+        readonly resourceHandler: Resource<T>;
+        readonly extensionManager: ExtensionManager<T>;
+        readonly fileHandler: File<T> | undefined;
         readonly extensions: Extension<T>[];
         readonly extensionsCascade: Extension<T>[];
         readonly nextId: number;
@@ -82,17 +83,18 @@ declare namespace base {
     }
 
     interface ApplicationUI<T extends NodeUI> extends Application<T> {
-        controllerHandler: ControllerUI<T>;
-        resourceHandler: ResourceUI<T>;
         userSettings: UserUISettings;
         readonly session: AppSessionUI<T>;
         readonly builtInExtensions: ObjectMap<ExtensionUI<T>>;
+        readonly controllerHandler: ControllerUI<T>;
+        readonly resourceHandler: ResourceUI<T>;
+        readonly fileHandler: FileUI<T> | undefined;
         readonly extensions: ExtensionUI<T>[];
         readonly rootElements: Set<Element>;
         readonly layouts: FileAsset[];
         conditionElement(element: HTMLElement): boolean;
         renderNode(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
-        resolveTarget(target: string): T | undefined;
+        resolveTarget(target: string | undefined): T | undefined;
         addLayout(layout: LayoutUI<T>): void;
         addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): void;
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
@@ -501,6 +503,7 @@ declare namespace base {
         baseline: boolean;
         multiline: boolean;
         overflow: number;
+        naturalChild: boolean;
         contentBoxWidth: number;
         contentBoxHeight: number;
         lineBreakLeading: boolean;

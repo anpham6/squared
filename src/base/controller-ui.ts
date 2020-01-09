@@ -78,10 +78,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             };
         }
         else {
-            const inputBorderColor = this.localSettings.style.inputBorderColor;
             styleMap = getElementCache(element, 'styleMap', sessionId) || {};
             const setBorderStyle = () => {
                 if (styleMap.border === undefined && checkBorderAttribute(0)) {
+                    const inputBorderColor = this.localSettings.style.inputBorderColor;
                     styleMap.border = 'outset 1px ' + inputBorderColor;
                     for (let i = 0; i < 4; i++) {
                         const border = BOX_BORDER[i];
@@ -363,8 +363,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 switch (node.css('position')) {
                     case 'relative':
                         if (node === actualParent.lastChild) {
-                            const box = actualParent.box;
                             let valid = false;
+                            const box = actualParent.box;
                             if (node.outsideX(box)) {
                                 if (!actualParent.hasPX('width') || actualParent.css('overflowX') === 'hidden') {
                                     continue;
@@ -509,10 +509,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         }
                         if (valid) {
                             const index = adjacent.containerIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0);
-                            if (layers[index] === undefined) {
-                                layers[index] = [];
+                            let layer = layers[index];
+                            if (layer === undefined) {
+                                layer = [];
+                                layer = layers[index];
                             }
-                            layers[index].push(item);
+                            layer.push(item);
                             break;
                         }
                     }
@@ -578,8 +580,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public cascadeDocument(templates: NodeTemplate<T>[], depth: number) {
-        const indent = depth > 0 ? '\t'.repeat(depth) : '';
         const showAttributes = this.userSettings.showAttributes;
+        const indent = depth > 0 ? '\t'.repeat(depth) : '';
         let output = '';
         for (const item of templates) {
             if (item) {

@@ -34,9 +34,6 @@ async function getImageSvgAsync(value: string) {
 const parseConditionText = (rule: string, value: string) => new RegExp(`^@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
-    public controllerHandler: Controller<T>;
-    public resourceHandler: Resource<T>;
-    public extensionManager: ExtensionManager<T>;
     public initializing = false;
     public closed = false;
     public readonly rootElements = new Set<HTMLElement>();
@@ -57,6 +54,10 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected _nodeConstructor: Constructor<Node>;
     protected _nodeAfterInsert: BindGeneric<Node, void>;
 
+    private _controllerHandler: Controller<T>;
+    private _resourceHandler: Resource<T>;
+    private _extensionManager: ExtensionManager<T>;
+
     protected constructor(
         public framework: number,
         nodeConstructor: Constructor<T>,
@@ -65,12 +66,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         ExtensionManagerConstructor: Constructor<T>)
     {
         const cache = this.processing.cache;
-        this.controllerHandler = <Controller<T>> (new ControllerConstructor(this, cache) as unknown);
-        this.resourceHandler = <Resource<T>> (new ResourceConstructor(this, cache) as unknown);
-        this.extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, cache) as unknown);
         this._cache = cache;
+        const controllerHandler = <Controller<T>> (new ControllerConstructor(this, cache) as unknown);
+        this._controllerHandler = controllerHandler;
+        this._resourceHandler = <Resource<T>> (new ResourceConstructor(this, cache) as unknown);
+        this._extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, cache) as unknown);
         this._nodeConstructor = nodeConstructor;
-        this._nodeAfterInsert = this.controllerHandler.afterInsertNode;
+        this._nodeAfterInsert = controllerHandler.afterInsertNode;
     }
 
     public abstract insertNode(element: Element, parent?: T): T | undefined;
@@ -78,15 +80,15 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract finalize(): void;
 
     public copyToDisk(directory: string, callback?: CallbackResult, assets?: FileAsset[]) {
-        this.resourceHandler.fileHandler?.copyToDisk(directory, assets, callback);
+        this.fileHandler?.copyToDisk(directory, assets, callback);
     }
 
     public appendToArchive(pathname: string, assets?: FileAsset[]) {
-        this.resourceHandler.fileHandler?.appendToArchive(pathname, assets);
+        this.fileHandler?.appendToArchive(pathname, assets);
     }
 
     public saveToArchive(filename?: string, assets?: FileAsset[]) {
-        this.resourceHandler.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, assets);
+        this.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, assets);
     }
 
     public reset() {
@@ -163,7 +165,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
                     const uri = image.src;
                     if (uri !== '') {
-                        ASSETS.images.set(uri, { width: image.width, height: image.height, uri });
+                        ASSETS.images.set(uri, {
+                            width: image.width,
+                            height: image.height,
+                            uri
+                        });
                     }
                 });
             }
@@ -176,10 +182,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                     else if (image.width === 0 && image.height === 0) {
                         const element = document.createElement('img');
                         element.src = uri;
-                        const { naturalWidth, naturalHeight } = element;
-                        if (naturalWidth > 0 && naturalHeight > 0) {
-                            image.width = naturalWidth;
-                            image.height = naturalHeight;
+                        const { naturalWidth: width, naturalHeight: height } = element;
+                        if (width > 0 && height > 0) {
+                            image.width = width;
+                            image.height = height;
                         }
                         else {
                             documentRoot.appendChild(element);
@@ -194,13 +200,13 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (mimeType?.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
                 const element = document.createElement('img');
                 element.src = 'data:' + mimeType + ';' + (data.base64 ? 'base64,' + data.base64 : data.content);
-                const { naturalWidth, naturalHeight } = element;
-                if (naturalWidth > 0 && naturalHeight > 0) {
-                    data.width = naturalWidth;
-                    data.height = naturalHeight;
+                const { naturalWidth: width, naturalHeight: height } = element;
+                if (width > 0 && height > 0) {
+                    data.width = width;
+                    data.height = height;
                     ASSETS.images.set(uri, {
-                        width: naturalWidth,
-                        height: naturalHeight,
+                        width,
+                        height,
                         uri: data.filename
                     });
                 }
@@ -472,7 +478,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     protected applyStyleRule(item: CSSStyleRule) {
-        const resource = this.resourceHandler;
+        const resourceHandler = this.resourceHandler;
         const sessionId = this.processing.sessionId;
         const styleSheetHref = item.parentStyleSheet?.href || undefined;
         const cssText = item.cssText;
@@ -488,12 +494,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                         let match: RegExpExecArray | null;
                         while ((match = REGEX_DATAURI.exec(value)) !== null) {
                             if (match[3] && match[4]) {
-                                resource.addRawData(match[2], match[3], match[4], match[5]);
+                                resourceHandler.addRawData(match[2], match[3], match[4], match[5]);
                             }
                             else if (this.userSettings.preloadImages) {
                                 const uri = resolvePath(match[5], styleSheetHref);
                                 if (uri !== '') {
-                                    if (resource.getImage(uri) === undefined) {
+                                    if (resourceHandler.getImage(uri) === undefined) {
                                         ASSETS.images.set(uri, { width: 0, height: 0, uri });
                                     }
                                     result = result.replace(match[1], `url("${uri}")`);
@@ -658,7 +664,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 else {
                                     srcLocal = url;
                                 }
-                                resource.addFont({
+                                resourceHandler.addFont({
                                     fontFamily,
                                     fontWeight,
                                     fontStyle,
@@ -673,6 +679,22 @@ export default abstract class Application<T extends Node> implements squared.bas
                 break;
             }
         }
+    }
+
+    get controllerHandler() {
+        return this._controllerHandler;
+    }
+
+    get resourceHandler() {
+        return this._resourceHandler;
+    }
+
+    get extensionManager() {
+        return this._extensionManager;
+    }
+
+    get fileHandler() {
+        return this._resourceHandler.fileHandler;
     }
 
     get extensionsCascade() {

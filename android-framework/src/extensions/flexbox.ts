@@ -482,7 +482,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 case 'center':
                                     chain.anchorParent(orientationInverse, 'packed', 0.5);
-                                    if (chain.textElement) {
+                                    if (!horizontal && chain.textElement) {
                                         chain.mergeGravity('gravity', 'center');
                                     }
                                     break;

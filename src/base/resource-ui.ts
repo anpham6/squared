@@ -35,8 +35,8 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
         size = item.horizontal ? (<Dimension> gradient.dimension).width : (<Dimension> gradient.dimension).height;
     }
     const result: ColorStop[] = [];
-    let match: RegExpExecArray | null;
     let previousOffset = 0;
+    let match: RegExpExecArray | null;
     while ((match = REGEX_COLORSTOP.exec(value)) !== null) {
         const color = parseColor(match[1], 1, true);
         if (color) {
@@ -53,13 +53,11 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                 if (isPercent(unit)) {
                     offset = parseFloat(unit) / 100;
                 }
-                else {
-                    if (isLength(unit)) {
-                        offset = node.parseUnit(unit, item.horizontal ? 'width' : 'height', false) / size;
-                    }
-                    else if (isCalc(unit)) {
-                        offset = calculate(match[6], size, node.fontSize) / size;
-                    }
+                else if (isLength(unit)) {
+                    offset = node.parseUnit(unit, item.horizontal ? 'width' : 'height', false) / size;
+                }
+                else if (isCalc(unit)) {
+                    offset = calculate(match[6], size, node.fontSize) / size;
                 }
                 if (repeating && offset !== -1) {
                     offset *= extent;
@@ -94,8 +92,9 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
             }
             else {
                 for (let j = i + 1, k = 2; j < length - 1; j++, k++) {
-                    if (result[j].offset !== -1) {
-                        stop.offset = (percent + result[j].offset) / k;
+                    const data = result[j];
+                    if (data.offset !== -1) {
+                        stop.offset = (percent + data.offset) / k;
                         break;
                     }
                 }
@@ -112,9 +111,9 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                 const original = result.slice(0);
                 let basePercent = percent;
                 while (percent < 100) {
-                    for (let i = 0; i < length; i++) {
-                        percent = Math.min(basePercent + original[i].offset, 1);
-                        result.push({ ...original[i], offset: percent });
+                    for (const data of original) {
+                        percent = Math.min(basePercent + data.offset, 1);
+                        result.push({ ...data, offset: percent });
                         if (percent === 1) {
                             break complete;
                         }
@@ -191,12 +190,7 @@ function getBackgroundSize(node: NodeUI, index: number, value?: string) {
     return undefined;
 }
 
-function getGradientPosition(value: string) {
-    if (value) {
-        return value.indexOf('at ') !== -1 ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : <RegExpExecArray> [value, value];
-    }
-    return null;
-}
+const getGradientPosition = (value: string) => isString(value) ? (value.indexOf('at ') !== -1 ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : <RegExpExecArray> [value, value]) : null;
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
     public static KEY_NAME = 'squared.resource';
