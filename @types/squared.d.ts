@@ -2,19 +2,7 @@ import { AppHandler, AppProcessing, AppSession, AppSessionUI, ControllerSettings
 import { GridCellData } from './base/extension';
 import { AutoMargin, AscendOptions, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from './base/node';
 
-import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
-
-import * as $const from '../src/base/lib/constant';
-import * as $enum from '../src/base/lib/enumeration';
-
-import * as $client from '../src/lib/client';
-import * as $css from '../src/lib/css';
-import * as $dom from '../src/lib/dom';
-import * as $regex from '../src/lib/regex';
-import * as $xml from '../src/lib/xml';
-
-import * as $svg_const from '../src/svg/lib/constant';
-import * as $svg_util from '../src/svg/lib/util';
+import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgMatrix, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
 type ExtensionRequest = base.Extension<base.Node> | string;
 
@@ -627,19 +615,90 @@ declare namespace base {
 
     namespace lib {
         namespace constant {
-            export import CSS_SPACING = $const.CSS_SPACING;
-            export import EXT_NAME = $const.EXT_NAME;
+            const CSS_SPACING: Map<number, string>;
+            const EXT_NAME: StringMap;
         }
 
         namespace enumeration {
-            export import APP_FRAMEWORK = $enum.APP_FRAMEWORK;
-            export import APP_SECTION = $enum.APP_SECTION;
-            export import BOX_STANDARD = $enum.BOX_STANDARD;
-            export import CSS_UNIT = $enum.CSS_UNIT;
-            export import NODE_ALIGNMENT = $enum.NODE_ALIGNMENT;
-            export import NODE_TEMPLATE = $enum.NODE_TEMPLATE;
-            export import NODE_PROCEDURE = $enum.NODE_PROCEDURE;
-            export import NODE_RESOURCE = $enum.NODE_RESOURCE;
+            const enum APP_FRAMEWORK {
+                UNIVERSAL = 0,
+                ANDROID = 2,
+                CHROME = 4
+            }
+            const enum NODE_ALIGNMENT {
+                UNKNOWN = 2,
+                AUTO_LAYOUT = 4,
+                HORIZONTAL = 8,
+                VERTICAL = 16,
+                ABSOLUTE = 32,
+                BLOCK = 64,
+                SEGMENTED = 128,
+                COLUMN = 256,
+                FLOAT = 512,
+                TOP = 1024,
+                RIGHT = 2048,
+                SINGLE = 4096,
+                EXTENDABLE = 8192,
+                WRAPPER = 16384
+            }
+            const enum NODE_TEMPLATE {
+                XML = 1,
+                INCLUDE
+            }
+            const enum NODE_TRAVERSE {
+                HORIZONTAL = 0,
+                VERTICAL = 1,
+                LINEBREAK = 2,
+                INLINE_WRAP = 3,
+                FLOAT_WRAP = 4,
+                FLOAT_CLEAR = 5,
+                FLOAT_BLOCK = 6,
+                FLOAT_INTERSECT = 7
+            }
+            const enum CSS_UNIT {
+                LENGTH = 2,
+                PERCENT = 4
+            }
+            const enum BOX_STANDARD {
+                MARGIN_TOP = 2,
+                MARGIN_RIGHT = 4,
+                MARGIN_BOTTOM = 8,
+                MARGIN_LEFT = 16,
+                PADDING_TOP = 32,
+                PADDING_RIGHT = 64,
+                PADDING_BOTTOM = 128,
+                PADDING_LEFT = 256,
+                MARGIN = 2 | 4 | 8 | 16,
+                MARGIN_VERTICAL = 2 | 8,
+                MARGIN_HORIZONTAL = 4 | 16,
+                PADDING = 32 | 64 | 128 | 256,
+                PADDING_VERTICAL = 32 | 128,
+                PADDING_HORIZONTAL = 64 | 256
+            }
+            enum APP_SECTION {
+                DOM_TRAVERSE = 2,
+                EXTENSION = 4,
+                RENDER = 8,
+                ALL = 14
+            }
+            enum NODE_RESOURCE {
+                BOX_STYLE = 2,
+                BOX_SPACING = 4,
+                FONT_STYLE = 8,
+                VALUE_STRING = 16,
+                IMAGE_SOURCE = 32,
+                ASSET = 8 | 16 | 32,
+                ALL = 126
+            }
+            enum NODE_PROCEDURE {
+                CONSTRAINT = 2,
+                LAYOUT = 4,
+                ALIGNMENT = 8,
+                ACCESSIBILITY = 16,
+                LOCALIZATION = 32,
+                CUSTOMIZATION = 64,
+                ALL = 126
+            }
         }
     }
 }
@@ -692,8 +751,17 @@ declare namespace lib {
     }
 
     namespace client {
-        export import PLATFORM = $client.PLATFORM;
-        export import USER_AGENT = $client.USER_AGENT;
+        const enum PLATFORM {
+            WINDOWS = 2,
+            MAC = 4
+        }
+        const enum USER_AGENT {
+            CHROME = 2,
+            SAFARI = 4,
+            FIREFOX = 8,
+            EDGE = 16
+        }
+
         function isPlatform(value: string | number): boolean;
         function isUserAgent(value: string | number): boolean;
         function getDeviceDPI(): number;
@@ -711,10 +779,11 @@ declare namespace lib {
             srcLocal?: string;
         }
 
-        export import BOX_POSITION = $css.BOX_POSITION;
-        export import BOX_MARGIN = $css.BOX_MARGIN;
-        export import BOX_PADDING = $css.BOX_PADDING;
-        export import BOX_BORDER = $css.BOX_BORDER;
+        const BOX_POSITION: string[];
+        const BOX_MARGIN: string[];
+        const BOX_BORDER: string[][];
+        const BOX_PADDING: string[];
+
         function getStyle(element: Element | null, pseudoElt?: string): CSSStyleDeclaration;
         function getFontSize(element: Element | null): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
@@ -749,7 +818,8 @@ declare namespace lib {
     }
 
     namespace dom {
-        export import ELEMENT_BLOCK = $dom.ELEMENT_BLOCK;
+        const ELEMENT_BLOCK: string[];
+
         function newBoxRect(): BoxRect;
         function newBoxRectDimension(): BoxRectDimension;
         function newBoxModel(): BoxModel;
@@ -784,13 +854,65 @@ declare namespace lib {
     }
 
     namespace regex {
-        export import STRING = $regex.STRING;
-        export import UNIT = $regex.UNIT;
-        export import CSS = $regex.CSS;
-        export import XML = $regex.XML;
-        export import CHAR = $regex.CHAR;
-        export import COMPONENT = $regex.COMPONENT;
-        export import ESCAPE = $regex.ESCAPE;
+        const STRING: {
+            DECIMAL: string,
+            PERCENT: string,
+            LENGTH: string,
+            LENGTH_PERCENTAGE: string,
+            DATAURI: string,
+            CSS_SELECTOR_LABEL: string,
+            CSS_SELECTOR_PSEUDO_ELEMENT: string,
+            CSS_SELECTOR_PSEUDO_CLASS: string,
+            CSS_SELECTOR_ATTR: string,
+            CSS_ANGLE: string,
+            CSS_CALC: string
+        };
+        const UNIT: {
+            DECIMAL: RegExp,
+            LENGTH: RegExp,
+            PERCENT: RegExp
+        };
+        const CSS: {
+            ANGLE: RegExp,
+            CALC: RegExp,
+            VAR: RegExp,
+            URL: RegExp,
+            CUSTOM_PROPERTY: RegExp,
+            HEX: RegExp,
+            RGBA: RegExp,
+            SELECTOR_G: RegExp,
+            SELECTOR_LABEL: RegExp,
+            SELECTOR_PSEUDO_ELEMENT: RegExp,
+            SELECTOR_PSEUDO_CLASS: RegExp,
+            SELECTOR_ATTR: RegExp
+        };
+        const XML: {
+            ATTRIBUTE: RegExp,
+            ENTITY: RegExp,
+            SEPARATOR: RegExp,
+            BREAKWORD_G: RegExp,
+            NONWORD_G: RegExp,
+            TAGNAME_G: RegExp
+        };
+        const CHAR: {
+            SPACE: RegExp,
+            LEADINGSPACE: RegExp,
+            TRAILINGSPACE: RegExp,
+            TRAILINGZERO: RegExp,
+            LEADINGNEWLINE: RegExp,
+            LEADINGNUMBER: RegExp,
+            LOWERCASE: RegExp,
+            WORD: RegExp,
+            UNITZERO: RegExp,
+            WORDDASH: RegExp
+        };
+        const COMPONENT: {
+            PROTOCOL: RegExp
+        };
+        const ESCAPE: {
+            ENTITY: RegExp,
+            NONENTITY: RegExp
+        };
     }
 
     namespace session {
@@ -864,7 +986,8 @@ declare namespace lib {
     }
 
     namespace xml {
-        export import STRING_XMLENCODING = $xml.STRING_XMLENCODING;
+        const STRING_XMLENCODING: string;
+
         function isPlainText(value: string): string;
         function pushIndent(value: string, depth: number, char?: string, indent?: string): string;
         function pushIndentArray(values: string[], depth: number, char?: string, separator?: string): string;
@@ -1282,15 +1405,100 @@ declare namespace svg {
 
     namespace lib {
         namespace constant {
-            export import FILL_MODE = $svg_const.FILL_MODE;
-            export import SYNCHRONIZE_MODE = $svg_const.SYNCHRONIZE_MODE;
-            export import KEYSPLINE_NAME = $svg_const.KEYSPLINE_NAME;
+            const enum INSTANCE_TYPE {
+                SVG_CONTAINER = 2,
+                SVG_ELEMENT = 4,
+                SVG_ANIMATION = 8,
+                SVG = 2 | 16,
+                SVG_G = 2 | 32,
+                SVG_USE_SYMBOL = 2 | 64,
+                SVG_PATTERN = 2 | 128,
+                SVG_SHAPE_PATTERN = 2 | 256,
+                SVG_USE_PATTERN = 2 | 512,
+                SVG_PATH = 4 | 1024,
+                SVG_SHAPE = 4 | 2048,
+                SVG_IMAGE = 4 | 4096,
+                SVG_USE = 4 | 2048 | 8192,
+                SVG_ANIMATE = 8 | 16384,
+                SVG_ANIMATE_TRANSFORM = 8 | 16384 | 32768,
+                SVG_ANIMATE_MOTION = 8 | 16384 | 65536 | 49160
+            }
+            const enum SYNCHRONIZE_MODE {
+                FROMTO_ANIMATE = 2,
+                KEYTIME_ANIMATE = 4,
+                IGNORE_ANIMATE = 8,
+                FROMTO_TRANSFORM = 16,
+                KEYTIME_TRANSFORM = 32,
+                IGNORE_TRANSFORM = 64
+            }
+            const enum SYNCHRONIZE_STATE {
+                BACKWARDS = 2,
+                INTERRUPTED = 4,
+                RESUME = 8,
+                COMPLETE = 16,
+                EQUAL_TIME = 32,
+                INVALID = 64
+            }
+            const enum FILL_MODE {
+                FREEZE = 2,
+                FORWARDS = 4,
+                BACKWARDS = 8
+            }
+            const enum REGION_UNIT {
+                USER_SPACE_ON_USE = 1,
+                OBJECT_BOUNDING_BOX = 2
+            }
+
+            const KEYSPLINE_NAME: {
+                'ease': string,
+                'ease-in': string,
+                'ease-in-out': string,
+                'ease-out': string,
+                'linear': string,
+                'step-start': string,
+                'step-end': string
+            };
         }
 
         namespace util {
-            export import MATRIX = $svg_util.MATRIX;
-            export import SVG = $svg_util.SVG;
-            export import TRANSFORM = $svg_util.TRANSFORM;
+            const MATRIX: {
+                applyX(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;
+                applyY(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;
+                clone(matrix: SvgMatrix | DOMMatrix): SvgMatrix;
+                rotate(angle: number): SvgMatrix;
+                skew(x?: number, y?: number): SvgMatrix;
+                scale(x?: number, y?: number): SvgMatrix;
+                translate(x?: number, y?: number): SvgMatrix;
+            };
+            const TRANSFORM: {
+                create(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;
+                parse(element: SVGElement, value?: string): SvgTransform[] | undefined;
+                matrix(element: SVGElement, value?: string): SvgMatrix | undefined;
+                origin(element: SVGElement, value?: string): Point;
+                rotateOrigin(element: SVGElement, attr?: string): SvgPoint[];
+                typeAsName(type: number): string;
+                typeAsValue(type: string | number): string;
+            };
+            const SVG: {
+                svg(element: Element): element is SVGSVGElement;
+                g(element: Element): element is SVGGElement;
+                symbol(element: Element): element is SVGSymbolElement;
+                path(element: Element): element is SVGPathElement;
+                shape(element: Element): element is SVGGeometryElement;
+                image(element: Element): element is SVGImageElement;
+                use(element: Element): element is SVGUseElement;
+                line(element: Element): element is SVGLineElement;
+                rect(element: Element): element is SVGRectElement;
+                circle(element: Element): element is SVGCircleElement;
+                ellipse(element: Element): element is SVGEllipseElement;
+                polygon(element: Element): element is SVGPolygonElement;
+                polyline(element: Element): element is SVGPolylineElement;
+                clipPath(element: Element): element is SVGClipPathElement;
+                pattern(element: Element): element is SVGPatternElement;
+                linearGradient(element: Element): element is SVGLinearGradientElement;
+                radialGradient(element: Element): element is SVGRadialGradientElement;
+            };
+
             function getAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getParentAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getAttributeURL(value: string): string;
