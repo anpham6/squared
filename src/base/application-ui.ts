@@ -18,8 +18,6 @@ const { XML } = $lib.regex;
 const { getElementCache, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
 
-let NodeConstructor!: Constructor<NodeUI>;
-
 function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
     const element = document.createElement(tagName);
     element.className = '__squared.pseudo';
@@ -81,7 +79,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         ExtensionManagerConstructor: Constructor<T>)
     {
         super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
-        NodeConstructor = nodeConstructor;
         this._localSettings = this.controllerHandler.localSettings;
         this._excluded = this._localSettings.unsupported.excluded;
     }
@@ -306,7 +303,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public createNode(element?: Element, append = true, parent?: T, children?: T[]) {
         const processing = this.processing;
-        const node = new NodeConstructor(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode) as T;
+        const node = new this._nodeConstructor(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode) as T;
         if (parent) {
             node.depth = parent.depth + 1;
             if (element === undefined && parent.naturalElement) {

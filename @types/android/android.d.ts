@@ -38,6 +38,7 @@ declare namespace base {
         application: Application<T>;
         readonly userSettings: UserSettingsAndroid;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
+        addImageSet(images: StringMap, prefix?: string): string;
     }
 
     class Resource<T extends View> implements Resource<T> {
@@ -46,7 +47,7 @@ declare namespace base {
         public static formatName(value: string): string;
         public static addTheme(...options: StyleAttribute[]): void;
         public static addString(value: string, name?: string, numberAlias?: boolean): string;
-        public static addImage(images: StringMap, prefix?: string): string;
+        public static addImage(images: StringMap, prefix?: string, imageFormat?: string[]): string;
         public static addColor(value: ColorData | string | undefined, transparency?: boolean): string;
     }
 

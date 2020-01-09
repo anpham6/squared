@@ -26,14 +26,9 @@ let REGEX_FONT_SRC!: RegExp;
 let REGEX_FONT_STYLE!: RegExp;
 let REGEX_FONT_WEIGHT!: RegExp;
 let REGEX_URL!: RegExp;
-let NodeConstructor!: Constructor<Node>;
 
 async function getImageSvgAsync(value: string) {
-    const response = await fetch(value, {
-        method: 'GET',
-        headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' })
-    });
-    return response.text();
+    return (await fetch(value, { method: 'GET', headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' }) })).text();
 }
 
 const parseConditionText = (rule: string, value: string) => new RegExp(`^@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
@@ -58,7 +53,9 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract userSettings: UserSettings;
 
     protected _cascadeAll = false;
-    protected _cache!: squared.base.NodeList<T>;
+    protected _cache: squared.base.NodeList<T>;
+    protected _nodeConstructor: Constructor<Node>;
+    protected _nodeAfterInsert: BindGeneric<Node, void>;
 
     protected constructor(
         public framework: number,
@@ -67,12 +64,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         ResourceConstructor: Constructor<T>,
         ExtensionManagerConstructor: Constructor<T>)
     {
-        NodeConstructor = nodeConstructor;
         const cache = this.processing.cache;
         this.controllerHandler = <Controller<T>> (new ControllerConstructor(this, cache) as unknown);
         this.resourceHandler = <Resource<T>> (new ResourceConstructor(this, cache) as unknown);
         this.extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, cache) as unknown);
         this._cache = cache;
+        this._nodeConstructor = nodeConstructor;
+        this._nodeAfterInsert = this.controllerHandler.afterInsertNode;
     }
 
     public abstract insertNode(element: Element, parent?: T): T | undefined;
@@ -294,7 +292,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public createNode(element?: Element, append = true, parent?: T, children?: T[]) {
-        const node = new NodeConstructor(this.nextId, this.processing.sessionId, element, this.controllerHandler.afterInsertNode) as T;
+        const node = new this._nodeConstructor(this.nextId, this.processing.sessionId, element, this._nodeAfterInsert) as T;
         if (parent) {
             node.depth = parent.depth + 1;
         }
@@ -322,7 +320,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const extensions = this.extensionsCascade;
         const node = this.cascadeParentNode(element, 0, extensions.length ? extensions : undefined);
         if (node) {
-            const parent = new NodeConstructor(0, processing.sessionId, element.parentElement || document.body, this.controllerHandler.afterInsertNode);
+            const parent = new this._nodeConstructor(0, processing.sessionId, element.parentElement || document.body, this._nodeAfterInsert);
             node.parent = parent;
             node.actualParent = parent;
             node.childIndex = 0;
@@ -454,13 +452,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         const length = styleSheets.length;
         for (let i = 0; i < length; i++) {
             const styleSheet = styleSheets[i];
-            let mediaText = '';
+            let mediaText: string | undefined;
             try {
                 mediaText = styleSheet.media.mediaText;
             }
             catch {
             }
-            if (mediaText === '' || REGEX_MEDIATEXT.test(mediaText)) {
+            if (!isString(mediaText) || REGEX_MEDIATEXT.test(mediaText)) {
                 applyStyleSheet(<CSSStyleSheet> styleSheet);
             }
         }
@@ -641,18 +639,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                     REGEX_FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
                     REGEX_URL = /\s*(url|local)\((?:['"]([^'")]+)['"]|([^)]+))\)\s*format\(['"]?(\w+)['"]?\)\s*/;
                 }
-                const match = REGEX_FONT_FACE.exec(cssText);
-                if (match) {
-                    const attr = match[1];
-                    const familyMatch = REGEX_FONT_FAMILY.exec(attr);
-                    const srcMatch = REGEX_FONT_SRC.exec(attr);
-                    if (familyMatch && srcMatch) {
-                        const styleMatch = REGEX_FONT_STYLE.exec(attr);
-                        const weightMatch = REGEX_FONT_WEIGHT.exec(attr);
-                        const fontFamily = familyMatch[1].trim();
-                        const fontStyle = styleMatch?.[1].toLowerCase() || 'normal';
-                        const fontWeight = weightMatch ? parseInt(weightMatch[1]) : 400;
-                        for (const value of srcMatch[1].split(XML.SEPARATOR)) {
+                const attr = REGEX_FONT_FACE.exec(cssText)?.[1];
+                if (attr) {
+                    const fontFamily = (REGEX_FONT_FAMILY.exec(attr)?.[1] || '').trim();
+                    const srcMatch = (REGEX_FONT_SRC.exec(attr)?.[1] || '').split(XML.SEPARATOR);
+                    if (fontFamily !== '' && srcMatch.length) {
+                        const fontStyle = REGEX_FONT_STYLE.exec(attr)?.[1].toLowerCase() || 'normal';
+                        const fontWeight = parseInt(REGEX_FONT_WEIGHT.exec(attr)?.[1] || '400');
+                        for (const value of srcMatch) {
                             const urlMatch = REGEX_URL.exec(value);
                             if (urlMatch) {
                                 let srcUrl: string | undefined;

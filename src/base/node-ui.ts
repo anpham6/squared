@@ -163,12 +163,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 previousFloat.push(clearable.left, clearable.right);
                                 break;
                         }
-                        for (const item of previousFloat) {
-                            if (item) {
-                                if (floating.has(item.float) && !node.floating && aboveRange(node.linear.top, item.linear.bottom)) {
+                        if (!node.floating) {
+                            for (const item of previousFloat) {
+                                if (item) {
                                     const float = item.float;
-                                    floating.delete(float);
-                                    clearable[float] = undefined;
+                                    if (floating.has(float) && aboveRange(node.linear.top, item.linear.bottom)) {
+                                        floating.delete(float);
+                                        clearable[float] = undefined;
+                                    }
                                 }
                             }
                         }

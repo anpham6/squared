@@ -1432,6 +1432,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             }
         }
         if (this.IMAGE_DATA.length) {
+            const resource = <android.base.Resource<T>> this.resource;
             const item: ExternalData[] = [];
             if (vectorName !== '') {
                 item.push({ drawable: getDrawableSrc(vectorName) });
@@ -1459,7 +1460,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     left: x !== 0 ? formatPX(x) : '',
                     top: y !== 0 ? formatPX(y) : ''
                 };
-                const src = getDrawableSrc(Resource.addImage({ mdpi: image.href }));
+                const src = getDrawableSrc(resource.addImageSet({ mdpi: image.href }));
                 if (image.rotateAngle) {
                     imageData.rotate = {
                         drawable: src,

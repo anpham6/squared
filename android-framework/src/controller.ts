@@ -27,7 +27,6 @@ const { NodeUI } = $base;
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
 
 const GUIDELINE_AXIS = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
-let DEFAULT_VIEWSETTINGS!: LocalSettings;
 
 function sortHorizontalFloat(list: View[]) {
     if (list.some(node => node.floating)) {
@@ -589,6 +588,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     };
 
+    private _defaultViewSettings!: LocalSettings;
+
     constructor(
         public application: android.base.Application<T>,
         public cache: squared.base.NodeList<T>)
@@ -598,7 +599,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public init() {
         const settings = this.userSettings;
-        DEFAULT_VIEWSETTINGS = {
+        this._defaultViewSettings = {
             targetAPI: settings.targetAPI || BUILD_ANDROID.LATEST,
             supportRTL: !!settings.supportRTL,
             floatPrecision: this.localSettings.precision.standardFloat
@@ -1414,10 +1415,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (match) {
                         const color = Resource.addColor(parseColor(match[1]));
                         if (color !== '') {
+                            const fontSize = node.fontSize;
                             node.android('shadowColor', '@color/' + color);
-                            node.android('shadowDx', truncate(parseUnit(match[2], node.fontSize) * 2));
-                            node.android('shadowDy', truncate(parseUnit(match[3], node.fontSize) * 2));
-                            node.android('shadowRadius', match[4] ? truncate(Math.max(parseUnit(match[4], node.fontSize), 1)) : '1');
+                            node.android('shadowDx', truncate(parseUnit(match[2], fontSize) * 2));
+                            node.android('shadowDy', truncate(parseUnit(match[3], fontSize) * 2));
+                            node.android('shadowRadius', match[4] ? truncate(Math.max(parseUnit(match[4], fontSize), 1)) : '1');
                         }
                     }
                 }
@@ -1436,6 +1438,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if ((<HTMLInputElement> node.element).list?.children.length) {
                     controlName = CONTAINER_ANDROID.EDIT_LIST;
                     node.controlName = controlName;
+                }
+                else if (node.localSettings.targetAPI >= BUILD_ANDROID.OREO) {
+                    node.android('importantForAutofill', 'no');
                 }
             }
             case CONTAINER_ANDROID.RANGE:
@@ -2706,22 +2711,24 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     excessCount++;
                                 }
                             }
-                            if (columns[k] === undefined) {
-                                columns[k] = [];
-                            }
                             l = 0;
                         }
-                        columns[k].push(column);
+                        let col = columns[k];
+                        if (col === undefined) {
+                            col = [];
+                            columns[k] = col;
+                        }
+                        col.push(column);
                         if (column.length) {
                             totalGap += maxArray(objectMap<T, number>(column.children as T[], child => child.marginLeft + child.marginRight));
                         }
                         if (j > 0 && /H\d/.test(column.tagName)) {
-                            if (columns[k].length === 1 && j === row.length - 2) {
+                            if (col.length === 1 && j === row.length - 2) {
                                 columnMin--;
                                 excessCount = 0;
                             }
                             else if ((l + 1) % perRowCount === 0 && row.length - j > columnMin && !row[j + 1].multiline && row[j + 1].bounds.height < maxHeight) {
-                                columns[k].push(row[++j]);
+                                col.push(row[++j]);
                                 l = -1;
                             }
                         }
@@ -3020,7 +3027,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (!this.userSettings.exclusionsDisabled) {
                 node.setExclusions();
             }
-            node.localSettings = DEFAULT_VIEWSETTINGS;
+            node.localSettings = this._defaultViewSettings;
         };
     }
 

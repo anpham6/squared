@@ -6,12 +6,11 @@ const $lib = squared.lib;
 const { findColorShade, parseColor } = $lib.color;
 const { getSrcSet } = $lib.css;
 const { CHAR, COMPONENT, CSS, XML } = $lib.regex;
-const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, trimString } = $lib.util;
+const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, spliceArray, trimString } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> squared.base.ResourceUI.STORED;
 const REGEX_NONWORD = /[^\w+]/g;
 let CACHE_IMAGE: StringMap = {};
-let IMAGE_FORMAT!: string[];
 
 function formatObject(obj: {}, numberAlias = false) {
     if (obj) {
@@ -165,7 +164,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
         return '';
     }
 
-    public static addImage(images: StringMap, prefix = '') {
+    public static addImage(images: StringMap, prefix = '', imageFormat?: string[]) {
         const mdpi = images.mdpi;
         if (mdpi) {
             if (CACHE_IMAGE[mdpi] && Object.keys(images).length === 1) {
@@ -173,7 +172,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
             }
             const src = fromLastIndexOf(mdpi, '/');
             const format = fromLastIndexOf(src, '.').toLowerCase();
-            if (IMAGE_FORMAT.includes(format) && format !== 'svg') {
+            if (imageFormat === undefined || imageFormat.includes(format)) {
                 CACHE_IMAGE[mdpi] = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
                 return CACHE_IMAGE[mdpi];
             }
@@ -201,6 +200,8 @@ export default class Resource<T extends android.base.View> extends squared.base.
         return '';
     }
 
+    private _imageFormat: string[];
+
     constructor(
         public application: android.base.Application<T>,
         public cache: squared.base.NodeList<T>)
@@ -212,7 +213,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
         STORED.drawables = new Map();
         STORED.animators = new Map();
         this.controllerSettings = application.controllerHandler.localSettings;
-        IMAGE_FORMAT = this.controllerSettings.supported.imageFormat as string[];
+        this._imageFormat = spliceArray(this.controllerSettings.supported.imageFormat.slice(0) as string[], value => value === 'svg');
     }
 
     public reset() {
@@ -229,14 +230,14 @@ export default class Resource<T extends android.base.View> extends squared.base.
                     result.mdpi = match[1];
                 }
                 else {
-                    return Resource.addImage({ mdpi: resolvePath(match[1]) }, prefix);
+                    return this.addImageSet({ mdpi: resolvePath(match[1]) }, prefix);
                 }
             }
         }
         else {
             if (element.srcset) {
                 if (imageSet === undefined) {
-                    imageSet = getSrcSet(element, IMAGE_FORMAT);
+                    imageSet = getSrcSet(element, this._imageFormat);
                 }
                 for (const image of imageSet) {
                     const pixelRatio = image.pixelRatio;
@@ -282,7 +283,11 @@ export default class Resource<T extends android.base.View> extends squared.base.
                 return filename.substring(0, filename.lastIndexOf('.'));
             }
         }
-        return Resource.addImage(result, prefix);
+        return this.addImageSet(result, prefix);
+    }
+
+    public addImageSet(images: StringMap, prefix?: string) {
+        return Resource.addImage(images, prefix, this._imageFormat);
     }
 
     get userSettings() {

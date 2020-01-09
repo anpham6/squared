@@ -830,7 +830,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                     else {
                                         value = resolvePath(uri);
-                                        images[length] = Resource.addImage({ mdpi: value });
+                                        images[length] = resource.addImageSet({ mdpi: value });
                                         if (images[length] !== '') {
                                             imageDimensions[length] = resource.getImage(value);
                                             valid = true;
