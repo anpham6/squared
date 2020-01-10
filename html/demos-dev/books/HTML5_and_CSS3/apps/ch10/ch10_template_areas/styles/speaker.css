@@ -1,0 +1,258 @@
+/* type selectors */
+html {
+	background-image: -moz-linear-gradient(to bottom, white 0%, #facd8a 100%);
+	background-image: -webkit-linear-gradient(to bottom, white 0%, #facd8a 100%);	
+	background-image: -o-linear-gradient(to bottom, white 0%, #facd8a 100%);
+	background-image: linear-gradient(to bottom, white 0%, #facd8a 100%);	
+}
+/* standard 960 and above */
+
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 100%;
+	width: 96%;
+    max-width: 1200px;
+	background-color: white;
+	margin: 15px auto;
+	padding: 15px 0;
+	border: 1px solid black;
+    display: grid;                                   /* make the body a grid */
+    grid-template: repeat(4, auto) / auto 1fr;       /* define four rows and two columns */
+    grid-gap: 1.5em;                                 /* define the gap between grid areas */
+    grid-template-areas:                             /* define the template areas */
+        "head head"
+        "navi navi"
+        "main main"
+        "foot foot";
+}
+article, aside, h1, h2, h3, p {
+	margin: 0;
+	padding: 0;
+}
+a { font-weight: bold; }
+a:link, a:visited { color: #931420; }
+a:hover, a:focus { color: black; }
+
+p {
+	font-size: .875em;
+	padding-bottom: 0.5em;
+}
+em { font-weight: bold; }
+
+/* the styles for the header */
+header {
+    grid-area: head;                        /* place the header in a grid area */
+}
+header h2 {
+	font-size: 2.25em;
+    color: #f2972e;
+    text-shadow: 2px 3px 0 black;
+    margin-left: 12%;
+	margin-bottom: 0.25em;
+}
+header h3 {
+	font-size: 1.25em;
+	font-style: italic;
+    margin-left: 12%;
+}
+header img {
+    width: 8%;
+    max-width: 80px;
+    min-width: 40px;    
+	float: left;
+	margin-left: 2%;
+}
+
+/* The styles for the navigation menu */
+#nav_menu { grid-area: navi; }             /* place the navigation menu in a grid area */
+#nav_menu ul {
+	list-style: none;
+    display: grid;                         /* make the list a grid */
+    grid-template: auto / repeat(5, 1fr);  /* define one row and five columns */
+    align-content: center;                 /* center the row tracks vertically */
+	margin: 0;
+	padding: 0;
+}
+#nav_menu ul li a {
+	text-align: center;
+	display: block;
+	padding: .7em 0;
+	text-decoration: none;
+	background-color: #facd8a;
+}
+#nav_menu ul li a.current {
+	color: #f2972e !important;
+}
+
+/* the styles for the main element */
+main {
+    margin: 0 2%;
+    grid-area: main;                   /* place the main element in a grid area */
+    display: grid;                     /* make the main element a grid */
+    grid-template: auto / 1fr 40%;     /* define one row and two columns */
+    grid-gap: 2%;                      /* define the gap between grid areas */
+    grid-template-areas:               /* define the template areas */
+        "arti side";
+}
+
+/* the styles for the article */
+article {
+    grid-area: arti;                   /* place the article in a grid area */
+}
+article h1 {
+	font-size: 1.625em;
+	margin-bottom: 0.35em;
+}
+article img {
+    max-width: 100%;
+	margin: 0 1.5em 1em 0;
+}
+
+/* the styles for the sidebar */
+aside {
+    max-height: 200px;                  /* to limit background */
+    min-height: 180px;                  /* to limit background */    
+	padding: 5%;                        /* based on size of column track */
+	background-color: #ffebc6;
+    grid-area: side;                    /* place the aside in a grid area */
+}
+aside h2 {
+	font-size: 1.25em;
+	padding-bottom: .5em;
+}
+aside ul { 
+	margin-top: 0;
+	margin-bottom: 1.5em; 
+}
+aside li {
+	font-size: .875em;
+	padding-bottom: 0.35em;
+}
+
+/* the styles for the footer */
+footer {
+	border-top: 2px solid #f2972e;
+	padding-top: 0.7em;
+    grid-area: foot;                     /* place the footer in a grid area */
+}
+footer p {
+	font-size: .75em;
+	text-align: right;
+    margin-right: 2%;    
+}
+#mobile_menu {
+    display: none;
+}
+/* media queries */
+
+/* tablet portrait to standard 960 */
+@media only screen and (max-width: 959px) {
+    #nav_menu ul li a {
+	    font-size: .875em;
+    }
+    article h1 {
+	    font-size: 1.5em;
+    }
+    aside h2 {
+	    font-size: 1.125em;
+    }
+}
+
+/* mobile landscape to tablet portrait */
+@media only screen and (max-width: 767px) {
+    body {
+	    width: 100%;
+	    margin: 0;
+	    border: none;
+        grid-template: repeat(4, auto) / 1fr;            /* change the template so it has four rows and one column */
+        grid-gap: 0;                                     /* so there's no space between the menu and aside */
+        grid-template-areas:                             /* define the template areas */
+            "head"
+            "navi"
+            "main"
+            "foot";
+    }
+    header {
+        padding-bottom: 1.5em;                            /* because there's no row gap */
+        display: grid;                                    /* make the header a grid */
+        grid-template: repeat(3, auto) / 1fr;             /* define 3 rows and one column */
+        grid-gap: .3em;                                   /* set the gap between rows */
+        justify-items: center;                            /* center the grid items horizontally */             
+    }
+    header h2 {
+	    font-size: 1.625em;
+	    margin-left: 0;
+    }
+    header h3 {
+	    font-size: 1em;
+	    margin-left: 0;
+    }
+    header img {
+        float: none;
+        margin-left: 0;
+        margin-bottom: 1em;
+    }
+    #nav_menu {
+    	display: none;
+    }
+    #mobile_menu {
+    	display: block;
+        grid-area: navi;                                  /* place the mobile menu in a grid area */
+    }
+    main {
+        margin: 0;
+        grid-template: auto auto / 1fr;                   /* change the template to 2 rows and 1 column */
+        grid-gap: .5em;                                   /* set the gap between rows */
+        grid-template-areas:                              /* define the template areas */
+            "side"
+            "arti";
+    }
+    article {
+        margin: 1.2em 2%;                                 /* adjust to 100% of page width and no gap */
+    }
+    article img {
+	    float: left;
+	    width: 50%;
+	    margin-right: 2%;
+    }
+    aside {
+            padding: 1em 2%;                              /* adjust to 100% of page with extra at top and bottom */
+    }
+    aside nav ul {
+        margin-bottom: 0;
+    }
+    footer p {
+        margin-right: 0;        
+	    text-align: center;
+    }    
+}
+
+/* mobile portrait to mobile landscape */
+@media only screen and (max-width: 479px) {
+    header h2 {
+	    font-size: 1.375em;
+    }
+    header h3 {
+	    font-size: .8125em;
+    }
+    p {
+	    font-size: .875em;
+    }
+    article h1, aside h2 {
+	    font-size: 1em;
+    }
+    aside li {
+	    font-size: .875em;
+    }
+    article img {
+	    float: none;
+	    width: 100%;
+	    margin-right: 0;
+    }
+    aside h3 {
+	    font-size: .9375em;
+    }
+    footer p {
+	    font-size: .6875em;
+    }
+}

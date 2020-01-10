@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Sales table with media query</title>
+    <style>
+    	table {
+            width: 50%;                                   /* table is 50% of the body */
+			border: 1px solid black;
+			border-collapse: collapse;
+		}
+		th, td {
+			border: 1px solid black;
+			padding: .2em .7em;
+			text-align: right;
+		}
+        th:first-child {
+            width: 45%;                                   /* make the column fluid */
+        }
+        th:nth-child(2) {
+            width: 35%;                                   /* make the column fluid */
+        }
+        th:nth-child(3) {
+            width: 20%;                                   /* make the column fluid */
+        }
+		th.left, td.left {
+			text-align: left;
+		}
+		thead, tfoot {
+		    background-color: aqua;
+		}
+		tfoot {
+			font-weight: bold;
+		}
+        @media only screen and (max-width: 479px) {
+            th, td {
+	            display: block;
+            }
+            thead {
+                display: none;
+            }
+            tr td:first-child {
+	            font-weight: bold;
+	            font-size: 110%;
+                background-color: aqua;
+            }
+            tbody td {
+                border-bottom-style: none;
+            }
+            tfoot {
+                background-color: white;
+                border: none;
+                border-top: 1px solid black;
+            }
+            tfoot th, tfoot td:nth-of-type(1) {
+                display: none;
+            }                 
+        }
+	</style>
+	<script src="/node_modules/systemjs/dist/system.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+<table>
+	<thead>
+		<tr>
+			<th class="left">Book</th>
+			<th>Year Published</th>
+			<th>Sales</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td class="left">PHP and MySQL</td>
+			<td>2017</td>
+			<td>$372,381</td>
+		</tr>
+		<tr>
+			<td class="left">JavaScript and jQuery</td>
+			<td>2017</td>
+			<td>$305,447</td>
+		</tr>
+		<tr>
+			<td class="left">Android Programming</td>
+			<td>2015</td>
+			<td>$292,444</td>
+		</tr>
+		<tr>
+			<td class="left">Java Servlets and JSP</td>
+			<td>2014</td>
+			<td>$328,992</td>
+		</tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<th class="left">Total Sales</th>
+			<td></td>
+			<td>$1,399,264</td>
+		</tr>
+	</tfoot>
+</table>
+
+
+</body>
+
+</html>

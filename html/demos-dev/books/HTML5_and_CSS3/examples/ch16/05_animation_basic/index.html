@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+    <title>A Simple Animation</title>
+    <style>
+        h1 {
+        	margin-left: 20%;
+        	color: blue;
+          -webkit-animation: moveright 3s ease-in-out 2s infinite alternate;
+                  animation: moveright 3s ease-in-out 2s infinite alternate;
+        }
+        @-webkit-keyframes moveright {
+            from {
+				margin-left: 20%;
+				color: blue;
+				}
+            to {
+				margin-left: 60%;
+				color: red;
+				}
+        }
+        @keyframes moveright {
+            from {
+				margin-left: 20%;
+				color: blue;
+				}
+            to {
+				margin-left: 60%;
+				color: red;
+				}
+        }
+    </style>
+</head>
+<body>
+	<h1>This text will animate.</h1>
+</body>
+</html>

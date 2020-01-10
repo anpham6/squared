@@ -1,0 +1,292 @@
+/* type selectors */
+html {
+	background-image: -moz-linear-gradient(to bottom, white 0%, #facd8a 100%);
+	background-image: -webkit-linear-gradient(to bottom, white 0%, #facd8a 100%);	
+	background-image: -o-linear-gradient(to bottom, white 0%, #facd8a 100%);
+	background-image: linear-gradient(to bottom, white 0%, #facd8a 100%);	
+}
+/* standard 960 and above */
+
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 100%;
+	width: 96%;
+    max-width: 1200px;
+	background-color: white;
+	margin: 15px auto;
+	padding: 15px 0;
+	border: 1px solid black;
+}
+article, aside, h1, h2, h3, p {
+	margin: 0;
+	padding: 0;
+}
+article, aside {
+	margin-top: 1.5em;
+	margin-bottom: 1em;	
+}
+
+a { font-weight: bold; }
+a:link, a:visited { color: #931420; }
+a:hover, a:focus { color: black; }
+
+p {
+	font-size: .875em;
+	padding-bottom: 0.5em;
+}
+em { font-weight: bold; }
+
+/* the styles for the header */
+header {
+    width: 100%;
+	padding-bottom: 2em;
+}
+header h2 {
+	font-size: 2.25em;
+    color: #f2972e;
+    text-shadow: 2px 3px 0 black;
+    margin-left: 120px;
+	margin-bottom: 0.25em;
+}
+header h3 {
+	font-size: 1.25em;
+	font-style: italic;
+    margin-left: 120px;
+}
+header img {                                  /* image isn't scaled */
+	float: left;
+	margin-left: 2.0202%;
+}
+
+/* The styles for the navigation menu - operation */
+#nav_menu ul {
+	list-style: none;
+	position: relative;
+}
+#nav_menu ul ul {
+	display: none;
+	position: absolute;
+	top: 100%;
+}
+#nav_menu ul ul li {
+	position: relative;
+}
+#nav_menu ul ul li ul {
+	position: absolute;
+	left: 100%;
+	top: 0;
+}
+#nav_menu ul li.lastitem ul li ul {
+	position: absolute;
+	left: -100%;
+	top: 0;
+}
+#nav_menu ul li:hover > ul {
+	display: block;
+}
+#nav_menu > ul::after {
+	content: "";
+	clear: both;
+	display: block;
+}
+
+/* The styles for the navigation menu - formatting */
+#nav_menu ul {
+    display: flex;                            /* make the unordered list a flexbox */
+    flex-basis: 100%;                         /* full width of page */
+    justify-content: space-around;            /* allocate space evenly with half-size space at start and end */    
+	margin: 0;
+	padding: 0;
+}
+#nav_menu ul li {
+    flex-basis: 20%;                          /* each item will occcupy 20% of the flexbox */      
+}
+#nav_menu ul li a {
+	text-align: center;
+	display: block;
+	padding: .7em 0;
+	text-decoration: none;
+	background-color: #facd8a;
+}
+#nav_menu ul li a.current {
+	color: #f2972e !important;
+}
+#nav_menu ul li ul {
+    width: 20%;                               /* make the Speakers submenu wider */
+}
+#nav_menu ul ul li ul {
+    width: 100%;                              /* make the Sampson submenu the same width as the menu */
+}
+
+/* the style for the main element */
+main { display: flex; }                       /* make the main element a flexbox */
+
+/* the styles for the article */
+article {
+    flex-basis: 60%;                          /* allocate 60% of the available width to the article */
+	margin-left: 2.0202%;
+	padding-right: 2.52525%;
+}
+article h1 {
+	font-size: 1.625em;
+	margin-bottom: 0.35em;
+}
+article img {
+    max-width: 100%;
+	margin: 0 1.5em 1em 0;
+}
+
+/* the styles for the sidebar */
+aside {
+    flex-basis: 40%;                          /* allocate 40% of the available width to the aside */
+    max-height: 200px;                        /* to limit background */
+    min-height: 180px;                        /* to limit background */
+	padding: 2.0202%;
+	background-color: #ffebc6;
+	margin-right: 2.0202%;
+}
+aside h2 {
+	font-size: 1.25em;
+	padding-bottom: .5em;
+}
+aside ul { 
+	margin-top: 0;
+	margin-bottom: 1.5em; 
+}
+aside li {
+	font-size: .875em;
+	padding-bottom: 0.35em;
+}
+
+/* the styles for the footer */
+footer {
+    display: flex;
+    justify-content: flex-end;
+	border-top: 2px solid #f2972e;
+	padding-top: 0.7em;
+}
+footer p {
+	font-size: .75em;
+	margin-right: 2.0202%;
+}
+#mobile_menu {
+    display: none;
+}
+/* media queries */
+
+/* tablet portrait to standard 960 */
+@media only screen and (max-width: 959px) {
+    #nav_menu ul li a {
+	    font-size: .875em;
+    }
+    article h1 {
+	    font-size: 1.5em;
+    }
+    aside h2 {
+	    font-size: 1.125em;
+    }
+}
+
+/* mobile landscape to tablet portrait */
+@media only screen and (max-width: 767px) {
+    #nav_menu {
+    	display: none;
+    }
+    #mobile_menu {
+    	display: block;
+    }
+    body {
+	    width: 100%;
+	    margin: 0;
+	    border: none;
+    }
+    header {
+        display: flex;                        /* change the header from an inline flexbox to a block flexbox */
+        text-align: center;
+    }
+    header, footer {
+        flex-wrap: wrap;                      /* wrap the contents of the header and footer */
+        justify-content: center;              /* center the contents of the header and footer */
+    }
+    header h2, header h3 {
+        flex-basis: 100%;                     /* extend the headings the full width of the page */
+    }
+    header h2 {
+	    font-size: 1.625em;
+	    margin-left: 0;
+    }
+    header h3 {
+	    font-size: 1em;
+	    margin-left: 0;
+    }
+    header img {
+        float: none;
+        margin-left: 0;
+        margin-bottom: 1em;
+        width: 60px;
+        height: 52.5px;
+    }
+    main {
+        flex-direction: column;               /* change the direction of the flex items from row to column */
+    }    
+    article {
+        order: 2;                             /* display the article after the aside */ 
+        width: 95.9596%;
+   	    margin-right: 2.0202%;
+	    padding-right: 0;
+    }
+    article img {
+	    float: left;
+	    width: 50%;
+	    margin-right: 2%;
+    }
+    aside {
+        order: 1;                              /* display the aside before the article */
+        width: 95.9596%;
+	    margin: 0;        
+        padding-top: 1em;
+        padding-bottom: 1em;
+    }
+    aside nav ul {
+        margin-bottom: 0;
+    }
+    footer p {
+        text-align: center;
+        margin-right: 0;
+    }    
+}
+
+/* mobile portrait to mobile landscape */
+@media only screen and (max-width: 479px) {
+
+    header h2 {
+	    font-size: 1.375em;
+    }
+    header h3 {
+	    font-size: .8125em;
+    }
+    header img {
+        width: 40px;
+        height: 35px;
+    }
+    p {
+	    font-size: .875em;
+    }
+    article h1, aside h2 {
+	    font-size: 1em;
+    }
+    aside li {
+	    font-size: .875em;
+    }
+    article img {
+	    float: none;
+	    width: 100%;
+	    margin-right: 0;
+    }
+    aside h3 {
+	    font-size: .9375em;
+    }
+    footer p {
+	    font-size: .6875em;
+    }
+}

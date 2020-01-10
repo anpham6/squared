@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>How to use named lines to position grid items</title>
+    <style>
+    body > * { background: silver; }
+    body {
+        display: grid;
+        width: 100%;
+        height: 600px;
+        margin: 20px auto;
+        grid-template-columns:
+            [body-start nav-start] 200px
+            [nav-end sec-start] 1fr
+            [sec3-start] 1fr
+			[sec-end body-end];
+        grid-template-rows:
+            [row1-start] 80px
+            [row2-start] 1fr
+            [row3-start] 1fr
+            [row4-start] 60px
+            [rows-end];
+        grid-gap: 16px;
+    }
+    header	{ grid-row: row1-start / row2-start; grid-column: body-start / body-end; }
+    nav 	{ grid-row: row2-start / row4-start; grid-column: nav-start / nav-end; }
+    #s1 	{ grid-row: row2-start / row3-start; grid-column: sec-start / sec-end; }
+    #s2 	{ grid-row: row3-start / row4-start; grid-column: sec-start / sec3-start; }
+    #s3 	{ grid-row: row3-start / row4-start; grid-column: sec3-start / sec-end; }
+    footer 	{ grid-row: row4-start / rows-end; grid-column: body-start / body-end; }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../../squared.js"></script>
+</head>
+<body>
+    <header>Header</header>
+    <nav>Navigation</nav>
+    <section id="s1">Section 1</section>
+    <section id="s2">Section 2</section>
+    <section id="s3">Section 3</section>
+    <footer>Footer</footer>
+</body>
+</html>

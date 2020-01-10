@@ -1,0 +1,249 @@
+/* type selectors */
+html {
+	background-image: -moz-linear-gradient(to bottom, white 0%, #facd8a 100%);
+	background-image: -webkit-linear-gradient(to bottom, white 0%, #facd8a 100%);	
+	background-image: -o-linear-gradient(to bottom, white 0%, #facd8a 100%);
+	background-image: linear-gradient(to bottom, white 0%, #facd8a 100%);	
+}
+/* standard 960 and above */
+
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 100%;
+	width: 96%;
+    max-width: 1200px;
+	background-color: white;
+	margin: 15px auto;
+	padding: 15px 0;
+	border: 1px solid black;
+    display: grid;
+    grid-template: repeat(4, auto) / repeat(12, 1fr);       /* define four rows and twelve columns */
+    grid-gap: 1.5em;                                        /* define the gap between the rows */
+}
+article, aside, h1, h2, h3, p {
+	margin: 0;
+	padding: 0;
+}
+a { font-weight: bold; }
+a:link, a:visited { color: #931420; }
+a:hover, a:focus { color: black; }
+p {
+	font-size: .875em;
+	padding-bottom: 0.5em;
+}
+em { font-weight: bold; }
+
+/* the styles for the header */
+header {
+    grid-row: 1 / 2;                        /* place the header in a grid area */
+    grid-column: 1 / span 12;
+}
+header h2 {
+	font-size: 2.25em;
+    color: #f2972e;
+    text-shadow: 2px 3px 0 black;
+    margin-left: 12%;
+	margin-bottom: 0.25em;
+}
+header h3 {
+	font-size: 1.25em;
+	font-style: italic;
+    margin-left: 12%;
+}
+header img {
+    width: 8%;
+    max-width: 80px;
+    min-width: 40px;    
+	float: left;
+	margin-left: 2%;
+}
+
+/* The styles for the navigation menu */
+#nav_menu {
+    grid-row: 2 / 3;                       /* place the navigation menu in a grid area */
+    grid-column: 1 / span 12;
+}
+#nav_menu ul {
+	list-style: none;
+    display: grid;
+    grid-template: auto / repeat(5, 1fr);
+    align-content: center;
+	margin: 0;
+	padding: 0;
+}
+#nav_menu ul li a {
+	text-align: center;
+	display: block;
+	padding: .7em 0;
+	text-decoration: none;
+	background-color: #facd8a;
+}
+#nav_menu ul li a.current {
+	color: #f2972e !important;
+}
+
+/* the styles for the article */
+article {
+	margin-left: 3.4%;    
+    grid-row: 3 / 4;                   /* place the article in a grid area */
+    grid-column: 1 / span 7;
+}
+article h1 {
+	font-size: 1.625em;
+	margin-bottom: 0.35em;
+}
+article img {
+    max-width: 100%;
+	margin: 0 1.5em 1em 0;
+}
+
+/* the styles for the sidebar */
+aside {
+    max-height: 200px;
+    min-height: 180px; 
+	padding: 5%;
+	background-color: #ffebc6;
+	margin-right: 5%;    
+    grid-row: 3 / 4;                    /* place the aside in a grid area */
+    grid-column: 8 / span 5;
+}
+aside h2 {
+	font-size: 1.25em;
+	padding-bottom: .5em;
+}
+aside ul { 
+	margin-top: 0;
+	margin-bottom: 1.5em; 
+}
+aside li {
+	font-size: .875em;
+	padding-bottom: 0.35em;
+}
+
+/* the styles for the footer */
+footer {
+	border-top: 2px solid #f2972e;
+	padding-top: 0.7em;
+    grid-row: 4 / 5;                     /* place the footer in a grid area */
+    grid-column: 1 / span 12;
+}
+footer p {
+	font-size: .75em;
+	text-align: right;
+    margin-right: 2%;    
+}
+#mobile_menu {
+    display: none;
+}
+/* media queries */
+
+/* tablet portrait to standard 960 */
+@media only screen and (max-width: 959px) {
+    #nav_menu ul li a {
+	    font-size: .875em;
+    }
+    article h1 {
+	    font-size: 1.5em;
+    }
+    aside h2 {
+	    font-size: 1.125em;
+    }
+}
+
+/* mobile landscape to tablet portrait */
+@media only screen and (max-width: 767px) {
+    body {
+	    width: 100%;
+	    margin: 0;
+	    border: none;
+        grid-template: repeat(5, auto) / 1fr;            /* change the template so it has five rows and one column */
+        grid-gap: 0;
+    }
+    header {
+        grid-column: 1 / 2;                              /* one column */        
+        padding-bottom: 1.5em;
+        display: grid;
+        grid-template: repeat(3, auto) / 1fr;
+        grid-gap: .3em;
+        justify-items: center;            
+    }
+    header h2 {
+	    font-size: 1.625em;
+	    margin-left: 0;
+    }
+    header h3 {
+	    font-size: 1em;
+	    margin-left: 0;
+    }
+    header img {
+        float: none;
+        margin-left: 0;
+        margin-bottom: 1em;
+    }
+    #nav_menu {
+    	display: none;
+    }
+    #mobile_menu {
+    	display: block;
+        grid-row: 2 / 3;                                  /* position the mobile menu */
+        grid-column: 1 / 2;
+    }
+    article {
+        width: 96%;
+        margin: 1.2em 2%;                                 /* added padding to top */
+        grid-row: 4 / 5;                                  /* moved article below aside */
+        grid-column: 1 / 2;                               /* one column */
+    }
+    article img {
+	    float: left;
+	    width: 50%;
+	    margin-right: 2%;
+    }
+    aside {
+	    margin-right: 0;       
+        padding: 1em 2%;
+        grid-row: 3 / 4;                                  /* moved aside above article */
+        grid-column: 1 / 2;                               /* changed to span 1 column */
+    }
+    aside nav ul {
+        margin-bottom: 0;
+    }
+    footer {
+        grid-row: 5 / 6;                                  /* row 5 */
+        grid-column: 1 / 2;                               /* one column */
+    }
+    footer p {
+        margin-right: 0;
+	    text-align: center;
+    }    
+}
+
+/* mobile portrait to mobile landscape */
+@media only screen and (max-width: 479px) {
+    header h2 {
+	    font-size: 1.375em;
+    }
+    header h3 {
+	    font-size: .8125em;
+    }
+    p {
+	    font-size: .875em;
+    }
+    article h1, aside h2 {
+	    font-size: 1em;
+    }
+    aside li {
+	    font-size: .875em;
+    }
+    article img {
+	    float: none;
+	    width: 100%;
+	    margin-right: 0;
+    }
+    aside h3 {
+	    font-size: .9375em;
+    }
+    footer p {
+	    font-size: .6875em;
+    }
+}

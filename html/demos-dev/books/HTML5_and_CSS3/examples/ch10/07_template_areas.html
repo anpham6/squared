@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>How to use template areas to position grid items</title>
+    <style>
+
+    body > * { background: silver; }
+   	body {
+        display: grid;
+        width: 100%;
+        height: 600px;
+        margin: 20px auto;
+        grid-template-columns: 200px 1fr 1fr;
+        grid-template-rows: 80px 1fr 1fr 60px;
+        grid-gap: 16px;
+        grid-template-areas:
+            "head head head"
+            "navi sec1 sec1"
+            "navi sec2 sec3"
+            "foot foot foot";
+    }
+    header 	{ grid-area: head; }
+    nav 	{ grid-area: navi; }
+    #s1 	{ grid-area: sec1; }
+    #s2 	{ grid-area: sec2; }
+    #s3 	{ grid-area: sec3; }
+    footer 	{ grid-area: foot; }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../../squared.js"></script>
+</head>
+<body>
+    <header>Header</header>
+    <nav>Navigation</nav>
+    <section id="s1">Section 1</section>
+    <section id="s2">Section 2</section>
+    <section id="s3">Section 3</section>
+    <footer>Footer</footer>
+</body>
+</html>

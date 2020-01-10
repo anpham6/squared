@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>How to position and align grid items in a container</title>
+    <style>
+        body { font-family: sans-serif; }
+        div { background-color: silver; }
+		/* GENERIC GRID PROPERTIES */
+        #grid1, #grid2, #grid3  {
+			background: #EDEDED;
+            display: grid;
+            width: 100%;
+			height: 300px;
+            grid-template-columns: 150px 150px 150px;
+            grid-template-rows: 100px 100px;
+            grid-gap: 20px;
+        }
+		/* JUSTIFY-CONTENT (CENTER HORIZONTALLY) */
+        #grid1 {
+			justify-content: center;
+            align-content: center;
+        }
+		/* JUSTIFY-ITEMS (CENTER HORIZONTALLY) */
+        #grid2 {
+			justify-items: center;
+            align-items: center;
+        }        
+		/* ALIGN-CONTENT (END VERTICALLY) */
+        #grid3 {
+			align-content: end;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../../squared.js"></script>
+</head>
+<body>
+<h1>justify-content:center</h1>
+<section id="grid1">
+    <div>Div 1</div>
+    <div>Div 2</div>
+    <div>Div 3</div>
+    <div>Div 4</div>
+    <div>Div 5</div>
+    <div>Div 6</div>
+</section>
+<h1>justify-items:center</h1>
+<section id="grid2">
+    <div>Div 1</div>
+    <div>Div 2</div>
+    <div>Div 3</div>
+    <div>Div 4</div>
+    <div>Div 5</div>
+    <div>Div 6</div>
+</section>
+<h1>align-content:end</h1>
+<section id="grid3">
+    <div>Div 1</div>
+    <div>Div 2</div>
+    <div>Div 3</div>
+    <div>Div 4</div>
+    <div>Div 5</div>
+    <div>Div 6</div>
+</section>
+</body>
+</html>
