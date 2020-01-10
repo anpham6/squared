@@ -23,8 +23,8 @@
 
 @font-face {
   font-family: 'ChunkFiveRegular';
-  src:  url('../assets/ChunkFive/Chunkfive-webfont.eot');
-  src:  url('../assets/ChunkFive/Chunkfive-webfont.eot?#iefix') format('embedded-opentype'),
+  src:  url('../assets/ChunkFive/Chunkfive-webfont.woff');
+  src:  url('../assets/ChunkFive/Chunkfive-webfont.woff?#iefix') format('embedded-opentype'),
         url('../assets/ChunkFive/Chunkfive-webfont.woff') format('woff'),
         url('../assets/ChunkFive/Chunkfive-webfont.ttf') format('truetype');
   font-weight: normal;
@@ -33,8 +33,8 @@
 
 @font-face {
   font-family: 'PT Sans';
-  src:  url('../assets/PT-Sans/PT_Sans-webfont.eot');
-  src:  url('../assets/PT-Sans/PT_Sans-webfont.eot?#iefix') format('embedded-opentype'),
+  src:  url('../assets/PT-Sans/PT_Sans-webfont.woff');
+  src:  url('../assets/PT-Sans/PT_Sans-webfont.woff?#iefix') format('embedded-opentype'),
         url('../assets/PT-Sans/PT_Sans-webfont.woff') format('woff'),
         url('../assets/PT-Sans/PT_Sans-webfont.ttf') format('truetype');
   font-style: normal;
@@ -43,8 +43,8 @@
 
 @font-face {
   font-family: 'PT Sans';
-  src:  url('../assets/PT-Sans/PT_Sans_Narrow-webfont.eot');
-  src:  url('../assets/PT-Sans/PT_Sans_Narrow-webfont.eot?#iefix') format('embedded-opentype'),
+  src:  url('../assets/PT-Sans/PT_Sans_Narrow-webfont.woff');
+  src:  url('../assets/PT-Sans/PT_Sans_Narrow-webfont.woff?#iefix') format('embedded-opentype'),
         url('../assets/PT-Sans/PT_Sans_Narrow-webfont.woff') format('woff'),
         url('../assets/PT-Sans/PT_Sans_Narrow-webfont.ttf') format('truetype');
   font-stretch: condensed;
@@ -54,16 +54,16 @@
 
 @font-face {
   font-family: 'Gentium Basic';
-  src:  url('../assets/GentiumBasic/GenBasR-webfont.eot');
-  src:  url('../assets/GentiumBasic/GenBasR-webfont.eot?#iefix') format('embedded-opentype'),
+  src:  url('../assets/GentiumBasic/GenBasR-webfont.woff');
+  src:  url('../assets/GentiumBasic/GenBasR-webfont.woff?#iefix') format('embedded-opentype'),
         url('../assets/GentiumBasic/GenBasR-webfont.woff') format('woff'),
         url('../assets/GentiumBasic/GenBasR-webfont.ttf')  format('truetype');
 }
 @font-face {
   font-family: 'Gentium Basic';
   font-style: italic;
-  src:  url('../assets/GentiumBasic/GenBasI-webfont.eot');
-  src:  url('../assets/GentiumBasic/GenBasI-webfont.eot?#iefix') format('embedded-opentype'),
+  src:  url('../assets/GentiumBasic/GenBasI-webfont.woff');
+  src:  url('../assets/GentiumBasic/GenBasI-webfont.woff?#iefix') format('embedded-opentype'),
         url('../assets/GentiumBasic/GenBasI-webfont.woff') format('woff'),
         url('../assets/GentiumBasic/GenBasI-webfont.ttf')  format('truetype');
 }
