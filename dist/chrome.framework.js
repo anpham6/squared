@@ -1,4 +1,4 @@
-/* chrome-framework 1.3.7
+/* chrome-framework 1.3.8
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
