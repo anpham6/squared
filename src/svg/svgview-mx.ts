@@ -209,7 +209,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     if (value !== undefined) {
                                         const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
                                         let section = map[name];
-                                        if (data === undefined) {
+                                        if (section === undefined) {
                                             section = [];
                                             map[name] = section;
                                         }

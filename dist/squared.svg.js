@@ -1,4 +1,4 @@
-/* squared.svg 1.3.8
+/* squared.svg 1.3.9
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -5378,7 +5378,7 @@
                                         if (value !== undefined) {
                                             const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
                                             let section = map[name];
-                                            if (data === undefined) {
+                                            if (section === undefined) {
                                                 section = [];
                                                 map[name] = section;
                                             }
