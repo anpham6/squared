@@ -1,24 +1,7 @@
-import { CustomizationResult } from '../../../@types/android/application';
-
 import { STRING_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
 import View from '../view';
-
-export interface Customizations {
-    [index: number]: CustomizationsData;
-}
-
-export interface CustomizationsData {
-    android: ObjectMap<boolean | CustomizationResult>;
-    assign: {
-        [namespace: string]: ObjectMap<StringMap>;
-    };
-}
-
-export interface Deprecations {
-    android: ObjectMap<CustomizationResult>;
-}
 
 const { optionalAsString, isString } = squared.lib.util;
 
@@ -30,7 +13,7 @@ function substitute(result: {}, value: string, api?: number, minApi = 0) {
     return false;
 }
 
-export const API_ANDROID: Customizations = {
+export const API_ANDROID: android.lib.customizations.Customizations = {
     [BUILD_ANDROID.Q]: {
         android: {},
         assign: {}
@@ -550,7 +533,7 @@ export const API_ANDROID: Customizations = {
     }
 };
 
-export const DEPRECATED_ANDROID: Deprecations = {
+export const DEPRECATED_ANDROID: android.lib.customizations.Deprecations = {
     android: {
         'amPmBackgroundColor': (result: {}, api: number) => substitute(result, 'headerBackground', api, BUILD_ANDROID.MARSHMALLOW),
         'amPmTextColor': (result: {}, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),

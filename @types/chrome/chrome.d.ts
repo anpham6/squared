@@ -1,7 +1,5 @@
 import { ChromeAsset, UserSettingsChrome } from './application';
 
-import * as $const from '../../chrome-framework/src/lib/constant';
-
 type View = chrome.base.View;
 
 declare function getElement(element: HTMLElement, cache?: boolean): Promise<View | null>;
@@ -36,7 +34,7 @@ declare namespace base {
 
     interface File<T extends View> extends squared.base.File<T> {
         resource: Resource<T>;
-        readonly application: Application<T>;
+        application: Application<T>;
         readonly userSettings: UserSettingsChrome;
         getHtmlPage(name?: string): ChromeAsset[];
         getScriptAssets(): ChromeAsset[];
@@ -76,7 +74,10 @@ declare namespace extensions {
 
 declare namespace lib {
     namespace constant {
-        export import EXT_CHROME = $const.EXT_CHROME;
+        const EXT_CHROME: {
+            COMPRESS_BROTLI: string,
+            COMPRESS_GZIP: string
+        };
     }
 }
 
