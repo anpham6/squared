@@ -291,7 +291,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 item.setBounds();
                 item.saveAsInitial();
             }
-            this.controllerHandler.sortInitialCache(this._cache);
+            this.controllerHandler.sortInitialCache();
             return true;
         }
         return false;

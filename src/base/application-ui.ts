@@ -64,10 +64,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     };
     public readonly builtInExtensions: ObjectMap<ExtensionUI<T>> = {};
     public readonly extensions: ExtensionUI<T>[] = [];
-    public abstract userSettings: UserUISettings;
     public readonly controllerHandler!: ControllerUI<T>;
     public readonly resourceHandler!: ResourceUI<T>;
     public readonly fileHandler!: FileUI<T>;
+    public abstract userSettings: UserUISettings;
 
     private readonly _layouts: FileAsset[] = [];
     private readonly _localSettings!: ControllerUISettings;
@@ -207,7 +207,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public insertNode(element: Element, parent?: T) {
         if (isTextNode(element)) {
-            if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || parent.naturalElements.length === 0)) {
+            if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (parent.element as Element).childElementCount === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode(element, false);
                 if (parent) {
@@ -395,7 +395,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             if (pseudoElements.length) {
-                const pseudoMap = new Map<T, { id: string, styleElement?: HTMLStyleElement }>();
+                const pseudoMap: { item: T, id: string, styleElement?: HTMLStyleElement }[] = [];
                 for (const item of pseudoElements) {
                     const element = <HTMLElement> (item.actualParent as T).element;
                     let id = element.id;
@@ -408,25 +408,22 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         styleElement = insertStyleSheetRule(`#${id + NodeUI.getPseudoElt(item)} { display: none !important; }`);
                     }
                     if (item.cssTry('display', item.display)) {
-                        pseudoMap.set(item, { id, styleElement });
+                        pseudoMap.push({ item, id, styleElement });
                     }
                 }
-                const nodes = pseudoMap.keys();
-                for (const item of nodes) {
-                    item.setBounds(false);
+                for (const data of pseudoMap) {
+                    data.item.setBounds(false);
                 }
-                for (const item of nodes) {
-                    const data = pseudoMap.get(item);
-                    if (data) {
-                        if (data.id.startsWith('__squared_')) {
-                            const element = <HTMLElement> (item.actualParent as T).element;
-                            element.id = '';
-                        }
-                        if (data.styleElement) {
-                            document.head.removeChild(data.styleElement);
-                        }
-                        item.cssFinally('display');
+                for (const data of pseudoMap) {
+                    const { item, styleElement } = data;
+                    if (data.id.startsWith('__squared_')) {
+                        const element = <HTMLElement> (item.actualParent as T).element;
+                        element.id = '';
                     }
+                    if (styleElement) {
+                        document.head.removeChild(styleElement);
+                    }
+                    item.cssFinally('display');
                 }
             }
             for (const item of this.processing.excluded) {
@@ -454,7 +451,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 item.saveAsInitial();
             }
             controllerHandler.evaluateNonStatic(node, cache);
-            controllerHandler.sortInitialCache(cache);
+            controllerHandler.sortInitialCache();
             return true;
         }
         return false;
@@ -465,11 +462,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { filename, iteration } = dataset;
         const prefix = isString(filename) && filename.replace(new RegExp(`\.${this._localSettings.layout.fileExtension}$`), '') || element.id || 'document_' + this.length;
         const suffix = (iteration ? convertInt(iteration) : -1) + 1;
+        const layoutName = convertWord(suffix > 1 ? prefix + '_' + suffix : prefix, true);
         dataset.iteration = suffix.toString();
-        dataset.layoutName = convertWord(suffix > 1 ? prefix + '_' + suffix : prefix, true);
-        this.setBaseLayout(dataset.layoutName);
+        dataset.layoutName = layoutName;
+        this.setBaseLayout();
         this.setConstraints();
-        this.setResources();
+        this.setResources(layoutName);
     }
 
     public resolveTarget(target: string | undefined) {
@@ -935,7 +933,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return undefined;
     }
 
-    protected setBaseLayout(layoutName: string) {
+    protected setBaseLayout() {
         const { processing, session } = this;
         const cache = processing.cache;
         const documentRoot = processing.node as T;
@@ -1254,11 +1252,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        for (const node of cache) {
-            if (node.documentRoot && node.renderParent) {
-                session.documentRoot.push({ node, layoutName: node === documentRoot ? layoutName : '' });
-            }
-        }
         cache.sort((a, b) => {
             if (a.depth === b.depth) {
                 if (a.nodeGroup && (b.length === 0 || b.naturalChild)) {
@@ -1296,9 +1289,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
     }
 
-    protected setResources() {
+    protected setResources(layoutName: string) {
         const resourceHandler = this.resourceHandler;
         for (const node of this._cache) {
+            if (node.documentRoot && node.renderParent) {
+                this.session.documentRoot.push({ node, layoutName: node === this.processing.node ? layoutName : '' });
+            }
             resourceHandler.setBoxStyle(node);
             if (node.visible) {
                 resourceHandler.setFontStyle(node);

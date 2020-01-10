@@ -52,10 +52,8 @@ function isHorizontalAlign(value: string) {
 
 function setAutoMargin(node: T, autoMargin: AutoMargin) {
     if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerWrapped?.has('width', CSS_UNIT.PERCENT, { not: '100%' }))) {
-        node.mergeGravity(
-            (node.blockWidth || !node.pageFlow) && node.outerWrapper === undefined ? 'gravity' : 'layout_gravity',
-            autoMargin.leftRight ? STRING_ANDROID.CENTER_HORIZONTAL : (autoMargin.left ? 'right' : 'left')
-        );
+        node.mergeGravity((node.blockWidth || !node.pageFlow) && node.outerWrapper === undefined ? 'gravity' : 'layout_gravity', autoMargin.leftRight ? STRING_ANDROID.CENTER_HORIZONTAL : (autoMargin.left ? 'right' : 'left'));
+        return true;
     }
     return false;
 }
@@ -158,6 +156,9 @@ function isFlexibleDimension(node: T, value: string) {
     }
     return false;
 }
+
+const excludeHorizontal = (node: T) => node.textEmpty && (node.bounds.width === 0 && node.contentBoxWidth === 0 && node.marginLeft <= 0 && node.marginRight <= 0 && !node.visibleStyle.background || node.bounds.height === 0 && node.contentBoxHeight === 0 && node.marginTop <= 0 && node.marginBottom <= 0);
+const excludeVertical = (node: T) => node.contentBoxHeight === 0 && (node.bounds.height === 0 || node.pseudoElement && node.textEmpty && node.pageFlow) && (node.marginTop <= 0 && node.marginBottom <= 0 || node.css('overflow') === 'hidden' && $lib.regex.CHAR.UNITZERO.test(node.css('height')));
 
 const LAYOUT_RELATIVE_PARENT = LAYOUT_ANDROID.relativeParent;
 const LAYOUT_RELATIVE = LAYOUT_ANDROID.relative;
@@ -1621,16 +1622,36 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         set renderExclude(value) {
             this._cached.renderExclude = value;
         }
-        get renderExclude() {
+        get renderExclude(): boolean {
             let result = this._cached.renderExclude;
             if (result === undefined) {
                 if (this.styleElement && this.length === 0 && !this.imageElement) {
-                    const renderParent = this.renderParent as T;
-                    if (this.blockStatic || renderParent && (renderParent.layoutVertical || renderParent.layoutFrame)) {
-                        result = this.contentBoxHeight === 0 && ((this.bounds.height === 0 || this.textEmpty && this.pseudoElement && this.pageFlow) && this.marginTop <= 0 && this.marginBottom <= 0 || this.css('overflow') === 'hidden' && $lib.regex.CHAR.UNITZERO.test(this.css('height'))) && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
+                    if (this.pageFlow) {
+                        const blockStatic = this.blockStatic || this.display === 'table';
+                        const renderParent = this.renderParent;
+                        if (renderParent) {
+                            if (blockStatic || renderParent.layoutVertical || renderParent.layoutFrame) {
+                                result = excludeVertical(this) && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
+                            }
+                            else {
+                                result = excludeHorizontal(this) && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '' && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
+                            }
+                        }
+                        else {
+                            const parent = this.parent as T;
+                            if (blockStatic || parent && (parent.layoutVertical || parent.layoutFrame)) {
+                                return excludeVertical(this);
+                            }
+                            else if (parent && parent.alignmentType > 0) {
+                                return excludeHorizontal(this);
+                            }
+                            else {
+                                return false;
+                            }
+                        }
                     }
                     else {
-                        result = this.textEmpty && (this.bounds.width === 0 && this.contentBoxWidth === 0 && this.marginLeft <= 0 && this.marginRight <= 0 && !this.visibleStyle.background || this.bounds.height === 0 && this.contentBoxHeight === 0 && this.marginTop <= 0 && this.marginBottom <= 0) && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '' && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
+                        result = excludeHorizontal(this) || excludeVertical(this);
                     }
                 }
                 else {
@@ -1646,8 +1667,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (result === undefined) {
                 result = 0;
                 if (this.plainText) {
-                    const bounds = this.bounds;
-                    result = bounds.height / (bounds.numberOfLines || 1);
+                    const { height, numberOfLines } = this.bounds;
+                    result = height / (numberOfLines || 1);
                 }
                 else {
                     if (this.multiline && this.cssTry('white-space', 'nowrap')) {

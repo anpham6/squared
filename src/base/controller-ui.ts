@@ -512,7 +512,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             let layer = layers[index];
                             if (layer === undefined) {
                                 layer = [];
-                                layer = layers[index];
+                                layers[index] = layer;
                             }
                             layer.push(item);
                             break;
@@ -555,8 +555,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public sortInitialCache(cache: squared.base.NodeList<T>) {
-        cache.sort((a, b) => {
+    public sortInitialCache(cache?: squared.base.NodeList<T>) {
+        (cache || this.cache).sort((a, b) => {
             if (a.depth !== b.depth) {
                 return a.depth < b.depth ? -1 : 1;
             }

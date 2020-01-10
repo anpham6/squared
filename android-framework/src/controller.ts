@@ -2132,6 +2132,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             if (item.styleElement && item.inlineStatic) {
                                 baseWidth -= item.contentBoxWidth;
                             }
+                            maxWidth = Math.ceil(maxWidth);
                             return true;
                         };
                         if (previous.floating && adjustFloatingNegativeMargin(item, previous)) {

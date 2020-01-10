@@ -15,8 +15,8 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     };
 
     public fileHandler?: squared.base.File<T>;
-    public abstract application: squared.base.Application<T>;
-    public abstract cache: squared.base.NodeList<T>;
+    public readonly abstract application: squared.base.Application<T>;
+    public readonly abstract cache: squared.base.NodeList<T>;
     public abstract controllerSettings: ControllerSettings;
 
     public abstract get userSettings(): UserSettings;

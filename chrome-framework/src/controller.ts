@@ -18,8 +18,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
     private _elementMap = new Map<Element, T>();
 
     constructor(
-        public application: chrome.base.Application<T>,
-        public cache: squared.base.NodeList<T>)
+        public readonly application: chrome.base.Application<T>,
+        public readonly cache: squared.base.NodeList<T>)
     {
         super();
     }

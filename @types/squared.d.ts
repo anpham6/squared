@@ -99,8 +99,8 @@ declare namespace base {
     }
 
     interface Controller<T extends Node> extends AppHandler<T> {
-        application: Application<T>;
-        cache: NodeList<T>;
+        readonly application: Application<T>;
+        readonly cache: NodeList<T>;
         sessionId: string;
         readonly userSettings: UserSettings;
         readonly localSettings: ControllerSettings;
@@ -153,10 +153,10 @@ declare namespace base {
     class ControllerUI<T extends NodeUI> implements Controller<T> {}
 
     interface Resource<T extends Node> extends AppHandler<T> {
-        application: Application<T>;
-        cache: NodeList<T>;
-        fileHandler?: File<T>;
+        readonly application: Application<T>;
+        readonly cache: NodeList<T>;
         readonly userSettings: UserSettings;
+        fileHandler?: File<T>;
         controllerSettings: ControllerSettings;
         reset(): void;
         addImage(element: HTMLImageElement | undefined): void;

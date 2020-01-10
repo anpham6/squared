@@ -14,7 +14,7 @@ const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumer
 
 const isHideMargin = (node: T, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && (node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
 
-const isFullScreen = (node: T, visibleStyle: VisibleStyle) => visibleStyle.borderWidth && !node.inline && !node.hasPX('width') && (node.backgroundColor !== '' || node.toElementInt('scrollHeight') < window.innerHeight) && node.css('height') !== '100%' && node.css('minHeight') !== '100%';
+const isFullScreen = (node: T, visibleStyle: VisibleStyle) => visibleStyle.borderWidth && !node.inline && !node.hasPX('width') && (node.backgroundColor !== '' || node.toElementInt('scrollHeight') < window.innerHeight) && node.css('height') !== '100%' && node.css('minHeight') !== '100%' || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
 
 const isParentVisible = (node: T, visibleStyle: VisibleStyle) => (node.actualParent as T).height > 0 && visibleStyle.backgroundImage && node.css('backgroundPositionY').indexOf('bottom') !== -1;
 
@@ -47,8 +47,8 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             node.setCacheValue('backgroundColor', '');
             visibleStyle.backgroundColor = false;
         }
-        const fullScreen = isFullScreen(node, visibleStyle);
-        if (fullScreen || isHideMargin(node, visibleStyle) || isParentVisible(node, visibleStyle)) {
+        const parentVisible = isParentVisible(node, visibleStyle);
+        if (isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle) || parentVisible) {
             const backgroundImage = node.backgroundImage;
             if (backgroundImage !== '') {
                 if (container) {
@@ -78,7 +78,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                 const minHeight = parent.cssInitial('minHeight');
                 let backgroundSize: string | undefined;
                 if (height === '' && minHeight === '') {
-                    container.setLayoutHeight(fullScreen ? 'match_parent' : 'wrap_content');
+                    container.setLayoutHeight(!parentVisible ? 'match_parent' : 'wrap_content');
                 }
                 else {
                     if (height !== '100%' && minHeight !== '100%') {

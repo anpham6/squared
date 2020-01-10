@@ -1192,6 +1192,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     resetGravityPosition();
                                 }
                             }
+                            if (dimenWidth > boundsWidth) {
+                                gravityX = '';
+                            }
+                            if (dimenHeight > boundsHeight) {
+                                gravityY = '';
+                            }
                             resizable = false;
                             break;
                         }
@@ -1447,7 +1453,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (gravityAlign === '') {
                         if ((width || dimenWidth) + position.left >= boundsWidth && (!node.blockStatic || node.hasPX('width', false))) {
                             tileModeX = '';
-                            if (!resizable && !height && gravity !== 'fill' && gravityX.indexOf('fill_horizontal') === -1) {
+                            if (!resizable && !height && position.left < 0 && gravity !== 'fill' && gravityX.indexOf('fill_horizontal') === -1) {
                                 gravityX += (gravityX !== '' ? '|' : '') + 'fill_horizontal';
                             }
                             if (tileMode === 'repeat') {
@@ -1457,7 +1463,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         if ((height || dimenHeight) + position.top >= boundsHeight && !node.documentBody && !node.has('height', CSS_UNIT.PERCENT)) {
                             tileModeY = '';
-                            if (!resizable && gravity !== 'fill' && gravityY.indexOf('fill_vertical') === -1 && !node.hasPX('height')) {
+                            if (!resizable && position.top < 0 && gravity !== 'fill' && gravityY.indexOf('fill_vertical') === -1 && !node.hasPX('height')) {
                                 gravityY += (gravityY !== '' ? '|' : '') + 'fill_vertical';
                             }
                             if (tileMode === 'repeat') {
