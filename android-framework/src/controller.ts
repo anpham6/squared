@@ -456,6 +456,16 @@ function setColumnVertical(partition: View[][], lastRow: boolean, previousRow?: 
     }
 }
 
+function setReadOnly(node: View) {
+    const element = <HTMLInputElement> node.element;
+    if (element.readOnly) {
+        node.android('focusable', 'false');
+    }
+    if (element.disabled) {
+        node.android('enabled', 'false');
+    }
+}
+
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
 
 const getRelativeVertical = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative || !item.pageFlow && item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
@@ -1433,8 +1443,39 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('minHeight', formatPX(Math.ceil(node.actualHeight)));
                 }
                 node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
+                if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
+                    setReadOnly(node);
+                }
                 break;
-            case CONTAINER_ANDROID.EDIT: {
+            case CONTAINER_ANDROID.SELECT:
+            case CONTAINER_ANDROID.CHECKBOX:
+            case CONTAINER_ANDROID.RADIO:
+                if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
+                    setReadOnly(node);
+                }
+                break;
+            case CONTAINER_ANDROID.EDIT:
+                if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
+                    if (!node.companion) {
+                        [node.previousSibling, node.nextSibling].some((sibling: T) => {
+                            if (sibling?.visible && sibling.pageFlow) {
+                                const element = <HTMLInputElement> node.element;
+                                const labelElement = <HTMLLabelElement> sibling.element;
+                                const labelParent = sibling.documentParent.tagName === 'LABEL' && sibling.documentParent as T;
+                                if (element.id && element.id === labelElement.htmlFor) {
+                                    sibling.android('labelFor', node.documentId);
+                                    return true;
+                                }
+                                else if (labelParent && sibling.textElement) {
+                                    labelParent.android('labelFor', node.documentId);
+                                    return true;
+                                }
+                            }
+                            return false;
+                        });
+                    }
+                    setReadOnly(node);
+                }
                 if ((<HTMLInputElement> node.element).list?.children.length) {
                     controlName = CONTAINER_ANDROID.EDIT_LIST;
                     node.controlName = controlName;
@@ -1442,7 +1483,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else if (node.localSettings.targetAPI >= BUILD_ANDROID.OREO) {
                     node.android('importantForAutofill', 'no');
                 }
-            }
             case CONTAINER_ANDROID.RANGE:
                 if (!node.hasPX('width')) {
                     node.css('width', formatPX(node.bounds.width), true);
