@@ -497,7 +497,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         function setDrawableBackground(node: T, value: string) {
             if (value !== '') {
                 const drawable = '@drawable/' + Resource.insertStoredAsset('drawables', node.containerName.toLowerCase() + '_' + node.controlId, value);
-                if (node.documentBody && !setHtmlBackground(node) && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY)) {
+                if (node.documentBody && !setHtmlBackground(node) && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY) && node.css('backgroundImage') !== 'none') {
                     setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
                 }
                 else {
@@ -1574,14 +1574,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     );
                     if (src !== '') {
                         imageData.drawable = '@drawable/' + src;
-                        if (position.static) {
+                        if (position.static && node.tagName !== 'HTML') {
                             imageData.gravity = 'fill';
                         }
                     }
                 }
                 else {
                     imageData.gradient = value;
-                    if (position.static) {
+                    if (position.static && node.tagName !== 'HTML') {
                         imageData.gravity = 'fill';
                     }
                 }

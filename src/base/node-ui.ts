@@ -339,7 +339,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public positioned = false;
     public rendered = false;
     public excluded = false;
-    public controlId = '';
     public floatContainer = false;
     public containerIndex = Number.POSITIVE_INFINITY;
     public lineBreakLeading = false;
@@ -386,6 +385,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public abstract set containerType(value: number);
     public abstract get containerType(): number;
+    public abstract set controlId(name: string);
+    public abstract get controlId(): string;
     public abstract get documentId(): string;
     public abstract get baselineHeight(): number;
     public abstract get support(): Support;

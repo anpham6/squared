@@ -204,8 +204,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _boxReset?: BoxModel;
 
         private _api = BUILD_ANDROID.LATEST;
-        private _containerType = 0;
         private _localization = false;
+        private _containerType = 0;
+        private _controlId?: string;
         private __android: StringMap = {};
         private __app: StringMap = {};
 
@@ -619,20 +620,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             else if (this.containerType === 0) {
                 this.containerType = CONTAINER_NODE.UNKNOWN;
             }
-            if (this.controlId === '') {
-                let name: string | undefined;
-                if (this.styleElement) {
-                    const elementId = this.elementId;
-                    const value = elementId?.trim() || getNamedItem(<HTMLElement> this.element, 'name');
-                    if (value !== '') {
-                        name = value.replace(REGEX_VALIDSTRING, '_').toLowerCase();
-                        if (name === 'parent' || RESERVED_JAVA.includes(name)) {
-                            name = '_' + name;
-                        }
-                    }
-                }
-                this.controlId = convertWord(squared.base.ResourceUI.generateId('android', name || fromLastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
-            }
         }
 
         public setLayout() {
@@ -815,6 +802,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             else if (!documentParent.layoutElement) {
                                 checkParentWidth();
+                            }
+                            else if (this.onlyChild) {
+                                layoutWidth = 'match_parent';
                             }
                         }
                         if (layoutWidth === '' && !this.floating) {
@@ -1306,8 +1296,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                                 break;
                             case 'paddingTop':
-                            case 'paddingBottom':
                                 value = this.actualPadding(attr, value);
+                                break;
+                            case 'paddingBottom':
+                                if (this.layoutVertical && this.hasPX('height')) {
+                                    continue;
+                                }
+                                else {
+                                    value = this.actualPadding(attr, value);
+                                }
                                 break;
                         }
                     }
@@ -1568,6 +1565,38 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 return '@id/' + controlId;
             }
             return '';
+        }
+
+        set controlId(value) {
+            this._controlId = value;
+        }
+        get controlId() {
+            let result = this._controlId;
+            if (result === undefined) {
+                const controlName = this.controlName;
+                if (controlName) {
+                    let name: string | undefined;
+                    if (this.styleElement) {
+                        const elementId = this.elementId;
+                        const value = elementId?.trim() || getNamedItem(<HTMLElement> this.element, 'name');
+                        if (value !== '') {
+                            name = value.replace(REGEX_VALIDSTRING, '_').toLowerCase();
+                            if (name === 'parent' || RESERVED_JAVA.includes(name)) {
+                                name = '_' + name;
+                            }
+                        }
+                    }
+                    result = convertWord(squared.base.ResourceUI.generateId('android', name || fromLastIndexOf(controlName, '.').toLowerCase(), name ? 0 : 1));
+                    this._controlId = result;
+                }
+                else if (this.id === 0) {
+                    return 'baseroot';
+                }
+                else {
+                    return '';
+                }
+            }
+            return result;
         }
 
         get anchorTarget(): T {

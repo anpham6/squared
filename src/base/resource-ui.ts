@@ -190,6 +190,57 @@ function getBackgroundSize(node: NodeUI, index: number, value?: string) {
     return undefined;
 }
 
+function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: string[]) {
+    const style = node.css(border[0]) || 'none';
+    let width = formatPX(attr !== 'outline' ? node[border[1]] : convertFloat(node.style[border[1]]));
+    let color: string | ColorData | undefined = node.css(border[2]) || 'initial';
+    switch (color) {
+        case 'initial':
+            color = 'rgb(0, 0, 0)';
+            break;
+        case 'inherit':
+        case 'currentcolor':
+            color = getInheritedStyle(<HTMLElement> node.element, border[2]);
+            break;
+    }
+    if (width !== '0px' && style !== 'none') {
+        if (width === '2px' && (style === 'inset' || style === 'outset')) {
+            width = '1px';
+        }
+        color = parseColor(color, 1, true);
+        if (color) {
+            boxStyle[attr] = <BorderAttribute> {
+                width,
+                style,
+                color
+            };
+        }
+    }
+}
+function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: 'backgroundClip' | 'backgroundOrigin') {
+    switch (node.css(attr)) {
+        case 'border-box':
+            return true;
+        case 'padding-box':
+            boxStyle[attr] = {
+                top: node.borderTopWidth,
+                right: node.borderRightWidth,
+                bottom: node.borderBottomWidth,
+                left: node.borderLeftWidth
+            };
+            break;
+        case 'content-box':
+            boxStyle[attr] = {
+                top: node.borderTopWidth + node.paddingTop,
+                right: node.borderRightWidth + node.paddingRight,
+                bottom: node.borderBottomWidth + node.paddingBottom,
+                left: node.borderLeftWidth + node.paddingLeft
+            };
+            break;
+    }
+    return false;
+}
+
 const getGradientPosition = (value: string) => isString(value) ? (value.indexOf('at ') !== -1 ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : <RegExpExecArray> [value, value]) : null;
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
@@ -577,58 +628,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 backgroundPositionX: node.css('backgroundPositionX'),
                 backgroundPositionY: node.css('backgroundPositionY')
             };
-            function setBorderStyle(attr: string, border: string[]) {
-                const style = node.css(border[0]) || 'none';
-                let width = formatPX(attr !== 'outline' ? node[border[1]] : convertFloat(node.style[border[1]]));
-                let color: string | ColorData | undefined = node.css(border[2]) || 'initial';
-                switch (color) {
-                    case 'initial':
-                        color = 'rgb(0, 0, 0)';
-                        break;
-                    case 'inherit':
-                    case 'currentcolor':
-                        color = getInheritedStyle(<HTMLElement> node.element, border[2]);
-                        break;
-                }
-                if (width !== '0px' && style !== 'none') {
-                    if (width === '2px' && (style === 'inset' || style === 'outset')) {
-                        width = '1px';
-                    }
-                    color = parseColor(color, 1, true);
-                    if (color) {
-                        boxStyle[attr] = <BorderAttribute> {
-                            width,
-                            style,
-                            color
-                        };
-                    }
-                }
-            }
-            function setBackgroundOffset(attr: 'backgroundClip' | 'backgroundOrigin') {
-                switch (node.css(attr)) {
-                    case 'border-box':
-                        return true;
-                    case 'padding-box':
-                        boxStyle[attr] = {
-                            top: node.borderTopWidth,
-                            right: node.borderRightWidth,
-                            bottom: node.borderBottomWidth,
-                            left: node.borderLeftWidth
-                        };
-                        break;
-                    case 'content-box':
-                        boxStyle[attr] = {
-                            top: node.borderTopWidth + node.paddingTop,
-                            right: node.borderRightWidth + node.paddingRight,
-                            bottom: node.borderBottomWidth + node.paddingBottom,
-                            left: node.borderLeftWidth + node.paddingLeft
-                        };
-                        break;
-                }
-                return false;
-            }
-            if (setBackgroundOffset('backgroundClip') && node.has('backgroundOrigin')) {
-                setBackgroundOffset('backgroundOrigin');
+            if (setBackgroundOffset(node, boxStyle, 'backgroundClip') && node.has('backgroundOrigin')) {
+                setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
             }
             if (node.css('borderRadius') !== '0px') {
                 const [A, B] = node.css('borderTopLeftRadius').split(' ');
@@ -652,19 +653,19 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             }
             if (node.visibleStyle.borderWidth) {
                 if (node.borderTopWidth > 0) {
-                    setBorderStyle('borderTop', BOX_BORDER[0]);
+                    setBorderStyle(node, boxStyle, 'borderTop', BOX_BORDER[0]);
                 }
                 if (node.borderRightWidth > 0) {
-                    setBorderStyle('borderRight', BOX_BORDER[1]);
+                    setBorderStyle(node, boxStyle, 'borderRight', BOX_BORDER[1]);
                 }
                 if (node.borderBottomWidth > 0) {
-                    setBorderStyle('borderBottom', BOX_BORDER[2]);
+                    setBorderStyle(node, boxStyle, 'borderBottom', BOX_BORDER[2]);
                 }
                 if (node.borderLeftWidth > 0) {
-                    setBorderStyle('borderLeft', BOX_BORDER[3]);
+                    setBorderStyle(node, boxStyle, 'borderLeft', BOX_BORDER[3]);
                 }
             }
-            setBorderStyle('outline', BOX_BORDER[4]);
+            setBorderStyle(node, boxStyle, 'outline', BOX_BORDER[4]);
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                 boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node);
             }
@@ -710,156 +711,156 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public setValueString(node: T) {
-        if (!node.svgElement) {
-            const element = <HTMLInputElement> node.element;
-            if (element) {
-                let key = '';
-                let value = '';
-                let hint = '';
-                let trimming = false;
-                let inlined = false;
-                switch (element.tagName) {
-                    case 'INPUT':
-                        value = element.value;
-                        switch (element.type) {
-                            case 'radio':
-                            case 'checkbox':
-                                const companion = node.companion;
-                                if (companion?.visible === false) {
-                                    value = companion.textContent.trim();
+        const element = <HTMLInputElement> node.element;
+        if (element) {
+            let key = '';
+            let value = '';
+            let hint = '';
+            let trimming = false;
+            let inlined = false;
+            switch (element.tagName) {
+                case 'INPUT':
+                    value = element.value;
+                    switch (element.type) {
+                        case 'radio':
+                        case 'checkbox':
+                            const companion = node.companion;
+                            if (companion?.visible === false) {
+                                value = companion.textContent.trim();
+                            }
+                            break;
+                        case 'submit':
+                            if (value === '' && !node.visibleStyle.backgroundImage) {
+                                value = 'Submit';
+                            }
+                            break;
+                        case 'time':
+                            if (value === '') {
+                                hint = '--:-- --';
+                            }
+                            break;
+                        case 'date':
+                        case 'datetime-local':
+                            if (value === '') {
+                                switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
+                                    case 'en-US':
+                                        hint = 'mm/dd/yyyy';
+                                        break;
+                                    default:
+                                        hint = 'dd/mm/yyyy';
+                                        break;
                                 }
-                                break;
-                            case 'submit':
-                                if (value === '' && !node.visibleStyle.backgroundImage) {
-                                    value = 'Submit';
+                                if (element.type === 'datetime-local') {
+                                    hint += ' --:-- --';
                                 }
-                                break;
-                            case 'time':
-                                if (value === '') {
-                                    hint = '--:-- --';
-                                }
-                                break;
-                            case 'date':
-                            case 'datetime-local':
-                                if (value === '') {
-                                    switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
-                                        case 'en-US':
-                                            hint = 'mm/dd/yyyy';
-                                            break;
-                                        default:
-                                            hint = 'dd/mm/yyyy';
-                                            break;
-                                    }
-                                    if (element.type === 'datetime-local') {
-                                        hint += ' --:-- --';
-                                    }
-                                }
-                                break;
-                            case 'week':
-                                if (value === '') {
-                                    hint = 'Week: --, ----';
-                                }
-                                break;
-                            case 'month':
-                                if (value === '') {
-                                    hint = '--------- ----';
-                                }
-                                break;
-                            case 'url':
-                            case 'email':
-                            case 'search':
-                            case 'number':
-                            case 'tel':
-                                if (value === '') {
-                                    hint = element.placeholder;
-                                }
-                                break;
-                            case 'file':
-                                value = isUserAgent(USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
-                                break;
+                            }
+                            break;
+                        case 'week':
+                            if (value === '') {
+                                hint = 'Week: --, ----';
+                            }
+                            break;
+                        case 'month':
+                            if (value === '') {
+                                hint = '--------- ----';
+                            }
+                            break;
+                        case 'text':
+                        case 'password':
+                        case 'url':
+                        case 'email':
+                        case 'search':
+                        case 'number':
+                        case 'tel':
+                            if (value === '') {
+                                hint = element.placeholder;
+                            }
+                            break;
+                        case 'file':
+                            value = isUserAgent(USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
+                            break;
+                    }
+                    break;
+                case 'TEXTAREA':
+                    value = element.value;
+                    break;
+                case 'IFRAME':
+                    value = element.src;
+                    break;
+                default:
+                    const textContent = node.textContent;
+                    if (node.plainText || node.pseudoElement) {
+                        key = textContent.trim();
+                        [value] = replaceWhiteSpace(node, textContent.replace(/&/g, '&amp;'));
+                        inlined = true;
+                        trimming = !(node.actualParent as T).preserveWhiteSpace;
+                    }
+                    else if (node.inlineText) {
+                        key = textContent.trim();
+                        [value, inlined] = replaceWhiteSpace(node, this.removeExcludedFromText(element, node.sessionId));
+                        trimming = true;
+                    }
+                    else if (node.naturalElements.length === 0 && textContent && textContent.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
+                        value = textContent;
+                    }
+                    break;
+            }
+            if (value !== '') {
+                if (trimming) {
+                    const previousSibling = node.siblingsLeading[0];
+                    let previousSpaceEnd = false;
+                    if (value.length > 1) {
+                        if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
+                            value = value.replace(CHAR.LEADINGSPACE, '');
                         }
-                        break;
-                    case 'TEXTAREA':
-                        value = element.value;
-                        break;
-                    case 'IFRAME':
-                        value = element.src;
-                        break;
-                    default:
-                        const textContent = node.textContent;
-                        if (node.plainText || node.pseudoElement) {
-                            key = textContent.trim();
-                            [value] = replaceWhiteSpace(node, textContent.replace(/&/g, '&amp;'));
-                            inlined = true;
-                            trimming = !(node.actualParent as T).preserveWhiteSpace;
+                        else if (previousSibling.naturalElement) {
+                            const textContent = previousSibling.textContent;
+                            const length = textContent.length;
+                            if (length) {
+                                previousSpaceEnd = textContent.charCodeAt(length - 1) === 32;
+                            }
                         }
-                        else if (node.inlineText) {
-                            key = textContent.trim();
-                            [value, inlined] = replaceWhiteSpace(node, this.removeExcludedFromText(element, node.sessionId));
-                            trimming = true;
+                    }
+                    if (inlined) {
+                        const trailingSpace = !node.lineBreakTrailing && CHAR.TRAILINGSPACE.test(value);
+                        if (previousSibling && CHAR.LEADINGSPACE.test(value) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
+                            value = STRING_SPACE + value.trim();
                         }
-                        else if (node.naturalElements.length === 0 && textContent && textContent.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
-                            value = textContent;
+                        else {
+                            value = value.trim();
                         }
-                        break;
+                        if (trailingSpace) {
+                            const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
+                            if (nextSibling?.blockStatic === false) {
+                                value += STRING_SPACE;
+                            }
+                        }
+                    }
+                    else if (value.trim() !== '') {
+                        value = value.replace(CHAR.LEADINGSPACE, previousSibling && (
+                            previousSibling.block ||
+                            previousSibling.lineBreak ||
+                            previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                            node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
+                        );
+                        value = value.replace(CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
+                    }
+                    else if (!node.inlineText) {
+                        return;
+                    }
                 }
                 if (value !== '') {
-                    if (trimming) {
-                        const previousSibling = node.siblingsLeading[0];
-                        let previousSpaceEnd = false;
-                        if (value.length > 1) {
-                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
-                                value = value.replace(CHAR.LEADINGSPACE, '');
-                            }
-                            else if (previousSibling.naturalElement) {
-                                const textContent = previousSibling.textContent;
-                                const length = textContent.length;
-                                if (length) {
-                                    previousSpaceEnd = textContent.charCodeAt(length - 1) === 32;
-                                }
-                            }
-                        }
-                        if (inlined) {
-                            const trailingSpace = !node.lineBreakTrailing && CHAR.TRAILINGSPACE.test(value);
-                            if (previousSibling && CHAR.LEADINGSPACE.test(value) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
-                                value = STRING_SPACE + value.trim();
-                            }
-                            else {
-                                value = value.trim();
-                            }
-                            if (trailingSpace) {
-                                const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
-                                if (nextSibling?.blockStatic === false) {
-                                    value += STRING_SPACE;
-                                }
-                            }
-                        }
-                        else if (value.trim() !== '') {
-                            value = value.replace(CHAR.LEADINGSPACE, previousSibling && (
-                                previousSibling.block ||
-                                previousSibling.lineBreak ||
-                                previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
-                            );
-                            value = value.replace(CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
-                        }
-                        else if (!node.inlineText) {
-                            return;
-                        }
-                    }
-                    if (value !== '') {
-                        node.data(ResourceUI.KEY_NAME, 'valueString', { key, value });
-                    }
-                }
-                if (hint !== '') {
-                    node.data(ResourceUI.KEY_NAME, 'hintString', hint);
+                    node.data(ResourceUI.KEY_NAME, 'valueString', { key, value });
                 }
             }
-            else if (node.inlineText) {
-                const value = node.textContent;
-                if (value) {
-                    node.data(ResourceUI.KEY_NAME, 'valueString', { key: value, value });
-                }
+            if (hint !== '') {
+                node.data(ResourceUI.KEY_NAME, 'hintString', hint);
+            }
+        }
+        else if (node.inlineText) {
+            const value = node.textContent;
+            if (value) {
+                node.data(ResourceUI.KEY_NAME, 'valueString', { key: value, value });
             }
         }
     }

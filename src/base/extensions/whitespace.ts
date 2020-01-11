@@ -63,41 +63,43 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                 }
                 const offsetParent = node[margin];
                 const offsetChild = child[margin];
-                const height = child.bounds.height;
-                let resetChild = false;
-                if (!DOCTYPE_HTML && offsetParent === 0 && offsetChild > 0 && child.cssInitial(margin) === '') {
-                    resetChild = true;
-                }
-                else {
-                    const outside = offsetParent >= offsetChild;
-                    if (height === 0 && outside && child.textEmpty && child.extensions.length === 0) {
-                        child.hide();
+                if (offsetParent > 0 || offsetChild > 0) {
+                    const height = child.bounds.height;
+                    let resetChild = false;
+                    if (!DOCTYPE_HTML && offsetParent === 0 && offsetChild > 0 && child.cssInitial(margin) === '') {
+                        resetChild = true;
                     }
-                    else if (child.getBox(boxMargin)[0] !== 1) {
-                        if (outside) {
-                            resetChild = true;
+                    else {
+                        const outside = offsetParent >= offsetChild;
+                        if (height === 0 && outside && child.textEmpty && child.extensions.length === 0) {
+                            child.hide();
                         }
-                        else if (node.documentBody) {
-                            resetMargin(node, boxMargin);
-                            if (direction) {
-                                node.bounds.top = 0;
-                                node.unset('box');
-                                node.unset('linear');
+                        else if (child.getBox(boxMargin)[0] !== 1) {
+                            if (outside) {
+                                resetChild = true;
+                            }
+                            else if (node.documentBody) {
+                                resetMargin(node, boxMargin);
+                                if (direction) {
+                                    node.bounds.top = 0;
+                                    node.unset('box');
+                                    node.unset('linear');
+                                }
+                            }
+                            else {
+                                if (node.getBox(boxMargin)[0] !== 1) {
+                                    node.modifyBox(boxMargin);
+                                    node.modifyBox(boxMargin, offsetChild);
+                                }
+                                resetChild = true;
                             }
                         }
-                        else {
-                            if (node.getBox(boxMargin)[0] !== 1) {
-                                node.modifyBox(boxMargin);
-                                node.modifyBox(boxMargin, offsetChild);
-                            }
-                            resetChild = true;
-                        }
                     }
-                }
-                if (resetChild) {
-                    resetMargin(child, boxMargin);
-                    if (height === 0 && !child.every(item => item.floating)) {
-                        resetMargin(child, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
+                    if (resetChild) {
+                        resetMargin(child, boxMargin);
+                        if (height === 0 && !child.every(item => item.floating)) {
+                            resetMargin(child, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
+                        }
                     }
                 }
             }

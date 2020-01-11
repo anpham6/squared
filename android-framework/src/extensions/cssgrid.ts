@@ -21,8 +21,8 @@ const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_li
 
 const { CSS_GRID } = $base_lib.constant.EXT_NAME;
 
-const REGEX_ALIGNSELF = /(start|end|center|baseline)/;
-const REGEX_JUSTIFYSELF = /(start|left|center|right|end)/;
+const REGEX_ALIGNSELF = /start|end|center|baseline/;
+const REGEX_JUSTIFYSELF = /start|left|center|right|end/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
@@ -290,7 +290,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         else if (horizontal) {
                             size = 0;
                             minSize = 0;
-                            sizeWeight = 0.01;
+                            sizeWeight = -1;
                             break;
                         }
                     }
@@ -307,6 +307,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                     else if (value.endsWith('fr')) {
                         if (horizontal || node.hasHeight) {
+                            if (sizeWeight === -1) {
+                                sizeWeight = 0;
+                            }
                             sizeWeight += parseFloat(value);
                             minSize = size;
                         }
@@ -317,6 +320,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         size = 0;
                     }
                     else if (isPercent(value)) {
+                        if (sizeWeight === -1) {
+                            sizeWeight = 0;
+                        }
                         sizeWeight += parseFloat(value) / 100;
                         minSize = size;
                         size = 0;
@@ -362,18 +368,27 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 if (minSize > 0 && !item.hasPX(horizontal ? 'minWidth' : 'minHeight')) {
                     item.css(horizontal ? 'minWidth' : 'minHeight', formatPX(minSize), true);
                 }
-                if (sizeWeight > 0) {
+                if (sizeWeight !== 0) {
                     if (!item.hasPX(dimension)) {
-                        const weight = truncate(sizeWeight, node.localSettings.floatPrecision);
                         if (horizontal) {
-                            item.setLayoutWidth('0px');
-                            item.android('layout_columnWeight', weight);
-                            item.mergeGravity('layout_gravity', 'fill_horizontal');
+                            if ((sizeWeight === 1 || sizeWeight === -1) && cellData.columnSpan === mainData.column.length) {
+                                item.setLayoutWidth('match_parent');
+                            }
+                            else {
+                                item.setLayoutWidth('0px');
+                                item.android('layout_columnWeight', sizeWeight === -1 ? '0.01' : truncate(sizeWeight, node.localSettings.floatPrecision));
+                                item.mergeGravity('layout_gravity', 'fill_horizontal');
+                            }
                         }
                         else {
-                            item.setLayoutHeight('0px');
-                            item.android('layout_rowWeight', weight);
-                            item.mergeGravity('layout_gravity', 'fill_vertical');
+                            if (sizeWeight === 1 && cellData.rowSpan === mainData.row.length) {
+                                item.setLayoutHeight('match_parent');
+                            }
+                            else {
+                                item.setLayoutHeight('0px');
+                                item.android('layout_rowWeight', truncate(sizeWeight, node.localSettings.floatPrecision));
+                                item.mergeGravity('layout_gravity', 'fill_vertical');
+                            }
                         }
                     }
                 }
@@ -469,7 +484,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (mainData.alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.bounds.height > (node.initial.bounds as BoxRectDimension).height && checkRowSpan()) {
                 target.css('minHeight', formatPX(node.actualHeight), true);
             }
-            else if (!target.hasPX('height') && !(row.length === 1 && mainData.alignContent === 'space-between')) {
+            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && mainData.alignContent === 'space-between')) {
                 if (!REGEX_ALIGNSELF.test(mainData.alignItems)) {
                     target.mergeGravity('layout_gravity', 'fill_vertical');
                 }

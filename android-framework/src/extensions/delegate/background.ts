@@ -14,7 +14,7 @@ const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumer
 
 const isHideMargin = (node: T, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && (node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
 
-const isFullScreen = (node: T, visibleStyle: VisibleStyle) => visibleStyle.borderWidth && !node.inline && !node.hasPX('width') && (node.backgroundColor !== '' || node.toElementInt('scrollHeight') < window.innerHeight) && node.css('height') !== '100%' && node.css('minHeight') !== '100%' || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
+const isFullScreen = (node: T, visibleStyle: VisibleStyle) => node.backgroundColor !== '' && visibleStyle.borderWidth && !node.inline && node.css('height') !== '100%' && node.css('minHeight') !== '100%' && !node.actualParent?.visibleStyle.background || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
 
 const isParentVisible = (node: T, visibleStyle: VisibleStyle) => (node.actualParent as T).height > 0 && visibleStyle.backgroundImage && node.css('backgroundPositionY').indexOf('bottom') !== -1;
 

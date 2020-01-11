@@ -343,7 +343,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             if (node.documentBody) {
                 parent.visible = false;
-                parent.exclude(NODE_RESOURCE.ASSET, NODE_PROCEDURE.ALL, APP_SECTION.EXTENSION);
+                parent.exclude(NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, NODE_PROCEDURE.ALL, APP_SECTION.EXTENSION);
                 cache.append(parent);
             }
             node.documentParent = parent;
@@ -1296,7 +1296,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 this.session.documentRoot.push({ node, layoutName: node === this.processing.node ? layoutName : '' });
             }
             resourceHandler.setBoxStyle(node);
-            if (node.visible) {
+            if (!node.imageElement && !node.svgElement && node.visible) {
                 resourceHandler.setFontStyle(node);
                 resourceHandler.setValueString(node);
             }
