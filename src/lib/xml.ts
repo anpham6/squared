@@ -16,9 +16,9 @@ const REGEX_FORMAT = {
     NBSP: /&nbsp;/g,
     AMP: /&/g
 };
-const TAB_SPACE = '&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;';
 
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
+export const STRING_TABSPACE = '&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;';
 
 export function isPlainText(value: string) {
     const length = value.length;
@@ -259,7 +259,7 @@ export function replaceCharacterData(value: string, tab = false) {
                 break;
             case '\t':
                 if (tab) {
-                    char[i] = TAB_SPACE;
+                    char[i] = STRING_TABSPACE;
                     valid = true;
                 }
                 else {

@@ -987,6 +987,7 @@ declare namespace lib {
 
     namespace xml {
         const STRING_XMLENCODING: string;
+        const STRING_TABSPACE: string;
 
         function isPlainText(value: string): string;
         function pushIndent(value: string, depth: number, char?: string, indent?: string): string;

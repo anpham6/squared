@@ -433,7 +433,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                     }
-                    else if (actualParent.visible) {
+                    else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE') {
                         if (!actualParent.documentRoot && actualParent.ascend({ condition: item => item.documentRoot, attr: 'outerWrapper' }).length === 0) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
                             const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;

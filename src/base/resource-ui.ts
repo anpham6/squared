@@ -12,6 +12,7 @@ const { isEqual, offsetAngleX, offsetAngleY, relativeAngle, triangulate, truncat
 const { CHAR, ESCAPE, STRING, XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
 const { convertCamelCase, convertFloat, hasValue, isEqual: isEqualObject, isNumber, isString, trimEnd, trimStart } = $lib.util;
+const { STRING_TABSPACE } = $lib.xml;
 
 type NodeUI = squared.base.NodeUI;
 
@@ -142,11 +143,13 @@ function getAngle(value: string, fallback = 0) {
     return fallback;
 }
 
-function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean] {
+function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boolean] {
+    let inlined = false;
     value = value.replace(REGEX_NOBREAKSPACE, STRING_SPACE);
     switch (node.css('whiteSpace')) {
         case 'nowrap':
             value = value.replace(/\n/g, ' ');
+            inlined = true;
             break;
         case 'pre':
         case 'pre-wrap':
@@ -155,31 +158,30 @@ function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean] {
             }
             value = value
                 .replace(/\n/g, '\\n')
-                .replace(/ /g, STRING_SPACE);
-            break;
+                .replace(/\t/g, STRING_TABSPACE)
+                .replace(/\s/g, STRING_SPACE);
+            return [value, true, false];
         case 'pre-line':
             value = value
                 .replace(/\n/g, '\\n')
                 .replace(/[ ]+/g, ' ');
-            break;
-        default:
-            if (node.onlyChild && node.htmlElement) {
-                value = value
-                    .replace(CHAR.LEADINGSPACE, '')
-                    .replace(CHAR.TRAILINGSPACE, '');
-            }
-            else {
-                const { previousSibling, nextSibling } = node;
-                if (previousSibling && (previousSibling.lineBreak || previousSibling.blockStatic)) {
-                    value = value.replace(CHAR.LEADINGSPACE, '');
-                }
-                if (nextSibling && (nextSibling.lineBreak || nextSibling.blockStatic)) {
-                    value = value.replace(CHAR.TRAILINGSPACE, '');
-                }
-            }
-            return [value, false];
+            return [value, true, false];
     }
-    return [value, true];
+    if (node.onlyChild && node.htmlElement) {
+        value = value
+            .replace(CHAR.LEADINGSPACE, '')
+            .replace(CHAR.TRAILINGSPACE, '');
+    }
+    else {
+        const { previousSibling, nextSibling } = node;
+        if (previousSibling && (previousSibling.lineBreak || previousSibling.blockStatic)) {
+            value = value.replace(CHAR.LEADINGSPACE, '');
+        }
+        if (nextSibling && (nextSibling.lineBreak || nextSibling.blockStatic)) {
+            value = value.replace(CHAR.TRAILINGSPACE, '');
+        }
+    }
+    return [value, inlined, true];
 }
 
 function getBackgroundSize(node: NodeUI, index: number, value?: string) {
@@ -716,7 +718,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             let key = '';
             let value = '';
             let hint = '';
-            let trimming = false;
+            let trimming = true;
             let inlined = false;
             switch (element.tagName) {
                 case 'INPUT':
@@ -791,14 +793,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const textContent = node.textContent;
                     if (node.plainText || node.pseudoElement) {
                         key = textContent.trim();
-                        [value] = replaceWhiteSpace(node, textContent.replace(/&/g, '&amp;'));
+                        [value, inlined, trimming] = replaceWhiteSpace(node, textContent.replace(/&/g, '&amp;'));
                         inlined = true;
-                        trimming = !(node.actualParent as T).preserveWhiteSpace;
                     }
                     else if (node.inlineText) {
                         key = textContent.trim();
-                        [value, inlined] = replaceWhiteSpace(node, this.removeExcludedFromText(element, node.sessionId));
-                        trimming = true;
+                        [value, inlined, trimming] = replaceWhiteSpace(node, this.removeExcludedFromText(element, node.sessionId));
                     }
                     else if (node.naturalElements.length === 0 && textContent && textContent.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                         value = textContent;
@@ -875,17 +875,21 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             const item = getElementAsNode(child, sessionId) as NodeUI | undefined;
             if (item === undefined || !item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
                 if (item) {
+                    const preserveWhitespace = (item.actualParent as T).preserveWhiteSpace;
                     if (item.htmlElement && attr === 'innerHTML') {
+                        const outerHTML = item.toElementString('outerHTML');
                         if (item.lineBreak) {
-                            value = value.replace(new RegExp(`\\s*${item.toElementString('outerHTML')}\\s*`), '\\n');
+                            value = value.replace(!preserveWhitespace ? new RegExp(`\\s*${outerHTML}\\s*`) : outerHTML, '\\n');
                         }
-                        else {
-                            value = value.replace(item.toElementString('outerHTML'), item.pageFlow && item.textContent.trim() !== '' ? STRING_SPACE : '');
+                        else if (!preserveWhitespace) {
+                            value = value.replace(outerHTML, item.pageFlow && item.textContent.trim() !== '' ? STRING_SPACE : '');
                         }
                         continue;
                     }
                     else if (isString(item[attr])) {
-                        value = value.replace(item[attr], '');
+                        if (!preserveWhitespace) {
+                            value = value.replace(item[attr], '');
+                        }
                         continue;
                     }
                 }

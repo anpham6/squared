@@ -1716,8 +1716,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get flexbox() {
         let result = this._cached.flexbox;
         if (result === undefined) {
-            const actualParent = this.actualParent;
-            if (actualParent) {
+            if (this.styleElement) {
+                const actualParent = this.actualParent as T;
                 const getFlexValue = (attr: string, initialValue: number, parent?: Node): number => {
                     const value = (parent || this).css(attr);
                     if (isNumber(value)) {

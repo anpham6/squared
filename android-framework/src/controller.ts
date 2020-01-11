@@ -1421,15 +1421,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('justificationMode', 'inter_word');
                 }
                 if (node.has('textShadow')) {
-                    const match = /^(rgba?\([^)]+\)|[a-z]+) (-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?.*$/.exec(node.css('textShadow'));
+                    const match = /^(?:(rgba?\([^)]+\)|[a-z]+) )?(-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?.*$/.exec(node.css('textShadow'));
                     if (match) {
-                        const color = Resource.addColor(parseColor(match[1]));
+                        const color = Resource.addColor(parseColor(match[1] || node.css('color')));
                         if (color !== '') {
+                            const precision = this.localSettings.precision.standardFloat;
                             const fontSize = node.fontSize;
                             node.android('shadowColor', '@color/' + color);
-                            node.android('shadowDx', truncate(parseUnit(match[2], fontSize) * 2));
-                            node.android('shadowDy', truncate(parseUnit(match[3], fontSize) * 2));
-                            node.android('shadowRadius', match[4] ? truncate(Math.max(parseUnit(match[4], fontSize), 1)) : '1');
+                            node.android('shadowDx', truncate(parseUnit(match[2], fontSize) * 2, precision));
+                            node.android('shadowDy', truncate(parseUnit(match[3], fontSize) * 2, precision));
+                            if (match[4]) {
+                                node.android('shadowRadius', truncate(Math.max(parseUnit(match[4], fontSize), 0), precision));
+                            }
                         }
                     }
                 }
