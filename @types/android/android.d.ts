@@ -1,5 +1,5 @@
 import { CustomizationResult, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
-import { Constraint, LocalSettings, SupportAndroid, ViewAttribute } from './node';
+import { Constraint, LocalSettings, SupportAndroid, SpacerAttribute, ViewAttribute } from './node';
 import { FileOutputOptions } from './resource';
 
 type View = base.View;
@@ -15,6 +15,8 @@ declare namespace base {
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
         readonly userSettings: UserSettingsAndroid;
+        renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
+        renderSpace(options: SpacerAttribute): string;
         checkFrameHorizontal(data: squared.base.LayoutUI<T>): boolean;
         checkConstraintFloat(data: squared.base.LayoutUI<T>, horizontal?: boolean): boolean;
         checkConstraintHorizontal(data: squared.base.LayoutUI<T>): boolean;
@@ -22,7 +24,6 @@ declare namespace base {
         addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposite?: boolean): void;
         addBarrier(nodes: T[], barrierDirection: string): string | undefined;
         evaluateAnchors(nodes: T[]): void;
-        renderSpace(width: string, height?: string, columnSpan?: number, rowSpan?: number, options?: ViewAttribute): string;
         createNodeWrapper(node: T, parent: T, children?: T[], controlName?: string, containerType?: number): T;
     }
 
@@ -419,7 +420,7 @@ declare namespace lib {
         function getDocumentId(value: string): string;
         function getHorizontalBias(node: View): number;
         function getVerticalBias(node: View): number;
-        function createViewAttribute(options?: ExternalData, android?: ExternalData, app?: ExternalData): ViewAttribute;
+        function createViewAttribute(externalData?: ExternalData, options?: ViewAttribute): ViewAttribute;
         function createStyleAttribute(options?: ExternalData): Required<StyleAttribute>;
         function localizeString(value: string, rtl: boolean, api: number): string;
         function getXmlNs(value: string): string;

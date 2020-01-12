@@ -53,12 +53,19 @@ const PREFIX_MENU = 'ic_menu_';
 function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, options: ViewAttribute) {
     const dataset = element.dataset;
     for (const attr in dataset) {
-        if (validator[attr]) {
+        const pattern = validator[attr];
+        if (pattern) {
             const value = dataset[attr];
             if (value) {
-                const match = validator[attr].exec(value);
+                const match = pattern.exec(value);
                 if (match) {
-                    options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
+                    const name = NAMESPACE_APP.includes(attr) ? 'app' : 'android';
+                    let data = options[name];
+                    if (data === undefined) {
+                        data = {};
+                        options[name] = data;
+                    }
+                    data[attr] = Array.from(new Set(match)).join('|');
                 }
             }
         }

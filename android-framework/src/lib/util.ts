@@ -58,18 +58,26 @@ export function getVerticalBias(node: View) {
     return calculateBias(top, bottom, node.localSettings.floatPrecision);
 }
 
-export function createViewAttribute(options?: ExternalData, android = {}, app = {}): ViewAttribute {
-    const result = <ViewAttribute> { android, app };
-    if (options) {
-        const { android: androidA, app: appA } = options;
-        if (androidA) {
-            Object.assign(result.android, androidA);
+export function createViewAttribute(externalData?: ExternalData, options?: ViewAttribute): ViewAttribute {
+    if (options === undefined) {
+        options = { android: {} };
+    }
+    else if (options.android === undefined) {
+        options.android = {};
+    }
+    if (externalData) {
+        const { android, app } = externalData;
+        if (android) {
+            Object.assign(options.android, android);
         }
-        if (appA) {
-            Object.assign(result.app, appA);
+        if (app) {
+            if (options.app === undefined) {
+                options.app = {};
+            }
+            Object.assign(options.app, app);
         }
     }
-    return result;
+    return options;
 }
 
 export function createStyleAttribute(options?: ExternalData) {

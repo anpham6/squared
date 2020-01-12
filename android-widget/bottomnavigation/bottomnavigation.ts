@@ -70,8 +70,13 @@ export default class BottomNavigation<T extends android.base.View> extends squar
             const menu = optionalAsString(BottomNavigation.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
             if (menu !== '') {
                 const options = createViewAttribute(this.options[node.elementId]);
-                assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
-                node.app('menu', options.app.menu);
+                let app = options.app;
+                if (app === undefined) {
+                    app = {};
+                    options.app = app;
+                }
+                assignEmptyValue(app, 'menu', '@menu/' + menu);
+                node.app('menu', app.menu);
             }
         }
     }

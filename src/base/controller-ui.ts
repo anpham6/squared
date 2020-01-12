@@ -35,7 +35,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     public abstract renderNode(layout: squared.base.LayoutUI<T>): NodeTemplate<T> | undefined;
     public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): NodeTemplate<T> | undefined;
-    public abstract renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
     public abstract setConstraints(): void;
     public abstract optimize(nodes: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;

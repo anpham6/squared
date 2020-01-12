@@ -1,6 +1,6 @@
 import { FileAsset, LayoutType, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
 import { ControllerSettingsAndroid } from '../../@types/android/application';
-import { LocalSettings, ViewAttribute } from '../../@types/android/node';
+import { LocalSettings, SpacerAttribute } from '../../@types/android/node';
 
 import Resource from './resource';
 import View from './view';
@@ -1519,12 +1519,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string) {
         const node = new View(0, '0', undefined, this.afterInsertNode);
         node.setControlType(controlName);
-        if (width !== '') {
-            node.setLayoutWidth(width || 'wrap_content');
-        }
-        if (height !== '') {
-            node.setLayoutHeight(height || 'wrap_content');
-        }
+        node.setLayoutWidth(isString(width) ? width : 'wrap_content');
+        node.setLayoutHeight(isString(height) ? height : 'wrap_content');
         if (options) {
             node.apply(options);
             options.documentId = node.documentId;
@@ -1532,26 +1528,40 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return this.getEnclosingXmlTag(controlName, this.userSettings.showAttributes ? node.extractAttributes(1) : undefined, content);
     }
 
-    public renderSpace(width: string, height?: string, columnSpan?: number, rowSpan?: number, options?: ViewAttribute) {
-        if (options === undefined) {
-            options = createViewAttribute();
+    public renderSpace(options: SpacerAttribute) {
+        const { android, app, column, columnSpan, row, rowSpan } = options;
+        let { width, height } = options;
+        if (width) {
+            if (isPercent(width)) {
+                android.layout_columnWeight = truncate(parseFloat(width) / 100, this.localSettings.precision.standardFloat);
+                width = '0px';
+            }
         }
-        const android = options.android;
-        if (isPercent(width)) {
-            android.layout_columnWeight = truncate(parseFloat(width) / 100, this.localSettings.precision.standardFloat);
-            width = '0px';
+        else {
+            width = 'wrap_content';
         }
-        if (height && isPercent(height)) {
-            android.layout_rowWeight = truncate(parseFloat(height) / 100, this.localSettings.precision.standardFloat);
-            height = '0px';
+        if (height) {
+            if (isPercent(height)) {
+                android.layout_rowWeight = truncate(parseFloat(height) / 100, this.localSettings.precision.standardFloat);
+                height = '0px';
+            }
+        }
+        else {
+            height = 'wrap_content';
+        }
+        if (column !== undefined) {
+            android.layout_column = column.toString();
         }
         if (columnSpan) {
             android.layout_columnSpan = columnSpan.toString();
         }
+        if (row !== undefined) {
+            android.layout_row = row.toString();
+        }
         if (rowSpan) {
             android.layout_rowSpan = rowSpan.toString();
         }
-        return this.renderNodeStatic(CONTAINER_ANDROID.SPACE, options, width, height || undefined);
+        return this.renderNodeStatic(CONTAINER_ANDROID.SPACE, { android, app }, width, height);
     }
 
     public addGuideline(node: T, parent: T, orientation?: string, percent = false, opposite = false) {
@@ -1748,11 +1758,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         resourceValue = '@dimen/' + Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposite ? LT : RB), formatPX(location));
                     }
-                    const options = createViewAttribute(
-                        undefined,
-                        { orientation: horizontal ? STRING_ANDROID.VERTICAL : STRING_ANDROID.HORIZONTAL },
-                        { [beginPercent]: resourceValue }
-                    );
+                    const options = createViewAttribute(undefined, {
+                        android: {
+                            orientation: horizontal ? STRING_ANDROID.VERTICAL : STRING_ANDROID.HORIZONTAL
+                        },
+                        app: {
+                            [beginPercent]: resourceValue
+                        }
+                    });
                     this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(node.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.GUIDELINE : CONTAINER_ANDROID_X.GUIDELINE, options), false);
                     const documentId = options.documentId;
                     if (documentId) {
@@ -1781,14 +1794,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             unbound.push(node);
         }
         if (unbound.length) {
-            const options = createViewAttribute(
-                undefined,
-                undefined,
-                {
+            const options = createViewAttribute(undefined, {
+                android: {},
+                app: {
                     barrierDirection,
                     constraint_referenced_ids: objectMap(unbound, item => getDocumentId(item.documentId)).join(',')
                 }
-            );
+            });
             const target = unbound[unbound.length - 1];
             this.addAfterOutsideTemplate(target.id, this.renderNodeStatic(target.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.BARRIER : CONTAINER_ANDROID_X.BARRIER, options), false);
             for (const node of unbound) {

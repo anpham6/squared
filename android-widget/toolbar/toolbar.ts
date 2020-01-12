@@ -123,7 +123,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         }
         if (hasAppBar) {
             if (hasMenu) {
-                const app = toolbarOptions.app;
+                let app = toolbarOptions.app;
+                if (app === undefined) {
+                    app = {};
+                    toolbarOptions.app = app;
+                }
                 const popupTheme = app.popupTheme;
                 if (popupTheme) {
                     popupOverlay = popupTheme.replace('@style/', '');
@@ -216,7 +220,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 collapsingToolbarNode.setLayoutWidth('match_parent');
                 collapsingToolbarNode.setLayoutHeight('match_parent');
                 application.addLayoutTemplate(
-                    (collapsingToolbarNode.renderParent || parent) as T,
+                    collapsingToolbarNode.renderParent as T,
                     collapsingToolbarNode,
                     <NodeXmlTemplate<T>> {
                         type: NODE_TEMPLATE.XML,
@@ -227,7 +231,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 if (backgroundImage) {
                     const src = resource.addImageSrc(node.backgroundImage);
                     if (src !== '') {
-                        const controller = this.controller;
+                        const controller = <android.base.Controller<T>> this.controller;
                         const backgroundImageOptions = createViewAttribute(options.backgroundImage);
                         let scaleType: string;
                         switch (node.css('backgroundSize')) {
@@ -309,8 +313,13 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         const menu = optionalAsString(Toolbar.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
             const toolbarOptions = createViewAttribute(this.options[node.elementId]?.self);
-            assignEmptyValue(toolbarOptions, 'app', 'menu', '@menu/' + menu);
-            node.app('menu', toolbarOptions.app.menu);
+            let app = toolbarOptions.app;
+            if (app === undefined) {
+                app = {};
+                toolbarOptions.app = app;
+            }
+            assignEmptyValue(app, 'menu', '@menu/' + menu);
+            node.app('menu', app.menu);
         }
         const themeData: ToolbarThemeData = node.data(WIDGET_NAME.TOOLBAR, 'themeData');
         if (themeData) {

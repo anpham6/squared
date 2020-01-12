@@ -15,8 +15,17 @@ export interface Constraint {
 
 export interface ViewAttribute {
     android: StringMap;
-    app: StringMap;
+    app?: StringMap;
     documentId?: string;
+}
+
+export interface SpacerAttribute extends ViewAttribute {
+    width?: string;
+    height?: string;
+    column?: number;
+    columnSpan?: number;
+    row?: number;
+    rowSpan?: number;
 }
 
 export interface SupportAndroid extends Support {

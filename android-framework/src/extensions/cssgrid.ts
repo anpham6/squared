@@ -6,7 +6,6 @@ import View from '../view';
 
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
-import { createViewAttribute } from '../lib/util';
 
 import $LayoutUI = squared.base.LayoutUI;
 
@@ -559,51 +558,49 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const percent = unit.reduce((a, b) => a + parseFloat(b), 0) + (column.gap * columnCount * 100) / node.actualWidth;
                 if (percent < 100) {
                     const columnGap = '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_cssgrid_column_gap', formatPX(column.gap));
-                    const lengthA = mainData.row.length;
-                    for (let i = 0; i < lengthA; i++) {
+                    const length = mainData.row.length;
+                    for (let j = 0; j < length; j++) {
                         controller.addAfterOutsideTemplate(
                             lastChild.id,
-                            controller.renderSpace(
-                                formatPercent((100 - percent) / 100),
-                                'wrap_content',
-                                0,
-                                0,
-                                createViewAttribute(undefined, {
+                            controller.renderSpace({
+                                width: formatPercent((100 - percent) / 100),
+                                height: 'wrap_content',
+                                android: {
                                     [node.localizeString(STRING_ANDROID.MARGIN_LEFT)]: columnGap,
-                                    layout_row: i.toString(),
+                                    layout_row: j.toString(),
                                     layout_column: columnCount.toString()
-                                })
-                            ),
+                                }
+                            }),
                             false
                         );
                     }
                     node.android('columnCount', (columnCount + 1).toString());
                 }
             }
-            const emptyRows = mainData.emptyRows;
-            const length = emptyRows.length;
-            for (let i = 0; i < length; i++) {
-                const row = emptyRows[i];
+            let i = 0;
+            for (const row of mainData.emptyRows) {
                 if (row) {
-                    const rowGap = '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_cssgrid_row_gap', formatPX(mainData.row.gap));
-                    const lengthA = row.length;
-                    for (let j = 0; j < lengthA; j++) {
+                    const height = '@dimen/' + Resource.insertStoredAsset('dimens', node.controlId + '_cssgrid_row_gap', formatPX((mainData.rowHeight[i] || 0) + mainData.row.gap));
+                    const length = row.length;
+                    for (let j = 0; j < length; j++) {
                         if (row[j] === 1) {
                             controller.addAfterOutsideTemplate(
                                 lastChild.id,
-                                controller.renderSpace(
-                                    'wrap_content',
-                                    rowGap,
-                                    0,
-                                    0,
-                                    createViewAttribute(undefined, { layout_row: i.toString(), layout_column: j.toString() })
-                                ),
+                                controller.renderSpace({
+                                    width: 'wrap_content',
+                                    height,
+                                    android: {
+                                        layout_row: i.toString(),
+                                        layout_column: j.toString()
+                                    }
+                                }),
                                 false
                             );
                             break;
                         }
                     }
                 }
+                i++;
             }
         }
     }

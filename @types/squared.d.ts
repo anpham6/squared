@@ -134,7 +134,6 @@ declare namespace base {
         setConstraints(): void;
         renderNode(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
         renderNodeGroup(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
-        renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
         createNodeGroup(node: T, children: T[], parent?: T, traverse?: boolean): T;
         sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
         addBeforeOutsideTemplate(id: number, value: string, format?: boolean, index?: number): void;

@@ -53,7 +53,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     public processChild(node: T, parent: T) {
         const mainData: ListData = node.data(LIST, 'mainData');
         if (mainData) {
-            const { application, controller } = this;
+            const application = this.application;
+            const controller = <android.base.Controller<T>> this.controller;
             const firstChild = parent.firstStaticChild === node;
             const ordinalValue = mainData.ordinal || '';
             let minWidth = node.marginLeft;
@@ -158,7 +159,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         ordinal.id,
                         controller.renderNodeStatic(
                             CONTAINER_ANDROID.SPACE,
-                            createViewAttribute(undefined, { minWidth: '@dimen/' + Resource.insertStoredAsset('dimens', node.tagName.toLowerCase() + '_space_indent', formatPX(minWidth)) })
+                            createViewAttribute(undefined, {
+                                android: {
+                                    minWidth: '@dimen/' + Resource.insertStoredAsset('dimens', node.tagName.toLowerCase() + '_space_indent', formatPX(minWidth))
+                                }
+                            })
                         ),
                         false
                     );
