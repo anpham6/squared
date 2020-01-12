@@ -69,6 +69,7 @@ declare namespace base {
     interface View extends squared.base.NodeUI {
         tagName: string;
         anchored: boolean;
+        api: number;
         localSettings: LocalSettings;
         readonly layoutWidth: string;
         readonly layoutHeight: string;

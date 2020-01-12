@@ -22,7 +22,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         const overflow: string[] = [];
         const scrollView: T[] = [];
         const horizontalScroll = CONTAINER_ANDROID.HORIZONTAL_SCROLL;
-        const verticalScroll = node.localSettings.targetAPI < BUILD_ANDROID.Q ? CONTAINER_ANDROID.VERTICAL_SCROLL : CONTAINER_ANDROID_X.VERTICAL_SCROLL;
+        const verticalScroll = node.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.VERTICAL_SCROLL : CONTAINER_ANDROID_X.VERTICAL_SCROLL;
         if (node.overflowX && node.overflowY) {
             overflow.push(horizontalScroll, verticalScroll);
         }

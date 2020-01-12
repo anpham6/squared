@@ -59,7 +59,7 @@ function setAutoMargin(node: T, autoMargin: AutoMargin) {
 }
 
 function setMultiline(node: T, lineHeight: number, overwrite: boolean, autoPadding: boolean) {
-    if (node.localSettings.targetAPI >= BUILD_ANDROID.PIE) {
+    if (node.api >= BUILD_ANDROID.PIE) {
         node.android('lineHeight', formatPX(lineHeight), overwrite);
     }
     else {
@@ -169,15 +169,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
         public static getControlName(containerType: number, api = BUILD_ANDROID.Q): string {
             const name = CONTAINER_NODE[containerType];
-            if (api >= BUILD_ANDROID.Q) {
-                const controlName: string | undefined = CONTAINER_ANDROID_X[name];
-                if (controlName) {
-                    return controlName;
-                }
-            }
-            return CONTAINER_ANDROID[name];
+            return api >= BUILD_ANDROID.Q && CONTAINER_ANDROID_X[name] || CONTAINER_ANDROID[name];
         }
 
+        public api = BUILD_ANDROID.LATEST;
         public renderParent?: T;
         public renderTemplates?: (NodeTemplate<T> | null)[];
         public outerWrapper?: T;
@@ -203,7 +198,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _boxAdjustment?: BoxModel;
         protected _boxReset?: BoxModel;
 
-        private _api = BUILD_ANDROID.LATEST;
         private _localization = false;
         private _containerType = 0;
         private _controlId?: string;
@@ -473,16 +467,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public supported(attr: string, result = {}): boolean {
             if (typeof DEPRECATED[attr] === 'function') {
-                const valid = DEPRECATED[attr](result, this._api, this);
+                const valid = DEPRECATED[attr](result, this.api, this);
                 if (!valid || Object.keys(result).length) {
                     return valid;
                 }
             }
-            for (let i = this._api; i <= BUILD_ANDROID.LATEST; i++) {
+            for (let i = this.api; i <= BUILD_ANDROID.LATEST; i++) {
                 const callback = API_ANDROID[i]?.android[attr];
                 if (callback !== undefined) {
                     if (typeof callback === 'function') {
-                        return callback(result, this._api, this);
+                        return callback(result, this.api, this);
                     }
                     return callback;
                 }
@@ -503,7 +497,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         const prefix = name + ':';
                         switch (name) {
                             case 'android':
-                                if (this._api < BUILD_ANDROID.LATEST) {
+                                if (this.api < BUILD_ANDROID.LATEST) {
                                     for (let attr in obj) {
                                         if (attr === 'id') {
                                             id = obj[attr];
@@ -560,7 +554,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public localizeString(value: string) {
-            return localizeString(value, this._localization, this._api);
+            return localizeString(value, this._localization, this.api);
         }
 
         public hide(invisible?: boolean) {
@@ -639,10 +633,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const maxDimension = this.support.maxDimension;
             let adjustViewBounds = false;
             if (this.documentBody) {
-                if (this.css('width') === '100%' || this.css('minWidth') === '100%' || !this.hasWidth && (this.layoutConstraint || this.layoutRelative) && this.renderChildren.some(node => node.alignParent('right')) && this.positionStatic) {
+                const hasFixedElements = renderParent.id === 0 && this.renderChildren.some(node => node.css('position') === 'fixed');
+                if (this.css('width') === '100%' || this.css('minWidth') === '100%' || hasFixedElements || this.blockStatic && !this.hasPX('width') && !this.hasPX('maxWidth')) {
                     this.setLayoutWidth('match_parent', false);
                 }
-                if (this.css('height') === '100%' || this.css('minHeight') === '100%' || !this.hasHeight && this.layoutConstraint && this.renderChildren.some(node => node.alignParent('bottom')) && this.positionStatic) {
+                if (this.css('height') === '100%' || this.css('minHeight') === '100%' || hasFixedElements) {
                     this.setLayoutHeight('match_parent', false);
                 }
             }
@@ -1248,7 +1243,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             let assign = API_ANDROID[0].assign;
             setCustomization(assign[tagName]);
             setCustomization(assign[controlName]);
-            const api = API_ANDROID[this._api];
+            const api = API_ANDROID[this.api];
             if (api) {
                 assign = api.assign;
                 setCustomization(assign[tagName]);
@@ -1391,7 +1386,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 break;
                         }
                     }
-                    if (!unmergeable && this._api >= BUILD_ANDROID.OREO) {
+                    if (!unmergeable && this.api >= BUILD_ANDROID.OREO) {
                         if (top === right && right === bottom && bottom === left) {
                             mergeAll = top;
                         }
@@ -1491,7 +1486,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public setLayoutHeight(value: string, overwrite = true) {
-             this.android('layout_height', value, overwrite);
+            this.android('layout_height', value, overwrite);
         }
 
         private alignLayout(renderParent: T) {
@@ -1850,10 +1845,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             else {
                 this._localSettings = { ...value };
-            }
-            const api = value.targetAPI;
-            if (api) {
-                this._api = api;
             }
         }
         get localSettings() {

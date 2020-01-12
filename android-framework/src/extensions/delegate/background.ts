@@ -35,12 +35,40 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
 
     public processNode(node: T, parent: T) {
         const controller = <android.base.Controller<T>> this.controller;
+        let target = node.outerWrapper as T | undefined;
+        let targetParent: T | undefined;
+        while (target) {
+            const outerWrapper = target.outerWrapper as T | undefined;
+            if (outerWrapper) {
+                target = outerWrapper;
+            }
+            else {
+                break;
+            }
+        }
+        if (target) {
+            targetParent = target.parent as T;
+            const renderChildren = targetParent.renderChildren;
+            const index = renderChildren.findIndex(item => item === target);
+            if (index !== -1) {
+                renderChildren.splice(index, 1);
+                targetParent.renderTemplates?.splice(index, 1);
+                target.rendered = false;
+                target.renderParent = undefined;
+            }
+            else {
+                target = undefined;
+                targetParent = undefined;
+            }
+        }
+        const actualNode = target || node;
+        const actualParent = targetParent || parent;
         const { backgroundColor, visibleStyle } = node;
         const parentVisible = isParentVisible(node, visibleStyle);
         let container: T | undefined;
         let parentAs: T | undefined;
         if (backgroundColor !== '') {
-            container = controller.createNodeWrapper(node, parent);
+            container = controller.createNodeWrapper(actualNode, actualParent);
             container.unsafe('excludeResource', NODE_RESOURCE.BOX_SPACING);
             container.css('backgroundColor', backgroundColor);
             container.setCacheValue('backgroundColor', backgroundColor);
@@ -64,9 +92,9 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                     parentAs = container;
                     parentAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     parentAs.addAlign(NODE_ALIGNMENT.SINGLE);
-                    parentAs.render(parent);
+                    parentAs.render(targetParent);
                     this.application.addLayoutTemplate(
-                        parent,
+                        actualParent,
                         container,
                         <NodeXmlTemplate<T>> {
                             type: NODE_TEMPLATE.XML,
@@ -74,24 +102,24 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                             controlName: container.controlName
                         }
                     );
-                    container = controller.createNodeWrapper(node, parentAs);
+                    container = controller.createNodeWrapper(actualNode, parentAs);
                     container.documentRoot = false;
                     parentAs.documentRoot = true;
                 }
                 else {
-                    container = controller.createNodeWrapper(node, parent);
+                    container = controller.createNodeWrapper(actualNode, actualParent);
                 }
                 container.setLayoutWidth('match_parent');
                 container.unsafe('excludeResource', NODE_RESOURCE.BOX_SPACING);
-                const height = parent.cssInitial('height');
-                const minHeight = parent.cssInitial('minHeight');
+                const height = actualParent.cssInitial('height');
+                const minHeight = actualParent.cssInitial('minHeight');
                 let backgroundSize: string | undefined;
                 if (height === '' && minHeight === '') {
                     container.setLayoutHeight(!parentVisible ? 'match_parent' : 'wrap_content');
                 }
                 else {
                     if (height !== '100%' && minHeight !== '100%') {
-                        const offsetHeight = parent.toElementInt('offsetHeight');
+                        const offsetHeight = actualParent.toElementInt('offsetHeight');
                         if (offsetHeight < window.innerHeight) {
                             backgroundSize = `auto ${offsetHeight}px`;
                         }
@@ -117,20 +145,48 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         }
         visibleStyle.background = visibleStyle.borderWidth || visibleStyle.backgroundImage || visibleStyle.backgroundColor;
         if (container) {
-            return {
-                parent: container,
-                parentAs,
-                renderAs: container,
-                outputAs: this.application.renderNode(
-                    new $LayoutUI(
-                        parentAs || parent,
-                        container,
-                        CONTAINER_NODE.FRAME,
-                        NODE_ALIGNMENT.SINGLE,
-                        container.children as T[]
-                    )
-                ),
-            };
+            if (target) {
+                target.render(container);
+                this.application.addLayoutTemplate(
+                    container,
+                    target,
+                    <NodeXmlTemplate<T>> {
+                        type: NODE_TEMPLATE.XML,
+                        node: target,
+                        controlName: target.controlName
+                    }
+                );
+                return {
+                    parent: target,
+                    parentAs: actualParent,
+                    renderAs: container,
+                    outputAs: this.application.renderNode(
+                        new $LayoutUI(
+                            actualParent,
+                            container,
+                            CONTAINER_NODE.FRAME,
+                            NODE_ALIGNMENT.SINGLE,
+                            container.children as T[]
+                        )
+                    ),
+                };
+            }
+            else {
+                return {
+                    parent: container,
+                    parentAs,
+                    renderAs: container,
+                    outputAs: this.application.renderNode(
+                        new $LayoutUI(
+                            parentAs || parent,
+                            container,
+                            CONTAINER_NODE.FRAME,
+                            NODE_ALIGNMENT.SINGLE,
+                            container.children as T[]
+                        )
+                    ),
+                };
+            }
         }
         return undefined;
     }

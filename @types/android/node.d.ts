@@ -1,7 +1,6 @@
 import { Support } from '../base/node';
 
 export interface LocalSettings {
-    targetAPI: number;
     supportRTL: boolean;
     floatPrecision: number;
 }

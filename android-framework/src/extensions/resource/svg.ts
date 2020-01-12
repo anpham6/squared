@@ -655,7 +655,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 if (element) {
                     const drawable = this.createSvgDrawable(node, element);
                     if (drawable !== '') {
-                        if (node.localSettings.targetAPI >= BUILD_ANDROID.LOLLIPOP) {
+                        if (node.api >= BUILD_ANDROID.LOLLIPOP) {
                             node.android('src', getDrawableSrc(drawable));
                         }
                         else {
@@ -710,7 +710,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     public createSvgDrawable(node: T, element: SVGSVGElement) {
         const svg = new $Svg(element);
-        const supportedKeyFrames = node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW;
+        const supportedKeyFrames = node.api >= BUILD_ANDROID.MARSHMALLOW;
         const { floatPrecisionValue, floatPrecisionKeyTime } = this.options;
         this.SVG_INSTANCE = svg;
         this.VECTOR_DATA.clear();

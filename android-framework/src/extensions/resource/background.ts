@@ -851,7 +851,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                     else if (value.colorStops.length > 1) {
-                        const gradient = createBackgroundGradient(value, node.localSettings.targetAPI);
+                        const gradient = createBackgroundGradient(value, node.api);
                         if (gradient) {
                             images[length] = gradient;
                             imageDimensions[length] = value.dimension;

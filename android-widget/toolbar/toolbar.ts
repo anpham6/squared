@@ -139,7 +139,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         let controlName: string;
         let appBarName: string;
         let collapsingToolbarName: string;
-        if (node.localSettings.targetAPI < BUILD_ANDROID.Q) {
+        if (node.api < BUILD_ANDROID.Q) {
             controlName = SUPPORT_ANDROID.TOOLBAR;
             appBarName = SUPPORT_ANDROID.APPBAR;
             collapsingToolbarName = SUPPORT_ANDROID.COLLAPSING_TOOLBAR;

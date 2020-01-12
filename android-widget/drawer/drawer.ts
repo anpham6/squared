@@ -56,7 +56,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         const options = createViewAttribute(this.options.self);
         if (Drawer.findNestedElement(node.element, WIDGET_NAME.MENU)) {
             assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
-            this.setStyleTheme(node.localSettings.targetAPI);
+            this.setStyleTheme(node.api);
         }
         else {
             const navigationViewOptions = createViewAttribute(this.options.navigationView);
@@ -68,7 +68,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         }
         node.documentRoot = true;
         node.renderExclude = false;
-        const controlName = node.localSettings.targetAPI < BUILD_ANDROID.Q ? SUPPORT_ANDROID.DRAWER : SUPPORT_ANDROID_X.DRAWER;
+        const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.DRAWER : SUPPORT_ANDROID_X.DRAWER;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude(NODE_RESOURCE.FONT_STYLE);
         node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
@@ -106,7 +106,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
                 controller.addAfterInsideTemplate(
                     node.id,
                     controller.renderNodeStatic(
-                        node.localSettings.targetAPI < BUILD_ANDROID.Q ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW,
+                        node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW,
                         Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
                         'wrap_content',
                         'match_parent'

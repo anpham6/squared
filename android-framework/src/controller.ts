@@ -482,8 +482,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public static setFlexDimension<T extends View>(node: T, dimension: string) {
         const horizontal = dimension === 'width';
-        const flexbox = node.flexbox;
-        const { grow, basis } = flexbox;
+        const { grow, basis, shrink } = node.flexbox;
         function setFlexGrow(value: string) {
             if (horizontal) {
                 node.setLayoutWidth('0px');
@@ -498,8 +497,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else if (value !== '') {
-                if (flexbox.shrink < 1) {
-                    node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX((1 - flexbox.shrink) * parseFloat(value)));
+                if (shrink < 1) {
+                    node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX((1 - shrink) * parseFloat(value)));
                     node.app(horizontal ? 'layout_constraintWidth_max' : 'layout_constraintHeight_max', value);
                 }
                 else {
@@ -528,7 +527,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
         }
-        if (flexbox.shrink > 1) {
+        if (shrink > 1) {
             node.app(horizontal ? 'layout_constrainedWidth' : 'layout_constrainedHeight', 'true');
         }
         constraintMinMax(node, 'Width', true);
@@ -599,6 +598,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     };
 
     private _defaultViewSettings!: LocalSettings;
+    private _targetAPI!: number;
 
     constructor(
         public application: android.base.Application<T>,
@@ -609,8 +609,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public init() {
         const settings = this.userSettings;
+        this._targetAPI = settings.targetAPI || BUILD_ANDROID.LATEST;
         this._defaultViewSettings = {
-            targetAPI: settings.targetAPI || BUILD_ANDROID.LATEST,
             supportRTL: !!settings.supportRTL,
             floatPrecision: this.localSettings.precision.standardFloat
         };
@@ -1097,7 +1097,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if (valid) {
             const dataset = node.dataset;
-            node.setControlType(View.getControlName(containerType, node.localSettings.targetAPI), containerType);
+            node.setControlType(View.getControlName(containerType, node.api), containerType);
             node.addAlign(alignmentType);
             node.render(!dataset.use && dataset.target ? (<squared.base.ApplicationUI<T>> this.application).resolveTarget(dataset.target) : layout.parent);
             node.apply(options);
@@ -1112,7 +1112,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public renderNode(layout: squared.base.LayoutUI<T>) {
         const { containerType, node } = layout;
-        let controlName = View.getControlName(containerType, node.localSettings.targetAPI);
+        let controlName = View.getControlName(containerType, node.api);
         node.setControlType(controlName, containerType);
         node.addAlign(layout.alignmentType);
         let parent = layout.parent;
@@ -1483,7 +1483,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     controlName = CONTAINER_ANDROID.EDIT_LIST;
                     node.controlName = controlName;
                 }
-                else if (node.localSettings.targetAPI >= BUILD_ANDROID.OREO) {
+                else if (node.api >= BUILD_ANDROID.OREO) {
                     node.android('importantForAutofill', 'no');
                 }
             case CONTAINER_ANDROID.RANGE:
@@ -1753,7 +1753,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         { orientation: horizontal ? STRING_ANDROID.VERTICAL : STRING_ANDROID.HORIZONTAL },
                         { [beginPercent]: resourceValue }
                     );
-                    this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(node.localSettings.targetAPI < BUILD_ANDROID.Q ? CONTAINER_ANDROID.GUIDELINE : CONTAINER_ANDROID_X.GUIDELINE, options), false);
+                    this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(node.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.GUIDELINE : CONTAINER_ANDROID_X.GUIDELINE, options), false);
                     const documentId = options.documentId;
                     if (documentId) {
                         node.anchor(LT, documentId, true);
@@ -1790,7 +1790,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             );
             const target = unbound[unbound.length - 1];
-            this.addAfterOutsideTemplate(target.id, this.renderNodeStatic(target.localSettings.targetAPI < BUILD_ANDROID.Q ? CONTAINER_ANDROID.BARRIER : CONTAINER_ANDROID_X.BARRIER, options), false);
+            this.addAfterOutsideTemplate(target.id, this.renderNodeStatic(target.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.BARRIER : CONTAINER_ANDROID_X.BARRIER, options), false);
             for (const node of unbound) {
                 (node.constraint.barrier as {})[barrierDirection] = options.documentId;
             }
@@ -3072,6 +3072,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.setExclusions();
             }
             node.localSettings = this._defaultViewSettings;
+            node.api = this._targetAPI;
         };
     }
 

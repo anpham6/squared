@@ -9,11 +9,11 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import $LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
+const { isLength } = $lib.css;
 const { truncate } = $lib.math;
 const { capitalize, sameArray, withinRange } = $lib.util;
 
 const $base = squared.base;
-const { NodeUI } = $base;
 
 const $base_lib = $base.lib;
 const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
@@ -28,23 +28,41 @@ type FlexBasis = {
     grow: number;
 };
 
-const MAP_leftTop = ['left', 'top'];
-const MAP_rightBottom = ['right', 'bottom'];
-const MAP_rightLeftBottomTop = ['rightLeft', 'bottomTop'];
-const MAP_leftRightTopBottom = ['leftRight', 'topBottom'];
-const MAP_widthHeight = ['Width', 'Height'];
-const MAP_horizontalVertical = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
+const MAP_horizontal = {
+    orientation: STRING_ANDROID.HORIZONTAL,
+    orientationInverse: STRING_ANDROID.VERTICAL,
+    WH: 'Width',
+    HW: 'Height',
+    LT: 'left',
+    TL: 'top',
+    RB: 'right',
+    BR: 'bottom',
+    LRTB: 'leftRight',
+    RLBT: 'rightLeft'
+};
+const MAP_vertical = {
+    orientation: STRING_ANDROID.VERTICAL,
+    orientationInverse: STRING_ANDROID.HORIZONTAL,
+    WH: 'Height',
+    HW: 'Width',
+    LT: 'top',
+    TL: 'left',
+    RB: 'bottom',
+    BR: 'right',
+    LRTB: 'topBottom',
+    RLBT: 'bottomTop'
+};
 
 function adjustGrowRatio(parent: View, items: View[], attr: string) {
     const horizontal = attr === 'width';
     const hasDimension = 'has' + capitalize(attr);
-    const result = items.reduce((a, b) => a + b.flexbox.grow, 0);
     const setPercentage = (item: View) => item.flexbox.basis = (item.bounds[attr] / parent.box[attr] * 100) + '%';
     let percent = parent[hasDimension] || parent.blockStatic && withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight')), parent.box.width);
+    let result = 0;
     let growShrinkType = 0;
-    if (percent) {
-        for (const item of items) {
-            const autoMargin = item.innerWrapped?.autoMargin || item.autoMargin;
+    for (const item of items) {
+        if (percent) {
+            const autoMargin = (item.innerWrapped || item).autoMargin;
             if (horizontal) {
                 if (autoMargin.horizontal) {
                     percent = false;
@@ -58,6 +76,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
                 }
             }
         }
+        result += item.flexbox.grow;
     }
     if (items.length > 1 && (horizontal || percent)) {
         const groupBasis: FlexBasis[] = [];
@@ -67,15 +86,14 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
         let maxDimension = 0;
         let maxRatio = NaN;
         for (const item of items) {
+            const { alignSelf, basis, shrink, grow } = item.flexbox;
             const dimension = item.bounds[attr];
-            const flexbox = item.flexbox;
             let growPercent = false;
-            if (flexbox.grow > 0 || flexbox.shrink !== 1) {
-                const basis = flexbox.basis === 'auto' ? item.parseUnit(item.css(attr), attr) : item.parseUnit(flexbox.basis, attr);
-                if (basis > 0) {
-                    const { shrink, grow } = flexbox;
+            if (grow > 0 || shrink !== 1) {
+                const value = basis === 'auto' ? item.parseUnit(item.css(attr), attr) : item.parseUnit(basis, attr);
+                if (value > 0) {
                     let largest = false;
-                    if (dimension < basis) {
+                    if (dimension < value) {
                         if (isNaN(maxRatio) || shrink < maxRatio) {
                             maxRatio = shrink;
                             largest = true;
@@ -91,23 +109,34 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
                     }
                     if (largest) {
                         maxBasis = item;
-                        maxBasisUnit = basis;
+                        maxBasisUnit = value;
                         maxDimension = dimension;
                     }
                     groupBasis.push({
                         item,
-                        basis,
+                        basis: value,
                         dimension,
                         shrink,
                         grow
                     });
                     continue;
                 }
-                else if (flexbox.grow > 0 && dimension > item[attr]) {
+                else if (grow > 0 && dimension > item[attr]) {
                     growPercent = true;
                 }
             }
-            if (flexbox.alignSelf === 'auto' && (percent && !item[hasDimension] || growPercent)) {
+            else if (isLength(basis)) {
+                groupBasis.push({
+                    item,
+                    basis: Math.min(dimension, item.parseUnit(basis, attr)),
+                    dimension,
+                    shrink,
+                    grow
+                });
+                item.flexbox.basis = 'auto';
+                continue;
+            }
+            if (alignSelf === 'auto' && (percent && !item[hasDimension] || growPercent)) {
                 percentage.push(item);
             }
         }
@@ -115,11 +144,12 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
             if (groupBasis.length > 1) {
                 for (const data of groupBasis) {
                     const item = data.item;
-                    if (item === maxBasis || data.basis === maxBasisUnit && (growShrinkType === 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio === data.grow)) {
+                    const basis = data.basis;
+                    if (item === maxBasis || basis === maxBasisUnit && (growShrinkType === 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio === data.grow)) {
                         item.flexbox.grow = 1;
                     }
-                    else {
-                        item.flexbox.grow = ((data.dimension / data.basis) / (maxDimension / maxBasisUnit)) * data.basis / maxBasisUnit;
+                    else if (basis > 0) {
+                        item.flexbox.grow = ((data.dimension / basis) / (maxDimension / maxBasisUnit)) * basis / maxBasisUnit;
                     }
                 }
             }
@@ -138,7 +168,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
     return result;
 }
 
-const getAutoMargin = (node: View) => node.innerWrapped?.autoMargin || node.autoMargin;
+const getAutoMargin = (node: View) => (node.innerWrapped || node).autoMargin;
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T) {
@@ -151,12 +181,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             return { include: true };
         }
         else {
-            const layout = new $LayoutUI(
-                parent,
-                node,
-                0,
-                NODE_ALIGNMENT.AUTO_LAYOUT
-            );
+            const layout = new $LayoutUI(parent, node, 0, NODE_ALIGNMENT.AUTO_LAYOUT);
             layout.itemCount = node.length;
             layout.rowCount = mainData.rowCount;
             layout.columnCount = mainData.columnCount;
@@ -300,23 +325,17 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 }
             }
             [chainHorizontal, chainVertical].forEach((partition, index) => {
+                const length = partition.length;
+                if (length === 0) {
+                    return;
+                }
                 const horizontal = index === 0;
-                const inverse = horizontal ? 1 : 0;
-                const orientation = MAP_horizontalVertical[index];
-                const orientationInverse = MAP_horizontalVertical[inverse];
-                const WH = MAP_widthHeight[index];
-                const HW = MAP_widthHeight[inverse];
-                const LT = MAP_leftTop[index];
-                const TL = MAP_leftTop[inverse];
-                const RB = MAP_rightBottom[index];
-                const BR = MAP_rightBottom[inverse];
-                const LRTB = MAP_leftRightTopBottom[index];
-                const RLBT = MAP_rightLeftBottomTop[index];
+                const { orientation, orientationInverse, WH, HW, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_horizontal : MAP_vertical;
+                const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
                 const WHL = WH.toLowerCase();
                 const HWL = HW.toLowerCase();
                 const dimension: boolean = node['has' + HW];
                 const dimensionInverse: boolean = node['has' + WH];
-                const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
                 function setLayoutWeight(chain: T, value: number) {
                     if (chain[WHL] === 0) {
                         chain.app(orientationWeight, truncate(value, chain.localSettings.floatPrecision));
@@ -328,7 +347,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                 }
-                const length = partition.length;
                 for (let i = 0; i < length; i++) {
                     const seg = partition[i];
                     const lengthA = seg.length;
@@ -473,9 +491,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'baseline':
                                     if (horizontal) {
                                         if (baseline === null) {
-                                            baseline = NodeUI.baseline(seg);
+                                            baseline = chain;
+                                            chain.anchor(TL, 'parent');
                                         }
-                                        if (baseline && chain !== baseline) {
+                                        else {
                                             chain.anchor('baseline', baseline.documentId);
                                         }
                                     }
@@ -656,11 +675,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'space-evenly':
                                     if (lengthA > 1) {
                                         segStart.anchorStyle(orientation, 'spread');
-                                        if (!alignContent.startsWith('space')) {
-                                            for (const item of seg) {
-                                                setLayoutWeight(item, item.flexbox.grow || 1);
-                                            }
-                                        }
                                     }
                                     else {
                                         centered = true;
@@ -680,7 +694,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                             }
                         }
-                        if (spreadInside || !wrap && partition[i].some(item => item.app(orientationWeight) !== '') && !sameArray(partition[i], item => item.app(orientationWeight))) {
+                        if (spreadInside || !wrap && seg.some(item => item.app(orientationWeight) !== '') && !sameArray(seg, item => item.app(orientationWeight))) {
                             segStart.anchorStyle(orientation, 'spread_inside', 0, false);
                         }
                         else if (!centered) {

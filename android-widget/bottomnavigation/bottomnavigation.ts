@@ -37,7 +37,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
                 child.hide();
             }
         }
-        const controlName = node.localSettings.targetAPI < BUILD_ANDROID.Q ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
+        const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude(NODE_RESOURCE.ASSET);
         node.render(parent);

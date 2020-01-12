@@ -71,7 +71,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     }
                                 }
                                 if (node.css('fontVariant') === 'small-caps') {
-                                    if (node.localSettings.targetAPI >= BUILD_ANDROID.LOLLIPOP) {
+                                    if (node.api >= BUILD_ANDROID.LOLLIPOP) {
                                         node.android('fontFeatureSettings', 'smcp');
                                     }
                                     else {

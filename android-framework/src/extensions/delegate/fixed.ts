@@ -19,7 +19,7 @@ export interface FixedData {
 
 export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return node.naturalElement && (node.documentBody || node.contentBoxWidth > 0 || node.contentBoxHeight > 0);
+        return node.naturalElement && (node.contentBoxWidth > 0 || node.contentBoxHeight > 0 || node.documentBody);
     }
 
     public condition(node: T) {

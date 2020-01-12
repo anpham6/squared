@@ -142,7 +142,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const data = nameMap[tag];
             for (let node of data) {
                 const { id, companion } = node;
-                const targetAPI = node.localSettings.targetAPI;
+                const targetAPI = node.api;
                 const stored = <FontAttribute> node.data(Resource.KEY_NAME, 'fontStyle');
                 let { fontFamily, fontStyle, fontWeight } = stored;
                 if (companion?.tagName === 'LABEL' && !companion.visible) {
@@ -186,7 +186,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (fontStyle === 'normal') {
                             fontStyle = '';
                         }
-                        if (fontWeight === '400' || node.localSettings.targetAPI < BUILD_ANDROID.OREO) {
+                        if (fontWeight === '400' || node.api < BUILD_ANDROID.OREO) {
                             fontWeight = '';
                         }
                         else if (parseInt(fontWeight) > 500) {

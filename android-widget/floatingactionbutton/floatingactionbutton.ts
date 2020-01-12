@@ -54,7 +54,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         if (src !== '') {
             assignEmptyValue(options, 'app', 'srcCompat', '@drawable/' + src);
         }
-        const controlName = node.localSettings.targetAPI < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
+        const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);
         node.exclude(NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET);
         Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
@@ -106,7 +106,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
             if (target) {
                 const layoutGravity = node.android('layout_gravity');
                 let anchor = parent.documentId;
-                if (parent.controlName === (node.localSettings.targetAPI < BUILD_ANDROID.Q ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
+                if (parent.controlName === (node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
                     const value: string = parent.data(WIDGET_NAME.TOOLBAR, 'outerParent');
                     if (value) {
                         anchor = value;
