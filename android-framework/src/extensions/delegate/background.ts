@@ -10,13 +10,16 @@ import $LayoutUI = squared.base.LayoutUI;
 
 type T = View;
 
-const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+
+function isParentVisible(node: T, visibleStyle: VisibleStyle) {
+    const actualParent = node.actualParent as T;
+    return actualParent.visibleStyle.background && hasWidth(node) && node.css('height') !== '100%' && node.css('minHeight') !== '100%' || actualParent.height > 0 && visibleStyle.backgroundImage && node.css('backgroundPositionY').indexOf('bottom') !== -1;
+}
 
 const isHideMargin = (node: T, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && (node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
-
-const isFullScreen = (node: T, visibleStyle: VisibleStyle) => node.backgroundColor !== '' && visibleStyle.borderWidth && !node.inline && node.css('height') !== '100%' && node.css('minHeight') !== '100%' && !node.actualParent?.visibleStyle.background || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
-
-const isParentVisible = (node: T, visibleStyle: VisibleStyle) => (node.actualParent as T).height > 0 && visibleStyle.backgroundImage && node.css('backgroundPositionY').indexOf('bottom') !== -1;
+const isFullScreen = (node: T, visibleStyle: VisibleStyle) => node.backgroundColor !== '' && visibleStyle.borderWidth && node.blockStatic && node.css('height') !== '100%' && node.css('minHeight') !== '100%' && !(node.actualParent as T).visibleStyle.background || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
+const hasWidth = (node: T) => !node.blockStatic || node.hasPX('width') || node.has('maxWidth', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' });
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly removeIs = true;
@@ -27,27 +30,33 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
 
     public condition(node: T) {
         const visibleStyle = node.visibleStyle;
-        return isHideMargin(node, visibleStyle) || isFullScreen(node, visibleStyle) || isParentVisible(node, visibleStyle);
+        return isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle) || isParentVisible(node, visibleStyle);
     }
 
     public processNode(node: T, parent: T) {
         const controller = <android.base.Controller<T>> this.controller;
         const { backgroundColor, visibleStyle } = node;
+        const parentVisible = isParentVisible(node, visibleStyle);
         let container: T | undefined;
         let parentAs: T | undefined;
         if (backgroundColor !== '') {
             container = controller.createNodeWrapper(node, parent);
-            container.setLayoutWidth('match_parent');
             container.unsafe('excludeResource', NODE_RESOURCE.BOX_SPACING);
             container.css('backgroundColor', backgroundColor);
             container.setCacheValue('backgroundColor', backgroundColor);
-            container.setLayoutHeight('match_parent');
+            if (!parentVisible) {
+                container.setLayoutWidth('match_parent');
+                container.setLayoutHeight('match_parent');
+            }
+            else {
+                container.setLayoutWidth(hasWidth(node) ? 'wrap_content' : 'match_parent');
+                container.setLayoutHeight('wrap_content');
+            }
             container.unsetCache('visibleStyle');
             node.css('backgroundColor', 'transparent');
             node.setCacheValue('backgroundColor', '');
             visibleStyle.backgroundColor = false;
         }
-        const parentVisible = isParentVisible(node, visibleStyle);
         if (isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle) || parentVisible) {
             const backgroundImage = node.backgroundImage;
             if (backgroundImage !== '') {

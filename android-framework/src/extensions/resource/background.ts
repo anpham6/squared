@@ -494,15 +494,25 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         const application = this.application;
         const settings = <UserSettingsAndroid> application.userSettings;
         this._resourceSvgInstance = this.controller.localSettings.svg.enabled ? <ResourceSvg<T>> application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
+        let themeBackground = false;
         function setDrawableBackground(node: T, value: string) {
             if (value !== '') {
                 const drawable = '@drawable/' + Resource.insertStoredAsset('drawables', node.containerName.toLowerCase() + '_' + node.controlId, value);
-                if (node.documentBody && !setHtmlBackground(node) && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY) && node.css('backgroundImage') !== 'none') {
-                    setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                if (!themeBackground) {
+                    if (node.documentBody) {
+                        themeBackground = true;
+                        if (!setHtmlBackground(node) && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY) && node.css('backgroundImage') !== 'none') {
+                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                            return;
+                        }
+                    }
+                    else if (node.tagName === 'HTML') {
+                        themeBackground = true;
+                        setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                        return;
+                    }
                 }
-                else {
-                    node.android('background', drawable, false);
-                }
+                node.android('background', drawable, false);
             }
         }
         function setHtmlBackground(node: T) {

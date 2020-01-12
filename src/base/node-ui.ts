@@ -19,6 +19,8 @@ const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
+const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth;
+const checkBlockDimension = (node: T, previous: T) => aboveRange(node.linear.top, previous.linear.bottom) && (isBlockWrap(node) || isBlockWrap(previous) || node.float !== previous.float);
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static outerRegion(node: T): BoxRectDimension {
@@ -367,7 +369,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _excludeProcedure = 0;
     private _excludeResource = 0;
     private _visible = true;
-    private _locked: ObjectMapNested<boolean> = {};
+    private _locked?: ObjectMapNested<boolean>;
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
     private _renderAs?: T;
@@ -458,16 +460,21 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockAttr(name: string, attr: string) {
-        let locked = this._locked[name];
+        let locked = this._locked;
         if (locked === undefined) {
             locked = {};
-            this._locked[name] = locked;
+            this._locked = locked;
         }
-        locked[attr] = true;
+        let lockedData = locked[name];
+        if (lockedData === undefined) {
+            lockedData = {};
+            locked[name] = lockedData;
+        }
+        lockedData[attr] = true;
     }
 
     public lockedAttr(name: string, attr: string) {
-        return this._locked[name]?.[attr] || false;
+        return this._locked?.[name]?.[attr] || false;
     }
 
     public render(parent?: T) {
@@ -712,8 +719,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return NODE_TRAVERSE.LINEBREAK;
         }
         else if (this.pageFlow || this.positionAuto) {
-            const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth;
-            const checkBlockDimension = (previous: T) => aboveRange(this.linear.top, previous.linear.bottom) && (isBlockWrap(this) || isBlockWrap(previous) || this.float !== previous.float);
             if (isArray(siblings)) {
                 if (cleared?.has(this)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
@@ -731,11 +736,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                     }
-                    else if (horizontal === false && this.floating && lastSibling.blockStatic) {
-                        return NODE_TRAVERSE.HORIZONTAL;
+                    else if (!this.floating && withinRange(this.linear.left, this.documentParent.box.left) && siblings.some(item => item.float === 'right' && aboveRange(this.linear.right, item.linear.left))) {
+                        return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                     else if (horizontal !== undefined) {
-                        if (!this.display.startsWith('inline-')) {
+                        if (this.floating && lastSibling.blockStatic && !horizontal) {
+                            return NODE_TRAVERSE.HORIZONTAL;
+                        }
+                        else if (!this.display.startsWith('inline-')) {
                             const { top, bottom } = this.linear;
                             if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
@@ -773,7 +781,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                     }
-                    if (this.blockDimension && checkBlockDimension(lastSibling)) {
+                    if (this.blockDimension && checkBlockDimension(this, lastSibling)) {
                         return NODE_TRAVERSE.INLINE_WRAP;
                     }
                 }
@@ -782,30 +790,31 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 return NODE_TRAVERSE.VERTICAL;
             }
             const parent = this.actualParent || this.documentParent;
-            const blockStatic = this.blockStatic || this.display === 'table';
             for (const previous of this.siblingsLeading) {
-                if (previous.lineBreak) {
+                if (previous.blockStatic || previous.autoMargin.leftRight) {
+                    return NODE_TRAVERSE.VERTICAL;
+                }
+                else if (previous.lineBreak) {
                     return NODE_TRAVERSE.LINEBREAK;
                 }
                 else if (cleared?.get(previous) === 'both' && (!isArray(siblings) || siblings[0] !== previous)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
-                else if (
-                    blockStatic && (!previous.floating || !previous.rightAligned && withinRange(previous.linear.right, parent.box.right) || cleared?.has(previous)) ||
-                    previous.blockStatic ||
-                    previous.autoMargin.leftRight)
-                {
-                    return NODE_TRAVERSE.VERTICAL;
-                }
-                else if (previous.floating) {
-                    if (previous.float === 'left' && this.autoMargin.right || previous.float === 'right' && this.autoMargin.left) {
+                else {
+                    const blockStatic = this.blockStatic || this.display === 'table';
+                    if (blockStatic && (!previous.floating || !previous.rightAligned && withinRange(previous.linear.right, parent.box.right) || cleared?.has(previous))) {
                         return NODE_TRAVERSE.VERTICAL;
                     }
-                    else if (blockStatic && this.some(item => item.floating && aboveRange(item.linear.top, previous.linear.bottom))) {
-                        return NODE_TRAVERSE.FLOAT_BLOCK;
+                    else if (previous.floating) {
+                        if (previous.float === 'left' && this.autoMargin.right || previous.float === 'right' && this.autoMargin.left) {
+                            return NODE_TRAVERSE.VERTICAL;
+                        }
+                        else if (blockStatic && this.some(item => item.floating && aboveRange(item.linear.top, previous.linear.bottom))) {
+                            return NODE_TRAVERSE.FLOAT_BLOCK;
+                        }
                     }
                 }
-                if (this.blockDimension && checkBlockDimension(previous)) {
+                if (this.blockDimension && checkBlockDimension(this, previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }

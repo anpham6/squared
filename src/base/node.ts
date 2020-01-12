@@ -1850,9 +1850,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = false;
                     break;
                 case 'relative':
-                    result = !this.hasPX('top') && !this.hasPX('right') && !this.hasPX('bottom') && !this.hasPX('left');
-                    if (result) {
-                        this._cached.positionRelative = false;
+                    if (!this.documentBody) {
+                        result = !this.hasPX('top') && !this.hasPX('right') && !this.hasPX('bottom') && !this.hasPX('left');
+                        if (result) {
+                            this._cached.positionRelative = false;
+                        }
+                    }
+                    else {
+                        result = false;
                     }
                     break;
                 case 'inherit':

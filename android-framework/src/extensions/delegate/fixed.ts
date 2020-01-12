@@ -42,7 +42,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 }
                 else if (item.hasPX('right')) {
                     const value = item.right;
-                    if (value >= 0 && (fixed || value < paddingRight || node.documentBody && node.hasPX('width'))) {
+                    if (value >= 0 && (fixed || value < paddingRight || node.documentBody && node.hasPX('width') && node.positionStatic)) {
                         children.add(item);
                         right = true;
                     }
@@ -63,7 +63,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 }
                 else if (item.hasPX('bottom')) {
                     const value = item.bottom;
-                    if (value >= 0 && (fixed || value < paddingBottom || node.documentBody && node.hasPX('height'))) {
+                    if (value >= 0 && (fixed || value < paddingBottom || node.documentBody && node.hasPX('height') && node.positionStatic)) {
                         children.add(item);
                         bottom = true;
                     }

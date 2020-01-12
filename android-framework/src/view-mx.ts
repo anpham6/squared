@@ -639,10 +639,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const maxDimension = this.support.maxDimension;
             let adjustViewBounds = false;
             if (this.documentBody) {
-                if (this.css('width') === '100%' || this.css('minWidth') === '100%' || !this.hasWidth && (this.layoutConstraint || this.layoutRelative) && this.renderChildren.some(node => node.alignParent('right'))) {
+                if (this.css('width') === '100%' || this.css('minWidth') === '100%' || !this.hasWidth && (this.layoutConstraint || this.layoutRelative) && this.renderChildren.some(node => node.alignParent('right')) && this.positionStatic) {
                     this.setLayoutWidth('match_parent', false);
                 }
-                if (this.css('height') === '100%' || this.css('minHeight') === '100%' || !this.hasHeight && this.layoutConstraint && this.renderChildren.some(node => node.alignParent('bottom'))) {
+                if (this.css('height') === '100%' || this.css('minHeight') === '100%' || !this.hasHeight && this.layoutConstraint && this.renderChildren.some(node => node.alignParent('bottom')) && this.positionStatic) {
                     this.setLayoutHeight('match_parent', false);
                 }
             }
@@ -1269,7 +1269,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     let value: number = boxReset === undefined || boxReset[attr] === 0 ? this[attr] : 0;
                     if (value !== 0) {
                         switch (attr) {
-                            case 'marginRight': {
+                            case 'marginRight':
                                 if (value < 0) {
                                     if (this.float === 'right' && aboveRange(this.linear.right, this.documentParent.box.right)) {
                                         value = 0;
@@ -1289,7 +1289,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                 }
                                 break;
-                            }
                             case 'marginBottom':
                                 if (value < 0 && this.pageFlow && !this.blockStatic) {
                                     value = 0;
@@ -1324,6 +1323,45 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         case 3:
                             left = value;
                             break;
+                    }
+                }
+                if (margin) {
+                    if (this.floating) {
+                        let node = (this.renderParent as T).renderChildren.find(item => !item.floating) as T | undefined;
+                        if (node) {
+                            const boundsTop = this.bounds.top;
+                            let actualNode: T | undefined;
+                            while (node.bounds.top === boundsTop) {
+                                actualNode = node;
+                                const innerWrapped = node.innerWrapped as T | undefined;
+                                if (innerWrapped) {
+                                    node = innerWrapped;
+                                }
+                                else {
+                                    break;
+                                }
+                            }
+                            if (actualNode) {
+                                const boxData = actualNode.getBox(BOX_STANDARD.MARGIN_TOP);
+                                top += (boxData[0] !== 1 ? actualNode.marginTop : 0) + boxData[1];
+                            }
+                        }
+                    }
+                    else if (top > 0) {
+                        const renderParent = this.renderParent as T;
+                        if (renderParent.layoutVertical) {
+                            const actualParent = this.actualParent as T;
+                            if (actualParent.floatContainer) {
+                                const boundsTop = this.bounds.top;
+                                const renderChildren = renderParent.renderChildren;
+                                for (const node of actualParent.naturalElements as T[]) {
+                                    if (node.floating && node.bounds.top === boundsTop && !renderChildren.includes(node)) {
+                                        top = Math.max(top - node.linear.height, 0);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
@@ -1395,7 +1433,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             };
-            setBoxModel(BOX_MARGIN, true, this.renderParent?.is(CONTAINER_NODE.GRID) === true);
+            setBoxModel(BOX_MARGIN, true, (this.renderParent as T).is(CONTAINER_NODE.GRID) === true);
             setBoxModel(BOX_PADDING, false, false);
         }
 
@@ -1453,7 +1491,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public setLayoutHeight(value: string, overwrite = true) {
-            this.android('layout_height', value, overwrite);
+             this.android('layout_height', value, overwrite);
         }
 
         private alignLayout(renderParent: T) {
