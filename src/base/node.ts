@@ -180,12 +180,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         cached.percentWidth = undefined;
                     case 'minWidth':
                         cached.width = undefined;
+                        cached.hasWidth = undefined;
                         break;
                     case 'height':
                         cached.actualHeight = undefined;
                         cached.percentHeight = undefined;
                     case 'minHeight':
                         cached.height = undefined;
+                        cached.hasHeight = undefined;
                         break;
                     case 'verticalAlign':
                         cached.baseline = undefined;
@@ -1772,17 +1774,31 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get hasWidth() {
-        return this.width > 0;
+        let result = this._cached.hasWidth;
+        if (result === undefined) {
+            result = this.width > 0 && !this.hasPX('maxWidth');
+            this._cached.hasWidth = result;
+        }
+        return result;
     }
     get hasHeight() {
-        const value = this.css('height');
-        if (isPercent(value)) {
-            if (this.pageFlow && this.actualParent?.hasHeight) {
-                return parseFloat(value) > 0;
+        let result = this._cached.hasHeight;
+        if (result === undefined) {
+            const value = this.css('height');
+            if (isPercent(value)) {
+                if (this.pageFlow && this.actualParent?.hasHeight) {
+                    result = parseFloat(value) > 0;
+                }
+                else {
+                    result = false;
+                }
             }
-            return false;
+            else {
+                result = this.height > 0 && !this.hasPX('maxHeight');
+            }
+            this._cached.hasHeight = result;
         }
-        return this.height > 0;
+        return result;
     }
 
     get lineHeight() {

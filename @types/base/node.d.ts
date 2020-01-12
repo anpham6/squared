@@ -63,6 +63,8 @@ export interface CachedValue<T> {
     whiteSpace?: boolean;
     width?: number;
     height?: number;
+    hasWidth?: boolean;
+    hasHeight?: boolean;
     overflow?: number;
     lineHeight?: number;
     baselineHeight?: number;
@@ -127,6 +129,12 @@ export interface AscendOptions {
     condition?: (item: Node) => boolean;
     parent?: Node;
     attr?: string;
+}
+
+export interface ExcludeOptions {
+    resource?: number;
+    procedure?: number;
+    section?: number;
 }
 
 export interface LinearData<T> {

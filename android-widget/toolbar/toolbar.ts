@@ -136,7 +136,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             }
         }
         else {
-            node.exclude(0, NODE_PROCEDURE.LAYOUT);
+            node.exclude({ procedure: NODE_PROCEDURE.LAYOUT });
             assignEmptyValue(toolbarOptions, 'android', 'fitsSystemWindows', 'true');
         }
         assignEmptyValue(toolbarOptions, 'android', 'layout_height', hasAppBar || !node.hasPX('height') ? '?android:attr/actionBarSize' : '');
@@ -154,7 +154,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             collapsingToolbarName = SUPPORT_ANDROID_X.COLLAPSING_TOOLBAR;
         }
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
-        node.exclude(NODE_RESOURCE.FONT_STYLE);
+        node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
         let appBarNode: T | undefined;
         let collapsingToolbarNode: T | undefined;
         if (hasAppBar) {
@@ -360,7 +360,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             placeholder.dataset.target = target;
         }
         placeholder.inherit(node, 'base');
-        placeholder.exclude(NODE_RESOURCE.ALL);
+        placeholder.exclude({ resource: NODE_RESOURCE.ALL });
         placeholder.positioned = true;
         placeholder.renderExclude = false;
         return placeholder;

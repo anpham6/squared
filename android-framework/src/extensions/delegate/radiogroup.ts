@@ -73,7 +73,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 container.css('verticalAlign', 'middle');
                 container.baseline = false;
             }
-            container.exclude(NODE_RESOURCE.ASSET);
+            container.exclude({ resource: NODE_RESOURCE.ASSET });
             const dataset = node.dataset;
             container.render(!dataset.use && dataset.target ? this.application.resolveTarget(dataset.target) : parent);
             for (const item of removeable) {

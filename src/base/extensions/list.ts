@@ -109,7 +109,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                 if (src !== '' && src !== 'none') {
                                     mainData.imageSrc = src;
                                     mainData.imagePosition = position;
-                                    item.exclude(NODE_RESOURCE.IMAGE_SOURCE);
+                                    item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
                                 }
                                 break;
                             default:

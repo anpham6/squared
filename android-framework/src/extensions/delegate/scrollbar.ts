@@ -90,12 +90,12 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 else {
                     container = this.application.createNode();
                     container.inherit(node, 'base');
-                    container.exclude(NODE_RESOURCE.BOX_STYLE);
+                    container.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
                     scrollView[0].innerWrapped = container;
                     container.outerWrapper = scrollView[0];
                 }
                 container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
-                container.exclude(NODE_RESOURCE.ASSET);
+                container.exclude({ resource: NODE_RESOURCE.ASSET });
                 container.resetBox(BOX_STANDARD.PADDING);
                 scrollView.push(container);
             }
@@ -144,7 +144,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 );
             }
             node.overflow = 0;
-            node.exclude(NODE_RESOURCE.BOX_STYLE);
+            node.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
             node.resetBox(BOX_STANDARD.MARGIN, scrollView[0]);
             parent = scrollView.pop() as T;
             parent.innerWrapped = node;

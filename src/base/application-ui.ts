@@ -343,7 +343,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             if (node.documentBody) {
                 parent.visible = false;
-                parent.exclude(NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, NODE_PROCEDURE.ALL, APP_SECTION.EXTENSION);
+                parent.exclude({
+                    resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING,
+                    procedure: NODE_PROCEDURE.ALL,
+                    section: APP_SECTION.EXTENSION
+                });
                 cache.append(parent);
             }
             node.documentParent = parent;

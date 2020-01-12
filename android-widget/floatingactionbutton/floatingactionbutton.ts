@@ -56,7 +56,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         }
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);
-        node.exclude(NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET);
+        node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
         Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         let outerParent: T | undefined;
         if (!node.pageFlow || target) {
@@ -117,7 +117,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                     node.delete('android', 'layout_gravity');
                 }
                 node.app('layout_anchor', anchor);
-                node.exclude(0, NODE_PROCEDURE.ALIGNMENT);
+                node.exclude({ procedure: NODE_PROCEDURE.ALIGNMENT });
                 node.render(this.application.resolveTarget(target));
                 outerParent = node.renderParent as T;
             }

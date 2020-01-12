@@ -70,7 +70,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         node.renderExclude = false;
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.DRAWER : SUPPORT_ANDROID_X.DRAWER;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
-        node.exclude(NODE_RESOURCE.FONT_STYLE);
+        node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
         node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
         node.render(parent);
         node.setLayoutWidth('match_parent');

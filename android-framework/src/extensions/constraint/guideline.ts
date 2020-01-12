@@ -27,7 +27,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
     }
 
     public processNode(node: T, parent: T) {
-        node.exclude(0, NODE_PROCEDURE.CONSTRAINT);
+        node.exclude({ procedure: NODE_PROCEDURE.CONSTRAINT });
         return {
             output: this.application.renderNode(
                 new $LayoutUI(

@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { InitialData, LinearData, SiblingOptions, Support } from '../../@types/base/node';
+import { ExcludeOptions, InitialData, LinearData, SiblingOptions, Support } from '../../@types/base/node';
 
 import Node from './node';
 
@@ -644,43 +644,50 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return !hasBit(this.excludeSection, value);
     }
 
-    public exclude(resource = 0, procedure = 0, section = 0) {
-        if (resource > 0 && !hasBit(this._excludeResource, resource)) {
+    public exclude(options: ExcludeOptions) {
+        const { resource, procedure, section } = options;
+        if (resource && !hasBit(this._excludeResource, resource)) {
             this._excludeResource |= resource;
         }
-        if (procedure > 0 && !hasBit(this._excludeProcedure, procedure)) {
+        if (procedure && !hasBit(this._excludeProcedure, procedure)) {
             this._excludeProcedure |= procedure;
         }
-        if (section > 0 && !hasBit(this._excludeSection, section)) {
+        if (section && !hasBit(this._excludeSection, section)) {
             this._excludeSection |= section;
         }
     }
 
     public setExclusions() {
         if (this.styleElement) {
-            const dataset = this.actualParent?.dataset || {};
-            const parseExclusions = (attr: string, enumeration: {}) => {
-                let exclude = this.dataset[attr] || '';
-                let offset = 0;
-                const value = dataset[attr + 'Child'];
-                if (value) {
-                    exclude += (exclude !== '' ? '|' : '') + value;
-                }
-                if (exclude !== '') {
-                    for (const name of exclude.split(/\s*\|\s*/)) {
-                        const i: number = enumeration[name.toUpperCase()] || 0;
-                        if (i > 0 && !hasBit(offset, i)) {
-                            offset |= i;
+            const actualParent = this.actualParent;
+            if (actualParent) {
+                const dataset = (this._element as HTMLElement).dataset;
+                const parentDataset = actualParent.dataset;
+                if (Object.keys(dataset).length || Object.keys(parentDataset).length) {
+                    const parseExclusions = (attr: string, enumeration: {}) => {
+                        let exclude = dataset[attr] || '';
+                        let offset = 0;
+                        const value = parentDataset[attr + 'Child'];
+                        if (value) {
+                            exclude += (exclude !== '' ? '|' : '') + value;
                         }
-                    }
+                        if (exclude !== '') {
+                            for (const name of exclude.split(/\s*\|\s*/)) {
+                                const i: number = enumeration[name.toUpperCase()] || 0;
+                                if (i > 0 && !hasBit(offset, i)) {
+                                    offset |= i;
+                                }
+                            }
+                        }
+                        return offset;
+                    };
+                    this.exclude({
+                        resource: parseExclusions('excludeResource', NODE_RESOURCE),
+                        procedure: parseExclusions('excludeProcedure', NODE_PROCEDURE),
+                        section: parseExclusions('excludeSection', APP_SECTION)
+                    });
                 }
-                return offset;
-            };
-            this.exclude(
-                parseExclusions('excludeResource', NODE_RESOURCE),
-                parseExclusions('excludeProcedure', NODE_PROCEDURE),
-                parseExclusions('excludeSection', APP_SECTION)
-            );
+            }
         }
     }
 

@@ -39,7 +39,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         }
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
-        node.exclude(NODE_RESOURCE.ASSET);
+        node.exclude({ resource: NODE_RESOURCE.ASSET });
         node.render(parent);
         node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
         node.setLayoutWidth('match_parent');

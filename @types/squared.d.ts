@@ -1,6 +1,6 @@
 import { AppHandler, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { GridCellData } from './base/extension';
-import { AutoMargin, AscendOptions, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from './base/node';
+import { AutoMargin, AscendOptions, ExcludeOptions, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgMatrix, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
@@ -554,7 +554,7 @@ declare namespace base {
         hasProcedure(value: number): boolean;
         hasResource(value: number): boolean;
         hasSection(value: number): boolean;
-        exclude(resource?: number, procedure?: number, section?: number): void;
+        exclude(options: ExcludeOptions): void;
         hide(invisible?: boolean): void;
         appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
         sort(predicate?: (a: Node, b: Node) => number): this;
