@@ -25,6 +25,7 @@ import ConstraintGuideline from './extensions/constraint/guideline';
 
 import DelegateBackground from './extensions/delegate/background';
 import DelegateFixed from './extensions/delegate/fixed';
+import DelegateCssGrid from './extensions/delegate/cssgrid';
 import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
 import DelegateNegativeViewport from './extensions/delegate/negative-viewport';
 import DelegateNegativeX from './extensions/delegate/negative-x';
@@ -98,6 +99,7 @@ const appBase: AppFramework<View> = {
         delegate: {
             Background: DelegateBackground,
             Fixed: DelegateFixed,
+            CssGrid: DelegateCssGrid,
             MaxWidthHeight: DelegateMaxWidthHeight,
             NegativeViewport: DelegateNegativeViewport,
             NegativeX: DelegateNegativeX,
@@ -337,6 +339,7 @@ const appBase: AppFramework<View> = {
             [EA.DELEGATE_NEGATIVEVIEWPORT]: new DelegateNegativeViewport(EA.DELEGATE_NEGATIVEVIEWPORT, framework),
             [EA.DELEGATE_NEGATIVEX]: new DelegateNegativeX(EA.DELEGATE_NEGATIVEX, framework),
             [EA.DELEGATE_PERCENT]: new DelegatePercent(EA.DELEGATE_PERCENT, framework),
+            [EA.DELEGATE_CSS_GRID]: new DelegateCssGrid(EA.DELEGATE_CSS_GRID, framework),
             [EA.DELEGATE_RADIOGROUP]: new DelegateRadioGroup(EA.DELEGATE_RADIOGROUP, framework),
             [EA.DELEGATE_SCROLLBAR]: new DelegateScrollBar(EA.DELEGATE_SCROLLBAR, framework),
             [EA.RESOURCE_INCLUDES]: new ResourceIncludes(EA.RESOURCE_INCLUDES, framework),

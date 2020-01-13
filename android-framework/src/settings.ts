@@ -9,6 +9,7 @@ const settings: UserSettingsAndroid = {
         'android.delegate.percent',
         'android.delegate.scrollbar',
         'android.delegate.background',
+        'android.delegate.css-grid',
         'android.delegate.radiogroup',
         'squared.sprite',
         'squared.css-grid',

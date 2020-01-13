@@ -9,7 +9,7 @@ export const EXT_ANDROID = {
     DELEGATE_NEGATIVEVIEWPORT: 'android.delegate.negative-viewport',
     DELEGATE_NEGATIVEX: 'android.delegate.negative-x',
     DELEGATE_PERCENT: 'android.delegate.percent',
-    DELEGATE_GRID: 'android.delegate.grid',
+    DELEGATE_CSS_GRID: 'android.delegate.css-grid',
     DELEGATE_RADIOGROUP: 'android.delegate.radiogroup',
     DELEGATE_SCROLLBAR: 'android.delegate.scrollbar',
     DELEGATE_VERTICALALIGN: 'android.delegate.verticalalign',

@@ -76,7 +76,7 @@ function getColumnTotal(rows: (NodeUI[] | undefined)[]) {
     return value;
 }
 
-const convertLength = (node: NodeUI, value: string) => isLength(value) ? node.convertPX(value) : value;
+const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? node.convertPX(value, index === 0 ? 'height' : 'width') : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute<T extends NodeUI>(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string): CssGridData<T> {
@@ -84,7 +84,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             children: [],
             rowData: [],
             rowHeight: undefined as any,
-            rowWeight: undefined as any,
             rowSpanMultiple: [],
             templateAreas: {},
             row: CssGrid.createDataRowAttribute(),
@@ -209,13 +208,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         repeating.push({ name: subName });
                                     }
                                     else if ((namedMatch = CACHE_PATTERN.CELL_MINMAX.exec(subPattern)) !== null) {
-                                        repeating.push({ unit: convertLength(node, namedMatch[2]), unitMin: convertLength(node, namedMatch[1]) });
+                                        repeating.push({ unit: convertLength(node, namedMatch[2], index), unitMin: convertLength(node, namedMatch[1], index) });
                                     }
                                     else if ((namedMatch = CACHE_PATTERN.CELL_FIT_CONTENT.exec(subPattern)) !== null) {
-                                        repeating.push({ unit: convertLength(node, namedMatch[1]), unitMin: '0px' });
+                                        repeating.push({ unit: convertLength(node, namedMatch[1], index), unitMin: '0px' });
                                     }
                                     else if ((namedMatch = CACHE_PATTERN.CELL_UNIT.exec(subPattern)) !== null) {
-                                        repeating.push({ unit: convertLength(node, namedMatch[0]) });
+                                        repeating.push({ unit: convertLength(node, namedMatch[0], index) });
                                     }
                                 }
                                 if (repeating.length) {
@@ -244,19 +243,19 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             name[attr].push(i);
                         }
                         else if (command.startsWith('minmax')) {
-                            unit.push(convertLength(node, match[6]));
-                            unitMin.push(convertLength(node, match[5]));
+                            unit.push(convertLength(node, match[6], index));
+                            unitMin.push(convertLength(node, match[5], index));
                             repeat.push(false);
                             i++;
                         }
                         else if (command.startsWith('fit-content')) {
-                            unit.push(convertLength(node, match[7]));
+                            unit.push(convertLength(node, match[7], index));
                             unitMin.push('0px');
                             repeat.push(false);
                             i++;
                         }
                         else if (CACHE_PATTERN.UNIT.test(command)) {
-                            unit.push(command === 'auto' ? 'auto' : convertLength(node, command));
+                            unit.push(command === 'auto' ? 'auto' : convertLength(node, command, index));
                             unitMin.push('');
                             repeat.push(false);
                             i++;
@@ -819,46 +818,49 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (children.length === node.length) {
+                const row = mainData.row;
                 const data = mainData.rowData;
-                const rowCount = data.length;
-                const modified = new Set<T>();
+                const rowCount = Math.max(row.unit.length, data.length);
                 const rowHeight = new Array(rowCount);
-                const rowWeight = new Array(rowCount);
+                const rowGap = row.gap;
                 const columnGap = mainData.column.gap;
-                const rowGap = mainData.row.gap;
+                const modified = new Set<T>();
                 mainData.row.length = rowCount;
                 mainData.column.length = columnCount;
                 mainData.rowHeight = rowHeight;
-                mainData.rowWeight = rowWeight;
                 for (let i = 0; i < rowCount; i++) {
-                    rowHeight[i] = 0;
-                    const row = data[i];
-                    for (let j = 0; j < columnCount; j++) {
-                        const column = row[j] as T[];
-                        if (column) {
-                            for (const item of column) {
-                                if (!modified.has(item)) {
-                                    const cellData = <CssGridCellData> item.data(CSS_GRID, 'cellData');
-                                    const x = j + cellData.columnSpan - 1;
-                                    const y = i + cellData.rowSpan - 1;
-                                    if (x < columnCount - 1) {
-                                        item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, columnGap);
+                    const rowItem = data[i];
+                    const unit = row.unit[i];
+                    if (rowItem) {
+                        rowHeight[i] = 0;
+                        const checkHeight = !isLength(unit);
+                        for (let j = 0; j < columnCount; j++) {
+                            const column = rowItem[j] as T[];
+                            if (column) {
+                                for (const item of column) {
+                                    if (!modified.has(item)) {
+                                        const cellData = <CssGridCellData> item.data(CSS_GRID, 'cellData');
+                                        const x = j + cellData.columnSpan - 1;
+                                        const y = i + cellData.rowSpan - 1;
+                                        if (x < columnCount - 1) {
+                                            item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, columnGap);
+                                        }
+                                        if (y < rowCount - 1) {
+                                            item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, rowGap);
+                                        }
+                                        if (cellData.rowSpan === 1 && checkHeight) {
+                                            rowHeight[i] = Math.max(rowHeight[i], item.bounds.height);
+                                        }
+                                        modified.add(item);
                                     }
-                                    if (y < rowCount - 1) {
-                                        item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, rowGap);
-                                    }
-                                    if (cellData.rowSpan === 1) {
-                                        rowHeight[i] = Math.max(rowHeight[i], item.bounds.height);
-                                    }
-                                    modified.add(item);
                                 }
                             }
                         }
                     }
-                }
-                const actualHeight = node.actualHeight;
-                for (let i = 0; i < rowCount; i++) {
-                    rowWeight[i] = rowHeight[i] / actualHeight;
+                    else {
+                        rowHeight[i] = parseFloat(unit) || 0;
+                        mainData.emptyRows[i] = [1];
+                    }
                 }
                 node.retain(children);
                 node.cssSort('zIndex');

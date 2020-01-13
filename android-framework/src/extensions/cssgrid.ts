@@ -165,12 +165,11 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
         }
     }
     else {
-        const sizeTotal = getGridSize(node, mainData, horizontal);
-        if (sizeTotal > 0) {
-            const padding = horizontal ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_TOP;
+        const renderParent = node.renderParent as View;
+        if (renderParent.layoutConstraint && renderParent.innerWrapped === node) {
             switch (alignment) {
                 case 'center':
-                    node.modifyBox(padding, Math.floor(sizeTotal / 2));
+                    node.anchorParent(horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL, 'packed', 0.5, true);
                     data.normal = false;
                     break;
                 case 'right':
@@ -179,9 +178,36 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                     }
                 case 'end':
                 case 'flex-end':
-                    node.modifyBox(padding, sizeTotal);
+                    node.anchorParent(horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL, 'packed', 1, true);
                     data.normal = false;
                     break;
+            }
+        }
+        else {
+            let value = getGridSize(node, mainData, horizontal);
+            if (value > 0) {
+                switch (alignment) {
+                    case 'center':
+                        value /= 2;
+                        if (horizontal) {
+                            node.modifyBox(BOX_STANDARD.PADDING_LEFT, Math.floor(value));
+                        }
+                        else {
+                            node.modifyBox(BOX_STANDARD.PADDING_TOP, Math.floor(value));
+                            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, Math.ceil(value));
+                        }
+                        data.normal = false;
+                        break;
+                    case 'right':
+                        if (!horizontal) {
+                            break;
+                        }
+                    case 'end':
+                    case 'flex-end':
+                        node.modifyBox(horizontal ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_TOP, value);
+                        data.normal = false;
+                        break;
+                }
             }
         }
     }
@@ -412,7 +438,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'base', 'initial');
                 renderAs.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING);
-                renderAs.exclude(NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET, NODE_PROCEDURE.CUSTOMIZATION);
+                renderAs.exclude({
+                    resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET,
+                    procedure: NODE_PROCEDURE.CUSTOMIZATION
+                });
                 parent.appendTry(node, renderAs);
                 renderAs.render(parent);
                 node.transferBox(BOX_STANDARD.MARGIN, renderAs);
@@ -480,14 +509,15 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 return false;
             }
-            if (mainData.alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.bounds.height > (node.initial.bounds as BoxRectDimension).height && checkRowSpan()) {
+            const alignContent = mainData.alignContent;
+            if (alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.bounds.height > (node.initial.bounds as BoxRectDimension).height && checkRowSpan()) {
                 target.css('minHeight', formatPX(node.actualHeight), true);
             }
-            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && mainData.alignContent === 'space-between')) {
+            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && alignContent === 'space-between')) {
                 if (!REGEX_ALIGNSELF.test(mainData.alignItems)) {
                     target.mergeGravity('layout_gravity', 'fill_vertical');
                 }
-                if (mainData.alignContent === 'normal' && parent.hasHeight && mainData.rowSpanMultiple.length === 0) {
+                if (alignContent === 'normal' && parent.hasHeight && mainData.rowSpanMultiple.length === 0) {
                     target.mergeGravity('layout_rowWeight', '1');
                 }
             }
@@ -502,35 +532,31 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public postBaseLayout(node: T) {
         const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
-            if (node.hasWidth && mainData.justifyContent !== 'normal') {
-                setContentSpacing(node, mainData, mainData.justifyContent, true, 'width', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT);
+            const { column, alignContent, justifyContent } = mainData;
+            if ((node.blockStatic || node.hasWidth) && justifyContent !== 'normal') {
+                setContentSpacing(node, mainData, justifyContent, true, 'width', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT);
             }
-            if (node.hasHeight && mainData.alignContent !== 'normal') {
-                setContentSpacing(node, mainData, mainData.alignContent, false, 'height', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM);
-                const rowWeight = mainData.rowWeight;
-                if (rowWeight.length > 1) {
-                    const precision = this.controller.localSettings.precision.standardFloat;
-                    for (let i = 0; i < mainData.row.length; i++) {
-                        if (rowWeight[i] > 0) {
-                            const rowData = mainData.rowData[i];
-                            const length = rowData.length;
-                            for (let j = 0; j < length; j++) {
-                                const item = rowData[j];
-                                if (item) {
-                                    for (let col of item) {
-                                        if (col.outerWrapper) {
-                                            col = col.outerWrapper as T;
-                                        }
-                                        col.android('layout_rowWeight', truncate(rowWeight[i], precision).toString());
-                                        col.setLayoutHeight('0px');
-                                    }
+            if (node.hasHeight && alignContent !== 'normal') {
+                setContentSpacing(node, mainData, alignContent, false, 'height', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM);
+                const actualHeight = node.actualHeight;
+                const { rowData, rowHeight } = mainData;
+                const length = rowData.length;
+                for (let i = 0; i < length; i++) {
+                    const rowWeight = rowHeight[i] / actualHeight;
+                    if (rowWeight > 0) {
+                        for (const item of rowData[i]) {
+                            if (item) {
+                                for (let col of item) {
+                                    const weight = truncate(rowWeight, col.localSettings.floatPrecision);
+                                    col = col.ascend({ excluding: node, attr: 'outerWrapper' }).pop() as T || col;
+                                    col.android('layout_rowWeight', weight);
+                                    col.setLayoutHeight('0px');
                                 }
                             }
                         }
                     }
                 }
             }
-            const column = mainData.column;
             if (column.normal && !column.unit.includes('auto')) {
                 const gap =  column.gap * (column.length - 1);
                 if (gap > 0) {

@@ -4,7 +4,7 @@ import View from '../../view';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
+const { NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const isJustified = (node: View) => (node.blockStatic || node.hasWidth) && /center|end|right$/.test(node.css('justifyContent'));
 const isAligned = (node: View) => node.hasHeight && /center|end$/.test(node.css('alignContent'));
@@ -19,24 +19,20 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public processNode(node: T, parent: T) {
-        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), CONTAINER_NODE.CONSTRAINT);
+        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, {
+            controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
+            containerType: CONTAINER_NODE.CONSTRAINT,
+            resource: NODE_RESOURCE.ASSET
+        });
         container.inherit(node, 'base', 'initial', 'styleMap');
         if (isJustified(node)) {
             node.setLayoutWidth('wrap_content');
-            node.cssApply({
-                width: 'auto',
-                minWidth: 'auto'
-            }, true);
         }
         else {
             container.setLayoutWidth('wrap_content');
         }
         if (isAligned(node)) {
             node.setLayoutHeight('wrap_content');
-            node.cssApply({
-                height: 'auto',
-                minHeight: 'auto'
-            }, true);
         }
         else {
             container.setLayoutHeight('wrap_content');
