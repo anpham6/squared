@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { CachedValue, AutoMargin } from '../../@types/base/node';
+import { CachedValueUI, AutoMargin } from '../../@types/base/node';
 import { CustomizationResult } from '../../@types/android/application';
 import { Constraint, LocalSettings, SupportAndroid } from '../../@types/android/node';
 
@@ -191,7 +191,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         };
 
         protected _namespaces = ['android', 'app'];
-        protected _cached: CachedValue<T> = {};
+        protected _cached: CachedValueUI<T> = {};
         protected _controlName = '';
         protected _localSettings!: LocalSettings;
         protected _documentParent?: T;
@@ -993,7 +993,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (this.pageFlow) {
                 let floating = '';
-                if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.container.positionRelative || outerRenderParent.is(CONTAINER_NODE.GRID) || this.display === 'table-cell')) {
+                if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.positionRelative || outerRenderParent.is(CONTAINER_NODE.GRID) || this.display === 'table-cell')) {
                     const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
                     switch (this.cssInitial('verticalAlign', true)) {
                         case 'top':
@@ -1805,9 +1805,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             let result = this._cached.support;
             if (result === undefined) {
                 result = <SupportAndroid> {
-                    container: {
-                        positionRelative: this.layoutRelative || this.layoutConstraint
-                    },
+                    positionRelative: this.layoutRelative || this.layoutConstraint,
                     maxDimension: this.textElement || this.imageOrSvgElement
                 };
                 if (this.containerType !== 0) {

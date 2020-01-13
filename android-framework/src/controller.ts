@@ -1207,15 +1207,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const container = application.createNode();
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
+                    container.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
+                    container.cssApply({ position: node.css('position'), zIndex: node.zIndex.toString() });
                     container.positionAuto = false;
-                    container.exclude({
-                        resource: NODE_RESOURCE.ALL,
-                        procedure: NODE_PROCEDURE.ALL
-                    });
-                    container.cssApply({
-                        position: node.css('position'),
-                        zIndex: node.zIndex.toString()
-                    });
                     parent.appendTry(node, container);
                     node.parent = container;
                     if (width > 0) {
@@ -1343,7 +1337,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('maxLength', element.maxLength.toString());
                 }
                 if (!node.hasPX('width') && element.cols > 0) {
-                    node.css('width', formatPX(element.cols * 8), true);
+                    node.css('width', formatPX(element.cols * 8));
                 }
                 node.android('hint', element.placeholder);
                 node.android('scrollbars', STRING_ANDROID.VERTICAL);
@@ -1393,10 +1387,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 if (!node.hasWidth) {
-                    node.css('width', formatPX(node.bounds.width), true);
+                    node.css('width', formatPX(node.bounds.width));
                 }
                 if (!node.hasHeight) {
-                    node.css('height', formatPX(node.bounds.height), true);
+                    node.css('height', formatPX(node.bounds.height));
                 }
                 node.android('progressTint', '@color/' + Resource.addColor(foregroundColor));
                 node.android('progressBackgroundTint', '@color/' + Resource.addColor(backgroundColor));
@@ -1490,7 +1484,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             case CONTAINER_ANDROID.RANGE:
                 if (!node.hasPX('width')) {
-                    node.css('width', formatPX(node.bounds.width), true);
+                    node.css('width', formatPX(node.bounds.width));
                 }
                 break;
             case CONTAINER_ANDROID.LINE:
@@ -2170,10 +2164,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 if (node.hasPX('width')) {
                                     const width = node.css('width');
                                     if (node.parseUnit(width) > node.parseUnit(node.css('minWidth'))) {
-                                        node.cssApply({
-                                            width: 'auto',
-                                            minWidth: width
-                                        }, true);
+                                        node.cssApply({ width: 'auto', minWidth: width });
                                     }
                                 }
                                 node.android('maxLines', '1');
@@ -2422,7 +2413,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         if (documentId !== '' && !withinRange(node.bounds.height, item.bounds.height)) {
                                             if (!node.hasHeight && documentId === 'true') {
                                                 if (!alignmentMultiLine) {
-                                                    node.css('height', formatPX(node.bounds.height), true);
+                                                    node.css('height', formatPX(node.bounds.height));
                                                 }
                                                 else if (baseline) {
                                                     documentId = baseline.documentId;

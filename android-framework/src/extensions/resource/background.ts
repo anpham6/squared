@@ -450,11 +450,8 @@ function getColorValue(value: ColorData | string | undefined, transparency = tru
 }
 
 const roundFloat = (value: string) => Math.round(parseFloat(value));
-
 const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
-
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
-
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 
 export function convertColorStops(list: ColorStop[], precision?: number) {

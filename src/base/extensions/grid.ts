@@ -326,8 +326,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 for (const item of group) {
                     item.parent = node;
-                    if (!hasLength && item.percentWidth) {
-                        item.css('width', formatPX(item.bounds.width));
+                    if (item.percentWidth && !hasLength) {
+                        item.css('width', formatPX(item.bounds.width), true);
                     }
                 }
             }

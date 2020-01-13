@@ -137,10 +137,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         node.documentRoot = true;
         node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
         node.setControlType(NAVIGATION.MENU, CONTAINER_NODE.INLINE);
-        node.exclude({
-            resource: NODE_RESOURCE.ALL,
-            procedure: NODE_PROCEDURE.ALL
-        });
+        node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
         for (const item of node.cascade()) {
             this.addDescendant(item as T);
         }
@@ -228,10 +225,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
             android.title = numberResourceValue || !isNumber(name) ? '@string/' + name : title;
         }
         node.setControlType(controlName, CONTAINER_NODE.INLINE);
-        node.exclude({
-            resource: NODE_RESOURCE.ALL,
-            procedure: NODE_PROCEDURE.ALL
-        });
+        node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
         node.render(parent);
         node.apply(options);
         return {

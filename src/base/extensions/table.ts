@@ -113,10 +113,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 if (!td.hasPX('width')) {
                     const value = getNamedItem(element, 'width');
                     if (isPercent(value)) {
-                        td.css('width', value);
+                        td.css('width', value, true);
                     }
                     else if (isNumber(value)) {
-                        td.css('width', formatPX(parseFloat(value)));
+                        td.css('width', formatPX(parseFloat(value)), true);
                     }
                 }
                 if (!td.hasPX('height')) {
@@ -268,16 +268,16 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     replaceMap<string, string>(mapWidth, value => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
                 }
                 else if (width > node.width) {
-                    node.css('width', 'auto', true);
+                    node.css('width', 'auto');
                     if (!mainData.layoutFixed) {
                         for (const item of node.cascade()) {
-                            item.css('width', 'auto', true);
+                            item.css('width', 'auto');
                         }
                     }
                 }
             }
             if (mainData.layoutFixed && !node.hasPX('width')) {
-                node.css('width', formatPX(node.bounds.width), true);
+                node.css('width', formatPX(node.bounds.width));
             }
         }
         let mapPercent = 0;

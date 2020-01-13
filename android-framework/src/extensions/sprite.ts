@@ -30,10 +30,7 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 const container = this.application.createNode();
                 container.inherit(node, 'base', 'initial', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                container.exclude({
-                    resource: NODE_RESOURCE.IMAGE_SOURCE,
-                    procedure: NODE_PROCEDURE.CUSTOMIZATION
-                });
+                container.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE, procedure: NODE_PROCEDURE.CUSTOMIZATION });
                 parent.appendTry(node, container);
                 node.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
                 node.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.BOX_STYLE });

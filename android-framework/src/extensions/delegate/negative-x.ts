@@ -91,10 +91,10 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 offset = Math.abs(offset);
             }
             if (node.hasPX('width', false)) {
-                container.cssPX('width', (node.marginLeft > 0 ? node.marginLeft : 0) + offset, false, true);
+                container.cssPX('width', Math.max(node.marginLeft, 0) + offset, false);
             }
             else if (node.hasPX('width')) {
-                container.css('width', 'auto', true);
+                container.css('width', 'auto');
             }
         }
         if (!isNaN(right)) {

@@ -84,25 +84,25 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     node.setLayoutWidth('match_parent');
                 }
                 else {
-                    node.css('width', formatPX(node.actualWidth), true);
+                    node.css('width', formatPX(node.actualWidth));
                 }
             }
             else if (node.hasPX('width') && node.actualWidth < Math.floor(node.bounds.width)) {
                 if (mainData.layoutFixed) {
-                    node.android('width', formatPX(node.bounds.width), true);
+                    node.android('width', formatPX(node.bounds.width));
                 }
                 else {
                     if (!node.hasPX('minWidth')) {
                         node.android('minWidth', formatPX(node.actualWidth));
                     }
-                    node.css('width', 'auto', true);
+                    node.css('width', 'auto');
                 }
             }
             if (node.hasPX('height') && node.actualHeight < Math.floor(node.bounds.height)) {
                 if (!node.hasPX('minHeight')) {
                     node.android('minHeight', formatPX(node.actualHeight));
                 }
-                node.css('height', 'auto', true);
+                node.css('height', 'auto');
             }
             const layout = new $LayoutUI(
                 parent,

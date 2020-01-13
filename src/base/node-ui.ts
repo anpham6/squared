@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { ExcludeOptions, InitialData, LinearData, SiblingOptions, Support } from '../../@types/base/node';
+import { CachedValueUI, ExcludeOptions, InitialData, LinearData, SiblingOptions, Support } from '../../@types/base/node';
 
 import Node from './node';
 
@@ -10,8 +10,9 @@ const $lib = squared.lib;
 const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, formatPX, isLength } = $lib.css;
 const { isTextNode, newBoxModel } = $lib.dom;
 const { isEqual } = $lib.math;
+const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { aboveRange, assignEmptyProperty, belowRange, cloneObject, filterArray, hasBit, isArray, searchObject, withinRange } = $lib.util;
+const { aboveRange, assignEmptyProperty, belowRange, cloneObject, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
 
 type T = NodeUI;
 
@@ -361,6 +362,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _documentParent?: T;
     protected _controlName?: string;
     protected _boxRegister?: ObjectMap<Set<T>>;
+    protected abstract _cached: CachedValueUI<T>;
     protected abstract _namespaces: string[];
     protected abstract _boxAdjustment?: BoxModel;
     protected abstract _boxReset?: BoxModel;
@@ -1426,5 +1428,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get fontSize() {
         return super.fontSize;
+    }
+
+    get extensions() {
+        let result = this._cached.extensions;
+        if (result === undefined) {
+            result = this.dataset.use ? spliceArray(this.dataset.use.split(XML.SEPARATOR), value => value === '') : [];
+            this._cached.extensions = result;
+        }
+        return result;
     }
 }

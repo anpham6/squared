@@ -7,7 +7,7 @@ const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, isLe
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
 const { CHAR, CSS, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, setElementCache } = $lib.session;
-const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, filterArray, hasBit, hasValue, isNumber, isObject, isString, spliceArray, spliceString } = $lib.util;
+const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, filterArray, hasBit, hasValue, isNumber, isObject, isString, spliceString } = $lib.util;
 
 type T = Node;
 
@@ -176,14 +176,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         this._cached = {};
                         return;
                     case 'width':
-                        cached.actualWidth = undefined;
                         cached.percentWidth = undefined;
                     case 'minWidth':
                         cached.width = undefined;
-                        cached.hasWidth = undefined;
                         break;
                     case 'height':
-                        cached.actualHeight = undefined;
                         cached.percentHeight = undefined;
                     case 'minHeight':
                         cached.height = undefined;
@@ -1774,12 +1771,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get hasWidth() {
-        let result = this._cached.hasWidth;
-        if (result === undefined) {
-            result = this.width > 0 && !this.hasPX('maxWidth');
-            this._cached.hasWidth = result;
-        }
-        return result;
+        return this.width > 0;
     }
     get hasHeight() {
         let result = this._cached.hasHeight;
@@ -1794,7 +1786,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
             }
             else {
-                result = this.height > 0 && !this.hasPX('maxHeight');
+                result = this.height > 0;
             }
             this._cached.hasHeight = result;
         }
@@ -2579,13 +2571,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = this.bounds.width;
                 }
                 else {
-                    const width = this.parseUnit(this.cssInitial('width', true));
-                    if (width > 0) {
-                        result = width;
-                        const maxWidth = this.parseUnit(this.css('maxWidth'));
-                        if (maxWidth > 0) {
-                            result = Math.min(result, maxWidth);
-                        }
+                    result = this.width;
+                    if (result > 0) {
                         if (this.contentBox && !this.tableElement) {
                             result += this.contentBoxWidth;
                         }
@@ -2609,13 +2596,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = this.bounds.height;
                 }
                 else {
-                    const height = this.parseUnit(this.cssInitial('height', true), 'height');
-                    if (height > 0) {
-                        result = height;
-                        const maxHeight = this.parseUnit(this.css('maxHeight'));
-                        if (maxHeight > 0) {
-                            result = Math.min(result, maxHeight);
-                        }
+                    result = this.height;
+                    if (result > 0) {
                         if (this.contentBox && !this.tableElement) {
                             result += this.contentBoxHeight;
                         }
@@ -2802,14 +2784,5 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             x: (bounds.left + bounds.right) / 2,
             y: (bounds.top + bounds.bottom) / 2
         };
-    }
-
-    get extensions() {
-        let result = this._cached.extensions;
-        if (result === undefined) {
-            result = this.dataset.use ? spliceArray(this.dataset.use.split(XML.SEPARATOR), value => value === '') : [];
-            this._cached.extensions = result;
-        }
-        return result;
     }
 }

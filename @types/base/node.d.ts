@@ -53,24 +53,19 @@ export interface CachedValue<T> {
     baseline?: boolean;
     verticalAlign?: string;
     multiline?: boolean;
-    leftTopAxis?: boolean;
     positiveAxis?: boolean;
     centerAligned?: boolean;
     rightAligned?: boolean;
     bottomAligned?: boolean;
     horizontalAligned?: boolean;
-    renderExclude?: boolean;
     whiteSpace?: boolean;
     width?: number;
     height?: number;
-    hasWidth?: boolean;
     hasHeight?: boolean;
     overflow?: number;
     lineHeight?: number;
-    baselineHeight?: number;
     dir?: string;
     tagName?: string;
-    containerName?: string;
     textContent?: string;
     textEmpty?: boolean;
     src?: string;
@@ -87,6 +82,13 @@ export interface CachedValue<T> {
     visibleStyle?: VisibleStyle;
     percentWidth?: boolean;
     percentHeight?: boolean;
+}
+
+export interface CachedValueUI<T> extends CachedValue<T> {
+    leftTopAxis?: boolean;
+    renderExclude?: boolean;
+    containerName?: string;
+    baselineHeight?: number;
     support?: Support;
     extensions?: string[];
 }
@@ -102,9 +104,7 @@ export interface VisibleStyle {
 }
 
 export interface Support {
-    container: {
-        positionRelative: boolean;
-    };
+    positionRelative: boolean;
 }
 
 export type AutoMargin = {

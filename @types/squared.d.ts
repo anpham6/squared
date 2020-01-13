@@ -346,7 +346,6 @@ declare namespace base {
         readonly pseudoElement: boolean;
         readonly documentBody: boolean;
         readonly dataset: DOMStringMap;
-        readonly extensions: string[];
         readonly centerAligned: boolean;
         readonly rightAligned: boolean;
         readonly bottomAligned: boolean;
@@ -526,6 +525,7 @@ declare namespace base {
         readonly onlyChild: boolean;
         readonly support: Support;
         readonly documentId: string;
+        readonly extensions: string[];
         readonly outerExtensionElement: HTMLElement | null;
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(): void;

@@ -140,7 +140,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     if (list) {
                                         this.createOptionArray(<HTMLSelectElement> list, node.controlId);
                                         if (!node.hasPX('width')) {
-                                            node.css('width', formatPX(Math.max(node.bounds.width, node.width)), true);
+                                            node.css('width', formatPX(node.actualWidth));
                                         }
                                     }
                                 }

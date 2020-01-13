@@ -26,7 +26,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
         const verticalAlign = convertFloat(node.verticalAlign);
         let { top, right, bottom, left } = node;
         let target = node;
-        if (renderParent.support.container.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
+        if (renderParent.support.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
             const application = this.application;
             target = node.clone(application.nextId, true, true) as T;
             target.baselineAltered = true;
