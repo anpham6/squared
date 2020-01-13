@@ -7,7 +7,7 @@ import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const $lib = squared.lib;
-const { isLength, isPercent } = $lib.css;
+const { formatPX, isLength, isPercent } = $lib.css;
 const { assignRect } = $lib.dom;
 const { CHAR } = $lib.regex;
 const { convertInt, isNumber, trimString, withinRange } = $lib.util;
@@ -25,12 +25,21 @@ type RepeatItem = {
     unitMin?: string
 };
 
+type RowData = (NodeUI[] | undefined)[][];
+
 const CSS_GRID = EXT_NAME.CSS_GRID;
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
 const STRING_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
 const STRING_NAMED = '\\[([\\w\\-\\s]+)\\]';
-const CACHE_PATTERN: ObjectMap<RegExp> = {};
+const REGEX_UNIT = new RegExp(`^(${STRING_UNIT})$`);
+const REGEX_NAMED = new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+const REGEX_REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+const REGEX_STARTEND = /^([\w\-]+)-(start|end)$/;
+const REGEX_CELL_UNIT = new RegExp('[\\d.]+[a-z%]+|auto|max-content|min-content');
+const REGEX_CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
+const REGEX_CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
+const REGEX_CELL_NAMED = new RegExp('\\[([\\w\\-\\s]+)\\]');
 
 function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
     const repeat = data.repeat;
@@ -76,6 +85,28 @@ function getColumnTotal(rows: (NodeUI[] | undefined)[]) {
     return value;
 }
 
+function setFlexibleDimension(dimension: number, gap: number, count: number, unit: string[], max: number[]) {
+    let total = 0;
+    const length = unit.length;
+    for (let i = 0; i < length; i++) {
+        const value = unit[i];
+        if (value.endsWith('fr')) {
+            total += parseFloat(value);
+        }
+    }
+    if (total > 0) {
+        const ratio = (dimension - ((count - 1) * gap) - max.reduce((a, b) => a + Math.max(0, b), 0)) / total;
+        if (ratio > 0) {
+            for (let i = 0; i < length; i++) {
+                const value = unit[i];
+                if (value.endsWith('fr')) {
+                    unit[i] = formatPX(parseFloat(value) * ratio);
+                }
+            }
+        }
+    }
+}
+
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? node.convertPX(value, index === 0 ? 'height' : 'width') : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
@@ -108,7 +139,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             autoFill: false,
             autoFit: false,
             name: {},
-            normal: true
+            fixedWidth: false,
+            flexible: false
         };
     }
 
@@ -121,18 +153,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
-        if (CACHE_PATTERN.UNIT === undefined) {
-            CACHE_PATTERN.UNIT = new RegExp(`^(${STRING_UNIT})$`);
-            CACHE_PATTERN.NAMED = new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
-            CACHE_PATTERN.REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
-            CACHE_PATTERN.STARTEND = /^([\w\-]+)-(start|end)$/;
-        }
         const mainData = CssGrid.createDataAttribute(
             node.css('alignItems'),
             node.css('alignContent'),
             node.css('justifyItems'),
             node.css('justifyContent')
         );
+        const { row, column } = mainData;
         const gridAutoFlow = node.css('gridAutoFlow');
         const horizontal = gridAutoFlow.indexOf('column') === -1;
         const dense = gridAutoFlow.indexOf('dense') !== -1;
@@ -140,8 +167,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         const cellsPerRow: number[] = [];
         const layout: GridLayout[] = [];
         let rowInvalid: ObjectIndex<boolean> = {};
-        mainData.row.gap = node.parseUnit(node.css('rowGap'), 'height', false);
-        mainData.column.gap = node.parseUnit(node.css('columnGap'), 'width', false);
+        row.gap = node.parseUnit(node.css('rowGap'), 'height', false);
+        column.gap = node.parseUnit(node.css('columnGap'), 'width', false);
         function setDataRows(item: T, placement: number[]) {
             if (placement.every(value => value > 0)) {
                 for (let i = placement[horizontal ? 0 : 1] - 1; i < placement[horizontal ? 2 : 3] - 1; i++) {
@@ -151,15 +178,15 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         rowData[i] = data;
                     }
                     for (let j = placement[horizontal ? 1 : 0] - 1; j < placement[horizontal ? 3 : 2] - 1; j++) {
-                        let row = data[j];
+                        let rowItem = data[j];
                         let count = cellsPerRow[i] || 0;
-                        if (row === undefined) {
-                            row = [];
-                            data[j] = row;
+                        if (rowItem === undefined) {
+                            rowItem = [];
+                            data[j] = rowItem;
                             count++;
                         }
                         cellsPerRow[i] = count;
-                        row.push(item);
+                        rowItem.push(item);
                     }
                 }
                 return true;
@@ -168,11 +195,11 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
             if (value !== '' && value !== 'none' && value !== 'auto') {
-                const data = index === 0 ? mainData.row : mainData.column;
+                const data = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = data;
                 let match: RegExpMatchArray | null;
                 let i = 1;
-                while ((match = CACHE_PATTERN.NAMED.exec(value)) !== null) {
+                while ((match = REGEX_NAMED.exec(value)) !== null) {
                     const command = match[1];
                     if (index < 2) {
                         if (command.startsWith('repeat')) {
@@ -189,31 +216,25 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     break;
                             }
                             if (iterations > 0) {
-                                if (CACHE_PATTERN.CELL_UNIT === undefined) {
-                                    CACHE_PATTERN.CELL_UNIT = new RegExp('[\\d.]+[a-z%]+|auto|max-content|min-content');
-                                    CACHE_PATTERN.CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
-                                    CACHE_PATTERN.CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
-                                    CACHE_PATTERN.CELL_NAMED = new RegExp('\\[([\\w\\-\\s]+)\\]');
-                                }
                                 const repeating: RepeatItem[] = [];
                                 let subMatch: RegExpMatchArray | null;
-                                while ((subMatch = CACHE_PATTERN.REPEAT.exec(match[3])) !== null) {
+                                while ((subMatch = REGEX_REPEAT.exec(match[3])) !== null) {
                                     const subPattern = subMatch[1];
                                     let namedMatch: RegExpMatchArray | null;
-                                    if ((namedMatch = CACHE_PATTERN.CELL_NAMED.exec(subPattern)) !== null) {
+                                    if ((namedMatch = REGEX_CELL_NAMED.exec(subPattern)) !== null) {
                                         const subName = namedMatch[1];
                                         if (name[subName] === undefined) {
                                             name[subName] = [];
                                         }
                                         repeating.push({ name: subName });
                                     }
-                                    else if ((namedMatch = CACHE_PATTERN.CELL_MINMAX.exec(subPattern)) !== null) {
+                                    else if ((namedMatch = REGEX_CELL_MINMAX.exec(subPattern)) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[2], index), unitMin: convertLength(node, namedMatch[1], index) });
                                     }
-                                    else if ((namedMatch = CACHE_PATTERN.CELL_FIT_CONTENT.exec(subPattern)) !== null) {
+                                    else if ((namedMatch = REGEX_CELL_FIT_CONTENT.exec(subPattern)) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[1], index), unitMin: '0px' });
                                     }
-                                    else if ((namedMatch = CACHE_PATTERN.CELL_UNIT.exec(subPattern)) !== null) {
+                                    else if ((namedMatch = REGEX_CELL_UNIT.exec(subPattern)) !== null) {
                                         repeating.push({ unit: convertLength(node, namedMatch[0], index) });
                                     }
                                 }
@@ -232,15 +253,16 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         }
                                     }
                                 }
-                                CACHE_PATTERN.REPEAT.lastIndex = 0;
+                                REGEX_REPEAT.lastIndex = 0;
                             }
                         }
                         else if (command.charAt(0) === '[') {
-                            const attr = match[4];
-                            if (name[attr] === undefined) {
-                                name[attr] = [];
+                            for (const attr of match[4].split(CHAR.SPACE)) {
+                                if (name[attr] === undefined) {
+                                    name[attr] = [];
+                                }
+                                name[attr].push(i);
                             }
-                            name[attr].push(i);
                         }
                         else if (command.startsWith('minmax')) {
                             unit.push(convertLength(node, match[6], index));
@@ -254,7 +276,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             repeat.push(false);
                             i++;
                         }
-                        else if (CACHE_PATTERN.UNIT.test(command)) {
+                        else if (REGEX_UNIT.test(command)) {
                             unit.push(command === 'auto' ? 'auto' : convertLength(node, command, index));
                             unitMin.push('');
                             repeat.push(false);
@@ -262,10 +284,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     else {
-                        (index === 2 ? mainData.row : mainData.column).auto.push(node.convertPX(command));
+                        (index === 2 ? row : column).auto.push(node.convertPX(command));
                     }
                 }
-                CACHE_PATTERN.NAMED.lastIndex = 0;
+                REGEX_NAMED.lastIndex = 0;
             }
         });
         if (horizontal) {
@@ -314,15 +336,15 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 indexB = 0;
                 indexC = 2;
             }
-            let row = 0;
-            let column = 0;
+            let rowIndex = 0;
+            let columnIndex = 0;
             let columnMax = 0;
             let previous: T | undefined;
             node.each((item: T, index) => {
-                if (previous === undefined || item.linear[directionA] >= previous.linear[directionB] || column > 0 && column === columnMax) {
-                    columnMax = Math.max(column, columnMax);
-                    row++;
-                    column = 1;
+                if (previous === undefined || item.linear[directionA] >= previous.linear[directionB] || columnIndex > 0 && columnIndex === columnMax) {
+                    columnMax = Math.max(columnIndex, columnMax);
+                    rowIndex++;
+                    columnIndex = 1;
                 }
                 const rowEnd = item.css('gridRowEnd');
                 const columnEnd = item.css('gridColumnEnd');
@@ -332,21 +354,21 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     rowSpan = parseInt(rowEnd.split(' ')[1]);
                 }
                 else if (isNumber(rowEnd)) {
-                    rowSpan = parseInt(rowEnd) - row;
+                    rowSpan = parseInt(rowEnd) - rowIndex;
                 }
                 if (columnEnd.startsWith('span')) {
                     columnSpan = parseInt(columnEnd.split(' ')[1]);
                 }
                 else if (isNumber(columnEnd)) {
-                    columnSpan = parseInt(columnEnd) - column;
+                    columnSpan = parseInt(columnEnd) - columnIndex;
                 }
-                if (column === 1 && columnMax > 0) {
+                if (columnIndex === 1 && columnMax > 0) {
                     let valid = false;
                     do {
                         const available: number[] = new Array(columnMax - 1).fill(1);
                         for (const cell of layout) {
                             const placement = cell.placement;
-                            if (placement[indexA] > row) {
+                            if (placement[indexA] > rowIndex) {
                                 for (let i = placement[indexB]; i < placement[indexC]; i++) {
                                     available[i - 1] = 0;
                                 }
@@ -358,7 +380,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     k = i;
                                 }
                                 if (++j === columnSpan) {
-                                    column = k + 1;
+                                    columnIndex = k + 1;
                                     valid = true;
                                     break;
                                 }
@@ -368,25 +390,36 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         if (!valid) {
-                            mainData.emptyRows[row - 1] = available;
-                            row++;
+                            mainData.emptyRows[rowIndex - 1] = available;
+                            rowIndex++;
                         }
                     }
                     while (!valid);
                 }
-                layout[index] = <GridLayout> {
-                    placement: horizontal ? [row, column, row + rowSpan, column + columnSpan] : [column, row, column + columnSpan, row + rowSpan],
-                    rowSpan,
-                    columnSpan
-                };
-                column += columnSpan;
+                if (horizontal) {
+                    layout[index] = {
+                        outerCoord: item.linear.top,
+                        placement: [rowIndex, columnIndex, rowIndex + rowSpan, columnIndex + columnSpan],
+                        rowSpan,
+                        columnSpan
+                    };
+                }
+                else {
+                    layout[index] = {
+                        outerCoord: item.linear.left,
+                        placement: [columnIndex, rowIndex, columnIndex + columnSpan, rowIndex + rowSpan],
+                        rowSpan,
+                        columnSpan
+                    };
+                }
+                columnIndex += columnSpan;
                 previous = item;
             });
         }
         else {
+            const templateAreas = mainData.templateAreas;
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
                 if (template !== 'none') {
-                    const templateAreas = mainData.templateAreas;
                     trimString(template.trim(), '"').split(CHAR.SPACE).forEach((area, j) => {
                         if (area.charAt(0) !== '.') {
                             const templateArea = templateAreas[area];
@@ -407,14 +440,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             });
             node.each((item, index) => {
-                const templateAreas = mainData.templateAreas;
                 const positions = [
                     item.css('gridRowStart'),
                     item.css('gridColumnStart'),
                     item.css('gridRowEnd'),
                     item.css('gridColumnEnd')
                 ];
-                const placement: number[] = [];
+                const placement = [0, 0, 0, 0];
                 let rowSpan = 1;
                 let columnSpan = 1;
                 if (Object.keys(templateAreas).length) {
@@ -438,7 +470,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         else {
-                            const match = CACHE_PATTERN.STARTEND.exec(name);
+                            const match = REGEX_STARTEND.exec(name);
                             if (match) {
                                 template = templateAreas[match[1]];
                                 if (template) {
@@ -471,7 +503,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (!placement[0] || !placement[1] || !placement[2] || !placement[3]) {
+                if (placement[0] === 0 || placement[1] === 0 || placement[2] === 0 || placement[3] === 0) {
                     function setPlacement(value: string, position: number) {
                         if (isNumber(value)) {
                             placement[position] = parseInt(value);
@@ -479,7 +511,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         else if (value.startsWith('span')) {
                             const span = parseInt(value.split(' ')[1]);
-                            if (!placement[position - 2]) {
+                            if (placement[position - 2] === 0) {
                                 if (position % 2 === 0) {
                                     rowSpan = span;
                                 }
@@ -498,15 +530,16 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     let colStart: string[] | undefined;
                     for (let i = 0; i < 4; i++) {
                         const value = positions[i];
-                        if (value !== 'auto' && !placement[i] && !setPlacement(value, i)) {
-                            const data = mainData[i % 2 === 0 ? 'row' : 'column'];
+                        if (value !== 'auto' && placement[i] === 0 && !setPlacement(value, i)) {
+                            const vertical = i % 2 === 0;
+                            const data = vertical ? row : column;
                             const alias = value.split(' ');
                             if (alias.length === 1) {
                                 alias[1] = alias[0];
                                 alias[0] = '1';
                             }
                             else if (isNumber(alias[0])) {
-                                if (i % 2 === 0) {
+                                if (vertical) {
                                     if (rowStart) {
                                         rowSpan = parseInt(alias[0]) - parseInt(rowStart[0]);
                                     }
@@ -529,7 +562,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                         }
-                        if (!placement[i]) {
+                        if (placement[i] === 0) {
                             setPlacement(value, i);
                         }
                     }
@@ -543,19 +576,28 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             });
         }
         {
-            const data = horizontal ? mainData.column : mainData.row;
-            const outerCoord = horizontal ? node.box.top : node.box.left;
+            let data: CssGridDirectionData;
+            let outerCoord: number;
+            if (horizontal) {
+                data = column;
+                outerCoord = node.box.top;
+            }
+            else {
+                data = row;
+                outerCoord = node.box.left;
+            }
             let unit = data.unit;
             let length = Math.max(1, unit.length);
             let outerCount = 0;
             for (const item of layout) {
                 if (item) {
                     const placement = item.placement;
-                    if (placement.length) {
-                        length = Math.max(length, horizontal ? item.columnSpan : item.rowSpan, placement[horizontal ? 1 : 0] || 0, (placement[horizontal ? 3 : 2] || 0) - 1);
+                    const totalSpan = horizontal ? item.columnSpan : item.rowSpan;
+                    if (placement.some(value => value > 0)) {
+                        length = Math.max(length, totalSpan, placement[horizontal ? 1 : 0] || 0, (placement[horizontal ? 3 : 2] || 0) - 1);
                     }
                     if (withinRange(item.outerCoord, outerCoord)) {
-                        outerCount += horizontal ? item.columnSpan : item.rowSpan;
+                        outerCount += totalSpan;
                     }
                 }
             }
@@ -572,25 +614,42 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
             let percent = 1;
             let fr = 0;
-            for (const px of unit) {
-                if (isPercent(px)) {
-                    percent -= parseFloat(px) / 100;
+            for (const value of unit) {
+                if (isPercent(value)) {
+                    percent -= parseFloat(value) / 100;
                 }
-                else if (px.endsWith('fr')) {
-                    fr += parseFloat(px);
+                else if (value.endsWith('fr')) {
+                    fr += parseFloat(value);
+                }
+                else {
+                    continue;
+                }
+
+            }
+            data.flexible = percent < 1 || fr > 0;
+            if (horizontal) {
+                if (node.hasPX('width')) {
+                    column.fixedWidth = true;
+                    column.flexible = false;
+                }
+            }
+            else {
+                if (node.hasPX('height')) {
+                    row.fixedWidth = true;
+                    row.flexible = false;
                 }
             }
             if (percent < 1 && fr > 0) {
                 const lengthA = unit.length;
                 for (let i = 0; i < lengthA; i++) {
-                    const px = unit[i];
-                    if (px.endsWith('fr')) {
-                        unit[i] = percent * (parseFloat(px) / fr) + 'fr';
+                    const value = unit[i];
+                    if (value.endsWith('fr')) {
+                        unit[i] = percent * (parseFloat(value) / fr) + 'fr';
                     }
                 }
             }
-            const rowEnd = mainData.row.unit.length + 1;
-            const columnEnd = mainData.column.unit.length + 1;
+            const rowEnd = row.unit.length + 1;
+            const columnEnd = column.unit.length + 1;
             for (const cell of layout) {
                 const placement = cell.placement;
                 if (placement[2] < 0) {
@@ -598,7 +657,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         placement[2] += rowEnd + 1;
                     }
                     else {
-                        placement[2] = undefined as any;
+                        placement[2] = 0;
                     }
                 }
                 if (placement[3] < 0) {
@@ -606,7 +665,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         placement[3] += columnEnd + 1;
                     }
                     else {
-                        placement[3] = undefined as any;
+                        placement[3] = 0;
                     }
                 }
             }
@@ -624,7 +683,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             if (horizontal) {
                 ROW_SPAN = cell.rowSpan;
                 COLUMN_SPAN = cell.columnSpan;
-                COLUMN_COUNT = mainData.column.length;
+                COLUMN_COUNT = column.length;
                 rowA = 0;
                 colA = 1;
                 rowB = 2;
@@ -633,15 +692,15 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             else {
                 ROW_SPAN = cell.columnSpan;
                 COLUMN_SPAN = cell.rowSpan;
-                COLUMN_COUNT = mainData.row.length;
+                COLUMN_COUNT = row.length;
                 rowA = 1;
                 colA = 0;
                 rowB = 3;
                 colB = 2;
             }
-            while (!placement[0] || !placement[1]) {
+            while (placement[0] === 0 || placement[1] === 0) {
                 const PLACEMENT = placement.slice(0);
-                if (!PLACEMENT[rowA]) {
+                if (PLACEMENT[rowA] === 0) {
                     let length = rowData.length;
                     for (let i = 0, j = 0, k = -1; i < length; i++) {
                         if (!rowInvalid[i]) {
@@ -663,14 +722,14 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (!PLACEMENT[rowA]) {
+                if (PLACEMENT[rowA] === 0) {
                     placement[rowA] = rowData.length + 1;
-                    if (!placement[colA]) {
+                    if (placement[colA] === 0) {
                         placement[colA] = 1;
                     }
                 }
-                else if (!PLACEMENT[colA]) {
-                    if (!PLACEMENT[rowB]) {
+                else if (PLACEMENT[colA] === 0) {
+                    if (PLACEMENT[rowB] === 0) {
                         PLACEMENT[rowB] = PLACEMENT[rowA] + ROW_SPAN;
                     }
                     const available: [number, number][][] = [];
@@ -685,14 +744,14 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             const range: [number, number][] = [];
                             let span = 0;
                             for (let j = 0, k = -1; j < COLUMN_COUNT; j++) {
-                                const row = data[j];
-                                if (row === undefined) {
+                                const rowItem = data[j];
+                                if (rowItem === undefined) {
                                     if (k === -1) {
                                         k = j;
                                     }
                                     span++;
                                 }
-                                if (row || j === COLUMN_COUNT - 1) {
+                                if (rowItem || j === COLUMN_COUNT - 1) {
                                     if (span >= COLUMN_SPAN) {
                                         range.push([k, k + span]);
                                     }
@@ -751,10 +810,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     rowInvalid[ROW_A - 1] = true;
                 }
             }
-            if (!placement[rowB]) {
+            if (placement[rowB] === 0) {
                 placement[rowB] = placement[rowA] + ROW_SPAN;
             }
-            if (!placement[colB]) {
+            if (placement[colB] === 0) {
                 placement[colB] = placement[colA] + COLUMN_SPAN;
             }
             if (setDataRows(item, placement)) {
@@ -776,37 +835,40 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
         });
-        const lengthC = rowData.length;
-        if (lengthC > 0) {
+        if (rowData.length) {
+            let rowMain: RowData;
             if (horizontal) {
+                rowMain = rowData;
                 mainData.rowData = rowData;
             }
             else {
-                for (let i = 0; i < lengthC; i++) {
+                rowMain = mainData.rowData;
+                const length = rowData.length;
+                for (let i = 0; i < length; i++) {
                     const data = rowData[i];
-                    const lengthD = data.length;
-                    for (let j = 0; j < lengthD; j++) {
-                        let row = mainData.rowData[j];
-                        if (row === undefined) {
-                            row = [];
-                            mainData.rowData[j] = row;
+                    const lengthA = data.length;
+                    for (let j = 0; j < lengthA; j++) {
+                        let rowItem = rowMain[j];
+                        if (rowItem === undefined) {
+                            rowItem = [];
+                            rowMain[j] = rowItem;
                         }
-                        row[i] = data[j];
+                        rowItem[i] = data[j];
                     }
                 }
             }
-            const unitTotal = (horizontal ? mainData.row : mainData.column).unitTotal;
+            const unitTotal = horizontal ? row.unitTotal : column.unitTotal;
             const children = mainData.children;
             let columnCount = 0;
-            for (const data of mainData.rowData) {
-                const lengthD = data.length;
-                columnCount = Math.max(lengthD, columnCount);
-                for (let i = 0; i < lengthD; i++) {
-                    const column = data[i];
+            for (const data of rowMain) {
+                const lengthA = data.length;
+                columnCount = Math.max(lengthA, columnCount);
+                for (let i = 0; i < lengthA; i++) {
+                    const columnItem = data[i];
                     let count = unitTotal[i] || 0;
-                    if (column) {
+                    if (columnItem) {
                         let maxDimension = 0;
-                        for (const item of column) {
+                        for (const item of columnItem) {
                             if (!children.includes(item)) {
                                 maxDimension = Math.max(maxDimension, horizontal ? item.bounds.height : item.bounds.width);
                                 children.push(item);
@@ -818,49 +880,95 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (children.length === node.length) {
-                const row = mainData.row;
-                const data = mainData.rowData;
-                const rowCount = Math.max(row.unit.length, data.length);
+                const rowCount = Math.max(row.unit.length, rowMain.length);
                 const rowHeight = new Array(rowCount);
-                const rowGap = row.gap;
-                const columnGap = mainData.column.gap;
+                const { gap: rowGap, unit: rowUnit } = row;
+                const { gap: columnGap, unit: columnUnit } = column;
+                const rowMax: number[] = new Array(rowCount).fill(0);
+                const columnMax: number[] = new Array(columnCount).fill(0);
                 const modified = new Set<T>();
-                mainData.row.length = rowCount;
-                mainData.column.length = columnCount;
+                row.length = rowCount;
+                column.length = columnCount;
                 mainData.rowHeight = rowHeight;
                 for (let i = 0; i < rowCount; i++) {
-                    const rowItem = data[i];
-                    const unit = row.unit[i];
+                    const rowItem = rowMain[i];
+                    const unitHeight = rowUnit[i];
                     if (rowItem) {
-                        rowHeight[i] = 0;
-                        const checkHeight = !isLength(unit);
+                        const checkHeight = !isLength(unitHeight);
+                        let height = checkHeight ? 0 : parseFloat(unitHeight);
                         for (let j = 0; j < columnCount; j++) {
-                            const column = rowItem[j] as T[];
-                            if (column) {
-                                for (const item of column) {
+                            const columnItem = rowItem[j] as T[];
+                            if (columnItem) {
+                                for (const item of columnItem) {
                                     if (!modified.has(item)) {
-                                        const cellData = <CssGridCellData> item.data(CSS_GRID, 'cellData');
-                                        const x = j + cellData.columnSpan - 1;
-                                        const y = i + cellData.rowSpan - 1;
+                                        const { columnSpan, rowSpan } = <CssGridCellData> item.data(CSS_GRID, 'cellData');
+                                        const x = j + columnSpan - 1;
+                                        const y = i + rowSpan - 1;
                                         if (x < columnCount - 1) {
                                             item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, columnGap);
                                         }
                                         if (y < rowCount - 1) {
                                             item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, rowGap);
                                         }
-                                        if (cellData.rowSpan === 1 && checkHeight) {
-                                            rowHeight[i] = Math.max(rowHeight[i], item.bounds.height);
+                                        if (rowSpan === 1) {
+                                            const boundsHeight = item.bounds.height;
+                                            const columnHeight = rowMax[i];
+                                            if (item.hasHeight) {
+                                                if (columnHeight < 0) {
+                                                    if (boundsHeight > Math.abs(columnHeight)) {
+                                                        rowMax[i] = boundsHeight;
+                                                    }
+                                                }
+                                                else {
+                                                    rowMax[i] = Math.max(boundsHeight, columnHeight);
+                                                }
+                                            }
+                                            else if (boundsHeight > Math.abs(columnHeight)) {
+                                                rowMax[i] = -boundsHeight;
+                                            }
+                                            if (checkHeight) {
+                                                height = Math.max(boundsHeight, height);
+                                            }
+                                        }
+                                        else {
+                                            height = Number.POSITIVE_INFINITY;
+                                        }
+                                        if (columnSpan === 1) {
+                                            const boundsWidth = item.bounds.width;
+                                            const columnWidth = columnMax[j];
+                                            if (item.hasWidth) {
+                                                if (columnWidth < 0) {
+                                                    if (boundsWidth > Math.abs(columnWidth)) {
+                                                        columnMax[j] = boundsWidth;
+                                                    }
+                                                }
+                                                else {
+                                                    columnMax[j] = Math.max(boundsWidth, columnWidth);
+                                                }
+                                            }
+                                            else if (boundsWidth > Math.abs(columnWidth)) {
+                                                columnMax[j] = -boundsWidth;
+                                            }
                                         }
                                         modified.add(item);
                                     }
                                 }
                             }
                         }
+                        rowHeight[i] = height;
                     }
                     else {
-                        rowHeight[i] = parseFloat(unit) || 0;
+                        const height = parseFloat(unitHeight) || 0;
+                        rowHeight[i] = height;
+                        rowMax[i] = height;
                         mainData.emptyRows[i] = [1];
                     }
+                }
+                if (column.fixedWidth) {
+                    setFlexibleDimension(node.actualWidth, columnGap, columnCount, columnUnit, columnMax);
+                }
+                if (row.fixedWidth) {
+                    setFlexibleDimension(node.actualHeight, rowGap, rowCount, rowUnit, rowMax);
                 }
                 node.retain(children);
                 node.cssSort('zIndex');

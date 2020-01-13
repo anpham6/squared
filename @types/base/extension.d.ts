@@ -28,7 +28,8 @@ export interface CssGridDirectionData {
     autoFill: boolean;
     repeat: boolean[];
     name: ObjectMap<number[]>;
-    normal: boolean;
+    fixedWidth: boolean;
+    flexible: boolean;
 }
 
 export interface CssGridCellData {

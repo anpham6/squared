@@ -4,7 +4,7 @@ import View from '../../view';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-const { NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const isJustified = (node: View) => (node.blockStatic || node.hasWidth) && /center|end|right$/.test(node.css('justifyContent'));
 const isAligned = (node: View) => node.hasHeight && /center|end$/.test(node.css('alignContent'));
@@ -41,6 +41,7 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
         node.setCacheValue('backgroundColor', '');
         node.css('backgroundImage', 'none');
         node.setCacheValue('backgroundImage', '');
+        node.resetBox(BOX_STANDARD.PADDING, container);
         const visibleStyle = node.visibleStyle;
         visibleStyle.background = false;
         visibleStyle.backgroundImage = false;
