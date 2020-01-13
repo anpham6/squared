@@ -27,6 +27,23 @@ let REGEX_FONT_STYLE!: RegExp;
 let REGEX_FONT_WEIGHT!: RegExp;
 let REGEX_URL!: RegExp;
 
+function addImageSrc(uri: string, width = 0, height = 0) {
+    if (isString(uri)) {
+        const image = ASSETS.images.get(uri);
+        if (image === undefined || width > 0 && height > 0 || image.width === 0 && image.height === 0) {
+            ASSETS.images.set(uri, { width, height, uri });
+        }
+    }
+}
+
+function parseSrcSet(value: string) {
+    if (isString(value)) {
+        for (const uri of value.split(XML.SEPARATOR)) {
+            addImageSrc(resolvePath(uri));
+        }
+    }
+}
+
 async function getImageSvgAsync(value: string) {
     return (await fetch(value, { method: 'GET', headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' }) })).text();
 }
@@ -162,35 +179,30 @@ export default abstract class Application<T extends Node> implements squared.bas
         const images: PreloadImage[] = [];
         if (preloadImages) {
             for (const element of this.rootElements) {
+                element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => {
+                    addImageSrc(source.src);
+                    parseSrcSet(source.srcset);
+                });
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
-                    const uri = image.src;
-                    if (uri !== '') {
-                        ASSETS.images.set(uri, {
-                            width: image.width,
-                            height: image.height,
-                            uri
-                        });
-                    }
+                    addImageSrc(image.src, image.width, image.height);
                 });
             }
             for (const image of ASSETS.images.values()) {
-                const uri = image.uri;
-                if (uri) {
-                    if (uri.toLowerCase().endsWith('.svg')) {
-                        images.push(uri);
+                const uri = image.uri as string;
+                if (uri.toLowerCase().endsWith('.svg')) {
+                    images.push(uri);
+                }
+                else if (image.width === 0 && image.height === 0) {
+                    const element = document.createElement('img');
+                    element.src = uri;
+                    const { naturalWidth: width, naturalHeight: height } = element;
+                    if (width > 0 && height > 0) {
+                        image.width = width;
+                        image.height = height;
                     }
-                    else if (image.width === 0 && image.height === 0) {
-                        const element = document.createElement('img');
-                        element.src = uri;
-                        const { naturalWidth: width, naturalHeight: height } = element;
-                        if (width > 0 && height > 0) {
-                            image.width = width;
-                            image.height = height;
-                        }
-                        else {
-                            documentRoot.appendChild(element);
-                            preloaded.push(element);
-                        }
+                    else {
+                        documentRoot.appendChild(element);
+                        preloaded.push(element);
                     }
                 }
             }
@@ -204,11 +216,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (width > 0 && height > 0) {
                     data.width = width;
                     data.height = height;
-                    ASSETS.images.set(uri, {
-                        width,
-                        height,
-                        uri: data.filename
-                    });
+                    ASSETS.images.set(uri, { width, height, uri: data.filename });
                 }
                 else {
                     document.body.appendChild(element);
@@ -223,11 +231,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                         images.push(image.src);
                     }
                 }
-                else if (image.complete) {
-                    resource.addImage(image);
-                }
-                else if (preloadImages) {
-                    images.push(image);
+                else {
+                    if (preloadImages) {
+                        parseSrcSet(image.srcset);
+                    }
+                    if (image.complete) {
+                        resource.addImage(image);
+                    }
+                    else if (preloadImages) {
+                        images.push(image);
+                    }
                 }
             });
         }
@@ -500,7 +513,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 const uri = resolvePath(match[5], styleSheetHref);
                                 if (uri !== '') {
                                     if (resourceHandler.getImage(uri) === undefined) {
-                                        ASSETS.images.set(uri, { width: 0, height: 0, uri });
+                                        addImageSrc(uri);
                                     }
                                     result = result.replace(match[1], `url("${uri}")`);
                                 }

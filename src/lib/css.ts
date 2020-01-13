@@ -2,7 +2,7 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { CSS, STRING, UNIT, XML } from './regex';
 
-import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertRoman, fromLastIndexOf, isString, replaceMap, resolvePath, spliceString } from './util';
+import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertRoman, isString, replaceMap, resolvePath, spliceString } from './util';
 
 type CSSKeyframesData = squared.lib.css.CSSKeyframesData;
 
@@ -666,21 +666,24 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
 export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     const parentElement = <HTMLPictureElement> element.parentElement;
     const result: ImageSrcSet[] = [];
-    const src = element.src;
     let { srcset, sizes } = element;
     if (parentElement?.tagName === 'PICTURE') {
         const children = parentElement.children;
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const source = <HTMLSourceElement> children[i];
-            if (source.tagName === 'SOURCE' && isString(source.srcset) && (isString(source.media) && validMediaRule(source.media) || mimeType && isString(source.type) && mimeType.includes((source.type.split('/').pop() as string).toLowerCase()))) {
-                ({ srcset, sizes } = source);
-                break;
+            if (source.tagName === 'SOURCE') {
+                const type = source.type.trim();
+                const value = source.srcset.trim();
+                if (value !== '' && (isString(source.media) && validMediaRule(source.media) || type !== '' && mimeType?.includes((type.split('/').pop() as string).toLowerCase()))) {
+                    srcset = value;
+                    sizes = source.sizes;
+                    break;
+                }
             }
         }
     }
     if (srcset !== '') {
-        const filepath = src.substring(0, src.lastIndexOf('/') + 1);
         const pattern = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
         for (const value of srcset.split(XML.SEPARATOR)) {
             const match = pattern.exec(value.trim());
@@ -699,7 +702,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                         break;
                 }
                 result.push({
-                    src: resolvePath(filepath + fromLastIndexOf(match[1], '/')),
+                    src: resolvePath(match[1]),
                     pixelRatio,
                     width
                 });
@@ -726,7 +729,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         });
     }
     if (result.length === 0) {
-        result.push({ src, pixelRatio: 1, width: 0 });
+        result.push({ src: element.src, pixelRatio: 1, width: 0 });
     }
     else if (result.length > 1 && isString(sizes)) {
         const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH}\\))?\\s*(.+)`);

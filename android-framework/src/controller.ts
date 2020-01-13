@@ -1,4 +1,4 @@
-import { FileAsset, LayoutType, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
+import { FileAsset, ImageAsset, LayoutType, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
 import { ControllerSettingsAndroid } from '../../@types/android/application';
 import { LocalSettings, SpacerAttribute, WrapperOptions } from '../../@types/android/node';
 
@@ -9,6 +9,8 @@ import ViewGroup from './viewgroup';
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, STRING_ANDROID } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { createViewAttribute, getDocumentId, getRootNs } from './lib/util';
+
+type T = View;
 
 const $lib = squared.lib;
 const { PLATFORM, USER_AGENT, isPlatform, isUserAgent } = $lib.client;
@@ -28,7 +30,7 @@ const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE
 
 const GUIDELINE_AXIS = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
 
-function sortHorizontalFloat(list: View[]) {
+function sortHorizontalFloat(list: T[]) {
     if (list.some(node => node.floating)) {
         list.sort((a, b) => {
             const floatingA = a.floating;
@@ -54,13 +56,13 @@ function sortHorizontalFloat(list: View[]) {
     }
 }
 
-function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
+function sortConstraintAbsolute(templates: NodeXmlTemplate<T>[]) {
     if (templates.length > 1) {
         templates.sort((a, b) => {
             const nodeA = a.node;
             const nodeB = b.node;
-            const above = <View> nodeA.innerWrapped || nodeA;
-            const below = <View> nodeB.innerWrapped || nodeB;
+            const above = nodeA.innerWrapped as T || nodeA;
+            const below = nodeB.innerWrapped as T || nodeB;
             if (above.absoluteParent === below.absoluteParent) {
                 if (above.zIndex === below.zIndex) {
                     return above.childIndex < below.childIndex ? -1 : 1;
@@ -82,12 +84,15 @@ function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
     return templates;
 }
 
-function adjustBaseline(baseline: View, nodes: View[]) {
-    let imageBaseline: View | undefined;
+const getBaselineAnchor = (node: T) => node.imageOrSvgElement ? 'baseline' : 'bottom';
+
+function adjustBaseline(baseline: T, nodes: T[]) {
+    const baselineHeight = baseline.baselineHeight;
+    let imageBaseline: T | undefined;
     let imageHeight = 0;
     for (const node of nodes) {
         if (node !== baseline && !node.baselineAltered) {
-            let height = node.bounds.height;
+            let height = node.baselineHeight;
             if (height > 0 || node.textElement) {
                 if (node.blockVertical && baseline.blockVertical) {
                     node.anchor('bottom', baseline.documentId);
@@ -95,20 +100,16 @@ function adjustBaseline(baseline: View, nodes: View[]) {
                 }
                 else if (!node.textElement && !node.inputElement) {
                     for (const image of node.renderChildren.filter(item => item.imageOrSvgElement && item.baseline)) {
-                        if (image.bounds.height > height) {
-                            height = image.bounds.height;
-                        }
+                        height = Math.max(image.baselineHeight, height);
                     }
-                    if (height > baseline.bounds.height) {
+                    if (height > baselineHeight) {
                         if (imageBaseline === undefined || height >= imageHeight) {
-                            if (imageBaseline) {
-                                imageBaseline.anchor(node.imageOrSvgElement ? 'baseline' : 'bottom', node.documentId);
-                            }
-                            imageBaseline = node;
+                            imageBaseline?.anchor(getBaselineAnchor(node), node.documentId);
                             imageHeight = height;
+                            imageBaseline = node;
                         }
                         else {
-                            node.anchor(imageBaseline.imageOrSvgElement ? 'baseline' : 'bottom', imageBaseline.documentId);
+                            node.anchor(getBaselineAnchor(imageBaseline), imageBaseline.documentId);
                         }
                         continue;
                     }
@@ -117,8 +118,11 @@ function adjustBaseline(baseline: View, nodes: View[]) {
                         continue;
                     }
                 }
-                if (node.naturalChild && node.length === 0 || isLayoutBaselineAligned(node)) {
+                if (node.naturalChild && node.length === 0) {
                     node.anchor('baseline', baseline.documentId);
+                }
+                else if (isLayoutBaselineAligned(node)) {
+                    node.anchor(node.naturalElements.findIndex((item: T) => item.imageOrSvgElement && item.baseline) !== -1 ? 'bottom' : 'baseline', baseline.documentId);
                 }
             }
             else if (node.imageOrSvgElement && node.baseline) {
@@ -127,24 +131,26 @@ function adjustBaseline(baseline: View, nodes: View[]) {
         }
     }
     if (imageBaseline) {
-        baseline.anchor(imageBaseline.imageOrSvgElement ? 'baseline' : 'bottom', imageBaseline.documentId);
+        baseline.anchor(getBaselineAnchor(imageBaseline), imageBaseline.documentId);
     }
 }
 
-function isLayoutBaselineAligned(node: View) {
+function isLayoutBaselineAligned(node: T) {
+    const children = node.renderChildren;
     if (node.layoutHorizontal) {
-        const children = node.renderChildren;
-        return children.length > 0 && children.every(item => item.baseline && !item.baselineAltered && (!item.positionRelative || item.positionRelative && item.top === 0 && item.bottom === 0));
+        return children.length > 0 && children.every(item => item.baseline && !item.baselineAltered && (!item.positionRelative || item.top === 0 && item.bottom === 0));
     }
     else if (node.layoutVertical) {
-        const children = node.renderChildren;
         const firstChild = children[0];
         return !!firstChild && firstChild.baseline && (children.length === 1 || firstChild.textElement);
+    }
+    else if (node.layoutFrame && children.length === 1 && children[0].baseline) {
+        return true;
     }
     return false;
 }
 
-function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number) {
+function adjustAbsolutePaddingOffset(parent: T, direction: number, value: number) {
     if (value > 0) {
         if (parent.documentBody) {
             switch (direction) {
@@ -183,7 +189,7 @@ function adjustAbsolutePaddingOffset(parent: View, direction: number, value: num
     return value;
 }
 
-function adjustFloatingNegativeMargin(node: View, previous: View) {
+function adjustFloatingNegativeMargin(node: T, previous: T) {
     if (previous.float === 'left') {
         if (previous.marginRight < 0) {
             const right = Math.abs(previous.marginRight);
@@ -208,10 +214,10 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
     return false;
 }
 
-function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
+function constraintMinMax(node: T, dimension: string, horizontal: boolean) {
     if (!node.inputElement && !node.imageOrSvgElement) {
         const documentParent = node.documentParent;
-        const renderParent = <View> node.renderParent;
+        const renderParent = node.renderParent as T;
         function setAlignmentBlock() {
             if (renderParent.nodeGroup) {
                 renderParent.addAlign(NODE_ALIGNMENT.BLOCK);
@@ -275,7 +281,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
     }
 }
 
-function constraintPercentValue(node: View, dimension: string, horizontal: boolean, opposing: boolean) {
+function constraintPercentValue(node: T, dimension: string, horizontal: boolean, opposing: boolean) {
     const value = node.cssInitial(dimension, true);
     let unit: string | undefined;
     if (opposing) {
@@ -312,7 +318,7 @@ function constraintPercentValue(node: View, dimension: string, horizontal: boole
     return false;
 }
 
-function constraintPercentWidth(node: View, opposing: boolean) {
+function constraintPercentWidth(node: T, opposing: boolean) {
     if (!opposing && !node.documentParent.layoutElement && node.documentParent.hasPX('width', false)) {
         const value = node.cssInitial('width', true);
         if (isPercent(value) && value !== '100%') {
@@ -324,7 +330,7 @@ function constraintPercentWidth(node: View, opposing: boolean) {
     }
 }
 
-function constraintPercentHeight(node: View, opposing: boolean) {
+function constraintPercentHeight(node: T, opposing: boolean) {
     if (node.documentParent.hasPX('height', false)) {
         if (!opposing && !node.documentParent.layoutElement) {
             const value = node.cssInitial('height', true);
@@ -347,7 +353,7 @@ function constraintPercentHeight(node: View, opposing: boolean) {
     }
 }
 
-function isTargeted(parent: View, node: View) {
+function isTargeted(parent: T, node: T) {
     if (node.dataset.target && parent.element) {
         const element = document.getElementById(node.dataset.target);
         return element !== null && element !== parent.element;
@@ -378,7 +384,7 @@ function causesLineBreak(element: Element, sessionId: string) {
         return true;
     }
     else {
-        const node = getElementAsNode<View>(element, sessionId);
+        const node = getElementAsNode<T>(element, sessionId);
         if (node) {
             return !node.excluded && node.blockStatic;
         }
@@ -386,7 +392,7 @@ function causesLineBreak(element: Element, sessionId: string) {
     return false;
 }
 
-function setColumnHorizontal(seg: View[]) {
+function setColumnHorizontal(seg: T[]) {
     const length = seg.length;
     for (let i = 0; i < length; i++) {
         const item = seg[i];
@@ -405,7 +411,7 @@ function setColumnHorizontal(seg: View[]) {
     rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread_inside');
 }
 
-function setColumnVertical(partition: View[][], lastRow: boolean, previousRow?: View | string) {
+function setColumnVertical(partition: T[][], lastRow: boolean, previousRow?: T | string) {
     const rowStart = partition[0][0];
     const length = partition.length;
     for (let i = 0; i < length; i++) {
@@ -456,7 +462,7 @@ function setColumnVertical(partition: View[][], lastRow: boolean, previousRow?: 
     }
 }
 
-function setReadOnly(node: View) {
+function setReadOnly(node: T) {
     const element = <HTMLInputElement> node.element;
     if (element.readOnly) {
         node.android('focusable', 'false');
@@ -466,10 +472,10 @@ function setReadOnly(node: View) {
     }
 }
 
-const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
-const getRelativeVertical = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative || !item.pageFlow && item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
-const getRelativeVerticalAligned = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
-const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
+const isMultiline = (node: T) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
+const getRelativeVertical = (layout: squared.base.LayoutUI<T>) => layout.some(item => item.positionRelative || !item.pageFlow && item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
+const getRelativeVerticalAligned = (layout: squared.base.LayoutUI<T>) => layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
+const getMaxHeight = (node: T) => Math.max(node.actualHeight, node.lineHeight);
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
     public static setConstraintDimension<T extends View>(node: T) {
@@ -1126,28 +1132,44 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const percentHeight = node.percentHeight ? height : -1;
                 let scaleType = 'fitXY';
                 let imageSet: ImageSrcSet[] | undefined;
-                if (element.srcset) {
+                if (element.srcset || node.actualParent?.tagName === 'PICTURE') {
+                    function setDimension(value: number, image: ImageAsset | undefined) {
+                        width = value;
+                        node.css('width', formatPX(value), true);
+                        if (image && image.width > 0 && image.height > 0) {
+                            height = image.height * (width / image.width);
+                            node.css('height', formatPX(height), true);
+                        }
+                        else {
+                            node.android('adjustViewBounds', 'true');
+                        }
+                    }
                     imageSet = getSrcSet(element, this.localSettings.supported.imageFormat as string[]);
                     if (imageSet.length) {
-                        const actualWidth = imageSet[0].actualWidth;
+                        const image = imageSet[0];
+                        const actualWidth = image.actualWidth;
                         if (actualWidth) {
                             if (percentWidth === -1) {
-                                width = actualWidth;
-                                node.css('width', formatPX(width), true);
-                                const image = this.application.resourceHandler.getImage(element.src);
-                                if (image && image.width > 0 && image.height > 0) {
-                                    height = image.height * (width / image.width);
-                                    node.css('height', formatPX(height), true);
-                                }
-                                else {
-                                    node.android('adjustViewBounds', 'true');
-                                }
+                                setDimension(actualWidth, this.application.resourceHandler.getImage(element.src));
                             }
                             else {
-                                width = parent.box.width;
+                                width = node.bounds.width;
                                 node.android('adjustViewBounds', 'true');
+                                percentWidth = -1;
                             }
-                            percentWidth = -1;
+                        }
+                        else {
+                            const stored = this.application.resourceHandler.getImage(image.src);
+                            if (stored) {
+                                if (percentWidth === -1) {
+                                    setDimension(stored.width, stored);
+                                }
+                                else {
+                                    width = node.bounds.width;
+                                    node.android('adjustViewBounds', 'true');
+                                    percentWidth = -1;
+                                }
+                            }
                         }
                     }
                     else {
@@ -1202,7 +1224,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         node.mergeGravity('layout_gravity', 'bottom');
                     }
                 }
-                if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
+                if (!node.pageFlow && parent === absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
                     const application = <squared.base.ApplicationUI<T>> this.application;
                     const container = application.createNode();
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -3087,7 +3109,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     get afterInsertNode() {
-        return (node: View) => {
+        return (node: T) => {
             if (!this.userSettings.exclusionsDisabled) {
                 node.setExclusions();
             }

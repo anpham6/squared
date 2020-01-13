@@ -1747,6 +1747,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else if (this.hasHeight) {
                         result = this.actualHeight;
                     }
+                    else if (this.tagName === 'PICTURE') {
+                        result = Math.max(this.naturalElements.find(node => node.tagName === 'IMG')?.height || 0, this.bounds.height);
+                    }
                     else {
                         result = this.bounds.height;
                     }
