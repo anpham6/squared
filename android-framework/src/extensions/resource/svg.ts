@@ -671,9 +671,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     if (node.baseline) {
                         node.android('baselineAlignBottom', 'true');
                     }
-                    if (parentElement) {
-                        parentElement.removeChild(element);
-                    }
+                    parentElement?.removeChild(element);
                 }
             }
         }

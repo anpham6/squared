@@ -149,13 +149,19 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
+                let including = node;
                 switch (td.tagName) {
+                    case 'TD':
+                        if (!td.cssInitial('verticalAlign')) {
+                            td.css('verticalAlign', 'middle', true);
+                        }
+                        including = td.parent as T;
                     case 'TH': {
                         function setBorderStyle(attr: string) {
                             const cssStyle = attr + 'Style';
                             const cssColor = attr + 'Color';
                             const cssWidth = attr + 'Width';
-                            td.ascend({ including: node }).some((item: T) => {
+                            td.ascend({ including }).some((item: T) => {
                                 if (item.has(cssStyle)) {
                                     td.css(cssStyle, item.css(cssStyle));
                                     td.css(cssColor, item.css(cssColor));
@@ -181,12 +187,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         if (td.borderLeftWidth === 0) {
                             setBorderStyle('borderLeft');
                         }
-                    }
-                    case 'TD':
-                        if (!td.cssInitial('verticalAlign')) {
-                            td.css('verticalAlign', 'middle', true);
-                        }
                         break;
+                    }
                 }
                 const columnWidth = td.cssInitial('width');
                 const reevaluate = mapWidth[m] === undefined || mapWidth[m] === 'auto';
