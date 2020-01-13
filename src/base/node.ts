@@ -241,14 +241,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public ascend(options: AscendOptions = {}) {
-        const { condition, parent } = options;
+        const { condition, including, excluding } = options;
         let attr = options.attr;
         if (!isString(attr)) {
             attr = 'actualParent';
         }
         const result: T[] = [];
         let current = this[attr];
-        while (current && current.id !== 0) {
+        while (current && current !== excluding) {
             if (condition) {
                 if (condition(current)) {
                     result.push(current);
@@ -258,7 +258,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             else {
                 result.push(current);
             }
-            if (current === parent) {
+            if (current === including) {
                 break;
             }
             current = current[attr];

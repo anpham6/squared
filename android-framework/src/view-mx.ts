@@ -318,9 +318,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 const horizontal = orientation === STRING_ANDROID.HORIZONTAL;
                 if (renderParent.layoutConstraint) {
                     if (overwrite || !this.constraint[orientation]) {
-                        node.anchor(horizontal ? 'left' : 'top', 'parent', overwrite);
-                        node.anchor(horizontal ? 'right' : 'bottom', 'parent', overwrite);
-                        node.constraint[orientation] = true;
+                        if (horizontal) {
+                            node.anchor('left', 'parent', overwrite);
+                            node.anchor('right', 'parent', overwrite);
+                            node.constraint.horizontal = true;
+                        }
+                        else {
+                            node.anchor('top', 'parent', overwrite);
+                            node.anchor('bottom', 'parent', overwrite);
+                            node.constraint.vertical = true;
+                        }
                         if (style) {
                             node.anchorStyle(orientation, style, bias, overwrite);
                         }

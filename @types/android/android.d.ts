@@ -1,5 +1,5 @@
 import { CustomizationResult, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
-import { Constraint, LocalSettings, SupportAndroid, SpacerAttribute, ViewAttribute } from './node';
+import { Constraint, LocalSettings, SupportAndroid, SpacerAttribute, ViewAttribute, WrapperOptions } from './node';
 import { FileOutputOptions } from './resource';
 
 type View = base.View;
@@ -24,7 +24,7 @@ declare namespace base {
         addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposite?: boolean): void;
         addBarrier(nodes: T[], barrierDirection: string): string | undefined;
         evaluateAnchors(nodes: T[]): void;
-        createNodeWrapper(node: T, parent: T, children?: T[], controlName?: string, containerType?: number): T;
+        createNodeWrapper(node: T, parent: T, children?: T[], options?: WrapperOptions): T;
     }
 
     class Controller<T extends View> implements Controller<T> {

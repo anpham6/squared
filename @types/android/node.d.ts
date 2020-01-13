@@ -1,4 +1,4 @@
-import { Support } from '../base/node';
+import { ExcludeOptions, Support } from '../base/node';
 
 export interface LocalSettings {
     supportRTL: boolean;
@@ -26,6 +26,11 @@ export interface SpacerAttribute extends ViewAttribute {
     columnSpan?: number;
     row?: number;
     rowSpan?: number;
+}
+
+export interface WrapperOptions extends ExcludeOptions {
+    controlName?: string;
+    containerType?: number;
 }
 
 export interface SupportAndroid extends Support {

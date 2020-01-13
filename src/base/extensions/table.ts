@@ -155,7 +155,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             const cssStyle = attr + 'Style';
                             const cssColor = attr + 'Color';
                             const cssWidth = attr + 'Width';
-                            td.ascend({ parent: node }).some((item: T) => {
+                            td.ascend({ including: node }).some((item: T) => {
                                 if (item.has(cssStyle)) {
                                     td.css(cssStyle, item.css(cssStyle));
                                     td.css(cssColor, item.css(cssColor));

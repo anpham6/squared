@@ -127,7 +127,8 @@ export interface SiblingOptions {
 
 export interface AscendOptions {
     condition?: (item: Node) => boolean;
-    parent?: Node;
+    including?: Node;
+    excluding?: Node;
     attr?: string;
 }
 

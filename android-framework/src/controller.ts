@@ -1,6 +1,6 @@
 import { FileAsset, LayoutType, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
 import { ControllerSettingsAndroid } from '../../@types/android/application';
-import { LocalSettings, SpacerAttribute } from '../../@types/android/node';
+import { LocalSettings, SpacerAttribute, WrapperOptions } from '../../@types/android/node';
 
 import Resource from './resource';
 import View from './view';
@@ -467,9 +467,8 @@ function setReadOnly(node: View) {
 }
 
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
-
 const getRelativeVertical = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative || !item.pageFlow && item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
-
+const getRelativeVerticalAligned = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
@@ -666,7 +665,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.SINGLE | NODE_ALIGNMENT.BLOCK);
                     }
                     else if (child.baseline && (child.textElement || child.inputElement)) {
-                        layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.VERTICAL);
+                        layout.setContainerType(getRelativeVerticalAligned(layout), NODE_ALIGNMENT.VERTICAL);
                     }
                     else {
                         layout.setContainerType(CONTAINER_NODE.FRAME, NODE_ALIGNMENT.SINGLE);
@@ -678,7 +677,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         else if (Resource.hasLineBreak(node, true)) {
-            layout.setContainerType(layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
+            layout.setContainerType(getRelativeVerticalAligned(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (this.checkConstraintFloat(layout)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
@@ -792,7 +791,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 layout.renderType |= NODE_ALIGNMENT.FLOAT | NODE_ALIGNMENT.HORIZONTAL;
             }
             else {
-                layout.setContainerType(layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.VERTICAL);
+                layout.setContainerType(getRelativeVerticalAligned(layout), NODE_ALIGNMENT.VERTICAL);
             }
         }
         else if (floated.size && cleared.size) {
@@ -805,7 +804,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (!layout.parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             layout.node = this.createLayoutNodeGroup(layout);
-            layout.setContainerType(layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.VERTICAL);
+            layout.setContainerType(getRelativeVerticalAligned(layout), NODE_ALIGNMENT.VERTICAL);
         }
         return layout;
     }
@@ -1027,13 +1026,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             item.anchorParent(STRING_ANDROID.HORIZONTAL);
                             item.anchorParent(STRING_ANDROID.VERTICAL);
                             if (item.rightAligned) {
-                                item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', 1);
+                                item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', 1, false);
                             }
                             else if (!item.centerAligned) {
-                                item.anchorStyle(STRING_ANDROID.HORIZONTAL);
+                                item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', 0, false);
                             }
                             if (!item.autoMargin.topBottom) {
-                                item.anchorStyle(STRING_ANDROID.VERTICAL);
+                                item.anchorStyle(STRING_ANDROID.VERTICAL, 'packed', 0, false);
                             }
                             Controller.setConstraintDimension(item);
                         }
@@ -1209,7 +1208,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
                     container.positionAuto = false;
-                    container.exclude(NODE_RESOURCE.ALL, NODE_PROCEDURE.ALL);
+                    container.exclude({
+                        resource: NODE_RESOURCE.ALL,
+                        procedure: NODE_PROCEDURE.ALL
+                    });
                     container.cssApply({
                         position: node.css('position'),
                         zIndex: node.zIndex.toString()
@@ -1903,7 +1905,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return group;
     }
 
-    public createNodeWrapper(node: T, parent: T, children?: T[], controlName?: string, containerType?: number) {
+    public createNodeWrapper(node: T, parent: T, children?: T[], options: WrapperOptions = {}) {
         const container = this.application.createNode(undefined, true, parent, children);
         container.addAlign(NODE_ALIGNMENT.WRAPPER);
         if (node.documentRoot) {
@@ -1911,10 +1913,21 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.documentRoot = false;
         }
         container.inherit(node, 'base', 'alignment');
+        const { controlName, containerType } = options;
+        let { resource, procedure, section } = options;
+        if (resource === undefined) {
+            resource = NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET;
+        }
+        if (procedure === undefined) {
+            procedure = NODE_PROCEDURE.CUSTOMIZATION;
+        }
+        if (section === undefined) {
+            section = APP_SECTION.ALL;
+        }
         if (controlName) {
             container.setControlType(controlName, containerType);
         }
-        container.exclude(NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET, NODE_PROCEDURE.CUSTOMIZATION, APP_SECTION.ALL);
+        container.exclude({ resource, procedure, section });
         parent.appendTry(node, container);
         node.parent = container;
         const outerWrapper = node.outerWrapper;
@@ -2008,7 +2021,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         else if (parent.floatContainer) {
                             const { containerType, alignmentType } = this.containerTypeVerticalMargin;
-                            const container = node.ascend({ condition: (item: T) => item.of(containerType, alignmentType), parent, attr: 'renderParent' });
+                            const container = node.ascend({
+                                condition: (item: T) => item.of(containerType, alignmentType),
+                                including: parent,
+                                attr: 'renderParent'
+                            });
                             if (container.length) {
                                 const box = node.box;
                                 let leftOffset = 0;

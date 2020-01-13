@@ -36,7 +36,10 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public processNode(node: T, parent: T) {
         const outside = node.filter((item: T) => outsideX(item, node)) as T[];
-        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), CONTAINER_NODE.CONSTRAINT);
+        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, {
+            controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
+            containerType: CONTAINER_NODE.CONSTRAINT
+        });
         const { marginTop, marginBottom } = node;
         if (marginTop > 0) {
             container.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
@@ -140,7 +143,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     public postBaseLayout(node: T) {
         const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData');
         if (mainData) {
-            const options = { condition: (item: T) => item !== node, parent: node, attr: 'outerWrapper' };
+            const options = { excluding: node, attr: 'outerWrapper' };
             let firstChild = mainData.firstChild;
             if (firstChild) {
                 firstChild = <T> firstChild.ascend(options).pop() || firstChild;
