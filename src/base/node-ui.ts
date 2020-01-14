@@ -745,7 +745,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                     }
-                    else if (!this.floating && this.multiline && siblings.some(item => item.float === 'right' && aboveRange(this.textBounds?.top || Number.NEGATIVE_INFINITY, item.bounds.bottom))) {
+                    else if (!this.floating && siblings.every(item => item.float === 'right' && aboveRange(this.textBounds?.top || Number.NEGATIVE_INFINITY, item.bounds.bottom))) {
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                     else if (horizontal !== undefined) {
@@ -1121,9 +1121,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public cssApply(values: StringMap, cache = false) {
         Object.assign(this._styleMap, values);
         if (cache) {
-            for (const attr in values) {
-                this.unsetCache(attr);
-            }
+            this.unsetCache(...Object.keys(values));
         }
         return this;
     }

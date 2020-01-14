@@ -30,7 +30,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
 
     public condition(node: T) {
         const visibleStyle = node.visibleStyle;
-        return isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle) || isParentVisible(node, visibleStyle);
+        return isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle);
     }
 
     public processNode(node: T, parent: T) {
@@ -85,63 +85,61 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             node.setCacheValue('backgroundColor', '');
             visibleStyle.backgroundColor = false;
         }
-        if (isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle) || parentVisible) {
-            const backgroundImage = node.backgroundImage;
-            if (backgroundImage !== '') {
-                if (container) {
-                    parentAs = container;
-                    parentAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                    parentAs.addAlign(NODE_ALIGNMENT.SINGLE);
-                    parentAs.render(targetParent);
-                    this.application.addLayoutTemplate(
-                        actualParent,
-                        container,
-                        <NodeXmlTemplate<T>> {
-                            type: NODE_TEMPLATE.XML,
-                            node: container,
-                            controlName: container.controlName
-                        }
-                    );
-                    container = controller.createNodeWrapper(actualNode, parentAs);
-                    container.documentRoot = false;
-                    parentAs.documentRoot = true;
-                }
-                else {
-                    container = controller.createNodeWrapper(actualNode, actualParent);
-                }
-                container.setLayoutWidth('match_parent');
-                container.unsafe('excludeResource', NODE_RESOURCE.BOX_SPACING);
-                const height = actualParent.cssInitial('height');
-                const minHeight = actualParent.cssInitial('minHeight');
-                let backgroundSize: string | undefined;
-                if (height === '' && minHeight === '') {
-                    container.setLayoutHeight(!parentVisible ? 'match_parent' : 'wrap_content');
-                }
-                else {
-                    if (height !== '100%' && minHeight !== '100%') {
-                        const offsetHeight = actualParent.toElementInt('offsetHeight');
-                        if (offsetHeight < window.innerHeight) {
-                            backgroundSize = `auto ${offsetHeight}px`;
-                        }
+        const backgroundImage = node.backgroundImage;
+        if (backgroundImage !== '') {
+            if (container) {
+                parentAs = container;
+                parentAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
+                parentAs.addAlign(NODE_ALIGNMENT.SINGLE);
+                parentAs.render(targetParent);
+                this.application.addLayoutTemplate(
+                    actualParent,
+                    container,
+                    <NodeXmlTemplate<T>> {
+                        type: NODE_TEMPLATE.XML,
+                        node: container,
+                        controlName: container.controlName
                     }
-                    container.setLayoutHeight('match_parent');
-                }
-                container.cssApply({
-                    backgroundImage,
-                    backgroundSize: backgroundSize || node.css('backgroundSize'),
-                    backgroundRepeat: node.css('backgroundRepeat'),
-                    backgroundPositionX: node.css('backgroundPositionX'),
-                    backgroundPositionY: node.css('backgroundPositionY'),
-                    backgroundClip: node.css('backgroundClip'),
-                    border: '0px none solid',
-                    borderRadius: '0px'
-                });
-                container.setCacheValue('backgroundImage', backgroundImage);
-                container.unsetCache('visibleStyle');
-                node.css('backgroundImage', 'none');
-                node.setCacheValue('backgroundImage', '');
-                visibleStyle.backgroundImage = false;
+                );
+                container = controller.createNodeWrapper(actualNode, parentAs);
+                container.documentRoot = false;
+                parentAs.documentRoot = true;
             }
+            else {
+                container = controller.createNodeWrapper(actualNode, actualParent);
+            }
+            container.setLayoutWidth('match_parent');
+            container.unsafe('excludeResource', NODE_RESOURCE.BOX_SPACING);
+            const height = actualParent.cssInitial('height');
+            const minHeight = actualParent.cssInitial('minHeight');
+            let backgroundSize: string | undefined;
+            if (height === '' && minHeight === '') {
+                container.setLayoutHeight(!parentVisible ? 'match_parent' : 'wrap_content');
+            }
+            else {
+                if (height !== '100%' && minHeight !== '100%') {
+                    const offsetHeight = actualParent.toElementInt('offsetHeight');
+                    if (offsetHeight < window.innerHeight) {
+                        backgroundSize = `auto ${offsetHeight}px`;
+                    }
+                }
+                container.setLayoutHeight('match_parent');
+            }
+            container.cssApply({
+                backgroundImage,
+                backgroundSize: backgroundSize || node.css('backgroundSize'),
+                backgroundRepeat: node.css('backgroundRepeat'),
+                backgroundPositionX: node.css('backgroundPositionX'),
+                backgroundPositionY: node.css('backgroundPositionY'),
+                backgroundClip: node.css('backgroundClip'),
+                border: '0px none solid',
+                borderRadius: '0px'
+            });
+            container.setCacheValue('backgroundImage', backgroundImage);
+            container.unsetCache('visibleStyle');
+            node.css('backgroundImage', 'none');
+            node.setCacheValue('backgroundImage', '');
+            visibleStyle.backgroundImage = false;
         }
         visibleStyle.background = visibleStyle.borderWidth || visibleStyle.backgroundImage || visibleStyle.backgroundColor;
         if (container) {

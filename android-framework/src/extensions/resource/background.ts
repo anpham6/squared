@@ -568,7 +568,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         const color = getColorValue(backgroundColor, false);
                         if (color !== '') {
                             if (node.documentBody) {
-                                setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
+                                if (!themeBackground) {
+                                    setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
+                                    themeBackground = true;
+                                }
+                                else {
+                                    node.android('background', color, false);
+                                }
                             }
                             else {
                                 const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');

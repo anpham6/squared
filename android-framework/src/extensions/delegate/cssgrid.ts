@@ -29,7 +29,7 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
             node.setLayoutWidth('wrap_content');
         }
         else {
-            container.setLayoutWidth('wrap_content');
+            container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
         }
         if (isAligned(node)) {
             node.setLayoutHeight('wrap_content');
@@ -41,7 +41,7 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
         node.setCacheValue('backgroundColor', '');
         node.css('backgroundImage', 'none');
         node.setCacheValue('backgroundImage', '');
-        node.resetBox(BOX_STANDARD.PADDING, container);
+        node.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING, container);
         const visibleStyle = node.visibleStyle;
         visibleStyle.background = false;
         visibleStyle.backgroundImage = false;

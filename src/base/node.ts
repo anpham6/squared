@@ -293,32 +293,32 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public withinX(rect: BoxRectDimension, dimension: BoxType = 'linear') {
         if (this.pageFlow || rect.width > 0) {
-            const self: BoxRectDimension = this[dimension];
-            return aboveRange(self.left, rect.left) && belowRange(self.right, rect.right);
+            const bounds = this[dimension];
+            return aboveRange(bounds.left, rect.left) && belowRange(bounds.right, rect.right);
         }
         return true;
     }
 
     public withinY(rect: BoxRectDimension, dimension: BoxType = 'linear') {
         if (this.pageFlow || rect.height > 0) {
-            const self: BoxRectDimension = this[dimension];
-            return aboveRange(self.top, rect.top) && belowRange(self.bottom, rect.bottom);
+            const bounds = this[dimension];
+            return aboveRange(bounds.top, rect.top) && belowRange(bounds.bottom, rect.bottom);
         }
         return true;
     }
 
     public outsideX(rect: BoxRectDimension, dimension: BoxType = 'linear') {
         if (this.pageFlow || rect.width > 0) {
-            const self: BoxRectDimension = this[dimension];
-            return self.left < Math.floor(rect.left) || Math.floor(self.right) > rect.right;
+            const bounds = this[dimension];
+            return bounds.left < Math.floor(rect.left) || Math.floor(bounds.right) > rect.right;
         }
         return false;
     }
 
     public outsideY(rect: BoxRectDimension, dimension: BoxType = 'linear') {
         if (this.pageFlow || rect.height > 0) {
-            const self: BoxRectDimension = this[dimension];
-            return self.top < Math.floor(rect.top) || Math.floor(self.bottom) > rect.bottom;
+            const bounds = this[dimension];
+            return bounds.top < Math.floor(rect.top) || Math.floor(bounds.bottom) > rect.bottom;
         }
         return false;
     }
@@ -2234,7 +2234,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get rightAligned() {
         let result = this._cached.rightAligned;
         if (result === undefined) {
-            result = this.float === 'right' || this.autoMargin.left || !this.pageFlow && this.hasPX('right') || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'right';
+            const actualParent = this.actualParent;
+            if (actualParent && actualParent.flexElement) {
+                result = /right|end$/.test(actualParent.css('justifyContent'));
+            }
+            else {
+                result = this.float === 'right' || this.autoMargin.left || !this.pageFlow && this.hasPX('right') || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'right';
+            }
             this._cached.rightAligned = result;
         }
         return result;
@@ -2385,7 +2391,36 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get textBounds() {
         let result = this._textBounds;
         if (this.naturalChild && result === undefined) {
-            result = actualTextRangeRect(<Element> this._element, this.sessionId);
+            if (this.textElement) {
+                result = actualTextRangeRect(<Element> this._element, this.sessionId);
+            }
+            else if (this.length) {
+                const nodes = this.cascade(node => node.length === 0);
+                if (nodes.length && nodes.every(item => item.textElement)) {
+                    let top = Number.POSITIVE_INFINITY;
+                    let right = Number.NEGATIVE_INFINITY;
+                    let left = Number.POSITIVE_INFINITY;
+                    let bottom = Number.NEGATIVE_INFINITY;
+                    let numberOfLines = 0;
+                    for (const node of nodes) {
+                        const rect = actualTextRangeRect(<Element> node.element, node.sessionId);
+                        top = Math.min(rect.top, top);
+                        right = Math.max(rect.right, right);
+                        left = Math.min(rect.left, left);
+                        bottom = Math.max(rect.bottom, bottom);
+                        numberOfLines += rect.numberOfLines || 0;
+                    }
+                    result = {
+                        top,
+                        right,
+                        left,
+                        bottom,
+                        width: right - left,
+                        height: bottom - top,
+                        numberOfLines
+                    };
+                }
+            }
             this._textBounds = result;
         }
         return result;

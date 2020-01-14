@@ -665,8 +665,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 layoutWidth = 'match_parent';
                             }
                             else {
-                                this.app('layout_constraintWidth_percent', truncate((parseFloat(width) / 100) + this.contentBoxWidthPercent, this.localSettings.floatPrecision));
-                                layoutWidth = '0px';
+                                const percent = Math.min((parseFloat(width) / 100) + this.contentBoxWidthPercent, 1);
+                                this.app('layout_constraintWidth_percent', truncate(percent, this.localSettings.floatPrecision));
+                                layoutWidth = percent === 1 ? 'match_parent' : '0px';
                             }
                             adjustViewBounds = true;
                         }
@@ -805,7 +806,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             else if (!documentParent.layoutElement) {
                                 checkParentWidth();
                             }
-                            else if (this.onlyChild) {
+                            else if (this.gridElement && this.onlyChild) {
                                 layoutWidth = 'match_parent';
                             }
                         }

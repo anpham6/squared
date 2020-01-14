@@ -18,6 +18,7 @@ type PreloadImage = HTMLImageElement | string;
 
 const ASSETS = Resource.ASSETS;
 const REGEX_MEDIATEXT = /all|screen/;
+const REGEX_BACKGROUND = /^background/;
 const REGEX_DATAURI = new RegExp(`(url\\("(${STRING.DATAURI})"\\)),?\\s*`, 'g');
 let REGEX_IMPORTANT!: RegExp;
 let REGEX_FONT_FACE!: RegExp;
@@ -627,11 +628,15 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 const revisedSpecificity = specificity + (important[attr] ? 1000 : 0);
                                 if (specificityData[attr] === undefined || revisedSpecificity >= specificityData[attr]) {
                                     const value = styleMap[attr];
-                                    if (value === 'initial' && cssStyle.background && attr.startsWith('background')) {
-                                        continue;
+                                    if (value === 'initial' && REGEX_BACKGROUND.test(attr)) {
+                                        if (cssStyle.background === 'none') {
+                                            delete styleData[attr];
+                                        }
+                                    }
+                                    else {
+                                        styleData[attr] = value;
                                     }
                                     specificityData[attr] = revisedSpecificity;
-                                    styleData[attr] = value;
                                 }
                             }
                         }

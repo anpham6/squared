@@ -523,15 +523,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public postBaseLayout(node: T) {
         const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
-            const { column, alignContent, justifyContent } = mainData;
-            let normal = true;
+            const { alignContent, justifyContent } = mainData;
             if ((node.blockStatic || node.hasWidth) && justifyContent !== 'normal') {
-                normal = setContentSpacing(node, mainData, justifyContent, true, 'width', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT);
+                setContentSpacing(node, mainData, justifyContent, true, 'width', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT);
             }
             if (node.hasHeight && alignContent !== 'normal') {
                 setContentSpacing(node, mainData, alignContent, false, 'height', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM);
                 const rowHeight = mainData.rowHeight;
-                if (rowHeight.every(value => value > 0 && value !== Number.POSITIVE_INFINITY)) {
+                if (rowHeight.length > 1 && rowHeight.every(value => value > 0 && value !== Number.POSITIVE_INFINITY)) {
                     let gridHeight = 0;
                     const actualHeight = node.actualHeight;
                     const { row, rowData } = mainData;
@@ -562,20 +561,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
             }
-            if (!column.fixedWidth) {
-                const gap =  column.gap * (column.length - 1);
-                if (normal && !column.unit.includes('auto')) {
-                    if (gap > 0) {
-                        if (!(node.renderParent as T).hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
-                            node.cssPX('minWidth', gap);
-                            node.cssPX('width', gap, false);
-                        }
-                    }
-                }
-                if (column.flexible) {
-                    node.css('width', formatPX(node.actualWidth));
-                }
-            }
         }
     }
 
@@ -586,6 +571,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const { children, column } = mainData;
             const unit = column.unit;
             const lastChild = children[children.length - 1];
+            if (!column.fixedWidth && column.flexible && node.flexibleWidth && node.ascend({ condition: item => item.hasWidth }).length === 0) {
+                node.css('width', formatPX(node.actualWidth));
+            }
             if (unit.length && unit.every(value => isPercent(value))) {
                 const columnCount = column.length;
                 const percent = unit.reduce((a, b) => a + parseFloat(b), 0) + (column.gap * columnCount * 100) / node.actualWidth;

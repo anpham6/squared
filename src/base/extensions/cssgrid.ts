@@ -87,15 +87,19 @@ function getColumnTotal(rows: (NodeUI[] | undefined)[]) {
 
 function setFlexibleDimension(dimension: number, gap: number, count: number, unit: string[], max: number[]) {
     let total = 0;
+    let percent = 1;
     const length = unit.length;
     for (let i = 0; i < length; i++) {
         const value = unit[i];
         if (value.endsWith('fr')) {
             total += parseFloat(value);
         }
+        else if (isPercent(value)) {
+            percent -= parseFloat(value) / 100;
+        }
     }
     if (total > 0) {
-        const ratio = (dimension - ((count - 1) * gap) - max.reduce((a, b) => a + Math.max(0, b), 0)) / total;
+        const ratio = ((dimension * percent) - ((count - 1) * gap) - max.reduce((a, b) => a + Math.max(0, b), 0)) / total;
         if (ratio > 0) {
             for (let i = 0; i < length; i++) {
                 const value = unit[i];
@@ -628,13 +632,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
             data.flexible = percent < 1 || fr > 0;
             if (horizontal) {
-                if (node.hasPX('width')) {
+                if (node.hasPX('width', false)) {
                     column.fixedWidth = true;
                     column.flexible = false;
                 }
             }
             else {
-                if (node.hasPX('height')) {
+                if (node.hasPX('height', false)) {
                     row.fixedWidth = true;
                     row.flexible = false;
                 }

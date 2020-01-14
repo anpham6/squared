@@ -156,43 +156,53 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                let including = node;
+                function setBorderStyle(attr: string, including: T) {
+                    const cssStyle = attr + 'Style';
+                    td.ascend({ including }).some((item: T) => {
+                        if (item.has(cssStyle)) {
+                            const cssColor = attr + 'Color';
+                            const cssWidth = attr + 'Width';
+                            td.css(cssStyle, item.css(cssStyle));
+                            td.css(cssColor, item.css(cssColor));
+                            td.css(cssWidth, item.css(cssWidth), true);
+                            td.css('border', 'inherit');
+                            return true;
+                        }
+                        return false;
+                    });
+                }
                 switch (td.tagName) {
-                    case 'TD':
+                    case 'TD': {
+                        const including = td.parent as T;
                         if (!td.cssInitial('verticalAlign')) {
                             td.css('verticalAlign', 'middle', true);
                         }
-                        including = td.parent as T;
-                    case 'TH': {
-                        function setBorderStyle(attr: string) {
-                            const cssStyle = attr + 'Style';
-                            td.ascend({ including }).some((item: T) => {
-                                if (item.has(cssStyle)) {
-                                    const cssColor = attr + 'Color';
-                                    const cssWidth = attr + 'Width';
-                                    td.css(cssStyle, item.css(cssStyle));
-                                    td.css(cssColor, item.css(cssColor));
-                                    td.css(cssWidth, item.css(cssWidth), true);
-                                    td.css('border', 'inherit');
-                                    return true;
-                                }
-                                return false;
-                            });
-                        }
-                        if (!td.cssInitial('textAlign')) {
-                            td.css('textAlign', td.css('textAlign'));
-                        }
                         if (td.borderTopWidth === 0) {
-                            setBorderStyle('borderTop');
+                            setBorderStyle('borderTop', including);
                         }
                         if (td.borderRightWidth === 0) {
-                            setBorderStyle('borderRight');
+                            setBorderStyle('borderRight', including);
                         }
                         if (td.borderBottomWidth === 0) {
-                            setBorderStyle('borderBottom');
+                            setBorderStyle('borderBottom', including);
                         }
                         if (td.borderLeftWidth === 0) {
-                            setBorderStyle('borderLeft');
+                            setBorderStyle('borderLeft', including);
+                        }
+                        break;
+                    }
+                    case 'TH': {
+                        if (!td.cssInitial('textAlign')) {
+                            td.css('textAlign', 'center');
+                        }
+                        if (td.borderTopWidth === 0) {
+                            setBorderStyle('borderTop', node);
+                        }
+                        if (td.borderBottomWidth === 0) {
+                            setBorderStyle('borderBottom', node);
+                        }
+                        if (td.borderLeftWidth === 0) {
+                            setBorderStyle('borderLeft', node);
                         }
                         break;
                     }
@@ -483,7 +493,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                     borderTopColor,
                                     borderTopStyle,
                                     borderTopWidth
-                                });
+                                }, true);
                             }
                             else {
                                 hideTop = true;
@@ -506,7 +516,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                     borderBottomColor,
                                     borderBottomStyle,
                                     borderBottomWidth
-                                });
+                                }, true);
                             }
                             else {
                                 hideBottom = true;
@@ -518,7 +528,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                     borderLeftColor,
                                     borderLeftStyle,
                                     borderLeftWidth
-                                });
+                                }, true);
                             }
                             else {
                                 hideLeft = true;
@@ -541,7 +551,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                     borderRightColor,
                                     borderRightStyle,
                                     borderRightWidth
-                                });
+                                }, true);
                             }
                             else {
                                 hideRight = true;
