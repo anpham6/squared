@@ -1324,7 +1324,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'EMBED':
                     const size = getNamedItem(element, attr);
                     if (size !== '') {
-                        value = this.parseUnit(size, attr);
+                        value = isNumber(size) ? parseFloat(size) : this.parseUnit(size, attr);
                         if (value > 0) {
                             this.css(attr, isPercent(size) ? size : size + 'px');
                         }

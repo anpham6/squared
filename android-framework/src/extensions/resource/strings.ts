@@ -163,26 +163,24 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
     }
 
     public createOptionArray(element: HTMLSelectElement, controlId: string) {
-        const stringArray = Resource.getOptionArray(element);
+        const [stringArray, numberArray] = Resource.getOptionArray(element);
+        const numberResourceValue = this.options.numberResourceValue;
         let result: string[] | undefined;
-        if (!this.options.numberResourceValue && stringArray[1]) {
-            result = stringArray[1];
+        if (!numberResourceValue && numberArray) {
+            result = numberArray;
         }
         else {
-            const resourceArray = stringArray[0] || stringArray[1];
+            const resourceArray = stringArray || numberArray;
             if (resourceArray) {
                 result = [];
                 for (let value of resourceArray) {
-                    value = Resource.addString(replaceCharacterData(value), '', this.options.numberResourceValue);
+                    value = Resource.addString(replaceCharacterData(value), '', numberResourceValue);
                     if (value !== '') {
                         result.push('@string/' + value);
                     }
                 }
             }
         }
-        if (result?.length) {
-            return Resource.insertStoredAsset('arrays', controlId + '_array', result);
-        }
-        return '';
+        return result?.length ? Resource.insertStoredAsset('arrays', controlId + '_array', result) : '';
     }
 }

@@ -45,13 +45,12 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         const mainData = Table.createDataAttribute(node);
-        const thead: T[] = [];
         const tbody: T[] = [];
-        const tfoot: T[] = [];
         let table: T[] = [];
-        function inheritStyles(section: T[]) {
-            if (section.length) {
-                const parent = section[0];
+        let tfoot: T | undefined;
+        let thead: T | undefined;
+        function inheritStyles(parent: T | undefined) {
+            if (parent) {
                 for (const item of parent.cascade() as T[]) {
                     switch (item.tagName) {
                         case 'TH':
@@ -62,21 +61,29 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 table = table.concat(parent.children as T[]);
-                for (const item of section) {
-                    item.hide();
-                }
+                parent.hide();
             }
         }
         node.each((item: T) => {
             switch (item.tagName) {
                 case 'THEAD':
-                    thead.push(item);
+                    if (thead === undefined) {
+                        thead = item;
+                    }
+                    else {
+                        item.hide();
+                    }
                     break;
                 case 'TBODY':
                     tbody.push(item);
                     break;
                 case 'TFOOT':
-                    tfoot.push(item);
+                    if (tfoot === undefined) {
+                        tfoot = item;
+                    }
+                    else {
+                        item.hide();
+                    }
                     break;
             }
         });
@@ -159,10 +166,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     case 'TH': {
                         function setBorderStyle(attr: string) {
                             const cssStyle = attr + 'Style';
-                            const cssColor = attr + 'Color';
-                            const cssWidth = attr + 'Width';
                             td.ascend({ including }).some((item: T) => {
                                 if (item.has(cssStyle)) {
+                                    const cssColor = attr + 'Color';
+                                    const cssWidth = attr + 'Width';
                                     td.css(cssStyle, item.css(cssStyle));
                                     td.css(cssColor, item.css(cssColor));
                                     td.css(cssWidth, item.css(cssWidth), true);

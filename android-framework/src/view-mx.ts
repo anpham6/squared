@@ -1012,7 +1012,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (this.floating) {
                             node.mergeGravity('layout_gravity', this.float);
                         }
-                        else if (!setAutoMargin(node, autoMargin) && textAlign !== '' && this.hasWidth && !this.blockStatic && this.display !== 'table') {
+                        else if (!setAutoMargin(node, autoMargin) && textAlign !== '' && this.hasWidth && !this.blockStatic && !this.inputElement && this.display !== 'table') {
                             node.mergeGravity('layout_gravity', textAlign, false);
                         }
                     }

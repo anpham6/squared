@@ -151,24 +151,29 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 fontFamily.replace(REGEX_DOUBLEQUOTE, '').split(XML.SEPARATOR).some((value, index, array) => {
                     value = trimString(value, "'").toLowerCase();
                     let fontName = value;
-                    let customFont = false;
+                    let actualFontWeight = '';
                     if (!disableFontAlias && FONTREPLACE_ANDROID[fontName]) {
                         fontName = this.options.systemDefaultFont;
                     }
                     if (targetAPI >= FONT_ANDROID[fontName] || !disableFontAlias && targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontName]]) {
                         fontFamily = fontName;
-                        customFont = true;
                     }
                     else if (fontStyle && fontWeight) {
-                        let createFont = true;
-                        if (resource.getFont(value, fontStyle, fontWeight) === undefined) {
-                            if (resource.getFont(value, fontStyle)) {
-                                createFont = false;
+                        let createFont = false;
+                        if (resource.getFont(value, fontStyle, fontWeight)) {
+                            createFont = true;
+                        }
+                        else {
+                            const font = resource.getFont(value, fontStyle);
+                            if (font) {
+                                actualFontWeight = fontWeight;
+                                fontWeight = font.fontWeight.toString();
+                                createFont = true;
                             }
                             else if (index < array.length - 1) {
                                 return false;
                             }
-                            else if (index > 0) {
+                            else {
                                 value = trimString(array[0], "'").toLowerCase();
                                 fontName = value;
                             }
@@ -180,21 +185,23 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             fonts.set(fontName, font);
                         }
                         fontFamily = '@font/' + fontName;
-                        customFont = true;
                     }
-                    if (customFont) {
-                        if (fontStyle === 'normal') {
-                            fontStyle = '';
-                        }
-                        if (fontWeight === '400' || node.api < BUILD_ANDROID.OREO) {
-                            fontWeight = '';
-                        }
-                        else if (parseInt(fontWeight) > 500) {
-                            fontStyle += (fontStyle ? '|' : '') + 'bold';
-                        }
-                        return true;
+                    else {
+                        return false;
                     }
-                    return false;
+                    if (fontStyle === 'normal') {
+                        fontStyle = '';
+                    }
+                    if (actualFontWeight !== '') {
+                        fontWeight = actualFontWeight;
+                    }
+                    else if (fontWeight === '400' || node.api < BUILD_ANDROID.OREO) {
+                        fontWeight = '';
+                    }
+                    if (parseInt(fontWeight) > 500) {
+                        fontStyle += (fontStyle ? '|' : '') + 'bold';
+                    }
+                    return true;
                 });
                 const fontData = {
                     fontFamily,

@@ -304,8 +304,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return '';
     }
 
-    public static getOptionArray(element: HTMLSelectElement, showDisabled = false) {
-        const stringArray: string[] = [];
+    public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled = false) {
+        let result: string[] = [];
         let numberArray = true;
         const children = element.children;
         const length = children.length;
@@ -314,15 +314,27 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             if (!showDisabled && item.disabled) {
                 continue;
             }
-            const value = item.text.trim() || item.value.trim();
-            if (value !== '') {
-                if (numberArray && !isNumber(value)) {
+            if (item.tagName === 'OPTION') {
+                const value = item.text.trim() || item.value.trim();
+                if (value !== '') {
+                    if (numberArray && !isNumber(value)) {
+                        numberArray = false;
+                    }
+                    result.push(value);
+                }
+            }
+            else if (item.tagName === 'OPTGROUP') {
+                const [groupStringArray, groupNumberArray] = this.getOptionArray(item, showDisabled);
+                if (groupStringArray) {
+                    result = result.concat(groupStringArray);
                     numberArray = false;
                 }
-                stringArray.push(value);
+                else if (groupNumberArray) {
+                    result = result.concat(groupNumberArray);
+                }
             }
         }
-        return numberArray ? [undefined, stringArray] : [stringArray];
+        return numberArray ? [undefined, result] : [result];
     }
 
     public static isBackgroundVisible(object: BoxStyle | undefined) {
@@ -734,6 +746,11 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         case 'submit':
                             if (value === '' && !node.visibleStyle.backgroundImage) {
                                 value = 'Submit';
+                            }
+                            break;
+                        case 'reset':
+                            if (value === '' && !node.visibleStyle.backgroundImage) {
+                                value = 'Reset';
                             }
                             break;
                         case 'time':

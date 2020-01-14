@@ -358,11 +358,6 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     if (nextSiblings.length) {
                         let above = previousSiblings.pop() as T;
                         let below = nextSiblings.pop() as T;
-                        const inline = above.inlineStatic && below.inlineStatic;
-                        if (inline && previousSiblings.length === 0) {
-                            processed.add(node.id);
-                            continue;
-                        }
                         let lineHeight = 0;
                         let aboveLineBreak: T | undefined;
                         function getMarginOffset() {
@@ -375,28 +370,33 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                             return top - above.linear.bottom - lineHeight;
                         }
-                        if (!above.multiline && above.has('lineHeight')) {
-                            const aboveOffset = Math.floor((above.lineHeight - above.bounds.height) / 2);
-                            if (aboveOffset > 0) {
-                                lineHeight += aboveOffset;
+                        if (above.rendered && below.rendered) {
+                            const inline = above.inlineStatic && below.inlineStatic;
+                            if (inline && previousSiblings.length === 0) {
+                                processed.add(node.id);
+                                continue;
                             }
-                        }
-                        if (!below.multiline && below.has('lineHeight')) {
-                            const belowOffset = Math.round((below.lineHeight - below.bounds.height) / 2);
-                            if (belowOffset > 0) {
-                                lineHeight += belowOffset;
+                            if (!above.multiline && above.has('lineHeight')) {
+                                const aboveOffset = Math.floor((above.lineHeight - above.bounds.height) / 2);
+                                if (aboveOffset > 0) {
+                                    lineHeight += aboveOffset;
+                                }
                             }
-                        }
-                        if (inline) {
-                            aboveLineBreak = previousSiblings[0] as T;
-                            if (previousSiblings.length === 1) {
-                                aboveLineBreak = aboveLineBreak.lineBreak ? node : undefined;
+                            if (!below.multiline && below.has('lineHeight')) {
+                                const belowOffset = Math.round((below.lineHeight - below.bounds.height) / 2);
+                                if (belowOffset > 0) {
+                                    lineHeight += belowOffset;
+                                }
                             }
-                            aboveLineBreak?.setBounds(false);
-                        }
-                        let aboveParent = above.renderParent;
-                        let belowParent = below.renderParent;
-                        if (aboveParent && belowParent) {
+                            if (inline) {
+                                aboveLineBreak = previousSiblings[0] as T;
+                                if (previousSiblings.length === 1) {
+                                    aboveLineBreak = aboveLineBreak.lineBreak ? node : undefined;
+                                }
+                                aboveLineBreak?.setBounds(false);
+                            }
+                            let aboveParent = above.renderParent;
+                            let belowParent = below.renderParent;
                             while (aboveParent && aboveParent !== actualParent) {
                                 above = aboveParent as T;
                                 aboveParent = above.renderParent;
@@ -405,28 +405,26 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 below = belowParent as T;
                                 belowParent = below.renderParent;
                             }
-                            if (belowParent === aboveParent) {
-                                const offset = getMarginOffset();
-                                if (offset > 0) {
-                                    if (below.visible) {
-                                        below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
-                                        valid = true;
-                                    }
-                                    else if (above.visible) {
-                                        above.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                                        valid = true;
-                                    }
+                            const offset = getMarginOffset();
+                            if (offset > 0) {
+                                if (below.visible) {
+                                    below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                                    valid = true;
+                                }
+                                else if (above.visible) {
+                                    above.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                                    valid = true;
                                 }
                             }
                         }
                         else {
                             const offset = getMarginOffset();
                             if (offset > 0) {
-                                if (below.lineBreak || below.excluded) {
+                                if ((below.lineBreak || below.excluded) && actualParent.lastChild === below) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                                     valid = true;
                                 }
-                                else if (above.lineBreak || above.excluded) {
+                                else if ((above.lineBreak || above.excluded) && actualParent.firstChild === above) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
                                     valid = true;
                                 }

@@ -12,7 +12,7 @@ const { isTextNode, newBoxModel } = $lib.dom;
 const { isEqual } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { aboveRange, assignEmptyProperty, belowRange, cloneObject, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
+const { aboveRange, assignEmptyProperty, belowRange, cloneObject, convertWord, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
 
 type T = NodeUI;
 
@@ -1180,18 +1180,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get containerName() {
         let result = this._cached.containerName;
         if (result === undefined) {
-            result = '';
             const element = <HTMLInputElement> this.element;
             if (element) {
                 if (isTextNode(element)) {
                     result = 'PLAINTEXT';
                 }
                 else if (element.tagName === 'INPUT') {
-                    result = 'INPUT_' + element.type.toUpperCase();
+                    result = 'INPUT_' + convertWord(element.type, true).toUpperCase();
                 }
                 else {
                     result = element.tagName.toUpperCase();
                 }
+            }
+            else {
+                result = '';
             }
             this._cached.containerName = result;
         }

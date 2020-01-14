@@ -361,7 +361,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 let parent: T | undefined;
                 switch (node.css('position')) {
                     case 'relative':
-                        if (node === actualParent.lastChild) {
+                        if (!actualParent.layoutElement && node === actualParent.lastChild) {
                             let valid = false;
                             const box = actualParent.box;
                             if (node.outsideX(box)) {

@@ -8,7 +8,6 @@ const { XML } = $lib.regex;
 const { convertUnderscore, fromLastIndexOf } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-const NAMESPACE_ATTR = ['android', 'app'];
 const REGEX_UNIT = /\dpx$/;
 const REGEX_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/;
 
@@ -20,6 +19,24 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
     }
     const previous = map.get(name);
     return previous !== undefined && previous !== value ? Resource.generateId('dimen', name) : name;
+}
+
+function createNamespaceData(namespace: string, node: View, group: ObjectMap<View[]>) {
+    const obj = node.namespace(namespace);
+    for (const attr in obj) {
+        if (attr !== 'text') {
+            const value = obj[attr];
+            if (REGEX_UNIT.test(value)) {
+                const dimen = `${namespace},${attr},${value}`;
+                let data = group[dimen];
+                if (data === undefined) {
+                    data = [];
+                    group[dimen] = data;
+                }
+                data.push(node);
+            }
+        }
+    }
 }
 
 const getDisplayName = (value: string) => fromLastIndexOf(value, '.');
@@ -38,23 +55,8 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                     group = {};
                     groups[containerName] = group;
                 }
-                for (const namespace of NAMESPACE_ATTR) {
-                    const obj = node.namespace(namespace);
-                    for (const attr in obj) {
-                        if (attr !== 'text') {
-                            const value = obj[attr];
-                            if (REGEX_UNIT.test(value)) {
-                                const dimen = `${namespace},${attr},${value}`;
-                                let data = group[dimen];
-                                if (data === undefined) {
-                                    data = [];
-                                    group[dimen] = data;
-                                }
-                                data.push(node);
-                            }
-                        }
-                    }
-                }
+                createNamespaceData('android', node, group);
+                createNamespaceData('app', node, group);
             }
         }
         for (const containerName in groups) {

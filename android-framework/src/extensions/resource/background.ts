@@ -21,7 +21,7 @@ const { CHAR, CSS, XML } = $lib.regex;
 const { flatArray, isEqual, resolvePath } = $lib.util;
 const { applyTemplate } = $lib.xml;
 
-const { CSS_UNIT, NODE_RESOURCE } = squared.base.lib.enumeration;
+const { BOX_STANDARD, CSS_UNIT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 interface PositionAttribute {
     top?: string;
@@ -875,19 +875,28 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const embedded = extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'));
                 for (let i = 0; i < embedded.length; i++) {
                     const image = embedded[i];
-                    const src = resource.addImageSrc(<HTMLImageElement> image.element);
+                    const element = <HTMLImageElement> image.element;
+                    const src = resource.addImageSrc(element);
                     if (src !== '') {
                         const imageBounds = image.bounds;
                         images[length] = src;
                         backgroundRepeat[length] = 'no-repeat';
                         backgroundSize[length] = getPixelUnit(image.actualWidth, image.actualHeight);
-                        backgroundPosition[length] = getBackgroundPosition(
+                        const position = getBackgroundPosition(
                             image.containerName === 'INPUT_IMAGE' ? getPixelUnit(0, 0) : getPixelUnit(imageBounds.left - bounds.left + node.borderLeftWidth, imageBounds.top - bounds.top + node.borderTopWidth),
                             node.actualDimension,
                             node.fontSize,
                             imageBounds
                         );
-                        imageDimensions[length] = resource.getImage(src);
+                        const stored = resource.getImage(element.src);
+                        if (!node.hasPX('width')) {
+                            const offsetStart = (stored ? stored.width : 0) + position.left - (node.paddingLeft + node.borderLeftWidth);
+                            if (offsetStart > 0) {
+                                node.modifyBox(BOX_STANDARD.PADDING_LEFT, offsetStart);
+                            }
+                        }
+                        imageDimensions[length] = stored;
+                        backgroundPosition[length] = position;
                         length++;
                     }
                 }

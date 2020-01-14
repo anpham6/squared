@@ -656,7 +656,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     REGEX_FONT_SRC = /\s*src:\s*([^;]+);/;
                     REGEX_FONT_STYLE = /\s*font-style:\s*(\w+)\s*;/;
                     REGEX_FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-                    REGEX_URL = /\s*(url|local)\((?:['"]([^'")]+)['"]|([^)]+))\)\s*format\(['"]?(\w+)['"]?\)\s*/;
+                    REGEX_URL = /\s*(url|local)\((?:['""]([^'")]+)['"]|([^)]+))\)(?:\s*format\(['"]?(\w+)['"]?\))?\s*/;
                 }
                 const attr = REGEX_FONT_FACE.exec(cssText)?.[1];
                 if (attr) {
@@ -683,7 +683,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     fontStyle,
                                     srcUrl,
                                     srcLocal,
-                                    srcFormat: urlMatch[4].toLowerCase().trim()
+                                    srcFormat: urlMatch[4]?.toLowerCase().trim() || 'truetype'
                                 });
                             }
                         }

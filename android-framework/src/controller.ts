@@ -267,9 +267,11 @@ function constraintMinMax(node: T, dimension: string, horizontal: boolean) {
                 }
             }
             if (valid) {
-                const value = node.parseUnit(maxWH, dimension.toLowerCase());
+                let value = node.parseUnit(maxWH, dimension.toLowerCase());
                 node.app(horizontal ? 'layout_constraintWidth_max' : 'layout_constraintHeight_max', formatPX(value + contentBox));
+                node.css(horizontal ? 'maxWidth' : 'maxHeight', 'auto');
                 if (horizontal && node.layoutVertical) {
+                    value -= node.contentBoxWidth;
                     node.each(item => {
                         if (item.textElement && !item.hasPX('maxWidth')) {
                             item.css('maxWidth', formatPX(value));
@@ -1272,6 +1274,22 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'INPUT': {
                 const element = <HTMLInputElement> node.element;
                 const type = element.type;
+                function setMinDimension() {
+                    if (element.minLength !== -1) {
+                        node.android('minLength', element.minLength.toString());
+                    }
+                    if (element.maxLength > 0) {
+                        node.android('maxLength', element.maxLength.toString());
+                    }
+                }
+                function setMinMax() {
+                    if (isString(element.min)) {
+                        node.android('min', element.min);
+                    }
+                    if (isString(element.max)) {
+                        node.android('max', element.max);
+                    }
+                }
                 switch (type) {
                     case 'checkbox':
                         if (element.checked) {
@@ -1284,59 +1302,40 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 'password':
                         node.android('inputType', 'textPassword');
                         break;
-                    case 'range':
-                    case 'time':
                     case 'number':
+                    case 'range':
+                        node.android('inputType', 'number');
+                        setMinMax();
+                        break;
+                    case 'time':
+                        node.android('inputType', 'time');
+                        setMinMax();
+                        break;
                     case 'date':
+                        node.android('inputType', 'date');
+                        setMinMax();
+                        break;
                     case 'datetime-local':
-                        switch (type) {
-                            case 'number':
-                            case 'range':
-                                node.android('inputType', 'number');
-                                break;
-                            case 'date':
-                                node.android('inputType', 'date');
-                                break;
-                            case 'time':
-                                node.android('inputType', 'time');
-                                break;
-                            case 'datetime-local':
-                                node.android('inputType', 'datetime');
-                                break;
-                        }
-                        if (isString(element.min)) {
-                            node.android('min', element.min);
-                        }
-                        if (isString(element.max)) {
-                            node.android('max', element.max);
-                        }
+                        node.android('inputType', 'datetime');
+                        setMinMax();
                         break;
                     case 'email':
+                        node.android('inputType', 'textEmailAddress');
+                        setMinDimension();
+                        break;
                     case 'tel':
+                        node.android('inputType', 'phone');
+                        setMinDimension();
+                        break;
                     case 'url':
+                        node.android('inputType', 'textUri');
+                        setMinDimension();
+                        break;
                     case 'week':
                     case 'month':
                     case 'search':
-                        switch (type) {
-                            case 'email':
-                                node.android('inputType', 'textEmailAddress');
-                                break;
-                            case 'tel':
-                                node.android('inputType', 'phone');
-                                break;
-                            case 'url':
-                                node.android('inputType', 'textUri');
-                                break;
-                            default:
-                                node.android('inputType', 'text');
-                                break;
-                        }
-                        if (element.minLength !== -1) {
-                            node.android('minLength', element.minLength.toString());
-                        }
-                        if (element.maxLength > 0) {
-                            node.android('maxLength', element.maxLength.toString());
-                        }
+                        node.android('inputType', 'text');
+                        setMinDimension();
                         break;
                 }
                 break;
@@ -1464,38 +1463,31 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('minHeight', formatPX(Math.ceil(node.actualHeight)));
                 }
                 node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
-                if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
-                    setReadOnly(node);
-                }
+                setReadOnly(node);
                 break;
             case CONTAINER_ANDROID.SELECT:
             case CONTAINER_ANDROID.CHECKBOX:
             case CONTAINER_ANDROID.RADIO:
-                if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
-                    setReadOnly(node);
-                }
+                setReadOnly(node);
                 break;
             case CONTAINER_ANDROID.EDIT:
-                if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
-                    if (!node.companion) {
-                        [node.previousSibling, node.nextSibling].some((sibling: T) => {
-                            if (sibling?.visible && sibling.pageFlow) {
-                                const element = <HTMLInputElement> node.element;
-                                const labelElement = <HTMLLabelElement> sibling.element;
-                                const labelParent = sibling.documentParent.tagName === 'LABEL' && sibling.documentParent as T;
-                                if (element.id && element.id === labelElement.htmlFor) {
-                                    sibling.android('labelFor', node.documentId);
-                                    return true;
-                                }
-                                else if (labelParent && sibling.textElement) {
-                                    labelParent.android('labelFor', node.documentId);
-                                    return true;
-                                }
+                if (!node.companion && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
+                    [node.previousSibling, node.nextSibling].some((sibling: T) => {
+                        if (sibling?.visible && sibling.pageFlow) {
+                            const element = <HTMLInputElement> node.element;
+                            const labelElement = <HTMLLabelElement> sibling.element;
+                            const labelParent = sibling.documentParent.tagName === 'LABEL' && sibling.documentParent as T;
+                            if (element.id && element.id === labelElement.htmlFor) {
+                                sibling.android('labelFor', node.documentId);
+                                return true;
                             }
-                            return false;
-                        });
-                    }
-                    setReadOnly(node);
+                            else if (labelParent && sibling.textElement) {
+                                labelParent.android('labelFor', node.documentId);
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
                 }
                 if ((<HTMLInputElement> node.element).list?.children.length) {
                     controlName = CONTAINER_ANDROID.EDIT_LIST;
@@ -1504,6 +1496,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else if (node.api >= BUILD_ANDROID.OREO) {
                     node.android('importantForAutofill', 'no');
                 }
+                setReadOnly(node);
             case CONTAINER_ANDROID.RANGE:
                 if (!node.hasPX('width')) {
                     node.css('width', formatPX(node.bounds.width));
