@@ -665,7 +665,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 layoutWidth = 'match_parent';
                             }
                             else {
-                                this.app('layout_constraintWidth_percent', truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
+                                this.app('layout_constraintWidth_percent', truncate((parseFloat(width) / 100) + this.contentBoxWidthPercent, this.localSettings.floatPrecision));
                                 layoutWidth = '0px';
                             }
                             adjustViewBounds = true;
@@ -1845,6 +1845,24 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get flexibleHeight(): boolean {
             return isFlexibleDimension(this, this.layoutHeight);
+        }
+
+        get contentBoxWidthPercent() {
+            const actualParent = this.actualParent;
+            if (actualParent && !actualParent.layoutElement) {
+                const boxWidth = actualParent.box.width || 0;
+                return boxWidth > 0 ? this.contentBoxWidth / boxWidth : 0;
+            }
+            return 0;
+        }
+
+        get contentBoxHeightPercent() {
+            const actualParent = this.actualParent;
+            if (actualParent && !actualParent.layoutElement) {
+                const boxHeight = actualParent.box.height || 0;
+                return boxHeight > 0 ? this.contentBoxHeight / boxHeight : 0;
+            }
+            return 0;
         }
 
         set localSettings(value) {

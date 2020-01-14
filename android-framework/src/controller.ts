@@ -305,7 +305,12 @@ function constraintPercentValue(node: T, dimension: string, horizontal: boolean,
     }
     else if (isPercent(value) && value !== '100%') {
         const percent = parseFloat(value) / 100;
-        node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', truncate(percent, node.localSettings.floatPrecision));
+        if (horizontal) {
+            node.app('layout_constraintWidth_percent', truncate(percent + node.contentBoxWidthPercent, node.localSettings.floatPrecision));
+        }
+        else {
+            node.app('layout_constraintHeight_percent', truncate(percent + node.contentBoxHeightPercent, node.localSettings.floatPrecision));
+        }
         unit = '0px';
     }
     if (unit) {
@@ -517,7 +522,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             setFlexGrow(node.convertPX(basis));
         }
         else if (basis !== '0%' && isPercent(basis)) {
-            node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
+            const percent = parseFloat(basis) / 100;
+            if (horizontal) {
+                node.app('layout_constraintWidth_percent', (percent + node.contentBoxWidthPercent).toPrecision(node.localSettings.floatPrecision));
+            }
+            else {
+                node.app('layout_constraintHeight_percent', (percent + node.contentBoxHeightPercent).toPrecision(node.localSettings.floatPrecision));
+            }
             setFlexGrow('');
         }
         else {

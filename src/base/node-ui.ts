@@ -745,7 +745,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                     }
-                    else if (!this.floating && withinRange(this.linear.left, this.documentParent.box.left) && siblings.some(item => item.float === 'right' && aboveRange(this.linear.right, item.linear.left))) {
+                    else if (!this.floating && this.multiline && siblings.some(item => item.float === 'right' && aboveRange(this.textBounds?.top || Number.NEGATIVE_INFINITY, item.bounds.bottom))) {
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                     else if (horizontal !== undefined) {
