@@ -1,18 +1,16 @@
 import { CachedValue } from '../../@types/base/node';
 
-type T = View;
-
 export default class View extends squared.base.Node implements chrome.base.View {
-    public queryMap?: T[][];
+    public queryMap?: View[][];
 
-    protected _cached: CachedValue<T> = {};
-    protected _documentParent?: T;
+    protected _cached: CachedValue<View> = {};
+    protected _documentParent?: View;
 
     constructor(
         id: number,
         sessionId: string,
         element: Element,
-        afterInit?: BindGeneric<T, void>)
+        afterInit?: BindGeneric<View, void>)
     {
         super(id, sessionId, element);
         this.init();

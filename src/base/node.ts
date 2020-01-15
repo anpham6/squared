@@ -6,7 +6,7 @@ const $lib = squared.lib;
 const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
 const { CHAR, CSS, XML } = $lib.regex;
-const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, setElementCache } = $lib.session;
+const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, filterArray, hasBit, hasValue, isNumber, isObject, isString, spliceString } = $lib.util;
 
 type T = Node;
@@ -56,10 +56,6 @@ function setNaturalElements(node: T) {
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && REGEX_PX.test(actualValue);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static getPseudoElt(node: T) {
-        return getElementCache(<Element> node.element, 'pseudoElement', node.sessionId) || '';
-    }
-
     public documentRoot = false;
     public depth = -1;
     public childIndex = Number.POSITIVE_INFINITY;
@@ -124,7 +120,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     this.style = style;
                 }
                 else {
-                    this.style = getStyle(element.parentElement, Node.getPseudoElt(this));
+                    this.style = getStyle(element.parentElement, getPseudoElt(element, sessionId));
                 }
             }
             else {
@@ -431,11 +427,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssSpecificity(attr: string) {
+        let result: number | undefined;
         if (this.styleElement) {
-            const element = <Element> this._element;
-            return getElementCache(this.pseudoElement ? <Element> element.parentElement : element, 'styleSpecificity' + Node.getPseudoElt(this), this.sessionId)?.[attr] as number || 0;
-        }
-        return 0;
+            if (this.pseudoElement) {
+                const element = <Element> this._element;
+                const sessionId = this.sessionId;
+                result = getElementCache(<Element> element.parentElement, 'styleSpecificity' + getPseudoElt(element, sessionId), sessionId)?.[attr] as number;
+            }
+            else {
+                result = getElementCache(<Element> this._element, 'styleSpecificity', this.sessionId)?.[attr] as number;
+            }
+}
+        return result || 0;
     }
 
     public cssTry(attr: string, value: string) {

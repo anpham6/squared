@@ -8,18 +8,16 @@ import View from '../../view';
 
 import $LayoutUI = squared.base.LayoutUI;
 
-type T = View;
-
 const { CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-function isParentVisible(node: T, visibleStyle: VisibleStyle) {
-    const actualParent = node.actualParent as T;
+function isParentVisible(node: View, visibleStyle: VisibleStyle) {
+    const actualParent = node.actualParent as View;
     return actualParent.visibleStyle.background && hasWidth(node) && node.css('height') !== '100%' && node.css('minHeight') !== '100%' || actualParent.height > 0 && visibleStyle.backgroundImage && node.css('backgroundPositionY').indexOf('bottom') !== -1;
 }
 
-const isHideMargin = (node: T, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && (node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
-const isFullScreen = (node: T, visibleStyle: VisibleStyle) => node.backgroundColor !== '' && visibleStyle.borderWidth && node.blockStatic && node.css('height') !== '100%' && node.css('minHeight') !== '100%' && !(node.actualParent as T).visibleStyle.background || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
-const hasWidth = (node: T) => !node.blockStatic || node.hasPX('width') || node.has('maxWidth', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' });
+const isHideMargin = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && (node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
+const isFullScreen = (node: View, visibleStyle: VisibleStyle) => node.backgroundColor !== '' && visibleStyle.borderWidth && node.blockStatic && node.css('height') !== '100%' && node.css('minHeight') !== '100%' && !(node.actualParent as View).visibleStyle.background || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
+const hasWidth = (node: View) => !node.blockStatic || node.hasPX('width') || node.has('maxWidth', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' });
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly removeIs = true;

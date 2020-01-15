@@ -465,7 +465,6 @@ declare namespace base {
     }
 
     class Node implements Node {
-        public static getPseudoElt(node: Node): string;
         constructor(id: number, sessionId?: string, element?: Element);
     }
 
@@ -917,6 +916,7 @@ declare namespace lib {
     namespace session {
         function actualClientRect(element: Element, sessionId: string, cache?: boolean): ClientRect;
         function actualTextRangeRect(element: Element, sessionId: string, cache?: boolean): BoxRectDimension;
+        function getPseudoElt(element: Element, sessionId: string): string;
         function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
         function getElementCache(element: Element, attr: string, sessionId?: string): any;
         function deleteElementCache(element: Element, attr: string, sessionId: string): void;

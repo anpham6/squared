@@ -51,6 +51,10 @@ export function actualTextRangeRect(element: Element, sessionId: string, cache =
     return bounds;
 }
 
+export function getPseudoElt(element: Element, sessionId: string) {
+    return getElementCache(element, 'pseudoElement', sessionId) || '';
+}
+
 export function setElementCache(element: Element, attr: string, sessionId: string, data: any) {
     element[`__${attr}::${sessionId}`] = data;
 }

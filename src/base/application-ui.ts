@@ -16,7 +16,7 @@ const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule
 const { getNamedItem, getRangeClientRect, isTextNode, removeElementsByClassName } = $lib.dom;
 const { aboveRange, captureMap, convertFloat, convertInt, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;
 const { XML } = $lib.regex;
-const { getElementCache, setElementCache } = $lib.session;
+const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
 
 function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
@@ -399,30 +399,29 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             if (pseudoElements.length) {
-                const pseudoMap: { item: T, id: string, styleElement?: HTMLStyleElement }[] = [];
+                const pseudoMap: { item: T, id: string, parentElement: Element, styleElement?: HTMLStyleElement }[] = [];
                 for (const item of pseudoElements) {
-                    const element = <HTMLElement> (item.actualParent as T).element;
-                    let id = element.id;
+                    const parentElement = <HTMLElement> (item.actualParent as T).element;
+                    let id = parentElement.id;
                     let styleElement: HTMLStyleElement | undefined;
                     if (item.pageFlow) {
                         if (id === '') {
                             id = '__squared_' + Math.round(Math.random() * new Date().getTime());
-                            element.id = id;
+                            parentElement.id = id;
                         }
-                        styleElement = insertStyleSheetRule(`#${id + NodeUI.getPseudoElt(item)} { display: none !important; }`);
+                        styleElement = insertStyleSheetRule(`#${id + getPseudoElt(<Element> item.element, item.sessionId)} { display: none !important; }`);
                     }
                     if (item.cssTry('display', item.display)) {
-                        pseudoMap.push({ item, id, styleElement });
+                        pseudoMap.push({ item, id, parentElement, styleElement });
                     }
                 }
                 for (const data of pseudoMap) {
                     data.item.setBounds(false);
                 }
                 for (const data of pseudoMap) {
-                    const { item, styleElement } = data;
+                    const { item, parentElement, styleElement } = data;
                     if (/^__squared_/.test(data.id)) {
-                        const element = <HTMLElement> (item.actualParent as T).element;
-                        element.id = '';
+                        parentElement.id = '';
                     }
                     if (styleElement) {
                         document.head.removeChild(styleElement);

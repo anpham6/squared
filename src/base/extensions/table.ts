@@ -12,8 +12,6 @@ const { getNamedItem } = $lib.dom;
 const { maxArray } = $lib.math;
 const { isNumber, replaceMap, withinRange } = $lib.util;
 
-type T = NodeUI;
-
 const enum LAYOUT_TABLE {
     NONE = 0,
     STRETCH = 1,
@@ -25,11 +23,11 @@ const enum LAYOUT_TABLE {
 const TABLE = EXT_NAME.TABLE;
 const REGEX_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
 
-function setAutoWidth(node: T, td: T, data: ExternalData) {
+function setAutoWidth(node: NodeUI, td: NodeUI, data: ExternalData) {
     data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
     data.expand = true;
 }
-const setBoundsWidth = (td: T) => td.css('width', formatPX(td.bounds.width), true);
+const setBoundsWidth = (td: NodeUI) => td.css('width', formatPX(td.bounds.width), true);
 
 export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute(node: NodeUI): TableData {

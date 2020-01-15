@@ -10,8 +10,6 @@ import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, STRING_ANDROID } from './lib/co
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { createViewAttribute, getDocumentId, getRootNs } from './lib/util';
 
-type T = View;
-
 const $lib = squared.lib;
 const { PLATFORM, USER_AGENT, isPlatform, isUserAgent } = $lib.client;
 const { parseColor } = $lib.color;
@@ -30,7 +28,7 @@ const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE
 
 const GUIDELINE_AXIS = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
 
-function sortHorizontalFloat(list: T[]) {
+function sortHorizontalFloat(list: View[]) {
     if (list.some(node => node.floating)) {
         list.sort((a, b) => {
             const floatingA = a.floating;
@@ -56,13 +54,13 @@ function sortHorizontalFloat(list: T[]) {
     }
 }
 
-function sortConstraintAbsolute(templates: NodeXmlTemplate<T>[]) {
+function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
     if (templates.length > 1) {
         templates.sort((a, b) => {
             const nodeA = a.node;
             const nodeB = b.node;
-            const above = nodeA.innerWrapped as T || nodeA;
-            const below = nodeB.innerWrapped as T || nodeB;
+            const above = nodeA.innerWrapped as View || nodeA;
+            const below = nodeB.innerWrapped as View || nodeB;
             if (above.absoluteParent === below.absoluteParent) {
                 if (above.zIndex === below.zIndex) {
                     return above.childIndex < below.childIndex ? -1 : 1;
@@ -84,11 +82,11 @@ function sortConstraintAbsolute(templates: NodeXmlTemplate<T>[]) {
     return templates;
 }
 
-const getBaselineAnchor = (node: T) => node.imageOrSvgElement ? 'baseline' : 'bottom';
+const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
 
-function adjustBaseline(baseline: T, nodes: T[]) {
+function adjustBaseline(baseline: View, nodes: View[]) {
     const baselineHeight = baseline.baselineHeight;
-    let imageBaseline: T | undefined;
+    let imageBaseline: View | undefined;
     let imageHeight = 0;
     for (const node of nodes) {
         if (node !== baseline && !node.baselineAltered) {
@@ -122,7 +120,7 @@ function adjustBaseline(baseline: T, nodes: T[]) {
                     node.anchor('baseline', baseline.documentId);
                 }
                 else if (isLayoutBaselineAligned(node)) {
-                    node.anchor(node.naturalElements.findIndex((item: T) => item.imageOrSvgElement && item.baseline) !== -1 ? 'bottom' : 'baseline', baseline.documentId);
+                    node.anchor(node.naturalElements.findIndex((item: View) => item.imageOrSvgElement && item.baseline) !== -1 ? 'bottom' : 'baseline', baseline.documentId);
                 }
             }
             else if (node.imageOrSvgElement && node.baseline) {
@@ -135,7 +133,7 @@ function adjustBaseline(baseline: T, nodes: T[]) {
     }
 }
 
-function isLayoutBaselineAligned(node: T) {
+function isLayoutBaselineAligned(node: View) {
     const children = node.renderChildren;
     if (node.layoutHorizontal) {
         return children.length > 0 && children.every(item => item.baseline && !item.baselineAltered && (!item.positionRelative || item.top === 0 && item.bottom === 0));
@@ -150,7 +148,7 @@ function isLayoutBaselineAligned(node: T) {
     return false;
 }
 
-function adjustAbsolutePaddingOffset(parent: T, direction: number, value: number) {
+function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number) {
     if (value > 0) {
         if (parent.documentBody) {
             switch (direction) {
@@ -189,7 +187,7 @@ function adjustAbsolutePaddingOffset(parent: T, direction: number, value: number
     return value;
 }
 
-function adjustFloatingNegativeMargin(node: T, previous: T) {
+function adjustFloatingNegativeMargin(node: View, previous: View) {
     if (previous.float === 'left') {
         if (previous.marginRight < 0) {
             const right = Math.abs(previous.marginRight);
@@ -214,10 +212,10 @@ function adjustFloatingNegativeMargin(node: T, previous: T) {
     return false;
 }
 
-function constraintMinMax(node: T, dimension: string, horizontal: boolean) {
+function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
     if (!node.inputElement && !node.imageOrSvgElement) {
         const documentParent = node.documentParent;
-        const renderParent = node.renderParent as T;
+        const renderParent = node.renderParent as View;
         function setAlignmentBlock() {
             if (renderParent.nodeGroup) {
                 renderParent.addAlign(NODE_ALIGNMENT.BLOCK);
@@ -283,7 +281,7 @@ function constraintMinMax(node: T, dimension: string, horizontal: boolean) {
     }
 }
 
-function setConstraintPercent(node: T, value: string, horizontal: boolean) {
+function setConstraintPercent(node: View, value: string, horizontal: boolean) {
     let percent = parseFloat(value) / 100;
     if (horizontal) {
         percent = Math.min(percent + node.contentBoxWidthPercent, 1);
@@ -296,7 +294,7 @@ function setConstraintPercent(node: T, value: string, horizontal: boolean) {
     return percent === 1 ? 'match_parent' : '0px';
 }
 
-function setLayoutDimension(node: T, value: string, horizontal: boolean, overwrite = true) {
+function setLayoutDimension(node: View, value: string, horizontal: boolean, overwrite = true) {
     if (horizontal) {
         node.setLayoutWidth(value, overwrite);
     }
@@ -305,7 +303,7 @@ function setLayoutDimension(node: T, value: string, horizontal: boolean, overwri
     }
 }
 
-function constraintPercentValue(node: T, dimension: string, horizontal: boolean, opposing: boolean) {
+function constraintPercentValue(node: View, dimension: string, horizontal: boolean, opposing: boolean) {
     const value = node.cssInitial(dimension, true);
     let unit: string | undefined;
     if (opposing) {
@@ -335,7 +333,7 @@ function constraintPercentValue(node: T, dimension: string, horizontal: boolean,
     return false;
 }
 
-function constraintPercentWidth(node: T, opposing: boolean) {
+function constraintPercentWidth(node: View, opposing: boolean) {
     if (!opposing && !node.documentParent.layoutElement && node.documentParent.hasPX('width', false)) {
         const value = node.cssInitial('width', true);
         if (isPercent(value) && value !== '100%') {
@@ -347,7 +345,7 @@ function constraintPercentWidth(node: T, opposing: boolean) {
     }
 }
 
-function constraintPercentHeight(node: T, opposing: boolean) {
+function constraintPercentHeight(node: View, opposing: boolean) {
     if (node.documentParent.hasPX('height', false)) {
         if (!opposing && !node.documentParent.layoutElement) {
             const value = node.cssInitial('height', true);
@@ -370,7 +368,7 @@ function constraintPercentHeight(node: T, opposing: boolean) {
     }
 }
 
-function isTargeted(parent: T, node: T) {
+function isTargeted(parent: View, node: View) {
     if (node.dataset.target && parent.element) {
         const element = document.getElementById(node.dataset.target);
         return element !== null && element !== parent.element;
@@ -378,7 +376,7 @@ function isTargeted(parent: T, node: T) {
     return false;
 }
 
-function getTextBottom<T extends View>(nodes: T[]): T[] {
+function getTextBottom(nodes: View[]): View[] {
     return filterArray(nodes, node => (node.baseline || isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && node.toElementInt('size') > 1) || node.verticalAlign === 'text-bottom' && node.containerName !== 'INPUT_IMAGE').sort((a, b) => {
         if (a.baselineHeight === b.baselineHeight) {
             return a.tagName === 'SELECT' ? 1 : 0;
@@ -401,7 +399,7 @@ function causesLineBreak(element: Element, sessionId: string) {
         return true;
     }
     else {
-        const node = getElementAsNode<T>(element, sessionId);
+        const node = getElementAsNode<View>(element, sessionId);
         if (node) {
             return !node.excluded && node.blockStatic;
         }
@@ -409,7 +407,7 @@ function causesLineBreak(element: Element, sessionId: string) {
     return false;
 }
 
-function setColumnHorizontal(seg: T[]) {
+function setColumnHorizontal(seg: View[]) {
     const length = seg.length;
     for (let i = 0; i < length; i++) {
         const item = seg[i];
@@ -428,7 +426,7 @@ function setColumnHorizontal(seg: T[]) {
     rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread_inside');
 }
 
-function setColumnVertical(partition: T[][], lastRow: boolean, previousRow?: T | string) {
+function setColumnVertical(partition: View[][], lastRow: boolean, previousRow?: View | string) {
     const rowStart = partition[0][0];
     const length = partition.length;
     for (let i = 0; i < length; i++) {
@@ -479,7 +477,7 @@ function setColumnVertical(partition: T[][], lastRow: boolean, previousRow?: T |
     }
 }
 
-function setReadOnly(node: T) {
+function setReadOnly(node: View) {
     const element = <HTMLInputElement> node.element;
     if (element.readOnly) {
         node.android('focusable', 'false');
@@ -489,10 +487,10 @@ function setReadOnly(node: T) {
     }
 }
 
-const isMultiline = (node: T) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
-const getRelativeVertical = (layout: squared.base.LayoutUI<T>) => layout.some(item => item.positionRelative || !item.pageFlow && item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
-const getRelativeVerticalAligned = (layout: squared.base.LayoutUI<T>) => layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
-const getMaxHeight = (node: T) => Math.max(node.actualHeight, node.lineHeight);
+const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
+const getRelativeVertical = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative || !item.pageFlow && item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
+const getRelativeVerticalAligned = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
+const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
     public static setConstraintDimension<T extends View>(node: T) {
@@ -2479,7 +2477,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     else if (lengthA < items.length && lengthA > 0) {
-                        textBottom = getTextBottom(items)[0];
+                        textBottom = getTextBottom(items)[0] as T;
                         if (textBottom) {
                             for (const item of baselineAlign) {
                                 if (item.baseline && !item.multiline && textBottom.bounds.height > item.bounds.height) {
