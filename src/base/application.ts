@@ -49,6 +49,7 @@ async function getImageSvgAsync(value: string) {
     return (await fetch(value, { method: 'GET', headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' }) })).text();
 }
 
+const isSvgExtension = (value: string) => /\.svg$/.test(value.toLowerCase());
 const parseConditionText = (rule: string, value: string) => new RegExp(`^@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
@@ -190,7 +191,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             for (const image of ASSETS.images.values()) {
                 const uri = image.uri as string;
-                if (uri.toLowerCase().endsWith('.svg')) {
+                if (isSvgExtension(uri)) {
                     images.push(uri);
                 }
                 else if (image.width === 0 && image.height === 0) {
@@ -210,7 +211,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         for (const [uri, data] of ASSETS.rawData.entries()) {
             const mimeType = data.mimeType;
-            if (mimeType?.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
+            if (isString(mimeType) && /^image\//.test(mimeType) && !/svg\+xml$/.test(mimeType)) {
                 const element = document.createElement('img');
                 element.src = 'data:' + mimeType + ';' + (data.base64 ? 'base64,' + data.base64 : data.content);
                 const { naturalWidth: width, naturalHeight: height } = element;
@@ -227,7 +228,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         for (const element of this.rootElements) {
             element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                if (image.src.toLowerCase().endsWith('.svg')) {
+                if (isSvgExtension(image.src)) {
                     if (preloadImages) {
                         images.push(image.src);
                     }

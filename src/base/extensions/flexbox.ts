@@ -13,12 +13,12 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute<T extends NodeUI>(node: T, children: T[]): FlexboxData<T> {
         const wrap = node.css('flexWrap');
         const direction = node.css('flexDirection');
-        const directionRow = direction.startsWith('row');
+        const directionRow = /^row/.test(direction);
         return {
             directionRow,
             directionColumn: !directionRow,
-            directionReverse: direction.endsWith('reverse'),
-            wrap: wrap.startsWith('wrap'),
+            directionReverse: /reverse$/.test(direction),
+            wrap: /^wrap/.test(wrap),
             wrapReverse: wrap === 'wrap-reverse',
             alignContent: node.css('alignContent'),
             justifyContent: node.css('justifyContent'),

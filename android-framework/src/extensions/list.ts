@@ -184,7 +184,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             baselineAlignBottom: adjustPadding ? 'true' : ''
                         });
                     }
-                    else if (ordinalValue) {
+                    else if (ordinalValue !== '') {
                         ordinal.textContent = ordinalValue;
                         ordinal.inlineText = true;
                         ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
@@ -200,7 +200,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     ordinal.depth = node.depth;
                     ordinal.inherit(node, 'textStyle');
-                    if (ordinalValue && !ordinalValue.endsWith('.')) {
+                    if (ordinalValue !== '' && !/\.$/.test(ordinalValue)) {
                         ordinal.fontSize *= 0.75;
                     }
                     ordinal.cssApply({

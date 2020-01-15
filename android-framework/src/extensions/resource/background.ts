@@ -827,7 +827,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 const match = CSS.URL.exec(value);
                                 if (match) {
                                     const uri = match[1];
-                                    if (uri.startsWith('data:image')) {
+                                    if (/^data\:image/.test(uri)) {
                                         const rawData = resource.getRawData(uri);
                                         if (rawData?.base64) {
                                             images[length] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));

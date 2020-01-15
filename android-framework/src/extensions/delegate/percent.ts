@@ -6,7 +6,7 @@ import $LayoutUI = squared.base.LayoutUI;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
-const isFlexible = (node: View) => !node.documentParent.layoutElement && !node.display.startsWith('table');
+const isFlexible = (node: View) => !node.documentParent.layoutElement && !/^table/.test(node.display);
 
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {

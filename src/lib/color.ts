@@ -957,7 +957,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
         if (value.charAt(0) === '#') {
             rgba = parseRGBA(value);
         }
-        else if (value.startsWith('rgb')) {
+        else if (/^rgb/.test(value)) {
             const match = CSS.RGBA.exec(value);
             if (match) {
                 rgba = {

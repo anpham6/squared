@@ -31,7 +31,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public addImage(element: HTMLImageElement | undefined) {
         if (element?.complete) {
             const uri = element.src;
-            if (uri.startsWith('data:image/')) {
+            if (/^data\:image\//.test(uri)) {
                 const match = new RegExp(`^${STRING.DATAURI}$`).exec(uri);
                 if (match) {
                     const mimeType = match[1];
@@ -84,11 +84,12 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         }
         const imageFormat = this.controllerSettings.supported.imageFormat;
         const origin = location.origin;
-        const pathname = uri.startsWith(origin) ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '';
+        const valid = uri.startsWith(origin);
+        const pathname = valid ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '';
         const getFileName = () => buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
         let filename: string | undefined;
         if (imageFormat === '*') {
-            if (uri.startsWith(origin)) {
+            if (valid) {
                 filename = fromLastIndexOf(uri, '/');
             }
             else {
@@ -123,7 +124,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     }
 
     public getRawData(uri: string) {
-        if (uri.startsWith('url(')) {
+        if (/^url\(/.test(uri)) {
             const match = CSS.URL.exec(uri);
             if (match) {
                 uri = match[1];

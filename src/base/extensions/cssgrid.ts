@@ -40,6 +40,7 @@ const REGEX_CELL_UNIT = new RegExp('[\\d.]+[a-z%]+|auto|max-content|min-content'
 const REGEX_CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
 const REGEX_CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
 const REGEX_CELL_NAMED = new RegExp('\\[([\\w\\-\\s]+)\\]');
+const REGEX_SPAN = /^span/;
 
 function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
     const repeat = data.repeat;
@@ -91,7 +92,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
     const length = unit.length;
     for (let i = 0; i < length; i++) {
         const value = unit[i];
-        if (value.endsWith('fr')) {
+        if (isUnitFR(value)) {
             total += parseFloat(value);
         }
         else if (isPercent(value)) {
@@ -103,7 +104,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         if (ratio > 0) {
             for (let i = 0; i < length; i++) {
                 const value = unit[i];
-                if (value.endsWith('fr')) {
+                if (isUnitFR(value)) {
                     unit[i] = formatPX(parseFloat(value) * ratio);
                 }
             }
@@ -111,6 +112,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
     }
 }
 
+const isUnitFR = (value: string) => /fr^/.test(value);
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? node.convertPX(value, index === 0 ? 'height' : 'width') : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
@@ -204,9 +206,17 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 let match: RegExpMatchArray | null;
                 let i = 1;
                 while ((match = REGEX_NAMED.exec(value)) !== null) {
-                    const command = match[1];
+                    const command = match[1].trim();
                     if (index < 2) {
-                        if (command.startsWith('repeat')) {
+                        if (command.charAt(0) === '[') {
+                            for (const attr of match[4].split(CHAR.SPACE)) {
+                                if (name[attr] === undefined) {
+                                    name[attr] = [];
+                                }
+                                name[attr].push(i);
+                            }
+                        }
+                        else if (/^repeat/.test(command)) {
                             let iterations = 1;
                             switch (match[2]) {
                                 case 'auto-fit':
@@ -260,21 +270,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 REGEX_REPEAT.lastIndex = 0;
                             }
                         }
-                        else if (command.charAt(0) === '[') {
-                            for (const attr of match[4].split(CHAR.SPACE)) {
-                                if (name[attr] === undefined) {
-                                    name[attr] = [];
-                                }
-                                name[attr].push(i);
-                            }
-                        }
-                        else if (command.startsWith('minmax')) {
+                        else if (/^minmax/.test(command)) {
                             unit.push(convertLength(node, match[6], index));
                             unitMin.push(convertLength(node, match[5], index));
                             repeat.push(false);
                             i++;
                         }
-                        else if (command.startsWith('fit-content')) {
+                        else if (/^fit\-content/.test(command)) {
                             unit.push(convertLength(node, match[7], index));
                             unitMin.push('0px');
                             repeat.push(false);
@@ -354,13 +356,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const columnEnd = item.css('gridColumnEnd');
                 let rowSpan = 1;
                 let columnSpan = 1;
-                if (rowEnd.startsWith('span')) {
+                if (REGEX_SPAN.test(rowEnd)) {
                     rowSpan = parseInt(rowEnd.split(' ')[1]);
                 }
                 else if (isNumber(rowEnd)) {
                     rowSpan = parseInt(rowEnd) - rowIndex;
                 }
-                if (columnEnd.startsWith('span')) {
+                if (REGEX_SPAN.test(columnEnd)) {
                     columnSpan = parseInt(columnEnd.split(' ')[1]);
                 }
                 else if (isNumber(columnEnd)) {
@@ -513,7 +515,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             placement[position] = parseInt(value);
                             return true;
                         }
-                        else if (value.startsWith('span')) {
+                        else if (REGEX_SPAN.test(value)) {
                             const span = parseInt(value.split(' ')[1]);
                             if (placement[position - 2] === 0) {
                                 if (position % 2 === 0) {
@@ -622,7 +624,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (isPercent(value)) {
                     percent -= parseFloat(value) / 100;
                 }
-                else if (value.endsWith('fr')) {
+                else if (isUnitFR(value)) {
                     fr += parseFloat(value);
                 }
                 else {
@@ -647,7 +649,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const lengthA = unit.length;
                 for (let i = 0; i < lengthA; i++) {
                     const value = unit[i];
-                    if (value.endsWith('fr')) {
+                    if (isUnitFR(value)) {
                         unit[i] = percent * (parseFloat(value) / fr) + 'fr';
                     }
                 }

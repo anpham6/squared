@@ -24,7 +24,7 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
             containerType: CONTAINER_NODE.CONSTRAINT,
             resource: NODE_RESOURCE.ASSET
         });
-        container.inherit(node, 'base', 'initial', 'styleMap');
+        container.inherit(node, 'base', 'initial', 'styleMap', 'boxStyle');
         if (isJustified(node)) {
             node.setLayoutWidth('wrap_content');
         }

@@ -23,7 +23,7 @@ function formatObject(obj: {}, numberAlias = false) {
                 if (value) {
                     switch (attr) {
                         case 'text':
-                            if (!value.startsWith('@string/')) {
+                            if (!/^@string\//.test(value)) {
                                 value = Resource.addString(value, '', numberAlias);
                                 if (value !== '') {
                                     obj[attr] = '@string/' + value;
@@ -223,14 +223,13 @@ export default class Resource<T extends android.base.View> extends squared.base.
 
     public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
         const result: StringMap = {};
+        let mdpi: string | undefined;
         if (typeof element === 'string') {
             const match = CSS.URL.exec(element);
             if (match) {
-                if (match[1].startsWith('data:image')) {
-                    result.mdpi = match[1];
-                }
-                else {
-                    return this.addImageSet({ mdpi: resolvePath(match[1]) }, prefix);
+                mdpi = match[1];
+                if (!/^data\:image/.test(mdpi)) {
+                    return this.addImageSet({ mdpi: resolvePath(mdpi) }, prefix);
                 }
             }
         }
@@ -247,8 +246,8 @@ export default class Resource<T extends android.base.View> extends squared.base.
                             result.ldpi = src;
                         }
                         else if (pixelRatio === 1) {
-                            if (result.mdpi === undefined || image.actualWidth) {
-                                result.mdpi = src;
+                            if (mdpi === undefined || image.actualWidth) {
+                                mdpi = src;
                             }
                         }
                         else if (pixelRatio <= 1.5) {
@@ -266,21 +265,22 @@ export default class Resource<T extends android.base.View> extends squared.base.
                     }
                 }
             }
-            if (result.mdpi === undefined) {
-                result.mdpi = element.src;
+            if (mdpi === undefined) {
+                mdpi = element.src;
             }
         }
-        const mdpi = result.mdpi;
         if (mdpi) {
+            result.mdpi = mdpi;
             const resource = this.application.resourceHandler;
             const rawData = resource.getRawData(mdpi);
             if (rawData?.base64) {
-                if (rawData.filename.toLowerCase().endsWith('.svg')) {
+                const { base64, filename } = rawData;
+                if (/\.svg$/.test(filename.toLowerCase())) {
                     return '';
                 }
-                const filename = prefix + rawData.filename;
-                resource.writeRawImage(filename, rawData.base64);
-                return filename.substring(0, filename.lastIndexOf('.'));
+                const pathname = prefix + filename;
+                resource.writeRawImage(pathname, base64);
+                return pathname.substring(0, pathname.lastIndexOf('.'));
             }
         }
         return this.addImageSet(result, prefix);

@@ -107,9 +107,9 @@ export const TRANSFORM = {
                 let match: RegExpExecArray | null;
                 while ((match = pattern.exec(transform)) !== null) {
                     const attr = match[1];
-                    const isX = attr.endsWith('X');
-                    const isY = attr.endsWith('Y');
-                    if (attr.startsWith('rotate')) {
+                    const isX = /X$/.test(attr);
+                    const isY = /Y$/.test(attr);
+                    if (/^rotate/.test(attr)) {
                         const angle = convertAngle(match[2], match[3]);
                         const matrix = MATRIX.rotate(angle);
                         if (isX) {
@@ -124,7 +124,7 @@ export const TRANSFORM = {
                         }
                         ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
                     }
-                    else if (attr.startsWith('skew')) {
+                    else if (/^skew/.test(attr)) {
                         const x = isY ? 0 : convertAngle(match[2], match[3]);
                         const y = isY ? convertAngle(match[2], match[3]) : (match[4] && match[5] ? convertAngle(match[4], match[5]) : 0);
                         const matrix = MATRIX.skew(x, y);
@@ -141,13 +141,13 @@ export const TRANSFORM = {
                             }
                         }
                     }
-                    else if (attr.startsWith('scale')) {
+                    else if (/^scale/.test(attr)) {
                         const x = isY ? undefined : parseFloat(match[2]);
                         const y = isY ? parseFloat(match[2]) : (!isX && match[3] ? parseFloat(match[3]) : x);
                         const matrix = MATRIX.scale(x, isX ? undefined : y);
                         ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, matrix, 0, !isY, !isX);
                     }
-                    else if (attr.startsWith('translate')) {
+                    else if (/^translate/.test(attr)) {
                         const fontSize = getFontSize(element);
                         const arg1 = parseUnit(match[2], fontSize);
                         const arg2 = (!isX && match[3] ? parseUnit(match[3], fontSize) : 0);
@@ -156,7 +156,7 @@ export const TRANSFORM = {
                         const matrix = MATRIX.translate(x, y);
                         ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, matrix, 0);
                     }
-                    else if (attr.startsWith('matrix')) {
+                    else if (/^matrix/.test(attr)) {
                         const matrix = TRANSFORM.matrix(element, value);
                         if (matrix) {
                             ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix);

@@ -387,7 +387,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             if (position) {
                                 const name = position[1]?.trim();
                                 if (name) {
-                                    if (name.startsWith('circle')) {
+                                    if (/^circle/.test(name)) {
                                         shape = 'circle';
                                     }
                                     else {
@@ -580,9 +580,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak = false, trim = false) {
-        const naturalElements = node.naturalElements;
-        if (naturalElements.length) {
-            return naturalElements.some(item => item.lineBreak);
+        if (node.naturalElements.length) {
+            return node.naturalElements.some(item => item.lineBreak);
         }
         else if (!lineBreak && node.naturalChild) {
             const element = <Element> node.element;
@@ -590,12 +589,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             if (trim) {
                 value = value.trim();
             }
-            if (/\n/.test(value)) {
-                if (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
-                    return true;
-                }
-                return node.css('whiteSpace').startsWith('pre');
-            }
+            return /\n/.test(value) && (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap') || /^pre/.test(node.css('whiteSpace')));
         }
         return false;
     }

@@ -796,7 +796,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         };
                         if (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID)) {
                             if (this.display === 'flex') {
-                                if (renderParent.layoutConstraint && this.css('flexDirection').startsWith('column')) {
+                                if (renderParent.layoutConstraint && /^column/.test(this.css('flexDirection'))) {
                                     layoutWidth = '0px';
                                 }
                                 else if (!documentParent.layoutElement) {
@@ -814,7 +814,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (this.layoutVertical && !renderParent.inlineWidth && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) && !this.documentRoot ||
                                 !this.pageFlow && this.absoluteParent === documentParent && this.hasPX('left') && this.hasPX('right') ||
                                 this.is(CONTAINER_NODE.GRID) && this.some((node: T) => parseFloat(node.android('layout_columnWeight')) > 0) ||
-                                documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && documentParent.css('flexDirection').startsWith('row'))
+                                documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && /^row/.test(documentParent.css('flexDirection')))
                             {
                                 layoutWidth = 'match_parent';
                             }
@@ -898,7 +898,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             layoutHeight = formatPX(this.actualHeight);
                         }
                     }
-                    else if (this.display === 'table-cell' || !this.pageFlow && this.leftTopAxis && this.hasPX('top') && this.hasPX('bottom') || this.onlyChild && renderParent.flexElement && !renderParent.inlineHeight && renderParent.css('flexDirection').startsWith('row') && this.outerWrapper === undefined) {
+                    else if (
+                        this.display === 'table-cell' ||
+                        !this.pageFlow && this.leftTopAxis && this.hasPX('top') && this.hasPX('bottom') ||
+                        this.onlyChild && renderParent.flexElement && !renderParent.inlineHeight && /^row/.test(renderParent.css('flexDirection')) && this.outerWrapper === undefined)
+                    {
                         layoutHeight = 'match_parent';
                     }
                 }

@@ -420,7 +420,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 for (const data of pseudoMap) {
                     const { item, styleElement } = data;
-                    if (data.id.startsWith('__squared_')) {
+                    if (/^__squared_/.test(data.id)) {
                         const element = <HTMLElement> (item.actualParent as T).element;
                         element.id = '';
                     }
@@ -674,7 +674,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 content = getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
                 styleMap.content = content;
             }
-            if (content.endsWith('-quote')) {
+            if (/\-quote$/.test(content)) {
                 let current = element.parentElement;
                 while (current?.tagName === 'Q') {
                     nested++;
@@ -726,7 +726,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (styleMap.display === undefined) {
                     styleMap.display = 'inline';
                 }
-                let tagName = styleMap.display.startsWith('inline') ? 'span' : 'div';
+                let tagName = /^inline/.test(styleMap.display) ? 'span' : 'div';
                 let content = '';
                 switch (value) {
                     case 'normal':
@@ -748,7 +748,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         break;
                     default:
-                        if (value.startsWith('url(')) {
+                        if (/^url\(/.test(value)) {
                             content = resolveURL(value);
                             const format = fromLastIndexOf(content, '.').toLowerCase();
                             const imageFormat = this._localSettings.supported.imageFormat;

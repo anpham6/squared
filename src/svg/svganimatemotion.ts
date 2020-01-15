@@ -305,8 +305,9 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         const toValue = to.value;
                         const angleFrom = parseAngle(fromValue.split(' ').pop() as string);
                         const angleTo = parseAngle(toValue.split(' ').pop() as string);
+                        const autoValue = /^auto/.test(fromValue);
                         if (fromValue === toValue || angleFrom === angleTo) {
-                            if (fromValue.startsWith('auto')) {
+                            if (autoValue) {
                                 if (angleFrom !== 0) {
                                     for (const item of timeRange) {
                                         item.rotate += angleFrom;
@@ -323,7 +324,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                             const offset = angleTo - angleFrom;
                             const length = timeRange.length;
                             const l = offset / length;
-                            if (fromValue.startsWith('auto')) {
+                            if (autoValue) {
                                 for (let k = 0; k < length - 1; k++) {
                                     timeRange[k].rotate += angleFrom + (k * l);
                                 }

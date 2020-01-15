@@ -332,7 +332,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                 }
-                if (!hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && !(node.documentParent.layoutElement && node.documentParent.css('flexDirection').startsWith('column')) && node.tagName !== 'FIELDSET') {
+                if (!hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && !(node.documentParent.flexElement && /^column/.test(node.documentParent.css('flexDirection'))) && node.tagName !== 'FIELDSET') {
                     if (firstChild) {
                         applyMarginCollapse(node, firstChild, true);
                     }

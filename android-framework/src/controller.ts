@@ -532,7 +532,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             const documentParent = node.documentParent as T;
-            if (grow > 0 && (horizontal && documentParent.css('flexDirection').startsWith('row') || !horizontal && documentParent.css('flexDirection').startsWith('column') && (documentParent.hasHeight || documentParent.blockHeight || documentParent.flexibleHeight))) {
+            if (grow > 0 && (horizontal && /^row/.test(documentParent.css('flexDirection')) || !horizontal && /^column/.test(documentParent.css('flexDirection')) && (documentParent.hasHeight || documentParent.blockHeight || documentParent.flexibleHeight))) {
                 setFlexGrow(node.hasPX(dimension, false) ? formatPX(horizontal ? node.actualWidth : node.actualHeight) : '');
                 setLayoutDimension(node, '0px', horizontal);
             }
@@ -1997,7 +1997,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             const android = node.namespace('android');
             for (const attr in android) {
-                if (attr.startsWith('layout_')) {
+                if (/^layout_/.test(attr)) {
                     container.android(attr, android[attr]);
                     delete android[attr];
                 }

@@ -21,6 +21,10 @@ const REGEX_BACKGROUND = /\s*(url\(.+?\))\s*/;
 const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+\-]\d+)?$/;
+const REGEX_PX = /px$/;
+const REGEX_EM = /em$/;
+const REGEX_GRID = /grid$/;
+const REGEX_FLEX = /flex$/;
 
 function setNaturalChildren(node: T) {
     let children: T[];
@@ -49,7 +53,7 @@ function setNaturalElements(node: T) {
     return children;
 }
 
-const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && actualValue.endsWith('px');
+const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && REGEX_PX.test(actualValue);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static getPseudoElt(node: T) {
@@ -517,7 +521,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public convertPX(value: string, dimension = 'width', parent = true) {
-        return value.endsWith('px') ? value : Math.round(this.parseUnit(value, dimension, parent)) + 'px';
+        return REGEX_PX.test(value) ? value : Math.round(this.parseUnit(value, dimension, parent)) + 'px';
     }
 
     public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[] | boolean>) {
@@ -534,7 +538,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'baseline':
                 case 'left':
                 case 'start':
-                    return this.flexElement || (this.actualParent as T).flexElement;
+                    return this.flexElement || this.actualParent?.flexElement ? /^(align|justify|place)\-/.test(attr) : false;
                 default:
                     if (options) {
                         if (options.not) {
@@ -634,13 +638,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     break;
                             }
                         }
-                        else if (segment.endsWith('|*')) {
+                        else if (/\|\*$/.test(segment)) {
                             all = segment === '*|*';
                         }
                         else if (segment.charAt(0) === '*') {
                             segment = segment.substring(1);
                         }
-                        else if (segment.startsWith('::')) {
+                        else if (/^\:\:/.test(segment)) {
                             selectors.length = 0;
                             break invalid;
                         }
@@ -668,7 +672,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 break invalid;
                             }
                             while ((subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
-                                if (subMatch[0].startsWith(':not(')) {
+                                if (/^\:not\(/.test(subMatch[0])) {
                                     if (subMatch[1]) {
                                         if (notList === undefined) {
                                             notList = [];
@@ -1367,6 +1371,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (!this.plainText) {
             const border = BOX_BORDER[index];
             const value = this.css(border[0]);
+            if (this.element?.className === 'container2') {
+                console.log(1);
+            }
             if (value !== 'none') {
                 const attr = border[1];
                 const width = this.css(attr);
@@ -1530,7 +1537,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get svgElement() {
         let result = this._cached.svgElement;
         if (result === undefined) {
-            result = !this.htmlElement && !this.plainText && this._element instanceof SVGElement || this.imageElement && this.src.toLowerCase().endsWith('.svg');
+            result = !this.htmlElement && !this.plainText && this._element instanceof SVGElement || this.imageElement && /\.svg$/.test(this.src.toLowerCase());
             this._cached.svgElement = result;
         }
         return result;
@@ -1564,7 +1571,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get flexElement() {
         let result = this._cached.flexElement;
         if (result === undefined) {
-            result = this.display.endsWith('flex');
+            result = REGEX_FLEX.test(this.display);
             this._cached.flexElement = result;
         }
         return result;
@@ -1573,7 +1580,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get gridElement() {
         let result = this._cached.gridElement;
         if (result === undefined) {
-            result = this.display.endsWith('grid');
+            result = REGEX_GRID.test(this.display);
             this._cached.gridElement = result;
         }
         return result;
@@ -1807,9 +1814,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     else {
                         value = parseUnit(lineHeight, this.fontSize);
-                        if (lineHeight.endsWith('px')) {
+                        if (REGEX_PX.test(lineHeight)) {
                             const fontSize = this.cssInitial('fontSize');
-                            if (fontSize.endsWith('em')) {
+                            if (REGEX_EM.test(fontSize)) {
                                 value *= parseFloat(fontSize);
                             }
                         }
@@ -1826,7 +1833,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     if (this.styleElement) {
                         const fontSize = this.cssInitial('fontSize');
-                        if (fontSize.endsWith('em')) {
+                        if (REGEX_EM.test(fontSize)) {
                             const emSize = parseFloat(fontSize);
                             if (emSize !== 1) {
                                 value *= emSize;
@@ -2601,8 +2608,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 result = right - left;
             }
             else {
-                const parent = this.actualParent;
-                if (parent?.flexElement && parent.css('flexDirection').startsWith('row') || this.display === 'table-cell') {
+                if (this.display === 'table-cell' || this.actualParent?.flexElement && /^row/.test(this.actualParent.css('flexDirection'))) {
                     result = this.bounds.width;
                 }
                 else {
@@ -2626,8 +2632,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.actualHeight;
         if (result === undefined) {
             if (!this.plainText) {
-                const parent = this.actualParent;
-                if (parent?.flexElement && parent.css('flexDirection').startsWith('column') || this.display === 'table-cell') {
+                if (this.display === 'table-cell' || this.actualParent?.flexElement && /^column/.test(this.actualParent.css('flexDirection'))) {
                     result = this.bounds.height;
                 }
                 else {
@@ -2746,7 +2751,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get boundingClientRect() {
-        return (this.naturalElement ? this._element?.getBoundingClientRect() : <DOMRect> this._bounds) || <DOMRect> newBoxRectDimension();
+        return <DOMRect> (this.naturalElement && this._element?.getBoundingClientRect() || this._bounds || newBoxRectDimension());
     }
 
     get fontSize() {

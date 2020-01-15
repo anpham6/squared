@@ -21,9 +21,6 @@ interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const STRING_CUBICBEZIER = 'cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)';
-const REGEX_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
-const KEYFRAME_MAP = getKeyframeRules();
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
     'animation-duration': '0s',
@@ -33,6 +30,10 @@ const ANIMATION_DEFAULT = {
     'animation-fill-mode': 'none',
     'animation-timing-function': 'ease'
 };
+const STRING_CUBICBEZIER = 'cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)';
+const KEYFRAME_MAP = getKeyframeRules();
+const REGEX_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
+const REGEX_AUTO = /^auto/;
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
@@ -68,12 +69,9 @@ function convertRotate(value: string) {
     if (value === 'reverse') {
         return 'auto 180deg';
     }
-    else if (value.startsWith('reverse ')) {
+    else if (/^reverse /.test(value)) {
         const angle = value.split(' ')[1];
-        if (isAngle(angle)) {
-            return 'auto ' + (180 + parseAngle(angle)) + 'deg';
-        }
-        return 'auto 0deg';
+        return 'auto ' + (isAngle(angle) ? 180 + parseAngle(angle) : '0') + 'deg';
     }
     return value;
 }
@@ -330,8 +328,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     previous.value = previousValue;
                                     item.value = itemValue;
                                     if (previousValue.split(' ').pop() !== itemValue.split(' ').pop()) {
-                                        const previousAuto = previousValue.startsWith('auto');
-                                        const auto = itemValue.startsWith('auto');
+                                        const previousAuto = REGEX_AUTO.test(previousValue);
+                                        const auto = REGEX_AUTO.test(itemValue);
                                         if (previousAuto && !auto || !previousAuto && auto) {
                                             const key = (previous.key + item.key) / 2;
                                             offsetRotate.splice(j++, 0, { key, value: previousValue });
@@ -349,7 +347,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     for (const item of offsetRotate) {
                                         const value = item.value;
                                         let angle = parseAngle(value.split(' ').pop() as string);
-                                        if (value.startsWith('auto')) {
+                                        if (REGEX_AUTO.test(value)) {
                                             angle += 90;
                                         }
                                         item.value = angle + ' 0 0';
@@ -452,7 +450,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             if (KEYSPLINE_NAME[keySpline]) {
                                                 keySpline = KEYSPLINE_NAME[keySpline];
                                             }
-                                            else if (keySpline.startsWith('step')) {
+                                            else if (/^step/.test(keySpline)) {
                                                 if (value !== '') {
                                                     const steps = SvgAnimate.convertStepTimingFunction(name, keySpline, keyTimes, values, j, getFontSize(element));
                                                     if (steps) {
@@ -500,8 +498,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             animate.iterationCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
                             animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
                             animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
-                            animate.reverse = direction.endsWith('reverse');
-                            animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && direction.startsWith('alternate');
+                            animate.reverse = /reverse$/.test(direction);
+                            animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && /^alternate/.test(direction);
                             groupName.push(animate);
                         }
                     }

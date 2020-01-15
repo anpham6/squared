@@ -686,7 +686,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (match) {
             src = match[1];
         }
-        if (src.toLowerCase().endsWith('.svg') || src.startsWith('data:image/svg+xml')) {
+        if (/\.svg$/.test(src.toLowerCase()) || /^data\:image\/svg\+xml/.test(src)) {
             const fileAsset = this.resource.getRawData(src);
             if (fileAsset) {
                 const parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;
@@ -887,7 +887,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     togetherTargets.push(togetherData);
                 }
                 for (const [keyName, item] of sequentialMap.entries()) {
-                    if (keyName.startsWith('sequentially_companion')) {
+                    if (/^sequentially_companion/.test(keyName)) {
                         togetherTargets.push(item);
                     }
                     else {
@@ -1010,10 +1010,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                             }
                                         }
                                         if (transformOrigin) {
-                                            if (propertyName.endsWith('X')) {
+                                            if (/X$/.test(propertyName)) {
                                                 afterAnimator.push(this.createPropertyValue('translateX', '0', '1', valueType));
                                             }
-                                            else if (propertyName.endsWith('Y')) {
+                                            else if (/Y$/.test(propertyName)) {
                                                 afterAnimator.push(this.createPropertyValue('translateY', '0', '1', valueType));
                                             }
                                         }
@@ -1256,11 +1256,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                             if (transformOrigin?.[j]) {
                                                                 let direction: string | undefined;
                                                                 let translateTo = 0;
-                                                                if (propertyName.endsWith('X')) {
+                                                                if (/X$/.test(propertyName)) {
                                                                     direction = 'translateX';
                                                                     translateTo = transformOrigin[j].x;
                                                                 }
-                                                                else if (propertyName.endsWith('Y')) {
+                                                                else if (/Y$/.test(propertyName)) {
                                                                     direction = 'translateY';
                                                                     translateTo = transformOrigin[j].y;
                                                                 }
@@ -1499,7 +1499,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         const pathArray: PathData[] = [];
                         if (itemPath.strokeWidth && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                             const animateData = this.ANIMATE_DATA.get(item.name);
-                            if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
+                            if (animateData === undefined || animateData.animate.every(animate => /^stroke\-dash/.test(animate.attributeName))) {
                                 const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData?.animate, floatPrecisionValue);
                                 if (strokeDash) {
                                     if (animateData) {

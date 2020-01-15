@@ -6,7 +6,10 @@ import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertRoman,
 
 type CSSKeyframesData = squared.lib.css.CSSKeyframesData;
 
-const CACHE_PATTERN: ObjectMap<RegExp> = {};
+const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+const REGEX_MEDIACONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+const REGEX_PX = /px$/;
 
 function compareRange(operation: string, unit: number, range: number) {
     switch (operation) {
@@ -24,7 +27,6 @@ function compareRange(operation: string, unit: number, range: number) {
 }
 
 const convertLength = (value: string, dimension: number, fontSize?: number) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
-
 const convertPercent = (value: string, dimension: number, fontSize?: number) => Math.min(isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension, 1);
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
@@ -113,7 +115,7 @@ export function getSpecificity(value: string) {
                     continue;
             }
         }
-        else if (segment.endsWith('|*')) {
+        else if (/\|\*^/.test(segment)) {
             continue;
         }
         else if (segment.charAt(0) === '*') {
@@ -130,7 +132,7 @@ export function getSpecificity(value: string) {
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
         while ((subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
-            if (subMatch[0].startsWith(':not(')) {
+            if (/^\:not\(/.test(subMatch[0])) {
                 if (subMatch[1]) {
                     const lastIndex = CSS.SELECTOR_G.lastIndex;
                     result += getSpecificity(subMatch[1]);
@@ -238,14 +240,11 @@ export function getKeyframeRules(): ObjectMap<CSSKeyframesData> {
 }
 
 export function parseKeyframeRule(rules: CSSRuleList) {
-    if (CACHE_PATTERN.KEYFRAME === undefined) {
-        CACHE_PATTERN.KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-    }
     const result: CSSKeyframesData = {};
     const length = rules.length;
     for (let i = 0; i < length; i++) {
         const item = rules[i];
-        const match = CACHE_PATTERN.KEYFRAME.exec(item.cssText);
+        const match = REGEX_KEYFRAME.exec(item.cssText);
         if (match) {
             for (let percent of (item['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
                 percent = percent.trim();
@@ -277,25 +276,19 @@ export function validMediaRule(value: string, fontSize?: number) {
             case 'only screen':
                 return true;
             default: {
-                if (CACHE_PATTERN.MEDIA_RULE === undefined) {
-                    CACHE_PATTERN.MEDIA_RULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-                    CACHE_PATTERN.MEDIA_CONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-                }
-                else {
-                    CACHE_PATTERN.MEDIA_RULE.lastIndex = 0;
-                }
+                REGEX_MEDIARULE.lastIndex = 0;
                 let match: RegExpExecArray | null;
-                while ((match = CACHE_PATTERN.MEDIA_RULE.exec(value)) !== null) {
+                while ((match = REGEX_MEDIARULE.exec(value)) !== null) {
                     const negate = match[1] === 'not';
                     let subMatch: RegExpExecArray | null;
                     let valid = false;
-                    while ((subMatch = CACHE_PATTERN.MEDIA_CONDITION.exec(match[2])) !== null) {
+                    while ((subMatch = REGEX_MEDIACONDITION.exec(match[2])) !== null) {
                         const attr = subMatch[1];
                         let operation: string;
-                        if (attr.startsWith('min')) {
+                        if (/^min/.test(attr)) {
                             operation = '>=';
                         }
-                        else if (attr.startsWith('max')) {
+                        else if (/^max/.test(attr)) {
                             operation = '<=';
                         }
                         else {
@@ -330,10 +323,10 @@ export function validMediaRule(value: string, fontSize?: number) {
                             case 'max-resolution':
                                 if (rule) {
                                     let resolution = parseFloat(rule);
-                                    if (rule.endsWith('dpcm')) {
+                                    if (/dpcm$/.test(rule)) {
                                         resolution *= 2.54;
                                     }
-                                    else if (rule.endsWith('dppx') || rule.endsWith('x')) {
+                                    else if (/dppx$/.test(rule)) {
                                         resolution *= 96;
                                     }
                                     valid = compareRange(operation, getDeviceDPI(), resolution);
@@ -372,7 +365,7 @@ export function validMediaRule(value: string, fontSize?: number) {
                             break;
                         }
                     }
-                    CACHE_PATTERN.MEDIA_CONDITION.lastIndex = 0;
+                    REGEX_MEDIACONDITION.lastIndex = 0;
                     if (!negate && valid || negate && !valid) {
                         return true;
                     }
@@ -852,7 +845,7 @@ export function convertAngle(value: string, unit = 'deg') {
 }
 
 export function convertPX(value: string, fontSize?: number) {
-    return value ? (value.endsWith('px') ? value : parseUnit(value, fontSize) + 'px') : '0px';
+    return value ? (REGEX_PX.test(value) ? value : parseUnit(value, fontSize) + 'px') : '0px';
 }
 
 export function calculate(value: string, dimension = 0, fontSize?: number) {
@@ -876,12 +869,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
         }
     }
     if (opened === closing.length) {
-        if (CACHE_PATTERN.CALCUATE_SYMBOL === undefined) {
-            CACHE_PATTERN.CALCUATE_SYMBOL = /(\s+[+\-]\s+|\s*[*/]\s*)/;
-            CACHE_PATTERN.CALCUATE_PLACEHOLDER = /{(\d+)}/;
-        }
-        const symbol = CACHE_PATTERN.CALCUATE_SYMBOL;
-        const placeholder = CACHE_PATTERN.CALCUATE_PLACEHOLDER;
+        const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
         const equated: number[] = [];
         let index = 0;
         while (true) {
@@ -911,7 +899,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                                 evaluate.push(partial);
                                 break;
                             default:
-                                const match = placeholder.exec(partial);
+                                const match = /{(\d+)}/.exec(partial);
                                 if (match) {
                                     seg.push(equated[parseInt(match[1])]);
                                 }

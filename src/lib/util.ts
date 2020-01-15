@@ -327,7 +327,7 @@ export function resolvePath(value: string, href?: string) {
             value = origin + value;
         }
         else {
-            if (value.startsWith('../')) {
+            if (/^\.\.\//.test(value)) {
                 const segments: string[] = [];
                 let levels = 0;
                 for (const dir of value.split('/')) {

@@ -2,6 +2,8 @@ import { FileAsset, RawAsset, UserSettings } from '../../@types/base/application
 
 const { fromLastIndexOf, trimString } = squared.lib.util;
 
+const isHttpProtocol = () => /^http/.test(location.protocol);
+
 export interface ExpressResult {
     success: boolean;
     directory: string;
@@ -200,7 +202,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
     }
 
     public copying(directory: string, assets: FileAsset[], callback?: CallbackResult) {
-        if (location.protocol.startsWith('http')) {
+        if (isHttpProtocol()) {
             assets = assets.concat(this.assets);
             if (assets.length) {
                 const { outputDirectory, outputArchiveTimeout } = this.userSettings;
@@ -241,7 +243,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
     }
 
     public archiving(filename: string, assets: FileAsset[], appendTo = '') {
-        if (location.protocol.startsWith('http')) {
+        if (isHttpProtocol()) {
             assets = assets.concat(this.assets);
             if (assets.length) {
                 const { outputDirectory, outputArchiveFormat, outputArchiveTimeout } = this.userSettings;

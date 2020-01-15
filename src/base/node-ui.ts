@@ -752,7 +752,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         if (this.floating && lastSibling.blockStatic && !horizontal) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (!this.display.startsWith('inline-')) {
+                        else if (!/^inline\-/.test(this.display)) {
                             const { top, bottom } = this.linear;
                             if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
