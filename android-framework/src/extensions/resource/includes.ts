@@ -10,7 +10,7 @@ type NodeRenderIndex = {
     item: View;
     name?: string;
     index: number;
-    merge: boolean;
+    include: boolean;
 };
 
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
@@ -31,7 +31,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                             item,
                             name,
                             index,
-                            merge: dataset.androidIncludeMerge === 'true'
+                            include: dataset.androidIncludeMerge === 'false'
                         };
                         if (name) {
                             if (open === undefined) {
@@ -64,12 +64,12 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                     templates.push(<NodeTemplate<T>> renderTemplates[k]);
                                     renderTemplates[k] = null;
                                 }
-                                const merge = openData.merge || templates.length > 1;
+                                const merge = !openData.include || templates.length > 1;
                                 const depth = merge ? 1 : 0;
                                 renderTemplates[openData.index] = <NodeIncludeTemplate<T>> {
                                     type: NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
-                                    content: controller.renderNodeStatic('include', { layout: '@layout/' + openData.name }, '', ''),
+                                    content: controller.renderNodeStatic('include', { layout: '@layout/' + openData.name }, 'match_parent'),
                                     indent: true
                                 };
                                 let content = controller.cascadeDocument(templates, depth);

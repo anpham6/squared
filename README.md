@@ -418,12 +418,12 @@ CSS Grid and Flexbox layouts are are for the most part fully supported. There is
 
 ### ANDROID: Layout Includes / Merge Tag
 
-Some applications can benefit from using includes or merge tags to share common templates. Nested includes are also supported.
+Some applications can benefit from using includes or merge tags to share common templates. Merge is the default behavior and can be disabled using the "false" attribute value. Nested includes are also supported.
 
 ```xml
 <div>
     <div>Item 1</div>
-    <div data-android-include="filename1" data-android-include-merge="true">Item 2</div>
+    <div data-android-include="filename1" data-android-include-merge="false">Item 2</div>
     <div>Item 3</div>
     <div data-android-include-end="true">Item 4</div>
     <div data-android-include="filename2" data-android-include-end="true">Item 5</div>

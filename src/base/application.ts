@@ -29,17 +29,15 @@ let REGEX_FONT_WEIGHT!: RegExp;
 let REGEX_URL!: RegExp;
 
 function addImageSrc(uri: string, width = 0, height = 0) {
-    if (isString(uri)) {
-        const image = ASSETS.images.get(uri);
-        if (image === undefined || width > 0 && height > 0 || image.width === 0 && image.height === 0) {
-            ASSETS.images.set(uri, { width, height, uri });
-        }
+    const image = ASSETS.images.get(uri);
+    if (image === undefined || width > 0 && height > 0 || image.width === 0 && image.height === 0) {
+        ASSETS.images.set(uri, { width, height, uri });
     }
 }
 
 function parseSrcSet(value: string) {
-    if (isString(value)) {
-        for (const uri of value.split(XML.SEPARATOR)) {
+    for (const uri of value.split(XML.SEPARATOR)) {
+        if (uri !== '') {
             addImageSrc(resolvePath(uri));
         }
     }
@@ -181,13 +179,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         const images: PreloadImage[] = [];
         if (preloadImages) {
             for (const element of this.rootElements) {
-                element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => {
-                    addImageSrc(source.src);
-                    parseSrcSet(source.srcset);
-                });
-                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
-                    addImageSrc(image.src, image.width, image.height);
-                });
+                element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
+                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
             }
             for (const image of ASSETS.images.values()) {
                 const uri = image.uri as string;
