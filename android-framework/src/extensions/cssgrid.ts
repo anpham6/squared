@@ -544,7 +544,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 if (item) {
                                     for (let col of item) {
                                         const weight = truncate(rowWeight, col.localSettings.floatPrecision);
-                                        col = col.ascend({ excluding: node, attr: 'outerWrapper' })[0] as T || col;
+                                        col = col.outerMostWrapper as T || col;
                                         col.android('layout_rowWeight', weight);
                                         col.setLayoutHeight('0px');
                                     }

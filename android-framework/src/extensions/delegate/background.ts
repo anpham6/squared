@@ -33,17 +33,8 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
 
     public processNode(node: T, parent: T) {
         const controller = <android.base.Controller<T>> this.controller;
-        let target = node.outerWrapper as T | undefined;
+        let target = node.outerMostWrapper as T | undefined;
         let targetParent: T | undefined;
-        while (target) {
-            const outerWrapper = target.outerWrapper as T | undefined;
-            if (outerWrapper) {
-                target = outerWrapper;
-            }
-            else {
-                break;
-            }
-        }
         if (target) {
             targetParent = target.parent as T;
             const renderChildren = targetParent.renderChildren;
@@ -89,7 +80,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                 parentAs = container;
                 parentAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 parentAs.addAlign(NODE_ALIGNMENT.SINGLE);
-                parentAs.render(targetParent);
+                parentAs.render(actualParent);
                 this.application.addLayoutTemplate(
                     actualParent,
                     container,

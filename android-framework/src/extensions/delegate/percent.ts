@@ -57,7 +57,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public postConstraints(node: T) {
-        const outerWrapper = node.outerWrapper as T;
+        const outerWrapper = node.outerMostWrapper;
         if (outerWrapper) {
             node.resetBox(BOX_STANDARD.MARGIN, outerWrapper);
         }

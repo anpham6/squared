@@ -1008,7 +1008,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    public actualRect(direction: string, dimension = 'linear', all = false) {
+    public actualRect(direction: string, dimension: BoxType = 'linear', all = false) {
         const value: number = this[dimension][direction];
         if (this.inputElement || all) {
             const companion = this.companion;
@@ -1396,6 +1396,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 result = false;
             }
             this._cached.textEmpty = result;
+        }
+        return result;
+    }
+
+    get outerMostWrapper() {
+        let result = this.outerWrapper;
+        while (result) {
+            const outerWrapper = result.outerWrapper;
+            if (outerWrapper) {
+                result = outerWrapper;
+            }
+            else {
+                break;
+            }
         }
         return result;
     }

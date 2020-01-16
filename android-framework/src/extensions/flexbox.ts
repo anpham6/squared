@@ -439,10 +439,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         const previous = seg[j - 1];
                         const next = seg[j + 1];
                         if (next) {
-                            chain.anchor(RLBT, (next.outerWrapper || next).documentId);
+                            chain.anchor(RLBT, next.documentId);
                         }
                         if (previous) {
-                            chain.anchor(LRTB, (previous.outerWrapper || previous).documentId);
+                            chain.anchor(LRTB, previous.documentId);
                         }
                         if (opposing) {
                             if (parentEnd && lengthA > 1 && dimensionInverse) {

@@ -522,6 +522,7 @@ declare namespace base {
         readonly layoutHorizontal: boolean;
         readonly layoutVertical: boolean;
         readonly onlyChild: boolean;
+        readonly outerMostWrapper: NodeUI | undefined;
         readonly support: Support;
         readonly documentId: string;
         readonly extensions: string[];
@@ -560,7 +561,7 @@ declare namespace base {
         render(parent?: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
         renderFilter(predicate: IteratorPredicate<NodeUI, boolean>): NodeUI[];
-        actualRect(direction: string, dimension?: string, all?: boolean): number;
+        actualRect(direction: string, dimension?: BoxType, all?: boolean): number;
         actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
         previousSiblings(options?: SiblingOptions): NodeUI[];

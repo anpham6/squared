@@ -1376,18 +1376,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                     }
-                    else if (top > 0) {
-                        const renderParent = this.renderParent as T;
-                        if (renderParent.layoutVertical) {
-                            const actualParent = this.actualParent as T;
-                            if (actualParent.floatContainer) {
-                                const boundsTop = this.bounds.top;
-                                const renderChildren = renderParent.renderChildren;
-                                for (const node of actualParent.naturalElements as T[]) {
-                                    if (node.floating && node.bounds.top === boundsTop && !renderChildren.includes(node)) {
-                                        top = Math.max(top - node.linear.height, 0);
-                                        break;
-                                    }
+                    else if (top > 0 && (this.actualParent as T)?.floatContainer) {
+                        const renderParent = (this.outerMostWrapper || this).renderParent as T;
+                        if (renderParent.layoutVertical && !renderParent.hasAlign(NODE_ALIGNMENT.FLOAT)) {
+                            const boundsTop = this.bounds.top;
+                            const renderChildren = renderParent.renderChildren;
+                            for (const node of (this.actualParent as T).naturalElements as T[]) {
+                                if (node.floating && node.bounds.top === boundsTop && !renderChildren.includes(node)) {
+                                    top = Math.max(top - node.linear.height, 0);
+                                    break;
                                 }
                             }
                         }
@@ -1664,12 +1661,20 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get anchorTarget(): T {
-            const outerWrapper = this.outerWrapper;
-            if (outerWrapper === undefined) {
-                return this;
+            let target = this as T;
+            while (target) {
+                const renderParent = target.renderParent as T;
+                if (renderParent) {
+                    if (renderParent.layoutConstraint || renderParent.layoutRelative) {
+                        return target;
+                    }
+                }
+                else {
+                    break;
+                }
+                target = target.outerWrapper as T;
             }
-            const renderParent = this.renderParent;
-            return renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative) ? this : outerWrapper;
+            return this;
         }
 
         set anchored(value) {
