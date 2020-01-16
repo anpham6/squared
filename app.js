@@ -65,6 +65,10 @@ function createGzipWriteStream(level, filename, filenameOut) {
     return out;
 }
 
+function encodeString(value) {
+    return value.replace(/[<>:"/\\|?*]/g, '_');
+}
+
 app.post('/api/assets/copy', (req, res) => {
     const dirname = req.query.to;
     if (dirname) {

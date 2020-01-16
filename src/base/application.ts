@@ -14,24 +14,25 @@ const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
 const { CHAR, STRING, XML } = $lib.regex;
 const { getElementCache, setElementCache } = $lib.session;
 
+const { images, rawData } = Resource.ASSETS;
+
 type PreloadImage = HTMLImageElement | string;
 
-const ASSETS = Resource.ASSETS;
 const REGEX_MEDIATEXT = /all|screen/;
 const REGEX_BACKGROUND = /^background/;
+const REGEX_IMPORTANT = /\s*([a-z\-]+):.*?!important;/g;
+const REGEX_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
+const REGEX_FONTFAMILY = /\s*font-family:[^\w]*([^'";]+)/;
+const REGEX_FONTSRC = /\s*src:\s*([^;]+);/;
+const REGEX_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
+const REGEX_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
+const REGEX_URL = /\s*(url|local)\((?:['""]([^'")]+)['"]|([^)]+))\)(?:\s*format\(['"]?([\w\-]+)['"]?\))?\s*/;
 const REGEX_DATAURI = new RegExp(`(url\\("(${STRING.DATAURI})"\\)),?\\s*`, 'g');
-let REGEX_IMPORTANT!: RegExp;
-let REGEX_FONT_FACE!: RegExp;
-let REGEX_FONT_FAMILY!: RegExp;
-let REGEX_FONT_SRC!: RegExp;
-let REGEX_FONT_STYLE!: RegExp;
-let REGEX_FONT_WEIGHT!: RegExp;
-let REGEX_URL!: RegExp;
 
 function addImageSrc(uri: string, width = 0, height = 0) {
-    const image = ASSETS.images.get(uri);
+    const image = images.get(uri);
     if (image === undefined || width > 0 && height > 0 || image.width === 0 && image.height === 0) {
-        ASSETS.images.set(uri, { width, height, uri });
+        images.set(uri, { width, height, uri });
     }
 }
 
@@ -176,16 +177,16 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         };
         const preloadImages = this.userSettings.preloadImages;
-        const images: PreloadImage[] = [];
+        const imageElements: PreloadImage[] = [];
         if (preloadImages) {
             for (const element of this.rootElements) {
                 element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
             }
-            for (const image of ASSETS.images.values()) {
+            for (const image of images.values()) {
                 const uri = image.uri as string;
                 if (isSvgExtension(uri)) {
-                    images.push(uri);
+                    imageElements.push(uri);
                 }
                 else if (image.width === 0 && image.height === 0) {
                     const element = document.createElement('img');
@@ -202,7 +203,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
-        for (const [uri, data] of ASSETS.rawData.entries()) {
+        for (const [uri, data] of rawData.entries()) {
             const mimeType = data.mimeType;
             if (isString(mimeType) && /^image\//.test(mimeType) && !/svg\+xml$/.test(mimeType)) {
                 const element = document.createElement('img');
@@ -211,7 +212,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (width > 0 && height > 0) {
                     data.width = width;
                     data.height = height;
-                    ASSETS.images.set(uri, { width, height, uri: data.filename });
+                    images.set(uri, { width, height, uri: data.filename });
                 }
                 else {
                     document.body.appendChild(element);
@@ -223,7 +224,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
                 if (isSvgExtension(image.src)) {
                     if (preloadImages) {
-                        images.push(image.src);
+                        imageElements.push(image.src);
                     }
                 }
                 else {
@@ -234,14 +235,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                         resource.addImage(image);
                     }
                     else if (preloadImages) {
-                        images.push(image);
+                        imageElements.push(image);
                     }
                 }
             });
         }
-        if (images.length) {
+        if (imageElements.length) {
             this.initializing = true;
-            Promise.all(objectMap<PreloadImage, Promise<PreloadImage>>(images, image => {
+            Promise.all(objectMap<PreloadImage, Promise<PreloadImage>>(imageElements, image => {
                 return new Promise((resolve, reject) => {
                     if (typeof image === 'string') {
                         resolve(getImageSvgAsync(image));
@@ -257,7 +258,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 for (let i = 0; i < length; i++) {
                     const value = result[i];
                     if (typeof value === 'string') {
-                        const uri = images[i];
+                        const uri = imageElements[i];
                         if (typeof uri === 'string') {
                             resource.addRawData(uri, 'image/svg+xml', 'utf8', value);
                         }
@@ -280,7 +281,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         const PromiseResult = class {
             public then(resolve: () => void) {
-                if (images.length) {
+                if (imageElements.length) {
                     __THEN = resolve;
                 }
                 else {
@@ -305,20 +306,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         return false;
     }
 
-    public createNode(element?: Element, append = true, parent?: T, children?: T[]) {
-        const node = new this._nodeConstructor(this.nextId, this.processing.sessionId, element, this._nodeAfterInsert) as T;
-        if (parent) {
-            node.depth = parent.depth + 1;
-        }
-        if (children) {
-            for (const item of children) {
-                item.parent = node;
-            }
-        }
-        if (append) {
-            this._cache.append(node, children !== undefined);
-        }
-        return node;
+    public createNode(element: Element) {
+        return new this._nodeConstructor(this.nextId, this.processing.sessionId, element, this._nodeAfterInsert) as T;
     }
 
     public toString() {
@@ -522,9 +511,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                     fromRule.push(convertCamelCase(attr));
                 }
                 if (cssText.indexOf('!important') !== -1) {
-                    if (REGEX_IMPORTANT === undefined) {
-                        REGEX_IMPORTANT = /\s*([a-z\-]+):.*?!important;/g;
-                    }
                     let match: RegExpExecArray | null;
                     while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
                         const attr = convertCamelCase(match[1]);
@@ -649,21 +635,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                 break;
             }
             case CSSRule.FONT_FACE_RULE: {
-                if (REGEX_FONT_FACE === undefined) {
-                    REGEX_FONT_FACE = /\s*@font-face\s*{([^}]+)}\s*/;
-                    REGEX_FONT_FAMILY = /\s*font-family:[^\w]*([^'";]+)/;
-                    REGEX_FONT_SRC = /\s*src:\s*([^;]+);/;
-                    REGEX_FONT_STYLE = /\s*font-style:\s*(\w+)\s*;/;
-                    REGEX_FONT_WEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-                    REGEX_URL = /\s*(url|local)\((?:['""]([^'")]+)['"]|([^)]+))\)(?:\s*format\(['"]?(\w+)['"]?\))?\s*/;
-                }
-                const attr = REGEX_FONT_FACE.exec(cssText)?.[1];
+                const attr = REGEX_FONTFACE.exec(cssText)?.[1];
                 if (attr) {
-                    const fontFamily = (REGEX_FONT_FAMILY.exec(attr)?.[1] || '').trim();
-                    const srcMatch = (REGEX_FONT_SRC.exec(attr)?.[1] || '').split(XML.SEPARATOR);
+                    const fontFamily = (REGEX_FONTFAMILY.exec(attr)?.[1] || '').trim();
+                    const srcMatch = (REGEX_FONTSRC.exec(attr)?.[1] || '').split(XML.SEPARATOR);
                     if (fontFamily !== '' && srcMatch.length) {
-                        const fontStyle = REGEX_FONT_STYLE.exec(attr)?.[1].toLowerCase() || 'normal';
-                        const fontWeight = parseInt(REGEX_FONT_WEIGHT.exec(attr)?.[1] || '400');
+                        const fontStyle = REGEX_FONTSTYLE.exec(attr)?.[1].toLowerCase() || 'normal';
+                        const fontWeight = parseInt(REGEX_FONTWEIGHT.exec(attr)?.[1] || '400');
                         for (const value of srcMatch) {
                             const urlMatch = REGEX_URL.exec(value);
                             if (urlMatch) {

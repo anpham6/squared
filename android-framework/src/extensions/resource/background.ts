@@ -999,18 +999,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 gravityX = node.localizeString('right');
                                 break;
                             default:
-                                gravityX += node.localizeString(position.right !== 0 ? 'right' : 'left');
+                                gravityX = node.localizeString(position.right !== 0 ? 'right' : 'left');
                                 break;
                         }
                     }
                     else {
                         if (dimension) {
-                            if (position.left > 0) {
+                            let x = position.left;
+                            if (x > 0) {
                                 do {
-                                    position.left -= dimenWidth;
+                                    x -= dimenWidth;
                                 }
-                                while (position.left > 0);
+                                while (x > 0);
                                 repeatX = true;
+                                position.left = x;
                             }
                             else {
                                 repeatX = dimenWidth < boundsWidth;
@@ -1027,38 +1029,44 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             case 'top':
                             case '0%':
                                 resetPosition('top', 'bottom');
-                                gravityY += 'top';
+                                gravityY = 'top';
                                 break;
                             case 'center':
                             case '50%':
                                 resetPosition('top', 'bottom', true);
-                                gravityY += STRING_ANDROID.CENTER_VERTICAL;
+                                gravityY = STRING_ANDROID.CENTER_VERTICAL;
                                 break;
                             case 'bottom':
                             case '100%':
                                 resetPosition('bottom', 'top');
-                                gravityY += 'bottom';
+                                gravityY = 'bottom';
                                 break;
                             default:
-                                gravityY += position.bottom !== 0 ? 'bottom' : 'top';
+                                gravityY = position.bottom !== 0 ? 'bottom' : 'top';
                                 break;
                         }
                     }
                     else {
                         if (dimension) {
-                            if (position.top > 0) {
+                            let y = position.top;
+                            if (y > 0) {
                                 do {
-                                    position.top -= dimenHeight;
+                                    y -= dimenHeight;
                                 }
-                                while (position.top > 0);
+                                while (y > 0);
+                                position.top = y;
                                 repeatY = true;
                             }
                             else {
-                                repeatY = dimenHeight < boundsHeight;
+                                repeatY = node.element === document.body || dimenHeight < boundsHeight;
+                                if (y === 0) {
+                                    gravityY = 'top';
+                                }
                             }
                         }
                         else {
                             position.top = 0;
+                            gravityY = 'top';
                             repeatY = true;
                         }
                         position.bottom = 0;
@@ -1131,11 +1139,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (gravityX !== '' && tileModeY === 'repeat' && dimenWidth < boundsWidth) {
                             function resetX() {
                                 if (gravityY === '' && gravityX !== node.localizeString('left') && node.renderChildren.length) {
-                                    tileModeY = 'disabled';
+                                    tileModeY = '';
                                 }
                                 gravityAlign = gravityX;
                                 gravityX = '';
-                                tileModeX = 'disabled';
+                                tileModeX = '';
                             }
                             switch (gravityX) {
                                 case 'start':
@@ -1160,7 +1168,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (gravityY !== '' && tileModeX === 'repeat' && dimenHeight < boundsHeight) {
                             function resetY() {
                                 if (gravityX === '' && gravityY !== 'top' && node.renderChildren.length) {
-                                    tileModeX = 'disabled';
+                                    tileModeX = '';
                                 }
                                 gravityAlign += (gravityAlign !== '' ? '|' : '') + gravityY;
                                 gravityY = '';

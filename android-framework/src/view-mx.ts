@@ -177,28 +177,31 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public static getAvailablePercent(nodes: T[], dimension: "width" | "height", boxSize: number) {
             let percent = 1;
+            let i = 0;
             for (const sibling of nodes) {
-                if (sibling[dimension] > 0) {
-                    const value = sibling.cssInitial(dimension);
-                    if (isPercent(value)) {
-                        percent -= parseFloat(value) / 100;
-                        continue;
+                if (sibling.pageFlow) {
+                    i++;
+                    if (sibling[dimension] > 0) {
+                        const value = sibling.cssInitial(dimension);
+                        if (isPercent(value)) {
+                            percent -= parseFloat(value) / 100;
+                            continue;
+                        }
+                        else if (isLength(value, false)) {
+                            percent -= sibling.parseUnit(value) / boxSize;
+                            continue;
+                        }
                     }
-                    else if (isLength(value, false)) {
-                        percent -= sibling.parseUnit(value) / boxSize;
-                        continue;
-                    }
+                    percent -= sibling.bounds[dimension] / boxSize;
                 }
-                percent -= sibling.bounds[dimension] / boxSize;
             }
-            return Math.max(0, percent);
+            return i > 1 ? Math.max(0, percent) : 1;
         }
 
         public api = BUILD_ANDROID.LATEST;
         public renderParent?: T;
         public renderTemplates?: (NodeTemplate<T> | null)[];
         public outerWrapper?: T;
-        public innerWrapped?: T;
         public companion?: T;
         public extracted?: T[];
         public horizontalRows?: T[][];
@@ -219,6 +222,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _documentParent?: T;
         protected _boxAdjustment?: BoxModel;
         protected _boxReset?: BoxModel;
+        protected _innerWrapped?: T;
 
         private _localization = false;
         private _containerType = 0;
@@ -503,11 +507,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             for (let i = this.api; i <= BUILD_ANDROID.LATEST; i++) {
                 const callback = API_ANDROID[i]?.android[attr];
-                if (callback !== undefined) {
-                    if (typeof callback === 'function') {
+                switch (typeof callback) {
+                    case 'boolean':
+                        return callback;
+                    case 'function':
                         return callback(result, this.api, this);
-                    }
-                    return callback;
                 }
             }
             return true;
@@ -662,11 +666,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const maxDimension = this.support.maxDimension;
             let adjustViewBounds = false;
             if (this.documentBody) {
-                const hasFixedElements = renderParent.id === 0 && this.renderChildren.some(node => node.css('position') === 'fixed');
-                if (this.css('width') === '100%' || this.css('minWidth') === '100%' || hasFixedElements || this.blockStatic && !this.hasPX('width') && !this.hasPX('maxWidth')) {
+                const fixedContainer = renderParent.id === 0 && this.renderChildren.some(node => node.css('position') === 'fixed');
+                if (fixedContainer || this.css('width') === '100%' || this.css('minWidth') === '100%' || this.blockStatic && !this.hasPX('width') && !this.hasPX('maxWidth')) {
                     this.setLayoutWidth('match_parent', false);
                 }
-                if (this.css('height') === '100%' || this.css('minHeight') === '100%' || hasFixedElements) {
+                if (fixedContainer || this.css('height') === '100%' || this.css('minHeight') === '100%') {
                     this.setLayoutHeight('match_parent', false);
                 }
             }
@@ -942,7 +946,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (maxDimension) {
                 const maxWidth = this.css('maxWidth');
-                const maxHeight = this.css('maxHeight');
+                let maxHeight = this.css('maxHeight');
                 let width = -1;
                 if (isLength(maxWidth, true)) {
                     if (maxWidth === '100%') {
@@ -952,8 +956,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else if (this.imageElement) {
                             width = this.toElementInt('naturalWidth');
                             if (width > documentParent.actualWidth) {
-                                width = -1;
                                 this.setLayoutWidth('match_parent');
+                                this.setLayoutHeight('wrap_content');
+                                width = -1;
+                                maxHeight = '';
                                 adjustViewBounds = true;
                             }
                         }
@@ -1376,11 +1382,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                     }
-                    else if (top > 0 && (this.actualParent as T)?.floatContainer) {
+                    else if (top > 0 && (this.actualParent as T)?.floatContainer && this.inlineVertical) {
                         const renderParent = (this.outerMostWrapper || this).renderParent as T;
                         if (renderParent.layoutVertical && !renderParent.hasAlign(NODE_ALIGNMENT.FLOAT)) {
                             const boundsTop = this.bounds.top;
-                            const renderChildren = renderParent.renderChildren;
+                            const renderChildren = (this.renderParent as T).renderChildren;
                             for (const node of (this.actualParent as T).naturalElements as T[]) {
                                 if (node.floating && node.bounds.top === boundsTop && !renderChildren.includes(node)) {
                                     top = Math.max(top - node.linear.height, 0);
@@ -1523,7 +1529,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         private alignLayout(renderParent: T) {
             if (this.layoutLinear) {
                 if (this.layoutVertical) {
-                    if (!renderParent.layoutVertical && !renderParent.layoutFrame && !this.documentRoot && !this.hasAlign(NODE_ALIGNMENT.TOP)) {
+                    if (!renderParent.layoutFrame && !this.documentRoot && !this.hasAlign(NODE_ALIGNMENT.TOP)) {
                         let children = this.renderChildren;
                         let firstChild: T | undefined;
                         do {
@@ -1892,6 +1898,20 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 return boxHeight > 0 ? this.contentBoxHeight / boxHeight : 0;
             }
             return 0;
+        }
+
+        get innerWrapped() {
+            return this._innerWrapped;
+        }
+        set innerWrapped(value) {
+            if (value) {
+                const outerWrapper = this.outerMostWrapper as T | undefined;
+                if (outerWrapper) {
+                    value = outerWrapper;
+                }
+                this._innerWrapped = value;
+                value.outerWrapper = this;
+            }
         }
 
         set localSettings(value) {

@@ -12,7 +12,7 @@ const { CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.
 
 function isParentVisible(node: View, visibleStyle: VisibleStyle) {
     const actualParent = node.actualParent as View;
-    return actualParent.visibleStyle.background && hasWidth(node) && node.css('height') !== '100%' && node.css('minHeight') !== '100%' || actualParent.height > 0 && visibleStyle.backgroundImage && node.css('backgroundPositionY').indexOf('bottom') !== -1;
+    return actualParent.visibleStyle.background && (hasWidth(node) && node.css('height') !== '100%' && node.css('minHeight') !== '100%' || visibleStyle.backgroundImage && (visibleStyle.backgroundRepeatY || node.css('backgroundPositionY').indexOf('bottom') !== -1));
 }
 
 const isHideMargin = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && (node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
@@ -76,26 +76,28 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         }
         const backgroundImage = node.backgroundImage;
         if (backgroundImage !== '') {
-            if (container) {
-                parentAs = container;
-                parentAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                parentAs.addAlign(NODE_ALIGNMENT.SINGLE);
-                parentAs.render(actualParent);
-                this.application.addLayoutTemplate(
-                    actualParent,
-                    container,
-                    <NodeXmlTemplate<T>> {
-                        type: NODE_TEMPLATE.XML,
-                        node: container,
-                        controlName: container.controlName
-                    }
-                );
-                container = controller.createNodeWrapper(actualNode, parentAs);
-                container.documentRoot = false;
-                parentAs.documentRoot = true;
-            }
-            else {
-                container = controller.createNodeWrapper(actualNode, actualParent);
+            if (container === undefined || parentVisible || actualParent.visibleStyle.background || !visibleStyle.backgroundRepeatY) {
+                if (container) {
+                    parentAs = container;
+                    parentAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
+                    parentAs.addAlign(NODE_ALIGNMENT.SINGLE);
+                    parentAs.render(actualParent);
+                    this.application.addLayoutTemplate(
+                        actualParent,
+                        container,
+                        <NodeXmlTemplate<T>> {
+                            type: NODE_TEMPLATE.XML,
+                            node: container,
+                            controlName: container.controlName
+                        }
+                    );
+                    container = controller.createNodeWrapper(actualNode, parentAs);
+                    container.documentRoot = false;
+                    parentAs.documentRoot = true;
+                }
+                else {
+                    container = controller.createNodeWrapper(actualNode, actualParent);
+                }
             }
             container.setLayoutWidth('match_parent');
             container.unsafe('excludeResource', NODE_RESOURCE.BOX_SPACING);
@@ -103,7 +105,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             const minHeight = actualParent.cssInitial('minHeight');
             let backgroundSize: string | undefined;
             if (height === '' && minHeight === '') {
-                container.setLayoutHeight(!parentVisible ? 'match_parent' : 'wrap_content');
+                container.setLayoutHeight(!parentVisible && (visibleStyle.backgroundRepeatY || !node.cssAny('backgroundPositionY', 'top', '0px', '0%')) ? 'match_parent' : 'wrap_content');
             }
             else {
                 if (height !== '100%' && minHeight !== '100%') {

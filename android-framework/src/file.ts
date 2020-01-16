@@ -48,7 +48,7 @@ function getImageAssets(items: string[]) {
     for (let i = 0, j = 0; i < length; i += 3, j++) {
         result[j] = {
             pathname: items[i + 1],
-            filename: items[i + 2],
+            filename: items[i + 2].split('?')[0],
             content: '',
             uri: items[i]
         };
@@ -188,7 +188,7 @@ export default class File<T extends android.base.View> extends squared.base.File
                     if (uri) {
                         this.addAsset({
                             pathname,
-                            filename: fontName + '.' + fromLastIndexOf(uri, '.').toLowerCase(),
+                            filename: fontName + '.' + fromLastIndexOf(uri.split('?')[0], '.').toLowerCase(),
                             uri
                         });
                     }

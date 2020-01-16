@@ -467,7 +467,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     node.setLayoutHeight('match_parent', false);
                 }
                 renderAs.innerWrapped = node;
-                node.outerWrapper = renderAs;
                 node.parent = renderAs;
                 outputAs = this.application.renderNode(
                     new LayoutUI(
@@ -621,7 +620,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 i++;
             }
             if (!column.fixedWidth) {
-                if (column.flexible && node.flexibleWidth && node.ascend({ condition: item => item.hasWidth }).length === 0) {
+                if (column.flexible && node.flexibleWidth && node.ascend({ condition: (item: T) => item.inlineWidth || item.flexibleWidth }).length > 0) {
                     node.setLayoutWidth(node.blockStatic ? 'match_parent' : formatPX(node.actualWidth));
                 }
             }

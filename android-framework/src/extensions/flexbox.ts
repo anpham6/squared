@@ -515,8 +515,13 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         if (baseline === null) {
                                             baseline = getBaseline(seg) as T | null;
                                         }
-                                        if (baseline && baseline !== chain) {
-                                            chain.anchor('baseline', baseline.documentId);
+                                        if (baseline) {
+                                            if (baseline !== chain) {
+                                                chain.anchor('baseline', baseline.documentId);
+                                            }
+                                            else {
+                                                chain.anchorParent(orientationInverse, 'packed');
+                                            }
                                         }
                                     }
                                     break;

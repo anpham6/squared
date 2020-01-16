@@ -643,9 +643,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     public afterResources() {
         if ($SvgBuild) {
+            let parentElement: HTMLElement | undefined;
+            let element: SVGSVGElement | undefined;
             for (const node of this.application.processing.cache) {
-                let parentElement: HTMLElement | undefined;
-                let element: SVGSVGElement | undefined;
                 if (node.imageElement) {
                     [parentElement, element] = this.createSvgElement(node, node.src);
                 }
@@ -671,7 +671,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     if (node.baseline) {
                         node.android('baselineAlignBottom', 'true');
                     }
-                    parentElement?.removeChild(element);
+                    if (parentElement) {
+                        parentElement.removeChild(element);
+                        parentElement = undefined;
+                    }
+                    element = undefined;
                 }
             }
         }

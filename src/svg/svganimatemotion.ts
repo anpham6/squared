@@ -291,7 +291,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         }
                         else {
                             const maxTime = Math.floor(truncateFraction(toKey * duration));
-                            for ( ; ; j++) {
+                            do {
                                 const item = offsetPath[j];
                                 if (item?.key <= maxTime) {
                                     timeRange.push(item);
@@ -300,6 +300,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                     break;
                                 }
                             }
+                            while (j++);
                         }
                         const fromValue = from.value;
                         const toValue = to.value;

@@ -50,7 +50,7 @@ declare namespace base {
         reset(): void;
         parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
         createCache(documentRoot: HTMLElement): boolean;
-        createNode(element?: Element, append?: boolean, parent?: T, children?: T[]): T;
+        createNode(element: Element): T;
         insertNode(element: Element, parent?: T): T | undefined;
         afterCreateCache(element: HTMLElement): void;
         finalize(): void;
@@ -81,6 +81,7 @@ declare namespace base {
         readonly rootElements: Set<Element>;
         readonly layouts: FileAsset[];
         conditionElement(element: HTMLElement): boolean;
+        createNode(element?: Element, append?: boolean, parent?: T, children?: T[]): T;
         renderNode(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
         resolveTarget(target: string | undefined): T | undefined;
         addLayout(layout: LayoutUI<T>): void;
@@ -286,6 +287,7 @@ declare namespace base {
     interface LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T>, LayoutType {
         parent: T;
         node: T;
+        type: LayoutType;
         itemCount: number;
         rowCount: number;
         columnCount: number;
@@ -298,7 +300,6 @@ declare namespace base {
         readonly unknownAligned: boolean;
         readonly visible: T[];
         init(): void;
-        setType(value: LayoutType): void;
         setContainerType(containerType: number, alignmentType?: number): void;
         hasAlign(value: number): boolean;
         add(value: number): number;

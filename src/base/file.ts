@@ -187,9 +187,9 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (data.content || data.uri || data.base64) {
             const assets = this.assets;
             const { pathname, filename } = data;
-            const index = assets.findIndex(item => item.pathname === pathname && item.filename === filename);
-            if (index !== -1) {
-                Object.assign(assets[index], data);
+            const asset = assets.find(item => item.pathname === pathname && item.filename === filename);
+            if (asset) {
+                Object.assign(asset, data);
             }
             else {
                 assets.push(<RawAsset> data);

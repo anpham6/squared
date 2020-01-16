@@ -80,10 +80,6 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         }
     }
 
-    public setType(value: LayoutType) {
-        this.setContainerType(value.containerType, value.alignmentType);
-    }
-
     public setContainerType(containerType: number, alignmentType?: number) {
         this.containerType = containerType;
         if (alignmentType) {
@@ -129,6 +125,10 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     get cleared() {
         return this._cleared || new Map<T, string>();
+    }
+
+    set type(value: LayoutType) {
+        this.setContainerType(value.containerType, value.alignmentType);
     }
 
     get singleRowAligned() {

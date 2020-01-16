@@ -265,11 +265,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 if (node.marginTop !== 0) {
                     container.modifyBox(BOX_STANDARD.MARGIN_TOP, node.marginTop);
                     node.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                    node.outerWrapper = container;
-                    container.innerWrapped = node;
                     if (register) {
                         container.registerBox(BOX_STANDARD.MARGIN_TOP, ordinal);
                     }
+                    container.innerWrapped = node;
                 }
                 return {
                     parent: container,

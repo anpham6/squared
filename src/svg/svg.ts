@@ -22,10 +22,7 @@ function getColorStop(element: SVGGradientElement) {
         const item = stops[i];
         const color = parseColor(getNamedItem(item, 'stop-color'), convertFloat(getNamedItem(item, 'stop-opacity') || '1'));
         if (color) {
-            result.push({
-                color,
-                offset: parseFloat(getNamedItem(item, 'offset')) / 100
-            });
+            result.push({ color, offset: parseFloat(getNamedItem(item, 'offset')) / 100 });
         }
     }
     return result;

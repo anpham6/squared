@@ -92,7 +92,6 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     container.inherit(node, 'base');
                     container.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
                     scrollView[0].innerWrapped = container;
-                    container.outerWrapper = scrollView[0];
                 }
                 container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
                 container.exclude({ resource: NODE_RESOURCE.ASSET });
@@ -149,7 +148,6 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             parent = scrollView.pop() as T;
             parent.innerWrapped = node;
             node.parent = parent;
-            node.outerWrapper = parent;
             return { parent };
         }
         return undefined;

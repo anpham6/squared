@@ -157,22 +157,22 @@ function isBlockElement(node: NodeUI | null, direction?: boolean, checkIndex = f
             valid = true;
         }
         else if (!node.floating) {
-            const display = node.display;
-            if (display === 'list-item') {
-                valid = true;
-            }
-            if (direction !== undefined) {
-                if (display === 'table') {
+            switch (node.display) {
+                case 'table':
+                case 'list-item':
                     valid = true;
-                }
-                if (direction) {
-                    const firstChild = <NodeUI> node.firstStaticChild;
-                    valid = isBlockElement(firstChild) && validAboveChild(firstChild);
-                }
-                else {
-                    const lastChild = <NodeUI> node.lastStaticChild;
-                    valid = isBlockElement(lastChild) && validBelowChild(lastChild);
-                }
+                    checkIndex = false;
+                    break;
+                default:
+                    if (direction) {
+                        const firstChild = <NodeUI> node.firstStaticChild;
+                        valid = isBlockElement(firstChild) && validAboveChild(firstChild);
+                    }
+                    else {
+                        const lastChild = <NodeUI> node.lastStaticChild;
+                        valid = isBlockElement(lastChild) && validBelowChild(lastChild);
+                    }
+                    break;
             }
         }
         return valid && (!checkIndex || direction === undefined || node.bounds.height > 0);

@@ -1419,7 +1419,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             wrapper.containerName = node.containerName;
             wrapper.inherit(node, 'boxStyle');
             wrapper.innerWrapped = node;
-            node.outerWrapper = wrapper;
             this.addLayout(new LayoutUI(
                 parent,
                 wrapper,
@@ -1438,7 +1437,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (rightSub) {
             layerIndex.push(rightSub);
         }
-        layout.setType(controllerHandler.containerTypeVerticalMargin);
+        layout.type = controllerHandler.containerTypeVerticalMargin;
         layout.itemCount = layerIndex.length;
         layout.add(NODE_ALIGNMENT.BLOCK);
         for (const item of layerIndex) {
@@ -1482,15 +1481,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     seg
                 );
                 if (seg.length === 1) {
-                    const groupNode = group.node;
-                    groupNode.innerWrapped = first;
-                    first.outerWrapper = groupNode;
                     if (first.percentWidth) {
-                        group.setType(controllerHandler.containerTypePercent);
+                        group.type = controllerHandler.containerTypePercent;
                     }
                     else {
                         group.setContainerType(containerType, alignmentType);
                     }
+                    group.node.innerWrapped = first;
                 }
                 else if (group.linearY || group.unknownAligned) {
                     group.setContainerType(containerType, alignmentType | (group.unknownAligned ? NODE_ALIGNMENT.UNKNOWN : 0));
