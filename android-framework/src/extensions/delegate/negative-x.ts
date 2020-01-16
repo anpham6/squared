@@ -4,7 +4,7 @@ import View from '../../view';
 import { EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const { formatPX } = squared.lib.css;
 
@@ -129,7 +129,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             parent: container,
             renderAs: container,
             outputAs: this.application.renderNode(
-                new $LayoutUI(
+                new LayoutUI(
                     parent,
                     container,
                     container.containerType,

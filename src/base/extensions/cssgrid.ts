@@ -112,7 +112,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
     }
 }
 
-const isUnitFR = (value: string) => /fr^/.test(value);
+const isUnitFR = (value: string) => /fr$/.test(value);
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? node.convertPX(value, index === 0 ? 'height' : 'width') : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
@@ -517,7 +517,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         else if (REGEX_SPAN.test(value)) {
                             const span = parseInt(value.split(' ')[1]);
-                            if (placement[position - 2] === 0) {
+                            if (!placement[position - 2]) {
                                 if (position % 2 === 0) {
                                     rowSpan = span;
                                 }
@@ -630,7 +630,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 else {
                     continue;
                 }
-
             }
             data.flexible = percent < 1 || fr > 0;
             if (horizontal) {

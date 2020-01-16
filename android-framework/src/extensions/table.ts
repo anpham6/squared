@@ -4,7 +4,7 @@ import View from '../view';
 
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
 const { formatPX } = $lib.css;
@@ -33,8 +33,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 node.each((item: T) => {
                     const data = item.data(TABLE, 'cellData');
                     if (UNITZERO.test(item.css('width'))) {
-                        item.setLayoutWidth('0px');
                         item.android('layout_columnWeight', item.toElementString('colSpan', '1'));
+                        item.setLayoutWidth('0px');
                     }
                     else {
                         const expand: boolean | undefined = data.expand;
@@ -104,7 +104,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 }
                 node.css('height', 'auto');
             }
-            const layout = new $LayoutUI(
+            const layout = new LayoutUI(
                 parent,
                 node,
                 CONTAINER_NODE.GRID,

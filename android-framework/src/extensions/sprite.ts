@@ -5,7 +5,7 @@ import View from '../view';
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const { formatPX } = squared.lib.css;
 
@@ -68,7 +68,7 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 return {
                     renderAs: container,
                     outputAs: this.application.renderNode(
-                        new $LayoutUI(
+                        new LayoutUI(
                             parent,
                             container,
                             CONTAINER_NODE.FRAME,

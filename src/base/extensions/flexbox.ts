@@ -111,12 +111,12 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             let offset: number;
             length = rows.length;
             if (length > 1) {
-                const boxSize = node.box[size];
+                const boxSize: number = node.box[size];
                 for (let i = 0; i < length; i++) {
                     const seg = rows[i];
                     const group = controller.createNodeGroup(seg[0], seg, node, true);
                     group.containerIndex = i;
-                    const box = group.unsafe('box');
+                    const box: BoxRectDimension = group.unsafe('box');
                     if (box) {
                         box[size] = boxSize;
                     }

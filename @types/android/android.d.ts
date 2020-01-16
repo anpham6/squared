@@ -28,8 +28,8 @@ declare namespace base {
     }
 
     class Controller<T extends View> implements Controller<T> {
-        public static setConstraintDimension<T extends View>(node: T): void;
-        public static setFlexDimension<T extends View>(node: T, horizontal: boolean): void;
+        public static setConstraintDimension<T extends View>(node: T, percentWidth?: number): number;
+        public static setFlexDimension<T extends View>(node: T, horizontal: boolean, percentWidth?: number, percentHeight?: number): [number, number];
     }
 
     interface Resource<T extends View> extends squared.base.ResourceUI<T> {
@@ -112,6 +112,7 @@ declare namespace base {
 
     class View implements View {
         public static getControlName(containerType: number, api?: number): string;
+        public static getAvailablePercent(nodes: View[], dimension: "width" | "height", boxSize: number): number;
         constructor(id: number, sessionId?: string, element?: Element, afterInit?: BindGeneric<View, void>);
     }
 

@@ -6,7 +6,7 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import View from '../../view';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const { CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -157,7 +157,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                     parentAs: actualParent,
                     renderAs: container,
                     outputAs: this.application.renderNode(
-                        new $LayoutUI(
+                        new LayoutUI(
                             actualParent,
                             container,
                             CONTAINER_NODE.FRAME,
@@ -173,7 +173,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                     parentAs,
                     renderAs: container,
                     outputAs: this.application.renderNode(
-                        new $LayoutUI(
+                        new LayoutUI(
                             parentAs || parent,
                             container,
                             CONTAINER_NODE.FRAME,

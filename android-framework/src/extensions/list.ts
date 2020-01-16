@@ -8,7 +8,7 @@ import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
 const { formatPX, getBackgroundPosition } = $lib.css;
@@ -27,7 +27,7 @@ const PADDINGRIGHT_DFN = 8;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
-        const layout = new $LayoutUI(parent, node, 0, 0, node.children as T[]);
+        const layout = new LayoutUI(parent, node, 0, 0, node.children as T[]);
         if (!layout.unknownAligned || layout.singleRowAligned) {
             super.processNode(node, parent);
             if (layout.linearY) {
@@ -84,7 +84,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 ordinal = node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T | undefined;
             }
             if (ordinal) {
-                const layoutOrdinal = new $LayoutUI(parent, ordinal);
+                const layoutOrdinal = new LayoutUI(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
                     layoutOrdinal.containerType = CONTAINER_NODE.TEXT;
                 }
@@ -274,7 +274,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 return {
                     parent: container,
                     renderAs: container,
-                    outputAs: application.renderNode(new $LayoutUI(
+                    outputAs: application.renderNode(new LayoutUI(
                         parent,
                         container,
                         CONTAINER_NODE.LINEAR,

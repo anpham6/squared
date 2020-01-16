@@ -11,7 +11,7 @@ const $lib = squared.lib;
 const { checkStyleValue, getSpecificity, getStyle, hasComputedStyle, parseSelectorText, validMediaRule } = $lib.css;
 const { isTextNode } = $lib.dom;
 const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
-const { STRING, XML } = $lib.regex;
+const { CHAR, STRING, XML } = $lib.regex;
 const { getElementCache, setElementCache } = $lib.session;
 
 type PreloadImage = HTMLImageElement | string;
@@ -38,7 +38,7 @@ function addImageSrc(uri: string, width = 0, height = 0) {
 function parseSrcSet(value: string) {
     for (const uri of value.split(XML.SEPARATOR)) {
         if (uri !== '') {
-            addImageSrc(resolvePath(uri));
+            addImageSrc(resolvePath(uri.split(CHAR.SPACE)[0].trim()));
         }
     }
 }

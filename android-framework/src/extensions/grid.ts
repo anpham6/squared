@@ -5,7 +5,7 @@ import View from '../view';
 
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
 const { formatPX } = $lib.css;
@@ -43,7 +43,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         super.processNode(node, parent);
         const columnCount: number = node.data(GRID, 'columnCount');
         if (columnCount) {
-            const layout = new $LayoutUI(
+            const layout = new LayoutUI(
                 parent,
                 node,
                 CONTAINER_NODE.GRID,
@@ -63,12 +63,12 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         const cellData: GridCellData<T> = node.data(GRID, 'cellData');
         if (cellData) {
             const siblings = cellData.siblings?.slice(0);
-            let layout: $LayoutUI<T> | undefined;
+            let layout: LayoutUI<T> | undefined;
             if (siblings) {
                 const controller = <android.base.Controller<T>> this.controller;
                 siblings.unshift(node);
                 layout = controller.processLayoutHorizontal(
-                    new $LayoutUI(
+                    new LayoutUI(
                         parent,
                         controller.createNodeGroup(node, siblings, parent, true),
                         0,

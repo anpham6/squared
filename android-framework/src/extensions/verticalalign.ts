@@ -2,7 +2,7 @@ import View from '../view';
 
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
@@ -11,7 +11,7 @@ export default class <T extends View> extends squared.base.extensions.VerticalAl
         super.processNode(node, parent);
         return {
             output: this.application.renderNode(
-                new $LayoutUI(
+                new LayoutUI(
                     parent,
                     node,
                     CONTAINER_NODE.RELATIVE,

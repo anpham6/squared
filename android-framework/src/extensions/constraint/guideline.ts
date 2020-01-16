@@ -5,7 +5,7 @@ import View from '../../view';
 import { STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
 const { formatPX } = $lib.css;
@@ -30,7 +30,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
         node.exclude({ procedure: NODE_PROCEDURE.CONSTRAINT });
         return {
             output: this.application.renderNode(
-                new $LayoutUI(
+                new LayoutUI(
                     parent,
                     node,
                     CONTAINER_NODE.CONSTRAINT,

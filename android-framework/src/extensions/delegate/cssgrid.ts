@@ -2,7 +2,7 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import View from '../../view';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -51,7 +51,7 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
             parent: container,
             renderAs: container,
             outputAs: this.application.renderNode(
-                new $LayoutUI(
+                new LayoutUI(
                     parent,
                     container,
                     CONTAINER_NODE.CONSTRAINT,

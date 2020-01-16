@@ -52,7 +52,10 @@ function isHorizontalAlign(value: string) {
 
 function setAutoMargin(node: T, autoMargin: AutoMargin) {
     if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerWrapped?.has('width', CSS_UNIT.PERCENT, { not: '100%' }))) {
-        node.mergeGravity((node.blockWidth || !node.pageFlow) && node.outerWrapper === undefined ? 'gravity' : 'layout_gravity', autoMargin.leftRight ? STRING_ANDROID.CENTER_HORIZONTAL : (autoMargin.left ? 'right' : 'left'));
+        node.mergeGravity(
+            (node.blockWidth || !node.pageFlow) && node.outerWrapper === undefined ? 'gravity' : 'layout_gravity',
+            autoMargin.leftRight ? STRING_ANDROID.CENTER_HORIZONTAL : (autoMargin.left ? 'right' : 'left')
+        );
         return true;
     }
     return false;
@@ -170,6 +173,25 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public static getControlName(containerType: number, api = BUILD_ANDROID.Q): string {
             const name = CONTAINER_NODE[containerType];
             return api >= BUILD_ANDROID.Q && CONTAINER_ANDROID_X[name] || CONTAINER_ANDROID[name];
+        }
+
+        public static getAvailablePercent(nodes: T[], dimension: "width" | "height", boxSize: number) {
+            let percent = 1;
+            for (const sibling of nodes) {
+                if (sibling[dimension] > 0) {
+                    const value = sibling.cssInitial(dimension);
+                    if (isPercent(value)) {
+                        percent -= parseFloat(value) / 100;
+                        continue;
+                    }
+                    else if (isLength(value, false)) {
+                        percent -= sibling.parseUnit(value) / boxSize;
+                        continue;
+                    }
+                }
+                percent -= sibling.bounds[dimension] / boxSize;
+            }
+            return Math.max(0, percent);
         }
 
         public api = BUILD_ANDROID.LATEST;
@@ -1606,10 +1628,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         get documentId() {
             const controlId = this.controlId;
-            if (controlId) {
-                return '@id/' + controlId;
-            }
-            return '';
+            return controlId !== '' ? '@id/' + controlId : '';
         }
 
         set controlId(value) {
@@ -1854,8 +1873,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         get contentBoxWidthPercent() {
             const actualParent = this.actualParent;
-            if (actualParent && !actualParent.layoutElement) {
-                const boxWidth = actualParent.box.width || 0;
+            if (actualParent && !actualParent.gridElement) {
+                const boxWidth = actualParent.box.width;
                 return boxWidth > 0 ? this.contentBoxWidth / boxWidth : 0;
             }
             return 0;
@@ -1863,8 +1882,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         get contentBoxHeightPercent() {
             const actualParent = this.actualParent;
-            if (actualParent && !actualParent.layoutElement) {
-                const boxHeight = actualParent.box.height || 0;
+            if (actualParent && !actualParent.gridElement) {
+                const boxHeight = actualParent.box.height;
                 return boxHeight > 0 ? this.contentBoxHeight / boxHeight : 0;
             }
             return 0;

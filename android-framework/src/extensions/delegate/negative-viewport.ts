@@ -2,7 +2,7 @@ import View from '../../view';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
@@ -31,7 +31,7 @@ export default class NegativeViewport<T extends View> extends squared.base.Exten
             parent: container,
             renderAs: container,
             outputAs: this.application.renderNode(
-                new $LayoutUI(
+                new LayoutUI(
                     parent,
                     container,
                     CONTAINER_NODE.FRAME,

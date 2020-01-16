@@ -41,7 +41,7 @@ function setNaturalChildren(node: T) {
         });
     }
     else {
-        children = node.initial.children || node.children;
+        children = (node.initial.children || node.children).slice(0);
     }
     node.naturalChildren = children;
     return children;
@@ -867,7 +867,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 }
                                                 break;
                                             case 'BUTTON': {
-                                                const form = node.ascend({ condition: item => item.tagName === 'FORM' }).shift();
+                                                const form = node.ascend({ condition: item => item.tagName === 'FORM' })[0];
                                                 if (form) {
                                                     const element = <HTMLElement> node.element;
                                                     let valid = false;
@@ -1374,9 +1374,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (!this.plainText) {
             const border = BOX_BORDER[index];
             const value = this.css(border[0]);
-            if (this.element?.className === 'container2') {
-                console.log(1);
-            }
             if (value !== 'none') {
                 const attr = border[1];
                 const width = this.css(attr);
@@ -1415,7 +1412,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         case 'TH':
                             return 0;
                         default:
-                            const parent = this.ascend({ condition: node => node.tagName === 'TABLE'}).shift();
+                            const parent = this.ascend({ condition: node => node.tagName === 'TABLE'})[0];
                             if (parent) {
                                 const [horizontal, vertical] = parent.css('borderSpacing').split(' ');
                                 switch (attr) {
@@ -2557,7 +2554,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get percentWidth() {
         let result = this._cached.percentWidth;
         if (result === undefined) {
-            result = isPercent(this.cssInitial('width', true));
+            result = isPercent(this.cssInitial('width'));
             this._cached.percentWidth = result;
         }
         return result;
@@ -2566,7 +2563,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get percentHeight() {
         let result = this._cached.percentHeight;
         if (result === undefined) {
-            result = isPercent(this.cssInitial('height', true));
+            result = isPercent(this.cssInitial('height'));
             this._cached.percentHeight = result;
         }
         return result;

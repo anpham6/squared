@@ -138,7 +138,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 return 0;
             });
         }
-        return list.shift() || null;
+        return list[0] || null;
     }
 
     public static linearData<T extends NodeUI>(list: T[], clearOnly = false): LinearData<T> {

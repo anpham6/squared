@@ -6,7 +6,8 @@ import View from '../view';
 import { STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
+import NodeUI = squared.base.NodeUI;
 
 const $lib = squared.lib;
 const { isLength } = $lib.css;
@@ -168,6 +169,15 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
     return result;
 }
 
+function getBaseline(nodes: View[]) {
+    for (const node of nodes) {
+        if (node.textElement && node.baseline) {
+            return node;
+        }
+    }
+    return NodeUI.baseline(nodes);
+}
+
 const getAutoMargin = (node: View) => (node.innerWrapped || node).autoMargin;
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
@@ -177,11 +187,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         if (mainData.directionRow && mainData.rowCount === 1 || mainData.directionColumn && mainData.columnCount === 1) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;
             node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
+            node.addAlign(mainData.directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL);
             mainData.wrap = false;
             return { include: true };
         }
         else {
-            const layout = new $LayoutUI(parent, node, 0, NODE_ALIGNMENT.AUTO_LAYOUT);
+            const layout = new LayoutUI(parent, node, 0, NODE_ALIGNMENT.AUTO_LAYOUT);
             layout.itemCount = node.length;
             layout.rowCount = mainData.rowCount;
             layout.columnCount = mainData.columnCount;
@@ -189,8 +200,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 layout.containerType = CONTAINER_NODE.CONSTRAINT;
             }
             else {
-                layout.setContainerType(CONTAINER_NODE.LINEAR, mainData.directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL);
+                layout.containerType = CONTAINER_NODE.LINEAR;
             }
+            layout.add(mainData.directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL);
             return {
                 output: this.application.renderNode(layout),
                 complete: true
@@ -202,7 +214,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         if (node.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
             return {
                 output: this.application.renderNode(
-                    new $LayoutUI(
+                    new LayoutUI(
                         parent,
                         node,
                         CONTAINER_NODE.CONSTRAINT,
@@ -238,7 +250,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             parent: container,
                             renderAs: container,
                             outputAs: this.application.renderNode(
-                                new $LayoutUI(
+                                new LayoutUI(
                                     parent,
                                     container,
                                     CONTAINER_NODE.FRAME,
@@ -257,6 +269,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     public postBaseLayout(node: T) {
         const mainData: FlexboxData<T> = node.data(FLEXBOX, 'mainData');
         if (mainData) {
+            const controller = <android.base.Controller<T>> this.controller;
             const { alignContent, children, directionColumn, directionReverse, directionRow, justifyContent, wrap, wrapReverse } = mainData;
             const chainHorizontal: T[][] = [];
             const chainVertical: T[][] = [];
@@ -324,12 +337,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     chainVertical[0] = children;
                 }
             }
-            [chainHorizontal, chainVertical].forEach((partition, index) => {
+            function applyLayout(partition: T[][], horizontal: boolean) {
                 const length = partition.length;
                 if (length === 0) {
                     return;
                 }
-                const horizontal = index === 0;
                 const { orientation, orientationInverse, WH, HW, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_horizontal : MAP_vertical;
                 const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
                 const WHL = WH.toLowerCase();
@@ -361,6 +373,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     let parentEnd = true;
                     let baseline: T | null = null;
                     let growAll: boolean;
+                    let percentWidth: number | undefined;
+                    let percentHeight: number | undefined;
                     if (opposing) {
                         growAll = false;
                         if (dimensionInverse) {
@@ -386,6 +400,14 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                     else {
+                        if (horizontal) {
+                            percentWidth = View.getAvailablePercent(seg, 'width', node.box.width);
+                            percentHeight = 1;
+                        }
+                        else {
+                            percentWidth = 1;
+                            percentHeight = View.getAvailablePercent(seg, 'height', node.box.height);
+                        }
                         growAll = horizontal || dimensionInverse;
                         growAvailable = 1 - adjustGrowRatio(node, seg, WHL);
                         if (lengthA > 1) {
@@ -491,10 +513,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'baseline':
                                     if (horizontal) {
                                         if (baseline === null) {
-                                            baseline = chain;
-                                            chain.anchor(TL, 'parent');
+                                            baseline = getBaseline(seg) as T | null;
                                         }
-                                        else {
+                                        if (baseline && baseline !== chain) {
                                             chain.anchor('baseline', baseline.documentId);
                                         }
                                     }
@@ -606,7 +627,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                     break;
                             }
-                            Controller.setFlexDimension(chain, WHL);
+                            [percentWidth, percentHeight] = Controller.setFlexDimension(chain, WHL, percentWidth, percentHeight);
                             if (!(innerWrapped || chain).has('flexGrow')) {
                                 growAll = false;
                             }
@@ -682,7 +703,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 case 'space-around':
                                     if (lengthA > 1) {
-                                        const controller = <android.base.Controller<T>> this.controller;
                                         segStart.constraint[orientation] = false;
                                         segEnd.constraint[orientation] = false;
                                         controller.addGuideline(segStart, node, orientation, true, false);
@@ -702,7 +722,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                 }
-            });
+            }
+            applyLayout(chainHorizontal, true);
+            applyLayout(chainVertical, false);
         }
     }
 }

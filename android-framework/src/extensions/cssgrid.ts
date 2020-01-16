@@ -7,7 +7,7 @@ import View from '../view';
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
@@ -212,7 +212,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         super.processNode(node, parent);
         const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
-            const layout = new $LayoutUI(
+            const layout = new LayoutUI(
                 parent,
                 node,
                 CONTAINER_NODE.GRID,
@@ -470,7 +470,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 node.outerWrapper = renderAs;
                 node.parent = renderAs;
                 outputAs = this.application.renderNode(
-                    new $LayoutUI(
+                    new LayoutUI(
                         parent,
                         renderAs,
                         CONTAINER_NODE.FRAME,
@@ -544,7 +544,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 if (item) {
                                     for (let col of item) {
                                         const weight = truncate(rowWeight, col.localSettings.floatPrecision);
-                                        col = col.ascend({ excluding: node, attr: 'outerWrapper' }).shift() as T || col;
+                                        col = col.ascend({ excluding: node, attr: 'outerWrapper' })[0] as T || col;
                                         col.android('layout_rowWeight', weight);
                                         col.setLayoutHeight('0px');
                                     }

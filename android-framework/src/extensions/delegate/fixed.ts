@@ -5,7 +5,7 @@ import View from '../../view';
 import { EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import $LayoutUI = squared.base.LayoutUI;
+import LayoutUI = squared.base.LayoutUI;
 
 const { aboveRange, belowRange } = squared.lib.util;
 
@@ -145,7 +145,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 parent: container,
                 renderAs: container,
                 outputAs: this.application.renderNode(
-                    new $LayoutUI(
+                    new LayoutUI(
                         parent,
                         container,
                         CONTAINER_NODE.CONSTRAINT,
