@@ -83,17 +83,17 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
     }
 }
 
-function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: string, horizontal: boolean, dimension: string, MARGIN_START: number, MARGIN_END: number) {
+function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: string, horizontal: boolean, dimension: string, outerWrapper: boolean, MARGIN_START: number, MARGIN_END: number) {
     const data = horizontal ? mainData.column : mainData.row;
     if (/^space/.test(alignment)) {
-        const sizeTotal = getGridSize(node, mainData, horizontal);
-        if (sizeTotal > 0) {
+        const gridSize = getGridSize(node, mainData, horizontal);
+        if (gridSize > 0) {
             const rowData = getRowData(mainData, horizontal);
             const itemCount = data.length;
             const adjusted = new Set<View>();
             function getMarginSize(value: number) {
-                const marginSize = Math.floor(sizeTotal / value);
-                return [marginSize, sizeTotal - (marginSize * value)];
+                const marginSize = Math.floor(gridSize / value);
+                return [marginSize, gridSize - (marginSize * value)];
             }
             switch (alignment) {
                 case 'space-around': {
@@ -107,11 +107,11 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                                 adjusted.add(item);
                             }
                             else {
-                                item.cssPX(dimension, sizeTotal / itemCount, false, true);
+                                item.cssPX(dimension, gridSize / itemCount, false, true);
                             }
                         }
                     }
-                    return false;
+                    break;
                 }
                 case 'space-between': {
                     if (itemCount > 1) {
@@ -136,19 +136,29 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                                 }
                             }
                         }
+                        break;
                     }
-                    return false;
+                    else {
+                        return;
+                    }
                 }
                 case 'space-evenly': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount + 1);
                     for (let i = 0; i < itemCount; i++) {
                         for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
-                            const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
+                            let marginEnd = marginSize + (i < marginExcess ? 1 : 0);
                             if (!adjusted.has(item)) {
-                                if (i === 0) {
-                                    item.modifyBox(MARGIN_START, marginSize);
+                                if (outerWrapper) {
+                                    marginEnd /= 2;
+                                    item.modifyBox(MARGIN_START, marginEnd);
+                                    item.modifyBox(MARGIN_END, marginEnd);
                                 }
-                                item.modifyBox(MARGIN_END, marginEnd);
+                                else {
+                                    if (i === 0) {
+                                        item.modifyBox(MARGIN_START, marginSize);
+                                    }
+                                    item.modifyBox(MARGIN_END, marginEnd);
+                                }
                                 adjusted.add(item);
                             }
                             else {
@@ -156,18 +166,42 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                             }
                         }
                     }
-                    return false;
+                    break;
+                }
+            }
+        }
+        if (outerWrapper) {
+            const spaceBetween = alignment === 'space-between';
+            if (horizontal) {
+                if (spaceBetween) {
+                    if (!node.hasPX('width')) {
+                        node.setLayoutWidth('match_parent');
+                    }
+                }
+                else {
+                    node.setLayoutWidth('wrap_content');
+                    node.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed', 0.5, true);
+                }
+            }
+            else {
+                if (spaceBetween) {
+                    if (!node.hasPX('height')) {
+                        node.setLayoutWidth('match_parent');
+                    }
+                }
+                else {
+                    node.setLayoutHeight('wrap_content');
+                    node.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0.5, true);
                 }
             }
         }
     }
     else {
-        const renderParent = node.renderParent as View;
-        if (renderParent.layoutConstraint && renderParent.innerWrapped === node) {
+        if (outerWrapper) {
             switch (alignment) {
                 case 'center':
                     node.anchorParent(horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL, 'packed', 0.5, true);
-                    return false;
+                    break;
                 case 'right':
                     if (!horizontal) {
                         break;
@@ -175,36 +209,35 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                 case 'end':
                 case 'flex-end':
                     node.anchorParent(horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL, 'packed', 1, true);
-                    return false;
+                    break;
             }
         }
         else {
-            let value = getGridSize(node, mainData, horizontal);
-            if (value > 0) {
+            let gridSize = getGridSize(node, mainData, horizontal);
+            if (gridSize > 0) {
                 switch (alignment) {
                     case 'center':
-                        value /= 2;
+                        gridSize /= 2;
                         if (horizontal) {
-                            node.modifyBox(BOX_STANDARD.PADDING_LEFT, Math.floor(value));
+                            node.modifyBox(BOX_STANDARD.PADDING_LEFT, Math.floor(gridSize));
                         }
                         else {
-                            node.modifyBox(BOX_STANDARD.PADDING_TOP, Math.floor(value));
-                            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, Math.ceil(value));
+                            node.modifyBox(BOX_STANDARD.PADDING_TOP, Math.floor(gridSize));
+                            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, Math.ceil(gridSize));
                         }
-                        return false;
+                        break;
                     case 'right':
                         if (!horizontal) {
                             break;
                         }
                     case 'end':
                     case 'flex-end':
-                        node.modifyBox(horizontal ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_TOP, value);
-                        return false;
+                        node.modifyBox(horizontal ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_TOP, gridSize);
+                        break;
                 }
             }
         }
     }
-    return true;
 }
 
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
@@ -523,11 +556,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
             const { alignContent, justifyContent } = mainData;
+            const outerWrapper = node.renderParent === node.outerWrapper;
             if ((node.blockStatic || node.hasWidth) && justifyContent !== 'normal') {
-                setContentSpacing(node, mainData, justifyContent, true, 'width', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT);
+                setContentSpacing(node, mainData, justifyContent, true, 'width', outerWrapper, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT);
             }
             if (node.hasHeight && alignContent !== 'normal') {
-                setContentSpacing(node, mainData, alignContent, false, 'height', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM);
+                setContentSpacing(node, mainData, alignContent, false, 'height', outerWrapper, BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM);
                 const rowHeight = mainData.rowHeight;
                 if (rowHeight.length > 1 && rowHeight.every(value => value > 0 && value !== Number.POSITIVE_INFINITY)) {
                     let gridHeight = 0;
@@ -555,10 +589,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             gridHeight += gap;
                         }
                     }
-                    if (node.inlineHeight && node.renderParent === node.outerWrapper && gridHeight > 0) {
+                    if (node.inlineHeight && outerWrapper && gridHeight > 0) {
                         node.css('minHeight', formatPX(gridHeight));
                     }
                 }
+            }
+            if (outerWrapper && mainData.column.length === 1) {
+                node.setLayoutWidth('match_parent');
             }
         }
     }

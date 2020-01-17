@@ -116,12 +116,14 @@ const isUnitFR = (value: string) => /fr$/.test(value);
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? node.convertPX(value, index === 0 ? 'height' : 'width') : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataAttribute<T extends NodeUI>(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string): CssGridData<T> {
+    public static createDataAttribute<T extends NodeUI>(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string, autoFlow: string): CssGridData<T> {
         return {
             children: [],
             rowData: [],
-            rowHeight: undefined as any,
+            rowHeight: [],
             rowSpanMultiple: [],
+            rowDirection: autoFlow.indexOf('column') === -1,
+            dense: autoFlow.indexOf('dense') !== -1,
             templateAreas: {},
             row: CssGrid.createDataRowAttribute(),
             column: CssGrid.createDataRowAttribute(),
@@ -163,12 +165,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             node.css('alignItems'),
             node.css('alignContent'),
             node.css('justifyItems'),
-            node.css('justifyContent')
+            node.css('justifyContent'),
+            node.css('gridAutoFlow')
         );
-        const { row, column } = mainData;
-        const gridAutoFlow = node.css('gridAutoFlow');
-        const horizontal = gridAutoFlow.indexOf('column') === -1;
-        const dense = gridAutoFlow.indexOf('dense') !== -1;
+        const { column, dense, row, rowDirection: horizontal } = mainData;
         const rowData: (T[] | undefined)[][] = [];
         const cellsPerRow: number[] = [];
         const layout: GridLayout[] = [];
@@ -296,6 +296,20 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 REGEX_NAMED.lastIndex = 0;
             }
         });
+        {
+            const data = horizontal ? column : row;
+            if (data.autoFill || data.autoFit) {
+                let unit = data.unit;
+                if (unit.length === 0) {
+                    unit.push('auto');
+                    data.unitMin.push('');
+                    data.repeat.push(true);
+                }
+                unit = repeatUnit(data, unit);
+                data.unit = unit;
+                data.unitMin = repeatUnit(data, data.unitMin);
+            }
+        }
         if (horizontal) {
             node.sort((a, b) => {
                 const { left, top } = a.linear;
@@ -445,6 +459,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     });
                 }
             });
+            let previousPlacement: number[] | undefined;
             node.each((item, index) => {
                 const positions = [
                     item.css('gridRowStart'),
@@ -510,15 +525,34 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 if (placement[0] === 0 || placement[1] === 0 || placement[2] === 0 || placement[3] === 0) {
-                    function setPlacement(value: string, position: number) {
+                    function setPlacement(value: string, position: number, vertical: boolean, data: CssGridDirectionData) {
                         if (isNumber(value)) {
                             placement[position] = parseInt(value);
                             return true;
                         }
                         else if (REGEX_SPAN.test(value)) {
                             const span = parseInt(value.split(' ')[1]);
-                            if (!placement[position - 2]) {
-                                if (position % 2 === 0) {
+                            if (span === data.unit.length && previousPlacement) {
+                                if (horizontal) {
+                                    if (!vertical) {
+                                        const rowEnd = previousPlacement[2];
+                                        if (rowEnd > 0 && placement[0] === 0) {
+                                            placement[0] = rowEnd;
+                                        }
+                                    }
+                                }
+                                else {
+                                    if (vertical) {
+                                        const columnEnd = previousPlacement[3];
+                                        if (columnEnd > 0 && placement[1] === 0) {
+                                            placement[1] = columnEnd;
+                                        }
+                                    }
+                                }
+                            }
+                            const start = placement[position - 2];
+                            if (position < 2 || start === 0) {
+                                if (vertical) {
                                     rowSpan = span;
                                 }
                                 else {
@@ -526,7 +560,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             else {
-                                placement[position] = placement[position - 2] + span;
+                                placement[position] = start + span;
                             }
                             return true;
                         }
@@ -536,40 +570,47 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     let colStart: string[] | undefined;
                     for (let i = 0; i < 4; i++) {
                         const value = positions[i];
-                        if (value !== 'auto' && placement[i] === 0 && !setPlacement(value, i)) {
+                        if (value !== 'auto' && placement[i] === 0) {
                             const vertical = i % 2 === 0;
                             const data = vertical ? row : column;
-                            const alias = value.split(' ');
-                            if (alias.length === 1) {
-                                alias[1] = alias[0];
-                                alias[0] = '1';
-                            }
-                            else if (isNumber(alias[0])) {
-                                if (vertical) {
-                                    if (rowStart) {
-                                        rowSpan = parseInt(alias[0]) - parseInt(rowStart[0]);
+                            if (!setPlacement(value, i, vertical, data)) {
+                                const alias = value.split(' ');
+                                if (alias.length === 1) {
+                                    alias[1] = alias[0];
+                                    alias[0] = '1';
+                                }
+                                else if (isNumber(alias[0])) {
+                                    if (vertical) {
+                                        if (rowStart) {
+                                            rowSpan = parseInt(alias[0]) - parseInt(rowStart[0]);
+                                        }
+                                        else {
+                                            rowStart = alias;
+                                        }
+                                    }
+                                    else if (colStart) {
+                                        columnSpan = parseInt(alias[0]) - parseInt(colStart[0]);
                                     }
                                     else {
-                                        rowStart = alias;
+                                        colStart = alias;
                                     }
                                 }
-                                else if (colStart) {
-                                    columnSpan = parseInt(alias[0]) - parseInt(colStart[0]);
-                                }
-                                else {
-                                    colStart = alias;
-                                }
-                            }
-                            const named = data.name[alias[1]];
-                            if (named) {
-                                const nameIndex = parseInt(alias[0]);
-                                if (nameIndex <= named.length) {
-                                    placement[i] = named[nameIndex - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
+                                const named = data.name[alias[1]];
+                                if (named) {
+                                    const nameIndex = parseInt(alias[0]);
+                                    if (nameIndex <= named.length) {
+                                        placement[i] = named[nameIndex - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
+                                    }
                                 }
                             }
                         }
-                        if (placement[i] === 0) {
-                            setPlacement(value, i);
+                    }
+                }
+                if (previousPlacement === undefined) {
+                    if (placement[0] === 0) {
+                        placement[0] = 1;
+                        if (placement[2] === 0) {
+                            placement[2] = 2;
                         }
                     }
                 }
@@ -579,6 +620,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     rowSpan,
                     columnSpan
                 };
+                previousPlacement = placement;
             });
         }
         {
@@ -592,7 +634,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 data = row;
                 outerCoord = node.box.left;
             }
-            let unit = data.unit;
+            const unit = data.unit;
             let length = Math.max(1, unit.length);
             let outerCount = 0;
             for (const item of layout) {
@@ -608,16 +650,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             data.length = Math.max(length, outerCount);
-            if (data.autoFill || data.autoFit) {
-                if (unit.length === 0) {
-                    unit.push('auto');
-                    data.unitMin.push('');
-                    data.repeat.push(true);
-                }
-                unit = repeatUnit(data, unit);
-                data.unit = unit;
-                data.unitMin = repeatUnit(data, data.unitMin);
-            }
             let percent = 1;
             let fr = 0;
             for (const value of unit) {
@@ -709,7 +741,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     let length = rowData.length;
                     for (let i = 0, j = 0, k = -1; i < length; i++) {
                         if (!rowInvalid[i]) {
-                            if (cellsPerRow[i] === undefined || cellsPerRow[i] < COLUMN_COUNT) {
+                            if (cellsPerRow[i] === undefined || cellsPerRow[i] < COLUMN_COUNT && (dense || i === length - 1)) {
                                 if (j === 0) {
                                     k = i;
                                     length = Math.max(length, i + ROW_SPAN);
@@ -885,16 +917,15 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (children.length === node.length) {
-                const rowCount = Math.max(row.unit.length, rowMain.length);
-                const rowHeight = new Array(rowCount);
                 const { gap: rowGap, unit: rowUnit } = row;
                 const { gap: columnGap, unit: columnUnit } = column;
+                const rowCount = Math.max(row.unit.length, rowMain.length);
                 const rowMax: number[] = new Array(rowCount).fill(0);
                 const columnMax: number[] = new Array(columnCount).fill(0);
+                const rowHeight = mainData.rowHeight;
                 const modified = new Set<T>();
                 row.length = rowCount;
                 column.length = columnCount;
-                mainData.rowHeight = rowHeight;
                 for (let i = 0; i < rowCount; i++) {
                     const rowItem = rowMain[i];
                     const unitHeight = rowUnit[i];

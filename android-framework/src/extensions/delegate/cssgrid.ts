@@ -6,8 +6,8 @@ import LayoutUI = squared.base.LayoutUI;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
-const isJustified = (node: View) => (node.blockStatic || node.hasWidth) && /center|end|right$/.test(node.css('justifyContent'));
-const isAligned = (node: View) => node.hasHeight && /center|end$/.test(node.css('alignContent'));
+const isJustified = (node: View) => (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
+const isAligned = (node: View) => node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
 
 export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {

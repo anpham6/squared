@@ -84,8 +84,8 @@ function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
 
 function adjustBaseline(baseline: View, nodes: View[]) {
     const baselineHeight = baseline.baselineHeight;
-    let imageBaseline: View | undefined;
     let imageHeight = 0;
+    let imageBaseline: View | undefined;
     for (const node of nodes) {
         if (node !== baseline && !node.baselineAltered) {
             let height = node.baselineHeight;
@@ -94,24 +94,27 @@ function adjustBaseline(baseline: View, nodes: View[]) {
                     node.anchor('bottom', baseline.documentId);
                     continue;
                 }
-                else if (node.imageOrSvgElement) {
-                    for (const image of node.renderChildren.filter(item => item.imageOrSvgElement && item.baseline)) {
-                        height = Math.max(image.baselineHeight, height);
-                    }
-                    if (height > baselineHeight) {
-                        if (imageBaseline === undefined || height >= imageHeight) {
-                            imageBaseline?.anchor(getBaselineAnchor(node), node.documentId);
-                            imageHeight = height;
-                            imageBaseline = node;
+                else {
+                    const imageElements = node.renderChildren.filter(item => item.imageOrSvgElement && item.baseline);
+                    if (node.imageOrSvgElement || imageElements.length > 0) {
+                        for (const image of imageElements) {
+                            height = Math.max(image.baselineHeight, height);
                         }
-                        else {
-                            node.anchor(getBaselineAnchor(imageBaseline), imageBaseline.documentId);
+                        if (height > baselineHeight) {
+                            if (imageBaseline === undefined || height >= imageHeight) {
+                                imageBaseline?.anchor(getBaselineAnchor(node), node.documentId);
+                                imageHeight = height;
+                                imageBaseline = node;
+                            }
+                            else {
+                                node.anchor(getBaselineAnchor(imageBaseline), imageBaseline.documentId);
+                            }
+                            continue;
                         }
-                        continue;
-                    }
-                    else if (withinRange(node.linear.top, node.documentParent.box.top)) {
-                        node.anchor('top', 'true');
-                        continue;
+                        else if (withinRange(node.linear.top, node.documentParent.box.top)) {
+                            node.anchor('top', 'true');
+                            continue;
+                        }
                     }
                 }
                 if (node.naturalChild && node.length === 0) {
@@ -281,7 +284,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
 
 function setConstraintPercent(node: View, value: string, horizontal: boolean, percent: number) {
     let basePercent = (parseFloat(value) / 100);
-    if (percent < 1 && basePercent < 1) {
+    if (basePercent < 1 && (percent < 1 || node.blockStatic && !node.documentParent.gridElement)) {
         const actualParent = node.actualParent;
         let boxPercent = horizontal ? node.contentBoxWidthPercent : node.contentBoxHeightPercent;
         let marginPercent = 0;
@@ -599,7 +602,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             inputBackgroundColor: isPlatform(PLATFORM.MAC) ? 'rgb(255, 255, 255)' : 'rgb(221, 221, 221)',
             meterForegroundColor: 'rgb(99, 206, 68)',
             meterBackgroundColor: 'rgb(237, 237, 237)',
-            progressForegroundColor: 'rgb(153, 153, 158)',
+            progressForegroundColor: 'rgb(138, 180, 248)',
             progressBackgroundColor: 'rgb(237, 237, 237)'
         },
         supported: {

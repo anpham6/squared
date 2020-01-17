@@ -10,6 +10,8 @@ export interface CssGridData<T> {
     rowData: (T[] | undefined)[][];
     rowHeight: number[];
     rowSpanMultiple: (true | undefined)[];
+    rowDirection: boolean;
+    dense: boolean;
     templateAreas: ObjectMap<CssGridCellData>;
     alignItems: string;
     alignContent: string;
