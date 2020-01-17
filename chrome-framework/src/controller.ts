@@ -47,6 +47,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
         return true;
     }
 
+    public cacheElement(node: T) {
+        this._elementMap.set(<Element> node.element, node);
+    }
+
     public cacheElementList(list: squared.base.NodeList<T>) {
         const elementMap = this._elementMap;
         for (const node of list) {

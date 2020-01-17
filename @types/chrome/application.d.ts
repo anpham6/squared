@@ -10,6 +10,7 @@ interface ChromeFramework<T extends View> extends AppFramework<T> {
 }
 
 interface UserSettingsChrome extends UserSettings {
+    cacheQuerySelectorResultSet: boolean;
     excludePlainText: boolean;
     outputFileExclusions: string[];
 }

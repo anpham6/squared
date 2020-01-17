@@ -19,16 +19,22 @@ export default class Application<T extends chrome.base.View> extends squared.bas
                 return undefined;
             }
             this.controllerHandler.applyDefaultStyles(element);
+            const node = this.createNode(element);
+            if (parent) {
+                node.cssApply(parent.textStyle);
+            }
+            return node;
         }
-        const node = this.createNode(element, false);
-        if (node.plainText && parent) {
-            node.cssApply(parent.textStyle);
-        }
-        return node;
+        return this.createNode(element);
     }
 
     public afterCreateCache() {
-        (<chrome.base.Controller<T>> this.controllerHandler).cacheElementList(this.processing.cache);
+        if (this.userSettings.cacheQuerySelectorResultSet) {
+            (<chrome.base.Controller<T>> this.controllerHandler).cacheElementList(this.processing.cache);
+        }
+        else {
+            (<chrome.base.Controller<T>> this.controllerHandler).cacheElement(this.processing.node as T);
+        }
     }
 
     get length() {

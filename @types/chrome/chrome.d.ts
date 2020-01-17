@@ -20,6 +20,7 @@ declare namespace base {
         application: Application<T>;
         readonly elementMap: Map<Element, T>;
         readonly userSettings: UserSettingsChrome;
+        cacheElement(node: T): void;
         cacheElementList(list: squared.base.NodeList<T>): void;
     }
 
