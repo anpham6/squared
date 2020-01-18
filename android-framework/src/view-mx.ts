@@ -9,7 +9,6 @@ import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { localizeString } from './lib/util';
 
 const $lib = squared.lib;
-const { USER_AGENT, isUserAgent } = $lib.client;
 const { BOX_MARGIN, BOX_PADDING, formatPX, getDataSet, isLength, isPercent } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { clampRange, truncate } = $lib.math;
@@ -187,7 +186,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             percent -= parseFloat(value) / 100;
                             continue;
                         }
-                        else if (isLength(value, false)) {
+                        else if (isLength(value)) {
                             percent -= sibling.parseUnit(value) / boxSize;
                             continue;
                         }
@@ -343,7 +342,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (renderParent) {
                 const horizontal = orientation === STRING_ANDROID.HORIZONTAL;
                 if (renderParent.layoutConstraint) {
-                    if (overwrite || !this.constraint[orientation]) {
+                    if (overwrite || !node.constraint[orientation]) {
                         if (horizontal) {
                             node.anchor('left', 'parent', overwrite);
                             node.anchor('right', 'parent', overwrite);
@@ -679,10 +678,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {
                     const width = this.css('width');
                     let value = -1;
-                    if (isLength(width)) {
-                        value = this.actualWidth;
-                    }
-                    else if (isPercent(width)) {
+                    if (isPercent(width)) {
                         if (this.inputElement) {
                             value = this.bounds.width;
                         }
@@ -740,6 +736,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else {
                             value = this.actualWidth;
                         }
+                    }
+                    else {
+                        value = this.actualWidth;
                     }
                     if (value > 0) {
                         layoutWidth = formatPX(value);
@@ -857,10 +856,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.hasPX('height') && (!this.inlineStatic || this.cssInitial('height') === '')) {
                     const height = this.css('height');
                     let value = -1;
-                    if (isLength(height)) {
-                        value = this.actualHeight;
-                    }
-                    else if (isPercent(height)) {
+                    if (isPercent(height)) {
                         if (this.inputElement) {
                             value = this.bounds.height;
                         }
@@ -902,6 +898,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (layoutHeight === '' && this.hasHeight) {
                             value = this.actualHeight;
                         }
+                    }
+                    else {
+                        value = this.actualHeight;
                     }
                     if (value > 0) {
                         if (this.is(CONTAINER_NODE.LINE) && this.tagName !== 'HR' && this.hasPX('height', true, true)) {
@@ -1253,13 +1252,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public applyOptimizations() {
             const renderParent = this.renderParent;
             if (renderParent) {
-                const borderWidth = !this.tableElement ? this.styleElement : this.css('boxSizing') === 'content-box' || isUserAgent(USER_AGENT.FIREFOX);
-                if (borderWidth && this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE) && (this.renderChildren.length === 0 || !this.naturalChildren.every(node => !node.pageFlow && node.absoluteParent === this))) {
-                    this.modifyBox(BOX_STANDARD.PADDING_LEFT, this.borderLeftWidth);
-                    this.modifyBox(BOX_STANDARD.PADDING_RIGHT, this.borderRightWidth);
-                    this.modifyBox(BOX_STANDARD.PADDING_TOP, this.borderTopWidth);
-                    this.modifyBox(BOX_STANDARD.PADDING_BOTTOM, this.borderBottomWidth);
-                }
                 this.alignLayout(renderParent);
                 this.setLineHeight(renderParent);
                 if (this.inlineWidth && this.renderChildren.some(node => node.blockWidth && node.some((item: T) => item.flexibleWidth))) {
@@ -1395,12 +1387,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                     }
-                }
-                if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
-                    let mergeAll = 0;
-                    let mergeHorizontal = 0;
-                    let mergeVertical = 0;
-                    if (margin && this.positionStatic && !this.blockWidth && (left < 0 || right < 0)) {
+                    if (this.positionStatic && !this.blockWidth && (left < 0 || right < 0)) {
                         switch (this.cssAscend('textAlign')) {
                             case 'center': {
                                 if (left < right) {
@@ -1423,6 +1410,34 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 break;
                         }
                     }
+                }
+                else if (this.visibleStyle.borderWidth) {
+                    if (this.css('boxSizing') !== 'border-box') {
+                        if (!this.is(CONTAINER_NODE.LINE) && (this.renderChildren.length === 0 || !this.naturalChildren.every(node => !node.pageFlow && node.absoluteParent === this))) {
+                            top += this.borderTopWidth;
+                            right += this.borderRightWidth;
+                            bottom += this.borderBottomWidth;
+                            left += this.borderLeftWidth;
+                        }
+                    }
+                    else if (this.gridElement) {
+                        top += this.borderTopWidth;
+                        right += this.borderRightWidth;
+                        bottom += this.borderBottomWidth;
+                        left += this.borderLeftWidth;
+                        switch (this.css('alignContent')) {
+                            case 'space-around':
+                            case 'space-evenly':
+                                top -= this.paddingTop;
+                                bottom -= this.paddingBottom;
+                                break;
+                        }
+                    }
+                }
+                if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
+                    let mergeAll = 0;
+                    let mergeHorizontal = 0;
+                    let mergeVertical = 0;
                     if (!unmergeable && this.api >= BUILD_ANDROID.OREO) {
                         if (top === right && right === bottom && bottom === left) {
                             mergeAll = top;

@@ -9,6 +9,8 @@ const { CHAR, CSS, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, filterArray, hasBit, hasValue, isNumber, isObject, isString, spliceString } = $lib.util;
 
+const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
+
 type T = Node;
 
 const REGEX_INLINE = /^inline/;
@@ -21,7 +23,6 @@ const REGEX_BACKGROUND = /\s*(url\(.+?\))\s*/;
 const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+\-]\d+)?$/;
-const REGEX_PX = /px$/;
 const REGEX_EM = /em$/;
 const REGEX_GRID = /grid$/;
 const REGEX_FLEX = /flex$/;
@@ -53,7 +54,7 @@ function setNaturalElements(node: T) {
     return children;
 }
 
-const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && REGEX_PX.test(actualValue);
+const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public documentRoot = false;
@@ -96,6 +97,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         else {
             this.style = <CSSStyleDeclaration> {};
             this._styleMap = {};
+            this._cssStyle = {};
         }
     }
 
@@ -445,7 +447,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             else {
                 result = getElementCache(<Element> this._element, 'styleSpecificity', this.sessionId)?.[attr] as number;
             }
-}
+        }
         return result || 0;
     }
 
@@ -532,7 +534,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public convertPX(value: string, dimension = 'width', parent = true) {
-        return REGEX_PX.test(value) ? value : Math.round(this.parseUnit(value, dimension, parent)) + 'px';
+        return PX.test(value) ? value : Math.round(this.parseUnit(value, dimension, parent)) + 'px';
     }
 
     public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[] | boolean>) {
@@ -594,11 +596,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         else if (this.plainText) {
             const rect = getRangeClientRect(<Element> this._element);
             const bounds = assignRect(rect);
-            const numberOfLines = rect.numberOfLines as number;
-            bounds.numberOfLines = numberOfLines;
+            const lines = rect.numberOfLines as number;
+            bounds.numberOfLines = lines;
             this._bounds = bounds;
             this._textBounds = bounds;
-            this._cached.multiline = numberOfLines > 1;
+            this._cached.multiline = lines > 1;
         }
         if (!cache) {
             this._box = undefined;
@@ -622,7 +624,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 invalid: {
                     let adjacent: string | undefined;
                     let match: RegExpExecArray | null;
-                    while ((match = CSS.SELECTOR_G.exec(query)) !== null) {
+                    while ((match = SELECTOR_G.exec(query)) !== null) {
                         let segment = match[1];
                         let all = false;
                         let tagName: string | undefined;
@@ -661,7 +663,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                         if (!all) {
                             let subMatch: RegExpExecArray | null;
-                            while ((subMatch = CSS.SELECTOR_ATTR.exec(segment)) !== null) {
+                            while ((subMatch = SELECTOR_ATTR.exec(segment)) !== null) {
                                 if (attrList === undefined) {
                                     attrList = [];
                                 }
@@ -682,7 +684,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 selectors.length = 0;
                                 break invalid;
                             }
-                            while ((subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
+                            while ((subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
                                 if (/^\:not\(/.test(subMatch[0])) {
                                     if (subMatch[1]) {
                                         if (notList === undefined) {
@@ -699,7 +701,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 }
                                 segment = spliceString(segment, subMatch.index, subMatch[0].length);
                             }
-                            while ((subMatch = CSS.SELECTOR_LABEL.exec(segment)) !== null) {
+                            while ((subMatch = SELECTOR_LABEL.exec(segment)) !== null) {
                                 const label = subMatch[0];
                                 switch (label.charAt(0)) {
                                     case '#':
@@ -731,7 +733,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         offset++;
                         adjacent = undefined;
                     }
-                    CSS.SELECTOR_G.lastIndex = 0;
+                    SELECTOR_G.lastIndex = 0;
                 }
                 let length = queryMap.length;
                 if (selectors.length && offset !== -1 && offset < length) {
@@ -1116,8 +1118,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         notData.pseudoList = [not];
                                         break;
                                     case '[': {
-                                        CSS.SELECTOR_ATTR.lastIndex = 0;
-                                        const match = CSS.SELECTOR_ATTR.exec(not);
+                                        SELECTOR_ATTR.lastIndex = 0;
+                                        const match = SELECTOR_ATTR.exec(not);
                                         if (match) {
                                             const caseInsensitive = match[6] === 'i';
                                             let attrValue = match[3] || match[4] || match[5] || '';
@@ -1822,7 +1824,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     else {
                         value = parseUnit(lineHeight, this.fontSize);
-                        if (REGEX_PX.test(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
+                        if (PX.test(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
                             const fontSize = this.cssInitial('fontSize');
                             if (REGEX_EM.test(fontSize)) {
                                 value *= parseFloat(fontSize);
@@ -2476,7 +2478,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 default:
                     if (result !== '' && this.pageFlow && !this.plainText && !this.inputElement && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === result)) {
                         let current = this.actualParent;
-                        while (current && current.id !== 0) {
+                        while (current) {
                             const color = current.cssInitial('backgroundColor', true);
                             if (color !== '') {
                                 if (color === result && current.backgroundColor === '') {

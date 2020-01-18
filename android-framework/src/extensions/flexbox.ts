@@ -178,6 +178,15 @@ function getBaseline(nodes: View[]) {
     return NodeUI.baseline(nodes);
 }
 
+function setLayoutWeightOpposing(item: View, value: string, horizontal: boolean) {
+    if (!horizontal) {
+        item.setLayoutWidth(value);
+    }
+    else {
+        item.setLayoutHeight(value);
+    }
+}
+
 const getAutoMargin = (node: View) => (node.innerWrapped || node).autoMargin;
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
@@ -413,20 +422,17 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         if (lengthA > 1) {
                             let sizeCount = 0;
                             for (const chain of seg) {
-                                const bounds = chain.initial.bounds;
-                                if (bounds) {
-                                    const value = bounds[HWL];
-                                    if (sizeCount === 0) {
-                                        maxSize = value;
-                                        sizeCount++;
-                                    }
-                                    else if (value === maxSize) {
-                                        sizeCount++;
-                                    }
-                                    else if (value > maxSize) {
-                                        maxSize = value;
-                                        sizeCount = 1;
-                                    }
+                                const value = (<BoxRectDimension> chain.data(FLEXBOX, 'boundsData') || chain.bounds)[HWL];
+                                if (sizeCount === 0) {
+                                    maxSize = value;
+                                    sizeCount++;
+                                }
+                                else if (value === maxSize) {
+                                    sizeCount++;
+                                }
+                                else if (value > maxSize) {
+                                    maxSize = value;
+                                    sizeCount = 1;
                                 }
                             }
                             if (sizeCount === lengthA) {
@@ -589,42 +595,34 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchorStyle(orientationInverse, 'packed', wrapReverse ? 1 : 0);
                                             }
                                             if (chain[HWL] === 0) {
-                                                function setLayoutWeightOpposing(item: T, value: string) {
-                                                    if (!horizontal) {
-                                                        item.setLayoutWidth(value);
-                                                    }
-                                                    else {
-                                                        item.setLayoutHeight(value);
-                                                    }
-                                                }
                                                 if (!horizontal && chain.blockStatic) {
-                                                    setLayoutWeightOpposing(chain, 'match_parent');
+                                                    setLayoutWeightOpposing(chain, 'match_parent', horizontal);
                                                 }
                                                 else if (isNaN(maxSize)) {
                                                     if (!horizontal && !wrap && chain.length || dimension && alignContent === 'normal') {
-                                                        setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent');
+                                                        setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent', horizontal);
                                                     }
                                                     else {
-                                                        setLayoutWeightOpposing(chain, 'wrap_content');
+                                                        setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
                                                     }
                                                 }
                                                 else if (lengthA === 1) {
                                                     if (!horizontal) {
-                                                        setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent');
+                                                        setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent', horizontal);
                                                     }
                                                     else {
-                                                        setLayoutWeightOpposing(chain, 'wrap_content');
+                                                        setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
                                                     }
                                                 }
-                                                else if ((chain.naturalElement ? (chain.initial.bounds as Dimension)[HWL] : Number.POSITIVE_INFINITY) < maxSize) {
-                                                    setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px');
+                                                else if ((chain.naturalElement ? (<BoxRectDimension> chain.data(FLEXBOX, 'boundsData') || chain.bounds)[HWL] : Number.POSITIVE_INFINITY) < maxSize) {
+                                                    setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px', horizontal);
                                                     if (innerWrapped?.autoMargin[orientation] === false) {
-                                                        setLayoutWeightOpposing(innerWrapped, 'match_parent');
+                                                        setLayoutWeightOpposing(innerWrapped, 'match_parent', horizontal);
                                                     }
                                                 }
                                                 else {
                                                     chain.lockAttr('android', 'layout_' + HWL);
-                                                    setLayoutWeightOpposing(chain, 'wrap_content');
+                                                    setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
                                                 }
                                             }
                                             break;

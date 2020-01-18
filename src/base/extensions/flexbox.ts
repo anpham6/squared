@@ -6,8 +6,9 @@ import NodeUI from '../node-ui';
 import { EXT_NAME } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
 
-const { assignRect } = squared.lib.dom;
 const { withinRange } = squared.lib.util;
+
+const FLEXBOX = EXT_NAME.FLEXBOX;
 
 export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute<T extends NodeUI>(node: T, children: T[]): FlexboxData<T> {
@@ -46,14 +47,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     if (item.cssTry('align-self', 'start')) {
                         if (item.cssTry('justify-self', 'start')) {
                             const rect = item.boundingClientRect;
-                            const bounds = item.initial.bounds;
-                            if (bounds) {
-                                bounds.width = rect.width;
-                                bounds.height = rect.height;
-                            }
-                            else {
-                                item.initial.bounds = assignRect(rect);
-                            }
+                            item.data(FLEXBOX, 'boundsData', { ...item.bounds, width: rect.width, height: rect.height });
                             item.cssFinally('justify-self');
                         }
                         item.cssFinally('align-self');
@@ -169,7 +163,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 mainData.columnCount = 1;
             }
         }
-        node.data(EXT_NAME.FLEXBOX, 'mainData', mainData);
+        node.data(FLEXBOX, 'mainData', mainData);
         return undefined;
     }
 }

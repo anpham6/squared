@@ -424,6 +424,8 @@ declare namespace lib {
         function getDocumentId(value: string): string;
         function getHorizontalBias(node: View): number;
         function getVerticalBias(node: View): number;
+        function isGridJustified(node: View): boolean;
+        function isGridAligned(node: View): boolean;
         function createViewAttribute(externalData?: ExternalData, options?: ViewAttribute): ViewAttribute;
         function createStyleAttribute(options?: ExternalData): Required<StyleAttribute>;
         function localizeString(value: string, rtl: boolean, api: number): string;

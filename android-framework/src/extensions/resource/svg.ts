@@ -599,13 +599,9 @@ function sortSynchronized(a: $SvgAnimate, b: $SvgAnimate) {
 }
 
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
-
 const getVectorName = (target: SvgView, section: string, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
-
 const getRadiusPercent = (value: string) => isPercent(value) ? parseFloat(value) / 100 : 0.5;
-
 const getDrawableSrc = (name: string) => '@drawable/' + name;
-
 const getFillData = (ordering = ''): FillData => ({ ordering, objectAnimator: [] });
 
 export default class ResourceSvg<T extends View> extends squared.base.ExtensionUI<T> {

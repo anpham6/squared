@@ -181,151 +181,156 @@ function isBlockElement(node: NodeUI | null, direction?: boolean, checkIndex = f
 }
 
 const setMinHeight = (node: NodeUI, offset: number) => node.css('minHeight', formatPX(Math.max(offset, node.hasPX('minHeight', false) ? node.parseUnit(node.css('minHeight')) : 0)));
-
 const canResetChild = (node: NodeUI) => !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
-
 const validAboveChild = (node: NodeUI) => !node.hasPX('height') && node.paddingBottom === 0 && node.borderBottomWidth === 0 && canResetChild(node);
-
 const validBelowChild = (node: NodeUI) => !node.hasPX('height') && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node);
 
 export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public afterBaseLayout() {
         const processed = new Set<number>();
         for (const node of this.application.processing.cache) {
-            if (node.naturalElement && node.naturalElements.length && !node.layoutElement && !node.tableElement && node.id !== 0) {
+            if (node.naturalElement && node.naturalElements.length && !node.layoutElement && !node.tableElement) {
+                const children = node.naturalChildren;
+                if (children[0].documentBody) {
+                    continue;
+                }
+                const length = children.length;
+                const blockParent = isBlockElement(node) && !(node.actualParent as T).layoutElement;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;
-                const blockParent = isBlockElement(node) && !(node.actualParent as T).layoutElement;
-                const children = node.naturalChildren;
-                const length = children.length;
                 for (let i = 0; i < length; i++) {
                     const current = children[i] as T;
-                    if (!current.pageFlow) {
-                        continue;
-                    }
-                    if (blockParent) {
-                        if (!current.floating) {
-                            if (current.bounds.height > 0 || length === 1 || isBlockElement(current, i === 0 ? true : (i === length - 1 ? false : undefined), true)) {
-                                if (firstChild === undefined) {
-                                    firstChild = current;
+                    if (current.pageFlow) {
+                        if (blockParent) {
+                            if (!current.floating) {
+                                if (current.bounds.height > 0 || length === 1 || isBlockElement(current, i === 0 ? true : (i === length - 1 ? false : undefined), true)) {
+                                    if (firstChild === undefined) {
+                                        firstChild = current;
+                                    }
+                                    lastChild = current;
                                 }
-                                lastChild = current;
-                            }
-                            else if (current.bounds.height === 0 && node.layoutVertical && current.alignSibling('topBottom') === '' && current.alignSibling('bottomTop') === '' && (current.renderChildren.length === 0 || current.every((item: T) => !item.visible))) {
-                                if (!current.pseudoElement || current.pseudoElement && (length === 1 || i > 0 || children.every((item, index) => index === 0 || item.floating || item.pseudoElement && item.textContent.trim() === ''))) {
+                                else if (
+                                    current.bounds.height === 0 && node.layoutVertical && current.alignSibling('topBottom') === '' && current.alignSibling('bottomTop') === '' && (
+                                        current.renderChildren.length === 0 ||
+                                        current.every((item: T) => !item.visible)
+                                    ) && (
+                                        !current.pseudoElement ||
+                                        current.pseudoElement && (length === 1 || i > 0 || children.every((item, index) => index === 0 || item.floating || item.pseudoElement && item.textContent.trim() === '')))
+                                    )
+                                {
                                     current.hide();
                                 }
                             }
-                        }
-                        else {
-                            lastChild = undefined;
-                        }
-                    }
-                    if (i > 0 && isBlockElement(current, false)) {
-                        const previousSiblings = current.previousSiblings({ floating: false });
-                        const lengthA = previousSiblings.length;
-                        if (lengthA > 0) {
-                            let inheritedTop = false;
-                            const previous = previousSiblings[lengthA - 1];
-                            if (isBlockElement(previous, true)) {
-                                let marginBottom = previous.marginBottom;
-                                let marginTop = current.marginTop;
-                                if (previous.excluded && !current.excluded) {
-                                    const offset = Math.min(marginBottom, previous.marginTop);
-                                    if (offset < 0) {
-                                        current.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.abs(offset) < marginTop ? offset : undefined);
-                                        processed.add(previous.id);
-                                        continue;
-                                    }
-                                }
-                                else if (!previous.excluded && current.excluded) {
-                                    const offset = Math.min(marginTop, current.marginBottom);
-                                    if (offset < 0) {
-                                        previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) < marginBottom ? offset : undefined);
-                                        processed.add(current.id);
-                                        continue;
-                                    }
-                                }
-                                let inheritedBottom = false;
-                                if (blockParent) {
-                                    let inherit = previous;
-                                    while (validAboveChild(inherit)) {
-                                        const bottomChild = inherit.lastStaticChild as T;
-                                        if (isBlockElement(bottomChild, true) && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
-                                            const childBottom = bottomChild.marginBottom;
-                                            resetMargin(bottomChild, BOX_STANDARD.MARGIN_BOTTOM);
-                                            if (childBottom > marginBottom) {
-                                                marginBottom = childBottom;
-                                                previous.setCacheValue('marginBottom', marginBottom);
-                                                inheritedBottom = true;
-                                            }
-                                            else if (childBottom === 0 && marginBottom === 0) {
-                                                inherit = bottomChild;
-                                                continue;
-                                            }
-                                        }
-                                        break;
-                                    }
-                                    inherit = current;
-                                    while (validBelowChild(inherit)) {
-                                        const topChild = inherit.firstStaticChild as T;
-                                        if (isBlockElement(topChild, false) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
-                                            const childTop = topChild.marginTop;
-                                            resetMargin(topChild, BOX_STANDARD.MARGIN_TOP);
-                                            if (childTop > marginTop) {
-                                                marginTop = childTop;
-                                                current.setCacheValue('marginTop', marginTop);
-                                                inheritedTop = true;
-                                            }
-                                            else if (childTop === 0 && marginTop === 0) {
-                                                inherit = topChild;
-                                                continue;
-                                            }
-                                        }
-                                        break;
-                                    }
-                                }
-                                if (marginBottom > 0) {
-                                    if (marginTop > 0) {
-                                        if (marginTop <= marginBottom) {
-                                            if (!inheritedTop || !hasBit(current.overflow, NODE_ALIGNMENT.BLOCK)) {
-                                                if (inheritedTop) {
-                                                    current.setCacheValue('marginTop', 0);
-                                                    inheritedTop = false;
-                                                }
-                                                resetMargin(current, BOX_STANDARD.MARGIN_TOP);
-                                            }
-                                        }
-                                        else {
-                                            if (!inheritedBottom || !hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
-                                                if (inheritedBottom) {
-                                                    previous.setCacheValue('marginBottom', 0);
-                                                    inheritedBottom = false;
-                                                }
-                                                resetMargin(previous, BOX_STANDARD.MARGIN_BOTTOM);
-                                            }
-                                        }
-                                    }
-                                    else if (previous.bounds.height === 0) {
-                                        resetMargin(previous, BOX_STANDARD.MARGIN_BOTTOM);
-                                    }
-                                }
-                                if (inheritedTop) {
-                                    for (const item of current.registerBox(BOX_STANDARD.MARGIN_TOP)) {
-                                        item.setCacheValue('marginTop', marginTop);
-                                    }
-                                }
-                                if (inheritedBottom) {
-                                    for (const item of previous.registerBox(BOX_STANDARD.MARGIN_BOTTOM)) {
-                                        item.setCacheValue('marginBottom', marginBottom);
-                                    }
-                                }
+                            else {
+                                lastChild = undefined;
                             }
-                            if (!inheritedTop && previousSiblings.length > 1) {
-                                if (previousSiblings[0].floating && (node.layoutVertical || current.renderParent?.layoutVertical)) {
-                                    const offset = previousSiblings[0].linear.top - current.linear.top;
-                                    if (offset < 0) {
-                                        current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset, false);
+                        }
+                        if (i > 0 && isBlockElement(current, false)) {
+                            const previousSiblings = current.previousSiblings({ floating: false });
+                            const lengthA = previousSiblings.length;
+                            if (lengthA > 0) {
+                                let inheritedTop = false;
+                                const previous = previousSiblings[lengthA - 1];
+                                if (isBlockElement(previous, true)) {
+                                    let marginBottom = previous.marginBottom;
+                                    let marginTop = current.marginTop;
+                                    if (previous.excluded && !current.excluded) {
+                                        const offset = Math.min(marginBottom, previous.marginTop);
+                                        if (offset < 0) {
+                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.abs(offset) < marginTop ? offset : undefined);
+                                            processed.add(previous.id);
+                                            continue;
+                                        }
+                                    }
+                                    else if (!previous.excluded && current.excluded) {
+                                        const offset = Math.min(marginTop, current.marginBottom);
+                                        if (offset < 0) {
+                                            previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) < marginBottom ? offset : undefined);
+                                            processed.add(current.id);
+                                            continue;
+                                        }
+                                    }
+                                    let inheritedBottom = false;
+                                    if (blockParent) {
+                                        let inherit = previous;
+                                        while (validAboveChild(inherit)) {
+                                            const bottomChild = inherit.lastStaticChild as T;
+                                            if (isBlockElement(bottomChild, true) && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
+                                                const childBottom = bottomChild.marginBottom;
+                                                resetMargin(bottomChild, BOX_STANDARD.MARGIN_BOTTOM);
+                                                if (childBottom > marginBottom) {
+                                                    marginBottom = childBottom;
+                                                    previous.setCacheValue('marginBottom', marginBottom);
+                                                    inheritedBottom = true;
+                                                }
+                                                else if (childBottom === 0 && marginBottom === 0) {
+                                                    inherit = bottomChild;
+                                                    continue;
+                                                }
+                                            }
+                                            break;
+                                        }
+                                        inherit = current;
+                                        while (validBelowChild(inherit)) {
+                                            const topChild = inherit.firstStaticChild as T;
+                                            if (isBlockElement(topChild, false) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
+                                                const childTop = topChild.marginTop;
+                                                resetMargin(topChild, BOX_STANDARD.MARGIN_TOP);
+                                                if (childTop > marginTop) {
+                                                    marginTop = childTop;
+                                                    current.setCacheValue('marginTop', marginTop);
+                                                    inheritedTop = true;
+                                                }
+                                                else if (childTop === 0 && marginTop === 0) {
+                                                    inherit = topChild;
+                                                    continue;
+                                                }
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    if (marginBottom > 0) {
+                                        if (marginTop > 0) {
+                                            if (marginTop <= marginBottom) {
+                                                if (!inheritedTop || !hasBit(current.overflow, NODE_ALIGNMENT.BLOCK)) {
+                                                    if (inheritedTop) {
+                                                        current.setCacheValue('marginTop', 0);
+                                                        inheritedTop = false;
+                                                    }
+                                                    resetMargin(current, BOX_STANDARD.MARGIN_TOP);
+                                                }
+                                            }
+                                            else {
+                                                if (!inheritedBottom || !hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
+                                                    if (inheritedBottom) {
+                                                        previous.setCacheValue('marginBottom', 0);
+                                                        inheritedBottom = false;
+                                                    }
+                                                    resetMargin(previous, BOX_STANDARD.MARGIN_BOTTOM);
+                                                }
+                                            }
+                                        }
+                                        else if (previous.bounds.height === 0) {
+                                            resetMargin(previous, BOX_STANDARD.MARGIN_BOTTOM);
+                                        }
+                                    }
+                                    if (inheritedTop) {
+                                        for (const item of current.registerBox(BOX_STANDARD.MARGIN_TOP)) {
+                                            item.setCacheValue('marginTop', marginTop);
+                                        }
+                                    }
+                                    if (inheritedBottom) {
+                                        for (const item of previous.registerBox(BOX_STANDARD.MARGIN_BOTTOM)) {
+                                            item.setCacheValue('marginBottom', marginBottom);
+                                        }
+                                    }
+                                }
+                                if (!inheritedTop && previousSiblings.length > 1) {
+                                    if (previousSiblings[0].floating && (node.layoutVertical || current.renderParent?.layoutVertical)) {
+                                        const offset = previousSiblings[0].linear.top - current.linear.top;
+                                        if (offset < 0) {
+                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset, false);
+                                        }
                                     }
                                 }
                             }

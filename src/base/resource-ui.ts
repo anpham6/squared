@@ -219,6 +219,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
         }
     }
 }
+
 function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: 'backgroundClip' | 'backgroundOrigin') {
     switch (node.css(attr)) {
         case 'border-box':

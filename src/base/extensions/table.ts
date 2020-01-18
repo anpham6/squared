@@ -27,6 +27,7 @@ function setAutoWidth(node: NodeUI, td: NodeUI, data: ExternalData) {
     data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
     data.expand = true;
 }
+
 const setBoundsWidth = (td: NodeUI) => td.css('width', formatPX(td.bounds.width), true);
 
 export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {

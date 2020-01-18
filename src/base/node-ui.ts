@@ -579,6 +579,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         backgroundPositionX: node.css('backgroundPositionX'),
                         backgroundPositionY: node.css('backgroundPositionY'),
                         backgroundClip: node.css('backgroundClip'),
+                        boxSizing: node.css('boxSizing'),
                         border: 'initial',
                         borderRadius: 'initial',
                         borderTopWidth: node.css('borderTopWidth'),

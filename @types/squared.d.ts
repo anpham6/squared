@@ -1,5 +1,5 @@
 import { AppHandler, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
-import { GridCellData } from './base/extension';
+import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
 import { AutoMargin, AscendOptions, ExcludeOptions, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgMatrix, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
@@ -100,9 +100,9 @@ declare namespace base {
     }
 
     interface Controller<T extends Node> extends AppHandler<T> {
+        sessionId: string;
         readonly application: Application<T>;
         readonly cache: NodeList<T>;
-        sessionId: string;
         readonly userSettings: UserSettings;
         readonly localSettings: ControllerSettings;
         readonly generateSessionId: string;
@@ -153,11 +153,11 @@ declare namespace base {
     class ControllerUI<T extends NodeUI> implements Controller<T> {}
 
     interface Resource<T extends Node> extends AppHandler<T> {
+        controllerSettings: ControllerSettings;
+        fileHandler?: File<T>;
         readonly application: Application<T>;
         readonly cache: NodeList<T>;
         readonly userSettings: UserSettings;
-        fileHandler?: File<T>;
-        controllerSettings: ControllerSettings;
         reset(): void;
         addImage(element: HTMLImageElement | undefined): void;
         getImage(src: string): ImageAsset | undefined;
@@ -173,8 +173,8 @@ declare namespace base {
     }
 
     interface ResourceUI<T extends NodeUI> extends Resource<T> {
-        readonly userSettings: UserUISettings;
         controllerSettings: ControllerUISettings;
+        readonly userSettings: UserUISettings;
         finalize(layouts: FileAsset[]): void;
         writeRawImage(filename: string, base64: string): void;
         setBoxStyle(node: T): void;
@@ -325,7 +325,7 @@ declare namespace base {
         queryMap?: Node[][];
         textBounds?: BoxRectDimension;
         readonly sessionId: string;
-        readonly initial: InitialData<Node>;
+        readonly initial: InitialData<Node> | undefined;
         readonly box: BoxRectDimension;
         readonly bounds: BoxRectDimension;
         readonly linear: BoxRectDimension;
@@ -393,7 +393,6 @@ declare namespace base {
         readonly pageFlow: boolean;
         readonly floating: boolean;
         readonly float: string;
-        readonly positionAuto: boolean;
         readonly baseline: boolean;
         readonly multiline: boolean;
         readonly contentBoxWidth: number;
@@ -601,7 +600,12 @@ declare namespace base {
 
     namespace extensions {
         class Accessibility<T extends NodeUI> extends ExtensionUI<T> {}
-        class CssGrid<T extends NodeUI> extends ExtensionUI<T> {}
+        class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
+            public static isAligned<T extends NodeUI>(node: T): boolean;
+            public static isJustified<T extends NodeUI>(node: T): boolean;
+            public static createDataAttribute<T extends NodeUI>(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string, autoFlow: string): CssGridData<T>;
+            public static createDataRowAttribute(): CssGridDirectionData;
+        }
         class Flexbox<T extends NodeUI> extends ExtensionUI<T> {}
         class Grid<T extends NodeUI> extends ExtensionUI<T> {
             public static createDataCellAttribute<T extends NodeUI>(): GridCellData<T>;
@@ -874,6 +878,7 @@ declare namespace lib {
             PERCENT: RegExp
         };
         const CSS: {
+            PX: RegExp,
             ANGLE: RegExp,
             CALC: RegExp,
             VAR: RegExp,
@@ -921,7 +926,7 @@ declare namespace lib {
         function actualTextRangeRect(element: Element, sessionId: string, cache?: boolean): BoxRectDimension;
         function getPseudoElt(element: Element, sessionId: string): string;
         function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
-        function getElementCache(element: Element, attr: string, sessionId?: string): any;
+        function getElementCache(element: Element, attr: string, sessionId: string): any;
         function deleteElementCache(element: Element, attr: string, sessionId: string): void;
         function getElementAsNode<T>(element: Element, sessionId: string): T | undefined;
     }
@@ -1016,10 +1021,10 @@ declare namespace svg {
     }
 
     interface SvgTransformable {
-        readonly transforms: SvgTransform[];
         rotateAngle?: number;
         transformed?: SvgTransform[];
         transformResidual?: SvgTransform[][];
+        readonly transforms: SvgTransform[];
     }
 
     interface SvgSynchronize {

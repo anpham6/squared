@@ -22,6 +22,7 @@ export const UNIT = {
 };
 
 export const CSS = {
+    PX: /px$/,
     ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
     CALC: new RegExp(`^${STRING.CSS_CALC}$`),
     VAR: /var\((--[A-Za-z\d\-]+)(?!,\s*var\()(?:,\s*([a-z\-]+\([^)]+\)|[^)]+))?\)/,

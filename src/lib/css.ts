@@ -9,7 +9,7 @@ type CSSKeyframesData = squared.lib.css.CSSKeyframesData;
 const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
 const REGEX_MEDIACONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-const REGEX_PX = /px$/;
+const REGEX_PX = CSS.PX;
 
 function compareRange(operation: string, unit: number, range: number) {
     switch (operation) {

@@ -3,11 +3,13 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 import View from '../../view';
 
 import LayoutUI = squared.base.LayoutUI;
+import CssGrid = squared.base.extensions.CssGrid;
 
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
+const { formatPX } = squared.lib.css;
 
-const isJustified = (node: View) => (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
-const isAligned = (node: View) => node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
+const { NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
+
+const getLayoutDimension = (value: string) => /^space/.test(value) ? 'match_parent' : 'wrap_content';
 
 export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -15,7 +17,7 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        return isJustified(node) || isAligned(node);
+        return CssGrid.isJustified(node) || CssGrid.isAligned(node);
     }
 
     public processNode(node: T, parent: T) {
@@ -25,23 +27,29 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
             resource: NODE_RESOURCE.ASSET
         });
         container.inherit(node, 'base', 'initial', 'styleMap', 'boxStyle');
-        if (isJustified(node)) {
-            node.setLayoutWidth('wrap_content');
+        if (CssGrid.isJustified(node)) {
+            node.setLayoutWidth(getLayoutDimension(node.css('justifyContent')));
         }
         else {
-            container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
+            if (node.contentBoxWidth > 0 && node.hasPX('width', false)) {
+                node.setLayoutWidth(formatPX(node.actualWidth - node.contentBoxWidth));
+            }
+            else {
+                container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
+            }
         }
-        if (isAligned(node)) {
-            node.setLayoutHeight('wrap_content');
+        if (CssGrid.isAligned(node)) {
+            node.setLayoutHeight(getLayoutDimension(node.css('alignContent')));
         }
         else {
-            container.setLayoutHeight('wrap_content');
+            if (node.contentBoxHeight > 0 && node.hasPX('height', false)) {
+                node.setLayoutHeight(formatPX(node.actualHeight - node.contentBoxHeight));
+            }
+            else {
+                container.setLayoutHeight('wrap_content');
+            }
         }
-        node.css('backgroundColor', 'transparent');
-        node.setCacheValue('backgroundColor', '');
-        node.css('backgroundImage', 'none');
-        node.setCacheValue('backgroundImage', '');
-        node.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING, container);
+        container.unsetCache('contentBoxWidth', 'contentBoxHeight');
         const visibleStyle = node.visibleStyle;
         visibleStyle.background = false;
         visibleStyle.backgroundImage = false;

@@ -57,11 +57,8 @@ function getImageAssets(items: string[]) {
 }
 
 const createFileAsset = (pathname: string, filename: string, content: string): FileAsset => ({ pathname, filename, content });
-
 const replaceDrawableLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEX_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], dpi, false) + '"') : value;
-
 const replaceThemeLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEX_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], dpi, false) + '<') : value;
-
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
 export default class File<T extends android.base.View> extends squared.base.FileUI<T> implements android.base.File<T> {

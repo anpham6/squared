@@ -23,10 +23,7 @@ const { STRING_XMLENCODING, replaceTab } = $lib.xml;
 
 const $base = squared.base;
 const { NodeUI } = $base;
-
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
-
-const GUIDELINE_AXIS = [STRING_ANDROID.HORIZONTAL, STRING_ANDROID.VERTICAL];
 
 function sortHorizontalFloat(list: View[]) {
     if (list.some(node => node.floating)) {
@@ -1565,8 +1562,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string) {
         const node = new View(0, '0', undefined, this.afterInsertNode);
         node.setControlType(controlName);
-        node.setLayoutWidth(isString(width) ? width : 'wrap_content');
-        node.setLayoutHeight(isString(height) ? height : 'wrap_content');
+        node.setLayoutWidth(width || 'wrap_content');
+        node.setLayoutHeight(height || 'wrap_content');
         if (options) {
             node.apply(options);
             options.documentId = node.documentId;
@@ -1612,12 +1609,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public addGuideline(node: T, parent: T, orientation?: string, percent = false, opposite = false) {
         const absoluteParent = node.absoluteParent as T;
+        const boxParent = parent.nodeGroup && !node.documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
+        const box = boxParent.box;
         const linear = node.linear;
-        const boxParent = parent.nodeGroup && !(node.documentParent as T).hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
-        GUIDELINE_AXIS.forEach(value => {
+        const bounds = node.positionStatic ? node.bounds : linear;
+        const applyLayout = (value: string, horizontal: boolean) => {
             if (!node.constraint[value] && (!orientation || value === orientation)) {
-                const horizontal = value === STRING_ANDROID.HORIZONTAL;
-                const box = boxParent.box;
                 let LT: string;
                 let RB: string;
                 let LTRB: string;
@@ -1654,7 +1651,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.anchor(LT, 'parent', true);
                     return;
                 }
-                const bounds = node.positionStatic ? node.bounds : linear;
                 let beginPercent = 'layout_constraintGuide_';
                 let location: number;
                 if (!percent && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
@@ -1734,7 +1730,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const guideline = parent.constraint.guideline || {};
                 if (!node.pageFlow) {
-                    if (node.parent === boxParent.outerWrapper) {
+                    if (node.parent === boxParent.outerMostWrapper) {
                         location += boxParent[!opposite ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
                     }
                     else if (absoluteParent === node.documentParent) {
@@ -1824,7 +1820,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
             }
-        });
+        };
+        applyLayout(STRING_ANDROID.HORIZONTAL, true);
+        applyLayout(STRING_ANDROID.VERTICAL, false);
     }
 
     public addBarrier(nodes: T[], barrierDirection: string) {
