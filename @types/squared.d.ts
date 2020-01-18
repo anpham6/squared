@@ -426,6 +426,7 @@ declare namespace base {
         readonly nextElementSibling: Node | null;
         readonly attributes: StringMap;
         readonly boundingClientRect: DOMRect;
+        readonly cssStyle: StringMap;
         readonly textStyle: StringMap;
         readonly center: Point;
         init(): void;

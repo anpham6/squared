@@ -8,7 +8,7 @@ import NodeList from './nodelist';
 import Resource from './resource';
 
 const $lib = squared.lib;
-const { checkStyleValue, getSpecificity, getStyle, hasComputedStyle, parseSelectorText, validMediaRule } = $lib.css;
+const { getSpecificity, getStyle, hasComputedStyle, parseSelectorText, validMediaRule } = $lib.css;
 const { isTextNode } = $lib.dom;
 const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
 const { CHAR, STRING, XML } = $lib.regex;
@@ -482,7 +482,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
                 const cssStyle = item.style;
-                const fromRule: string[] = [];
                 const important: ObjectMap<boolean> = {};
                 const parseImageUrl = (styleMap: StringMap, attr: string) => {
                     const value = styleMap[attr];
@@ -507,9 +506,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                         REGEX_DATAURI.lastIndex = 0;
                     }
                 };
+                const baseMap: StringMap = {};
                 for (const attr of Array.from(cssStyle)) {
-                    fromRule.push(convertCamelCase(attr));
+                    baseMap[convertCamelCase(attr)] = cssStyle[attr];
                 }
+                parseImageUrl(baseMap, 'backgroundImage');
+                parseImageUrl(baseMap, 'listStyleImage');
+                parseImageUrl(baseMap, 'content');
                 if (cssText.indexOf('!important') !== -1) {
                     let match: RegExpExecArray | null;
                     while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
@@ -589,16 +592,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const targetElt = target ? '::' + target : '';
                     document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
                         const style = getStyle(element, targetElt);
-                        const styleMap: StringMap = {};
-                        for (const attr of fromRule) {
-                            const value = checkStyleValue(element, attr, cssStyle[attr], style);
-                            if (value) {
-                                styleMap[attr] = value;
-                            }
-                        }
-                        parseImageUrl(styleMap, 'backgroundImage');
-                        parseImageUrl(styleMap, 'listStyleImage');
-                        parseImageUrl(styleMap, 'content');
+                        const styleMap = { ...baseMap };
                         const attrStyle = 'styleMap' + targetElt;
                         const attrSpecificity = 'styleSpecificity' + targetElt;
                         const styleData: StringMap = getElementCache(element, attrStyle, sessionId);

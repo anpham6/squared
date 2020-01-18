@@ -64,6 +64,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract queryMap?: T[][];
 
     protected _styleMap!: StringMap;
+    protected _cssStyle!: StringMap;
     protected _box?: BoxRectDimension;
     protected _bounds?: BoxRectDimension;
     protected _linear?: BoxRectDimension;
@@ -103,30 +104,37 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (element) {
             const sessionId = this.sessionId;
             const styleMap = getElementCache(element, 'styleMap', sessionId) || {};
-            if (this.styleElement) {
-                if (!this.pseudoElement) {
-                    const style = getStyle(element);
+            let style: CSSStyleDeclaration;
+            if (!this.pseudoElement) {
+                style = getStyle(element);
+                if (this.styleElement) {
                     const items = Array.from(element.style);
                     if (items.length) {
                         const inline = element.style;
                         for (const attr of items) {
-                            const name = convertCamelCase(attr);
-                            const value = checkStyleValue(element, name, inline.getPropertyValue(attr), style);
-                            if (value !== '') {
-                                styleMap[name] = value;
-                            }
+                            styleMap[convertCamelCase(attr)] = inline.getPropertyValue(attr);
                         }
                     }
-                    this.style = style;
-                }
-                else {
-                    this.style = getStyle(element.parentElement, getPseudoElt(element, sessionId));
                 }
             }
             else {
-                this.style = getStyle(element);
+                style = getStyle(element.parentElement, getPseudoElt(element, sessionId));
             }
-            this._styleMap = styleMap;
+            if (this.styleElement) {
+                const revisedMap: StringMap = {};
+                for (const attr in styleMap) {
+                    const value = checkStyleValue(element, attr, styleMap[attr], style);
+                    if (value !== '') {
+                        revisedMap[attr] = value;
+                    }
+                }
+                this._styleMap = revisedMap;
+            }
+            else {
+                this._styleMap = styleMap;
+            }
+            this.style = style;
+            this._cssStyle = styleMap;
             if (sessionId !== '0') {
                 setElementCache(element, 'node', sessionId, this);
             }
@@ -1814,7 +1822,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     else {
                         value = parseUnit(lineHeight, this.fontSize);
-                        if (REGEX_PX.test(lineHeight)) {
+                        if (REGEX_PX.test(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
                             const fontSize = this.cssInitial('fontSize');
                             if (REGEX_EM.test(fontSize)) {
                                 value *= parseFloat(fontSize);
@@ -1823,13 +1831,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                 }
                 else if (this.naturalChild) {
-                    let current = this.actualParent;
-                    while (current) {
-                        if (current.lineHeight > 0) {
-                            value = current.lineHeight;
-                            break;
-                        }
-                        current = current.actualParent;
+                    const parent = this.ascend({ condition: item => item.lineHeight > 0 })[0];
+                    if (parent) {
+                        value = parent.lineHeight;
                     }
                     if (this.styleElement) {
                         const fontSize = this.cssInitial('fontSize');
@@ -2778,9 +2782,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
+    get cssStyle() {
+        return this._cssStyle;
+    }
+
     get textStyle() {
-        if (this._textStyle === undefined) {
-            this._textStyle = {
+        let result = this._textStyle;
+        if (result === undefined) {
+            result = {
                 fontFamily: this.css('fontFamily'),
                 fontSize: this.css('fontSize'),
                 fontWeight: this.css('fontWeight'),
@@ -2792,8 +2801,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 letterSpacing: this.css('letterSpacing'),
                 wordSpacing: this.css('wordSpacing')
             };
+            this._textStyle = result;
         }
-        return this._textStyle;
+        return result;
     }
 
     set dir(value) {

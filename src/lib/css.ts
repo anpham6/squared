@@ -176,11 +176,19 @@ export function getSpecificity(value: string) {
 
 export function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration) {
     if (value === 'inherit') {
-        value = getInheritedStyle(element, attr);
+        switch (attr) {
+            case 'fontSize':
+            case 'lineHeight':
+                if (style) {
+                    return style[attr];
+                }
+            default:
+                return getInheritedStyle(element, attr);
+        }
     }
     else if (isCustomProperty(value)) {
         if (style) {
-            value = style[attr] as string;
+            return style[attr];
         }
         else if (isCalc(value)) {
             value = calculateVar(element, value, attr)?.toString() as string;
