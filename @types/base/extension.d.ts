@@ -8,7 +8,6 @@ export interface CssGridData<T> {
     column: CssGridDirectionData;
     emptyRows: Array<Undefined<number[]>>;
     rowData: (T[] | undefined)[][];
-    rowHeight: number[];
     rowSpanMultiple: (true | undefined)[];
     rowDirection: boolean;
     dense: boolean;
