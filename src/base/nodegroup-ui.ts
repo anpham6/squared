@@ -23,12 +23,12 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     public previousSiblings(options?: SiblingOptions) {
-        const node = <NodeUI> (this._initial.children || this.children)[0];
+        const node = <NodeUI> (this._initial?.children || this.children)[0];
         return node?.previousSiblings(options) || [];
     }
 
     public nextSiblings(options?: SiblingOptions) {
-        const children = this._initial.children || this.children;
+        const children = this._initial?.children || this.children;
         const node = <NodeUI> children[children.length - 1];
         return node?.nextSiblings(options) || [];
     }

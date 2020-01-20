@@ -1239,11 +1239,22 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return super.rightAligned || this.hasAlign(NODE_ALIGNMENT.RIGHT);
     }
 
-    set positionAuto(value: boolean) {
+    set positionAuto(value) {
         this._cached.positionAuto = value;
     }
     get positionAuto() {
-        return super.positionAuto;
+        let result = this._cached.positionAuto;
+        if (result === undefined) {
+            if (this.pageFlow) {
+                result = false;
+            }
+            else {
+                const { top, right, bottom, left } = this._initial?.styleMap || this._styleMap;
+                result = (!top || top === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto') && (!left || left === 'auto') && this.toFloat('opacity', true, 1) > 0;
+            }
+            this._cached.positionAuto = result;
+        }
+        return result;
     }
 
     set flexbox(value: Flexbox) {

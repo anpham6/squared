@@ -33,16 +33,16 @@ function setNaturalChildren(node: T) {
         const sessionId = node.sessionId;
         let i = 0;
         children = [];
-        (<HTMLElement> node.element).childNodes.forEach((child: Element) => {
-            const childNode = getElementAsNode<T>(child, sessionId);
-            if (childNode) {
-                childNode.childIndex = i++;
-                children.push(childNode);
+        (<HTMLElement> node.element).childNodes.forEach((element: Element) => {
+            const item = getElementAsNode<T>(element, sessionId);
+            if (item) {
+                item.childIndex = i++;
+                children.push(item);
             }
         });
     }
     else {
-        children = (node.initial.children || node.children).slice(0);
+        children = (node.initial?.children || node.children).slice(0);
     }
     node.naturalChildren = children;
     return children;
@@ -71,9 +71,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected _linear?: BoxRectDimension;
     protected _textBounds?: BoxRectDimension;
     protected _fontSize?: number;
+    protected _initial?: InitialData<T>;
 
     protected readonly _element: Element | null = null;
-    protected readonly _initial: InitialData<T> = { iteration: -1 };
 
     protected abstract _cached: CachedValue<T>;
     protected abstract _naturalChildren?: T[];
@@ -144,16 +144,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public saveAsInitial(overwrite = false) {
-        const initial = this._initial;
-        if (initial.iteration === -1 || overwrite) {
-            initial.children = this.duplicate();
-            initial.styleMap = { ...this._styleMap };
+        if (this._initial === undefined || overwrite) {
+            this._initial = {
+                children: this.duplicate(),
+                styleMap: { ...this._styleMap }
+            };
         }
-        const bounds = this._bounds;
-        if (bounds) {
-            initial.bounds = { ...bounds };
-        }
-        initial.iteration++;
     }
 
     public data(name: string, attr: string, value?: any, overwrite = true) {
@@ -204,7 +200,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         cached.visibleStyle = undefined;
                         break;
                     case 'pageFlow':
-                        cached.positionAuto = undefined;
                         cached.blockStatic = undefined;
                         cached.baseline = undefined;
                         cached.floating = undefined;
@@ -358,10 +353,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssInitial(attr: string, modified = false, computed = false) {
-        if (this._initial.iteration === -1 && !modified) {
+        if (this._initial === undefined && !modified) {
             computed = true;
         }
-        let value = (!modified && this._initial.styleMap || this._styleMap)[attr];
+        let value = (!modified && this._initial?.styleMap || this._styleMap)[attr];
         if (computed && !value) {
             value = this.style[attr];
         }
@@ -485,12 +480,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public toInt(attr: string, initial = false, fallback = 0) {
-        const value = parseInt((initial && this._initial.styleMap || this._styleMap)[attr]);
+        const value = parseInt((initial && this._initial?.styleMap || this._styleMap)[attr]);
         return isNaN(value) ? fallback : value;
     }
 
     public toFloat(attr: string, initial = false, fallback = 0) {
-        const value = parseFloat((initial && this._initial.styleMap || this._styleMap)[attr]);
+        const value = parseFloat((initial && this._initial?.styleMap || this._styleMap)[attr]);
         return isNaN(value) ? fallback : value;
     }
 
@@ -538,7 +533,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[] | boolean>) {
-        const value = (options?.map === 'initial' && this._initial.styleMap || this._styleMap)[attr];
+        const value = (options?.map === 'initial' && this._initial?.styleMap || this._styleMap)[attr];
         if (value) {
             switch (value) {
                 case 'auto':
@@ -582,7 +577,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public hasPX(attr: string, percent = true, initial = false) {
-        const value = (initial && this._initial.styleMap || this._styleMap)[attr];
+        const value = (initial && this._initial?.styleMap || this._styleMap)[attr];
         return value ? isLength(value, percent) : false;
     }
 
@@ -1904,22 +1899,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    get positionAuto() {
-        let result = this._cached.positionAuto;
-        if (result === undefined) {
-            if (this.pageFlow) {
-                result = false;
-            }
-            else {
-                const { iteration, styleMap } = this._initial;
-                const { top, right, bottom, left } = iteration !== -1 && styleMap || this._styleMap;
-                result = (!top || top === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto') && (!left || left === 'auto') && this.toFloat('opacity', true, 1) > 0;
-            }
-            this._cached.positionAuto = result;
-        }
-        return result;
-    }
-
     get top() {
         let result = this._cached.top;
         if (result === undefined) {
@@ -2281,8 +2260,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.autoMargin;
         if (result === undefined) {
             if (!this.pageFlow || this.blockStatic || this.display === 'table') {
-                const initial = this._initial;
-                const styleMap = initial.iteration !== -1 && initial.styleMap || this._styleMap;
+                const styleMap = this._initial?.styleMap || this._styleMap;
                 const left = styleMap.marginLeft === 'auto' && (this.pageFlow || this.hasPX('right'));
                 const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasPX('left'));
                 const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.hasPX('bottom'));
@@ -2476,7 +2454,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = '';
                     break;
                 default:
-                    if (result !== '' && this.pageFlow && !this.plainText && !this.inputElement && (this._initial.iteration === -1 || this.cssInitial('backgroundColor') === result)) {
+                    if (result !== '' && this.pageFlow && !this.plainText && !this.inputElement && (this._initial === undefined || this.cssInitial('backgroundColor') === result)) {
                         let current = this.actualParent;
                         while (current) {
                             const color = current.cssInitial('backgroundColor', true);

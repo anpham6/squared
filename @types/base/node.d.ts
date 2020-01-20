@@ -1,8 +1,6 @@
 type Node = squared.base.Node;
 
 export interface InitialData<T> {
-    iteration: number;
-    bounds?: BoxRectDimension;
     styleMap?: StringMap;
     children?: T[];
 }
@@ -22,7 +20,6 @@ export interface CachedValue<T> {
     inlineFlow?: boolean;
     positionStatic?: boolean;
     positionRelative?: boolean;
-    positionAuto?: boolean;
     top?: number;
     right?: number;
     bottom?: number;
@@ -85,6 +82,7 @@ export interface CachedValue<T> {
 }
 
 export interface CachedValueUI<T> extends CachedValue<T> {
+    positionAuto?: boolean;
     leftTopAxis?: boolean;
     renderExclude?: boolean;
     containerName?: string;
