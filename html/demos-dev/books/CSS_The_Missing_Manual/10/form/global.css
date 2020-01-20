@@ -240,28 +240,8 @@ br.clear {
 	border-color: #CBD893;
 }
 
-.feature p.fLink a {
-	font-weight: bold;
-	text-decoration: none;
-	color: #102536;
-	font-size: 11px;
-	text-transform: uppercase;
-	background: #D6ECAE url(images/arrow.gif) no-repeat right center;
-	padding: 1px 15px 2px 5px;
-}
-
-.feature p.fLink {
-	margin-top: 4px;
-}
-
-.feature p.fLink a:hover {
-	color: #FDD041;
-	text-decoration: none;
-	background-color: #294E56;
-}
-
 #home #main h1#lead {
-	background: url(images/features/tomato.jpg) no-repeat right top;
+	/* background: url(images/features/tomato.jpg) no-repeat right top; */
 	color: #FBEF99;
 	padding-top: 130px;
 	padding-left: 25px;

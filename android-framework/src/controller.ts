@@ -132,16 +132,18 @@ function adjustBaseline(baseline: View, nodes: View[]) {
 }
 
 function isLayoutBaselineAligned(node: View) {
-    const children = node.renderChildren;
-    if (node.layoutHorizontal) {
-        return children.length > 0 && children.every(item => item.baseline && !item.baselineAltered && (!item.positionRelative || item.top === 0 && item.bottom === 0));
-    }
-    else if (node.layoutVertical) {
-        const firstChild = children[0];
-        return !!firstChild && firstChild.baseline && (children.length === 1 || firstChild.textElement);
-    }
-    else if (node.layoutFrame && children.length === 1 && children[0].baseline) {
-        return true;
+    if (!node.floating) {
+        const children = node.renderChildren;
+        if (node.layoutHorizontal) {
+            return children.length > 0 && children.every(item => item.baseline && !item.baselineAltered && (!item.positionRelative || item.top === 0 && item.bottom === 0));
+        }
+        else if (node.layoutVertical) {
+            const firstChild = children[0];
+            return !!firstChild && firstChild.baseline && (children.length === 1 || firstChild.textElement);
+        }
+        else if (node.layoutFrame && children.length === 1 && children[0].baseline) {
+            return true;
+        }
     }
     return false;
 }
@@ -1337,6 +1339,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 'number':
                     case 'range':
                         node.android('inputType', 'number');
+                        node.android('progress', element.value);
                         setMinMax();
                         break;
                     case 'time':
@@ -1447,6 +1450,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 node.android('progressTint', '@color/' + Resource.addColor(foregroundColor));
                 node.android('progressBackgroundTint', '@color/' + Resource.addColor(backgroundColor));
+                node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
+                node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.FONT_STYLE });
                 node.inlineText = false;
                 break;
             }
@@ -2476,6 +2481,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             else if (isLayoutBaselineAligned(item)) {
                                 baselineAlign.push(item);
+                            }
+                            else if (i === 0) {
+                                item.anchor('top', 'true');
                             }
                         }
                     }

@@ -134,6 +134,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     switch (type) {
                         case 'radio':
                         case 'checkbox':
+                        case 'image':
                             break;
                         case 'week':
                         case 'month':
@@ -144,11 +145,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             styleMap.paddingRight = formatPX(convertFloat(styleMap.paddingRight) + 1);
                             styleMap.paddingBottom = formatPX(convertFloat(styleMap.paddingBottom) + 1);
                             styleMap.paddingLeft = formatPX(convertFloat(styleMap.paddingLeft) + 1);
-                            break;
-                        case 'image':
-                            if (styleMap.verticalAlign === undefined) {
-                                styleMap.verticalAlign = 'text-bottom';
-                            }
                             break;
                         default:
                             const result = setBorderStyle();

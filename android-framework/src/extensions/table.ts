@@ -159,7 +159,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             if (width > layoutWidth) {
                 node.setLayoutWidth(formatPX(width));
             }
-            if (layoutWidth > 0 && node.cssInitial('width') === 'auto' && node.renderChildren.every(item => item.inlineWidth)) {
+            if (node.cssInitial('width') === 'auto' && node.renderChildren.every(item => item.inlineWidth)) {
                 node.renderEach((item: T) => {
                     item.setLayoutWidth('0px');
                     item.android('layout_columnWeight', '1');

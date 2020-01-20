@@ -23,6 +23,7 @@ const { CSS_GRID } = $base_lib.constant.EXT_NAME;
 
 const REGEX_ALIGNSELF = /start|end|center|baseline/;
 const REGEX_JUSTIFYSELF = /start|left|center|right|end/;
+const REGEX_PX = CSS.PX;
 const REGEX_FR = /fr$/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
@@ -54,7 +55,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
         const dimension = horizontal ? 'width' : 'height';
         for (let i = 0; i < length; i++) {
             const unitPX = unit[i];
-            if (CSS.PX.test(unitPX)) {
+            if (REGEX_PX.test(unitPX)) {
                 value += parseFloat(unitPX);
             }
             else {
@@ -222,7 +223,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
     let height: string | undefined;
     let layout_columnWeight: string | undefined;
     let layout_rowWeight: string | undefined;
-    if (section.every(value => CSS.PX.test(value))) {
+    if (section.every(value => REGEX_PX.test(value))) {
         let px = insideGap;
         for (const value of section) {
             px += parseFloat(value);
@@ -648,7 +649,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             {
                 let k = -1;
                 let l = 0;
-                function createSpacer(i: number, horizontal: boolean, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '') {
+                function createSpacer(i: number, horizontal: boolean, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) {
                     let width = '';
                     let height = '';
                     if (k !== -1) {
@@ -678,9 +679,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         if (section.length === unitData.length) {
                             if (horizontal) {
                                 width = 'match_parent';
+                                layout_columnWeight = '';
                             }
                             else {
                                 height = 'match_parent';
+                                layout_rowWeight = '';
                             }
                             gapSize = 0;
                         }
@@ -708,6 +711,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 columnSpan,
                                 android: {
                                     [horizontal ? node.localizeString(STRING_ANDROID.MARGIN_RIGHT) : 'bottom']: gapSize > 0 && (k + l) < unitData.length ? '@dimen/' + Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize)) : '',
+                                    [horizontal ? 'bottom' : node.localizeString(STRING_ANDROID.MARGIN_RIGHT)]: opposingMargin > 0 ? '@dimen/' + Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin)) : '',
                                     layout_row,
                                     layout_column,
                                     layout_rowWeight,
@@ -715,7 +719,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                     layout_gravity: 'fill'
                                 }
                             }),
-                            CSS.PX.test(width) || CSS.PX.test(height)
+                            REGEX_PX.test(width) || REGEX_PX.test(height)
                         );
                         k = -1;
                     }
@@ -750,10 +754,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             if (value > 0) {
                                 k = j;
                                 const { unit: unitA, gap: gapA } = rowDirection ? row : column;
-                                l = value === Number.POSITIVE_INFINITY ? unitA.length : 1;
-                                const dimensions = getCellDimensions(node, !rowDirection, [unitA[j]], gapA * (l - 1));
-                                createSpacer(i, rowDirection, unitA, gapA, dimensions[rowDirection ? 1 : 0], dimensions[rowDirection ? 3 : 2]);
-                                break;
+                                const { unit: unitB, gap: gapB } = !rowDirection ? row : column;
+                                const dimensions = getCellDimensions(node, !rowDirection, [unitA[j]], 0);
+                                l = value === Number.POSITIVE_INFINITY ? unitB.length : 1;
+                                createSpacer(i, rowDirection, unitB, gapB, dimensions[rowDirection ? 1 : 0], dimensions[rowDirection ? 3 : 2], i < length - 1 ? gapA : 0);
                             }
                         }
                     }
@@ -830,7 +834,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             else if (node.blockStatic && node.width > 0 && !node.hasPX('minWidth') && !node.documentParent.layoutElement) {
                 let minWidth = column.gap * (column.length - 1);
                 for (const value of unit) {
-                    if (CSS.PX.test(value)) {
+                    if (REGEX_PX.test(value)) {
                         minWidth += parseFloat(value);
                     }
                     else {

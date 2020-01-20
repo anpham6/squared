@@ -793,6 +793,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         case 'file':
                             value = isUserAgent(USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
                             break;
+                        case 'range':
+                            hint = value;
+                            value = '';
+                            break;
                     }
                     break;
                 case 'TEXTAREA':

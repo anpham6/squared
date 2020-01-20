@@ -191,10 +191,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 else if (image.width === 0 && image.height === 0) {
                     const element = document.createElement('img');
                     element.src = uri;
-                    const { naturalWidth: width, naturalHeight: height } = element;
-                    if (width > 0 && height > 0) {
-                        image.width = width;
-                        image.height = height;
+                    if (element.naturalWidth > 0 && element.naturalHeight > 0) {
+                        image.width = element.naturalWidth;
+                        image.height = element.naturalHeight;
                     }
                     else {
                         documentRoot.appendChild(element);
@@ -269,8 +268,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 resume();
             })
-            .catch((error: Event) => {
-                const message = (<HTMLImageElement> error.target)?.src || error['message'];
+            .catch((error: Event | HTMLImageElement) => {
+                if (error instanceof Event) {
+                    error = <HTMLImageElement> error.target;
+                }
+                const message = error instanceof HTMLImageElement ? error.src : '';
                 if (!this.userSettings.showErrorMessages || !isString(message) || confirm('FAIL: ' + message)) {
                     resume();
                 }

@@ -438,22 +438,14 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const node of this.application.session.cache) {
             const styleData = nodeMap[node.id];
             if (styleData?.length) {
-                switch (node.tagName) {
-                    case 'METER':
-                    case 'PROGRESS':
-                        node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
-                        break;
-                    default:
-                        if (styleData.length > 1) {
-                            parentStyle.add(styleData.join('.'));
-                            styleData.shift();
-                        }
-                        else {
-                            parentStyle.add(styleData[0]);
-                        }
-                        node.attr('_', 'style', '@style/' + styleData.join('.'));
-                        break;
+                if (styleData.length > 1) {
+                    parentStyle.add(styleData.join('.'));
+                    styleData.shift();
                 }
+                else {
+                    parentStyle.add(styleData[0]);
+                }
+                node.attr('_', 'style', '@style/' + styleData.join('.'));
             }
         }
         for (const value of parentStyle) {

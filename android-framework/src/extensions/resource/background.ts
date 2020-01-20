@@ -979,8 +979,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     const svg = imageSvg[i] === true;
                     let repeating = repeat === 'repeat';
+                    let width = 0;
+                    let height = 0;
+                    let tileMode = '';
+                    let tileModeX = '';
+                    let tileModeY = '';
                     let gravityX = '';
                     let gravityY = '';
+                    let gravityAlign = '';
+                    let gravity: string | undefined;
                     if (!repeating && repeat !== 'repeat-x') {
                         switch (position.horizontal) {
                             case 'left':
@@ -1030,6 +1037,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             case '0%':
                                 resetPosition('top', 'bottom');
                                 gravityY = 'top';
+                                if (isNaN(dimenHeight)) {
+                                    height = boundsHeight;
+                                }
                                 break;
                             case 'center':
                             case '50%':
@@ -1071,13 +1081,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         position.bottom = 0;
                     }
-                    let width = 0;
-                    let height = 0;
-                    let tileMode = '';
-                    let tileModeX = '';
-                    let tileModeY = '';
-                    let gravityAlign = '';
-                    let gravity: string | undefined;
                     if (repeating) {
                         if (repeatX && repeatY) {
                             tileMode = 'repeat';
@@ -1486,7 +1489,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 tileMode = '';
                             }
                         }
-                        if ((height || dimenHeight) + position.top >= boundsHeight && !node.documentBody && !node.has('height', CSS_UNIT.PERCENT)) {
+                        if ((height || dimenHeight) + position.top >= boundsHeight && !node.documentBody && !node.percentHeight) {
                             tileModeY = '';
                             if (!resizable && position.top < 0 && gravity !== 'fill' && gravityY.indexOf('fill_vertical') === -1 && !node.hasPX('height')) {
                                 gravityY += (gravityY !== '' ? '|' : '') + 'fill_vertical';

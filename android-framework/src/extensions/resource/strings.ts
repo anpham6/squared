@@ -9,7 +9,7 @@ import { BUILD_ANDROID } from '../../lib/enumeration';
 const $lib = squared.lib;
 const { formatPX } = $lib.css;
 const { measureTextWidth } = $lib.dom;
-const { capitalizeString, isNumber, lowerCaseString } = $lib.util;
+const { capitalizeString, lowerCaseString, isNumber, isString } = $lib.util;
 const { replaceCharacterData } = $lib.xml;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -23,12 +23,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
 
     public afterResources() {
         const numberResourceValue = this.options.numberResourceValue;
-        const setTextValue = (node: T, attr: string, name: string, value: string) => {
+        function setTextValue(node: T, attr: string, name: string, value: string) {
             name = Resource.addString(value, name, numberResourceValue);
             if (name !== '') {
                 node.android(attr, numberResourceValue || !isNumber(name) ? '@string/' + name : name, false);
             }
-        };
+        }
         for (const node of this.application.processing.cache) {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
@@ -145,8 +145,8 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     }
                                 }
                                 const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
-                                if (hintString) {
-                                    setTextValue(node, 'hint', node.controlId.toLowerCase() + '_hint', hintString);
+                                if (isString(hintString)) {
+                                    setTextValue(node, 'hint', '', hintString);
                                 }
                             }
                         }

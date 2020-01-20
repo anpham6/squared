@@ -317,11 +317,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 if (repeating.length) {
                                     for (let j = 0; j < iterations; j++) {
                                         for (const item of repeating) {
-                                            if (item.name) {
-                                                name[item.name].push(i);
+                                            const { name: nameA, unit: unitA } = item;
+                                            if (nameA) {
+                                                name[nameA].push(i);
                                             }
-                                            else if (item.unit) {
-                                                unit.push(item.unit);
+                                            else if (unitA) {
+                                                unit.push(unitA);
                                                 unitMin.push(item.unitMin || '');
                                                 repeat.push(true);
                                                 i++;
@@ -748,10 +749,9 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
             ITERATION = Math.max(length, outerCount);
             data.length = ITERATION;
-            const autoFill = data.autoFill || data.autoFit;
             const lengthA = unit.length;
             if (lengthA < data.length) {
-                if (autoFill) {
+                if (data.autoFill || data.autoFit) {
                     if (lengthA === 0) {
                         unit.push('auto');
                         data.unitMin.push('');
@@ -775,7 +775,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
             }
-            else if (autoFill && node.blockStatic && (horizontal && !node.hasWidth || !horizontal && !node.hasHeight)) {
+            else if (data.autoFit || data.autoFill && node.blockStatic && (horizontal && !node.hasWidth && !node.hasPX('maxWidth', false) || !horizontal && !node.hasHeight)) {
                 unit.length = ITERATION;
             }
             let percent = 1;

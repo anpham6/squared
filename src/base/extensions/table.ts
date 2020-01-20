@@ -173,7 +173,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 switch (td.tagName) {
                     case 'TD': {
                         const including = td.parent as T;
-                        if (!td.cssInitial('verticalAlign')) {
+                        if (td.cssInitial('verticalAlign') === '') {
                             td.css('verticalAlign', 'middle', true);
                         }
                         if (td.borderTopWidth === 0) {
@@ -191,7 +191,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         break;
                     }
                     case 'TH': {
-                        if (!td.cssInitial('textAlign')) {
+                        if (td.cssInitial('textAlign') === '') {
                             td.css('textAlign', 'center');
                         }
                         if (td.borderTopWidth === 0) {
@@ -199,9 +199,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (td.borderBottomWidth === 0) {
                             setBorderStyle('borderBottom', node);
-                        }
-                        if (td.borderLeftWidth === 0) {
-                            setBorderStyle('borderLeft', node);
                         }
                         break;
                     }
