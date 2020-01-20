@@ -1136,18 +1136,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get element() {
-        let element = this._element;
-        if (element === null) {
-            let current = this.innerWrapped;
-            while (current) {
-                element = <Element | null> current.unsafe('element');
-                if (element) {
-                    break;
-                }
-                current = current.innerWrapped;
-            }
-        }
-        return element;
+        return this._element || <Element | null> this.innerMostWrapped?.unsafe('element') || null;
     }
 
     set naturalChild(value) {
@@ -1408,6 +1397,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 result = false;
             }
             this._cached.textEmpty = result;
+        }
+        return result;
+    }
+
+    get innerMostWrapped() {
+        let result = this.innerWrapped;
+        while (result) {
+            const innerWrapped = result.innerWrapped;
+            if (innerWrapped) {
+                result = innerWrapped;
+            }
+            else {
+                break;
+            }
         }
         return result;
     }

@@ -50,7 +50,7 @@ function isHorizontalAlign(value: string) {
 }
 
 function setAutoMargin(node: T, autoMargin: AutoMargin) {
-    if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerWrapped?.has('width', CSS_UNIT.PERCENT, { not: '100%' }))) {
+    if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerMostWrapped?.has('width', CSS_UNIT.PERCENT, { not: '100%' }))) {
         node.mergeGravity(
             (node.blockWidth || !node.pageFlow) && node.outerWrapper === undefined ? 'gravity' : 'layout_gravity',
             autoMargin.leftRight ? STRING_ANDROID.CENTER_HORIZONTAL : (autoMargin.left ? 'right' : 'left')

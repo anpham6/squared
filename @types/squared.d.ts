@@ -524,6 +524,7 @@ declare namespace base {
         readonly layoutVertical: boolean;
         readonly onlyChild: boolean;
         readonly outerMostWrapper: NodeUI | undefined;
+        readonly innerMostWrapped: NodeUI | undefined;
         readonly support: Support;
         readonly documentId: string;
         readonly extensions: string[];

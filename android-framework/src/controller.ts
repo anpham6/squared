@@ -56,8 +56,8 @@ function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
         templates.sort((a, b) => {
             const nodeA = a.node;
             const nodeB = b.node;
-            const above = nodeA.innerWrapped as View || nodeA;
-            const below = nodeB.innerWrapped as View || nodeB;
+            const above = nodeA.innerMostWrapped as View || nodeA;
+            const below = nodeB.innerMostWrapped as View || nodeB;
             if (above.absoluteParent === below.absoluteParent) {
                 if (above.zIndex === below.zIndex) {
                     return above.childIndex < below.childIndex ? -1 : 1;
@@ -249,7 +249,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
             let valid = false;
             if (horizontal) {
                 if (node.outerWrapper || node.ascend({ condition: item => item.hasPX('width') || item.blockStatic }).length) {
-                    node.setLayoutWidth(renderParent.flexibleWidth ? 'match_parent' : '0px', !!node.innerWrapped?.naturalChild);
+                    node.setLayoutWidth(renderParent.flexibleWidth ? 'match_parent' : '0px', !!node.innerMostWrapped?.naturalChild);
                     valid = node.flexibleWidth;
                     setAlignmentBlock();
                     if (valid && !isPercent(maxWH)) {
@@ -258,7 +258,7 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
                 }
             }
             else if ((node.absoluteParent || documentParent).hasHeight && !node.hasPX('height')) {
-                node.setLayoutHeight(renderParent.flexibleHeight ? 'match_parent' : '0px', !!node.innerWrapped?.naturalChild);
+                node.setLayoutHeight(renderParent.flexibleHeight ? 'match_parent' : '0px', !!node.innerMostWrapped?.naturalChild);
                 valid = node.flexibleHeight;
                 if (valid && !isPercent(maxWH)) {
                     contentBox += node.contentBoxHeight;
@@ -282,8 +282,9 @@ function constraintMinMax(node: View, dimension: string, horizontal: boolean) {
 }
 
 function setConstraintPercent(node: View, value: string, horizontal: boolean, percent: number) {
+    const documentParent = node.documentParent;
     let basePercent = (parseFloat(value) / 100);
-    if (basePercent < 1 && (percent < 1 || node.blockStatic && !node.documentParent.gridElement)) {
+    if (basePercent < 1 && !(documentParent.flexElement && isPercent(node.flexbox.basis)) && (percent < 1 || node.blockStatic && !documentParent.gridElement)) {
         const actualParent = node.actualParent;
         let boxPercent = horizontal ? node.contentBoxWidthPercent : node.contentBoxHeightPercent;
         let marginPercent = 0;
@@ -1763,7 +1764,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (location <= 0) {
                     node.anchor(LT, 'parent', true);
                     if (location < 0) {
-                        const innerWrapped = node.innerWrapped;
+                        const innerWrapped = node.innerMostWrapped;
                         if (innerWrapped?.pageFlow === false) {
                             let boxMargin = 0;
                             switch (LT) {
