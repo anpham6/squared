@@ -897,6 +897,7 @@ declare namespace lib {
             ATTRIBUTE: RegExp,
             ENTITY: RegExp,
             SEPARATOR: RegExp,
+            DELIMITER: RegExp,
             BREAKWORD_G: RegExp,
             NONWORD_G: RegExp,
             TAGNAME_G: RegExp

@@ -9,7 +9,7 @@ const $lib = squared.lib;
 const { getHexCode, parseColor } = $lib.color;
 const { getFontSize, isLength, parseUnit } = $lib.css;
 const { getNamedItem } = $lib.dom;
-const { CHAR } = $lib.regex;
+const { CHAR, XML } = $lib.regex;
 const { flatMap, isNumber, replaceMap, sortNumber, trimEnd } = $lib.util;
 
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
@@ -165,7 +165,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             const values = getNamedItem(animationElement, 'values');
             const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList(getNamedItem(animationElement, 'keyTimes')) : [];
             if (values !== '') {
-                const valuesData = trimEnd(values, ';').split(/\s*;\s*/);
+                const valuesData = trimEnd(values, ';').split(XML.DELIMITER);
                 this.values = valuesData;
                 const length = valuesData.length;
                 if (length > 1 && length === keyTimes.length) {

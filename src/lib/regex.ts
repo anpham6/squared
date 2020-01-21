@@ -6,7 +6,7 @@ export const STRING = {
     PERCENT: '-?\\d+(?:\\.\\d+)?%',
     LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
-    DATAURI: '(?:data:([^;]+);([^,]+),)?(.*?)',
+    DATAURI: '(?:data:([^,]+),)?(.*?)',
     CSS_SELECTOR_LABEL: '[\\.#]?[\\w\\-]+',
     CSS_SELECTOR_PSEUDO_ELEMENT: '::[\\w\\-]+',
     CSS_SELECTOR_PSEUDO_CLASS: ':[\\w\\-]+(?:\\(\\s*([^()]+)\\s*\\)|\\(\\s*([\\w\\-]+\\(.+?\\))\\s*\\))?',
@@ -41,6 +41,7 @@ export const XML = {
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
     ENTITY: /&#?[A-Za-z\d]+;/,
     SEPARATOR: /\s*,\s*/,
+    DELIMITER: /\s*;\s*/,
     BREAKWORD_G: /([A-Za-z\d]+|&#?[A-Za-z\d]+;)/g,
     NONWORD_G: /[^A-Za-z\d]+/g,
     TAGNAME_G: /(<([^>]+)>)/g

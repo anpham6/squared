@@ -92,8 +92,10 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
             data.length = Math.floor(dimension / (sizeMin + data.gap));
             data.unit = repeatUnit(data, unit);
             data.unitMin = repeatUnit(data, unitMin);
+            return true;
         }
     }
+    return false;
 }
 
 function getColumnTotal(rows: (NodeUI[] | undefined)[]) {
@@ -385,8 +387,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 return 0;
             });
         }
-        setAutoFill(column, node.actualWidth);
-        setAutoFill(row, node.actualHeight);
+        let autoWidth = false;
+        let autoHeight = false;
         if (!node.has('gridTemplateAreas') && node.every(item => item.css('gridRowStart') === 'auto' && item.css('gridColumnStart') === 'auto')) {
             let directionA: string;
             let directionB: string;
@@ -488,7 +490,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             });
         }
         else {
+            autoWidth = setAutoFill(column, node.actualWidth);
+            autoHeight = setAutoFill(row, node.actualHeight);
             const templateAreas = mainData.templateAreas;
+            let previousPlacement: number[] | undefined;
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
                 if (template !== 'none') {
                     trimString(template.trim(), '"').split(CHAR.SPACE).forEach((area, j) => {
@@ -510,7 +515,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     });
                 }
             });
-            let previousPlacement: number[] | undefined;
             node.each((item, index) => {
                 const positions = [
                     item.css('gridRowStart'),
@@ -693,9 +697,9 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (previousPlacement === undefined) {
                     if (placement[0] === 0) {
                         placement[0] = 1;
-                        if (placement[2] === 0) {
-                            placement[2] = 2;
-                        }
+                    }
+                    if (placement[1] === 0) {
+                        placement[1] = 1;
                     }
                 }
                 const [a, b, c, d] = placement;
@@ -710,6 +714,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 else if (b > 0 && d === 0) {
                     placement[3] = a + columnSpan;
+                }
+                if (placement[2] === 0 && placement[0] > 0) {
+                    placement[2] = placement[0] + rowSpan;
+                }
+                if (placement[3] === 0 && placement[1] > 0) {
+                    placement[3] = placement[1] + columnSpan;
                 }
                 layout[index] = <GridLayout> {
                     outerCoord: horizontal ? item.linear.top : item.linear.left,
@@ -747,10 +757,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
             }
-            ITERATION = Math.max(length, outerCount);
-            data.length = ITERATION;
             const lengthA = unit.length;
-            if (lengthA < data.length) {
+            ITERATION = Math.max(length, outerCount, horizontal && !autoWidth || !horizontal && !autoHeight ? lengthA : 0);
+            data.length = ITERATION;
+            if (lengthA < ITERATION) {
                 if (data.autoFill || data.autoFit) {
                     if (lengthA === 0) {
                         unit.push('auto');
@@ -766,7 +776,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     const lengthB = auto.length;
                     if (lengthB) {
                         let i = 0;
-                        while (unit.length < data.length) {
+                        while (unit.length < ITERATION) {
                             if (i === lengthB) {
                                 i = 0;
                             }

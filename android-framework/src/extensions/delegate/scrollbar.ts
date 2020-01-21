@@ -91,7 +91,6 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     container = this.application.createNode();
                     container.inherit(node, 'base');
                     container.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
-                    scrollView[0].innerWrapped = container;
                 }
                 container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
                 container.exclude({ resource: NODE_RESOURCE.ASSET });
@@ -126,7 +125,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 }
                 if (i === 0) {
                     const dataset = node.dataset;
-                    item.render(!dataset.use && dataset.target ? this.application.resolveTarget(dataset.target) : parent);
+                    item.render(dataset.target && !dataset.use ? this.application.resolveTarget(dataset.target) : parent);
                 }
                 else {
                     item.render(scrollView[i - 1]);
@@ -142,11 +141,19 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     }
                 );
             }
+            for (let i = length - 1, j = 0; i >= 0; i--, j++) {
+                const item = scrollView[i];
+                if (j === 0) {
+                    parent = item;
+                    item.innerWrapped = node;
+                }
+                else {
+                    item.innerWrapped = parent;
+                }
+            }
             node.overflow = 0;
             node.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
             node.resetBox(BOX_STANDARD.MARGIN, scrollView[0]);
-            parent = scrollView.pop() as T;
-            parent.innerWrapped = node;
             node.parent = parent;
             return { parent };
         }

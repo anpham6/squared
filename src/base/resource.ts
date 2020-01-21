@@ -3,7 +3,7 @@ import { ControllerSettings, ResourceAssetMap, UserSettings } from '../../@types
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
 
 const $lib = squared.lib;
-const { CSS, STRING } = $lib.regex;
+const { CSS, STRING, XML } = $lib.regex;
 const { buildAlphaString, fromLastIndexOf } = $lib.util;
 
 export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
@@ -34,11 +34,8 @@ export default abstract class Resource<T extends squared.base.Node> implements s
             if (/^data\:image\//.test(uri)) {
                 const match = new RegExp(`^${STRING.DATAURI}$`).exec(uri);
                 if (match) {
-                    const mimeType = match[1];
-                    const encoding = match[2];
-                    if (mimeType && encoding) {
-                        this.addRawData(uri, mimeType, encoding, match[3], element.naturalWidth, element.naturalHeight);
-                    }
+                    const mimeType = match[1].split(XML.DELIMITER);
+                    this.addRawData(uri, mimeType[0].trim(), mimeType[1]?.trim() || 'base64', match[2], element.naturalWidth, element.naturalHeight);
                 }
             }
             if (uri !== '') {

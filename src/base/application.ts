@@ -490,11 +490,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                         let result = value;
                         let match: RegExpExecArray | null;
                         while ((match = REGEX_DATAURI.exec(value)) !== null) {
-                            if (match[3] && match[4]) {
-                                resourceHandler.addRawData(match[2], match[3], match[4], match[5]);
+                            if (match[3]) {
+                                const mimeType = match[3].split(XML.DELIMITER);
+                                resourceHandler.addRawData(match[2], mimeType[0].trim(), mimeType[1]?.trim() || 'utf8', match[4]);
                             }
                             else if (this.userSettings.preloadImages) {
-                                const uri = resolvePath(match[5], styleSheetHref);
+                                const uri = resolvePath(match[4], styleSheetHref);
                                 if (uri !== '') {
                                     if (resourceHandler.getImage(uri) === undefined) {
                                         addImageSrc(uri);
