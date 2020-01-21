@@ -80,7 +80,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         };
     }
 
-    public static baseline<T extends NodeUI>(list: T[], text = false) {
+    public static baseline<T extends NodeUI>(list: T[], text = false): T | null {
         list = filterArray(list, item => {
             if ((item.baseline || isLength(item.verticalAlign)) && (!text || item.textElement) && !item.floating && !item.baselineAltered) {
                 return item.naturalChild && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline);
@@ -89,10 +89,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         });
         if (list.length > 1) {
             list.sort((a, b) => {
-                if (a.length && b.length === 0) {
+                if (a.length && b.length === 0 || b.textElement && a.inputElement && b.childIndex < a.childIndex) {
                     return 1;
                 }
-                else if (b.length && a.length === 0) {
+                else if (b.length && a.length === 0 || a.textElement && b.inputElement && a.childIndex < b.childIndex) {
                     return -1;
                 }
                 let heightA = a.baselineHeight;
@@ -1412,7 +1412,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 break;
             }
         }
-        return result;
+        return result || null;
     }
 
     get outerMostWrapper() {
@@ -1426,7 +1426,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 break;
             }
         }
-        return result;
+        return result || null;
     }
 
     get preserveWhiteSpace() {

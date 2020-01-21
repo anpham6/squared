@@ -67,6 +67,6 @@ export function deleteElementCache(element: Element, attr: string, sessionId: st
     delete element[`__${attr}::${sessionId}`];
 }
 
-export function getElementAsNode<T>(element: Element, sessionId: string): T | undefined {
-    return getElementCache(element, 'node', sessionId);
+export function getElementAsNode<T>(element: Element, sessionId: string): T | null {
+    return getElementCache(element, 'node', sessionId) || null;
 }

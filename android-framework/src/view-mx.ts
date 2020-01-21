@@ -1808,9 +1808,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else if (this.inputElement) {
                         switch (this.controlName) {
-                            case CONTAINER_ANDROID.BUTTON:
-                                result += 2;
-                                break;
                             case CONTAINER_ANDROID.RADIO:
                             case CONTAINER_ANDROID.CHECKBOX:
                                 result += 8;
@@ -1920,7 +1917,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         set innerWrapped(value) {
             if (value) {
-                const outerWrapper = this.outerMostWrapper as T | undefined;
+                const outerWrapper = this.outerMostWrapper as T | null;
                 if (outerWrapper) {
                     value = outerWrapper;
                 }

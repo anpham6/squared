@@ -523,8 +523,8 @@ declare namespace base {
         readonly layoutHorizontal: boolean;
         readonly layoutVertical: boolean;
         readonly onlyChild: boolean;
-        readonly outerMostWrapper: NodeUI | undefined;
-        readonly innerMostWrapped: NodeUI | undefined;
+        readonly outerMostWrapper: NodeUI | null;
+        readonly innerMostWrapped: NodeUI | null;
         readonly support: Support;
         readonly documentId: string;
         readonly extensions: string[];
@@ -930,7 +930,7 @@ declare namespace lib {
         function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
         function getElementCache(element: Element, attr: string, sessionId: string): any;
         function deleteElementCache(element: Element, attr: string, sessionId: string): void;
-        function getElementAsNode<T>(element: Element, sessionId: string): T | undefined;
+        function getElementAsNode<T>(element: Element, sessionId: string): T | null;
     }
 
     namespace util {

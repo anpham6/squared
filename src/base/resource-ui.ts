@@ -888,8 +888,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const child = <Element> children[i];
-            const item = getElementAsNode(child, sessionId) as NodeUI | undefined;
-            if (item === undefined || !item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
+            const item = getElementAsNode<NodeUI>(child, sessionId);
+            if (item === null || !item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
                 if (item) {
                     const preserveWhitespace = (item.actualParent as T).preserveWhiteSpace;
                     if (item.htmlElement && attr === 'innerHTML') {
