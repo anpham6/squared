@@ -14,7 +14,7 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 const $lib = squared.lib;
 const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule, isLength, resolveURL } = $lib.css;
 const { getNamedItem, getRangeClientRect, isTextNode, removeElementsByClassName } = $lib.dom;
-const { aboveRange, captureMap, convertFloat, convertInt, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;
+const { aboveRange, captureMap, convertFloat, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;
 const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -464,7 +464,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const dataset = element.dataset;
         const { filename, iteration } = dataset;
         const prefix = isString(filename) && filename.replace(new RegExp(`\.${this._localSettings.layout.fileExtension}$`), '') || element.id || 'document_' + this.length;
-        const suffix = (iteration ? convertInt(iteration) : -1) + 1;
+        const suffix = (iteration ? parseInt(iteration) : -1) + 1;
         const layoutName = convertWord(suffix > 1 ? prefix + '_' + suffix : prefix, true);
         dataset.iteration = suffix.toString();
         dataset.layoutName = layoutName;

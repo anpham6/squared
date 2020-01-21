@@ -64,7 +64,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             let register = false;
             node.modifyBox(BOX_STANDARD.MARGIN_LEFT);
             if (parent.is(CONTAINER_NODE.GRID)) {
-                columnCount = convertInt(parent.android('columnCount'));
+                columnCount = convertInt(parent.android('columnCount')) || 1;
                 adjustPadding = true;
             }
             else if (firstChild) {

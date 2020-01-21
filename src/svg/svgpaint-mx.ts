@@ -237,7 +237,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     return parseUnit(value, getFontSize(this.element));
                 }
                 else if (isPercent(value)) {
-                    return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * convertFloat(value) / 100);
+                    return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * parseFloat(value) / 100);
                 }
             }
             return convertFloat(value);

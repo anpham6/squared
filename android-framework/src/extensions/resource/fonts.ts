@@ -9,7 +9,7 @@ import { convertLength } from '../../lib/util';
 
 const $lib = squared.lib;
 const { XML } = $lib.regex;
-const { capitalize, convertInt, convertWord, filterArray, objectMap, spliceArray, trimString } = $lib.util;
+const { capitalize, convertWord, filterArray, objectMap, spliceArray, trimString } = $lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -455,7 +455,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             value.split('.').forEach((tag, index, array) => {
                 const match = REGEX_TAGNAME.exec(tag);
                 if (match) {
-                    const styleData = resourceMap[match[1].toUpperCase()][convertInt(match[2])];
+                    const styleData = resourceMap[match[1].toUpperCase()][parseInt(match[2])];
                     if (styleData) {
                         if (index === 0) {
                             parent = tag;

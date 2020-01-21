@@ -9,7 +9,7 @@ import { BOX_STANDARD } from '../lib/enumeration';
 const $lib = squared.lib;
 const { formatPX, isLength, isPercent } = $lib.css;
 const { CHAR, CSS } = $lib.regex;
-const { convertInt, isNumber, trimString, withinRange } = $lib.util;
+const { isNumber, trimString, withinRange } = $lib.util;
 
 type GridLayout = {
     placement: number[],
@@ -290,7 +290,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     data.autoFill = true;
                                     break;
                                 default:
-                                    iterations = convertInt(match[2]);
+                                    iterations = parseInt(match[2]) || 1;
                                     break;
                             }
                             if (iterations > 0) {

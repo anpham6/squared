@@ -909,8 +909,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             const element = <HTMLInputElement> node.element;
                                             const rangeValue = parseFloat(element.value);
                                             if (!isNaN(rangeValue)) {
-                                                const min = convertFloat(element.min);
-                                                const max = convertFloat(element.max);
+                                                const min = parseFloat(element.min);
+                                                const max = parseFloat(element.max);
                                                 if (rangeValue >= min && rangeValue <= max) {
                                                     if (pseudo === ':out-of-range') {
                                                         return false;

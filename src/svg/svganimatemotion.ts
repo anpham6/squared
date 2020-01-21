@@ -10,7 +10,7 @@ const $lib = squared.lib;
 const { isPercent, parseAngle } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { truncateFraction } = $lib.math;
-const { convertFloat, isEqual, isNumber, isString, objectMap } = $lib.util;
+const { isEqual, isNumber, isString, objectMap } = $lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimateTransform implements squared.svg.SvgAnimateMotion {
     public path = '';
@@ -38,7 +38,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     break;
                 default:
                     if (isNumber(rotate)) {
-                        this.rotate = convertFloat(rotate) + 'deg';
+                        this.rotate = parseFloat(rotate) + 'deg';
                     }
                     break;
             }

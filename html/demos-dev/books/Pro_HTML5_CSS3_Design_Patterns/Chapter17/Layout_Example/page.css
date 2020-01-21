@@ -81,7 +81,7 @@ ul.tabs .hover  { text-decoration:underline; }
 .menu li                { margin:0; padding:2px 25px; list-style-type:none; color:black; }
 .menu li img            { margin-left:-22px; padding-right:5px; }
 .menu li.separator      { margin-top:5px; border-top:1px solid gray; padding-top:5px; }
-.menu li.flyout-trigger { background:url("flyout1.gif") no-repeat right center; }
+/* .menu li.flyout-trigger { background:url("flyout1.gif") no-repeat right center; } */
 
 .menu h3.hover      { background:url("g2.jpg") repeat-x left top white; }
 .menu li.hover      { background-color:firebrick; color:white; }
@@ -94,7 +94,7 @@ ul.tabs .hover  { text-decoration:underline; }
 .menu h3,.menu ul { border-left:1px solid yellow; border-right:1px solid orange; 
                       border-top:1px solid yellow; border-bottom:1px solid orange; }
 
-.menu li.flyout-trigger.hover { background:url("flyout2.gif") no-repeat right center firebrick; }
+/* .menu li.flyout-trigger.hover { background:url("flyout2.gif") no-repeat right center firebrick; } */
 
 .menu li.hover > a  { color:white; }
 
@@ -157,9 +157,6 @@ ul.inline li { display:inline; font-size:0.8em;  }
  #main               { float:left; width:50%; min-width:300px; margin-top:10px; font-size:0.8em;}
  #main   .oi        { padding-right:10px; position:relative; height:16em; }
  #extras             { float:left; width:25%; min-width:160px; }
- #extras .oi        { }
 
 /* FOOTER */
 #footer              { clear:both; padding-top:10px; }
-
-

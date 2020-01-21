@@ -159,6 +159,11 @@ function isFlexibleDimension(node: T, value: string) {
     return false;
 }
 
+function isFlexibleDirection(node: T, direction: string) {
+    const actualParent = node.actualParent;
+    return !(actualParent !== null && actualParent.flexElement && actualParent.css('flexDirection').startsWith(direction) && node.flexbox.grow > 0);
+}
+
 const excludeHorizontal = (node: T) => node.textEmpty && (node.bounds.width === 0 && node.contentBoxWidth === 0 && node.marginLeft <= 0 && node.marginRight <= 0 && !node.visibleStyle.background || node.bounds.height === 0 && node.contentBoxHeight === 0 && node.marginTop <= 0 && node.marginBottom <= 0);
 const excludeVertical = (node: T) => node.contentBoxHeight === 0 && (node.bounds.height === 0 || node.pseudoElement && node.textEmpty && node.pageFlow) && (node.marginTop <= 0 && node.marginBottom <= 0 || node.css('overflow') === 'hidden' && $lib.regex.CHAR.UNITZERO.test(node.css('height')));
 
@@ -660,7 +665,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 this.setLayoutHeight('wrap_content', false);
                 return;
             }
-            const documentParent = this.documentParent as T;
+            const actualParent = this.actualParent || this.documentParent;
             const renderParent = this.renderParent as T;
             const maxDimension = this.support.maxDimension;
             let adjustViewBounds = false;
@@ -711,7 +716,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (!maxDimension) {
                                 const maxWidth = this.css('maxWidth');
                                 const maxValue = this.parseUnit(maxWidth);
-                                const absoluteParent = this.absoluteParent || documentParent;
+                                const absoluteParent = this.absoluteParent || actualParent;
                                 if (maxWidth === '100%') {
                                     if (!renderParent.inlineWidth && aboveRange(maxValue, absoluteParent.box.width)) {
                                         layoutWidth = 'match_parent';
@@ -824,11 +829,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 if (renderParent.layoutConstraint && /^column/.test(this.css('flexDirection'))) {
                                     layoutWidth = '0px';
                                 }
-                                else if (!documentParent.layoutElement) {
+                                else if (!actualParent.layoutElement) {
                                     layoutWidth = 'match_parent';
                                 }
                             }
-                            else if (!documentParent.layoutElement) {
+                            else if (!actualParent.layoutElement) {
                                 checkParentWidth();
                             }
                             else if (this.gridElement && this.onlyChild) {
@@ -837,13 +842,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         if (layoutWidth === '' && !this.floating) {
                             if (this.layoutVertical && !renderParent.inlineWidth && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) && !this.documentRoot ||
-                                !this.pageFlow && this.absoluteParent === documentParent && this.hasPX('left') && this.hasPX('right') ||
+                                !this.pageFlow && this.absoluteParent === actualParent && this.hasPX('left') && this.hasPX('right') ||
                                 this.is(CONTAINER_NODE.GRID) && this.some((node: T) => parseFloat(node.android('layout_columnWeight')) > 0) ||
-                                documentParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && /^row/.test(documentParent.css('flexDirection')))
+                                actualParent.flexElement && this.flexbox.grow > 0 && renderParent.flexibleWidth && /^row/.test(actualParent.css('flexDirection')))
                             {
                                 layoutWidth = 'match_parent';
                             }
-                            else if (this.naturalElement && !this.inlineHorizontal && this.some(item => item.naturalElement && item.blockStatic && item.textElement) && !documentParent.layoutElement) {
+                            else if (this.naturalElement && !this.inlineHorizontal && this.some(item => item.naturalElement && item.blockStatic && item.textElement) && !actualParent.layoutElement) {
                                 checkParentWidth();
                             }
                         }
@@ -873,7 +878,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (!maxDimension) {
                                 const maxHeight = this.css('maxHeight');
                                 const maxValue = this.parseUnit(maxHeight);
-                                const absoluteParent = this.absoluteParent || documentParent;
+                                const absoluteParent = this.absoluteParent || actualParent;
                                 if (maxHeight === '100%') {
                                     if (!renderParent.inlineHeight && aboveRange(maxValue, absoluteParent.box.height)) {
                                         layoutHeight = 'match_parent';
@@ -915,7 +920,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (layoutHeight === '') {
                     if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
-                        if (renderParent.layoutConstraint && !this.floating && this.alignParent('top') && this.actualHeight >= (this.absoluteParent || documentParent).box.height) {
+                        if (renderParent.layoutConstraint && !this.floating && this.alignParent('top') && this.actualHeight >= (this.absoluteParent || actualParent).box.height) {
                             layoutHeight = '0px';
                             this.anchor('bottom', 'parent');
                         }
@@ -933,15 +938,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 this.setLayoutHeight(layoutHeight || 'wrap_content');
             }
-            else if (layoutHeight === '0px' && renderParent.inlineHeight && renderParent.android('minHeight') === '' && !documentParent.layoutElement) {
+            else if (layoutHeight === '0px' && renderParent.inlineHeight && renderParent.android('minHeight') === '' && !actualParent.layoutElement) {
                 this.setLayoutHeight('wrap_content');
             }
-            const isFlexible = (direction: string) => !(documentParent.flexElement && documentParent.css('flexDirection').startsWith(direction) && this.flexbox.grow > 0);
-            if (this.hasPX('minWidth') && isFlexible('column')) {
-                this.android('minWidth', this.convertPX(this.css('minWidth')), false);
+            if (this.hasPX('minWidth') && isFlexibleDirection(this, 'column')) {
+                this.android('minWidth', formatPX(this.parseUnit(this.css('minWidth')) + this.contentBoxWidth), false);
             }
-            if (this.hasPX('minHeight') && isFlexible('row') && this.display !== 'table-cell') {
-                this.android('minHeight', this.convertPX(this.css('minHeight'), 'height'), false);
+            if (this.hasPX('minHeight') && isFlexibleDirection(this, 'row') && this.display !== 'table-cell') {
+                this.android('minHeight', formatPX(this.parseUnit(this.css('minHeight'), 'height') + this.contentBoxHeight), false);
             }
             if (maxDimension) {
                 const maxWidth = this.css('maxWidth');
@@ -954,7 +958,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         else if (this.imageElement) {
                             width = this.toElementInt('naturalWidth');
-                            if (width > documentParent.actualWidth) {
+                            if (width > this.documentParent.actualWidth) {
                                 this.setLayoutWidth('match_parent');
                                 this.setLayoutHeight('wrap_content');
                                 width = -1;

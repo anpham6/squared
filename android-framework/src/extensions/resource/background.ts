@@ -1552,7 +1552,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         imageData.drawable = src;
                     }
                     else if ((tileMode === 'repeat' || tileModeX !== '' || tileModeY !== '' || gravityAlign !== '' && gravity !== '' || size === 'cover' || size === 'contain' || !resizable && height > 0 && size !== 'cover' && size !== 'contain') && !svg) {
-                        if (gravity === 'top' && tileModeY === 'repeat') {
+                        if (!node.hasHeight && !(node.renderParent as T).layoutLinear && gravity === 'top' && tileModeY === 'repeat') {
                             gravity = '';
                             tileModeY = '';
                         }

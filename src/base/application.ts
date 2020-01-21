@@ -37,9 +37,11 @@ function addImageSrc(uri: string, width = 0, height = 0) {
 }
 
 function parseSrcSet(value: string) {
-    for (const uri of value.split(XML.SEPARATOR)) {
-        if (uri !== '') {
-            addImageSrc(resolvePath(uri.split(CHAR.SPACE)[0].trim()));
+    if (value !== '') {
+        for (const uri of value.split(XML.SEPARATOR)) {
+            if (uri !== '') {
+                addImageSrc(resolvePath(uri.split(CHAR.SPACE)[0].trim()));
+            }
         }
     }
 }
@@ -593,17 +595,15 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const [selector, target] = selectorText.split('::');
                     const targetElt = target ? '::' + target : '';
                     document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
-                        const style = getStyle(element, targetElt);
-                        const styleMap = { ...baseMap };
                         const attrStyle = 'styleMap' + targetElt;
                         const attrSpecificity = 'styleSpecificity' + targetElt;
                         const styleData: StringMap = getElementCache(element, attrStyle, sessionId);
                         if (styleData) {
                             const specificityData: ObjectMap<number> = getElementCache(element, attrSpecificity, sessionId) || {};
-                            for (const attr in styleMap) {
+                            for (const attr in baseMap) {
                                 const revisedSpecificity = specificity + (important[attr] ? 1000 : 0);
                                 if (specificityData[attr] === undefined || revisedSpecificity >= specificityData[attr]) {
-                                    const value = styleMap[attr];
+                                    const value = baseMap[attr];
                                     if (value === 'initial' && REGEX_BACKGROUND.test(attr)) {
                                         if (cssStyle.background === 'none') {
                                             delete styleData[attr];
@@ -617,11 +617,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                             }
                         }
                         else {
+                            const styleMap = { ...baseMap };
                             const specificityData: ObjectMap<number> = {};
                             for (const attr in styleMap) {
                                 specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                             }
-                            setElementCache(element, 'style' + targetElt, '0', style);
+                            setElementCache(element, 'style' + targetElt, '0', getStyle(element, targetElt));
                             setElementCache(element, 'sessionId', '0', sessionId);
                             setElementCache(element, attrStyle, sessionId, styleMap);
                             setElementCache(element, attrSpecificity, sessionId, specificityData);

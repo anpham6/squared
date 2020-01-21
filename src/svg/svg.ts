@@ -12,7 +12,7 @@ import { SVG, getDOMRect, getTargetElement } from './lib/util';
 const $lib = squared.lib;
 const { parseColor } = $lib.color;
 const { getNamedItem } = $lib.dom;
-const { cloneObject, convertFloat } = $lib.util;
+const { cloneObject } = $lib.util;
 
 function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];
@@ -20,7 +20,7 @@ function getColorStop(element: SVGGradientElement) {
     const length = stops.length;
     for (let i = 0; i < length; i++) {
         const item = stops[i];
-        const color = parseColor(getNamedItem(item, 'stop-color'), convertFloat(getNamedItem(item, 'stop-opacity') || '1'));
+        const color = parseColor(getNamedItem(item, 'stop-color'), parseFloat(getNamedItem(item, 'stop-opacity') || '1'));
         if (color) {
             result.push({ color, offset: parseFloat(getNamedItem(item, 'offset')) / 100 });
         }
