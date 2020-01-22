@@ -53,6 +53,8 @@ function prioritizeExtensions<T extends NodeUI>(value: string | undefined, exten
     return extensions;
 }
 
+const requirePadding = (node: NodeUI) => node.textElement && (node.blockStatic || node.multiline);
+
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public readonly session: AppSessionUI<T> = {
         cache: new NodeList<T>(),
@@ -1639,7 +1641,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     private setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
-        const requirePadding = (node: T) => node.textElement && (node.blockStatic || node.multiline);
         if (inlineAbove.some((child: T) => requirePadding(child) || child.blockStatic && child.cascadeSome((nested: T) => requirePadding(nested)))) {
             if (leftAbove.length) {
                 let floatPosition = Number.NEGATIVE_INFINITY;

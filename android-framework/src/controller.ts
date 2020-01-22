@@ -1731,7 +1731,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     location = bounds[LT] - box[!opposite ? LT : RB];
-                    if (!horizontal && !boxParent.nodeGroup && boxParent !== absoluteParent && absoluteParent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 1) {
+                    if (!horizontal && !boxParent.nodeGroup && boxParent !== absoluteParent && !absoluteParent.positionRelative && absoluteParent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 1) {
                         location -= absoluteParent.marginTop;
                     }
                     beginPercent += 'begin';
@@ -2066,7 +2066,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else {
                     const parent = node.actualParent as T;
                     if (parent) {
-                        if (parent === renderParent && parent.blockStatic && node.naturalElement && node.inlineStatic) {
+                        if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === renderParent) {
                             const box = parent.box;
                             return box.width - (node.linear.left - box.left);
                         }

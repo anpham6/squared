@@ -24,9 +24,24 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
     public postOptimize(node: T) {
         const renderParent = node.renderParent as T;
         const verticalAlign = convertFloat(node.verticalAlign);
-        let { top, right, bottom, left } = node;
         let target = node;
-        if (renderParent.support.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
+        let top = 0;
+        let right = 0;
+        let bottom = 0;
+        let left = 0;
+        if (node.hasPX('top')) {
+            top = node.top;
+        }
+        else {
+            bottom = node.bottom;
+        }
+        if (node.hasPX('left')) {
+            left = node.left;
+        }
+        else {
+            right = node.right;
+        }
+        if (renderParent.support.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (top !== 0 || bottom !== 0 || verticalAlign !== 0)) {
             const application = this.application;
             target = node.clone(application.nextId, true, true) as T;
             target.baselineAltered = true;
@@ -85,28 +100,40 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
             }
         }
         else if (node.naturalElement && node.positionRelative) {
-            const parent = node.actualParent as T;
+            const bounds = node.bounds;
+            const hasVertical = top !== 0 || bottom !== 0;
+            const hasHorizontal = left !== 0 || right !== 0;
             let preceding = false;
             let previous: T | undefined;
-            for (const item of parent.naturalElements as T[]) {
+            for (const item of (node.actualParent as T).naturalElements as T[]) {
                 if (item === node) {
                     if (preceding) {
-                        if (renderParent.layoutVertical && (node.top !== 0 || node.bottom !== 0)) {
-                            const bounds = assignRect(node.boundingClientRect);
+                        if (renderParent.layoutVertical && hasVertical) {
+                            const rect = assignRect(node.boundingClientRect);
                             if (top !== 0) {
-                                top -= bounds.top - node.bounds.top;
+                                top -= rect.top - bounds.top;
                             }
-                            if (bottom !== 0) {
-                                bottom += bounds.bottom - node.bounds.bottom;
+                            else {
+                                if (previous && previous.positionRelative && previous.has('top')) {
+                                    bottom += bounds.bottom - rect.bottom;
+                                }
+                                else {
+                                    bottom += rect.bottom - bounds.bottom;
+                                }
                             }
                         }
-                        if (renderParent.layoutHorizontal && (node.left !== 0 || node.right !== 0) && node.alignSibling('leftRight') === '') {
-                            const bounds = assignRect(node.boundingClientRect);
+                        if (renderParent.layoutHorizontal && hasHorizontal && node.alignSibling('leftRight') === '') {
+                            const rect = assignRect(node.boundingClientRect);
                             if (left !== 0) {
-                                left -= bounds.left - node.bounds.left;
+                                left -= rect.left - bounds.left;
                             }
-                            if (right !== 0) {
-                                right += bounds.right - node.bounds.right;
+                            else {
+                                if (previous && previous.positionRelative && previous.has('right')) {
+                                    right += bounds.right - rect.right;
+                                }
+                                else {
+                                    right += rect.right - bounds.right;
+                                }
                             }
                         }
                     }
@@ -128,17 +155,19 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 else if (item.positionRelative && item.renderParent === renderParent) {
                     preceding = true;
                 }
-                previous = item;
+                if (item.pageFlow) {
+                    previous = item;
+                }
             }
+        }
+        if (verticalAlign !== 0) {
+            target.modifyBox(BOX_STANDARD.MARGIN_TOP, verticalAlign * -1);
         }
         if (top !== 0) {
             target.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
         }
         else if (bottom !== 0) {
             target.modifyBox(BOX_STANDARD.MARGIN_TOP, bottom * -1);
-        }
-        if (verticalAlign !== 0) {
-            target.modifyBox(BOX_STANDARD.MARGIN_TOP, verticalAlign * -1);
         }
         if (left !== 0) {
             if (target.autoMargin.left) {

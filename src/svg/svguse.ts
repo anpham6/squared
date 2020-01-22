@@ -25,8 +25,9 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     }
 
     public setPath() {
-        this.path = new SvgPath(this.shapeElement);
-        this.path.useParent = this;
+        const path = new SvgPath(this.shapeElement);
+        path.useParent = this;
+        this.path = path;
     }
 
     public build(options?: SvgBuildOptions) {
