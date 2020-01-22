@@ -2,6 +2,8 @@ import { NodeXmlTemplate } from '../../@types/base/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
+import Resource = android.base.Resource;
+
 const $lib = squared.lib;
 const { parseColor } = $lib.color;
 const { assignEmptyValue } = $lib.util;
@@ -12,8 +14,6 @@ const $libA = android.lib;
 const { EXT_ANDROID, STRING_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
 const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
-
-const { Resource } = android.base;
 
 const PREFIX_DIALOG = 'ic_dialog_';
 
@@ -52,7 +52,12 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                 break;
         }
         if (src !== '') {
-            assignEmptyValue(options, 'app', 'srcCompat', '@drawable/' + src);
+            let app = options.app;
+            if (app === undefined) {
+                app = {};
+                options.app = app;
+            }
+            assignEmptyValue(app, 'srcCompat', '@drawable/' + src);
         }
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);

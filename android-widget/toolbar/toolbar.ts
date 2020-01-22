@@ -3,6 +3,8 @@ import { UserSettingsAndroid } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
+import Resource = android.base.Resource;
+
 const $lib = squared.lib;
 const { formatPX } = $lib.css;
 const { getElementAsNode } = $lib.session;
@@ -14,8 +16,6 @@ const $libA = android.lib;
 const { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
 const { createStyleAttribute, createViewAttribute, getDocumentId } = $libA.util;
-
-const { Resource } = android.base;
 
 type ToolbarThemeData = {
     appBarOverlay: string;
@@ -77,6 +77,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         const collapsingToolbarChildren: T[] = [];
         const children = element.children;
         const length = children.length;
+        let app = toolbarOptions.app;
+        if (app === undefined) {
+            app = {};
+            toolbarOptions.app = app;
+        }
         for (let i = 0; i < length; i++) {
             const item = <HTMLElement> children[i];
             const dataset = item.dataset;
@@ -84,13 +89,13 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 if (dataset.navigationIcon) {
                     const src = resource.addImageSrc(<HTMLImageElement> item, PREFIX_MENU);
                     if (src !== '') {
-                        assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', '@drawable/' + src);
+                        assignEmptyValue(app, 'navigationIcon', '@drawable/' + src);
                     }
                 }
                 if (dataset.collapseIcon) {
                     const src = resource.addImageSrc(<HTMLImageElement> item, PREFIX_MENU);
                     if (src !== '') {
-                        assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', '@drawable/' + src);
+                        assignEmptyValue(app, 'collapseIcon', '@drawable/' + src);
                     }
                 }
             }
@@ -113,21 +118,16 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         let appBarOverlay = '';
         let popupOverlay = '';
         if (hasCollapsingToolbar) {
-            assignEmptyValue(toolbarOptions, 'app', 'layout_collapseMode', 'pin');
+            assignEmptyValue(app, 'layout_collapseMode', 'pin');
         }
         else {
-            assignEmptyValue(toolbarOptions, 'app', 'popupTheme', '@style/ThemeOverlay.AppCompat.Light');
+            assignEmptyValue(app, 'popupTheme', '@style/ThemeOverlay.AppCompat.Light');
             if (!backgroundImage) {
-                assignEmptyValue(toolbarOptions, 'app', 'layout_scrollFlags', 'scroll|enterAlways');
+                assignEmptyValue(app, 'layout_scrollFlags', 'scroll|enterAlways');
             }
         }
         if (hasAppBar) {
             if (hasMenu) {
-                let app = toolbarOptions.app;
-                if (app === undefined) {
-                    app = {};
-                    toolbarOptions.app = app;
-                }
                 const popupTheme = app.popupTheme;
                 if (popupTheme) {
                     popupOverlay = popupTheme.replace('@style/', '');
@@ -181,13 +181,18 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             }
             appBarNode.setControlType(appBarName, CONTAINER_NODE.BLOCK);
             if (hasCollapsingToolbar) {
+                app = collapsingToolbarOptions.app;
+                if (app === undefined) {
+                    app = {};
+                    collapsingToolbarOptions.app = app;
+                }
                 assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_collapsingtoolbar');
                 assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
                 if (!backgroundImage) {
-                    assignEmptyValue(collapsingToolbarOptions, 'app', 'contentScrim', '?attr/colorPrimary');
+                    assignEmptyValue(app, 'contentScrim', '?attr/colorPrimary');
                 }
-                assignEmptyValue(collapsingToolbarOptions, 'app', 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
-                assignEmptyValue(collapsingToolbarOptions, 'app', 'toolbarId', node.documentId);
+                assignEmptyValue(app, 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
+                assignEmptyValue(app, 'toolbarId', node.documentId);
                 collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
                 if (collapsingToolbarNode) {
                     collapsingToolbarNode.parent = appBarNode;
@@ -241,6 +246,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                                 scaleType = 'centerCrop';
                                 break;
                             case 'contain':
+                            case '100%':
                             case '100% 100%':
                                 scaleType = 'fitXY';
                                 break;
@@ -251,11 +257,16 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                                 scaleType = 'center';
                                 break;
                         }
+                        app = backgroundImageOptions.app;
+                        if (app === undefined) {
+                            app = {};
+                            backgroundImageOptions.app = app;
+                        }
                         assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_image');
                         assignEmptyValue(backgroundImageOptions, 'android', 'src', '@drawable/' + src);
                         assignEmptyValue(backgroundImageOptions, 'android', 'scaleType', scaleType);
                         assignEmptyValue(backgroundImageOptions, 'android', 'fitsSystemWindows', 'true');
-                        assignEmptyValue(backgroundImageOptions, 'app', 'layout_collapseMode', 'parallax');
+                        assignEmptyValue(app, 'layout_collapseMode', 'parallax');
                         controller.addBeforeOutsideTemplate(
                             node.id,
                             controller.renderNodeStatic(

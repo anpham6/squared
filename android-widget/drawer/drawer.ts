@@ -3,6 +3,8 @@ import { UserSettingsAndroid } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
+import Resource = android.base.Resource;
+
 const $lib = squared.lib;
 const { assignEmptyValue, cloneObject, includes, optionalAsString } = $lib.util;
 const { getElementAsNode } = $lib.session;
@@ -13,8 +15,6 @@ const $libA = android.lib;
 const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
 const { createStyleAttribute, createViewAttribute } = $libA.util;
-
-const { Resource } = android.base;
 
 export default class Drawer<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     public readonly documentBase = true;
@@ -92,11 +92,16 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             const options = createViewAttribute(this.options.navigationView);
             const menu = optionalAsString(Drawer.findNestedElement(element, WIDGET_NAME.MENU), 'dataset.layoutName');
             const headerLayout = optionalAsString(Drawer.findNestedElement(element, EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
+            let app = options.app;
+            if (app === undefined) {
+                app = {};
+                options.app = app;
+            }
             if (menu !== '') {
-                assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
+                assignEmptyValue(app, 'menu', '@menu/' + menu);
             }
             if (headerLayout !== '') {
-                assignEmptyValue(options, 'app', 'headerLayout', '@layout/' + headerLayout);
+                assignEmptyValue(app, 'headerLayout', '@layout/' + headerLayout);
             }
             if (menu !== '' || headerLayout !== '') {
                 const controller = <android.base.Controller<T>> this.controller;

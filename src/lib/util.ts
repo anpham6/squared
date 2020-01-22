@@ -285,8 +285,9 @@ export function optional(obj: UndefNull<object>, value: string, type?: string) {
         }
         while (
             result !== undefined &&
-            isObject(result) &&
-            ++i < attrs.length
+            result !== null &&
+            ++i < attrs.length &&
+            typeof result === 'object'
         );
         valid = i === attrs.length && result !== undefined && result !== null;
     }
