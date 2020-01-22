@@ -76,8 +76,8 @@ declare namespace extensions {
 declare namespace lib {
     namespace constant {
         const EXT_CHROME: {
-            COMPRESS_BROTLI: string,
-            COMPRESS_GZIP: string
+            COMPRESS_BROTLI: string;
+            COMPRESS_GZIP: string;
         };
     }
 }

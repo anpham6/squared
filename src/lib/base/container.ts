@@ -171,7 +171,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
             const children = container.children;
             const length = children.length;
             for (let i = 0; i < length; i++) {
-                const item = children[i] as T;
+                const item = children[i];
                 if (predicate(item, i, children)) {
                     return true;
                 }

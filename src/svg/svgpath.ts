@@ -26,7 +26,7 @@ interface DashGroup {
     duration: number;
 }
 
-const REGEXP_STROKEDASH = /^stroke\-dash/;
+const REGEXP_STROKEDASH = /^stroke-dash/;
 
 function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?: number) {
     const commandA = path[0];
@@ -428,7 +428,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             switch (this.element.tagName) {
                 case 'path':
                 case 'line':
-                case 'polyline':
+                case 'polyline': {
                     const commands = SvgBuild.getPathCommands(this.value);
                     const length = commands.length;
                     if (length) {
@@ -522,8 +522,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             data.path = SvgBuild.drawPath(commands, precision);
                             return data;
                         }
+                        break;
                     }
-                    break;
+                }
             }
         }
         return undefined;

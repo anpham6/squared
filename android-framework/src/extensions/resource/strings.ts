@@ -108,7 +108,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         }
                                     }
                                 }
-                                if (tagName === 'INS' && textDecorationLine.indexOf('line-through') === -1) {
+                                if (tagName === 'INS' && !textDecorationLine.includes('line-through')) {
                                     value = '<strike>' + value + '</strike>';
                                 }
                                 let indent = 0;

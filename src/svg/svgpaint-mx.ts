@@ -177,7 +177,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         value = this.convertLength(value).toString();
                         break;
                     case 'fill':
-                    case 'stroke':
+                    case 'stroke': {
                         const url = getAttributeURL(value);
                         if (url !== '') {
                             this[attr + 'Pattern'] = url;
@@ -202,6 +202,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             }
                         }
                         return;
+                    }
                 }
                 this[convertCamelCase(attr)] = value;
             }

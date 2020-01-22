@@ -542,7 +542,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     const top = node.actualRect('top');
                                     let maxBottom = Number.NEGATIVE_INFINITY;
                                     for (const item of actualParent.naturalChildren as T[]) {
-                                        if (horizontal.includes(item as T)) {
+                                        if (horizontal.includes(item)) {
                                             break;
                                         }
                                         else if (item.lineBreak) {

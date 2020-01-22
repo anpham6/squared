@@ -6,7 +6,7 @@ export interface LocalSettings {
 }
 
 export interface Constraint {
-    current: ObjectMap<{ documentId: string; horizontal: boolean; }>;
+    current: ObjectMap<{ documentId: string; horizontal: boolean }>;
     horizontal: boolean;
     vertical: boolean;
     barrier?: ObjectMap<string>;

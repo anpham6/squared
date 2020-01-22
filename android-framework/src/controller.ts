@@ -1118,7 +1118,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     valid = true;
                 }
                 break;
-            case CONTAINER_NODE.GRID:
+            case CONTAINER_NODE.GRID: {
                 const { columnCount, rowCount } = layout;
                 const android = options.android;
                 if (rowCount > 0) {
@@ -1127,6 +1127,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 android.columnCount = columnCount > 0 ? columnCount.toString() : '2';
                 valid = true;
                 break;
+            }
             case CONTAINER_NODE.FRAME:
             case CONTAINER_NODE.RELATIVE:
             case CONTAINER_NODE.CONSTRAINT:
@@ -1458,7 +1459,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         switch (controlName) {
-            case CONTAINER_ANDROID.TEXT:
+            case CONTAINER_ANDROID.TEXT: {
                 let overflow = '';
                 if (node.overflowX) {
                     overflow += STRING_ANDROID.HORIZONTAL;
@@ -1496,6 +1497,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('ellipsize', 'end');
                 }
                 break;
+            }
             case CONTAINER_ANDROID.BUTTON:
                 if (!node.hasHeight) {
                     node.android('minHeight', formatPX(Math.ceil(node.actualHeight)));
@@ -1556,7 +1558,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     break;
             }
         }
-        node.render(target ? (<android.base.Application<T>> this.application).resolveTarget(target) : parent);
+        node.render(target ? this.application.resolveTarget(target) : parent);
         return <NodeXmlTemplate<T>> {
             type: NODE_TEMPLATE.XML,
             node,
@@ -2425,7 +2427,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             item.anchor('top', baseline.documentId);
                                         }
                                         break;
-                                    case 'middle':
+                                    case 'middle': {
                                         const height = Math.max(item.actualHeight, item.lineHeight);
                                         if (!alignmentMultiLine) {
                                             item.anchor('centerVertical', 'true');
@@ -2445,6 +2447,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             }
                                         }
                                         break;
+                                    }
                                     case 'text-bottom':
                                         if (textBaseline === null) {
                                             textBaseline = NodeUI.baseline(items, true);
@@ -2557,7 +2560,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const positionAuto: NodeTemplate<T>[] = [];
             for (let i = 0; i < renderChildren.length; i++) {
                 if (!renderChildren[i].pageFlow) {
-                    positionAuto.push(<NodeTemplate<T>> renderTemplates[i]);
+                    positionAuto.push(renderTemplates[i]);
                     renderChildren.splice(i, 1);
                     renderTemplates.splice(i--, 1);
                 }

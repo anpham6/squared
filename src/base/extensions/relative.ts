@@ -128,7 +128,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 else if (item.positionRelative && item.renderParent === renderParent) {
                     preceding = true;
                 }
-                previous = item as T;
+                previous = item;
             }
         }
         if (top !== 0) {

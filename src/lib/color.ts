@@ -978,13 +978,14 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
                     rgba = { r: 0, g: 0, b: 0, a: 255 };
                     key = 'black';
                     break;
-                default:
+                default: {
                     const color = findColorName(value);
                     if (color) {
                         rgba = <RGBA> { ...color.rgb, a: parseOpacity(opacity) };
                         key = value;
                     }
                     break;
+                }
             }
         }
         if (rgba && (rgba.a > 0 || transparency)) {

@@ -8,7 +8,7 @@
     "watch": "tsc -w -p tsconfig.json",
     "dev-base": "tsc --inlineSourceMap false && rollup -c rollup.config.dev-base.js && cd ./android-framework && rollup -c rollup.config.dev.js",
     "dev": "tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js && cd ../chrome-framework && rollup -c rollup.config.js",
-    "prod": "npm run clean && tslint -c tslint.json '**/*.ts' && tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js",
+    "prod": "npm run clean && eslint **/*.ts && tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },
   "repository": {
@@ -59,13 +59,16 @@
     "uuid": "^3.4.0"
   },
   "devDependencies": {
-    "rollup": "^1.29.0",
+    "@typescript-eslint/eslint-plugin": "^2.17.0",
+    "@typescript-eslint/parser": "^2.17.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-tslint": "^3.1.0",
+    "rollup": "^1.29.1",
     "rollup-plugin-async": "^1.2.0",
     "rollup-plugin-terser": "^5.2.0",
     "systemjs": "^0.21.6",
     "systemjs-plugin-babel": "0.0.25",
     "terser": "^4.6.3",
-    "tslint": "^5.20.1",
     "typescript": "^3.7.5"
   }
 }

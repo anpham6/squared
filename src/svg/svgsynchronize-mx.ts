@@ -202,10 +202,11 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContain
                     value = SvgBuild.drawPolygon(points, precision);
                     break;
                 case 'circle':
-                case 'ellipse':
+                case 'ellipse': {
                     const pt = <Required<SvgPoint>> points[0];
                     value = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, precision);
                     break;
+                }
             }
             if (value !== undefined) {
                 result.push({ key, value });

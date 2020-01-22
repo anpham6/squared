@@ -12,13 +12,6 @@ type SvgAnimation = squared.svg.SvgAnimation;
 type SvgAnimationIntervalValue = squared.svg.SvgAnimationIntervalValue;
 type SvgAnimationIntervalAttributeMap = squared.svg.SvgAnimationIntervalAttributeMap;
 
-function getAttributeName(value: string) {
-    if (value.indexOf(':') !== -1) {
-        return value.split(':')[0];
-    }
-    return value;
-}
-
 export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimationIntervalMap {
     public static getGroupEndTime(item: SvgAnimationAttribute) {
         return item.iterationCount === 'infinite' ? Number.POSITIVE_INFINITY : item.delay + item.duration * parseInt(item.iterationCount);
@@ -73,7 +66,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             map[keyName] = new Map<number, SvgAnimationIntervalValue[]>();
             intervalMap[keyName] = {};
             intervalTimes[keyName] = new Set<number>();
-            const attributeName = getAttributeName(keyName);
+            const attributeName = keyName.split(':')[0];
             const backwards = <SvgAnimate> animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => a.group.id < b.group.id ? 1 : -1)[0];
             if (backwards) {
                 const delay = backwards.delay;
@@ -153,7 +146,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                                         if (itemB.start) {
                                             const animation = itemB.animation;
                                             if (animation?.animationElement) {
-                                                previous.push(<SvgAnimation> animation);
+                                                previous.push(animation);
                                             }
                                         }
                                     }
@@ -201,7 +194,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                                         if (itemB.start) {
                                             const animationB = itemB.animation;
                                             if (animationB) {
-                                                previous.push(<SvgAnimation> animationB);
+                                                previous.push(animationB);
                                             }
                                         }
                                     }
@@ -210,7 +203,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                                     for (let i = 0; i < dataB.length; i++) {
                                         const itemB = dataB[i];
                                         const animationB = itemB.animation;
-                                        if (forwarded || animationB && (itemB.end && previous.includes(<SvgAnimation> animationB) || animationA.animationElement === null && animationB.group.id < animationA.group.id)) {
+                                        if (forwarded || animationB && (itemB.end && previous.includes(animationB) || animationA.animationElement === null && animationB.group.id < animationA.group.id)) {
                                             dataB.splice(i--, 1);
                                         }
                                     }

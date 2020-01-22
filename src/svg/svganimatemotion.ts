@@ -87,7 +87,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 case 'spline':
                     super.setCalcMode('translate', mode);
                     break;
-                case 'linear':
+                case 'linear': {
                     const keyPoints = SvgAnimateTransform.toFractionList(getNamedItem(animationElement, 'keyPoints'), ';', false);
                     let keyTimes = super.keyTimes;
                     if (keyTimes.length === 0 && this.duration !== -1) {
@@ -99,6 +99,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         this._keyPoints = keyPoints;
                     }
                     break;
+                }
             }
         }
     }

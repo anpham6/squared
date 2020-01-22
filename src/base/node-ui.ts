@@ -449,7 +449,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const obj = this['__' + name];
         if (obj) {
             for (const attr of attrs) {
-                if (attr.indexOf('*') !== -1) {
+                if (attr.includes('*')) {
                     for (const [key] of searchObject(obj, attr)) {
                         delete obj[key];
                     }
@@ -521,7 +521,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public inherit(node: T, ...modules: string[]) {
         for (const name of modules) {
             switch (name) {
-                case 'base':
+                case 'base': {
                     this._documentParent = node.documentParent;
                     this._bounds =  { ...node.bounds };
                     this._linear = { ...node.linear };
@@ -537,6 +537,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         this.dir = actualParent.dir;
                     }
                     break;
+                }
                 case 'initial':
                     cloneObject(<InitialData<T>> node.unsafe('initial'), this.initial);
                     break;
@@ -569,7 +570,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this.cssApply(node.textStyle);
                     this.fontSize = node.fontSize;
                     break;
-                case 'boxStyle':
+                case 'boxStyle': {
                     const { backgroundColor, backgroundImage } = node;
                     this.cssApply({
                         backgroundColor,
@@ -615,6 +616,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     node.setCacheValue('backgroundImage', '');
                     node.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING, this);
                     break;
+                }
             }
         }
     }
@@ -753,7 +755,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         if (this.floating && lastSibling.blockStatic && !horizontal) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (!/^inline\-/.test(this.display)) {
+                        else if (!/^inline-/.test(this.display)) {
                             const { top, bottom } = this.linear;
                             if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;

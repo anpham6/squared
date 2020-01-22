@@ -50,7 +50,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
             let A = 0;
             let B = 0;
             for (let i = 0; i < length; i++) {
-                const item = children[i] as T;
+                const item = children[i];
                 if (item.floating) {
                     A++;
                 }

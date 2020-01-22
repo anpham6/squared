@@ -15,8 +15,8 @@ const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 const { SPRITE } = $base_lib.constant.EXT_NAME;
 
 type SpriteData = {
-    image: Required<RawAsset>,
-    position: BoxRectPosition
+    image: Required<RawAsset>;
+    position: BoxRectPosition;
 };
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {

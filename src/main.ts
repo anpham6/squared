@@ -39,7 +39,7 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
         const { builtInExtensions, extensions } = main;
         function includeExtension(extension: Extension) {
             if (!extensions.includes(extension)) {
-                extension.application = <Application> main;
+                extension.application = main;
                 extensions.push(extension);
             }
         }

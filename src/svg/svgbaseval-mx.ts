@@ -31,14 +31,15 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     case 'd':
                         this._baseVal[attr] = getNamedItem(this.element, 'd');
                         return true;
-                    case 'points':
+                    case 'points': {
                         const points: SVGPointList = this.element[attr];
                         if (Array.isArray(points)) {
                             this._baseVal[attr] = SvgBuild.clonePoints(points);
                             return true;
                         }
                         break;
-                    default:
+                    }
+                    default: {
                         const object: SVGAnimatedLength = this.element[attr];
                         if (object) {
                             const baseVal = object.baseVal;
@@ -48,6 +49,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             }
                         }
                         break;
+                    }
                 }
             }
             return false;

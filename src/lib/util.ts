@@ -387,7 +387,7 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
     }
     else {
         const search =
-            /^\*.+\*$/.test(value) ? (a: string) => a.indexOf(value.replace(/\*/g, '')) !== -1 :
+            /^\*.+\*$/.test(value) ? (a: string) => a.includes(value.replace(/\*/g, '')) :
                  /^\*/.test(value) ? (a: string) => a.endsWith(value.replace(/\*/, '')) :
                  /\*$/.test(value) ? (a: string) => a.startsWith(value.replace(/\*/, '')) :
                                      (a: string): boolean => a === value;
@@ -418,7 +418,7 @@ export function belowRange(a: number, b: number, offset = 1) {
 
 export function assignEmptyProperty(dest: {}, source: {}) {
     for (const attr in source) {
-        if (!dest.hasOwnProperty(attr)) {
+        if (!Object.prototype.hasOwnProperty.call(dest, attr)) {
             dest[attr] = source[attr];
         }
     }

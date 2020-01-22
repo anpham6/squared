@@ -20,13 +20,13 @@ type PreloadImage = HTMLImageElement | string;
 
 const REGEX_MEDIATEXT = /all|screen/;
 const REGEX_BACKGROUND = /^background/;
-const REGEX_IMPORTANT = /\s*([a-z\-]+):.*?!important;/g;
+const REGEX_IMPORTANT = /\s*([a-z-]+):.*?!important;/g;
 const REGEX_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
 const REGEX_FONTFAMILY = /\s*font-family:[^\w]*([^'";]+)/;
 const REGEX_FONTSRC = /\s*src:\s*([^;]+);/;
 const REGEX_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
 const REGEX_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-const REGEX_URL = /\s*(url|local)\((?:['""]([^'")]+)['"]|([^)]+))\)(?:\s*format\(['"]?([\w\-]+)['"]?\))?\s*/;
+const REGEX_URL = /\s*(url|local)\((?:['""]([^'")]+)['"]|([^)]+))\)(?:\s*format\(['"]?([\w-]+)['"]?\))?\s*/;
 const REGEX_DATAURI = new RegExp(`(url\\("(${STRING.DATAURI})"\\)),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
@@ -138,7 +138,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const preloadImages = this.userSettings.preloadImages;
         const imageElements: PreloadImage[] = [];
         const styleElement = insertStyleSheetRule(`html > body { overflow: hidden !important; }`);
-        let __THEN: Undefined<() => void>;
+        let THEN: Undefined<() => void>;
         const resume = () => {
             this.initializing = false;
             for (const image of preloaded) {
@@ -159,8 +159,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 ext.afterParseDocument();
             }
             document.head.removeChild(styleElement);
-            if (typeof __THEN === 'function') {
-                __THEN.call(this);
+            if (typeof THEN === 'function') {
+                THEN.call(this);
             }
         };
         if (elements.length === 0) {
@@ -288,7 +288,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const PromiseResult = class {
             public then(resolve: () => void) {
                 if (imageElements.length) {
-                    __THEN = resolve;
+                    THEN = resolve;
                 }
                 else {
                     resolve();
@@ -519,7 +519,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 parseImageUrl(baseMap, 'backgroundImage');
                 parseImageUrl(baseMap, 'listStyleImage');
                 parseImageUrl(baseMap, 'content');
-                if (cssText.indexOf('!important') !== -1) {
+                if (cssText.includes('!important')) {
                     let match: RegExpExecArray | null;
                     while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
                         const attr = convertCamelCase(match[1]);

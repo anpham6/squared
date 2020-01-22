@@ -760,7 +760,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             layoutWidth = 'wrap_content';
                             break;
-                        case 'min-content':
+                        case 'min-content': {
                             const nodes: T[] = [];
                             let maxWidth = 0;
                             for (const node of this.renderChildren) {
@@ -786,6 +786,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             layoutWidth = 'wrap_content';
                             break;
+                        }
                     }
                 }
                 else if (this.imageElement && this.hasPX('height')) {
@@ -975,7 +976,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         width = this.parseUnit(maxWidth);
                     }
                 }
-                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length > 0 || !/\n/.test(this.textContent))) {
+                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length > 0 || !this.textContent.includes('\n'))) {
                     width = Math.ceil(this.bounds.width);
                 }
                 if (width >= 0) {
@@ -1193,28 +1194,28 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             const direction = new Set<string>();
             const stored = this.android(attr);
+            let result = '';
+            function checkMergable(value: string) {
+                const horizontal = value + '_horizontal';
+                const vertical = value + '_vertical';
+                if (direction.has(value) || direction.has(horizontal) && direction.has(vertical)) {
+                    direction.delete(horizontal);
+                    direction.delete(vertical);
+                    direction.add(value);
+                }
+            }
             if (stored !== '') {
                 for (const value of stored.split('|')) {
                     direction.add(value);
                 }
             }
             direction.add(this.localizeString(alignment));
-            let result = '';
             switch (direction.size) {
                 case 0:
                     break;
                 case 1:
                     result = checkTextAlign(direction.values().next().value, false);
-                default:
-                    function checkMergable(value: string) {
-                        const horizontal = value + '_horizontal';
-                        const vertical = value + '_vertical';
-                        if (direction.has(value) || direction.has(horizontal) && direction.has(vertical)) {
-                            direction.delete(horizontal);
-                            direction.delete(vertical);
-                            direction.add(value);
-                        }
-                    }
+                default: {
                     checkMergable('center');
                     checkMergable('fill');
                     let x = '';
@@ -1247,6 +1248,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (z !== '') {
                         result += (result !== '' ? '|' : '') + z;
                     }
+                    break;
+                }
             }
             if (result !== '') {
                 this.android(attr, result);
@@ -1611,7 +1614,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 let previousMultiline = false;
                                 const length = horizontalRows.length;
                                 for (let i = 0; i < length; i++) {
-                                    const row = horizontalRows[i] as T[];
+                                    const row = horizontalRows[i];
                                     const nextRow = horizontalRows[i + 1];
                                     let nextMultiline = nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading);
                                     if (!nextMultiline && i < length - 1) {
@@ -1836,7 +1839,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (result === undefined) {
                 result = false;
                 switch (this.cssInitial('position')) {
-                    case 'absolute':
+                    case 'absolute': {
                         const { absoluteParent, documentParent } = this;
                         if (absoluteParent === documentParent) {
                             result = true;
@@ -1846,6 +1849,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             result = true;
                         }
                         break;
+                    }
                     case 'fixed':
                         result = true;
                         break;

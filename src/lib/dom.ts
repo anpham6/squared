@@ -136,7 +136,7 @@ export function getRangeClientRect(element: Element) {
     else {
         bounds = newBoxRectDimension();
     }
-    return <BoxRectDimension> bounds;
+    return bounds;
 }
 
 export function removeElementsByClassName(className: string) {

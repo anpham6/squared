@@ -1,4 +1,3 @@
-import { UserSettingsAndroid } from '../../../../@types/android/application';
 import { ResourceBackgroundOptions } from '../../../../@types/android/extension';
 import { GradientColorStop, GradientTemplate } from '../../../../@types/android/resource';
 
@@ -90,7 +89,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
         case 'inset':
         case 'outset':
         case 'groove':
-        case 'ridge':
+        case 'ridge': {
             const rgba = color.rgba;
             let percent = 1;
             if (width === 1) {
@@ -149,6 +148,8 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                     return getStrokeColor(reduced);
                 }
             }
+            break;
+        }
     }
     return result;
 }
@@ -275,7 +276,7 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
 }
 
 function checkBackgroundPosition(value: string, adjacent: string, fallback: string) {
-    if (value.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
+    if (!value.includes(' ') && adjacent.includes(' ')) {
         return CHAR.LOWERCASE.test(value) ? (value === 'initial' ? fallback : value) + ' 0px' : fallback + ' ' + value;
     }
     else if (value === 'initial') {
@@ -509,7 +510,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public afterResources() {
         const application = <android.base.Application<T>> this.application;
-        const settings = <UserSettingsAndroid> application.userSettings;
+        const settings = application.userSettings;
         let themeBackground = false;
         function setDrawableBackground(node: T, value: string) {
             if (value !== '') {
@@ -854,7 +855,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 const match = CSS.URL.exec(value);
                                 if (match) {
                                     const uri = match[1];
-                                    if (/^data\:image/.test(uri)) {
+                                    if (/^data:image/.test(uri)) {
                                         const rawData = resource.getRawData(uri);
                                         if (rawData?.base64) {
                                             images[length] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));
@@ -989,7 +990,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     const canResizeVertical = () => resizable && gravityY !== 'fill_vertical' && tileMode !== 'repeat' && tileModeY === '';
                     const src = '@drawable/' + value;
                     let repeat = backgroundRepeat[i];
-                    if (repeat.indexOf(' ') !== -1) {
+                    if (repeat.includes(' ')) {
                         const [x, y] = repeat.split(' ');
                         if (x === 'no-repeat') {
                             repeat = y === 'no-repeat' ? 'no-repeat' : 'repeat-y';
@@ -1460,7 +1461,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (resizable) {
                                 let fillX = false;
                                 let fillY = false;
-                                if (boundsWidth < dimenWidth && (!node.has('width', CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) && !(node.blockStatic && gravity && (gravity === 'center' || gravity.indexOf(STRING_ANDROID.CENTER_HORIZONTAL) !== -1)) || !node.pageFlow)) {
+                                if (boundsWidth < dimenWidth && (!node.has('width', CSS_UNIT.LENGTH, { map: 'initial', not: '100%' }) && !(node.blockStatic && gravity && (gravity === 'center' || gravity.includes(STRING_ANDROID.CENTER_HORIZONTAL))) || !node.pageFlow)) {
                                     width = boundsWidth - (node.contentBox ? node.contentBoxWidth : 0);
                                     fillX = true;
                                     if (tileMode !== 'disabled') {
@@ -1506,7 +1507,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (gravityAlign === '') {
                         if ((width || dimenWidth) + position.left >= boundsWidth && (!node.blockStatic || node.hasPX('width', false))) {
                             tileModeX = '';
-                            if (!resizable && !height && position.left < 0 && gravity !== 'fill' && gravityX.indexOf('fill_horizontal') === -1) {
+                            if (!resizable && !height && position.left < 0 && gravity !== 'fill' && !gravityX.includes('fill_horizontal')) {
                                 gravityX += (gravityX !== '' ? '|' : '') + 'fill_horizontal';
                             }
                             if (tileMode === 'repeat') {
@@ -1516,7 +1517,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         if ((height || dimenHeight) + position.top >= boundsHeight && !node.documentBody && !node.percentHeight) {
                             tileModeY = '';
-                            if (!resizable && position.top < 0 && gravity !== 'fill' && gravityY.indexOf('fill_vertical') === -1 && !node.hasPX('height')) {
+                            if (!resizable && position.top < 0 && gravity !== 'fill' && !gravityY.includes('fill_vertical') && !node.hasPX('height')) {
                                 gravityY += (gravityY !== '' ? '|' : '') + 'fill_vertical';
                             }
                             if (tileMode === 'repeat') {
@@ -1526,7 +1527,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         if (tileMode !== 'repeat' && gravity !== 'fill') {
                             if (tileModeX !== '') {
-                                if (tileModeY === '' && (gravityY === '' || gravityY.indexOf('top') !== -1 || gravityY.indexOf('fill_vertical') !== -1)) {
+                                if (tileModeY === '' && (gravityY === '' || gravityY.includes('top') || gravityY.includes('fill_vertical'))) {
                                     gravityAlign = gravityY;
                                     gravityY = '';
                                     if (node.renderChildren.length) {
@@ -1534,7 +1535,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                 }
                             }
-                            else if (tileModeY !== '' && (gravityX === '' || gravityX.indexOf('start') !== -1 || gravityX.indexOf('left') !== -1 || gravityX.indexOf('fill_horizontal') !== -1)) {
+                            else if (tileModeY !== '' && (gravityX === '' || gravityX.includes('start') || gravityX.includes('left') || gravityX.includes('fill_horizontal'))) {
                                 gravityAlign = gravityX;
                                 gravityX = '';
                                 if (node.renderChildren.length) {

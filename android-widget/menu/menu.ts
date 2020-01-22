@@ -121,7 +121,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                     }
                     current = current.parentElement;
                 }
-                application.rootElements.add(<HTMLElement> element);
+                application.rootElements.add(element);
             }
         }
         return false;

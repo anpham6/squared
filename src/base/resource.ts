@@ -31,7 +31,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public addImage(element: HTMLImageElement | undefined) {
         if (element?.complete) {
             const uri = element.src;
-            if (/^data\:image\//.test(uri)) {
+            if (/^data:image\//.test(uri)) {
                 const match = new RegExp(`^${STRING.DATAURI}$`).exec(uri);
                 if (match) {
                     const mimeType = match[1].split(XML.DELIMITER);
@@ -99,7 +99,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         }
         else {
             for (const extension of imageFormat) {
-                if (mimeType.indexOf(extension) !== -1) {
+                if (mimeType.includes(extension)) {
                     filename = uri.endsWith('.' + extension) ? fromLastIndexOf(uri, '/') : getFileName() + '.' + extension;
                     break;
                 }

@@ -99,7 +99,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                             case 'square':
                                 ordinal = '■';
                                 break;
-                            case 'none':
+                            case 'none': {
                                 let src = '';
                                 let position = '';
                                 if (!item.visibleStyle.backgroundRepeat) {
@@ -112,6 +112,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                     item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
                                 }
                                 break;
+                            }
                             default:
                                 ordinal = '○';
                                 break;

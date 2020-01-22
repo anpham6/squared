@@ -244,7 +244,7 @@ function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: 'background
     return false;
 }
 
-const getGradientPosition = (value: string) => isString(value) ? (value.indexOf('at ') !== -1 ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : <RegExpExecArray> [value, value]) : null;
+const getGradientPosition = (value: string) => isString(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : <RegExpExecArray> [value, value]) : null;
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
     public static KEY_NAME = 'squared.resource';
@@ -433,7 +433,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 switch (extent) {
                                     case 'closest-corner':
                                     case 'closest-side':
-                                    case 'farthest-side':
+                                    case 'farthest-side': {
                                         const length = radial[convertCamelCase(extent)];
                                         if (repeating) {
                                             radiusExtent = length;
@@ -442,6 +442,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                             radius = length;
                                         }
                                         break;
+                                    }
                                     default:
                                         radiusExtent = farthestCorner;
                                         break;
@@ -553,7 +554,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             case 'auto auto':
             case 'initial':
                 return undefined;
-            default:
+            default: {
                 const dimensions = value.split(' ');
                 const length = dimensions.length;
                 if (length === 1) {
@@ -572,6 +573,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                 }
                 break;
+            }
         }
         return width > 0 && height > 0 ? { width: Math.round(width), height: Math.round(height) } : undefined;
     }
@@ -590,7 +592,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             if (trim) {
                 value = value.trim();
             }
-            return /\n/.test(value) && (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap') || /^pre/.test(node.css('whiteSpace')));
+            return value.includes('\n') && (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap') || /^pre/.test(node.css('whiteSpace')));
         }
         return false;
     }
@@ -732,12 +734,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     value = element.value;
                     switch (element.type) {
                         case 'radio':
-                        case 'checkbox':
+                        case 'checkbox': {
                             const companion = node.companion;
                             if (companion?.visible === false) {
                                 value = companion.textContent.trim();
                             }
                             break;
+                        }
                         case 'submit':
                             if (value === '' && !node.visibleStyle.backgroundImage) {
                                 value = 'Submit';
@@ -805,7 +808,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 case 'IFRAME':
                     value = element.src;
                     break;
-                default:
+                default: {
                     const textContent = node.textContent;
                     if (node.plainText || node.pseudoElement) {
                         key = textContent.trim();
@@ -820,6 +823,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         value = textContent;
                     }
                     break;
+                }
             }
             if (value !== '') {
                 if (trimming) {

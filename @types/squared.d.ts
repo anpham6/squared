@@ -279,7 +279,7 @@ declare namespace base {
     interface FileUI<T extends NodeUI> extends File<T> {
         resource: ResourceUI<T>;
         readonly userSettings: UserUISettings;
-        readonly directory: { string: string, font: string, image: string };
+        readonly directory: { string: string; font: string; image: string };
     }
 
     class FileUI<T extends NodeUI> implements FileUI<T> {}
@@ -861,65 +861,65 @@ declare namespace lib {
 
     namespace regex {
         const STRING: {
-            DECIMAL: string,
-            PERCENT: string,
-            LENGTH: string,
-            LENGTH_PERCENTAGE: string,
-            DATAURI: string,
-            CSS_SELECTOR_LABEL: string,
-            CSS_SELECTOR_PSEUDO_ELEMENT: string,
-            CSS_SELECTOR_PSEUDO_CLASS: string,
-            CSS_SELECTOR_ATTR: string,
-            CSS_ANGLE: string,
-            CSS_CALC: string
+            DECIMAL: string;
+            PERCENT: string;
+            LENGTH: string;
+            LENGTH_PERCENTAGE: string;
+            DATAURI: string;
+            CSS_SELECTOR_LABEL: string;
+            CSS_SELECTOR_PSEUDO_ELEMENT: string;
+            CSS_SELECTOR_PSEUDO_CLASS: string;
+            CSS_SELECTOR_ATTR: string;
+            CSS_ANGLE: string;
+            CSS_CALC: string;
         };
         const UNIT: {
-            DECIMAL: RegExp,
-            LENGTH: RegExp,
-            PERCENT: RegExp
+            DECIMAL: RegExp;
+            LENGTH: RegExp;
+            PERCENT: RegExp;
         };
         const CSS: {
-            PX: RegExp,
-            ANGLE: RegExp,
-            CALC: RegExp,
-            VAR: RegExp,
-            URL: RegExp,
-            CUSTOM_PROPERTY: RegExp,
-            HEX: RegExp,
-            RGBA: RegExp,
-            SELECTOR_G: RegExp,
-            SELECTOR_LABEL: RegExp,
-            SELECTOR_PSEUDO_ELEMENT: RegExp,
-            SELECTOR_PSEUDO_CLASS: RegExp,
-            SELECTOR_ATTR: RegExp
+            PX: RegExp;
+            ANGLE: RegExp;
+            CALC: RegExp;
+            VAR: RegExp;
+            URL: RegExp;
+            CUSTOM_PROPERTY: RegExp;
+            HEX: RegExp;
+            RGBA: RegExp;
+            SELECTOR_G: RegExp;
+            SELECTOR_LABEL: RegExp;
+            SELECTOR_PSEUDO_ELEMENT: RegExp;
+            SELECTOR_PSEUDO_CLASS: RegExp;
+            SELECTOR_ATTR: RegExp;
         };
         const XML: {
-            ATTRIBUTE: RegExp,
-            ENTITY: RegExp,
-            SEPARATOR: RegExp,
-            DELIMITER: RegExp,
-            BREAKWORD_G: RegExp,
-            NONWORD_G: RegExp,
-            TAGNAME_G: RegExp
+            ATTRIBUTE: RegExp;
+            ENTITY: RegExp;
+            SEPARATOR: RegExp;
+            DELIMITER: RegExp;
+            BREAKWORD_G: RegExp;
+            NONWORD_G: RegExp;
+            TAGNAME_G: RegExp;
         };
         const CHAR: {
-            SPACE: RegExp,
-            LEADINGSPACE: RegExp,
-            TRAILINGSPACE: RegExp,
-            TRAILINGZERO: RegExp,
-            LEADINGNEWLINE: RegExp,
-            LEADINGNUMBER: RegExp,
-            LOWERCASE: RegExp,
-            WORD: RegExp,
-            UNITZERO: RegExp,
-            WORDDASH: RegExp
+            SPACE: RegExp;
+            LEADINGSPACE: RegExp;
+            TRAILINGSPACE: RegExp;
+            TRAILINGZERO: RegExp;
+            LEADINGNEWLINE: RegExp;
+            LEADINGNUMBER: RegExp;
+            LOWERCASE: RegExp;
+            WORD: RegExp;
+            UNITZERO: RegExp;
+            WORDDASH: RegExp;
         };
         const COMPONENT: {
-            PROTOCOL: RegExp
+            PROTOCOL: RegExp;
         };
         const ESCAPE: {
-            ENTITY: RegExp,
-            NONENTITY: RegExp
+            ENTITY: RegExp;
+            NONENTITY: RegExp;
         };
     }
 
@@ -1460,13 +1460,13 @@ declare namespace svg {
             }
 
             const KEYSPLINE_NAME: {
-                'ease': string,
-                'ease-in': string,
-                'ease-in-out': string,
-                'ease-out': string,
-                'linear': string,
-                'step-start': string,
-                'step-end': string
+                'ease': string;
+                'ease-in': string;
+                'ease-in-out': string;
+                'ease-out': string;
+                'linear': string;
+                'step-start': string;
+                'step-end': string;
             };
         }
 

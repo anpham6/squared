@@ -14,10 +14,10 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public condition(node: T, parent: T) {
-        if (node.percentWidth && !parent.layoutConstraint && node.css('width') !== '100%' && (node.documentRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width')))) {
+        if (node.percentWidth && !parent.layoutConstraint && node.cssInitial('width') !== '100%' && (node.documentRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width')))) {
             return isFlexible(node);
         }
-        else if (node.percentWidth && node.css('height') !== '100%' && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
+        else if (node.percentHeight && node.cssInitial('height') !== '100%' && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
             return isFlexible(node);
         }
         return false;
@@ -28,14 +28,14 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         if (node.percentWidth) {
             container.css('display', 'block');
             container.setLayoutWidth('match_parent');
-            node.setLayoutWidth(node.css('width') === '100%' ? 'match_parent' : '0px');
+            node.setLayoutWidth(node.cssInitial('width') === '100%' ? 'match_parent' : '0px');
         }
         else {
             container.setLayoutWidth('wrap_content');
         }
         if (node.percentHeight) {
             container.setLayoutHeight('match_parent');
-            node.setLayoutHeight(node.css('height') === '100%' ? 'match_parent' : '0px');
+            node.setLayoutHeight(node.cssInitial('height') === '100%' ? 'match_parent' : '0px');
         }
         else {
             container.setLayoutHeight('wrap_content');

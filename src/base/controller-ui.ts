@@ -146,7 +146,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             styleMap.paddingBottom = formatPX(convertFloat(styleMap.paddingBottom) + 1);
                             styleMap.paddingLeft = formatPX(convertFloat(styleMap.paddingLeft) + 1);
                             break;
-                        default:
+                        default: {
                             const result = setBorderStyle();
                             switch (type) {
                                 case 'file':
@@ -157,6 +157,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     break;
                             }
                             break;
+                        }
                     }
                     break;
                 }
@@ -167,12 +168,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'SELECT':
                     setBorderStyle();
                     break;
-                case 'BODY':
+                case 'BODY': {
                     const backgroundColor = styleMap.backgroundColor;
                     if (backgroundColor === undefined || backgroundColor === 'initial') {
                         styleMap.backgroundColor = 'rgb(255, 255, 255)';
                     }
                     break;
+                }
                 case 'FORM':
                     if (styleMap.marginTop === undefined) {
                         styleMap.marginTop = '0px';
@@ -188,7 +190,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     if (styleMap.display === undefined) {
                         styleMap.display = 'block';
                     }
-                case 'IMG':
+                case 'IMG': {
                     const setDimension = (attr: string, opposing: string) => {
                         const dimension = styleMap[attr];
                         if (dimension === undefined || dimension === 'auto') {
@@ -227,6 +229,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     setDimension('width', 'height');
                     setDimension('height', 'width');
                     break;
+                }
             }
         }
         setElementCache(element, 'styleMap', sessionId, styleMap);
@@ -439,7 +442,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                         }
                                     }
                                     else if (parent.layoutElement) {
-                                        parent = absoluteParent as T;
+                                        parent = absoluteParent;
                                         break;
                                     }
                                     else if (node.withinX(box) && node.withinY(box)) {
@@ -486,7 +489,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     node.css('opacity', opacity.toString());
                     node.parent = parent;
                     node.containerIndex = Number.POSITIVE_INFINITY;
-                    altered.add(parent as T);
+                    altered.add(parent);
                 }
                 node.documentParent = parent;
             }

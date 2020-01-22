@@ -53,7 +53,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             if (target) {
                 const targetElement = document.getElementById(target);
                 if (targetElement && element.parentElement !== targetElement && !includes(targetElement.dataset.use, WIDGET_NAME.COORDINATOR)) {
-                    (<squared.base.ApplicationUI<T>> this.application).rootElements.add(element);
+                    this.application.rootElements.add(element);
                 }
             }
         }

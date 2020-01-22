@@ -533,7 +533,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         chain.mergeGravity('gravity', 'center');
                                     }
                                     break;
-                                default:
+                                default: {
                                     const childContent = chain.layoutFrame && chain.innerWrapped as T;
                                     switch (alignContent) {
                                         case 'center':
@@ -625,6 +625,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         }
                                     }
                                     break;
+                                }
                             }
                             [percentWidth, percentHeight] = Controller.setFlexDimension(chain, WHL, percentWidth, percentHeight);
                             if (!(chain.innerMostWrapped || chain).has('flexGrow')) {

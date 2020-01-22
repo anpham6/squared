@@ -22,7 +22,7 @@ const REGEX_BORDER = /^border/;
 const REGEX_BACKGROUND = /\s*(url\(.+?\))\s*/;
 const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
-const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+\-]\d+)?$/;
+const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
 const REGEX_EM = /em$/;
 const REGEX_GRID = /grid$/;
 const REGEX_FLEX = /flex$/;
@@ -532,7 +532,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return PX.test(value) ? value : Math.round(this.parseUnit(value, dimension, parent)) + 'px';
     }
 
-    public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[] | boolean>) {
+    public has(attr: string, checkType = 0, options?: ObjectMap<string | string[] | boolean>) {
         const value = (options?.map === 'initial' && this._initial?.styleMap || this._styleMap)[attr];
         if (value) {
             switch (value) {
@@ -546,7 +546,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'baseline':
                 case 'left':
                 case 'start':
-                    return this.flexElement || this.actualParent?.flexElement ? /^(align|justify|place)\-/.test(attr) : false;
+                    return this.flexElement || this.actualParent?.flexElement ? /^(align|justify|place)-/.test(attr) : false;
                 default:
                     if (options) {
                         if (options.not) {
@@ -652,7 +652,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         else if (segment.charAt(0) === '*') {
                             segment = segment.substring(1);
                         }
-                        else if (/^\:\:/.test(segment)) {
+                        else if (/^::/.test(segment)) {
                             selectors.length = 0;
                             break invalid;
                         }
@@ -675,12 +675,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 });
                                 segment = spliceString(segment, subMatch.index, subMatch[0].length);
                             }
-                            if (segment.indexOf('::') !== -1) {
+                            if (segment.includes('::')) {
                                 selectors.length = 0;
                                 break invalid;
                             }
                             while ((subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
-                                if (/^\:not\(/.test(subMatch[0])) {
+                                if (/^:not\(/.test(subMatch[0])) {
                                     if (subMatch[1]) {
                                         if (notList === undefined) {
                                             notList = [];
@@ -1037,7 +1037,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                                 return false;
                                                             }
                                                             break;
-                                                        default:
+                                                        default: {
                                                             const subMatch = REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE.exec(placement);
                                                             if (subMatch) {
                                                                 const modifier = convertInt(subMatch[3]);
@@ -1080,6 +1080,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                                 }
                                                             }
                                                             break;
+                                                        }
                                                     }
                                                 }
                                                 continue;
@@ -1185,7 +1186,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                     }
                                                     break;
                                                 case '*':
-                                                    if (actualValue.indexOf(attrValue) === -1) {
+                                                    if (!actualValue.includes(attrValue)) {
                                                         return false;
                                                     }
                                                     break;
@@ -1238,7 +1239,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         }
                                     }
                                     else {
-                                        const children = parent.naturalElements as T[];
+                                        const children = parent.naturalElements;
                                         switch (adjacent) {
                                             case '+': {
                                                 const indexA = children.indexOf(node);
@@ -1333,7 +1334,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'VIDEO':
                 case 'CANVAS':
                 case 'OBJECT':
-                case 'EMBED':
+                case 'EMBED': {
                     const size = getNamedItem(element, attr);
                     if (size !== '') {
                         value = isNumber(size) ? parseFloat(size) : this.parseUnit(size, attr);
@@ -1342,6 +1343,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                     }
                     break;
+                }
             }
         }
         let maxValue = 0;
@@ -1416,7 +1418,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         case 'TD':
                         case 'TH':
                             return 0;
-                        default:
+                        default: {
                             const parent = this.ascend({ condition: node => node.tagName === 'TABLE'})[0];
                             if (parent) {
                                 const [horizontal, vertical] = parent.css('borderSpacing').split(' ');
@@ -1433,6 +1435,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 }
                             }
                             break;
+                        }
                     }
                     return 0;
                 }
@@ -1876,11 +1879,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         result = false;
                     }
                     break;
-                case 'inherit':
+                case 'inherit': {
                     const element = this._element;
                     const position = element?.parentElement ? getInheritedStyle(element.parentElement, 'position') : '';
                     result = position !== '' && !(position === 'absolute' || position === 'fixed');
                     break;
+                }
                 default:
                     result = true;
                     break;

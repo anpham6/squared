@@ -122,7 +122,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         switch (item.tagName) {
                             case 'set':
                                 for (const time of times) {
-                                    addAnimation(new SvgAnimation(element, <SVGAnimationElement> item), time);
+                                    addAnimation(new SvgAnimation(element, item), time);
                                 }
                                 break;
                             case 'animate':
@@ -462,7 +462,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                             }
                                                             keyTimesData.push(keyTime);
                                                             valuesData.push(steps[1][k]);
-                                                            keySplinesData.push(KEYSPLINE_NAME[keySpline.indexOf('start') !== -1 ? 'step-start' : 'step-end']);
+                                                            keySplinesData.push(KEYSPLINE_NAME[keySpline.includes('start') ? 'step-start' : 'step-end']);
                                                         }
                                                         continue;
                                                     }

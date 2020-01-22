@@ -12,16 +12,16 @@ const { CHAR, CSS } = $lib.regex;
 const { isNumber, trimString, withinRange } = $lib.util;
 
 type GridLayout = {
-    placement: number[],
-    rowSpan: number,
-    columnSpan: number,
-    outerCoord: number
+    placement: number[];
+    rowSpan: number;
+    columnSpan: number;
+    outerCoord: number;
 };
 
 type RepeatItem = {
-    name?: string
-    unit?: string
-    unitMin?: string
+    name?: string;
+    unit?: string;
+    unitMin?: string;
 };
 
 type RowData = (NodeUI[] | undefined)[][];
@@ -34,7 +34,7 @@ const STRING_NAMED = '\\[([\\w\\-\\s]+)\\]';
 const REGEX_UNIT = new RegExp(`^(${STRING_UNIT})$`);
 const REGEX_NAMED = new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
 const REGEX_REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
-const REGEX_STARTEND = /^([\w\-]+)-(start|end)$/;
+const REGEX_STARTEND = /^([\w-]+)-(start|end)$/;
 const REGEX_CELL_UNIT = new RegExp('[\\d.]+[a-z%]+|auto|max-content|min-content');
 const REGEX_CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
 const REGEX_CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
@@ -163,8 +163,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             children: [],
             rowData: [],
             rowSpanMultiple: [],
-            rowDirection: autoFlow.indexOf('column') === -1,
-            dense: autoFlow.indexOf('dense') !== -1,
+            rowDirection: !autoFlow.includes('column'),
+            dense: autoFlow.includes('dense'),
             templateAreas: {},
             row: CssGrid.createDataRowAttribute(),
             column: CssGrid.createDataRowAttribute(),
@@ -341,7 +341,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             repeat.push(false);
                             i++;
                         }
-                        else if (/^fit\-content/.test(command)) {
+                        else if (/^fit-content/.test(command)) {
                             unit.push(convertLength(node, match[7], index));
                             unitMin.push('0px');
                             repeat.push(false);
@@ -413,6 +413,14 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             let columnIndex = 0;
             let columnMax = 0;
             let previous: T | undefined;
+            if (horizontal) {
+                if (column.autoFill) {
+                    autoWidth = setAutoFill(column, node.actualWidth);
+                }
+            }
+            else if (row.autoFill) {
+                autoHeight = setAutoFill(row, node.actualHeight);
+            }
             node.each((item: T, index) => {
                 if (previous === undefined || item.linear[directionA] >= previous.linear[directionB] || columnIndex > 0 && columnIndex === columnMax) {
                     columnMax = Math.max(columnIndex, columnMax);

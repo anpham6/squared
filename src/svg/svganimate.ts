@@ -24,7 +24,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         let nextValue: any[] | undefined;
         switch (attributeName) {
             case 'fill':
-            case 'stroke':
+            case 'stroke': {
                 const colorStart = parseColor(values[index]);
                 const colorEnd = parseColor(values[index + 1]);
                 if (colorStart && colorEnd) {
@@ -32,6 +32,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     nextValue = [colorEnd];
                 }
                 break;
+            }
             case 'points':
                 currentValue = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[index]));
                 nextValue = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[index + 1]));
@@ -42,7 +43,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 currentValue = replaceMap<string, number>(values[index].trim().split(CHAR.SPACE), value => parseFloat(value));
                 nextValue = replaceMap<string, number>(values[index + 1].trim().split(CHAR.SPACE), value => parseFloat(value));
                 break;
-            default:
+            default: {
                 const valueA = values[index];
                 const valueB = values[index + 1];
                 if (isNumber(valueA)) {
@@ -58,6 +59,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     nextValue = [parseUnit(valueB, fontSize)];
                 }
                 break;
+            }
         }
         if (currentValue && nextValue) {
             const length = currentValue.length;

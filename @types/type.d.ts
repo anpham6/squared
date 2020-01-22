@@ -12,8 +12,8 @@ type BindGeneric<T, U> = (item: T, ...args: any[]) => U;
 type FunctionType<T> = (...args: any[]) => T;
 type FunctionMap<T> = ObjectMap<FunctionType<T>>;
 
-type ObjectMap<T> = { [key: string]: T; };
-type ObjectIndex<T> = { [key: number]: T; };
+type ObjectMap<T> = { [key: string]: T };
+type ObjectIndex<T> = { [key: number]: T };
 type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;
 type StringMap = ObjectMap<string>;
 type CallbackResult = (result: {}) => void;

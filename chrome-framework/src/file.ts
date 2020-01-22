@@ -32,7 +32,7 @@ function parseUri(value: string): ChromeAsset | undefined {
         }
     }
     if (pathname !== '') {
-        const extension = filename.indexOf('.') !== -1 ? fromLastIndexOf(filename, '.').toLowerCase() : undefined;
+        const extension = filename.includes('.') ? fromLastIndexOf(filename, '.').toLowerCase() : undefined;
         return {
             pathname,
             filename,
@@ -82,7 +82,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             else {
                 const filename = data.filename;
-                if (filename.indexOf('.') === -1) {
+                if (!filename.includes('.')) {
                     data.pathname += '/' + filename;
                     data.filename = 'index.html';
                 }

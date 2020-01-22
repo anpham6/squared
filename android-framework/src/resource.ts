@@ -228,7 +228,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
             const match = CSS.URL.exec(element);
             if (match) {
                 mdpi = match[1];
-                if (!/^data\:image/.test(mdpi)) {
+                if (!/^data:image/.test(mdpi)) {
                     return this.addImageSet({ mdpi: resolvePath(mdpi) }, prefix);
                 }
             }

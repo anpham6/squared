@@ -30,7 +30,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         const item = renderChildren[i] as T;
                         let found = false;
                         for (const value of item.combine('_', 'android')) {
-                            if (!found && /^style\=/.test(value)) {
+                            if (!found && /^style=/.test(value)) {
                                 if (i === 0) {
                                     style = value;
                                 }
@@ -93,9 +93,8 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
         }
         for (const name in styles) {
             const items: StringValue[] = [];
-            const data = styles[name];
-            for (const attr in data) {
-                const match = XML.ATTRIBUTE.exec(data[attr]);
+            for (const style of styles[name]) {
+                const match = XML.ATTRIBUTE.exec(style);
                 if (match) {
                     items.push({ key: match[1], value: match[2] });
                 }

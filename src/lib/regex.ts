@@ -25,7 +25,7 @@ export const CSS = {
     PX: /px$/,
     ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
     CALC: new RegExp(`^${STRING.CSS_CALC}$`),
-    VAR: /var\((--[A-Za-z\d\-]+)(?!,\s*var\()(?:,\s*([a-z\-]+\([^)]+\)|[^)]+))?\)/,
+    VAR: /var\((--[A-Za-z\d-]+)(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/,
     URL: /^url\("?(.+?)"?\)$/,
     CUSTOM_PROPERTY: /^\s*(?:var|calc)\(.+\)$/,
     HEX: /[A-Za-z\d]{3,8}/,

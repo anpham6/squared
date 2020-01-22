@@ -195,7 +195,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const children = element.children;
                 const length = children.length;
                 for (let i = 0; i < length; i++) {
-                    if (controllerHandler.visibleElement(<Element> children[i])) {
+                    if (controllerHandler.visibleElement(children[i])) {
                         return true;
                     }
                 }
@@ -399,7 +399,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             if (pseudoElements.length) {
-                const pseudoMap: { item: T, id: string, parentElement: Element, styleElement?: HTMLStyleElement }[] = [];
+                const pseudoMap: { item: T; id: string; parentElement: Element; styleElement?: HTMLStyleElement }[] = [];
                 for (const item of pseudoElements) {
                     const parentElement = <HTMLElement> (item.actualParent as T).element;
                     let id = parentElement.id;
@@ -463,7 +463,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public afterCreateCache(element: HTMLElement) {
         const dataset = element.dataset;
         const { filename, iteration } = dataset;
-        const prefix = isString(filename) && filename.replace(new RegExp(`\.${this._localSettings.layout.fileExtension}$`), '') || element.id || 'document_' + this.length;
+        const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._localSettings.layout.fileExtension}$`), '') || element.id || 'document_' + this.length;
         const suffix = (iteration ? parseInt(iteration) : -1) + 1;
         const layoutName = convertWord(suffix > 1 ? prefix + '_' + suffix : prefix, true);
         dataset.iteration = suffix.toString();
@@ -526,7 +526,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const element = <HTMLElement> childNodes[i];
                 let child: T | undefined;
                 if (element === beforeElement) {
-                    child = this.insertNode(<HTMLElement> beforeElement);
+                    child = this.insertNode(beforeElement);
                     if (child) {
                         node.innerBefore = child;
                         if (!child.textEmpty) {
@@ -536,7 +536,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 else if (element === afterElement) {
-                    child = this.insertNode(<HTMLElement> afterElement);
+                    child = this.insertNode(afterElement);
                     if (child) {
                         node.innerAfter = child;
                         if (!child.textEmpty) {
@@ -673,7 +673,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 content = getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
                 styleMap.content = content;
             }
-            if (/\-quote$/.test(content)) {
+            if (/-quote$/.test(content)) {
                 let current = element.parentElement;
                 while (current?.tagName === 'Q') {
                     nested++;
@@ -759,7 +759,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
+                            const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z-]+))?\)|"([^"]+)")\s*/g;
                             let found = false;
                             let match: RegExpExecArray | null;
                             while ((match = pattern.exec(value)) !== null) {
@@ -970,7 +970,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             setMapY((node.depth * -1) - 2, node.id, node);
             for (const item of node.cascade() as T[]) {
                 removeMapY(item);
-                setMapY((item.depth * -1) - 2, item.id, item as T);
+                setMapY((item.depth * -1) - 2, item.id, item);
             }
         };
         for (const ext of this.extensions) {
@@ -987,7 +987,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const length = axisY.length;
                 let cleared!: Map<T, string>;
                 if (floatContainer) {
-                    cleared = <Map<T, string>> NodeUI.linearData(parent.naturalElements as T[], true).cleared;
+                    cleared = NodeUI.linearData(parent.naturalElements as T[], true).cleared;
                 }
                 for (let k = 0; k < length; k++) {
                     let nodeY = axisY[k];

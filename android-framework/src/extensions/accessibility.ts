@@ -11,7 +11,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
                         node.extracted = [node];
                         break;
                     case 'INPUT_RADIO':
-                    case 'INPUT_CHECKBOX':
+                    case 'INPUT_CHECKBOX': {
                         const id = node.elementId;
                         [node.nextSibling, node.previousSibling].some((sibling: T) => {
                             if (sibling?.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
@@ -36,6 +36,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
                             return false;
                         });
                         break;
+                    }
                     case 'BUTTON':
                         if (node.length) {
                             const extracted = node.filter((item: T) => !item.textElement) as T[];

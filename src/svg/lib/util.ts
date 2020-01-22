@@ -410,7 +410,7 @@ export function getParentAttribute(element: SVGElement, attr: string, computed =
     let current: HTMLElement | SVGElement | null = element;
     let value = '';
     while (current && !(current instanceof HTMLElement)) {
-        value = getAttribute(<SVGElement> current, attr, computed);
+        value = getAttribute(current, attr, computed);
         if (value !== '' && value !== 'inherit') {
             break;
         }

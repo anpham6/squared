@@ -50,6 +50,28 @@ async function findElementAsync(element: HTMLElement, cache = true) {
     return elementMap.get(element) || null;
 }
 
+async function findElementAllAsync(query: NodeListOf<Element>, result: View[]): Promise<View[]> {
+    let incomplete = false;
+    query.forEach((element, index) => {
+        (async () => {
+            const item = await findElementAsync(<HTMLElement> element);
+            if (item) {
+                result[index] = item;
+            }
+            else {
+                incomplete = true;
+            }
+        });
+    });
+    if (incomplete) {
+        flatArray(result);
+    }
+    const PromiseResult = class {
+        public then(resolve: () => void) {}
+    };
+    return new PromiseResult();
+}
+
 const appBase: ChromeFramework<View> = {
     base: {
         Application,
@@ -223,22 +245,13 @@ const appBase: ChromeFramework<View> = {
     querySelectorAll: async (value: string) => {
         if (application) {
             const query = document.querySelectorAll(value);
-            const result: View[] = new Array(query.length);
-            let incomplete = false;
-            await (async () => {
-                query.forEach(async (element, index) => {
-                    const item = await findElementAsync(<HTMLElement> element);
-                    if (item) {
-                        result[index] = item;
-                    }
-                    else {
-                        incomplete = true;
-                    }
-                });
-            })();
-            return incomplete ? flatArray(result) : result;
+            if (query.length) {
+                const result: View[] = new Array(query.length);
+                await findElementAllAsync(query, result);
+                return result;
+            }
         }
-        return [];
+        return null;
     }
 };
 

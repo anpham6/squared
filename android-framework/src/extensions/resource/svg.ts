@@ -686,7 +686,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (match) {
             src = match[1];
         }
-        if (/\.svg$/.test(src.toLowerCase()) || /^data\:image\/svg\+xml/.test(src)) {
+        if (/\.svg$/.test(src.toLowerCase()) || /^data:image\/svg\+xml/.test(src)) {
             const fileAsset = this.resource.getRawData(src);
             if (fileAsset) {
                 const parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;
@@ -1447,7 +1447,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 let y = image.getBaseValue('y', 0) * scaleY;
                 let width: number = image.getBaseValue('width', 0);
                 let height: number = image.getBaseValue('height', 0);
-                const offset = getParentOffset(image.element, <SVGSVGElement> svg.element);
+                const offset = getParentOffset(image.element, svg.element);
                 x += offset.x;
                 y += offset.y;
                 width *= scaleX;
@@ -1499,7 +1499,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         const pathArray: PathData[] = [];
                         if (itemPath.strokeWidth && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                             const animateData = this.ANIMATE_DATA.get(item.name);
-                            if (animateData === undefined || animateData.animate.every(animate => /^stroke\-dash/.test(animate.attributeName))) {
+                            if (animateData === undefined || animateData.animate.every(animate => /^stroke-dash/.test(animate.attributeName))) {
                                 const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData?.animate, floatPrecisionValue);
                                 if (strokeDash) {
                                     if (animateData) {
@@ -1550,7 +1550,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
                 else if ($SvgBuild.isContainer(item)) {
                     if (item.length) {
-                        output += this.parseVectorData(<SvgGroup> item, renderDepth);
+                        output += this.parseVectorData(item, renderDepth);
                     }
                 }
                 else if ($SvgBuild.asImage(item)) {
@@ -1694,7 +1694,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             continue;
                         }
                         break;
-                    case 'fillPattern':
+                    case 'fillPattern': {
                         const definition = this.SVG_INSTANCE.definitions.gradient.get(value);
                         let valid = false;
                         if (definition) {
@@ -1729,6 +1729,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             continue;
                         }
                         break;
+                    }
                     case 'fillRule':
                         if (value === 'evenodd') {
                             attr = 'fillType';
