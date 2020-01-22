@@ -249,7 +249,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             attr = 'actualParent';
         }
         const result: T[] = [];
-        let current = this[attr];
+        let current = options.startSelf ? this : this[attr];
         while (current && current !== excluding) {
             if (condition) {
                 if (condition(current)) {

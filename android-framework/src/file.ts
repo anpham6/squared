@@ -57,8 +57,8 @@ function getImageAssets(items: string[]) {
 }
 
 const createFileAsset = (pathname: string, filename: string, content: string): FileAsset => ({ pathname, filename, content });
-const replaceDrawableLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEX_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], dpi, false) + '"') : value;
-const replaceThemeLength = (value: string, dpi: number, format: string) => format === 'dp' ? value.replace(REGEX_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], dpi, false) + '<') : value;
+const replaceDrawableLength = (value: string, format: string) => format === 'dp' ? value.replace(REGEX_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], false) + '"') : value;
+const replaceThemeLength = (value: string, format: string) => format === 'dp' ? value.replace(REGEX_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], false) + '<') : value;
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
 export default class File<T extends android.base.View> extends squared.base.FileUI<T> implements android.base.File<T> {
@@ -250,7 +250,7 @@ export default class File<T extends android.base.View> extends squared.base.File
             );
         }
         if (STORED.themes.size) {
-            const { convertPixels, insertSpaces, manifestThemeName, resolutionDPI } = this.userSettings;
+            const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of STORED.themes.entries()) {
                 const match = REGEX_FILENAME.exec(filename);
@@ -278,7 +278,6 @@ export default class File<T extends android.base.View> extends squared.base.File
                         replaceTab(
                             replaceThemeLength(
                                 applyTemplate('resources', STYLE_TMPL, [item]),
-                                resolutionDPI,
                                 convertPixels
                             ),
                             insertSpaces
@@ -294,11 +293,11 @@ export default class File<T extends android.base.View> extends squared.base.File
 
     public resourceDimenToXml(options: FileOutputOptions = {}) {
         if (STORED.dimens.size) {
-            const { convertPixels, resolutionDPI } = this.userSettings;
+            const convertPixels = this.userSettings.convertPixels;
             const item: ObjectMap<any[]> = { dimen: [] };
             const itemArray = item.dimen;
             for (const [name, value] of Array.from(STORED.dimens.entries()).sort()) {
-                itemArray.push({ name, innerText: convertPixels ? convertLength(value, resolutionDPI, false) : value });
+                itemArray.push({ name, innerText: convertPixels ? convertLength(value, false) : value });
             }
             return this.checkFileAssets([
                 replaceTab(applyTemplate('resources', DIMEN_TMPL, [item])),
@@ -311,17 +310,13 @@ export default class File<T extends android.base.View> extends squared.base.File
 
     public resourceDrawableToXml(options: FileOutputOptions = {}) {
         if (STORED.drawables.size) {
-            const { convertPixels, insertSpaces, resolutionDPI } = this.userSettings;
+            const { convertPixels, insertSpaces } = this.userSettings;
             const directory = this.directory.image;
             const result: string[] = [];
             for (const [name, value] of STORED.drawables.entries()) {
                 result.push(
                     replaceTab(
-                        replaceDrawableLength(
-                            value,
-                            resolutionDPI,
-                            convertPixels
-                        ),
+                        replaceDrawableLength(value, convertPixels),
                         insertSpaces
                     ),
                     directory,

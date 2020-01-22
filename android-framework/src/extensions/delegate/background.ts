@@ -16,7 +16,7 @@ function isParentVisible(node: View, visibleStyle: VisibleStyle) {
 }
 
 const isHideMargin = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && (node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
-const isFullScreen = (node: View, visibleStyle: VisibleStyle) => node.backgroundColor !== '' && visibleStyle.borderWidth && node.blockStatic && node.css('height') !== '100%' && node.css('minHeight') !== '100%' && !(node.actualParent as View).visibleStyle.background || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
+const isFullScreen = (node: View, visibleStyle: VisibleStyle) => node.backgroundColor !== '' && visibleStyle.borderWidth && !node.inline && node.css('height') !== '100%' && node.css('minHeight') !== '100%' && !(node.actualParent as View).visibleStyle.background || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
 const hasWidth = (node: View) => !node.blockStatic || node.hasPX('width') || node.has('maxWidth', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' });
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {

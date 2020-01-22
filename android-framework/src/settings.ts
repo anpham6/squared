@@ -31,6 +31,8 @@ const settings: UserSettingsAndroid = {
     ],
     targetAPI: 29,
     resolutionDPI: 160,
+    resolutionScreenWidth: 1280,
+    resolutionScreenHeight: 900,
     framesPerSecond: 60,
     supportRTL: true,
     preloadImages: true,

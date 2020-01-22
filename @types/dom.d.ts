@@ -59,7 +59,7 @@ interface BorderAttribute {
 interface FontAttribute {
     fontFamily: string;
     fontStyle: string;
-    fontSize: string;
+    fontSize: number;
     fontWeight: string;
     color: string;
     backgroundColor?: string;

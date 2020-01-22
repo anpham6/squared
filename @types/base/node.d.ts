@@ -128,6 +128,7 @@ export interface AscendOptions {
     including?: Node;
     excluding?: Node;
     attr?: string;
+    startSelf?: boolean;
 }
 
 export interface ExcludeOptions {

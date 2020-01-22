@@ -34,25 +34,16 @@ export function truncate(value: number | string, precision = 3) {
     if (typeof value === 'string') {
         value = parseFloat(value);
     }
-    if (value === Math.floor(value)) {
+    const base = Math.floor(value);
+    if (value === base) {
         return value.toString();
     }
     else if ((value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
          return '0';
     }
     else {
-        const absolute = Math.abs(value);
-        let i = 1;
-        if (absolute >= 1) {
-            precision += 1;
-            while (absolute / Math.pow(10, i++) >= 1) {
-                precision += 1;
-            }
-        }
-        else {
-            while (precision > 1 && absolute * Math.pow(10, i++) < 1) {
-                precision -= 1;
-            }
+        if (base !== 0) {
+            precision += base.toString().length;
         }
         return truncateTrailingZero(value.toPrecision(precision));
     }

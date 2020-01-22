@@ -712,7 +712,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             node.data(ResourceUI.KEY_NAME, 'fontStyle', <FontAttribute> {
                 fontFamily: node.css('fontFamily').trim(),
                 fontStyle: node.css('fontStyle'),
-                fontSize: formatPX(node.fontSize),
+                fontSize: node.fontSize,
                 fontWeight,
                 color: color?.valueAsRGBA || ''
             });
@@ -902,11 +902,14 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                         continue;
                     }
-                    else if (isString(item[attr])) {
-                        if (!preserveWhitespace) {
-                            value = value.replace(item[attr], '');
+                    else {
+                        const textContent = item[attr];
+                        if (isString(textContent)) {
+                            if (!preserveWhitespace) {
+                                value = value.replace(textContent, '');
+                            }
+                            continue;
                         }
-                        continue;
                     }
                 }
                 else if (child instanceof HTMLElement) {

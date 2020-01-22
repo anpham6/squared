@@ -3,6 +3,8 @@ import { ControllerUISettings, ResourceStoredMap, UserUISettings } from '../base
 export interface UserSettingsAndroid extends UserUISettings {
     targetAPI: number;
     resolutionDPI: number;
+    resolutionScreenWidth: number;
+    resolutionScreenHeight: number;
     supportRTL: boolean;
     customizationsOverwritePrivilege: boolean;
     convertPixels: string;

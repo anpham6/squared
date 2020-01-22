@@ -421,13 +421,14 @@ declare namespace lib {
     }
 
     namespace util {
+        function convertLength(value: string | number, font?: boolean, precision?: number): string;
         function getDocumentId(value: string): string;
         function getHorizontalBias(node: View): number;
         function getVerticalBias(node: View): number;
         function isGridJustified(node: View): boolean;
         function isGridAligned(node: View): boolean;
-        function createViewAttribute(externalData?: ExternalData, options?: ViewAttribute): ViewAttribute;
-        function createStyleAttribute(options?: ExternalData): Required<StyleAttribute>;
+        function createViewAttribute(data?: ExternalData, options?: ViewAttribute): ViewAttribute;
+        function createStyleAttribute(data?: ExternalData): Required<StyleAttribute>;
         function localizeString(value: string, rtl: boolean, api: number): string;
         function getXmlNs(value: string): string;
         function getRootNs(value: string): string;

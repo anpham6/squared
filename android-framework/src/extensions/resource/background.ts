@@ -449,10 +449,19 @@ function getColorValue(value: ColorData | string | undefined, transparency = tru
     return color !== '' ? '@color/' + color : '';
 }
 
+function fillBackgroundAttribute(attribute: string[], length: number) {
+    while (attribute.length < length) {
+        attribute = attribute.concat(attribute.slice(0));
+    }
+    attribute.length = length;
+    return attribute;
+}
+
 const roundFloat = (value: string) => Math.round(parseFloat(value));
 const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
+const constrictedWidth = (node: View) => !node.inline && node.hasPX('width', true, true) && node.cssInitial('width') !== '100%';
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     const result: GradientColorStop[] = [];
@@ -485,12 +494,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     };
     public readonly eventOnly = true;
 
+    private _maxScreenWidth = Number.POSITIVE_INFINITY;
+    private _maxScreenHeight = Number.POSITIVE_INFINITY;
     private _resourceSvgInstance?: ResourceSvg<T>;
 
-    public afterResources() {
-        const application = this.application;
-        const settings = <UserSettingsAndroid> application.userSettings;
+    public beforeParseDocument() {
+        const application = <android.base.Application<T>> this.application;
+        const { resolutionDPI, resolutionScreenWidth, resolutionScreenHeight } = application.userSettings;
+        const dpiRatio = 160 / resolutionDPI;
+        this._maxScreenWidth = resolutionScreenWidth * dpiRatio;
+        this._maxScreenHeight = resolutionScreenHeight * dpiRatio;
         this._resourceSvgInstance = this.controller.localSettings.svg.enabled ? <ResourceSvg<T>> application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
+    }
+
+    public afterResources() {
+        const application = <android.base.Application<T>> this.application;
+        const settings = <UserSettingsAndroid> application.userSettings;
         let themeBackground = false;
         function setDrawableBackground(node: T, value: string) {
             if (value !== '') {
@@ -590,7 +609,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
         }
-        this._resourceSvgInstance = undefined;
     }
 
     public getDrawableBorder(data: BoxStyle, outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false) {
@@ -752,7 +770,23 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if ((backgroundImage || extracted) && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
             const resource = <android.base.Resource<T>> this.resource;
             const bounds = node.bounds;
-            const { width: boundsWidth, height: boundsHeight } = bounds;
+            let { width: boundsWidth, height: boundsHeight } = bounds;
+            if (node.documentBody) {
+                boundsWidth = this._maxScreenWidth;
+                boundsHeight = this._maxScreenHeight;
+            }
+            else if (node.documentRoot) {
+                if (!constrictedWidth(node)) {
+                    boundsWidth = this._maxScreenWidth;
+                }
+                if (node.cssInitial('height') === '100%' || node.cssInitial('minHeight') === '100%') {
+                    boundsHeight = this._maxScreenHeight;
+                }
+            }
+            else if (node.ascend({ condition: (item: T) => constrictedWidth(item) && (!item.layoutElement || item === node), startSelf: true }).length === 0) {
+                const screenWidth = this._maxScreenWidth;
+                boundsWidth = Math.min(boundsWidth, screenWidth, screenWidth - bounds.left - (window.innerWidth - bounds.right));
+            }
             const result: BackgroundImageData[] = [];
             const images: (string | GradientTemplate)[] = [];
             const imageDimensions: Undefined<Dimension>[] = [];
@@ -767,15 +801,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             if (backgroundImage) {
                 const resourceInstance = this._resourceSvgInstance;
                 const lengthA = backgroundImage.length;
-                function fillBackgroundAttribute(attribute: string[]) {
-                    while (attribute.length < lengthA) {
-                        attribute = attribute.concat(attribute.slice(0));
-                    }
-                    attribute.length = lengthA;
-                    return attribute;
-                }
-                backgroundRepeat = fillBackgroundAttribute(backgroundRepeat);
-                backgroundSize = fillBackgroundAttribute(backgroundSize);
+                backgroundRepeat = fillBackgroundAttribute(backgroundRepeat, lengthA);
+                backgroundSize = fillBackgroundAttribute(backgroundSize, lengthA);
                 let modified = false;
                 for (let i = 0; i < lengthA; i++) {
                     let value = backgroundImage[i];
@@ -1269,12 +1296,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     height = boundsHeight * (ratioHeight / ratioWidth);
                                     left = 0;
                                     if (height > boundsHeight) {
-                                        top = boundsHeight - height;
+                                        top = (boundsHeight - height);
                                         if (position.topAsPercent > 0) {
-                                            const topPercent = Math.round(top * position.topAsPercent);
-                                            if (topPercent + dimenHeight < boundsHeight) {
-                                                top = topPercent;
-                                            }
+                                            top = Math.round(top * position.topAsPercent);
                                         }
                                     }
                                     else {
@@ -1288,10 +1312,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     if (width > boundsWidth) {
                                         left = boundsWidth - width;
                                         if (position.leftAsPercent > 0) {
-                                            const leftPercent = Math.round(left * position.leftAsPercent);
-                                            if (leftPercent + dimenWidth < boundsWidth) {
-                                                left = leftPercent;
-                                            }
+                                            left = Math.round(left * position.leftAsPercent);
                                         }
                                     }
                                     else {
@@ -1301,6 +1322,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     gravity = '';
                                 }
                                 else {
+                                    left = 0;
+                                    top = 0;
                                     gravity = 'fill';
                                 }
                                 resetGravityPosition();
@@ -1310,14 +1333,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 const ratioWidth = dimenWidth / boundsWidth;
                                 const ratioHeight = dimenHeight / boundsHeight;
                                 if (ratioWidth > ratioHeight) {
-                                    gravity = 'fill_horizontal|center_vertical';
+                                    gravityAlign = 'fill_horizontal|center_vertical';
                                     width = 0;
                                     height = boundsHeight * (ratioHeight / ratioWidth);
+                                    gravity = '';
                                 }
                                 else if (ratioWidth < ratioHeight) {
-                                    gravity = 'fill_vertical|center_horizontal';
+                                    gravityAlign = 'fill_vertical|center_horizontal';
                                     width = boundsWidth * (ratioWidth / ratioHeight);
                                     height = 0;
+                                    gravity = '';
                                 }
                                 else {
                                     gravity = 'fill';

@@ -8,7 +8,7 @@ import NodeList from './nodelist';
 import Resource from './resource';
 
 const $lib = squared.lib;
-const { getSpecificity, getStyle, hasComputedStyle, parseSelectorText, validMediaRule } = $lib.css;
+const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, validMediaRule } = $lib.css;
 const { isTextNode } = $lib.dom;
 const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
 const { CHAR, STRING, XML } = $lib.regex;
@@ -126,35 +126,19 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public parseDocument(...elements: any[]): squared.PromiseResult {
         const { controllerHandler: controller, resourceHandler: resource } = this;
-        let __THEN: Undefined<() => void>;
-        this.rootElements.clear();
         this.initializing = false;
+        this.rootElements.clear();
         const sessionId = controller.generateSessionId;
         this.processing.sessionId = sessionId;
         this.session.active.push(sessionId);
         controller.sessionId = sessionId;
         controller.init();
         this.setStyleMap();
-        if (elements.length === 0) {
-            elements.push(document.body);
-        }
-        for (const value of elements) {
-            let element: HTMLElement | null;
-            if (typeof value === 'string') {
-                element = document.getElementById(value);
-            }
-            else if (hasComputedStyle(value)) {
-                element = value;
-            }
-            else {
-                continue;
-            }
-            if (element) {
-                this.rootElements.add(element);
-            }
-        }
-        const documentRoot = this.rootElements.values().next().value;
         const preloaded: HTMLImageElement[] = [];
+        const preloadImages = this.userSettings.preloadImages;
+        const imageElements: PreloadImage[] = [];
+        const styleElement = insertStyleSheetRule(`html > body { overflow: hidden !important; }`);
+        let __THEN: Undefined<() => void>;
         const resume = () => {
             this.initializing = false;
             for (const image of preloaded) {
@@ -174,12 +158,30 @@ export default abstract class Application<T extends Node> implements squared.bas
             for (const ext of this.extensions) {
                 ext.afterParseDocument();
             }
+            document.head.removeChild(styleElement);
             if (typeof __THEN === 'function') {
                 __THEN.call(this);
             }
         };
-        const preloadImages = this.userSettings.preloadImages;
-        const imageElements: PreloadImage[] = [];
+        if (elements.length === 0) {
+            elements.push(document.body);
+        }
+        for (const value of elements) {
+            let element: HTMLElement | null;
+            if (typeof value === 'string') {
+                element = document.getElementById(value);
+            }
+            else if (hasComputedStyle(value)) {
+                element = value;
+            }
+            else {
+                continue;
+            }
+            if (element) {
+                this.rootElements.add(element);
+            }
+        }
+        const documentRoot = this.rootElements.values().next().value;
         if (preloadImages) {
             for (const element of this.rootElements) {
                 element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));

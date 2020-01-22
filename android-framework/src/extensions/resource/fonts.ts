@@ -9,7 +9,7 @@ import { convertLength } from '../../lib/util';
 
 const $lib = squared.lib;
 const { XML } = $lib.regex;
-const { capitalize, convertWord, filterArray, objectMap, spliceArray, trimString } = $lib.util;
+const { capitalize, convertInt, convertWord, filterArray, objectMap, spliceArray, trimString } = $lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -120,7 +120,6 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const resource = <android.base.Resource<T>> this.resource;
         const settings = resource.userSettings;
         const disableFontAlias = this.options.disableFontAlias;
-        const dpi = settings.resolutionDPI;
         const convertPixels = settings.convertPixels === 'dp';
         const { fonts, styles } = STORED;
         const styleKeys = Object.keys(FONT_STYLE);
@@ -216,7 +215,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     let value: string | undefined = fontData[key];
                     if (value) {
                         if (i === 3 && convertPixels) {
-                            value = convertLength(value, dpi, true);
+                            value = convertLength(value, true);
                         }
                         const attr = FONT_STYLE[key] + value + '"';
                         let dataIndex = sorted[i];
@@ -437,7 +436,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         for (const node of this.application.session.cache) {
             const styleData = nodeMap[node.id];
-            if (styleData?.length) {
+            if (styleData) {
                 if (styleData.length > 1) {
                     parentStyle.add(styleData.join('.'));
                     styleData.shift();
@@ -455,7 +454,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             value.split('.').forEach((tag, index, array) => {
                 const match = REGEX_TAGNAME.exec(tag);
                 if (match) {
-                    const styleData = resourceMap[match[1].toUpperCase()][parseInt(match[2])];
+                    const styleData = resourceMap[match[1].toUpperCase()][convertInt(match[2])];
                     if (styleData) {
                         if (index === 0) {
                             parent = tag;

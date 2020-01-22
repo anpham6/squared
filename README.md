@@ -35,7 +35,6 @@ GitHub
 <script>
     // optional
     squared.settings.targetAPI = 29;
-    squared.settings.resolutionDPI = 160;
 
     // without Express: use either console.log() or element.innerHTML to display using "system.write" commands
 
@@ -105,6 +104,7 @@ squared.settings = {
         'android.delegate.percent',
         'android.delegate.scrollbar',
         'android.delegate.background',
+        'android.delegate.css-grid',
         'android.delegate.radiogroup',
         'squared.sprite',
         'squared.css-grid',
@@ -125,7 +125,9 @@ squared.settings = {
         'android.resource.includes'
     ],
     targetAPI: 29,
-    resolutionDPI: 160,
+    resolutionDPI: 160, // Pixel C: 320dpi 2560x1800
+    resolutionScreenWidth: 1280,
+    resolutionScreenHeight: 900,
     framesPerSecond: 60,
     supportRTL: true,
     preloadImages: true,

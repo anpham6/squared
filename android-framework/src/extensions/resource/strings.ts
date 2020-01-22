@@ -78,7 +78,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         node.android('textAllCaps', 'true');
                                         const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
                                         if (fontStyle) {
-                                            fontStyle.fontSize = (parseFloat(fontStyle.fontSize) * this.options.fontVariantSmallCapsReduction) + 'px';
+                                            fontStyle.fontSize *= this.options.fontVariantSmallCapsReduction;
                                         }
                                     }
                                 }

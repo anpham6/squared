@@ -12,7 +12,7 @@ const { isPlainObject } = $lib.util;
 
 const REGEX_ID = /^@\+?id\//;
 
-function calculateBias(start: number, end: number, accuracy = 4) {
+function calculateBias(start: number, end: number, accuracy = 3) {
     if (start === 0) {
         return 0;
     }
@@ -20,22 +20,15 @@ function calculateBias(start: number, end: number, accuracy = 4) {
         return 1;
     }
     else {
-        return parseFloat(Math.max(start / (start + end), 0).toPrecision(accuracy));
+        return parseFloat(truncate(Math.max(start / (start + end), 0), accuracy));
     }
 }
 
-export function convertLength(value: string, dpi = 160, font = false, precision = 3) {
-    let result = parseFloat(value);
-    if (!isNaN(result)) {
-        if (dpi !== 160) {
-            result /= dpi / 160;
-            return (result !== 0 && result > -1 && result < 1 ? result.toPrecision(precision) : truncate(result, precision - 1)) + (font ? 'sp' : 'dp');
-        }
-        else {
-            return Math.round(result) + (font ? 'sp' : 'dp');
-        }
+export function convertLength(value: string | number, font = false, precision = 3) {
+    if (typeof value === 'string') {
+        value = parseFloat(value) || 0;
     }
-    return '0dp';
+    return !font ? Math.round(value) + 'dp' : truncate(value, precision) + 'sp';
 }
 
 export function getDocumentId(value: string) {
@@ -58,15 +51,15 @@ export function getVerticalBias(node: View) {
     return calculateBias(top, bottom, node.localSettings.floatPrecision);
 }
 
-export function createViewAttribute(externalData?: ExternalData, options?: ViewAttribute): ViewAttribute {
+export function createViewAttribute(data?: ExternalData, options?: ViewAttribute): ViewAttribute {
     if (options === undefined) {
         options = { android: {} };
     }
     else if (options.android === undefined) {
         options.android = {};
     }
-    if (externalData) {
-        const { android, app } = externalData;
+    if (data) {
+        const { android, app } = data;
         if (android) {
             Object.assign(options.android, android);
         }
@@ -80,7 +73,7 @@ export function createViewAttribute(externalData?: ExternalData, options?: ViewA
     return options;
 }
 
-export function createStyleAttribute(options?: ExternalData) {
+export function createStyleAttribute(data?: ExternalData) {
     const result: StyleAttribute = {
         output: {
             path: 'res/values',
@@ -90,10 +83,10 @@ export function createStyleAttribute(options?: ExternalData) {
         parent: '',
         items: {}
     };
-    if (isPlainObject(options)) {
+    if (isPlainObject(data)) {
         for (const attr in result) {
-            if (typeof options[attr] === typeof result[attr]) {
-                result[attr] = options[attr];
+            if (typeof data[attr] === typeof result[attr]) {
+                result[attr] = data[attr];
             }
         }
     }
