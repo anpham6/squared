@@ -355,6 +355,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract innerBefore?: T;
     public abstract innerAfter?: T;
     public abstract companion?: T;
+    public abstract labelFor?: T;
     public abstract extracted?: T[];
     public abstract horizontalRows?: T[][];
     public abstract readonly renderChildren: T[];
@@ -731,31 +732,34 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return NODE_TRAVERSE.LINEBREAK;
         }
         else if (this.pageFlow || this.positionAuto) {
+            const blockDimension = this.blockDimension;
             if (isArray(siblings)) {
                 if (cleared?.has(this)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else {
-                    const lastSibling = siblings[siblings.length - 1];
-                    if (this.floating && lastSibling.floating) {
-                        if (horizontal && this.float === lastSibling.float) {
+                    const previous = siblings[siblings.length - 1];
+                    const floating = this.floating;
+                    if (floating && previous.floating) {
+                        const float = this.float;
+                        if (horizontal && (float === previous.float && cleared?.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === float))) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (aboveRange(this.linear.top, lastSibling.linear.bottom)) {
+                        else if (aboveRange(this.linear.top, previous.linear.bottom)) {
                             return NODE_TRAVERSE.FLOAT_WRAP;
                         }
-                        else if (horizontal && cleared?.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === this.float)) {
-                            return NODE_TRAVERSE.HORIZONTAL;
-                        }
                     }
-                    else if (!this.floating && siblings.every(item => item.float === 'right' && aboveRange(this.textBounds?.top || Number.NEGATIVE_INFINITY, item.bounds.bottom))) {
+                    else if (floating && siblings.some(item => item.multiline)) {
+                        return NODE_TRAVERSE.FLOAT_WRAP;
+                    }
+                    else if (!floating && siblings.every(item => item.float === 'right' && aboveRange(this.textBounds?.top || Number.NEGATIVE_INFINITY, item.bounds.bottom))) {
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                     else if (horizontal !== undefined) {
-                        if (this.floating && lastSibling.blockStatic && !horizontal) {
+                        if (floating && previous.blockStatic && !horizontal) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (!/^inline-/.test(this.display)) {
+                        else if (!blockDimension) {
                             const { top, bottom } = this.linear;
                             if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
@@ -769,15 +773,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         }
                                         else if (this.styleText) {
                                             const textBounds = this.textBounds;
-                                            if (textBounds && textBounds.top > top) {
-                                                actualTop = textBounds.top;
+                                            if (textBounds) {
+                                                actualTop = Math.max(top, textBounds.top);
                                             }
                                         }
                                     }
                                     let maxBottom = Number.NEGATIVE_INFINITY;
                                     for (const item of siblings) {
-                                        if (item.float === 'right' && item.bounds.bottom > maxBottom) {
-                                            maxBottom = item.bounds.bottom;
+                                        if (item.float === 'right') {
+                                            maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
                                         }
                                     }
                                     if (belowRange(actualTop, maxBottom)) {
@@ -793,12 +797,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                     }
-                    if (this.blockDimension && checkBlockDimension(this, lastSibling)) {
+                    if (blockDimension && checkBlockDimension(this, previous)) {
                         return NODE_TRAVERSE.INLINE_WRAP;
                     }
                 }
             }
-            if (this.blockDimension && this.css('width') === '100%' && !this.hasPX('maxWidth')) {
+            if (blockDimension && this.css('width') === '100%' && !this.hasPX('maxWidth')) {
                 return NODE_TRAVERSE.VERTICAL;
             }
             const parent = this.actualParent || this.documentParent;
@@ -826,7 +830,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                     }
                 }
-                if (this.blockDimension && checkBlockDimension(this, previous)) {
+                if (blockDimension && checkBlockDimension(this, previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }
@@ -1012,7 +1016,42 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public actualRect(direction: string, dimension: BoxType = 'linear', all = false) {
-        const value: number = this[dimension][direction];
+        let value: number = this[dimension][direction];
+        if (this.positionRelative && this.floating) {
+            switch (direction) {
+                case 'top':
+                    if (this.has('top')) {
+                        value += this.top;
+                    }
+                    else {
+                        value -= this.bottom;
+                    }
+                    break;
+                case 'bottom':
+                    if (!this.has('top')) {
+                        value -= this.bottom;
+                    }
+                    else {
+                        value += this.top;
+                    }
+                    break;
+                case 'left':
+                    if (this.has('left')) {
+                        value += this.left;
+                    }
+                    else {
+                        value -= this.right;
+                    }
+                case 'right':
+                    if (!this.has('left')) {
+                        value -= this.right;
+                    }
+                    else {
+                        value += this.left;
+                    }
+                    break;
+            }
+        }
         if (this.inputElement || all) {
             const companion = this.companion;
             if (companion?.visible === false) {
@@ -1020,15 +1059,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 switch (direction) {
                     case 'top':
                     case 'left':
-                        if (outer < value) {
-                            return outer;
-                        }
+                        value = Math.min(outer, value);
                         break;
                     case 'right':
                     case 'bottom':
-                        if (outer > value) {
-                            return outer;
-                        }
+                        value = Math.max(outer, value);
                         break;
                 }
             }

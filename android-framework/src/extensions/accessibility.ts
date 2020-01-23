@@ -13,25 +13,29 @@ export default class <T extends android.base.View> extends squared.base.extensio
                     case 'INPUT_RADIO':
                     case 'INPUT_CHECKBOX': {
                         const id = node.elementId;
-                        [node.nextSibling, node.previousSibling].some((sibling: T) => {
-                            if (sibling?.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
+                        [node.nextSibling, node.previousSibling].some((sibling: T | null) => {
+                            if (sibling?.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
+                                let valid = false;
                                 if (id && id === sibling.toElementString('htmlFor')) {
-                                    node.companion = sibling;
+                                    valid = true;
                                 }
-                                else if (sibling.textElement && sibling.documentParent.tagName === 'LABEL') {
-                                    node.companion = sibling;
-                                    sibling.documentParent.renderAs = node;
+                                else if (sibling.textElement) {
+                                    const actualParent = sibling.actualParent as T;
+                                    if (actualParent.tagName === 'LABEL') {
+                                        actualParent.renderAs = node;
+                                        valid = true;
+                                    }
+                                    else if (sibling.plainText) {
+                                        valid = true;
+                                    }
                                 }
-                                else if (sibling.plainText) {
-                                    node.companion = sibling;
+                                if (valid) {
+                                    sibling.labelFor = node;
+                                    if (!this.options.showLabel) {
+                                        sibling.hide();
+                                    }
+                                    return true;
                                 }
-                                else {
-                                    return false;
-                                }
-                                if (!this.options.showLabel) {
-                                    sibling.hide();
-                                }
-                                return true;
                             }
                             return false;
                         });

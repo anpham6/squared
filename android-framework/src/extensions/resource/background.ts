@@ -462,7 +462,7 @@ const roundFloat = (value: string) => Math.round(parseFloat(value));
 const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
-const constrictedWidth = (node: View) => !node.inline && node.hasPX('width', true, true) && node.cssInitial('width') !== '100%';
+const constrictedWidth = (node: View) => !node.inline && !node.floating && node.hasPX('width', true, true) && node.cssInitial('width') !== '100%';
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     const result: GradientColorStop[] = [];
@@ -785,8 +785,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             else if (node.ascend({ condition: (item: T) => constrictedWidth(item) && (!item.layoutElement || item === node), startSelf: true }).length === 0) {
-                const screenWidth = this._maxScreenWidth;
-                boundsWidth = Math.min(boundsWidth, screenWidth, screenWidth - bounds.left - (window.innerWidth - bounds.right));
+                boundsWidth = Math.min(boundsWidth, this._maxScreenWidth);
             }
             const result: BackgroundImageData[] = [];
             const images: (string | GradientTemplate)[] = [];

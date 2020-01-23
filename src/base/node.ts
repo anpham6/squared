@@ -2596,7 +2596,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 result = right - left;
             }
             else {
-                if (this.display === 'table-cell' || this.actualParent?.flexElement && /^row/.test(this.actualParent.css('flexDirection'))) {
+                if (this.display === 'table-cell' || this.actualParent?.flexElement && /^row/.test(this.actualParent.css('flexDirection')) && this.flexbox.grow > 0) {
                     result = this.bounds.width;
                 }
                 else {
@@ -2620,7 +2620,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.actualHeight;
         if (result === undefined) {
             if (!this.plainText) {
-                if (this.display === 'table-cell' || this.actualParent?.flexElement && /^column/.test(this.actualParent.css('flexDirection'))) {
+                if (this.display === 'table-cell' || this.actualParent?.flexElement && /^column/.test(this.actualParent.css('flexDirection')) && this.flexbox.grow > 0) {
                     result = this.bounds.height;
                 }
                 else {

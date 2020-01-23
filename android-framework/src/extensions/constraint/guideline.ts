@@ -11,7 +11,7 @@ const $lib = squared.lib;
 const { formatPX } = $lib.css;
 const { withinRange } = $lib.util;
 
-const { NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
+const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 export default class Guideline<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ConstraintGuidelineOptions = {
@@ -27,7 +27,6 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
     }
 
     public processNode(node: T, parent: T) {
-        node.exclude({ procedure: NODE_PROCEDURE.CONSTRAINT });
         return {
             output: this.application.renderNode(
                 new LayoutUI(
@@ -75,6 +74,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                     }
                 }
             }
+            item.positioned = true;
         });
         if (circlePosition) {
             if (anchor === undefined) {

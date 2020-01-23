@@ -510,6 +510,7 @@ declare namespace base {
         innerBefore?: NodeUI;
         innerAfter?: NodeUI;
         companion?: NodeUI;
+        labelFor?: NodeUI;
         extracted?: NodeUI[];
         horizontalRows?: NodeUI[][];
         readonly excludeSection: number;

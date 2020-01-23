@@ -1017,7 +1017,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         let l = k;
                         let m = 0;
-                        if (nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE) && parentY.layoutVertical) {
+                        if (parentY.layoutVertical && nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
                             horizontal.push(nodeY);
                             l++;
                             m++;
@@ -1032,6 +1032,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             for ( ; l < length; l++, m++) {
                                 const item = axisY[l];
                                 if (item.pageFlow) {
+                                    if (item.labelFor && !item.visible) {
+                                        m--;
+                                        continue;
+                                    }
                                     if (floatContainer) {
                                         if (floatActive.size) {
                                             const float = cleared.get(item);
@@ -1067,7 +1071,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             const status = item.alignedVertically(horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0);
                                             if (status > 0) {
                                                 if (horizontal.length) {
-                                                    if (status !== NODE_TRAVERSE.FLOAT_INTERSECT && status !== NODE_TRAVERSE.FLOAT_BLOCK && floatActive.size && floatCleared.get(item) !== 'both' && !item.siblingsLeading.some((node: T) => node.lineBreak && !cleared.has(node))) {
+                                                    if (status < NODE_TRAVERSE.FLOAT_BLOCK && floatActive.size && floatCleared.get(item) !== 'both' && !item.siblingsLeading.some((node: T) => node.lineBreak && !cleared.has(node))) {
                                                          if (!item.floating || previous.floating && !aboveRange(item.linear.top, previous.linear.bottom)) {
                                                             if (floatCleared.has(item)) {
                                                                 if (!item.floating) {

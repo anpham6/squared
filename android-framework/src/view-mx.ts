@@ -231,6 +231,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         private _localization = false;
         private _containerType = 0;
         private _controlId?: string;
+        private _labelFor?: T;
         private __android: StringMap = {};
         private __app: StringMap = {};
 
@@ -1332,7 +1333,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 value = this.actualPadding(attr, value);
                                 break;
                             case 'paddingBottom':
-                                if (this.layoutVertical && this.hasPX('height')) {
+                                if (this.layoutVertical && !this.layoutElement && this.hasPX('height')) {
                                     continue;
                                 }
                                 else {
@@ -1419,26 +1420,26 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 else if (this.visibleStyle.borderWidth) {
-                    if (this.css('boxSizing') !== 'border-box') {
-                        if (!this.is(CONTAINER_NODE.LINE) && (this.renderChildren.length === 0 || !this.naturalChildren.every(node => !node.pageFlow && node.absoluteParent === this))) {
-                            top += this.borderTopWidth;
-                            right += this.borderRightWidth;
-                            bottom += this.borderBottomWidth;
-                            left += this.borderLeftWidth;
-                        }
-                    }
-                    else if (this.gridElement) {
+                    if (this.layoutElement) {
                         top += this.borderTopWidth;
                         right += this.borderRightWidth;
                         bottom += this.borderBottomWidth;
                         left += this.borderLeftWidth;
-                        switch (this.css('alignContent')) {
-                            case 'space-around':
-                            case 'space-evenly':
-                                top -= this.paddingTop;
-                                bottom -= this.paddingBottom;
-                                break;
+                        if (this.gridElement) {
+                            switch (this.css('alignContent')) {
+                                case 'space-around':
+                                case 'space-evenly':
+                                    top -= this.paddingTop;
+                                    bottom -= this.paddingBottom;
+                                    break;
+                            }
                         }
+                    }
+                    else if (this.contentBox && !this.is(CONTAINER_NODE.LINE) && (this.renderChildren.length === 0 || !this.naturalChildren.every(node => !node.pageFlow && node.absoluteParent === this))) {
+                        top += this.borderTopWidth;
+                        right += this.borderRightWidth;
+                        bottom += this.borderBottomWidth;
+                        left += this.borderLeftWidth;
                     }
                 }
                 if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
@@ -1918,6 +1919,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 return boxHeight > 0 ? this.contentBoxHeight / boxHeight : 0;
             }
             return 0;
+        }
+
+        get labelFor() {
+            return this._labelFor;
+        }
+        set labelFor(value) {
+            if (value) {
+                value.companion = this;
+            }
+            this._labelFor = value;
         }
 
         get innerWrapped() {

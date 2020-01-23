@@ -453,13 +453,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 if (minSize > 0 && !item.hasPX(horizontal ? 'minWidth' : 'minHeight')) {
                     item.css(horizontal ? 'minWidth' : 'minHeight', formatPX(minSize), true);
                 }
-                if (size === 0 && cellSpan === data.length) {
-                    if (horizontal) {
-                        item.setLayoutWidth('match_parent');
-                    }
-                    else {
-                        item.setLayoutHeight('match_parent');
-                    }
+                if (size === 0 && sizeWeight > 0 && horizontal && cellSpan === data.length) {
+                    item.setLayoutWidth('match_parent');
                 }
                 else {
                     let columnWeight = horizontal && column.flexible;

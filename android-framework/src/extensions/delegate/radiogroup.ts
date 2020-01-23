@@ -23,10 +23,11 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
 
     public processNode(node: T, parent: T) {
         const inputName = getInputName(<HTMLInputElement> node.element);
-        const children: T[] = [];
+        const radiogroup: T[] = [];
         const removeable: T[] = [];
-        const radioButton: T[] = [];
-        parent.each((item: T) => {
+        let first = -1;
+        let last = -1;
+        parent.each((item: T, index) => {
             const renderAs = item.renderAs as T;
             let remove: T | undefined;
             if (renderAs) {
@@ -36,29 +37,26 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 item = renderAs;
             }
             if (item.is(CONTAINER_NODE.RADIO) && !item.rendered && getInputName(<HTMLInputElement> item.element) === inputName) {
-                children.push(item);
-                radioButton.push(item);
+                radiogroup.push(item);
+                if (first === -1) {
+                    first = index;
+                }
+                last = index;
             }
-            else if (children.length && !item.visible && !item.is(CONTAINER_NODE.RADIO)) {
-                children.push(item);
-            }
-            else {
-                return;
+            else if (!item.visible) {
+                const labelFor = item.labelFor as T | undefined;
+                if (labelFor && radiogroup.includes(labelFor)) {
+                    last = index;
+                }
             }
             if (remove) {
                 removeable.push(remove);
             }
         });
-        for (let i = children.length - 1; i >= 0; i--) {
-            if (radioButton.includes(children[i])) {
-                children.splice(i + 1);
-                break;
-            }
-        }
-        if (children.length > 1) {
-            const container = this.controller.createNodeGroup(node, children, parent, true);
+        if (radiogroup.length > 1) {
+            const linearX = NodeUI.linearData(parent.children.slice(first, last + 1)).linearX;
+            const container = this.controller.createNodeGroup(node, radiogroup, parent, true);
             const controlName = CONTAINER_ANDROID.RADIOGROUP;
-            const linearX = NodeUI.linearData(children).linearX;
             if (linearX) {
                 container.addAlign(NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.SEGMENTED);
                 container.android('orientation', STRING_ANDROID.HORIZONTAL);
@@ -75,7 +73,10 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             }
             container.exclude({ resource: NODE_RESOURCE.ASSET });
             const dataset = node.dataset;
-            container.render(!dataset.use && dataset.target ? this.application.resolveTarget(dataset.target) : parent);
+            container.render(dataset.target && !dataset.use ? this.application.resolveTarget(dataset.target) : parent);
+            for (const item of radiogroup) {
+                item.positioned = true;
+            }
             for (const item of removeable) {
                 item.hide();
             }
