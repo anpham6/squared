@@ -533,8 +533,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
         }
         function setHtmlBackground(node: T) {
-            const parent = node.actualParent as T;
-            if (!parent.visible) {
+            const parent = node.actualParent as T | null;
+            if (parent?.visible === false) {
                 const background = parent.android('background');
                 if (background !== '') {
                     setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, background);

@@ -20,9 +20,9 @@ export default class <T extends android.base.View> extends squared.base.extensio
                                     valid = true;
                                 }
                                 else if (sibling.textElement) {
-                                    const actualParent = sibling.actualParent as T;
-                                    if (actualParent.tagName === 'LABEL') {
-                                        actualParent.renderAs = node;
+                                    const parent = sibling.actualParent as T;
+                                    if (parent.tagName === 'LABEL') {
+                                        parent.renderAs = node;
                                         valid = true;
                                     }
                                     else if (sibling.plainText) {

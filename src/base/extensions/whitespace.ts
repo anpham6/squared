@@ -194,10 +194,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 if (children[0].documentBody) {
                     continue;
                 }
-                const length = children.length;
-                const blockParent = isBlockElement(node) && !(node.actualParent as T).layoutElement;
+                const actualParent = node.actualParent as T;
+                const blockParent = isBlockElement(node) && !actualParent.layoutElement;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;
+                const length = children.length;
                 for (let i = 0; i < length; i++) {
                     const current = children[i] as T;
                     if (current.pageFlow) {
@@ -337,7 +338,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                 }
-                if (!hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && !(node.documentParent.flexElement && /^column/.test(node.documentParent.css('flexDirection'))) && node.tagName !== 'FIELDSET') {
+                if (!hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && !actualParent.layoutElement && node.tagName !== 'FIELDSET') {
                     if (firstChild) {
                         applyMarginCollapse(node, firstChild, true);
                     }
@@ -411,7 +412,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 belowParent = below.renderParent;
                             }
                             const offset = getMarginOffset();
-                            if (offset > 0) {
+                            if (offset >= 1) {
                                 if (below.visible) {
                                     below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                     valid = true;
@@ -479,9 +480,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
 
     public afterConstraints() {
         for (const node of this.application.processing.cache) {
-            if (node.pageFlow) {
+            if (node.pageFlow && node.styleElement && node.inlineVertical && !node.positioned) {
                 const renderParent = node.renderParent;
-                if (renderParent && node.styleElement && node.inlineVertical && !node.positioned && !node.documentParent.layoutElement && !renderParent.tableElement) {
+                if (renderParent && !renderParent.tableElement && node.actualParent?.layoutElement === false) {
                     if (node.blockDimension && !node.floating) {
                         if (renderParent.layoutVertical) {
                             const children = renderParent.renderChildren;
@@ -537,11 +538,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 horizontal = renderParent.renderChildren as T[];
                             }
                             if (horizontal) {
-                                const actualParent = node.actualParent;
-                                if (actualParent) {
+                                const parent = node.actualParent;
+                                if (parent) {
                                     const top = node.actualRect('top');
                                     let maxBottom = Number.NEGATIVE_INFINITY;
-                                    for (const item of actualParent.naturalChildren as T[]) {
+                                    for (const item of parent.naturalChildren as T[]) {
                                         if (horizontal.includes(item)) {
                                             break;
                                         }

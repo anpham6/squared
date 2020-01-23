@@ -1,4 +1,4 @@
-import { AppSessionUI, ControllerUISettings, FileAsset, LayoutResult, NodeTemplate, UserUISettings } from '../../@types/base/application';
+import { AppNodeUIOptions, AppSessionUI, ControllerUISettings, FileAsset, LayoutResult, NodeTemplate, UserUISettings } from '../../@types/base/application';
 
 import Application from './application';
 import NodeList from './nodelist';
@@ -211,7 +211,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (isTextNode(element)) {
             if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (parent.element as Element).childElementCount === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
-                const node = this.createNode(element, false);
+                const node = this.createNode({ parent, element, append: false });
                 if (parent) {
                     node.cssApply(parent.textStyle);
                     node.fontSize = parent.fontSize;
@@ -221,10 +221,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         else if (this.conditionElement(<HTMLElement> element)) {
             this.controllerHandler.applyDefaultStyles(element);
-            return this.createNode(element, false);
+            return this.createNode({ parent, element, append: false });
         }
         else {
-            const node = this.createNode(element, false);
+            const node = this.createNode({ parent, element, append: false });
             node.visible = false;
             node.excluded = true;
             return node;
@@ -304,12 +304,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public createNode(element?: Element, append = true, parent?: T, children?: T[]) {
+    public createNode(options: AppNodeUIOptions<T>) {
         const processing = this.processing;
-        const node = new this._nodeConstructor(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode) as T;
+        const { element, parent, children } = options;
+        const node = new this.Node(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode);
         if (parent) {
             node.depth = parent.depth + 1;
-            if (element === undefined && parent.naturalElement) {
+            if (parent.naturalElement && (!element || element.parentElement === null)) {
                 node.actualParent = parent;
             }
         }
@@ -318,7 +319,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 item.parent = node;
             }
         }
-        if (append) {
+        if (!(options.append === false)) {
             processing.cache.append(node, children !== undefined);
         }
         return node;
@@ -1421,7 +1422,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 inlineBelow[0].addAlign(NODE_ALIGNMENT.EXTENDABLE);
             }
             inlineBelow.unshift(node);
-            const wrapper = this.createNode(undefined, true, parent, inlineBelow);
+            const wrapper = this.createNode({ parent, children: inlineBelow });
             wrapper.containerName = node.containerName;
             wrapper.inherit(node, 'boxStyle');
             wrapper.innerWrapped = node;

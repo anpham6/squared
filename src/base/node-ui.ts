@@ -37,10 +37,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         let actualLeft: number;
         node.each((item: T) => {
             if (item.companion) {
-                actualTop = item.actualRect('top', 'linear', true);
-                actualRight = item.actualRect('right', 'linear', true);
-                actualBottom = item.actualRect('bottom', 'linear', true);
-                actualLeft = item.actualRect('left', 'linear', true);
+                actualTop = item.actualRect('top', 'linear');
+                actualRight = item.actualRect('right', 'linear');
+                actualBottom = item.actualRect('bottom', 'linear');
+                actualLeft = item.actualRect('left', 'linear');
             }
             else {
                 ({ top: actualTop, right: actualRight, bottom: actualBottom, left: actualLeft } = item.linear);
@@ -89,10 +89,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         });
         if (list.length > 1) {
             list.sort((a, b) => {
-                if (a.length && b.length === 0 || b.textElement && a.inputElement && b.childIndex < a.childIndex) {
+                if (a.length && b.length === 0) {
                     return 1;
                 }
-                else if (b.length && a.length === 0 || a.textElement && b.inputElement && a.childIndex < b.childIndex) {
+                else if (b.length && a.length === 0) {
                     return -1;
                 }
                 let heightA = a.baselineHeight;
@@ -116,24 +116,28 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (!isEqual(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
                 }
-                else {
-                    if (a.textElement && b.textElement) {
-                        if (!a.plainText && b.plainText) {
-                            return -1;
-                        }
-                        else if (a.plainText && !b.plainText) {
-                            return 1;
-                        }
-                    }
-                    else if (a.inputElement && b.inputElement && a.containerType !== b.containerType) {
-                        return a.containerType > b.containerType ? -1 : 1;
-                    }
-                    if (a.bounds.bottom > b.bounds.bottom) {
+                else if (a.textElement && b.textElement) {
+                    if (!a.plainText && b.plainText) {
                         return -1;
                     }
-                    else if (a.bounds.bottom < b.bounds.bottom) {
+                    else if (a.plainText && !b.plainText) {
                         return 1;
                     }
+                }
+                else if (a.inputElement && b.inputElement && a.containerType !== b.containerType) {
+                    return a.containerType > b.containerType ? -1 : 1;
+                }
+                else if (b.textElement && a.inputElement && b.childIndex < a.childIndex) {
+                    return 1;
+                }
+                else if (a.textElement && b.inputElement && a.childIndex < b.childIndex) {
+                    return -1;
+                }
+                if (a.bounds.bottom > b.bounds.bottom) {
+                    return -1;
+                }
+                else if (a.bounds.bottom < b.bounds.bottom) {
+                    return 1;
                 }
                 return 0;
             });
@@ -284,7 +288,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static partitionRows(list: T[]) {
-        const parent = list[0].actualParent as T | null;
+        const parent = list[0].actualParent;
         const cleared = parent?.floatContainer ? NodeUI.linearData(parent.naturalElements as T[], true).cleared : undefined;
         const result: T[][] = [];
         let row: T[] = [];
@@ -386,6 +390,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract extractAttributes(depth?: number): string;
     public abstract alignParent(position: string): boolean;
     public abstract alignSibling(position: string, documentId?: string): string;
+    public abstract actualRect(direction: string, dimension?: BoxType): number;
     public abstract localizeString(value: string): string;
 
     public abstract set containerType(value: number);
@@ -665,34 +670,31 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public setExclusions() {
         if (this.styleElement) {
-            const actualParent = this.actualParent;
-            if (actualParent) {
-                const dataset = (this._element as HTMLElement).dataset;
-                const parentDataset = actualParent.dataset;
-                if (Object.keys(dataset).length || Object.keys(parentDataset).length) {
-                    const parseExclusions = (attr: string, enumeration: {}) => {
-                        let exclude = dataset[attr] || '';
-                        let offset = 0;
-                        const value = parentDataset[attr + 'Child'];
-                        if (value) {
-                            exclude += (exclude !== '' ? '|' : '') + value;
-                        }
-                        if (exclude !== '') {
-                            for (const name of exclude.split(/\s*\|\s*/)) {
-                                const i: number = enumeration[name.toUpperCase()] || 0;
-                                if (i > 0 && !hasBit(offset, i)) {
-                                    offset |= i;
-                                }
+            const dataset = (this._element as HTMLElement).dataset;
+            const parentDataset = this.actualParent?.dataset || {};
+            if (Object.keys(dataset).length || Object.keys(parentDataset).length) {
+                const parseExclusions = (attr: string, enumeration: {}) => {
+                    let exclude = dataset[attr] || '';
+                    let offset = 0;
+                    const value = parentDataset[attr + 'Child'];
+                    if (value) {
+                        exclude += (exclude !== '' ? '|' : '') + value;
+                    }
+                    if (exclude !== '') {
+                        for (const name of exclude.split(/\s*\|\s*/)) {
+                            const i: number = enumeration[name.toUpperCase()] || 0;
+                            if (i > 0 && !hasBit(offset, i)) {
+                                offset |= i;
                             }
                         }
-                        return offset;
-                    };
-                    this.exclude({
-                        resource: parseExclusions('excludeResource', NODE_RESOURCE),
-                        procedure: parseExclusions('excludeProcedure', NODE_PROCEDURE),
-                        section: parseExclusions('excludeSection', APP_SECTION)
-                    });
-                }
+                    }
+                    return offset;
+                };
+                this.exclude({
+                    resource: parseExclusions('excludeResource', NODE_RESOURCE),
+                    procedure: parseExclusions('excludeProcedure', NODE_PROCEDURE),
+                    section: parseExclusions('excludeSection', APP_SECTION)
+                });
             }
         }
     }
@@ -1015,106 +1017,60 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    public actualRect(direction: string, dimension: BoxType = 'linear', all = false) {
-        let value: number = this[dimension][direction];
-        if (this.positionRelative && this.floating) {
-            switch (direction) {
-                case 'top':
-                    if (this.has('top')) {
-                        value += this.top;
-                    }
-                    else {
-                        value -= this.bottom;
-                    }
-                    break;
-                case 'bottom':
-                    if (!this.has('top')) {
-                        value -= this.bottom;
-                    }
-                    else {
-                        value += this.top;
-                    }
-                    break;
-                case 'left':
-                    if (this.has('left')) {
-                        value += this.left;
-                    }
-                    else {
-                        value -= this.right;
-                    }
-                case 'right':
-                    if (!this.has('left')) {
-                        value -= this.right;
-                    }
-                    else {
-                        value += this.left;
-                    }
-                    break;
-            }
-        }
-        if (this.inputElement || all) {
-            const companion = this.companion;
-            if (companion?.visible === false) {
-                const outer: number = companion[dimension][direction];
-                switch (direction) {
-                    case 'top':
-                    case 'left':
-                        value = Math.min(outer, value);
-                        break;
-                    case 'right':
-                    case 'bottom':
-                        value = Math.max(outer, value);
-                        break;
-                }
-            }
-        }
-        return value;
-    }
-
     public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
-        let node = this as T;
-        while (!node.naturalChild) {
-            const innerWrapped = node.innerWrapped as T;
-            if (innerWrapped) {
-                node = innerWrapped;
-                if (node.naturalChild && node.getBox(attr === 'paddingTop' ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM)[0] !== 1) {
+        if (!this.layoutElement) {
+            let node = this as T;
+            while (!node.naturalChild) {
+                const innerWrapped = node.innerWrapped as T;
+                if (innerWrapped) {
+                    node = innerWrapped;
+                    if (node.naturalChild && node.getBox(attr === 'paddingTop' ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM)[0] !== 1) {
+                        return value;
+                    }
+                }
+                else {
                     return value;
                 }
             }
-            else {
-                return value;
-            }
-        }
-        let reset = false;
-        if (canCascadeChildren(node)) {
-            function cascade(children: T[]) {
-                let valid = false;
-                for (const item of children) {
-                    if (item.blockStatic) {
-                        return false;
-                    }
-                    else if (item.inlineStatic) {
-                        if (item.has('lineHeight') && item.lineHeight > item.bounds.height) {
+            let reset = false;
+            if (canCascadeChildren(node)) {
+                function cascade(children: T[]) {
+                    let valid = false;
+                    for (const item of children) {
+                        if (item.blockStatic) {
                             return false;
                         }
-                        else if (item[attr] >= value) {
-                            valid = true;
-                        }
-                        else if (canCascadeChildren(item)) {
-                            if (!cascade(item.naturalElements as T[])) {
+                        else if (item.inlineStatic) {
+                            if (item.has('lineHeight') && item.lineHeight > item.bounds.height) {
                                 return false;
                             }
-                            else {
+                            else if (item[attr] >= value) {
                                 valid = true;
+                            }
+                            else if (canCascadeChildren(item)) {
+                                if (!cascade(item.naturalElements as T[])) {
+                                    return false;
+                                }
+                                else {
+                                    valid = true;
+                                }
                             }
                         }
                     }
+                    return valid;
                 }
-                return valid;
+                reset = cascade(node.naturalElements as T[]);
             }
-            reset = cascade(node.naturalElements as T[]);
+            return reset ? 0 : value;
         }
-        return reset ? 0 : value;
+        else if (this.gridElement) {
+            switch (this.css('alignContent')) {
+                case 'space-around':
+                case 'space-evenly':
+                    return 0;
+            }
+        }
+        return value;
     }
 
     public cloneBase(node: T) {
@@ -1358,6 +1314,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._controlName || '';
     }
 
+    set actualParent(value) {
+        this._cached.actualParent = value;
+    }
+    get actualParent(): T | null {
+        let result = this._cached.actualParent;
+        if (result === undefined) {
+            result = super.actualParent as T | null;
+            if (result === null) {
+                const innerWrapped = this.innerMostWrapped;
+                if (innerWrapped) {
+                    result = innerWrapped.actualParent;
+                }
+            }
+            this._cached.actualParent = result;
+        }
+        return result;
+    }
+
     set siblingsLeading(value) {
         this._siblingsLeading = value;
     }
@@ -1417,10 +1391,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get onlyChild() {
-        if (!this.documentRoot) {
-            return (this.renderParent?.renderChildren.length ?? this.parent?.length) === 1;
-        }
-        return false;
+        return (this.renderParent?.renderChildren.length ?? this.parent?.length) === 1 && !this.documentRoot;
     }
 
     get textEmpty() {

@@ -21,3 +21,7 @@ interface ChromeAsset extends Omit<RawAsset, keyof Dimension | 'content'> {
     gzipQuality?: number;
     brotliQuality?: number;
 }
+
+interface ChromeNodeOptions {
+    element: Element;
+}

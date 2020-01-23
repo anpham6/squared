@@ -9,7 +9,7 @@ const { formatPX } = squared.lib.css;
 
 const { NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
-const getLayoutDimension = (value: string) => /^space/.test(value) ? 'match_parent' : 'wrap_content';
+const getLayoutDimension = (value: string) => value === 'space-between' ? 'match_parent' : 'wrap_content';
 
 export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {

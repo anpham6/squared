@@ -104,6 +104,13 @@ export interface AppProcessing<T extends Node> {
     node?: T;
 }
 
+export interface AppNodeUIOptions<T extends NodeUI> {
+    parent?: T;
+    element?: Element | null;
+    children?: T[];
+    append?: boolean;
+}
+
 export interface ExtensionDependency {
     name: string;
     preload: boolean;

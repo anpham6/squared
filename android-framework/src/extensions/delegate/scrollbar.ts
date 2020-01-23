@@ -83,12 +83,12 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             for (let i = 0; i < length; i++) {
                 let container: T;
                 if (i === 0) {
-                    container = this.application.createNode(<HTMLElement> node.element);
+                    container = this.application.createNode({ element: node.element, parent });
                     container.inherit(node, 'base', 'initial', 'styleMap');
                     parent.appendTry(node, container);
                 }
                 else {
-                    container = this.application.createNode();
+                    container = this.application.createNode({ parent });
                     container.inherit(node, 'base');
                     container.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
                 }

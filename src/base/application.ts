@@ -56,6 +56,7 @@ const parseConditionText = (rule: string, value: string) => new RegExp(`^@${rule
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public initializing = false;
     public closed = false;
+    public readonly Node: Constructor<T>;
     public readonly rootElements = new Set<HTMLElement>();
     public readonly session: AppSession<T> = {
         active: []
@@ -71,7 +72,6 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected _cascadeAll = false;
     protected _cache: squared.base.NodeList<T>;
-    protected _nodeConstructor: Constructor<Node>;
     protected _nodeAfterInsert: BindGeneric<Node, void>;
 
     private _controllerHandler: Controller<T>;
@@ -91,10 +91,11 @@ export default abstract class Application<T extends Node> implements squared.bas
         this._controllerHandler = controllerHandler;
         this._resourceHandler = <Resource<T>> (new ResourceConstructor(this, cache) as unknown);
         this._extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, cache) as unknown);
-        this._nodeConstructor = nodeConstructor;
+        this.Node = nodeConstructor;
         this._nodeAfterInsert = controllerHandler.afterInsertNode;
     }
 
+    public abstract createNode(options: {}): T;
     public abstract insertNode(element: Element, parent?: T): T | undefined;
     public abstract afterCreateCache(element: HTMLElement): void;
     public abstract finalize(): void;
@@ -311,10 +312,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         return false;
     }
 
-    public createNode(element: Element) {
-        return new this._nodeConstructor(this.nextId, this.processing.sessionId, element, this._nodeAfterInsert) as T;
-    }
-
     public toString() {
         return '';
     }
@@ -328,7 +325,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const extensions = this.extensionsCascade;
         const node = this.cascadeParentNode(element, 0, extensions.length ? extensions : undefined);
         if (node) {
-            const parent = new this._nodeConstructor(0, processing.sessionId, element.parentElement || document.body, this._nodeAfterInsert);
+            const parent = new this.Node(0, processing.sessionId, element.parentElement || document.body, this._nodeAfterInsert);
             node.parent = parent;
             node.actualParent = parent;
             node.childIndex = 0;

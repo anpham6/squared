@@ -166,7 +166,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                 }
                 const options = createViewAttribute();
-                ordinal = application.createNode();
+                ordinal = application.createNode({ parent });
                 ordinal.containerName = node.containerName + '_ORDINAL';
                 if (inside) {
                     controller.addBeforeOutsideTemplate(

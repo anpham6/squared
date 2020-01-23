@@ -46,7 +46,7 @@ function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     }
 }
 
-function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolean) {
+function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolean, maxScreenWidth: number, maxScreenHeight: number) {
     const data = horizontal ? mainData.column : mainData.row;
     const unit = data.unit;
     const length = unit.length;
@@ -78,18 +78,18 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
     value += data.gap * (data.length - 1);
     if (horizontal) {
         value += node.contentBox ? node.borderLeftWidth + node.borderRightWidth : node.contentBoxWidth;
-        return node.actualWidth - value;
+        return (maxScreenWidth > value ? Math.min(maxScreenWidth, node.actualWidth) : node.actualWidth) - value;
     }
     else {
         value += node.contentBox ? node.borderTopWidth + node.borderBottomWidth : node.contentBoxHeight;
-        return node.actualHeight - value;
+        return (maxScreenHeight > value && node.documentBody ? Math.min(maxScreenHeight, node.actualHeight) : node.actualHeight) - value;
     }
 }
 
-function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: string, horizontal: boolean, dimension: string, outerWrapper: boolean, MARGIN_START: number, MARGIN_END: number) {
+function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: string, horizontal: boolean, dimension: string, outerWrapper: boolean, MARGIN_START: number, MARGIN_END: number, maxScreenWidth: number, maxScreenHeight: number) {
     const data = horizontal ? mainData.column : mainData.row;
     if (/^space/.test(alignment)) {
-        const gridSize = getGridSize(node, mainData, horizontal);
+        const gridSize = getGridSize(node, mainData, horizontal, maxScreenWidth, maxScreenHeight);
         if (gridSize > 0) {
             const rowData = getRowData(mainData, horizontal);
             const itemCount = data.length;
@@ -191,7 +191,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
             }
         }
         else {
-            let gridSize = getGridSize(node, mainData, horizontal);
+            let gridSize = getGridSize(node, mainData, horizontal, maxScreenWidth, maxScreenHeight);
             if (gridSize > 0) {
                 switch (alignment) {
                     case 'center':
@@ -502,7 +502,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 return [cellStart, cellSpan];
             }
             if (REGEX_ALIGNSELF.test(alignSelf) || REGEX_JUSTIFYSELF.test(justifySelf)) {
-                renderAs = this.application.createNode();
+                renderAs = this.application.createNode({ parent });
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'base', 'initial');
@@ -603,9 +603,19 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const { alignContent, justifyContent } = mainData;
             const outerWrapper = node.renderParent === node.outerWrapper;
             if (CssGrid.isJustified(node)) {
-                setContentSpacing(node, mainData, justifyContent, true, 'width', outerWrapper, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT);
-                if (mainData.column.length === 1) {
-                    node.setLayoutWidth('match_parent');
+                setContentSpacing(node, mainData, justifyContent, true, 'width', outerWrapper, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, (<android.base.Controller<T>> this.controller).userSettings.resolutionScreenWidth - node.bounds.left, 0);
+                switch (justifyContent) {
+                    case 'space-around':
+                    case 'space-evenly':
+                        if (outerWrapper) {
+                            node.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed', 0.5, true);
+                        }
+                        break;
+                    default:
+                        if (mainData.column.length === 1) {
+                            node.setLayoutWidth('match_parent');
+                        }
+                        break;
                 }
             }
             else if (outerWrapper) {
@@ -620,7 +630,15 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
             }
             if (CssGrid.isAligned(node)) {
-                setContentSpacing(node, mainData, alignContent, false, 'height', outerWrapper, BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM);
+                setContentSpacing(node, mainData, alignContent, false, 'height', outerWrapper, BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, 0, (<android.base.Controller<T>> this.controller).userSettings.resolutionScreenHeight);
+                if (outerWrapper) {
+                    switch (justifyContent) {
+                        case 'space-around':
+                        case 'space-evenly':
+                            node.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0.5, true);
+                            break;
+                    }
+                }
             }
             else if (outerWrapper) {
                 if (node.contentBoxHeight > 0 && node.hasPX('height', false)) {

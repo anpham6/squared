@@ -54,9 +54,32 @@ function setNaturalElements(node: T) {
     return children;
 }
 
+function getFlexValue(node: T, attr: string, fallback: number, parent?: Node | null): number {
+    const value = (parent || node).css(attr);
+    if (isNumber(value)) {
+        return parseFloat(value);
+    }
+    else if (value === 'inherit' && parent === undefined) {
+        return getFlexValue(node, attr, fallback, node.actualParent);
+    }
+    return fallback;
+}
+
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
+    public static isFlexibleDirection(node: T, direction: string) {
+        const parent = node.actualParent;
+        if (parent && parent.flexElement && parent.css('flexDirection').startsWith(direction)) {
+            if (direction === 'column' && !parent.hasHeight) {
+                return false;
+            }
+            const { grow, shrink } = node.flexbox;
+            return grow > 0 || shrink !== 1;
+        }
+        return false;
+    }
+
     public documentRoot = false;
     public depth = -1;
     public childIndex = Number.POSITIVE_INFINITY;
@@ -477,6 +500,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
         }
         return false;
+    }
+
+    public cssParent(attr: string, value?: string, cache = false) {
+        return this.naturalChild ? (this.actualParent as T).css(attr, value, cache) : '';
     }
 
     public toInt(attr: string, initial = false, fallback = 0) {
@@ -1731,25 +1758,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.flexbox;
         if (result === undefined) {
             if (this.styleElement) {
-                const actualParent = this.actualParent as T;
-                const getFlexValue = (attr: string, initialValue: number, parent?: Node): number => {
-                    const value = (parent || this).css(attr);
-                    if (isNumber(value)) {
-                        return parseFloat(value);
-                    }
-                    else if (value === 'inherit' && parent === undefined) {
-                        return getFlexValue(attr, initialValue, actualParent);
-                    }
-                    return initialValue;
-                };
                 const alignSelf = this.css('alignSelf');
                 const justifySelf = this.css('justifySelf');
                 result = {
-                    alignSelf: alignSelf === 'auto' ? actualParent.css('alignItems') : alignSelf,
-                    justifySelf: justifySelf === 'auto' ? actualParent.css('justifyItems') : justifySelf,
+                    alignSelf: alignSelf === 'auto' ? this.cssParent('alignItems') : alignSelf,
+                    justifySelf: justifySelf === 'auto' ? this.cssParent('justifyItems') : justifySelf,
                     basis: this.css('flexBasis'),
-                    grow: getFlexValue('flexGrow', 0),
-                    shrink: getFlexValue('flexShrink', 1),
+                    grow: getFlexValue(this, 'flexGrow', 0),
+                    shrink: getFlexValue(this, 'flexShrink', 1),
                     order: this.toInt('order')
                 };
             }
@@ -2230,9 +2246,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get rightAligned() {
         let result = this._cached.rightAligned;
         if (result === undefined) {
-            const actualParent = this.actualParent;
-            if (actualParent && actualParent.flexElement) {
-                result = /right|end$/.test(actualParent.css('justifyContent'));
+            const parent = this.actualParent;
+            if (parent?.flexElement) {
+                result = /right|end$/.test(parent.css('justifyContent'));
             }
             else {
                 result = this.float === 'right' || this.autoMargin.left || !this.pageFlow && this.hasPX('right') || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'right';
@@ -2595,20 +2611,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const { left, right } = this.bounds;
                 result = right - left;
             }
+            else if (this.display === 'table-cell' || Node.isFlexibleDirection(this, 'row')) {
+                result = this.bounds.width;
+            }
             else {
-                if (this.display === 'table-cell' || this.actualParent?.flexElement && /^row/.test(this.actualParent.css('flexDirection')) && this.flexbox.grow > 0) {
-                    result = this.bounds.width;
+                result = this.width;
+                if (result > 0) {
+                    if (this.contentBox && !this.tableElement) {
+                        result += this.contentBoxWidth;
+                    }
                 }
                 else {
-                    result = this.width;
-                    if (result > 0) {
-                        if (this.contentBox && !this.tableElement) {
-                            result += this.contentBoxWidth;
-                        }
-                    }
-                    else {
-                        result = this.bounds.width;
-                    }
+                    result = this.bounds.width;
                 }
             }
             this._cached.actualWidth = result;
@@ -2619,20 +2633,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get actualHeight() {
         let result = this._cached.actualHeight;
         if (result === undefined) {
-            if (!this.plainText) {
-                if (this.display === 'table-cell' || this.actualParent?.flexElement && /^column/.test(this.actualParent.css('flexDirection')) && this.flexbox.grow > 0) {
-                    result = this.bounds.height;
+            if (!this.plainText && this.display !== 'table-cell' && !Node.isFlexibleDirection(this, 'column')) {
+                result = this.height;
+                if (result > 0) {
+                    if (this.contentBox && !this.tableElement) {
+                        result += this.contentBoxHeight;
+                    }
                 }
                 else {
-                    result = this.height;
-                    if (result > 0) {
-                        if (this.contentBox && !this.tableElement) {
-                            result += this.contentBoxHeight;
-                        }
-                    }
-                    else {
-                        result = this.bounds.height;
-                    }
+                    result = this.bounds.height;
                 }
             }
             else {

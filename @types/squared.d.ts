@@ -1,4 +1,4 @@
-import { AppHandler, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
+import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
 import { AutoMargin, AscendOptions, ExcludeOptions, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from './base/node';
 
@@ -42,6 +42,7 @@ declare namespace base {
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;
         readonly extensionManager: ExtensionManager<T>;
+        readonly Node: Constructor<T>;
         readonly fileHandler: File<T> | undefined;
         readonly extensions: Extension<T>[];
         readonly extensionsCascade: Extension<T>[];
@@ -50,7 +51,7 @@ declare namespace base {
         reset(): void;
         parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
         createCache(documentRoot: HTMLElement): boolean;
-        createNode(element: Element): T;
+        createNode(options: {}): T;
         insertNode(element: Element, parent?: T): T | undefined;
         afterCreateCache(element: HTMLElement): void;
         finalize(): void;
@@ -81,7 +82,7 @@ declare namespace base {
         readonly rootElements: Set<Element>;
         readonly layouts: FileAsset[];
         conditionElement(element: HTMLElement): boolean;
-        createNode(element?: Element, append?: boolean, parent?: T, children?: T[]): T;
+        createNode(options: AppNodeUIOptions<T>): T;
         renderNode(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
         resolveTarget(target: string | undefined): T | undefined;
         addLayout(layout: LayoutUI<T>): void;
@@ -450,6 +451,7 @@ declare namespace base {
         cssSpecificity(attr: string): number;
         cssTry(attr: string, value: string): boolean;
         cssFinally(attr: string): boolean;
+        cssParent(attr: string, value?: string, cache?: boolean): string;
         toInt(attr: string, initial?: boolean, fallback?: number): number;
         toFloat(attr: string, initial?: boolean, fallback?: number): number;
         toElementInt(attr: string, fallback?: number): number;
@@ -466,6 +468,7 @@ declare namespace base {
     }
 
     class Node implements Node {
+        public static isFlexibleDirection(node: Node, direction: string): boolean;
         constructor(id: number, sessionId?: string, element?: Element);
     }
 
@@ -564,7 +567,7 @@ declare namespace base {
         render(parent?: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
         renderFilter(predicate: IteratorPredicate<NodeUI, boolean>): NodeUI[];
-        actualRect(direction: string, dimension?: BoxType, all?: boolean): number;
+        actualRect(direction: string, dimension?: BoxType): number;
         actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
         previousSiblings(options?: SiblingOptions): NodeUI[];
