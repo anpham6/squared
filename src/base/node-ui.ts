@@ -744,7 +744,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     const floating = this.floating;
                     if (floating && previous.floating) {
                         const float = this.float;
-                        if (horizontal && (float === previous.float && cleared?.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === float))) {
+                        if (horizontal && (float === previous.float || cleared?.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === float))) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                         else if (aboveRange(this.linear.top, previous.linear.bottom)) {
@@ -761,7 +761,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         if (floating && previous.blockStatic && !horizontal) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (!blockDimension) {
+                        else if (!/^inline-/.test(this.display)) {
                             const { top, bottom } = this.linear;
                             if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;

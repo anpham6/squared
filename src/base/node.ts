@@ -2,6 +2,8 @@ import { AscendOptions, CachedValue, InitialData } from '../../@types/base/node'
 
 import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
 
+import { EXT_NAME } from './lib/constant';
+
 const $lib = squared.lib;
 const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
@@ -72,7 +74,34 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const parent = node.actualParent;
         if (parent && parent.flexElement && parent.css('flexDirection').startsWith(direction)) {
             if (direction === 'column' && !parent.hasHeight) {
-                return false;
+                const grandParent = parent.actualParent;
+                if (grandParent) {
+                    if (grandParent.flexElement && !grandParent.css('flexDirection').includes('column')) {
+                        let maxHeight = 0;
+                        let parentHeight = 0;
+                        for (const item of grandParent) {
+                            const height = (item.data(EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
+                            if (height > maxHeight) {
+                                maxHeight = height;
+                            }
+                            if (item === parent) {
+                                parentHeight = height;
+                                if (parentHeight < maxHeight) {
+                                    break;
+                                }
+                            }
+                        }
+                        if (parentHeight >= maxHeight) {
+                            return false;
+                        }
+                    }
+                    else if (!grandParent.gridElement) {
+                        return false;
+                    }
+                }
+                else {
+                    return false;
+                }
             }
             const { grow, shrink } = node.flexbox;
             return grow > 0 || shrink !== 1;
@@ -266,7 +295,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public ascend(options: AscendOptions = {}) {
-        const { condition, including, excluding } = options;
+        const { condition, including, every, excluding } = options;
         let attr = options.attr;
         if (!isString(attr)) {
             attr = 'actualParent';
@@ -277,7 +306,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (condition) {
                 if (condition(current)) {
                     result.push(current);
-                    break;
+                    if (!every) {
+                        break;
+                    }
                 }
             }
             else {

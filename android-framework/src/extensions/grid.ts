@@ -13,7 +13,8 @@ const { captureMap, withinRange } = $lib.util;
 
 const $base_lib = squared.base.lib;
 const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
-const { GRID } = $base_lib.constant.EXT_NAME;
+
+const GRID = $base_lib.constant.EXT_NAME.GRID;
 
 function transferData(parent: View, siblings: View[])  {
     const data = squared.base.extensions.Grid.createDataCellAttribute();

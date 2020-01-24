@@ -112,8 +112,9 @@ declare namespace base {
 
     class View implements View {
         public static getControlName(containerType: number, api?: number): string;
-        public static getAvailablePercent(nodes: View[], dimension: "width" | "height", boxSize: number): number;
-        constructor(id: number, sessionId?: string, element?: Element, afterInit?: BindGeneric<View, void>);
+        public static availablePercent(nodes: View[], dimension: "width" | "height", boxSize: number): number;
+        public static ascendFlexibleWidth(node: View): boolean;
+        public static ascendFlexibleHeight(node: View): boolean;
     }
 
     class ViewGroup<T extends View> extends View {}

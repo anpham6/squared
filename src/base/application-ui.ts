@@ -427,7 +427,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         parentElement.id = '';
                     }
                     if (styleElement) {
-                        document.head.removeChild(styleElement);
+                        try {
+                            document.head.removeChild(styleElement);
+                        }
+                        catch {
+                        }
                     }
                     item.cssFinally('display');
                 }
@@ -1647,16 +1651,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     private setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
         if (inlineAbove.some((child: T) => requirePadding(child) || child.blockStatic && child.cascadeSome((nested: T) => requirePadding(nested)))) {
+            const bottom = target.bounds.bottom;
             if (leftAbove.length) {
                 let floatPosition = Number.NEGATIVE_INFINITY;
                 let marginLeft = 0;
                 let invalid = 0;
                 let hasSpacing = false;
                 for (const child of leftAbove) {
-                    const right = child.linear.right + Math.min(child.marginLeft, 0);
-                    if (right > floatPosition) {
-                        floatPosition = right;
-                        hasSpacing = child.marginRight > 0;
+                    if (child.bounds.top < bottom) {
+                        const right = child.linear.right + Math.min(child.marginLeft, 0);
+                        if (right > floatPosition) {
+                            floatPosition = right;
+                            hasSpacing = child.marginRight > 0;
+                        }
                     }
                 }
                 for (const child of inlineAbove) {
@@ -1682,10 +1689,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 let invalid = 0;
                 let hasSpacing = false;
                 for (const child of rightAbove) {
-                    const left = child.linear.left + Math.min(child.marginRight, 0);
-                    if (left < floatPosition) {
-                        floatPosition = left;
-                        hasSpacing = child.marginLeft > 0;
+                    if (child.bounds.top < bottom) {
+                        const left = child.linear.left + Math.min(child.marginRight, 0);
+                        if (left < floatPosition) {
+                            floatPosition = left;
+                            hasSpacing = child.marginLeft > 0;
+                        }
                     }
                 }
                 for (const child of inlineAbove) {

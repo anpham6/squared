@@ -1,7 +1,6 @@
 import { NodeXmlTemplate } from '../../../@types/base/application';
 import { ListData } from '../../../@types/base/extension';
 
-import Resource from '../resource';
 import View from '../view';
 
 import { CONTAINER_ANDROID } from '../lib/constant';
@@ -20,7 +19,7 @@ const { NodeUI } = $base;
 const $base_lib = $base.lib;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = $base_lib.enumeration;
 
-const { LIST } = $base_lib.constant.EXT_NAME;
+const LIST = $base_lib.constant.EXT_NAME.LIST;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
@@ -37,12 +36,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 layout.columnCount = layout.length;
                 layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
             }
-            if (layout.containerType !== 0) {
-                return {
-                    output: this.application.renderNode(layout),
-                    complete: true
-                };
+            else {
+                return undefined;
             }
+            return { output: this.application.renderNode(layout), complete: true };
         }
         return undefined;
     }
@@ -53,20 +50,15 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             const application = this.application;
             const controller = <android.base.Controller<T>> this.controller;
             const firstChild = parent.firstStaticChild === node;
-            const ordinalValue = mainData.ordinal || '';
             const inside = node.css('listStylePosition') === 'inside';
-            let minWidth = 0;
+            let value = mainData.ordinal || '';
+            let minWidth = node.marginLeft;
+            let marginLeft = 0;
             let columnCount = 0;
             let adjustPadding = false;
             let resetPadding = NaN;
             let register = false;
-            function resetMarginLeft() {
-                minWidth += node.marginLeft;
-                node.modifyBox(BOX_STANDARD.MARGIN_LEFT);
-            }
-            if (!inside) {
-                resetMarginLeft();
-            }
+            node.modifyBox(BOX_STANDARD.MARGIN_LEFT);
             if (parent.is(CONTAINER_NODE.GRID)) {
                 columnCount = convertInt(parent.android('columnCount')) || 1;
                 adjustPadding = true;
@@ -84,13 +76,26 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             }
             const container = node.length === 0 ? controller.createNodeGroup(node, [node], parent) : node;
             let ordinal: T | undefined;
-            if (ordinalValue === '') {
+            if (value === '') {
                 ordinal = node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T | undefined;
             }
             if (ordinal) {
+                if (columnCount === 3) {
+                    node.android('layout_columnSpan', '2');
+                }
+                if (!ordinal.hasWidth) {
+                    minWidth += ordinal.marginLeft;
+                    if (minWidth > 0) {
+                        ordinal.android('minWidth', formatPX(minWidth));
+                    }
+                }
+                ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.INLINE);
+                ordinal.modifyBox(BOX_STANDARD.MARGIN_LEFT);
+                ordinal.parent = parent;
+                ordinal.render(parent);
                 const layoutOrdinal = new LayoutUI(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
-                    layoutOrdinal.containerType = CONTAINER_NODE.TEXT;
+                    layoutOrdinal.setContainerType(CONTAINER_NODE.TEXT);
                 }
                 else {
                     if (layoutOrdinal.singleRowAligned) {
@@ -101,31 +106,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     layoutOrdinal.retain(ordinal.children as T[]);
                 }
-                ordinal.parent = parent;
-                ordinal.render(parent);
-                if (columnCount === 3) {
-                    node.android('layout_columnSpan', '2');
-                }
-                if (!ordinal.hasWidth) {
-                    minWidth += ordinal.marginLeft;
-                    if (inside) {
-                        resetMarginLeft();
-                    }
-                    if (minWidth > 0) {
-                        ordinal.android('minWidth', formatPX(minWidth));
-                    }
-                }
-                ordinal.modifyBox(BOX_STANDARD.MARGIN_LEFT);
-                application.addLayoutTemplate(
-                    parent,
-                    ordinal,
-                    application.renderNode(layoutOrdinal)
-                );
+                application.addLayoutTemplate(parent, ordinal, application.renderNode(layoutOrdinal));
             }
             else {
                 let gravity = 'right';
                 let paddingRight = 0;
-                let marginLeft = 0;
                 let top = 0;
                 let left = 0;
                 let image: string | undefined;
@@ -133,57 +118,32 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     const resource = <android.base.Resource<T>> this.resource;
                     if (mainData.imagePosition) {
                         ({ top, left } = getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize, resource.getImage(mainData.imageSrc)));
-                        gravity = 'left';
                         if (node.marginLeft < 0) {
-                            resetPadding = node.marginLeft;
-                            if (parent.paddingLeft > 0) {
-                                resetPadding += parent.paddingLeft;
-                            }
-                            else {
-                                resetPadding += parent.marginLeft;
-                            }
+                            resetPadding = node.marginLeft + (parent.paddingLeft > 0 ? parent.paddingLeft : parent.marginLeft);
                         }
                         else {
                             adjustPadding = false;
                             marginLeft = node.marginLeft;
                         }
-                        minWidth = 0;
+                        minWidth = node.paddingLeft - left;
+                        node.modifyBox(BOX_STANDARD.PADDING_LEFT);
+                        gravity = '';
                     }
                     image = resource.addImageSrc(mainData.imageSrc);
                 }
-                if (gravity === 'left') {
-                    minWidth -= left;
-                    node.modifyBox(BOX_STANDARD.PADDING_LEFT);
-                }
-                else {
-                    const length = ordinalValue.length || 1;
-                    if (inside) {
-                        paddingRight = length * 4;
-                    }
-                    else {
-                        paddingRight = Math.max(minWidth / (image ? 6 : length * 4), 4);
+                if (gravity === 'right') {
+                    if (image) {
+                        paddingRight = Math.max(minWidth / 6, 4);
                         minWidth -= paddingRight;
+                    }
+                    else if (value !== '') {
+                        value += '&#160;'.repeat(value.length === 1 ? 3 : 2);
                     }
                 }
                 const options = createViewAttribute();
                 ordinal = application.createNode({ parent });
                 ordinal.containerName = node.containerName + '_ORDINAL';
-                if (inside) {
-                    controller.addBeforeOutsideTemplate(
-                        ordinal.id,
-                        controller.renderNodeStatic(
-                            CONTAINER_ANDROID.SPACE,
-                            createViewAttribute(undefined, {
-                                android: {
-                                    minWidth: '@dimen/' + Resource.insertStoredAsset('dimens', node.tagName.toLowerCase() + '_space_indent', formatPX(minWidth))
-                                }
-                            })
-                        ),
-                        false
-                    );
-                    minWidth = 0;
-                }
-                else if (columnCount === 3) {
+                if (columnCount === 3) {
                     container.android('layout_columnSpan', '2');
                 }
                 if (node.tagName === 'DT' && !image) {
@@ -194,12 +154,12 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
                         Object.assign(options.android, {
                             src: '@drawable/' + image,
-                            scaleType: !inside && gravity === 'right' ? 'fitEnd' : 'fitStart',
+                            scaleType: gravity === 'right' && !inside ? 'fitEnd' : 'fitStart',
                             baselineAlignBottom: adjustPadding ? 'true' : ''
                         });
                     }
-                    else if (ordinalValue !== '') {
-                        ordinal.textContent = ordinalValue;
+                    else if (value !== '') {
+                        ordinal.textContent = value;
                         ordinal.inlineText = true;
                         ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
                         if (node.tagName === 'DFN') {
@@ -214,25 +174,26 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     ordinal.depth = node.depth;
                     ordinal.inherit(node, 'textStyle');
-                    if (ordinalValue !== '' && !/\.$/.test(ordinalValue)) {
+                    if (value !== '' && !/\.$/.test(value)) {
                         ordinal.fontSize *= 0.75;
                     }
+                    const { marginTop, paddingTop, lineHeight } = node;
                     ordinal.cssApply({
                         minWidth: minWidth > 0 ? formatPX(minWidth) : '',
-                        marginTop: node.marginTop !== 0 ? formatPX(node.marginTop) : '',
+                        marginTop: marginTop !== 0 ? formatPX(marginTop) : '',
                         marginLeft: marginLeft > 0 ? formatPX(marginLeft) : '',
-                        paddingTop: node.paddingTop > 0 && node.getBox(BOX_STANDARD.PADDING_TOP)[0] === 0 ? formatPX(node.paddingTop) : '',
-                        paddingRight: paddingRight > 0 && gravity === 'right' ? formatPX(paddingRight) : '',
-                        paddingLeft: paddingRight > 0 && gravity === 'left' && (!image || mainData.imagePosition) ? formatPX(paddingRight) : '',
-                        lineHeight: node.lineHeight > 0 ? formatPX(node.lineHeight) : ''
+                        paddingTop: paddingTop > 0 && node.getBox(BOX_STANDARD.PADDING_TOP)[0] === 0 ? formatPX(paddingTop) : '',
+                        paddingRight: paddingRight > 0 ? formatPX(paddingRight) : '',
+                        lineHeight: lineHeight > 0 ? formatPX(lineHeight) : ''
                     });
                     ordinal.apply(options);
+                    ordinal.modifyBox(BOX_STANDARD.PADDING_LEFT, 2);
                     if (ordinal.cssTry('display', 'block')) {
                         ordinal.setBounds();
                         ordinal.cssFinally('display');
                     }
                     ordinal.saveAsInitial();
-                    if (!inside) {
+                    if (gravity !== '') {
                         ordinal.mergeGravity('gravity', node.localizeString(gravity));
                     }
                     if (top !== 0) {

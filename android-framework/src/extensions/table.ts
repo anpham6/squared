@@ -13,8 +13,9 @@ const { aboveRange, convertFloat, convertInt, trimEnd } = $lib.util;
 const { UNITZERO } = $lib.regex.CHAR;
 
 const $base_lib = squared.base.lib;
-const { TABLE } = $base_lib.constant.EXT_NAME;
 const { CSS_UNIT, NODE_ALIGNMENT } = $base_lib.enumeration;
+
+const TABLE = $base_lib.constant.EXT_NAME.TABLE;
 
 function setLayoutHeight(node: View) {
     if (node.hasPX('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {
@@ -113,10 +114,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             );
             layout.rowCount = mainData.rowCount;
             layout.columnCount = mainData.columnCount;
-            return {
-                output: this.application.renderNode(layout),
-                complete: true
-            };
+            return { output: this.application.renderNode(layout), complete: true };
         }
         return undefined;
     }

@@ -1296,9 +1296,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     height = boundsHeight * (ratioHeight / ratioWidth);
                                     left = 0;
                                     if (height > boundsHeight) {
-                                        top = (boundsHeight - height);
+                                        top = boundsHeight - height;
                                         if (position.topAsPercent > 0) {
                                             top = Math.round(top * position.topAsPercent);
+                                        }
+                                        if (!node.hasPX('height')) {
+                                            node.css('height', formatPX(boundsHeight - node.contentBoxHeight));
                                         }
                                     }
                                     else {
@@ -1577,9 +1580,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         imageData.drawable = src;
                     }
                     else if ((tileMode === 'repeat' || tileModeX !== '' || tileModeY !== '' || gravityAlign !== '' && gravity !== '' || size === 'cover' || size === 'contain' || !resizable && height > 0 && size !== 'cover' && size !== 'contain') && !svg) {
-                        if (!node.hasHeight && !(node.renderParent as T).layoutLinear && gravity === 'top' && tileModeY === 'repeat') {
-                            gravity = '';
-                            tileModeY = '';
+                        switch (gravity) {
+                            case 'top':
+                                if (tileModeY === 'repeat' && !node.hasHeight && !node.layoutLinear) {
+                                    gravity = '';
+                                    tileModeY = '';
+                                }
+                                break;
+                            case 'bottom':
+                                if (gravityAlign === '') {
+                                    gravityAlign = gravity;
+                                    gravity = '';
+                                    tileMode = '';
+                                    tileModeX = tileModeX === '' ? 'disabled' : '';
+                                    tileModeY = tileModeY === '' ? 'disabled' : '';
+                                }
+                                break;
                         }
                         imageData.gravity = gravityAlign;
                         imageData.bitmap = [{

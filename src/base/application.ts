@@ -159,7 +159,11 @@ export default abstract class Application<T extends Node> implements squared.bas
             for (const ext of this.extensions) {
                 ext.afterParseDocument();
             }
-            document.head.removeChild(styleElement);
+            try {
+                document.head.removeChild(styleElement);
+            }
+            catch {
+            }
             if (typeof THEN === 'function') {
                 THEN.call(this);
             }

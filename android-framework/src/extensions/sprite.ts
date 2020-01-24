@@ -12,7 +12,7 @@ const { formatPX } = squared.lib.css;
 const $base_lib = squared.base.lib;
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 
-const { SPRITE } = $base_lib.constant.EXT_NAME;
+const SPRITE = $base_lib.constant.EXT_NAME.SPRITE;
 
 type SpriteData = {
     image: Required<RawAsset>;

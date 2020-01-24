@@ -129,6 +129,7 @@ export interface AscendOptions {
     excluding?: Node;
     attr?: string;
     startSelf?: boolean;
+    every?: boolean;
 }
 
 export interface ExcludeOptions {

@@ -14,7 +14,7 @@ const { pushIndent, pushIndentArray } = $lib.xml;
 
 type NodeUI = squared.base.NodeUI;
 
-const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && Math.abs(rect.left) >= rect.width || rect.top < 0 && Math.abs(rect.top) >= rect.height);
+const withinViewport = (rect: DOMRect | ClientRect) => !(rect.top + window.scrollY + rect.height < 0 || rect.left + window.scrollX + rect.width < 0);
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
     public abstract readonly localSettings: ControllerUISettings;

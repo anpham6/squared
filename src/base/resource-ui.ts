@@ -886,7 +886,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     private removeExcludedFromText(element: Element, sessionId: string) {
-        const attr = element.children.length || element.tagName === 'CODE' ? 'innerHTML' : 'textContent';
+        const styled = element.children.length || element.tagName === 'CODE';
+        const attr = styled ? 'innerHTML' : 'textContent';
         let value: string = element[attr] || '';
         const children = element.childNodes;
         const length = children.length;
@@ -896,10 +897,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             if (item === null || !item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
                 if (item) {
                     const preserveWhitespace = (item.actualParent as T).preserveWhiteSpace;
-                    if (item.htmlElement && attr === 'innerHTML') {
+                    if (styled && item.htmlElement) {
                         const outerHTML = item.toElementString('outerHTML');
                         if (item.lineBreak) {
                             value = value.replace(!preserveWhitespace ? new RegExp(`\\s*${outerHTML}\\s*`) : outerHTML, '\\n');
+                        }
+                        else if (item.positioned) {
+                            value = value.replace(outerHTML, '');
                         }
                         else if (!preserveWhitespace) {
                             value = value.replace(outerHTML, item.pageFlow && item.textContent.trim() !== '' ? STRING_SPACE : '');
@@ -928,9 +932,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
             }
         }
-        if (attr === 'innerHTML') {
-            return value.replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
-        }
-        return value;
+        return styled ? value.replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture))) : value;
     }
 }

@@ -8,6 +8,8 @@ import View from '../../view';
 
 import LayoutUI = squared.base.LayoutUI;
 
+const { resolveURL } = squared.lib.css;
+
 const { CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 const isHideMargin = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && (node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
@@ -72,7 +74,9 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         }
         const backgroundImage = node.backgroundImage;
         if (backgroundImage !== '') {
-            if (container === undefined || parentVisible || actualParent.visibleStyle.background || !visibleStyle.backgroundRepeatY) {
+            const image = this.application.resourceHandler.getImage(resolveURL(backgroundImage));
+            const fitContent = image !== undefined && image.height < node.actualHeight;
+            if (container === undefined || parentVisible || actualParent.visibleStyle.background || !visibleStyle.backgroundRepeatY || fitContent) {
                 if (container) {
                     parentAs = container;
                     parentAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -101,7 +105,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             const minHeight = actualParent.cssInitial('minHeight');
             let backgroundSize: string | undefined;
             if (height === '' && minHeight === '') {
-                container.setLayoutHeight(!parentVisible && (visibleStyle.backgroundRepeatY || node.cssAny('backgroundPositionY', 'top', '0px', '0%') || node.hasPX('backgroundPositionY')) ? 'match_parent' : 'wrap_content');
+                container.setLayoutHeight(!parentVisible && (visibleStyle.backgroundRepeatY || image && !fitContent || node.has('backgroundSize')) ? 'match_parent' : 'wrap_content');
             }
             else {
                 if (height !== '100%' && minHeight !== '100%') {

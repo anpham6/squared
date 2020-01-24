@@ -176,7 +176,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return api >= BUILD_ANDROID.Q && CONTAINER_ANDROID_X[name] || CONTAINER_ANDROID[name];
         }
 
-        public static getAvailablePercent(nodes: T[], dimension: "width" | "height", boxSize: number) {
+        public static availablePercent(nodes: T[], dimension: "width" | "height", boxSize: number) {
             let percent = 1;
             let i = 0;
             for (const sibling of nodes) {
@@ -197,6 +197,44 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             return i > 1 ? Math.max(0, percent) : 1;
+        }
+
+        public static ascendFlexibleWidth(node: T) {
+            if (node.documentRoot) {
+                return true;
+            }
+            let parent = node.renderParent as T | undefined;
+            let i = 0;
+            while (parent) {
+                if (parent.hasWidth || parent.documentRoot && (parent.blockWidth || parent.blockStatic && !parent.inlineWidth)) {
+                    return true;
+                }
+                else if (parent.inlineWidth || parent.flexibleWidth && i > 0 || parent.naturalElement && parent.inlineVertical && !parent.blockWidth) {
+                    return false;
+                }
+                i++
+                parent = parent.renderParent as T | undefined;
+            }
+            return false;
+        }
+
+        public static ascendFlexibleHeight(node: T) {
+            if (node.documentRoot) {
+                return true;
+            }
+            let parent = node.renderParent as T | undefined;
+            let i = 0;
+            while (parent) {
+                if (parent.hasHeight || parent.documentRoot && parent.blockHeight) {
+                    return true;
+                }
+                else if (parent.inlineHeight || parent.flexibleHeight && i > 0) {
+                    return false;
+                }
+                i++;
+                parent = parent.renderParent as T | undefined;
+            }
+            return false;
         }
 
         public api = BUILD_ANDROID.LATEST;
@@ -391,17 +429,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else if (renderParent.layoutRelative) {
                     for (const value of position) {
-                        if (node.alignSibling(value) !== '') {
-                            const attr: string | undefined = LAYOUT_RELATIVE[value];
-                            if (attr) {
-                                node.delete('android', LAYOUT_RELATIVE[value], this.localizeString(LAYOUT_RELATIVE[value]));
-                            }
+                        let attr: string | undefined = LAYOUT_RELATIVE[value];
+                        if (attr) {
+                            node.delete('android', attr, this.localizeString(attr));
                         }
-                        else {
-                            const attr: string | undefined = LAYOUT_RELATIVE_PARENT[value];
-                            if (attr) {
-                                node.delete('android', this.localizeString(attr));
-                            }
+                        attr = LAYOUT_RELATIVE_PARENT[value];
+                        if (attr) {
+                            node.delete('android', attr, this.localizeString(attr));
                         }
                     }
                 }
@@ -603,6 +637,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public clone(id?: number, attributes = true, position = false): T {
             const node = new View(id || this.id, this.sessionId, this.element || undefined);
+            node.unsafe('localization', this._localization);
             node.localSettings = { ...this.localSettings };
             if (id !== undefined) {
                 node.setControlType(this.controlName, this.containerType);
@@ -637,7 +672,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     Object.assign(node.unsafe('boxAdjustment'), { marginTop: 0 });
                 }
             }
-            node.saveAsInitial();
+            node.saveAsInitial(true);
             return node;
         }
 
@@ -668,7 +703,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const maxDimension = this.support.maxDimension;
             let adjustViewBounds = false;
             if (this.documentBody) {
-                const fixedContainer = renderParent.id === 0 && this.renderChildren.some(node => node.css('position') === 'fixed');
+                const fixedContainer = renderParent.id === 0 && this.renderChildren.some(node => !node.pageFlow && node.css('position') === 'fixed');
                 if (fixedContainer || this.css('width') === '100%' || this.css('minWidth') === '100%' || this.blockStatic && !this.hasPX('width') && !this.hasPX('maxWidth')) {
                     this.setLayoutWidth('match_parent', false);
                 }
@@ -1323,7 +1358,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 value = this.actualPadding(attr, value);
                                 break;
                             case 'paddingBottom':
-                                if (this.layoutVertical && !this.layoutElement && this.hasPX('height')) {
+                                if (this.layoutVertical && !this.layoutElement && this.hasPX('height', false, true)) {
                                     continue;
                                 }
                                 else {

@@ -14,12 +14,10 @@ const { isLength } = $lib.css;
 const { truncate } = $lib.math;
 const { capitalize, sameArray, withinRange } = $lib.util;
 
-const $base = squared.base;
-
-const $base_lib = $base.lib;
+const $base_lib = squared.base.lib;
 const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 
-const { FLEXBOX } = $base_lib.constant.EXT_NAME;
+const FLEXBOX = $base_lib.constant.EXT_NAME.FLEXBOX;
 
 type FlexBasis = {
     item: View;
@@ -407,12 +405,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                     else {
                         if (horizontal) {
-                            percentWidth = View.getAvailablePercent(seg, 'width', node.box.width);
+                            percentWidth = View.availablePercent(seg, 'width', node.box.width);
                             percentHeight = 1;
                         }
                         else {
                             percentWidth = 1;
-                            percentHeight = View.getAvailablePercent(seg, 'height', node.box.height);
+                            percentHeight = View.availablePercent(seg, 'height', node.box.height);
                         }
                         growAll = horizontal || dimensionInverse;
                         growAvailable = 1 - adjustGrowRatio(node, seg, WHL);
