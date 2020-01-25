@@ -146,6 +146,26 @@ function fillUnitEqually(unit: string[], length: number) {
     }
 }
 
+function getOpenCellIndex(iteration: number, length: number, available: number[] | undefined) {
+    if (available) {
+        for (let i = 0, j = -1, k = 0; i < iteration; i++) {
+            if (available[i] === 0) {
+                if (j === -1) {
+                    j = i;
+                }
+                if (++k === length) {
+                    return j;
+                }
+            }
+            else {
+                j = -1;
+            }
+        }
+        return -1;
+    }
+    return 0;
+}
+
 const isUnitFR = (value: string) => /fr$/.test(value);
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? node.convertPX(value, index === 0 ? 'height' : 'width') : value;
 
@@ -818,41 +838,14 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
         }
         node.each((item: T, index) => {
-            const cell = layout[index];
-            const placement = cell.placement;
-            let ROW_SPAN: number;
-            let COLUMN_SPAN: number;
-            if (horizontal) {
-                ({ columnSpan: COLUMN_SPAN, rowSpan: ROW_SPAN } = cell);
-            }
-            else {
-                ({ columnSpan: ROW_SPAN, rowSpan: COLUMN_SPAN } = cell);
-            }
-            function getOpenCellIndex(available: number[] | undefined) {
-                if (available) {
-                    for (let i = 0, j = -1, k = 0; i < ITERATION; i++) {
-                        if (available[i] === 0) {
-                            if (j === -1) {
-                                j = i;
-                            }
-                            if (++k === COLUMN_SPAN) {
-                                return j;
-                            }
-                        }
-                        else {
-                            j = -1;
-                        }
-                    }
-                    return -1;
-                }
-                return 0;
-            }
+            const { placement, rowSpan, columnSpan } = layout[index];
+            const [ROW_SPAN, COLUMN_SPAN] = horizontal ? [rowSpan, columnSpan] : [columnSpan, rowSpan];
             while (placement[0] === 0 || placement[1] === 0) {
                 const PLACEMENT = placement.slice(0);
                 if (PLACEMENT[rowA] === 0) {
                     let length = rowData.length;
                     for (let i = (dense ? 0 : getOpenRowIndex()), j = 0, k = -1; i < length; i++) {
-                        const l = getOpenCellIndex(openCells[i]);
+                        const l = getOpenCellIndex(ITERATION, COLUMN_SPAN, openCells[i]);
                         if (l !== -1) {
                             if (j === 0) {
                                 k = i;

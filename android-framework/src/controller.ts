@@ -1204,7 +1204,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const percentHeight = node.percentHeight ? height : -1;
                 let scaleType = 'fitXY';
                 let imageSet: ImageSrcSet[] | undefined;
-                if (element.srcset || node.actualParent?.tagName === 'PICTURE') {
+                if (isString(element.srcset) || node.actualParent?.tagName === 'PICTURE') {
                     imageSet = getSrcSet(element, this.localSettings.supported.imageFormat as string[]);
                     if (imageSet.length) {
                         const image = imageSet[0];

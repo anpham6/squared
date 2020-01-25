@@ -27,11 +27,11 @@ function outsideX(node: View, parent: View) {
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.documentRoot;
+        return !node.documentRoot && node.css('overflowX') !== 'hidden';
     }
 
     public condition(node: T) {
-        return node.some((item: T) => outsideX(item, node)) && node.css('overflowX') !== 'hidden';
+        return node.some((item: T) => outsideX(item, node));
     }
 
     public processNode(node: T, parent: T) {
@@ -123,8 +123,8 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 }
             }
         }
-        this.subscribers.add(container);
         container.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData', <NegativeXData> { offsetLeft: node.marginLeft + node.paddingLeft, firstChild, nextSibling: node });
+        this.subscribers.add(container);
         return {
             parent: container,
             renderAs: container,

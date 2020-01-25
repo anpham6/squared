@@ -279,7 +279,7 @@ function checkRowSpan(node: View, mainData: CssGridData<View>, rowSpan: number, 
         for (const item of flatMultiArray<View>(rowData[rowStart])) {
             if (item !== node) {
                 const data: CssGridCellData = item.data(CSS_GRID, 'cellData');
-                if (data && (rowStart === 0 || data.rowSpan < rowCount) && data.rowSpan > rowSpan) {
+                if (data && data.rowSpan > rowSpan && (rowStart === 0 || data.rowSpan < rowCount)) {
                     return true;
                 }
             }
@@ -288,11 +288,22 @@ function checkRowSpan(node: View, mainData: CssGridData<View>, rowSpan: number, 
     return false;
 }
 
+function checkAutoDimension(data: CssGridDirectionData, horizontal: boolean) {
+    const unit = data.unit;
+    const length = unit.length;
+    if (length && unit.every(value => value === 'auto')) {
+        data.unit = new Array(length).fill(horizontal ? '1fr' : '');
+    }
+}
+
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
+            const { column, row } = mainData;
+            checkAutoDimension(column, true);
+            checkAutoDimension(row, false);
             const layout = new LayoutUI(
                 parent,
                 node,
@@ -300,26 +311,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 NODE_ALIGNMENT.AUTO_LAYOUT,
                 node.children as T[]
             );
-            layout.rowCount = mainData.row.length;
-            layout.columnCount = mainData.column.length;
-            for (const image of node.cascade(item => item.imageElement) as T[]) {
-                const asset = this.resource.getImage(image.src);
-                if (asset) {
-                    const { width, height } = image.bounds;
-                    if (!image.hasPX('width', false) && asset.width > width) {
-                        image.css('width', formatPX(width));
-                        image.android('adjustViewBounds', 'true');
-                    }
-                    else if (!image.hasPX('height', false) && asset.height > height) {
-                        image.css('height', formatPX(height));
-                        image.android('adjustViewBounds', 'true');
-                    }
-                }
-            }
-            return {
-                output: this.application.renderNode(layout),
-                complete: true
-            };
+            layout.rowCount = row.length;
+            layout.columnCount = column.length;
+            return { output: this.application.renderNode(layout), complete: true };
         }
         return undefined;
     }
@@ -333,36 +327,16 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const { alignContent, column, row } = mainData;
             const { alignSelf, justifySelf } = node.flexbox;
             const applyLayout = (item: T, horizontal: boolean, dimension: string) => {
-                let data: CssGridDirectionData;
-                let cellStart: number;
-                let cellSpan: number;
-                let unitDimension: string;
-                if (horizontal) {
-                    data = column;
-                    unitDimension = STRING_ANDROID.HORIZONTAL;
-                    ({ columnStart: cellStart, columnSpan: cellSpan } = cellData);
-                }
-                else {
-                    data = row;
-                    unitDimension = STRING_ANDROID.VERTICAL;
-                    ({ rowStart: cellStart, rowSpan: cellSpan } = cellData);
-                }
-                const unitMin = data.unitMin;
-                let unit = data.unit;
+                const [data, cellStart, cellSpan, unitDimension, layoutDirection, layoutSpan, minDimension] =
+                    horizontal
+                        ? [column, cellData.columnStart, cellData.columnSpan, STRING_ANDROID.HORIZONTAL, 'layout_column', 'layout_columnSpan', 'minWidth']
+                        : [row, cellData.rowStart, cellData.rowSpan, STRING_ANDROID.VERTICAL, 'layout_row', 'layout_rowSpan', 'minHeight'];
+                const { unit, unitMin } = data;
                 let size = 0;
                 let minSize = 0;
-                let fitContent = false;
                 let minUnitSize = 0;
                 let sizeWeight = 0;
-                if (unit.every(value => value === 'auto')) {
-                    if (horizontal) {
-                        unit = new Array(unit.length).fill('1fr');
-                        data.unit = unit;
-                    }
-                    else {
-                        unit.length = 0;
-                    }
-                }
+                let fitContent = false;
                 for (let i = 0, j = 0; i < cellSpan; i++) {
                     const k = cellStart + i;
                     const min = unitMin[k];
@@ -463,14 +437,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         minSize = minUnitSize;
                     }
                 }
-                item.android(horizontal ? 'layout_column' : 'layout_row', cellStart.toString());
-                if (cellSpan > 1) {
-                    item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan', cellSpan.toString());
+                item.android(layoutDirection, cellStart.toString());
+                item.android(layoutSpan, cellSpan.toString());
+                if (minSize > 0 && !item.hasPX(minDimension)) {
+                    item.css(minDimension, formatPX(minSize), true);
                 }
-                if (minSize > 0 && !item.hasPX(horizontal ? 'minWidth' : 'minHeight')) {
-                    item.css(horizontal ? 'minWidth' : 'minHeight', formatPX(minSize), true);
-                }
-                if (size === 0 && sizeWeight > 0 && horizontal && cellSpan === data.length) {
+                if (horizontal && size === 0 && sizeWeight > 0 && cellSpan === data.length) {
                     item.setLayoutWidth('match_parent');
                 }
                 else {
@@ -576,20 +548,15 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             const target = renderAs || node;
             applyLayout(target, true, 'width');
-            const [rowStart, rowSpan] = applyLayout(target, false, 'height');
             if (!target.hasPX('width')) {
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
-            if (alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.bounds.height > (<BoxRectDimension> node.data(CSS_GRID, 'boundsData') || node.bounds).height && checkRowSpan(node, mainData, rowSpan, rowStart)) {
+            const [rowStart, rowSpan] = applyLayout(target, false, 'height');
+            if (alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.bounds.height > (<BoxRectDimension> node.data(CSS_GRID, 'boundsData'))?.height && checkRowSpan(node, mainData, rowSpan, rowStart)) {
                 target.css('minHeight', formatPX(node.actualHeight), true);
             }
-            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && alignContent === 'space-between')) {
-                if (!REGEX_ALIGNSELF.test(mainData.alignItems)) {
-                    target.mergeGravity('layout_gravity', 'fill_vertical');
-                }
-                if (alignContent === 'normal' && parent.hasHeight && mainData.rowSpanMultiple.length === 0) {
-                    target.mergeGravity('layout_rowWeight', '1');
-                }
+            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && /^space/.test(alignContent)) && !REGEX_ALIGNSELF.test(mainData.alignItems)) {
+                target.mergeGravity('layout_gravity', 'fill_vertical');
             }
         }
         return {
@@ -833,15 +800,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     node.mergeGravity('layout_gravity', STRING_ANDROID.CENTER_HORIZONTAL);
                 }
             }
-            else if (node.blockStatic && !node.hasPX('width', false) && !node.hasPX('minWidth', false) && node.actualParent?.layoutElement === false) {
+            else if (node.blockStatic && !node.hasPX('minWidth', false) && node.actualParent?.layoutElement === false) {
                 let minWidth = column.gap * (column.length - 1);
                 for (const value of unit) {
                     if (REGEX_PX.test(value)) {
                         minWidth += parseFloat(value);
                     }
                     else {
-                        minWidth = 0;
-                        break;
+                        return;
                     }
                 }
                 if (minWidth > node.width) {

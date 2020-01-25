@@ -15,17 +15,15 @@ export interface MaxWidthHeightData {
 
 export default class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.inputElement;
+        return !node.inputElement && !node.support.maxDimension;
     }
 
     public condition(node: T, parent: T) {
-        if (!node.support.maxDimension) {
-            const width = !isNaN(node.width) && node.hasPX('maxWidth') && !parent.hasAlign(NODE_ALIGNMENT.COLUMN);
-            const height = !isNaN(node.height) && node.hasPX('maxHeight') && parent.hasHeight;
-            if (width || height) {
-                node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { width, height });
-                return true;
-            }
+        const width = node.hasPX('maxWidth') && !parent.hasAlign(NODE_ALIGNMENT.COLUMN);
+        const height = node.hasPX('maxHeight') && parent.hasHeight;
+        if (width || height) {
+            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { width, height });
+            return true;
         }
         return false;
     }

@@ -1,4 +1,4 @@
-/*var squared = null;
+var squared = null;
 
 System.config({
     packages: {
@@ -25,18 +25,39 @@ System.import('/build/src/main.js').then(result => {
         System.import('/build/android-framework/src/main.js').then(result => {
             android = result.default;
             squared.setFramework(android);
+            const time = new Date().getTime();
             squared.parseDocument().then(function() {
                 squared.saveToArchive();
+                console.log(new Date().getTime() - time);
             });
         });
     });
-});*/
+});
+
+/*System.import('/build/src/main.js').then(result => {
+    squared = result;
+    System.import('/build/src/base/main.js').then(result => {
+        squared.base = result;
+        System.import('/build/src/svg/main.js').then(result => {
+            squared.svg = result;
+            System.import('/build/android-framework/src/main.js').then(result => {
+                android = result.default;
+                squared.setFramework(android);
+                const time = new Date().getTime();
+                squared.parseDocument().then(function() {
+                    squared.saveToArchive();
+                    console.log(new Date().getTime() - time);
+                });
+            });
+        });
+    });
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     squared.setFramework(android);
     const time = new Date().getTime();
     squared.parseDocument().then(function() {
-        squared.copyToDisk('C:\\Users\\An\\git\\flexbox/');
+        squared.saveToArchive();
         console.log(new Date().getTime() - time);
     });
-});
+});*/

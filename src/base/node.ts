@@ -930,8 +930,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssSort(attr: string, ascending = true, duplicate = false) {
         return (duplicate ? this.duplicate() : this.children).sort((a, b) => {
-            const valueA = a.toFloat(attr);
-            const valueB = b.toFloat(attr);
+            const valueA = a.toFloat(attr, a.childIndex);
+            const valueB = b.toFloat(attr, b.childIndex);
             if (valueA === valueB) {
                 return 0;
             }
@@ -1797,7 +1797,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     basis: this.css('flexBasis'),
                     grow: getFlexValue(this, 'flexGrow', 0),
                     shrink: getFlexValue(this, 'flexShrink', 1),
-                    order: this.toInt('order')
+                    order: this.toInt('order', 0)
                 };
             }
             else {
@@ -1807,7 +1807,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     basis: 'auto',
                     grow: 0,
                     shrink: 1,
-                    order: Number.POSITIVE_INFINITY
+                    order: 0
                 };
             }
             this._cached.flexbox = result;

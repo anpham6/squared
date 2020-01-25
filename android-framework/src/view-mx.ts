@@ -1998,10 +1998,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         set innerWrapped(value) {
             if (value) {
-                const outerWrapper = this.outerMostWrapper as T | null;
-                if (outerWrapper) {
-                    value = outerWrapper;
-                }
+                value = (value.outerMostWrapper || value) as T;
                 this._innerWrapped = value;
                 value.outerWrapper = this;
             }
