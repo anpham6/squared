@@ -928,8 +928,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssSort(attr: string, ascending = true, duplicate = false) {
-        const children = duplicate ? this.duplicate() : this.children;
-        children.sort((a, b) => {
+        return (duplicate ? this.duplicate() : this.children).sort((a, b) => {
             const valueA = a.toFloat(attr);
             const valueB = b.toFloat(attr);
             if (valueA === valueB) {
@@ -940,7 +939,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             return valueA > valueB ? -1 : 1;
         });
-        return children;
     }
 
     public cssPX(attr: string, value: number, negative = false, cache = false) {
@@ -1012,12 +1010,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.naturalChild ? (this.actualParent as T).css(attr, value, cache) : '';
     }
 
-    public toInt(attr: string, initial = false, fallback = 0) {
+    public toInt(attr: string, fallback = NaN, initial = false) {
         const value = parseInt((initial && this._initial?.styleMap || this._styleMap)[attr]);
         return isNaN(value) ? fallback : value;
     }
 
-    public toFloat(attr: string, initial = false, fallback = 0) {
+    public toFloat(attr: string, fallback = NaN, initial = false) {
         const value = parseFloat((initial && this._initial?.styleMap || this._styleMap)[attr]);
         return isNaN(value) ? fallback : value;
     }
@@ -1502,8 +1500,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         const result = this.parseUnit(this.css(attr), 'width', !(this.actualParent?.gridElement === true));
         if (!margin) {
-            let paddingStart = this.toFloat('paddingInlineStart');
-            let paddingEnd = this.toFloat('paddingInlineEnd');
+            let paddingStart = this.toFloat('paddingInlineStart', 0);
+            let paddingEnd = this.toFloat('paddingInlineEnd', 0);
             if (paddingStart > 0 || paddingEnd > 0) {
                 if (this.css('writingMode') === 'vertical-rl') {
                     if (this.dir === 'rtl') {
@@ -2355,7 +2353,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get zIndex() {
-        return this.toInt('zIndex');
+        return this.toInt('zIndex', 0);
     }
 
     get textContent() {

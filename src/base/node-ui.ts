@@ -1233,7 +1233,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             else {
                 const { top, right, bottom, left } = this._initial?.styleMap || this._styleMap;
-                result = (!top || top === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto') && (!left || left === 'auto') && this.toFloat('opacity', true, 1) > 0;
+                result = (!top || top === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto') && (!left || left === 'auto') && this.toFloat('opacity', 1) > 0;
             }
             this._cached.positionAuto = result;
         }

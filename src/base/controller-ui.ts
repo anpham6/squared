@@ -480,10 +480,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         node.unset('box');
                         node.unset('linear');
                     }
-                    let opacity = node.toFloat('opacity', false, 1);
+                    let opacity = node.toFloat('opacity', 1);
                     let current = actualParent;
                     while (current && current !== parent) {
-                        opacity *= current.toFloat('opacity', false, 1);
+                        opacity *= current.toFloat('opacity', 1);
                         current = current.actualParent as T;
                     }
                     node.css('opacity', opacity.toString());

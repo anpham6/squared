@@ -10,7 +10,7 @@ const { convertFloat, filterArray, withinRange } = $lib.util;
 
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return node.positionRelative || node.toFloat('verticalAlign', true) !== 0;
+        return node.positionRelative || node.toFloat('verticalAlign', 0, true) !== 0;
     }
 
     public condition() {

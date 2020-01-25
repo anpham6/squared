@@ -1198,8 +1198,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'IMG': {
                 const element = <HTMLImageElement> node.element;
                 const absoluteParent = node.absoluteParent || node.documentParent;
-                let width = node.toFloat('width');
-                let height = node.toFloat('height');
+                let width = node.toFloat('width', 0);
+                let height = node.toFloat('height', 0);
                 let percentWidth = node.percentWidth ? width : -1;
                 const percentHeight = node.percentHeight ? height : -1;
                 let scaleType = 'fitXY';

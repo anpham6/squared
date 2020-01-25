@@ -16,11 +16,12 @@ const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
 const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
 
 const PREFIX_DIALOG = 'ic_dialog_';
+const SUPPORTED_INPUT = ['button', 'file', 'image', 'reset', 'search', 'submit'];
 
 export default class FloatingActionButton<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
         const element = <HTMLInputElement> node.element;
-        return super.is(node) && (element.tagName !== 'INPUT' || ['button', 'file', 'image', 'reset', 'search', 'submit'].includes(element.type));
+        return super.is(node) && (element.tagName !== 'INPUT' || SUPPORTED_INPUT.includes(element.type));
     }
 
     public condition(node: T) {
@@ -32,7 +33,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;
         const options = createViewAttribute(this.options[element.id]);
-        const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', true, 1)));
+        const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1)));
         assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? '@color/' + colorName : '?attr/colorAccent');
         if (!node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
             assignEmptyValue(options, 'android', 'focusable', 'false');

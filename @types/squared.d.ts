@@ -453,8 +453,8 @@ declare namespace base {
         cssTry(attr: string, value: string): boolean;
         cssFinally(attr: string): boolean;
         cssParent(attr: string, value?: string, cache?: boolean): string;
-        toInt(attr: string, initial?: boolean, fallback?: number): number;
-        toFloat(attr: string, initial?: boolean, fallback?: number): number;
+        toInt(attr: string, fallback?: number, initial?: boolean): number;
+        toFloat(attr: string, fallback?: number, initial?: boolean): number;
         toElementInt(attr: string, fallback?: number): number;
         toElementFloat(attr: string, fallback?: number): number;
         toElementBoolean(attr: string, fallback?: boolean): boolean;
