@@ -641,7 +641,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if ($SvgBuild) {
             let parentElement: HTMLElement | undefined;
             let element: SVGSVGElement | undefined;
-            for (const node of this.application.processing.cache) {
+            for (const node of this.cacheProcessing) {
                 if (node.imageElement) {
                     [parentElement, element] = this.createSvgElement(node, node.src);
                 }

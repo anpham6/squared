@@ -29,7 +29,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 node.android(attr, numberResourceValue || !isNumber(name) ? '@string/' + name : name, false);
             }
         }
-        for (const node of this.application.processing.cache) {
+        for (const node of this.cacheProcessing) {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
                     case 'SELECT': {

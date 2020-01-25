@@ -47,7 +47,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public beforeCascade() {
         const dimens = STORED.dimens;
         const groups: ObjectMapNested<T[]> = {};
-        for (const node of this.application.session.cache) {
+        for (const node of this.cache) {
             if (node.visible) {
                 const containerName = node.containerName.toLowerCase();
                 let group = groups[containerName];

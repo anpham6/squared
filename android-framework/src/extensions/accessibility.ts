@@ -4,7 +4,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
     public readonly eventOnly = true;
 
     public beforeBaseLayout() {
-        for (const node of this.application.processing.cache) {
+        for (const node of this.cacheProcessing) {
             if (node.inputElement && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (node.containerName) {
                     case 'INPUT_IMAGE':

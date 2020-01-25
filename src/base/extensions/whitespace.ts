@@ -188,7 +188,7 @@ const validBelowChild = (node: NodeUI) => !node.hasPX('height') && node.borderTo
 export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public afterBaseLayout() {
         const processed = new Set<number>();
-        for (const node of this.application.processing.cache) {
+        for (const node of this.cacheProcessing) {
             if (node.naturalElement && node.naturalElements.length && !node.layoutElement && !node.tableElement) {
                 const children = node.naturalChildren;
                 if (children[0].documentBody) {
@@ -479,7 +479,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     }
 
     public afterConstraints() {
-        for (const node of this.application.processing.cache) {
+        for (const node of this.cacheProcessing) {
             if (node.pageFlow && node.styleElement && node.inlineVertical && !node.positioned) {
                 const renderParent = node.renderParent;
                 if (renderParent && !renderParent.tableElement && node.actualParent?.layoutElement === false) {

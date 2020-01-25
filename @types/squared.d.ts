@@ -198,7 +198,7 @@ declare namespace base {
 
     interface Extension<T extends Node> {
         application: Application<T>;
-        controller: Controller<T>;
+        readonly controller: Controller<T>;
         readonly framework: number;
         readonly name: string;
         readonly options: ExternalData;
@@ -215,9 +215,11 @@ declare namespace base {
 
     interface ExtensionUI<T extends NodeUI> extends Extension<T> {
         application: ApplicationUI<T>;
-        controller: ControllerUI<T>;
-        resource: ResourceUI<T>;
         tagNames: string[];
+        readonly controller: ControllerUI<T>;
+        readonly resource: ResourceUI<T>;
+        readonly cache: NodeList<T>;
+        readonly cacheProcessing: NodeList<T>;
         readonly documentBase: boolean;
         readonly eventOnly: boolean;
         readonly cascadeAll: boolean;

@@ -17,7 +17,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
     public readonly eventOnly = true;
 
     public beforeCascade() {
-        for (const node of this.application.session.cache) {
+        for (const node of this.cache) {
             const renderTemplates = node.renderTemplates;
             if (renderTemplates) {
                 let open: NodeRenderIndex[] | undefined;

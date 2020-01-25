@@ -23,8 +23,6 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
 
     public init?: (element: HTMLElement) => boolean;
 
-    public controller!: squared.base.ControllerUI<T>;
-    public resource!: squared.base.ResourceUI<T>;
     public tagNames: string[];
     public readonly eventOnly = false;
     public readonly documentBase = false;
@@ -32,6 +30,10 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     public readonly removeIs = false;
 
     protected _application!: squared.base.ApplicationUI<T>;
+    protected _controller!: squared.base.ControllerUI<T>;
+    protected _resource!: squared.base.ResourceUI<T>;
+    protected _cache!: squared.base.NodeList<T>;
+    protected _cacheProcessing!: squared.base.NodeList<T>;
 
     private _isAll = false;
 
@@ -90,10 +92,28 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
 
     set application(value) {
         this._application = value;
-        this.controller = value.controllerHandler;
-        this.resource = value.resourceHandler;
+        this._controller = value.controllerHandler;
+        this._resource = value.resourceHandler;
+        this._cache = value.session.cache;
+        this._cacheProcessing = value.processing.cache;
     }
     get application() {
         return this._application;
+    }
+
+    get controller() {
+        return this._controller;
+    }
+
+    get resource() {
+        return this._resource;
+    }
+
+    get cache() {
+        return this._cache;
+    }
+
+    get cacheProcessing() {
+        return this._cacheProcessing;
     }
 }
