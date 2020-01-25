@@ -1,8 +1,12 @@
-import { ExcludeOptions, Support } from '../base/node';
+import { CachedValueUI, ExcludeOptions, Support } from '../base/node';
 
 export interface LocalSettings {
     supportRTL: boolean;
     floatPrecision: number;
+}
+
+export interface CachedValueAndroidUI<T> extends CachedValueUI<T> {
+    leftTopAxis?: boolean;
 }
 
 export interface Constraint {

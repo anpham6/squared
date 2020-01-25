@@ -414,7 +414,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             else {
-                                if (!td.hasPX('width') || td.percentWidth) {
+                                if (td.percentWidth) {
                                     setBoundsWidth(td);
                                 }
                                 data.expand = false;

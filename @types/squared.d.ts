@@ -401,13 +401,10 @@ declare namespace base {
         readonly contentBoxHeight: number;
         readonly flexbox: Flexbox;
         readonly zIndex: number;
-        readonly positiveAxis: boolean;
         readonly backgroundColor: string;
         readonly backgroundImage: string;
         readonly visibleStyle: VisibleStyle;
         readonly fontSize: number;
-        readonly percentWidth: boolean;
-        readonly percentHeight: boolean;
         readonly src: string;
         readonly overflow: number;
         readonly overflowX: boolean;
@@ -525,6 +522,9 @@ declare namespace base {
         readonly textEmpty: boolean;
         readonly preserveWhiteSpace: boolean;
         readonly baselineHeight: number;
+        readonly positiveAxis: boolean;
+        readonly percentWidth: boolean;
+        readonly percentHeight: boolean;
         readonly layoutHorizontal: boolean;
         readonly layoutVertical: boolean;
         readonly onlyChild: boolean;

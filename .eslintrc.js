@@ -1,8 +1,7 @@
 module.exports = {
     "env": {
         "browser": true,
-        "es6": true,
-        "node": true
+        "es2017": true
     },
     "extends": [
         "eslint:recommended",
@@ -17,7 +16,6 @@ module.exports = {
     "ignorePatterns": [],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "ecmaVersion": 2018,
         "project": "tsconfig.json",
         "sourceType": "module"
     },
@@ -175,6 +173,7 @@ module.exports = {
         "no-undef-init": "error",
         "no-debugger": "error",
         "no-cond-assign": "error",
+        "no-unused-labels": "error",
         "no-underscore-dangle": ["error", {
             "allowAfterThis": true
         }],
@@ -187,29 +186,28 @@ module.exports = {
         "use-isnan": "error",
         "id-match": "error",
         "new-parens": "error",
+        "spaced-comment": "error",
+        "valid-typeof": "error",
         "max-classes-per-file": "off",
         "max-len": "off",
         "no-bitwise": "off",
         "no-console": "off",
-        "valid-typeof": "off",
         "comma-dangle": "off",
         "complexity": "off",
         "dot-notation": "off",
         "eol-last": "off",
         "guard-for-in": "off",
         "id-blacklist": "off",
+        "explicit-function-return-type": "off",
+        "quote-props": "off",
+        "radix": "off",
         "no-unused-expressions": "off",
         "no-constant-condition": "off",
         "no-shadow": "off",
         "no-empty": "off",
         "no-fallthrough": "off",
         "no-undef": "off",
-        "no-unused-labels": "off",
         "no-unused-vars": "off",
-        "quote-props": "off",
-        "radix": "off",
-        "spaced-comment": "error",
-        "explicit-function-return-type": "off",
         "@typescript-eslint/prefer-function-type": "error",
         "@typescript-eslint/unified-signatures": "error",
         "@typescript-eslint/array-type": "off",

@@ -93,7 +93,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             if (node.hasPX('width', false)) {
                 container.cssPX('width', Math.max(node.marginLeft, 0) + offset, false);
             }
-            else if (node.hasPX('width')) {
+            else if (node.percentWidth) {
                 container.css('width', 'auto');
             }
         }

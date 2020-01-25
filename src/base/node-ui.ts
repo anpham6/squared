@@ -7,7 +7,7 @@ import { CSS_SPACING } from './lib/constant';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 const $lib = squared.lib;
-const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, formatPX, isLength } = $lib.css;
+const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, formatPX, isLength, isPercent } = $lib.css;
 const { isTextNode, newBoxModel } = $lib.dom;
 const { isEqual } = $lib.math;
 const { XML } = $lib.regex;
@@ -1098,6 +1098,26 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         Object.assign(node.unsafe('cached'), this._cached);
     }
 
+    public unsetCache(...attrs: string[]) {
+        if (attrs.length) {
+            const cached = this._cached;
+            for (const attr of attrs) {
+                switch (attr) {
+                    case 'top':
+                    case 'right':
+                    case 'bottom':
+                    case 'left':
+                        cached.positionAuto = undefined;
+                        break;
+                    case 'lineHeight':
+                        cached.baselineHeight = undefined;
+                        break;
+                }
+            }
+        }
+        super.unsetCache(...attrs);
+    }
+
     public css(attr: string, value?: string, cache = false): string {
         if (arguments.length >= 2) {
             if (value) {
@@ -1273,6 +1293,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
+    get positiveAxis() {
+        let result = this._cached.positiveAxis;
+        if (result === undefined) {
+            result = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0;
+            this._cached.positiveAxis = result;
+        }
+        return result;
+    }
+
     set overflow(value: number) {
         if (value === 0 || value === NODE_ALIGNMENT.VERTICAL || value === NODE_ALIGNMENT.HORIZONTAL || value === (NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.VERTICAL)) {
             if (hasBit(this.overflow, NODE_ALIGNMENT.BLOCK)) {
@@ -1406,6 +1435,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 result = false;
             }
             this._cached.textEmpty = result;
+        }
+        return result;
+    }
+
+    get percentWidth() {
+        let result = this._cached.percentWidth;
+        if (result === undefined) {
+            result = isPercent(this.cssInitial('width'));
+            this._cached.percentWidth = result;
+        }
+        return result;
+    }
+
+    get percentHeight() {
+        let result = this._cached.percentHeight;
+        if (result === undefined) {
+            result = isPercent(this.cssInitial('height'));
+            this._cached.percentHeight = result;
         }
         return result;
     }

@@ -709,45 +709,46 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         this._cached = {};
                         return;
                     case 'width':
-                        cached.percentWidth = undefined;
                     case 'minWidth':
                         cached.width = undefined;
+                    case 'maxWidth':
+                        cached.overflow = undefined;
                         break;
                     case 'height':
-                        cached.percentHeight = undefined;
                     case 'minHeight':
                         cached.height = undefined;
                         cached.hasHeight = undefined;
+                    case 'maxHeight':
+                        cached.overflow = undefined;
                         break;
                     case 'verticalAlign':
                         cached.baseline = undefined;
+                        break;
+                    case 'textAlign':
+                        cached.rightAligned = undefined;
+                        cached.centerAligned = undefined;
+                        break;
+                    case 'top':
+                    case 'bottom':
+                        cached.bottomAligned = undefined;
                         break;
                     case 'backgroundColor':
                     case 'backgroundImage':
                         cached.visibleStyle = undefined;
                         break;
-                    case 'pageFlow':
-                        cached.blockStatic = undefined;
-                        cached.baseline = undefined;
-                        cached.floating = undefined;
-                        cached.autoMargin = undefined;
-                        cached.rightAligned = undefined;
-                        cached.bottomAligned = undefined;
-                        break;
                     case 'float':
                         cached.floating = undefined;
                         break;
-                    case 'visibleStyle':
-                        cached.borderTopWidth = undefined;
-                        cached.borderRightWidth = undefined;
-                        cached.borderBottomWidth = undefined;
-                        cached.borderLeftWidth = undefined;
-                        cached.backgroundColor = undefined;
-                        cached.backgroundImage = undefined;
+                    case 'overflowX':
+                    case 'overflowY':
+                        cached.overflow = undefined;
                         break;
                     default:
                         if (REGEX_MARGIN.test(attr)) {
                             cached.autoMargin = undefined;
+                            cached.rightAligned = undefined;
+                            cached.centerAligned = undefined;
+                            cached.horizontalAligned = undefined;
                         }
                         else if (REGEX_PADDING.test(attr)) {
                             cached.contentBoxWidth = undefined;
@@ -2278,7 +2279,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             const parent = this.actualParent;
             if (parent?.flexElement) {
-                result = /right|end$/.test(parent.css('justifyContent'));
+                result = /(right|end)$/.test(parent.css('justifyContent'));
             }
             else {
                 result = this.float === 'right' || this.autoMargin.left || !this.pageFlow && this.hasPX('right') || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'right';
@@ -2291,7 +2292,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get bottomAligned() {
         let result = this._cached.bottomAligned;
         if (result === undefined) {
-            result = !this.pageFlow && this.hasPX('bottom') && this.bottom >= 0;
+            result = !this.pageFlow && this.hasPX('bottom') && this.bottom >= 0 && !this.hasPX('top');
             this._cached.bottomAligned = result;
         }
         return result;
@@ -2484,15 +2485,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    get positiveAxis() {
-        let result = this._cached.positiveAxis;
-        if (result === undefined) {
-            result = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0;
-            this._cached.positiveAxis = result;
-        }
-        return result;
-    }
-
     get backgroundColor() {
         let result = this._cached.backgroundColor;
         if (result === undefined) {
@@ -2581,24 +2573,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 };
             }
             this._cached.visibleStyle = result;
-        }
-        return result;
-    }
-
-    get percentWidth() {
-        let result = this._cached.percentWidth;
-        if (result === undefined) {
-            result = isPercent(this.cssInitial('width'));
-            this._cached.percentWidth = result;
-        }
-        return result;
-    }
-
-    get percentHeight() {
-        let result = this._cached.percentHeight;
-        if (result === undefined) {
-            result = isPercent(this.cssInitial('height'));
-            this._cached.percentHeight = result;
         }
         return result;
     }

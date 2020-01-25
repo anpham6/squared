@@ -1,7 +1,7 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { CachedValueUI, AutoMargin } from '../../@types/base/node';
+import { AutoMargin } from '../../@types/base/node';
 import { CustomizationResult } from '../../@types/android/application';
-import { Constraint, LocalSettings, SupportAndroid } from '../../@types/android/node';
+import { CachedValueAndroidUI, Constraint, LocalSettings, SupportAndroid } from '../../@types/android/node';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
@@ -255,7 +255,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         };
 
         protected _namespaces = ['android', 'app'];
-        protected _cached: CachedValueUI<T> = {};
+        protected _cached: CachedValueAndroidUI<T> = {};
         protected _controlName = '';
         protected _localSettings!: LocalSettings;
         protected _documentParent?: T;

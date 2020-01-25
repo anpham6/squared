@@ -50,7 +50,6 @@ export interface CachedValue<T> {
     baseline?: boolean;
     verticalAlign?: string;
     multiline?: boolean;
-    positiveAxis?: boolean;
     centerAligned?: boolean;
     rightAligned?: boolean;
     bottomAligned?: boolean;
@@ -65,7 +64,6 @@ export interface CachedValue<T> {
     tagName?: string;
     textContent?: string;
     textEmpty?: boolean;
-    src?: string;
     float?: string;
     actualParent?: T | null;
     absoluteParent?: T | null;
@@ -77,13 +75,13 @@ export interface CachedValue<T> {
     backgroundColor?: string;
     backgroundImage?: string;
     visibleStyle?: VisibleStyle;
-    percentWidth?: boolean;
-    percentHeight?: boolean;
 }
 
 export interface CachedValueUI<T> extends CachedValue<T> {
     positionAuto?: boolean;
-    leftTopAxis?: boolean;
+    positiveAxis?: boolean;
+    percentWidth?: boolean;
+    percentHeight?: boolean;
     renderExclude?: boolean;
     containerName?: string;
     baselineHeight?: number;

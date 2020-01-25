@@ -36,6 +36,60 @@ function setOriginPosition(element: Element, point: Point, attr: string, positio
     }
 }
 
+export const SVG = {
+    svg: (element: Element): element is SVGSVGElement => {
+        return element.tagName === 'svg';
+    },
+    g: (element: Element): element is SVGGElement => {
+        return element.tagName === 'g';
+    },
+    symbol: (element: Element): element is SVGSymbolElement => {
+        return element.tagName === 'symbol';
+    },
+    path: (element: Element): element is SVGPathElement => {
+        return element.tagName === 'path';
+    },
+    shape: (element: Element): element is SVGGeometryElement => {
+        return SHAPES[element.tagName] !== undefined;
+    },
+    image: (element: Element): element is SVGImageElement => {
+        return element.tagName === 'image';
+    },
+    use: (element: Element): element is SVGUseElement => {
+        return element.tagName === 'use';
+    },
+    line: (element: Element): element is SVGLineElement => {
+        return element.tagName === 'line';
+    },
+    rect: (element: Element): element is SVGRectElement => {
+        return element.tagName === 'rect';
+    },
+    circle: (element: Element): element is SVGCircleElement => {
+        return element.tagName === 'circle';
+    },
+    ellipse: (element: Element): element is SVGEllipseElement => {
+        return element.tagName === 'ellipse';
+    },
+    polygon: (element: Element): element is SVGPolygonElement => {
+        return element.tagName === 'polygon';
+    },
+    polyline: (element: Element): element is SVGPolylineElement => {
+        return element.tagName === 'polyline';
+    },
+    clipPath: (element: Element): element is SVGClipPathElement => {
+        return element.tagName === 'clipPath';
+    },
+    pattern: (element: Element): element is SVGPatternElement => {
+        return element.tagName === 'pattern';
+    },
+    linearGradient: (element: Element): element is SVGLinearGradientElement => {
+        return element.tagName === 'linearGradient';
+    },
+    radialGradient: (element: Element): element is SVGRadialGradientElement => {
+        return element.tagName === 'radialGradient';
+    }
+};
+
 export const MATRIX = {
     applyX(matrix: SvgMatrix | DOMMatrix, x: number, y: number) {
         return matrix.a * x + matrix.c * y + matrix.e;
@@ -329,60 +383,6 @@ export const TRANSFORM = {
             default:
                 return '';
         }
-    }
-};
-
-export const SVG = {
-    svg: (element: Element): element is SVGSVGElement => {
-        return element.tagName === 'svg';
-    },
-    g: (element: Element): element is SVGGElement => {
-        return element.tagName === 'g';
-    },
-    symbol: (element: Element): element is SVGSymbolElement => {
-        return element.tagName === 'symbol';
-    },
-    path: (element: Element): element is SVGPathElement => {
-        return element.tagName === 'path';
-    },
-    shape: (element: Element): element is SVGGeometryElement => {
-        return SHAPES[element.tagName] !== undefined;
-    },
-    image: (element: Element): element is SVGImageElement => {
-        return element.tagName === 'image';
-    },
-    use: (element: Element): element is SVGUseElement => {
-        return element.tagName === 'use';
-    },
-    line: (element: Element): element is SVGLineElement => {
-        return element.tagName === 'line';
-    },
-    rect: (element: Element): element is SVGRectElement => {
-        return element.tagName === 'rect';
-    },
-    circle: (element: Element): element is SVGCircleElement => {
-        return element.tagName === 'circle';
-    },
-    ellipse: (element: Element): element is SVGEllipseElement => {
-        return element.tagName === 'ellipse';
-    },
-    polygon: (element: Element): element is SVGPolygonElement => {
-        return element.tagName === 'polygon';
-    },
-    polyline: (element: Element): element is SVGPolylineElement => {
-        return element.tagName === 'polyline';
-    },
-    clipPath: (element: Element): element is SVGClipPathElement => {
-        return element.tagName === 'clipPath';
-    },
-    pattern: (element: Element): element is SVGPatternElement => {
-        return element.tagName === 'pattern';
-    },
-    linearGradient: (element: Element): element is SVGLinearGradientElement => {
-        return element.tagName === 'linearGradient';
-    },
-    radialGradient: (element: Element): element is SVGRadialGradientElement => {
-        return element.tagName === 'radialGradient';
     }
 };
 

@@ -867,6 +867,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         const increasing = offsetTo > offsetFrom;
                                         const segDuration = j > 0 ? (keyTimeTo - keyTimesBase[j - 1]) * duration : 0;
                                         const offsetTotal = offsetValue * flattenData.lengthRatio;
+                                        let iterationTotal = offsetTotal / extendedLength;
+                                        let offsetRemaining = offsetTotal;
+                                        let finalValue = 0;
                                         const getKeyTimeIncrement = (offset: number) => ((offset / offsetTotal) * segDuration) / duration;
                                         const isDuplicateFraction = () => j > 0 && values[values.length - 1] === (increasing ? '1' : '0');
                                         const setFinalValue = (offset: number, checkInvert = false) => {
@@ -898,9 +901,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             values.push(value.toString());
                                             previousRemaining = value > 0 && value < 1 ? finalValue : 0;
                                         };
-                                        let iterationTotal = offsetTotal / extendedLength;
-                                        let offsetRemaining = offsetTotal;
-                                        let finalValue = 0;
                                         if (j === 0) {
                                             offsetRemaining %= extendedLength;
                                             setFinalValue(0);
