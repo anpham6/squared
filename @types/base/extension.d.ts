@@ -1,7 +1,3 @@
-export interface AccessibilityOptions {
-    showLabel: boolean;
-}
-
 export interface CssGridData<T> {
     children: T[];
     row: CssGridDirectionData;

@@ -1213,18 +1213,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         if (nodeY.styleElement) {
                             let next = false;
-                            const removeExtension = (ext: ExtensionUI<T>) => {
-                                const index = extensions.indexOf(ext);
-                                if (index !== -1) {
-                                    extensions = extensions.slice(0);
-                                    extensions.splice(index, 1);
-                                }
-                            };
                             for (const ext of prioritizeExtensions(nodeY.dataset.use, extensions)) {
                                 if (ext.is(nodeY)) {
-                                    if (ext.removeIs) {
-                                        removeExtension(ext);
-                                    }
                                     if (ext.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(ext))) {
                                         const result = ext.processNode(nodeY, parentY);
                                         if (result) {
@@ -1237,14 +1227,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                             parentY = result.parent || parentY;
                                             if (output && include !== false || include) {
-                                                if (nodeY.renderExtension === undefined) {
-                                                    nodeY.renderExtension = [];
+                                                let renderExt = nodeY.renderExtension;
+                                                if (renderExt === undefined) {
+                                                    renderExt = [];
+                                                    nodeY.renderExtension = renderExt;
                                                 }
-                                                nodeY.renderExtension.push(ext);
+                                                renderExt.push(ext);
                                                 ext.subscribers.add(nodeY);
                                             }
                                             if (result.remove) {
-                                                removeExtension(ext);
+                                                const index = extensions.indexOf(ext);
+                                                if (index !== -1) {
+                                                    extensions = extensions.slice(0);
+                                                    extensions.splice(index, 1);
+                                                }
                                             }
                                             next = result.next === true;
                                             if (result.complete || next) {

@@ -1,15 +1,17 @@
+import { AccessibilityOptions } from '../../../@types/android/extension';
+
 const { NODE_PROCEDURE } = squared.base.lib.enumeration;
 
 export default class <T extends android.base.View> extends squared.base.extensions.Accessibility<T> {
     public readonly eventOnly = true;
+    public readonly options: AccessibilityOptions = {
+        showLabel: false
+    };
 
     public beforeBaseLayout() {
         for (const node of this.cacheProcessing) {
             if (node.inputElement && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (node.containerName) {
-                    case 'INPUT_IMAGE':
-                        node.extracted = [node];
-                        break;
                     case 'INPUT_RADIO':
                     case 'INPUT_CHECKBOX': {
                         const id = node.elementId;
@@ -41,6 +43,9 @@ export default class <T extends android.base.View> extends squared.base.extensio
                         });
                         break;
                     }
+                    case 'INPUT_IMAGE':
+                        node.extracted = [node];
+                        break;
                     case 'BUTTON':
                         if (node.length) {
                             const extracted = node.filter((item: T) => !item.textElement) as T[];

@@ -18,8 +18,6 @@ const isParentVisible = (node: View, visibleStyle: VisibleStyle) => (node.actual
 const hasWidth = (node: View) => !node.blockStatic || node.hasPX('width') || node.has('maxWidth', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' });
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
-    public readonly removeIs = true;
-
     public is(node: T) {
         return node.documentBody;
     }
@@ -174,9 +172,10 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                             container.children as T[]
                         )
                     ),
+                    remove: true
                 };
             }
         }
-        return undefined;
+        return { remove: true };
     }
 }

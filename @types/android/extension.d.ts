@@ -1,5 +1,9 @@
 import { SvgTransformExclude } from '../svg/object';
 
+export interface AccessibilityOptions {
+    showLabel: boolean;
+}
+
 export interface ConstraintGuidelineOptions {
     circlePosition: boolean;
 }
