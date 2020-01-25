@@ -19,6 +19,8 @@ const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
 
+const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z-]+))?\)|"([^"]+)")\s*/g;
+
 function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
     const element = document.createElement(tagName);
     element.className = '__squared.pseudo';
@@ -51,6 +53,53 @@ function prioritizeExtensions<T extends NodeUI>(value: string | undefined, exten
         }
     }
     return extensions;
+}
+
+function saveAlignment(preAlignment: ObjectIndex<StringMap>, element: HTMLElement, id: number, attr: string, value: string, restoreValue: string) {
+    let stored = preAlignment[id];
+    if (stored === undefined) {
+        stored = {};
+        preAlignment[id] = stored;
+    }
+    stored[attr] = restoreValue;
+    element.style.setProperty(attr, value);
+}
+
+function getCounterValue(name: string, counterName: string) {
+    if (name !== 'none') {
+        const pattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
+        let counterMatch: RegExpExecArray | null;
+        while ((counterMatch = pattern.exec(name)) !== null) {
+            if (counterMatch[1] === counterName) {
+                return parseInt(counterMatch[2]);
+            }
+        }
+    }
+    return undefined;
+}
+
+function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string) {
+    const pseduoStyle: StringMap = getElementCache(parent, 'styleMap' + pseudoElt, sessionId);
+    if (pseduoStyle?.counterIncrement) {
+        return getCounterValue(pseduoStyle.counterIncrement, counterName);
+    }
+    return undefined;
+}
+
+function checkTraverseHorizontal(node: NodeUI, horizontal: NodeUI[], vertical: NodeUI[], extended: boolean) {
+    if (vertical.length || extended) {
+        return false;
+    }
+    horizontal.push(node);
+    return true;
+}
+
+function checkTraverseVertical(node: NodeUI, horizontal: NodeUI[], vertical: NodeUI[]) {
+    if (horizontal.length) {
+        return false;
+    }
+    vertical.push(node);
+    return true;
 }
 
 const requirePadding = (node: NodeUI) => node.textElement && (node.blockStatic || node.multiline);
@@ -335,15 +384,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const direction = new Set<HTMLElement>();
             const pseudoElements: T[] = [];
             let resetBounds = false;
-            function saveAlignment(element: HTMLElement, id: number, attr: string, value: string, restoreValue: string) {
-                let stored = preAlignment[id];
-                if (stored === undefined) {
-                    stored = {};
-                    preAlignment[id] = stored;
-                }
-                stored[attr] = restoreValue;
-                element.style.setProperty(attr, value);
-            }
             if (node.documentBody) {
                 parent.visible = false;
                 parent.exclude({
@@ -363,14 +403,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             case 'center':
                             case 'right':
                             case 'end':
-                                saveAlignment(element, item.id, 'text-align', 'left', textAlign);
+                                saveAlignment(preAlignment, element, item.id, 'text-align', 'left', textAlign);
                                 break;
                         }
                     }
                     if (item.positionRelative) {
                         for (const attr of BOX_POSITION) {
                             if (item.hasPX(attr)) {
-                                saveAlignment(element, item.id, attr, 'auto', item.css(attr));
+                                saveAlignment(preAlignment, element, item.id, attr, 'auto', item.css(attr));
                                 resetBounds = true;
                             }
                         }
@@ -766,10 +806,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z-]+))?\)|"([^"]+)")\s*/g;
                             let found = false;
                             let match: RegExpExecArray | null;
-                            while ((match = pattern.exec(value)) !== null) {
+                            while ((match = REGEX_COUNTER.exec(value)) !== null) {
                                 const attr = match[1];
                                 if (attr) {
                                     content += getNamedItem(element, attr.trim());
@@ -786,69 +825,50 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         counterName = match[6];
                                         styleName = match[8] || 'decimal';
                                     }
-                                    function getCounterValue(name: string) {
-                                        if (name !== 'none') {
-                                            const patternCounter = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
-                                            let counterMatch: RegExpExecArray | null;
-                                            while ((counterMatch = patternCounter.exec(name)) !== null) {
-                                                if (counterMatch[1] === counterName) {
-                                                    return parseInt(counterMatch[2]);
-                                                }
-                                            }
-                                        }
-                                        return undefined;
-                                    }
-                                    const getIncrementValue = (parent: Element) => {
-                                        const pseduoStyle: StringMap = getElementCache(parent, 'styleMap' + pseudoElt, sessionId);
-                                        if (pseduoStyle?.counterIncrement) {
-                                            return getCounterValue(pseduoStyle.counterIncrement);
-                                        }
-                                        return undefined;
-                                    };
-                                    const initalValue = (getIncrementValue(element) || 0) + (getCounterValue(style.getPropertyValue('counter-reset')) || 0);
+                                    const initalValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName) || 0);
                                     const subcounter: number[] = [];
                                     let current: Element | null = element;
                                     let counter = initalValue;
                                     let ascending = false;
                                     let lastResetElement: Element | undefined;
-                                    function incrementCounter(increment: number, pseudo: boolean) {
+                                    const incrementCounter = (increment: number, pseudo: boolean) => {
                                         if (subcounter.length === 0) {
                                             counter += increment;
                                         }
                                         else if (ascending || pseudo) {
                                             subcounter[subcounter.length - 1] += increment;
                                         }
-                                    }
-                                    function cascadeSibling(sibling: Element) {
-                                        if (getCounterValue(getStyle(sibling).getPropertyValue('counter-reset')) === undefined) {
+                                    };
+                                    const cascadeCounterSibling = (sibling: Element) => {
+                                        if (getCounterValue(getStyle(sibling).getPropertyValue('counter-reset'), counterName) === undefined) {
                                             const children = sibling.children;
                                             const length = children.length;
                                             for (let i = 0; i < length; i++) {
                                                 const child = children[i];
                                                 if (child.className !== '__squared.pseudo') {
-                                                    let increment = getIncrementValue(child);
+                                                    let increment = getCounterIncrementValue(child, counterName, pseudoElt, sessionId);
                                                     if (increment) {
                                                         incrementCounter(increment, true);
                                                     }
                                                     const childStyle = getStyle(child);
-                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-increment'));
+                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-increment'), counterName);
                                                     if (increment) {
                                                         incrementCounter(increment, false);
                                                     }
-                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-reset'));
+                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-reset'), counterName);
                                                     if (increment !== undefined) {
                                                         return;
                                                     }
-                                                    cascadeSibling(child);
+                                                    cascadeCounterSibling(child);
                                                 }
                                             }
                                         }
-                                    }
+                                    };
                                     do {
                                         ascending = false;
                                         if (current.previousElementSibling) {
                                             current = current.previousElementSibling;
-                                            cascadeSibling(current);
+                                            cascadeCounterSibling(current);
                                         }
                                         else if (current.parentElement) {
                                             current = current.parentElement;
@@ -858,16 +878,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             break;
                                         }
                                         if (current.className !== '__squared.pseudo') {
-                                            const pesudoIncrement = getIncrementValue(current);
+                                            const pesudoIncrement = getCounterIncrementValue(current, counterName, pseudoElt, sessionId);
                                             if (pesudoIncrement) {
                                                 incrementCounter(pesudoIncrement, true);
                                             }
                                             const currentStyle = getStyle(current);
-                                            const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment')) || 0;
+                                            const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment'), counterName) || 0;
                                             if (counterIncrement) {
                                                 incrementCounter(counterIncrement, false);
                                             }
-                                            const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'));
+                                            const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'), counterName);
                                             if (counterReset !== undefined) {
                                                 if (lastResetElement === undefined) {
                                                     counter += counterReset;
@@ -905,6 +925,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             if (!found) {
                                 content = value;
                             }
+                            REGEX_COUNTER.lastIndex = 0;
                         }
                         break;
                 }
@@ -1006,20 +1027,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let extended = false;
-                        function checkHorizontal(node: T) {
-                            if (vertical.length || extended) {
-                                return false;
-                            }
-                            horizontal.push(node);
-                            return true;
-                        }
-                        function checkVertical(node: T) {
-                            if (horizontal.length) {
-                                return false;
-                            }
-                            vertical.push(node);
-                            return true;
-                        }
                         let l = k;
                         let m = 0;
                         if (parentY.layoutVertical && nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
@@ -1110,21 +1117,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                     }
                                                     break traverse;
                                                 }
-                                                if (!checkVertical(item)) {
+                                                if (!checkTraverseVertical(item, horizontal, vertical)) {
                                                     break traverse;
                                                 }
                                             }
-                                            else if (!checkHorizontal(item)) {
+                                            else if (!checkTraverseHorizontal(item, horizontal, vertical, extended)) {
                                                 break traverse;
                                             }
                                         }
                                         else {
                                             if (item.alignedVertically()) {
-                                                if (!checkVertical(item)) {
+                                                if (!checkTraverseVertical(item, horizontal, vertical)) {
                                                     break traverse;
                                                 }
                                             }
-                                            else if (!checkHorizontal(item)) {
+                                            else if (!checkTraverseHorizontal(item, horizontal, vertical, extended)) {
                                                 break traverse;
                                             }
                                         }
@@ -1135,7 +1142,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 else if (item.positionAuto) {
                                     const lengthA = vertical.length;
-                                    if (lengthA > 0) {
+                                    if (lengthA) {
                                         if (vertical[lengthA - 1].blockStatic) {
                                             vertical.push(item);
                                         }
@@ -1206,20 +1213,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         if (nodeY.styleElement) {
                             let next = false;
-                            function removeExtension(item: ExtensionUI<T>) {
-                                const index = extensions.indexOf(item);
+                            const removeExtension = (ext: ExtensionUI<T>) => {
+                                const index = extensions.indexOf(ext);
                                 if (index !== -1) {
                                     extensions = extensions.slice(0);
                                     extensions.splice(index, 1);
                                 }
-                            }
-                            for (const item of prioritizeExtensions(nodeY.dataset.use, extensions)) {
-                                if (item.is(nodeY)) {
-                                    if (item.removeIs) {
-                                        removeExtension(item);
+                            };
+                            for (const ext of prioritizeExtensions(nodeY.dataset.use, extensions)) {
+                                if (ext.is(nodeY)) {
+                                    if (ext.removeIs) {
+                                        removeExtension(ext);
                                     }
-                                    if (item.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(item))) {
-                                        const result = item.processNode(nodeY, parentY);
+                                    if (ext.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(ext))) {
+                                        const result = ext.processNode(nodeY, parentY);
                                         if (result) {
                                             const { output, renderAs, outputAs, include } = result;
                                             if (output) {
@@ -1233,11 +1240,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 if (nodeY.renderExtension === undefined) {
                                                     nodeY.renderExtension = [];
                                                 }
-                                                nodeY.renderExtension.push(item);
-                                                item.subscribers.add(nodeY);
+                                                nodeY.renderExtension.push(ext);
+                                                ext.subscribers.add(nodeY);
                                             }
                                             if (result.remove) {
-                                                removeExtension(item);
+                                                removeExtension(ext);
                                             }
                                             next = result.next === true;
                                             if (result.complete || next) {

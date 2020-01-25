@@ -34,22 +34,10 @@ function setSpacingOffset(node: NodeUI, region: number, value: number, adjustmen
 
 function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
     if (isBlockElement(child, direction)) {
-        let margin: string;
-        let borderWidth: string;
-        let padding: string;
-        let boxMargin: number;
-        if (direction) {
-            margin = 'marginTop';
-            borderWidth = 'borderTopWidth';
-            padding = 'paddingTop';
-            boxMargin = BOX_STANDARD.MARGIN_TOP;
-        }
-        else {
-            margin = 'marginBottom';
-            borderWidth = 'borderBottomWidth';
-            padding = 'paddingBottom';
-            boxMargin = BOX_STANDARD.MARGIN_BOTTOM;
-        }
+        const [margin, borderWidth, padding, boxMargin] =
+            direction
+                ? ['marginTop', 'borderTopWidth', 'paddingTop', BOX_STANDARD.MARGIN_TOP]
+                : ['marginBottom', 'borderBottomWidth', 'paddingBottom', BOX_STANDARD.MARGIN_BOTTOM];
         if (node[borderWidth] === 0) {
             if (node[padding] === 0) {
                 while (DOCTYPE_HTML && child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0 && canResetChild(child)) {
@@ -180,6 +168,17 @@ function isBlockElement(node: NodeUI | null, direction?: boolean, checkIndex = f
     return false;
 }
 
+function getMarginOffset(below: NodeUI, above: NodeUI, lineHeight: number, aboveLineBreak?: NodeUI) {
+    const top = below.linear.top;
+    if (aboveLineBreak) {
+        const bottom = Math.max(aboveLineBreak.linear.top, above.linear.bottom);
+        if (bottom < top) {
+            return top - bottom - lineHeight;
+        }
+    }
+    return top - above.linear.bottom - lineHeight;
+}
+
 const setMinHeight = (node: NodeUI, offset: number) => node.css('minHeight', formatPX(Math.max(offset, node.hasPX('minHeight', false) ? node.parseUnit(node.css('minHeight')) : 0)));
 const canResetChild = (node: NodeUI) => !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
 const validAboveChild = (node: NodeUI) => !node.hasPX('height') && node.paddingBottom === 0 && node.borderBottomWidth === 0 && canResetChild(node);
@@ -229,7 +228,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         if (i > 0 && isBlockElement(current, false)) {
                             const previousSiblings = current.previousSiblings({ floating: false });
                             const lengthA = previousSiblings.length;
-                            if (lengthA > 0) {
+                            if (lengthA) {
                                 let inheritedTop = false;
                                 const previous = previousSiblings[lengthA - 1];
                                 if (isBlockElement(previous, true)) {
@@ -366,16 +365,6 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         let below = nextSiblings.pop() as T;
                         let lineHeight = 0;
                         let aboveLineBreak: T | undefined;
-                        function getMarginOffset() {
-                            const top = below.linear.top;
-                            if (aboveLineBreak) {
-                                const bottom = Math.max(aboveLineBreak.linear.top, above.linear.bottom);
-                                if (bottom < top) {
-                                    return top - bottom - lineHeight;
-                                }
-                            }
-                            return top - above.linear.bottom - lineHeight;
-                        }
                         if (above.rendered && below.rendered) {
                             const inline = above.inlineStatic && below.inlineStatic;
                             if (inline && previousSiblings.length === 0) {
@@ -411,7 +400,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 below = belowParent as T;
                                 belowParent = below.renderParent;
                             }
-                            const offset = getMarginOffset();
+                            const offset = getMarginOffset(below, above, lineHeight, aboveLineBreak);
                             if (offset >= 1) {
                                 if (below.visible) {
                                     below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
@@ -424,7 +413,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                         else {
-                            const offset = getMarginOffset();
+                            const offset = getMarginOffset(below, above, lineHeight);
                             if (offset > 0) {
                                 if ((below.lineBreak || below.excluded) && actualParent.lastChild === below) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);

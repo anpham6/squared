@@ -9,6 +9,8 @@ type CSSKeyframesData = squared.lib.css.CSSKeyframesData;
 const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
 const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+const REGEX_SRCSET = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
+const REGEX_CALCULATE = /(\s+[+-]\s+|\s*[*/]\s*)/;
 const REGEX_PX = CSS.PX;
 
 function compareRange(operation: string, unit: number, range: number) {
@@ -321,7 +323,7 @@ export function validMediaRule(value: string, fontSize?: number) {
                             case 'height':
                             case 'min-height':
                             case 'max-height':
-                                valid = compareRange(operation, attr.includes('width') ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
+                                valid = compareRange(operation, /width$/.test(attr) ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
                                 break;
                             case 'orientation':
                                 valid = rule !== undefined && (rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight);
@@ -685,9 +687,8 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         }
     }
     if (srcset !== '') {
-        const pattern = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
         for (const value of srcset.split(XML.SEPARATOR)) {
-            const match = pattern.exec(value.trim());
+            const match = REGEX_SRCSET.exec(value.trim());
             if (match) {
                 let width = 0;
                 let pixelRatio = 0;
@@ -877,7 +878,6 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
         }
     }
     if (opened === closing.length) {
-        const symbol = /(\s+[+-]\s+|\s*[*/]\s*)/;
         const equated: number[] = [];
         let index = 0;
         while (true) {
@@ -897,7 +897,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                 if (valid) {
                     const seg: number[] = [];
                     const evaluate: string[] = [];
-                    for (let partial of value.substring(j + 1, closing[i]).split(symbol)) {
+                    for (let partial of value.substring(j + 1, closing[i]).split(REGEX_CALCULATE)) {
                         partial = partial.trim();
                         switch (partial) {
                             case '+':

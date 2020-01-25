@@ -678,6 +678,21 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         return 0;
                     });
                     const intervalMap = new SvgAnimationIntervalMap(sorted, 'stroke-dasharray', 'stroke-dashoffset');
+                    const getDashOffset = (time: number, playing = false) => {
+                        const value = intervalMap.get('stroke-dashoffset', time, playing);
+                        if (value) {
+                            return parseFloat(value);
+                        }
+                        return valueOffset;
+                    };
+                    const getDashArray = (time: number, playing = false) => {
+                        const value = intervalMap.get('stroke-dasharray', time, playing);
+                        if (value) {
+                            return SvgBuild.parseCoordinates(value);
+                        }
+                        return valueArray;
+                    };
+                    const getFromToValue = (item?: SvgStrokeDash) => item ? item.start + ' ' + item.end : '1 1';
                     if (sorted.length > 1) {
                         for (let i = 0; i < sorted.length; i++) {
                             const item = sorted[i];
@@ -686,21 +701,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             }
                         }
                     }
-                    function getDashOffset(time: number, playing = false) {
-                        const value = intervalMap.get('stroke-dashoffset', time, playing);
-                        if (value) {
-                            return parseFloat(value);
-                        }
-                        return valueOffset;
-                    }
-                    function getDashArray(time: number, playing = false) {
-                        const value = intervalMap.get('stroke-dasharray', time, playing);
-                        if (value) {
-                            return SvgBuild.parseCoordinates(value);
-                        }
-                        return valueArray;
-                    }
-                    const getFromToValue = (item?: SvgStrokeDash) => item ? item.start + ' ' + item.end : '1 1';
                     let setDashLength: Undefined<(index: number) => void> = (index: number) => {
                         let offset = valueOffset;
                         const length = sorted.length;
@@ -722,10 +722,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     for (let i = 0; i < sorted.length; i++) {
                         const item = sorted[i];
                         if (item.setterType) {
-                            function setDashGroup(values: number[], offset: number) {
+                            const setDashGroup = (values: number[], offset: number) => {
                                 createDashGroup(values, offset, item.delay, item.fillReplace && item.duration > 0 ? item.duration : 0);
                                 modified = true;
-                            }
+                            };
                             switch (item.attributeName) {
                                 case 'stroke-dasharray':
                                     valueArray = SvgBuild.parseCoordinates(item.to);
@@ -853,7 +853,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 keyTime = keyTimeTo;
                                                 keyTimes.push(keyTime);
                                                 const lengthA = values.length;
-                                                if (lengthA > 0) {
+                                                if (lengthA) {
                                                     values.push(values[lengthA - 1]);
                                                     previousRemaining = parseFloat(values[lengthA - 1]);
                                                 }
@@ -869,7 +869,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         const offsetTotal = offsetValue * flattenData.lengthRatio;
                                         const getKeyTimeIncrement = (offset: number) => ((offset / offsetTotal) * segDuration) / duration;
                                         const isDuplicateFraction = () => j > 0 && values[values.length - 1] === (increasing ? '1' : '0');
-                                        function setFinalValue(offset: number, checkInvert = false) {
+                                        const setFinalValue = (offset: number, checkInvert = false) => {
                                             finalValue = (offsetRemaining - offset) / extendedLength;
                                             if (checkInvert) {
                                                 const value = truncateFraction(finalValue);
@@ -884,20 +884,20 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                     }
                                                 }
                                             }
-                                        }
-                                        function insertFractionKeyTime() {
+                                        };
+                                        const insertFractionKeyTime = () => {
                                             if (!isDuplicateFraction()) {
                                                 keyTimes.push(keyTime === 0 ? 0 : truncateFraction(keyTime));
                                                 values.push(increasing ? '1' : '0');
                                             }
-                                        }
-                                        function insertFinalKeyTime() {
+                                        };
+                                        const insertFinalKeyTime = () => {
                                             keyTime = keyTimeTo;
                                             keyTimes.push(keyTime);
                                             const value = truncateFraction(finalValue);
                                             values.push(value.toString());
                                             previousRemaining = value > 0 && value < 1 ? finalValue : 0;
-                                        }
+                                        };
                                         let iterationTotal = offsetTotal / extendedLength;
                                         let offsetRemaining = offsetTotal;
                                         let finalValue = 0;

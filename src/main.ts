@@ -24,6 +24,13 @@ const system = <FunctionMap<any>> {};
 let main: Application;
 let framework: AppFramework<Node>;
 
+function includeExtension(extensions: Extension[], ext: Extension) {
+    if (!extensions.includes(ext)) {
+        ext.application = main;
+        extensions.push(ext);
+    }
+}
+
 const checkMain = () => main?.initializing === false && main.length > 0;
 
 export function setFramework(value: AppFramework<Node>, cached = false) {
@@ -37,23 +44,17 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
         main = appBase.application;
         main.userSettings = settings;
         const { builtInExtensions, extensions } = main;
-        function includeExtension(extension: Extension) {
-            if (!extensions.includes(extension)) {
-                extension.application = main;
-                extensions.push(extension);
-            }
-        }
         extensions.length = 0;
         for (let namespace of settings.builtInExtensions) {
-            const extension = builtInExtensions[namespace];
-            if (extension) {
-                includeExtension(extension);
+            const ext = builtInExtensions[namespace];
+            if (ext) {
+                includeExtension(extensions, ext);
             }
             else {
                 namespace += '.';
                 for (const name in builtInExtensions) {
                     if (name.startsWith(namespace)) {
-                        includeExtension(builtInExtensions[name]);
+                        includeExtension(extensions, builtInExtensions[name]);
                     }
                 }
             }

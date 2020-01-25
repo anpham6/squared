@@ -5,9 +5,9 @@ import SvgPaint$MX from './svgpaint-mx';
 import SvgView$MX from './svgview-mx';
 import SvgBuild from './svgbuild';
 import SvgContainer from './svgcontainer';
-import SvgShape from './svgshape';
 import SvgPath from './svgpath';
 import SvgPattern from './svgpattern';
+import SvgShape from './svgshape';
 
 import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { TRANSFORM } from './lib/util';

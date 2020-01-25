@@ -183,28 +183,6 @@ function getBorderRadius(radius?: string[]): StringMap | undefined {
             return { radius: radius[0] };
         }
         else {
-            function getCornerRadius(corners: string[]) {
-                const [topLeft, topRight, bottomRight, bottomLeft] = corners;
-                const result: StringMap = {};
-                let valid = false;
-                if (topLeft !== '0px') {
-                    result.topLeftRadius = topLeft;
-                    valid = true;
-                }
-                if (topRight !== '0px') {
-                    result.topRightRadius = topRight;
-                    valid = true;
-                }
-                if (bottomRight !== '0px') {
-                    result.bottomRightRadius = bottomRight;
-                    valid = true;
-                }
-                if (bottomLeft !== '0px') {
-                    result.bottomLeftRadius = bottomLeft;
-                    valid = true;
-                }
-                return valid ? result : undefined;
-            }
             if (length === 8) {
                 const corners = new Array(4);
                 for (let i = 0, j = 0; i < length; i += 2) {
@@ -218,6 +196,29 @@ function getBorderRadius(radius?: string[]): StringMap | undefined {
         }
     }
     return undefined;
+}
+
+function getCornerRadius(corners: string[]) {
+    const [topLeft, topRight, bottomRight, bottomLeft] = corners;
+    const result: StringMap = {};
+    let valid = false;
+    if (topLeft !== '0px') {
+        result.topLeftRadius = topLeft;
+        valid = true;
+    }
+    if (topRight !== '0px') {
+        result.topRightRadius = topRight;
+        valid = true;
+    }
+    if (bottomRight !== '0px') {
+        result.bottomRightRadius = bottomRight;
+        valid = true;
+    }
+    if (bottomLeft !== '0px') {
+        result.bottomLeftRadius = bottomLeft;
+        valid = true;
+    }
+    return valid ? result : undefined;
 }
 
 function getBackgroundColor(value?: string) {
@@ -367,6 +368,13 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     return result;
 }
 
+function resetPosition(position: BoxRectPosition, dirA: string, dirB: string, overwrite = false) {
+    if (position.orientation.length === 2 || overwrite) {
+        position[dirA] = 0;
+    }
+    position[dirB] = 0;
+}
+
 function getPercentOffset(direction: string, position: BoxRectPosition, bounds: BoxRectDimension, dimension?: Dimension): number {
     if (dimension) {
         const orientation = position.orientation;
@@ -456,6 +464,53 @@ function fillBackgroundAttribute(attribute: string[], length: number) {
     }
     attribute.length = length;
     return attribute;
+}
+
+function setBorderStyle(layerList: ObjectMap<any>, borders: (BorderAttribute | undefined)[], index: number, corners: StringMap | undefined, indentWidth: number, indentOffset: string) {
+    const item = borders[index];
+    if (item) {
+        const width = roundFloat(item.width);
+        if (item.style === 'double' && width > 1) {
+            insertDoubleBorder(
+                layerList.item,
+                item,
+                index === 0,
+                index === 1,
+                index === 2,
+                index === 3,
+                indentWidth,
+                corners
+            );
+        }
+        else {
+            const inset = width > 1 && isInsetBorder(item);
+            if (inset) {
+                const hideInsetOffset = '-' + formatPX(width + indentWidth + 1);
+                layerList.item.push({
+                    top:  index === 0 ? '' : hideInsetOffset,
+                    right: index === 1 ? '' : hideInsetOffset,
+                    bottom: index === 2 ? '' : hideInsetOffset,
+                    left: index === 3 ? '' : hideInsetOffset,
+                    shape: {
+                        'android:shape': 'rectangle',
+                        stroke: getBorderStroke(item, index, inset, true)
+                    }
+                });
+            }
+            const hideOffset = '-' + formatPX((inset ? Math.ceil(width / 2) : width) + indentWidth + 1);
+            layerList.item.push({
+                top:  index === 0 ? indentOffset : hideOffset,
+                right: index === 1 ? indentOffset : hideOffset,
+                bottom: index === 2 ? indentOffset : hideOffset,
+                left: index === 3 ? indentOffset : hideOffset,
+                shape: {
+                    'android:shape': 'rectangle',
+                    corners,
+                    stroke: getBorderStroke(item, index, inset)
+                }
+            });
+        }
+    }
 }
 
 const roundFloat = (value: string) => Math.round(parseFloat(value));
@@ -710,56 +765,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             else {
-                function setBorderStyle(layerList: ObjectMap<any>, index: number) {
-                    const item = borders[index];
-                    if (item) {
-                        const width = roundFloat(item.width);
-                        if (item.style === 'double' && width > 1) {
-                            insertDoubleBorder(
-                                layerList.item,
-                                item,
-                                index === 0,
-                                index === 1,
-                                index === 2,
-                                index === 3,
-                                indentWidth,
-                                corners
-                            );
-                        }
-                        else {
-                            const inset = width > 1 && isInsetBorder(item);
-                            if (inset) {
-                                const hideInsetOffset = '-' + formatPX(width + indentWidth + 1);
-                                layerList.item.push({
-                                    top:  index === 0 ? '' : hideInsetOffset,
-                                    right: index === 1 ? '' : hideInsetOffset,
-                                    bottom: index === 2 ? '' : hideInsetOffset,
-                                    left: index === 3 ? '' : hideInsetOffset,
-                                    shape: {
-                                        'android:shape': 'rectangle',
-                                        stroke: getBorderStroke(item, index, inset, true)
-                                    }
-                                });
-                            }
-                            const hideOffset = '-' + formatPX((inset ? Math.ceil(width / 2) : width) + indentWidth + 1);
-                            layerList.item.push({
-                                top:  index === 0 ? indentOffset : hideOffset,
-                                right: index === 1 ? indentOffset : hideOffset,
-                                bottom: index === 2 ? indentOffset : hideOffset,
-                                left: index === 3 ? indentOffset : hideOffset,
-                                shape: {
-                                    'android:shape': 'rectangle',
-                                    corners,
-                                    stroke: getBorderStroke(item, index, inset)
-                                }
-                            });
-                        }
-                    }
-                }
-                setBorderStyle(layerListData[0], 0);
-                setBorderStyle(layerListData[0], 3);
-                setBorderStyle(layerListData[0], 2);
-                setBorderStyle(layerListData[0], 1);
+                setBorderStyle(layerListData[0], borders, 0, corners, indentWidth, indentOffset);
+                setBorderStyle(layerListData[0], borders, 3, corners, indentWidth, indentOffset);
+                setBorderStyle(layerListData[0], borders, 2, corners, indentWidth, indentOffset);
+                setBorderStyle(layerListData[0], borders, 1, corners, indentWidth, indentOffset);
             }
         }
         return [shapeData, layerListData];
@@ -959,13 +968,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let repeatY = true;
                 let recalibrate = true;
                 if (typeof value === 'string') {
-                    function resetPosition(dirA: string, dirB: string, overwrite = false) {
-                        if (position.orientation.length === 2 || overwrite) {
-                            position[dirA] = 0;
-                        }
-                        position[dirB] = 0;
-                    }
-                    function resetBackground() {
+                    const resetBackground = () => {
                         tileMode = '';
                         tileModeX = '';
                         tileModeY = '';
@@ -974,8 +977,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             node.visibleStyle.backgroundRepeat = true;
                             node.visibleStyle.backgroundRepeatY = true;
                         }
-                    }
-                    function resetGravityPosition() {
+                    };
+                    const resetGravityPosition = () => {
                         gravityX = '';
                         gravityY = '';
                         position.top = 0;
@@ -984,7 +987,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         position.left = 0;
                         resizable = false;
                         recalibrate = false;
-                    }
+                    };
                     const canResizeHorizontal = () => resizable && gravityX !== 'fill_horizontal' && tileMode !== 'repeat' && tileModeX === '';
                     const canResizeVertical = () => resizable && gravityY !== 'fill_vertical' && tileMode !== 'repeat' && tileModeY === '';
                     const src = '@drawable/' + value;
@@ -1019,17 +1022,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         switch (position.horizontal) {
                             case 'left':
                             case '0%':
-                                resetPosition('left', 'right');
+                                resetPosition(position, 'left', 'right');
                                 gravityX = node.localizeString('left');
                                 break;
                             case 'center':
                             case '50%':
-                                resetPosition('left', 'right', true);
+                                resetPosition(position, 'left', 'right', true);
                                 gravityX = STRING_ANDROID.CENTER_HORIZONTAL;
                                 break;
                             case 'right':
                             case '100%':
-                                resetPosition('right', 'left');
+                                resetPosition(position, 'right', 'left');
                                 gravityX = node.localizeString('right');
                                 break;
                             default:
@@ -1062,7 +1065,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         switch (position.vertical) {
                             case 'top':
                             case '0%':
-                                resetPosition('top', 'bottom');
+                                resetPosition(position, 'top', 'bottom');
                                 gravityY = 'top';
                                 if (isNaN(dimenHeight)) {
                                     height = boundsHeight;
@@ -1070,12 +1073,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 break;
                             case 'center':
                             case '50%':
-                                resetPosition('top', 'bottom', true);
+                                resetPosition(position, 'top', 'bottom', true);
                                 gravityY = STRING_ANDROID.CENTER_VERTICAL;
                                 break;
                             case 'bottom':
                             case '100%':
-                                resetPosition('bottom', 'top');
+                                resetPosition(position, 'bottom', 'top');
                                 gravityY = 'bottom';
                                 break;
                             default:
@@ -1167,14 +1170,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     if (dimension) {
                         if (gravityX !== '' && tileModeY === 'repeat' && dimenWidth < boundsWidth) {
-                            function resetX() {
+                            const resetX = () => {
                                 if (gravityY === '' && gravityX !== node.localizeString('left') && node.renderChildren.length) {
                                     tileModeY = '';
                                 }
                                 gravityAlign = gravityX;
                                 gravityX = '';
                                 tileModeX = '';
-                            }
+                            };
                             switch (gravityX) {
                                 case 'start':
                                 case 'left':
@@ -1196,14 +1199,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                         if (gravityY !== '' && tileModeX === 'repeat' && dimenHeight < boundsHeight) {
-                            function resetY() {
+                            const resetY = () => {
                                 if (gravityX === '' && gravityY !== 'top' && node.renderChildren.length) {
                                     tileModeX = '';
                                 }
                                 gravityAlign += (gravityAlign !== '' ? '|' : '') + gravityY;
                                 gravityY = '';
                                 tileModeY = 'disabled';
-                            }
+                            };
                             switch (gravityY) {
                                 case 'top':
                                     position.top += node.borderTopWidth;

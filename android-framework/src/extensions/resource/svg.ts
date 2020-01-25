@@ -290,7 +290,7 @@ function getOuterOpacity(target: SvgView) {
 
 function partitionTransforms(element: SVGGraphicsElement, transforms: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
     const length = transforms.length;
-    if (length > 0 && (SVG.circle(element) || SVG.ellipse(element))) {
+    if (length && (SVG.circle(element) || SVG.ellipse(element))) {
         if (transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE) && (rx !== ry || length > 1 && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
             return groupTransforms(element, transforms);
         }
@@ -304,6 +304,11 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
         const client: SvgTransform[] = [];
         const rotateOrigin = transforms[0].fromCSS ? [] : TRANSFORM.rotateOrigin(element).reverse();
         const items = transforms.slice(0).reverse();
+        const current: SvgTransform[] = [];
+        const restart = () => {
+            host.push(current.slice(0));
+            current.length = 0;
+        }
         for (let i = 1; i < items.length; i++) {
             const itemA = items[i];
             const itemB = items[i - 1];
@@ -327,11 +332,6 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
                     items.splice(--i, 1);
                 }
             }
-        }
-        const current: SvgTransform[] = [];
-        function restart() {
-            host.push(current.slice(0));
-            current.length = 0;
         }
         for (const item of items) {
             switch (item.type) {
@@ -598,6 +598,53 @@ function sortSynchronized(a: $SvgAnimate, b: $SvgAnimate) {
     return 0;
 }
 
+function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, targetSetTemplate: SetTemplate, templateName: string, imageLength: number) {
+    const templateSet = targetSetTemplate.set;
+    const length = templateSet.length;
+    if (length) {
+        let modified = false;
+        if (length > 1 && templateSet.every(item => item.ordering === '')) {
+            const setData: SetTemplate = {
+                set: [],
+                objectAnimator: []
+            };
+            for (const item of templateSet) {
+                setData.set = setData.set.concat(item.set as any);
+                setData.objectAnimator = setData.objectAnimator.concat(item.objectAnimator);
+            }
+            targetSetTemplate = setData;
+        }
+        while (targetSetTemplate.set.length === 1) {
+            const setData = <SetTemplate> targetSetTemplate.set[0];
+            if ((!modified || setData.ordering === '') && setData.objectAnimator.length === 0) {
+                targetSetTemplate = setData;
+                modified = true;
+            }
+            else {
+                break;
+            }
+        }
+        targetSetTemplate['xmlns:android'] = XMLNS_ANDROID.android;
+        if (modified) {
+            targetSetTemplate['android:ordering'] = targetSetTemplate.ordering;
+            targetSetTemplate.ordering = undefined;
+        }
+        const targetData: AnimatedVectorTarget = {
+            name,
+            animation: Resource.insertStoredAsset(
+                'animators',
+                getTemplateFilename(templateName, imageLength, 'anim', name),
+                applyTemplate('set', SET_TMPL, [targetSetTemplate])
+            )
+        };
+        if (targetData.animation !== '') {
+            targetData.animation = '@anim/' + targetData.animation;
+            data[0].target.push(targetData);
+        }
+    }
+}
+
+const getTemplateFilename = (templateName: string, length: number, prefix?: string, suffix?: string) => templateName + (prefix ? '_' + prefix : '') + (length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
 const getVectorName = (target: SvgView, section: string, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
 const getRadiusPercent = (value: string) => isPercent(value) ? parseFloat(value) / 100 : 0.5;
@@ -718,7 +765,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         this.NAMESPACE_AAPT = false;
         this.SYNCHRONIZE_MODE = SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyFrames ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
         const templateName = (node.tagName + '_' + convertWord(node.controlId, true) + '_viewbox').toLowerCase();
-        const getFilename = (prefix?: string, suffix?: string) => templateName + (prefix ? '_' + prefix : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
         svg.build({
             exclude: this.options.transformExclude,
             residual: partitionTransforms,
@@ -732,9 +778,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
         const include = this.parseVectorData(svg);
         const viewBox = svg.viewBox;
+        const imageLength = this.IMAGE_DATA.length;
         let vectorName = Resource.insertStoredAsset(
             'drawables',
-            getFilename(),
+            getTemplateFilename(templateName, imageLength),
             applyTemplate('vector', VECTOR_TMPL, [{
                 'xmlns:android': XMLNS_ANDROID.android,
                 'xmlns:aapt': this.NAMESPACE_AAPT ? XMLNS_ANDROID.aapt : '',
@@ -754,51 +801,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 'android:drawable': getDrawableSrc(vectorName),
                 target: []
             }];
-            function insertTargetAnimation(name: string, targetSetTemplate: SetTemplate) {
-                const templateSet = targetSetTemplate.set;
-                const length = templateSet.length;
-                if (length) {
-                    let modified = false;
-                    if (length > 1 && templateSet.every(item => item.ordering === '')) {
-                        const setData: SetTemplate = {
-                            set: [],
-                            objectAnimator: []
-                        };
-                        for (const item of templateSet) {
-                            setData.set = setData.set.concat(item.set as any);
-                            setData.objectAnimator = setData.objectAnimator.concat(item.objectAnimator);
-                        }
-                        targetSetTemplate = setData;
-                    }
-                    while (targetSetTemplate.set.length === 1) {
-                        const setData = <SetTemplate> targetSetTemplate.set[0];
-                        if ((!modified || setData.ordering === '') && setData.objectAnimator.length === 0) {
-                            targetSetTemplate = setData;
-                            modified = true;
-                        }
-                        else {
-                            break;
-                        }
-                    }
-                    targetSetTemplate['xmlns:android'] = XMLNS_ANDROID.android;
-                    if (modified) {
-                        targetSetTemplate['android:ordering'] = targetSetTemplate.ordering;
-                        targetSetTemplate.ordering = undefined;
-                    }
-                    const targetData: AnimatedVectorTarget = {
-                        name,
-                        animation: Resource.insertStoredAsset(
-                            'animators',
-                            getFilename('anim', name),
-                            applyTemplate('set', SET_TMPL, [targetSetTemplate])
-                        )
-                    };
-                    if (targetData.animation !== '') {
-                        targetData.animation = '@anim/' + targetData.animation;
-                        data[0].target.push(targetData);
-                    }
-                }
-            }
             for (const [name, group] of this.ANIMATE_DATA.entries()) {
                 const sequentialMap = new Map<string, $SvgAnimate[]>();
                 const transformMap = new Map<string, $SvgAnimateTransform[]>();
@@ -1387,7 +1389,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         targetSetTemplate.set.push(setData);
                     }
                 });
-                insertTargetAnimation(name, targetSetTemplate);
+                insertTargetAnimation(data, name, targetSetTemplate, templateName, imageLength);
             }
             for (const [name, target] of this.ANIMATE_TARGET.entries()) {
                 let objectAnimator: PropertyValue[] | undefined;
@@ -1415,21 +1417,27 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                 }
                 if (objectAnimator) {
-                    insertTargetAnimation(name, {
-                        set: [{ set: undefined as any, objectAnimator }],
-                        objectAnimator: undefined as any
-                    });
+                    insertTargetAnimation(
+                        data,
+                        name,
+                        {
+                            set: [{ set: undefined as any, objectAnimator }],
+                            objectAnimator: undefined as any
+                        },
+                        templateName,
+                        imageLength
+                    );
                 }
             }
             if (data[0].target) {
                 vectorName = Resource.insertStoredAsset(
                     'drawables',
-                    getFilename('anim'),
+                    getTemplateFilename(templateName, imageLength, 'anim'),
                     applyTemplate('animated-vector', ANIMATEDVECTOR_TMPL, data)
                 );
             }
         }
-        if (this.IMAGE_DATA.length) {
+        if (imageLength) {
             const resource = <android.base.Resource<T>> this.resource;
             const item: ExternalData[] = [];
             if (vectorName !== '') {

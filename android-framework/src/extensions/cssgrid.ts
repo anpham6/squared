@@ -86,6 +86,11 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
     }
 }
 
+function getMarginSize(value: number, gridSize: number) {
+    const size = Math.floor(gridSize / value);
+    return [size, gridSize - (size * value)];
+}
+
 function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: string, horizontal: boolean, dimension: string, outerWrapper: boolean, MARGIN_START: number, MARGIN_END: number, maxScreenWidth: number, maxScreenHeight: number) {
     const data = horizontal ? mainData.column : mainData.row;
     if (/^space/.test(alignment)) {
@@ -94,13 +99,9 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
             const rowData = getRowData(mainData, horizontal);
             const itemCount = data.length;
             const adjusted = new Set<View>();
-            function getMarginSize(value: number) {
-                const marginSize = Math.floor(gridSize / value);
-                return [marginSize, gridSize - (marginSize * value)];
-            }
             switch (alignment) {
                 case 'space-around': {
-                    const [marginSize, marginExcess] = getMarginSize(itemCount * 2);
+                    const [marginSize, marginExcess] = getMarginSize(itemCount * 2, gridSize);
                     for (let i = 0; i < itemCount; i++) {
                         for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
                             const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
@@ -118,7 +119,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                 }
                 case 'space-between': {
                     if (itemCount > 1) {
-                        const [marginSize, marginExcess] = getMarginSize(itemCount - 1);
+                        const [marginSize, marginExcess] = getMarginSize(itemCount - 1, gridSize);
                         for (let i = 0; i < itemCount; i++) {
                             for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
                                 const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
@@ -146,7 +147,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                     }
                 }
                 case 'space-evenly': {
-                    const [marginSize, marginExcess] = getMarginSize(itemCount + 1);
+                    const [marginSize, marginExcess] = getMarginSize(itemCount + 1, gridSize);
                     for (let i = 0; i < itemCount; i++) {
                         for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
                             let marginEnd = marginSize + (i < marginExcess ? 1 : 0);
@@ -271,6 +272,22 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
     return [width, height, layout_columnWeight, layout_rowWeight];
 }
 
+function checkRowSpan(node: View, mainData: CssGridData<View>, rowSpan: number, rowStart: number) {
+    if (rowSpan === 1 && mainData.rowSpanMultiple[rowStart]) {
+        const rowData = mainData.rowData;
+        const rowCount = rowData.length;
+        for (const item of flatMultiArray<View>(rowData[rowStart])) {
+            if (item !== node) {
+                const data: CssGridCellData = item.data(CSS_GRID, 'cellData');
+                if (data && (rowStart === 0 || data.rowSpan < rowCount) && data.rowSpan > rowSpan) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
@@ -315,7 +332,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         if (mainData && cellData) {
             const { alignContent, column, row } = mainData;
             const { alignSelf, justifySelf } = node.flexbox;
-            function applyLayout(item: T, horizontal: boolean, dimension: string) {
+            const applyLayout = (item: T, horizontal: boolean, dimension: string) => {
                 let data: CssGridDirectionData;
                 let cellStart: number;
                 let cellSpan: number;
@@ -500,7 +517,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
                 return [cellStart, cellSpan];
-            }
+            };
             if (REGEX_ALIGNSELF.test(alignSelf) || REGEX_JUSTIFYSELF.test(justifySelf)) {
                 renderAs = this.application.createNode({ parent });
                 renderAs.containerName = node.containerName;
@@ -560,25 +577,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const target = renderAs || node;
             applyLayout(target, true, 'width');
             const [rowStart, rowSpan] = applyLayout(target, false, 'height');
-            function checkRowSpan() {
-                if (rowSpan === 1 && mainData.rowSpanMultiple[rowStart] === true) {
-                    const rowData = mainData.rowData;
-                    const rowCount = rowData.length;
-                    for (const item of flatMultiArray<T>(rowData[rowStart])) {
-                        if (item !== node) {
-                            const data: CssGridCellData = item.data(CSS_GRID, 'cellData');
-                            if (data && (rowStart === 0 || data.rowSpan < rowCount) && data.rowSpan > rowSpan) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                return false;
-            }
             if (!target.hasPX('width')) {
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
-            if (alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.bounds.height > (<BoxRectDimension> node.data(CSS_GRID, 'boundsData') || node.bounds).height && checkRowSpan()) {
+            if (alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.bounds.height > (<BoxRectDimension> node.data(CSS_GRID, 'boundsData') || node.bounds).height && checkRowSpan(node, mainData, rowSpan, rowStart)) {
                 target.css('minHeight', formatPX(node.actualHeight), true);
             }
             else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && alignContent === 'space-between')) {
@@ -662,7 +664,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             {
                 let k = -1;
                 let l = 0;
-                function createSpacer(i: number, horizontal: boolean, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) {
+                const createSpacer = (i: number, horizontal: boolean, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) => {
                     let width = '';
                     let height = '';
                     if (k !== -1) {
@@ -738,7 +740,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                     l = 0;
                     return [width, height];
-                }
+                };
                 let length = Math.max(rowData.length, 1);
                 for (let i = 0; i < length; i++) {
                     if (emptyRows[i] === undefined) {

@@ -27,6 +27,15 @@ const REGEX_TRANSFORM = {
 };
 let REGEX_ROTATEORIGIN: RegExp | undefined;
 
+function setOriginPosition(element: Element, point: Point, attr: string, position: string, dimension: number) {
+    if (isLength(position)) {
+        point[attr] = parseUnit(position, getFontSize(element));
+    }
+    else if (isPercent(position)) {
+        point[attr] = (parseFloat(position) / 100) * dimension;
+    }
+}
+
 export const MATRIX = {
     applyX(matrix: SvgMatrix | DOMMatrix, x: number, y: number) {
         return matrix.a * x + matrix.c * y + matrix.e;
@@ -208,14 +217,6 @@ export const TRANSFORM = {
         const result: Point = { x: 0, y: 0 };
         if (value !== '') {
             const viewBox = getNearestViewBox(element);
-            function setPosition(attr: string, position: string, dimension: number) {
-                if (isLength(position)) {
-                    result[attr] = parseUnit(position, getFontSize(element));
-                }
-                else if (isPercent(position)) {
-                    result[attr] = (parseFloat(position) / 100) * dimension;
-                }
-            }
             let width = 0;
             let height = 0;
             if (viewBox) {
@@ -251,7 +252,7 @@ export const TRANSFORM = {
                 case 'center':
                     positions[0] = '50%';
                 default:
-                    setPosition('x', positions[0], width);
+                    setOriginPosition(element, result, 'x', positions[0], width);
                     break;
             }
             switch (positions[1]) {
@@ -265,7 +266,7 @@ export const TRANSFORM = {
                 case 'center':
                     positions[1] = '50%';
                 default:
-                    setPosition('y', positions[1], height);
+                    setOriginPosition(element, result, 'y', positions[1], height);
                     break;
             }
         }

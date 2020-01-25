@@ -19,6 +19,32 @@ type T = NodeUI;
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 
+function cascadeActualPadding(children: T[], attr: string, value: number) {
+    let valid = false;
+    for (const item of children) {
+        if (item.blockStatic) {
+            return false;
+        }
+        else if (item.inlineStatic) {
+            if (item.has('lineHeight') && item.lineHeight > item.bounds.height) {
+                return false;
+            }
+            else if (item[attr] >= value) {
+                valid = true;
+            }
+            else if (canCascadeChildren(item)) {
+                if (!cascadeActualPadding(item.naturalElements as T[], attr, value)) {
+                    return false;
+                }
+                else {
+                    valid = true;
+                }
+            }
+        }
+    }
+    return valid;
+}
+
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth;
 const checkBlockDimension = (node: T, previous: T) => aboveRange(node.linear.top, previous.linear.bottom) && (isBlockWrap(node) || isBlockWrap(previous) || node.float !== previous.float);
@@ -1034,32 +1060,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             let reset = false;
             if (canCascadeChildren(node)) {
-                function cascade(children: T[]) {
-                    let valid = false;
-                    for (const item of children) {
-                        if (item.blockStatic) {
-                            return false;
-                        }
-                        else if (item.inlineStatic) {
-                            if (item.has('lineHeight') && item.lineHeight > item.bounds.height) {
-                                return false;
-                            }
-                            else if (item[attr] >= value) {
-                                valid = true;
-                            }
-                            else if (canCascadeChildren(item)) {
-                                if (!cascade(item.naturalElements as T[])) {
-                                    return false;
-                                }
-                                else {
-                                    valid = true;
-                                }
-                            }
-                        }
-                    }
-                    return valid;
-                }
-                reset = cascade(node.naturalElements as T[]);
+                reset = cascadeActualPadding(node.naturalElements as T[], attr, value);
             }
             return reset ? 0 : value;
         }

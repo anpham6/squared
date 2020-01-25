@@ -47,15 +47,12 @@ module.exports = {
         "no-compare-neg-zero": [
             "error"
         ],
-        "no-cond-assign": "off",
         "no-const-assign": [
             "error"
         ],
-        "no-constant-condition": "off",
         "no-control-regex": [
             "error"
         ],
-        "no-debugger": "error",
         "no-delete-var": [
             "error"
         ],
@@ -71,7 +68,6 @@ module.exports = {
         "no-duplicate-case": [
             "error"
         ],
-        "no-empty": "off",
         "no-empty-character-class": [
             "error"
         ],
@@ -87,14 +83,15 @@ module.exports = {
         "no-extra-semi": [
             "error"
         ],
-        "no-fallthrough": "off",
         "no-func-assign": [
             "error"
         ],
         "no-global-assign": [
             "error"
         ],
-        "no-inner-declarations": "off",
+        "no-inner-declarations": [
+            "error"
+        ],
         "no-invalid-regexp": [
             "error"
         ],
@@ -137,19 +134,18 @@ module.exports = {
         "no-this-before-super": [
             "error"
         ],
-        "no-undef": "off",
         "no-unexpected-multiline": [
             "error"
         ],
         "no-unreachable": [
             "error"
         ],
-        "no-unsafe-finally": "error",
+        "no-unsafe-finally": [
+            "error"
+        ],
         "no-unsafe-negation": [
             "error"
         ],
-        "no-unused-labels": "off",
-        "no-unused-vars": "off",
         "no-useless-catch": [
             "error"
         ],
@@ -162,54 +158,60 @@ module.exports = {
         "require-yield": [
             "error"
         ],
-        "use-isnan": "error",
-        "valid-typeof": "off",
         "arrow-parens": [
             "error",
             "as-needed"
         ],
-        "comma-dangle": "off",
-        "complexity": "off",
-        "dot-notation": "off",
-        "eol-last": "off",
         "eqeqeq": [
             "error",
             "always"
         ],
-        "guard-for-in": "off",
-        "id-blacklist": "off",
-        "id-match": "error",
-        "import/order": "off",
-        "max-classes-per-file": "off",
-        "max-len": "off",
-        "new-parens": "error",
-        "no-bitwise": "off",
         "no-caller": "error",
-        "no-console": "off",
         "no-eval": "error",
-        "no-invalid-this": "off",
+        "no-invalid-this": "error",
         "no-new-wrappers": "error",
-        "no-shadow": "off",
         "no-throw-literal": "error",
         "no-trailing-spaces": "error",
         "no-undef-init": "error",
-        "no-underscore-dangle": [
-            "error",
-            {
-                "allowAfterThis": true
-            }
-        ],
-        "no-unused-expressions": "off",
+        "no-debugger": "error",
+        "no-cond-assign": "error",
+        "no-underscore-dangle": ["error", {
+            "allowAfterThis": true
+        }],
+        "prefer-arrow-callback": "error",
         "object-shorthand": "error",
         "one-var": [
             "error",
             "never"
         ],
-        "prefer-arrow-callback": "error",
+        "use-isnan": "error",
+        "id-match": "error",
+        "new-parens": "error",
+        "max-classes-per-file": "off",
+        "max-len": "off",
+        "no-bitwise": "off",
+        "no-console": "off",
+        "valid-typeof": "off",
+        "comma-dangle": "off",
+        "complexity": "off",
+        "dot-notation": "off",
+        "eol-last": "off",
+        "guard-for-in": "off",
+        "id-blacklist": "off",
+        "no-unused-expressions": "off",
+        "no-constant-condition": "off",
+        "no-shadow": "off",
+        "no-empty": "off",
+        "no-fallthrough": "off",
+        "no-undef": "off",
+        "no-unused-labels": "off",
+        "no-unused-vars": "off",
         "quote-props": "off",
         "radix": "off",
         "spaced-comment": "error",
         "explicit-function-return-type": "off",
+        "@typescript-eslint/prefer-function-type": "error",
+        "@typescript-eslint/unified-signatures": "error",
         "@typescript-eslint/array-type": "off",
         "@typescript-eslint/consistent-type-assertions": "off",
         "@typescript-eslint/consistent-type-definitions": "off",
@@ -220,9 +222,7 @@ module.exports = {
         "@typescript-eslint/no-parameter-properties": "off",
         "@typescript-eslint/no-use-before-define": "off",
         "@typescript-eslint/prefer-for-of": "off",
-        "@typescript-eslint/prefer-function-type": "error",
         "@typescript-eslint/quotes": "off",
-        "@typescript-eslint/unified-signatures": "error",
         "@typescript-eslint/explicit-function-return-type": "off",
         "@typescript-eslint/prefer-string-starts-ends-with": "off",
         "@typescript-eslint/camelcase": "off",

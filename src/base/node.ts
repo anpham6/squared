@@ -67,6 +67,481 @@ function getFlexValue(node: T, attr: string, fallback: number, parent?: Node | n
     return fallback;
 }
 
+function validateQuerySelector(self: T, node: T, selector: QueryData, index: number, last: boolean, adjacent?: string) {
+    if (selector.all) {
+        return true;
+    }
+    let tagName = selector.tagName;
+    if (tagName && tagName !== node.tagName.toUpperCase()) {
+        return false;
+    }
+    const id = selector.id;
+    if (id && id !== node.elementId) {
+        return false;
+    }
+    const { attrList, classList, notList, pseudoList } = selector;
+    if (pseudoList) {
+        const parent = node.actualParent as T;
+        tagName = node.tagName;
+        for (const pseudo of pseudoList) {
+            switch (pseudo) {
+                case ':first-child':
+                case ':nth-child(1)':
+                    if (node !== parent.firstChild) {
+                        return false;
+                    }
+                    break;
+                case ':last-child':
+                case ':nth-last-child(1)':
+                    if (node !== parent.lastChild) {
+                        return false;
+                    }
+                    break;
+                case ':only-child':
+                    if (parent.naturalElements.length > 1) {
+                        return false;
+                    }
+                    break;
+                case ':only-of-type': {
+                    let j = 0;
+                    for (const item of parent.naturalElements) {
+                        if (item.tagName === tagName && ++j > 1) {
+                            return false;
+                        }
+                    }
+                    break;
+                }
+                case ':first-of-type': {
+                    for (const item of parent.naturalElements) {
+                        if (item.tagName === tagName) {
+                            if (item !== node) {
+                                return false;
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case ':nth-child(n)':
+                case ':nth-last-child(n)':
+                    break;
+                case ':empty':
+                    if ((<HTMLElement> node.element).childNodes.length) {
+                        return false;
+                    }
+                    break;
+                case ':checked':
+                    if (tagName === 'INPUT') {
+                        if (!node.toElementBoolean('checked')) {
+                            return false;
+                        }
+                    }
+                    else if (tagName === 'OPTION') {
+                        if (!node.toElementBoolean('selected')) {
+                            return false;
+                        }
+                    }
+                    else {
+                        return false;
+                    }
+                    break;
+                case ':enabled':
+                    if (!node.inputElement || node.toElementBoolean('disabled')) {
+                        return false;
+                    }
+                    break;
+                case ':disabled':
+                    if (!node.inputElement || !node.toElementBoolean('disabled')) {
+                        return false;
+                    }
+                    break;
+                case ':read-only': {
+                    const element = <HTMLInputElement | HTMLTextAreaElement> node.element;
+                    if (element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && !element.readOnly) {
+                        return false;
+                    }
+                    break;
+                }
+                case ':read-write': {
+                    const element = <HTMLInputElement | HTMLTextAreaElement> node.element;
+                    if (!element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && element.readOnly) {
+                        return false;
+                    }
+                    break;
+                }
+                case ':required':
+                    if (!node.inputElement || tagName === 'BUTTON' || !node.toElementBoolean('required')) {
+                        return false;
+                    }
+                    break;
+                case ':optional':
+                    if (!node.inputElement || tagName === 'BUTTON' || node.toElementBoolean('required')) {
+                        return false;
+                    }
+                    break;
+                case ':placeholder-shown': {
+                    if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && node.toElementString('placeholder') !== '')) {
+                        return false;
+                    }
+                    break;
+                }
+                case ':default': {
+                    switch (tagName) {
+                        case 'INPUT': {
+                            const element = <HTMLInputElement> node.element;
+                            switch (element.type) {
+                                case 'radio':
+                                case 'checkbox':
+                                    if (!element.checked) {
+                                        return false;
+                                    }
+                                    break;
+                                default:
+                                    return false;
+                            }
+                            break;
+                        }
+                        case 'OPTION':
+                            if ((<HTMLOptionElement> node.element).attributes['selected'] === undefined) {
+                                return false;
+                            }
+                            break;
+                        case 'BUTTON': {
+                            const form = node.ascend({ condition: item => item.tagName === 'FORM' })[0];
+                            if (form) {
+                                const element = <HTMLElement> node.element;
+                                let valid = false;
+                                const children = (form.element as Element).querySelectorAll('*');
+                                const lengthA = children.length;
+                                for (let j = 0; j < lengthA; j++) {
+                                    const item = <HTMLInputElement> children[index];
+                                    if (item.tagName === 'BUTTON') {
+                                        valid = element === item;
+                                        break;
+                                    }
+                                    else if (item.tagName === 'INPUT') {
+                                        const type = item.type;
+                                        if (type === 'submit' || type === 'image') {
+                                            valid = element === item;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (!valid) {
+                                    return false;
+                                }
+                            }
+                            break;
+                        }
+                        default:
+                            return false;
+                    }
+                    break;
+                }
+                case ':in-range':
+                case ':out-of-range': {
+                    if (tagName === 'INPUT') {
+                        const element = <HTMLInputElement> node.element;
+                        const rangeValue = parseFloat(element.value);
+                        if (!isNaN(rangeValue)) {
+                            const min = parseFloat(element.min);
+                            const max = parseFloat(element.max);
+                            if (rangeValue >= min && rangeValue <= max) {
+                                if (pseudo === ':out-of-range') {
+                                    return false;
+                                }
+                            }
+                            else if (pseudo === ':in-range') {
+                                return false;
+                            }
+                        }
+                        else if (pseudo === ':in-range') {
+                            return false;
+                        }
+                    }
+                    else {
+                        return false;
+                    }
+                    break;
+                }
+                case ':indeterminate':
+                    if (tagName === 'INPUT') {
+                        const element = <HTMLInputElement> node.element;
+                        switch (element.type) {
+                            case 'checkbox':
+                                if (!element.indeterminate) {
+                                    return false;
+                                }
+                                break;
+                            case 'radio':
+                                if (element.checked) {
+                                    return false;
+                                }
+                                else if (element.name) {
+                                    const children = (node.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
+                                    const lengthA = children.length;
+                                    for (let j = 0; j < lengthA; j++) {
+                                        if ((<HTMLInputElement> children[j]).checked) {
+                                            return false;
+                                        }
+                                    }
+                                }
+                                break;
+                            default:
+                                return false;
+                        }
+                    }
+                    else if (tagName === 'PROGRESS') {
+                        if (node.toElementInt('value', -1) !== -1) {
+                            return false;
+                        }
+                    }
+                    else {
+                        return false;
+                    }
+                    break;
+                case ':target': {
+                    if (location.hash === '') {
+                        return false;
+                    }
+                    else {
+                        const element = <HTMLAnchorElement> node.element;
+                        if (!(location.hash === '#' + element.id || tagName === 'A' && location.hash === '#' + element.name)) {
+                            return false;
+                        }
+                    }
+                    break;
+                }
+                case ':scope':
+                    if (!last || adjacent === '>' && node !== self) {
+                        return false;
+                    }
+                    break;
+                case ':root':
+                    if (!last || adjacent) {
+                        return false;
+                    }
+                    break;
+                case ':link':
+                case ':visited':
+                case ':any-link':
+                case ':hover':
+                case ':focus':
+                case ':focus-within':
+                case ':valid':
+                case ':invalid': {
+                    const element = node.element;
+                    const children = (<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo);
+                    let valid = false;
+                    const lengthA = children.length;
+                    for (let j = 0; j < lengthA; j++) {
+                        if (children.item(index) === element) {
+                            valid = true;
+                            break;
+                        }
+                    }
+                    if (!valid) {
+                        return false;
+                    }
+                    break;
+                }
+                default: {
+                    let match = REGEX_QUERY_NTH_CHILD_OFTYPE.exec(pseudo);
+                    if (match) {
+                        const placement = match[3].trim();
+                        let children = parent.naturalElements;
+                        if (match[1]) {
+                            children = children.slice(0).reverse();
+                        }
+                        const index = (match[2] === 'child' ? children.indexOf(node) : filterArray(children, item => item.tagName === tagName).indexOf(node)) + 1;
+                        if (index > 0) {
+                            if (isNumber(placement)) {
+                                if (parseInt(placement) !== index) {
+                                    return false;
+                                }
+                            }
+                            else {
+                                switch (placement) {
+                                    case 'even':
+                                        if (index % 2 !== 0) {
+                                            return false;
+                                        }
+                                        break;
+                                    case 'odd':
+                                        if (index % 2 === 0) {
+                                            return false;
+                                        }
+                                        break;
+                                    default: {
+                                        const subMatch = REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE.exec(placement);
+                                        if (subMatch) {
+                                            const modifier = convertInt(subMatch[3]);
+                                            if (subMatch[2]) {
+                                                if (subMatch[1]) {
+                                                    return false;
+                                                }
+                                                const increment = parseInt(subMatch[2]);
+                                                if (increment !== 0) {
+                                                    if (index !== modifier) {
+                                                        for (let j = increment; ; j += increment) {
+                                                            const total = increment + modifier;
+                                                            if (total === index) {
+                                                                break;
+                                                            }
+                                                            else if (total > index) {
+                                                                return false;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                else if (index !== modifier) {
+                                                    return false;
+                                                }
+                                            }
+                                            else if (subMatch[3]) {
+                                                if (modifier > 0) {
+                                                    if (subMatch[1]) {
+                                                        if (index > modifier) {
+                                                            return false;
+                                                        }
+                                                    }
+                                                    else if (index < modifier) {
+                                                        return false;
+                                                    }
+                                                }
+                                                else {
+                                                    return false;
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            continue;
+                        }
+                    }
+                    else {
+                        match = REGEX_QUERY_LANG.exec(pseudo);
+                        if (match) {
+                            const attributes = node.attributes;
+                            if (attributes['lang'] && match[1].toLowerCase() === attributes['lang'].toLowerCase()) {
+                                continue;
+                            }
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+    }
+    if (notList) {
+        for (const not of notList) {
+            const notData: QueryData = { all: false };
+            switch (not.charAt(0)) {
+                case '.':
+                    notData.classList = [not];
+                    break;
+                case '#':
+                    notData.id = not.substring(1);
+                    break;
+                case ':':
+                    notData.pseudoList = [not];
+                    break;
+                case '[': {
+                    SELECTOR_ATTR.lastIndex = 0;
+                    const match = SELECTOR_ATTR.exec(not);
+                    if (match) {
+                        const caseInsensitive = match[6] === 'i';
+                        let attrValue = match[3] || match[4] || match[5] || '';
+                        if (caseInsensitive) {
+                            attrValue = attrValue.toLowerCase();
+                        }
+                        notData.attrList = [{
+                            key: match[1],
+                            symbol: match[2],
+                            value: attrValue,
+                            caseInsensitive
+                        }];
+                    }
+                    else {
+                        continue;
+                    }
+                    break;
+                }
+                default:
+                    if (CHAR.WORDDASH.test(not)) {
+                        notData.tagName = not;
+                    }
+                    else {
+                        return false;
+                    }
+            }
+            if (validateQuerySelector(self, node, notData, index, last)) {
+                return false;
+            }
+        }
+    }
+    if (classList) {
+        const elementList = (<HTMLElement> node.element).classList;
+        for (const className of classList) {
+            if (!elementList.contains(className)) {
+                return false;
+            }
+        }
+    }
+    if (attrList) {
+        const attributes = node.attributes;
+        for (const attr of attrList) {
+            let actualValue = attributes[attr.key];
+            if (actualValue === undefined) {
+                return false;
+            }
+            else {
+                const attrValue = attr.value;
+                if (attrValue) {
+                    if (attr.caseInsensitive) {
+                        actualValue = actualValue.toLowerCase();
+                    }
+                    if (attr.symbol) {
+                        switch (attr.symbol) {
+                            case '~':
+                                if (!actualValue.split(CHAR.SPACE).includes(attrValue)) {
+                                    return false;
+                                }
+                                break;
+                            case '^':
+                                if (!actualValue.startsWith(attrValue)) {
+                                    return false;
+                                }
+                                break;
+                            case '$':
+                                if (!actualValue.endsWith(attrValue)) {
+                                    return false;
+                                }
+                                break;
+                            case '*':
+                                if (!actualValue.includes(attrValue)) {
+                                    return false;
+                                }
+                                break;
+                            case '|':
+                                if (actualValue !== attrValue && !actualValue.startsWith(attrValue + '-')) {
+                                    return false;
+                                }
+                                break;
+                        }
+                    }
+                    else if (actualValue !== attrValue) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
@@ -790,480 +1265,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 let length = queryMap.length;
                 if (selectors.length && offset !== -1 && offset < length) {
-                    const validate = (node: T, data: QueryData, last: boolean, adjacent?: string) => {
-                        if (data.all) {
-                            return true;
-                        }
-                        let tagName = data.tagName;
-                        if (tagName && tagName !== node.tagName.toUpperCase()) {
-                            return false;
-                        }
-                        const id = data.id;
-                        if (id && id !== node.elementId) {
-                            return false;
-                        }
-                        const { attrList, classList, notList, pseudoList } = data;
-                        if (pseudoList) {
-                            const parent = node.actualParent as T;
-                            tagName = node.tagName;
-                            for (const pseudo of pseudoList) {
-                                switch (pseudo) {
-                                    case ':first-child':
-                                    case ':nth-child(1)':
-                                        if (node !== parent.firstChild) {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':last-child':
-                                    case ':nth-last-child(1)':
-                                        if (node !== parent.lastChild) {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':only-child':
-                                        if (parent.naturalElements.length > 1) {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':only-of-type': {
-                                        let j = 0;
-                                        for (const item of parent.naturalElements) {
-                                            if (item.tagName === tagName && ++j > 1) {
-                                                return false;
-                                            }
-                                        }
-                                        break;
-                                    }
-                                    case ':first-of-type': {
-                                        for (const item of parent.naturalElements) {
-                                            if (item.tagName === tagName) {
-                                                if (item !== node) {
-                                                    return false;
-                                                }
-                                                break;
-                                            }
-                                        }
-                                        break;
-                                    }
-                                    case ':nth-child(n)':
-                                    case ':nth-last-child(n)':
-                                        break;
-                                    case ':empty':
-                                        if ((<HTMLElement> node.element).childNodes.length) {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':checked':
-                                        if (tagName === 'INPUT') {
-                                            if (!node.toElementBoolean('checked')) {
-                                                return false;
-                                            }
-                                        }
-                                        else if (tagName === 'OPTION') {
-                                            if (!node.toElementBoolean('selected')) {
-                                                return false;
-                                            }
-                                        }
-                                        else {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':enabled':
-                                        if (!node.inputElement || node.toElementBoolean('disabled')) {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':disabled':
-                                        if (!node.inputElement || !node.toElementBoolean('disabled')) {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':read-only': {
-                                        const element = <HTMLInputElement | HTMLTextAreaElement> node.element;
-                                        if (element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && !element.readOnly) {
-                                            return false;
-                                        }
-                                        break;
-                                    }
-                                    case ':read-write': {
-                                        const element = <HTMLInputElement | HTMLTextAreaElement> node.element;
-                                        if (!element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && element.readOnly) {
-                                            return false;
-                                        }
-                                        break;
-                                    }
-                                    case ':required':
-                                        if (!node.inputElement || tagName === 'BUTTON' || !node.toElementBoolean('required')) {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':optional':
-                                        if (!node.inputElement || tagName === 'BUTTON' || node.toElementBoolean('required')) {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':placeholder-shown': {
-                                        if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && node.toElementString('placeholder') !== '')) {
-                                            return false;
-                                        }
-                                        break;
-                                    }
-                                    case ':default': {
-                                        switch (tagName) {
-                                            case 'INPUT': {
-                                                const element = <HTMLInputElement> node.element;
-                                                switch (element.type) {
-                                                    case 'radio':
-                                                    case 'checkbox':
-                                                        if (!element.checked) {
-                                                            return false;
-                                                        }
-                                                        break;
-                                                    default:
-                                                        return false;
-                                                }
-                                                break;
-                                            }
-                                            case 'OPTION':
-                                                if ((<HTMLOptionElement> node.element).attributes['selected'] === undefined) {
-                                                    return false;
-                                                }
-                                                break;
-                                            case 'BUTTON': {
-                                                const form = node.ascend({ condition: item => item.tagName === 'FORM' })[0];
-                                                if (form) {
-                                                    const element = <HTMLElement> node.element;
-                                                    let valid = false;
-                                                    const children = (form.element as Element).querySelectorAll('*');
-                                                    const lengthA = children.length;
-                                                    for (let j = 0; j < lengthA; j++) {
-                                                        const item = <HTMLInputElement> children[i];
-                                                        if (item.tagName === 'BUTTON') {
-                                                            valid = element === item;
-                                                            break;
-                                                        }
-                                                        else if (item.tagName === 'INPUT') {
-                                                            const type = item.type;
-                                                            if (type === 'submit' || type === 'image') {
-                                                                valid = element === item;
-                                                                break;
-                                                            }
-                                                        }
-                                                    }
-                                                    if (!valid) {
-                                                        return false;
-                                                    }
-                                                }
-                                                break;
-                                            }
-                                            default:
-                                                return false;
-                                        }
-                                        break;
-                                    }
-                                    case ':in-range':
-                                    case ':out-of-range': {
-                                        if (tagName === 'INPUT') {
-                                            const element = <HTMLInputElement> node.element;
-                                            const rangeValue = parseFloat(element.value);
-                                            if (!isNaN(rangeValue)) {
-                                                const min = parseFloat(element.min);
-                                                const max = parseFloat(element.max);
-                                                if (rangeValue >= min && rangeValue <= max) {
-                                                    if (pseudo === ':out-of-range') {
-                                                        return false;
-                                                    }
-                                                }
-                                                else if (pseudo === ':in-range') {
-                                                    return false;
-                                                }
-                                            }
-                                            else if (pseudo === ':in-range') {
-                                                return false;
-                                            }
-                                        }
-                                        else {
-                                            return false;
-                                        }
-                                        break;
-                                    }
-                                    case ':indeterminate':
-                                        if (tagName === 'INPUT') {
-                                            const element = <HTMLInputElement> node.element;
-                                            switch (element.type) {
-                                                case 'checkbox':
-                                                    if (!element.indeterminate) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                                case 'radio':
-                                                    if (element.checked) {
-                                                        return false;
-                                                    }
-                                                    else if (element.name) {
-                                                        const children = (node.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
-                                                        const lengthA = children.length;
-                                                        for (let j = 0; j < lengthA; j++) {
-                                                            if ((<HTMLInputElement> children[j]).checked) {
-                                                                return false;
-                                                            }
-                                                        }
-                                                    }
-                                                    break;
-                                                default:
-                                                    return false;
-                                            }
-                                        }
-                                        else if (tagName === 'PROGRESS') {
-                                            if (node.toElementInt('value', -1) !== -1) {
-                                                return false;
-                                            }
-                                        }
-                                        else {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':target': {
-                                        if (location.hash === '') {
-                                            return false;
-                                        }
-                                        else {
-                                            const element = <HTMLAnchorElement> node.element;
-                                            if (!(location.hash === '#' + element.id || tagName === 'A' && location.hash === '#' + element.name)) {
-                                                return false;
-                                            }
-                                        }
-                                        break;
-                                    }
-                                    case ':scope':
-                                        if (!last || adjacent === '>' && node !== this) {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':root':
-                                        if (!last || adjacent) {
-                                            return false;
-                                        }
-                                        break;
-                                    case ':link':
-                                    case ':visited':
-                                    case ':any-link':
-                                    case ':hover':
-                                    case ':focus':
-                                    case ':focus-within':
-                                    case ':valid':
-                                    case ':invalid': {
-                                        const element = node.element;
-                                        const children = (<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo);
-                                        let valid = false;
-                                        const lengthA = children.length;
-                                        for (let j = 0; j < lengthA; j++) {
-                                            if (children.item(i) === element) {
-                                                valid = true;
-                                                break;
-                                            }
-                                        }
-                                        if (!valid) {
-                                            return false;
-                                        }
-                                        break;
-                                    }
-                                    default: {
-                                        let match = REGEX_QUERY_NTH_CHILD_OFTYPE.exec(pseudo);
-                                        if (match) {
-                                            const placement = match[3].trim();
-                                            let children = parent.naturalElements;
-                                            if (match[1]) {
-                                                children = children.slice(0).reverse();
-                                            }
-                                            const index = (match[2] === 'child' ? children.indexOf(node) : filterArray(children, item => item.tagName === tagName).indexOf(node)) + 1;
-                                            if (index > 0) {
-                                                if (isNumber(placement)) {
-                                                    if (parseInt(placement) !== index) {
-                                                        return false;
-                                                    }
-                                                }
-                                                else {
-                                                    switch (placement) {
-                                                        case 'even':
-                                                            if (index % 2 !== 0) {
-                                                                return false;
-                                                            }
-                                                            break;
-                                                        case 'odd':
-                                                            if (index % 2 === 0) {
-                                                                return false;
-                                                            }
-                                                            break;
-                                                        default: {
-                                                            const subMatch = REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE.exec(placement);
-                                                            if (subMatch) {
-                                                                const modifier = convertInt(subMatch[3]);
-                                                                if (subMatch[2]) {
-                                                                    if (subMatch[1]) {
-                                                                        return false;
-                                                                    }
-                                                                    const increment = parseInt(subMatch[2]);
-                                                                    if (increment !== 0) {
-                                                                        if (index !== modifier) {
-                                                                            for (let j = increment; ; j += increment) {
-                                                                                const total = increment + modifier;
-                                                                                if (total === index) {
-                                                                                    break;
-                                                                                }
-                                                                                else if (total > index) {
-                                                                                    return false;
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                    else if (index !== modifier) {
-                                                                        return false;
-                                                                    }
-                                                                }
-                                                                else if (subMatch[3]) {
-                                                                    if (modifier > 0) {
-                                                                        if (subMatch[1]) {
-                                                                            if (index > modifier) {
-                                                                                return false;
-                                                                            }
-                                                                        }
-                                                                        else if (index < modifier) {
-                                                                            return false;
-                                                                        }
-                                                                    }
-                                                                    else {
-                                                                        return false;
-                                                                    }
-                                                                }
-                                                            }
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                                continue;
-                                            }
-                                        }
-                                        else {
-                                            match = REGEX_QUERY_LANG.exec(pseudo);
-                                            if (match) {
-                                                const attributes = node.attributes;
-                                                if (attributes['lang'] && match[1].toLowerCase() === attributes['lang'].toLowerCase()) {
-                                                    continue;
-                                                }
-                                            }
-                                        }
-                                        return false;
-                                    }
-                                }
-                            }
-                        }
-                        if (notList) {
-                            for (const not of notList) {
-                                const notData: QueryData = { all: false };
-                                switch (not.charAt(0)) {
-                                    case '.':
-                                        notData.classList = [not];
-                                        break;
-                                    case '#':
-                                        notData.id = not.substring(1);
-                                        break;
-                                    case ':':
-                                        notData.pseudoList = [not];
-                                        break;
-                                    case '[': {
-                                        SELECTOR_ATTR.lastIndex = 0;
-                                        const match = SELECTOR_ATTR.exec(not);
-                                        if (match) {
-                                            const caseInsensitive = match[6] === 'i';
-                                            let attrValue = match[3] || match[4] || match[5] || '';
-                                            if (caseInsensitive) {
-                                                attrValue = attrValue.toLowerCase();
-                                            }
-                                            notData.attrList = [{
-                                                key: match[1],
-                                                symbol: match[2],
-                                                value: attrValue,
-                                                caseInsensitive
-                                            }];
-                                        }
-                                        else {
-                                            continue;
-                                        }
-                                        break;
-                                    }
-                                    default:
-                                        if (CHAR.WORDDASH.test(not)) {
-                                            notData.tagName = not;
-                                        }
-                                        else {
-                                            return false;
-                                        }
-                                }
-                                if (validate(node, notData, last)) {
-                                    return false;
-                                }
-                            }
-                        }
-                        if (classList) {
-                            const elementList = (<HTMLElement> node.element).classList;
-                            for (const className of classList) {
-                                if (!elementList.contains(className)) {
-                                    return false;
-                                }
-                            }
-                        }
-                        if (attrList) {
-                            const attributes = node.attributes;
-                            for (const attr of attrList) {
-                                let actualValue = attributes[attr.key];
-                                if (actualValue === undefined) {
-                                    return false;
-                                }
-                                else {
-                                    const attrValue = attr.value;
-                                    if (attrValue) {
-                                        if (attr.caseInsensitive) {
-                                            actualValue = actualValue.toLowerCase();
-                                        }
-                                        if (attr.symbol) {
-                                            switch (attr.symbol) {
-                                                case '~':
-                                                    if (!actualValue.split(CHAR.SPACE).includes(attrValue)) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                                case '^':
-                                                    if (!actualValue.startsWith(attrValue)) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                                case '$':
-                                                    if (!actualValue.endsWith(attrValue)) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                                case '*':
-                                                    if (!actualValue.includes(attrValue)) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                                case '|':
-                                                    if (actualValue !== attrValue && !actualValue.startsWith(attrValue + '-')) {
-                                                        return false;
-                                                    }
-                                                    break;
-                                            }
-                                        }
-                                        else if (actualValue !== attrValue) {
-                                            return false;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        return true;
-                    };
                     const dataEnd = <QueryData> selectors.pop();
                     const lastEnd = selectors.length === 0;
                     let pending: T[] = [];
@@ -1274,7 +1275,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                         else {
                             for (const node of dataMap) {
-                                if (validate(node, dataEnd, lastEnd)) {
+                                if (validateQuerySelector(this, node, dataEnd, i, lastEnd)) {
                                     pending.push(node);
                                 }
                             }
@@ -1284,7 +1285,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         const depth = this.depth;
                         selectors.reverse();
                         length = selectors.length;
-                        function ascend(index: number, adjacent: string | undefined, nodes: T[]): boolean {
+                        const ascendQuerySelector = (index: number, adjacent: string | undefined, nodes: T[]): boolean => {
                             const selector = selectors[index];
                             const last = index === length - 1;
                             const next: T[] = [];
@@ -1292,7 +1293,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 if (adjacent) {
                                     const parent = node.actualParent as T;
                                     if (adjacent === '>') {
-                                        if (validate(parent, selector, last, adjacent)) {
+                                        if (validateQuerySelector(this, parent, selector, i, last, adjacent)) {
                                             next.push(parent);
                                         }
                                     }
@@ -1303,7 +1304,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 const indexA = children.indexOf(node);
                                                 if (indexA > 0) {
                                                     const sibling = children[indexA - 1];
-                                                    if (sibling && validate(sibling, selector, last, adjacent)) {
+                                                    if (sibling && validateQuerySelector(this, sibling, selector, i, last, adjacent)) {
                                                         next.push(sibling);
                                                     }
                                                 }
@@ -1316,7 +1317,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                     if (sibling === node) {
                                                         break;
                                                     }
-                                                    else if (validate(sibling, selector, last, adjacent)) {
+                                                    else if (validateQuerySelector(this, sibling, selector, i, last, adjacent)) {
                                                         next.push(sibling);
                                                     }
                                                 }
@@ -1328,7 +1329,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 else if (node.depth - depth >= length - index) {
                                     let parent = node.actualParent as T;
                                     do {
-                                        if (validate(parent, selector, last)) {
+                                        if (validateQuerySelector(this, parent, selector, i, last)) {
                                             next.push(parent);
                                         }
                                         parent = parent.actualParent as T;
@@ -1340,12 +1341,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 if (++index === length) {
                                     return true;
                                 }
-                                return ascend(index, selector.adjacent, next);
+                                return ascendQuerySelector(index, selector.adjacent, next);
                             }
                             return false;
-                        }
+                        };
                         for (const node of pending) {
-                            if (ascend(0, dataEnd.adjacent, [node])) {
+                            if (ascendQuerySelector(0, dataEnd.adjacent, [node])) {
                                 result.push(node);
                                 if (result.length === resultCount) {
                                     return result;

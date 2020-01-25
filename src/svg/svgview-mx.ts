@@ -76,6 +76,14 @@ function convertRotate(value: string) {
     return value;
 }
 
+function getKeyframeOrigin(attrMap: AttributeMap, element: SVGGraphicsElement, order: number) {
+    const origin = attrMap['transform-origin']?.find(item => item.key === order);
+    if (origin) {
+        return TRANSFORM.origin(element, origin.value);
+    }
+    return undefined;
+}
+
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
         public transformed?: SvgTransform[];
@@ -217,18 +225,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             }
                         }
                         if (attrMap['transform']) {
-                            function getKeyframeOrigin(order: number) {
-                                const origin = attrMap['transform-origin']?.find(item => item.key === order);
-                                if (origin) {
-                                    return TRANSFORM.origin(<SVGGraphicsElement> element, origin.value);
-                                }
-                                return undefined;
-                            }
                             for (const transform of sortAttribute(attrMap['transform'])) {
                                 const transforms = TRANSFORM.parse(element, transform.value);
                                 if (transforms) {
                                     const key = transform.key;
-                                    const origin = getKeyframeOrigin(key);
+                                    const origin = getKeyframeOrigin(attrMap, element, key);
                                     for (const item of transforms) {
                                         const m = item.matrix;
                                         let name: string;

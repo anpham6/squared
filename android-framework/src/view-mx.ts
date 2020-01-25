@@ -1002,7 +1002,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         width = this.parseUnit(maxWidth);
                     }
                 }
-                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length > 0 || !this.textContent.includes('\n'))) {
+                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length || !this.textContent.includes('\n'))) {
                     width = Math.ceil(this.bounds.width);
                 }
                 if (width >= 0) {

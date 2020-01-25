@@ -588,7 +588,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 if (placement[0] === 0 || placement[1] === 0 || placement[2] === 0 || placement[3] === 0) {
-                    function setPlacement(value: string, position: number, vertical: boolean, length: number) {
+                    const setPlacement = (value: string, position: number, vertical: boolean, length: number) => {
                         if (isNumber(value)) {
                             const cellIndex = parseInt(value);
                             if (cellIndex > 0) {
@@ -661,7 +661,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             return true;
                         }
                         return false;
-                    }
+                    };
                     let rowStart: string[] | undefined;
                     let colStart: string[] | undefined;
                     for (let i = 0; i < 4; i++) {

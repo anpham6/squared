@@ -61,7 +61,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, result: View[]): 
             else {
                 incomplete = true;
             }
-        });
+        })();
     });
     if (incomplete) {
         flatArray(result);

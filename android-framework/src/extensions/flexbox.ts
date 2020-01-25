@@ -341,7 +341,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     chainVertical[0] = children;
                 }
             }
-            function applyLayout(partition: T[][], horizontal: boolean) {
+            const applyLayout = (partition: T[][], horizontal: boolean) => {
                 const length = partition.length;
                 if (length === 0) {
                     return;
@@ -720,7 +720,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                 }
-            }
+            };
             applyLayout(chainHorizontal, true);
             applyLayout(chainVertical, false);
         }

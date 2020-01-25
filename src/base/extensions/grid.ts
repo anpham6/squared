@@ -91,7 +91,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         }
         const nextCoordsX = Object.keys(nextMapX);
         const lengthA = nextCoordsX.length;
-        if (lengthA > 0) {
+        if (lengthA) {
             let columnLength = -1;
             for (let i = 0; i < lengthA; i++) {
                 const nextAxisX: T[] = nextMapX[nextCoordsX[i]];

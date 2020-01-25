@@ -3,7 +3,7 @@ import { SvgAspectRatio, SvgBuildOptions, SvgPoint, SvgSynchronizeOptions } from
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getParentAttribute, getTargetElement, getAttributeURL } from './lib/util';
+import { SVG, getAttributeURL, getParentAttribute, getTargetElement } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
