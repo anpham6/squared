@@ -34,27 +34,6 @@ function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
     return element;
 }
 
-function prioritizeExtensions<T extends NodeUI>(value: string | undefined, extensions: ExtensionUI<T>[]) {
-    if (value) {
-        const included = value.split(XML.SEPARATOR);
-        const result: ExtensionUI<T>[] = [];
-        const untagged: ExtensionUI<T>[] = [];
-        for (const ext of extensions) {
-            const index = included.indexOf(ext.name);
-            if (index !== -1) {
-                result[index] = ext;
-            }
-            else {
-                untagged.push(ext);
-            }
-        }
-        if (result.length) {
-            return flatArray<ExtensionUI<T>>(result).concat(untagged);
-        }
-    }
-    return extensions;
-}
-
 function saveAlignment(preAlignment: ObjectIndex<StringMap>, element: HTMLElement, id: number, attr: string, value: string, restoreValue: string) {
     let stored = preAlignment[id];
     if (stored === undefined) {
@@ -100,6 +79,27 @@ function checkTraverseVertical(node: NodeUI, horizontal: NodeUI[], vertical: Nod
     }
     vertical.push(node);
     return true;
+}
+
+function prioritizeExtensions<T extends NodeUI>(value: string | undefined, extensions: ExtensionUI<T>[]) {
+    if (value) {
+        const included = value.split(XML.SEPARATOR);
+        const result: ExtensionUI<T>[] = [];
+        const untagged: ExtensionUI<T>[] = [];
+        for (const ext of extensions) {
+            const index = included.indexOf(ext.name);
+            if (index !== -1) {
+                result[index] = ext;
+            }
+            else {
+                untagged.push(ext);
+            }
+        }
+        if (result.length) {
+            return flatArray<ExtensionUI<T>>(result).concat(untagged);
+        }
+    }
+    return extensions;
 }
 
 const requirePadding = (node: NodeUI) => node.textElement && (node.blockStatic || node.multiline);
@@ -368,7 +368,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 item.parent = node;
             }
         }
-        if (!(options.append === false)) {
+        if (options.append !== false) {
             processing.cache.append(node, children !== undefined);
         }
         return node;
@@ -815,20 +815,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 else if (match[2] || match[5]) {
                                     const counterType = match[2] === 'counter';
-                                    let counterName: string;
-                                    let styleName: string;
-                                    if (counterType) {
-                                        counterName = match[3];
-                                        styleName = match[4] || 'decimal';
-                                    }
-                                    else {
-                                        counterName = match[6];
-                                        styleName = match[8] || 'decimal';
-                                    }
-                                    const initalValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName) || 0);
+                                    const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
+                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName) || 0);
                                     const subcounter: number[] = [];
                                     let current: Element | null = element;
-                                    let counter = initalValue;
+                                    let counter = initialValue;
                                     let ascending = false;
                                     let lastResetElement: Element | undefined;
                                     const incrementCounter = (increment: number, pseudo: boolean) => {
@@ -913,7 +904,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                     }
                                     else {
-                                        counter = initalValue;
+                                        counter = initialValue;
                                     }
                                     content += convertListStyle(styleName, counter, true);
                                 }
@@ -1360,11 +1351,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             const float = node.float;
             if (clearedFloat === 0) {
-                if (float === 'right') {
-                    rightAbove.push(node);
-                }
-                else if (float === 'left') {
+                if (float === 'left') {
                     leftAbove.push(node);
+                }
+                else if (float === 'right') {
+                    rightAbove.push(node);
                 }
                 else if (leftAbove.length || rightAbove.length) {
                     let top = node.linear.top;
@@ -1385,17 +1376,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     inlineAbove.push(node);
                 }
             }
-            else if (float === 'right') {
-                if (clearedFloat === 4 || clearedFloat === 6) {
-                    if (rightBelow === undefined) {
-                        rightBelow = [];
-                    }
-                    rightBelow.push(node);
-                }
-                else {
-                    rightAbove.push(node);
-                }
-            }
             else if (float === 'left') {
                 if (clearedFloat === 2 || clearedFloat === 6) {
                     if (leftBelow === undefined) {
@@ -1405,6 +1385,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else {
                     leftAbove.push(node);
+                }
+            }
+            else if (float === 'right') {
+                if (clearedFloat === 4 || clearedFloat === 6) {
+                    if (rightBelow === undefined) {
+                        rightBelow = [];
+                    }
+                    rightBelow.push(node);
+                }
+                else {
+                    rightAbove.push(node);
                 }
             }
             else if (clearedFloat === 6) {
@@ -1539,6 +1530,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         const staticRows: T[][] = [];
         const floatedRows: Null<T[]>[] = [];
+        const cleared = layout.cleared;
         const current: T[] = [];
         const floated: T[] = [];
         let clearReset = false;
@@ -1550,7 +1542,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 blockArea = true;
             }
             else {
-                if (layout.cleared.has(node)) {
+                if (cleared.has(node)) {
                     if (!node.floating) {
                         node.modifyBox(BOX_STANDARD.MARGIN_TOP);
                         staticRows.push(current.slice(0));
@@ -1573,7 +1565,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     floated.push(node);
                 }
                 else {
-                    if (clearReset && !layout.cleared.has(node)) {
+                    if (clearReset && !cleared.has(node)) {
                         layoutVertical = false;
                     }
                     current.push(node);
@@ -1613,7 +1605,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             verticalMargin.alignmentType
                         );
                         const children: T[] = [];
-                        let subgroup: T | undefined;
+                        let subgroup!: T;
                         if (floating.length) {
                             const floatgroup = controllerHandler.createNodeGroup(floating[0], floating, basegroup);
                             group.add(NODE_ALIGNMENT.FLOAT);
@@ -1643,7 +1635,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         if (pageFlow.length && floating.length) {
                             const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
-                            this.setFloatPadding(node, subgroup as T, pageFlow, leftAbove, rightAbove);
+                            this.setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
                         }
                     }
                 }
@@ -1658,7 +1650,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (leftAbove.length) {
                 let floatPosition = Number.NEGATIVE_INFINITY;
                 let marginLeft = 0;
-                let invalid = 0;
+                let invalid = false;
                 let hasSpacing = false;
                 for (const child of leftAbove) {
                     if (child.bounds.top < bottom) {
@@ -1670,16 +1662,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 for (const child of inlineAbove) {
-                    if (child.blockStatic) {
-                        if (child.bounds.left > floatPosition) {
-                            invalid++;
-                        }
-                        else {
-                            marginLeft = Math.max(marginLeft, child.marginLeft);
-                        }
+                    if (child.bounds.left <= floatPosition) {
+                        marginLeft = Math.max(marginLeft, child.marginLeft);
+                        invalid = true;
                     }
                 }
-                if (invalid < inlineAbove.length) {
+                if (invalid) {
                     const offset = floatPosition - parent.box.left - marginLeft;
                     if (offset > 0) {
                         target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this._localSettings.deviations.textMarginBoundarySize : 0));
@@ -1689,7 +1677,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (rightAbove.length) {
                 let floatPosition = Number.POSITIVE_INFINITY;
                 let marginRight = 0;
-                let invalid = 0;
+                let invalid = false;
                 let hasSpacing = false;
                 for (const child of rightAbove) {
                     if (child.bounds.top < bottom) {
@@ -1701,16 +1689,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 for (const child of inlineAbove) {
-                    if (child.blockStatic) {
-                        if (child.bounds.right < floatPosition) {
-                            invalid++;
-                        }
-                        else {
-                            marginRight = Math.max(marginRight, child.marginRight);
-                        }
+                    if (child.bounds.right >= floatPosition) {
+                        marginRight = Math.max(marginRight, child.marginRight);
+                        invalid = true;
                     }
                 }
-                if (invalid < inlineAbove.length) {
+                if (invalid) {
                     const offset = parent.box.right - floatPosition - marginRight;
                     if (offset > 0) {
                         target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this._localSettings.deviations.textMarginBoundarySize : 0));

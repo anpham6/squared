@@ -21,6 +21,20 @@ export function isPlatform(value: string | number) {
 }
 
 export function isUserAgent(value: string | number) {
+    const userAgent = navigator.userAgent;
+    let client: number;
+    if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+        client = USER_AGENT.SAFARI;
+    }
+    else if (userAgent.includes('Firefox')) {
+        client = USER_AGENT.FIREFOX;
+    }
+    else if (userAgent.includes('Edge')) {
+        client = USER_AGENT.EDGE;
+    }
+    else {
+        client = USER_AGENT.CHROME;
+    }
     if (typeof value === 'string') {
         const name = value.toUpperCase();
         value = 0;
@@ -36,17 +50,6 @@ export function isUserAgent(value: string | number) {
         if (name.includes('EDGE')) {
             value |= USER_AGENT.EDGE;
         }
-    }
-    const userAgent = navigator.userAgent;
-    let client = USER_AGENT.CHROME;
-    if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
-        client = USER_AGENT.SAFARI;
-    }
-    else if (userAgent.includes('Firefox')) {
-        client = USER_AGENT.FIREFOX;
-    }
-    else if (userAgent.includes('Edge')) {
-        client = USER_AGENT.EDGE;
     }
     return hasBit(value, client);
 }

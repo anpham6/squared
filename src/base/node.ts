@@ -1485,7 +1485,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     case 'marginBottom':
                                         return vertical ? this.parseUnit(vertical, 'height', false) : this.parseUnit(horizontal, 'width', false);
                                     case 'marginRight':
-                                        if (!(this.actualParent?.lastChild === this)) {
+                                        if (this.actualParent?.lastChild !== this) {
                                             return this.parseUnit(horizontal, 'width', false);
                                         }
                                     case 'marginLeft':
@@ -1499,7 +1499,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 break;
         }
-        const result = this.parseUnit(this.css(attr), 'width', !(this.actualParent?.gridElement === true));
+        const result = this.parseUnit(this.css(attr), 'width', this.actualParent?.gridElement !== true);
         if (!margin) {
             let paddingStart = this.toFloat('paddingInlineStart', 0);
             let paddingEnd = this.toFloat('paddingInlineEnd', 0);

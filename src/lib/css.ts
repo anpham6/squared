@@ -440,7 +440,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
         if (attr && !dimension) {
             const rect = (element instanceof SVGElement ? element : (element.parentElement || element)).getBoundingClientRect();
             attr = attr.toLowerCase();
-            if (/^margin|padding|border/.test(attr)) {
+            if (/^(margin|padding|border)/.test(attr)) {
                 dimension = rect.width;
             }
             else {
@@ -479,7 +479,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                         if (isPercent(sizeW)) {
                             width *= parseFloat(sizeW) / 100;
                         }
-                        else if (isLength(sizeW)) {
+                        else {
                             const length = parseUnit(sizeW, fontSize);
                             if (length) {
                                 width = length;
@@ -507,7 +507,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                         if (isPercent(sizeH)) {
                             height *= parseFloat(sizeH) / 100;
                         }
-                        else if (isLength(sizeH)) {
+                        else {
                             const length = parseUnit(sizeH, fontSize);
                             if (length) {
                                 height = length;

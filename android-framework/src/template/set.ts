@@ -1,5 +1,3 @@
-const ORDERING = ['ordering'];
-
 export const OBJECTANIMATOR = {
     'objectAnimator': {
         '^': 'android',
@@ -25,11 +23,11 @@ export default {
         '>': {
             'set': {
                 '^': 'android',
-                '@': ORDERING,
+                '@': ['ordering'],
                 '>': {
                     'set': {
                         '^': 'android',
-                        '@': ORDERING,
+                        '@': ['ordering'],
                         '>': {
                             'objectAnimator': OBJECTANIMATOR.objectAnimator
                         },

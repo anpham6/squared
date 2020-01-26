@@ -144,21 +144,18 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
         const innerWrapped = node.innerMostWrapped as T | null;
         if (innerWrapped) {
             const maxData: MaxWidthHeightData = innerWrapped.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
-            if (maxData) {
-                const container = maxData.container as T;
-                if (container.outerWrapper === node) {
-                    if (maxData.width) {
-                        node.css('maxWidth', innerWrapped.css('maxWidth'));
-                        node.setLayoutWidth('0px');
-                        node.contentBoxWidth = innerWrapped.contentBoxWidth;
-                        innerWrapped.setLayoutWidth('wrap_content');
-                    }
-                    if (maxData.height) {
-                        node.css('maxHeight', innerWrapped.css('maxHeight'));
-                        node.setLayoutHeight('0px');
-                        node.contentBoxHeight = innerWrapped.contentBoxHeight;
-                        innerWrapped.setLayoutHeight('wrap_content');
-                    }
+            if (maxData?.container?.outerWrapper === node) {
+                if (maxData.width) {
+                    node.css('maxWidth', innerWrapped.css('maxWidth'));
+                    node.setLayoutWidth('0px');
+                    node.contentBoxWidth = innerWrapped.contentBoxWidth;
+                    innerWrapped.setLayoutWidth('wrap_content');
+                }
+                if (maxData.height) {
+                    node.css('maxHeight', innerWrapped.css('maxHeight'));
+                    node.setLayoutHeight('0px');
+                    node.contentBoxHeight = innerWrapped.contentBoxHeight;
+                    innerWrapped.setLayoutHeight('wrap_content');
                 }
             }
         }

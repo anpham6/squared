@@ -2,6 +2,8 @@ import { CustomizationResult, ResourceStoredMapAndroid, StyleAttribute, UserSett
 import { Constraint, LocalSettings, SupportAndroid, SpacerAttribute, ViewAttribute, WrapperOptions } from './node';
 import { FileOutputOptions } from './resource';
 
+import LayoutUI = squared.base.LayoutUI;
+
 type View = base.View;
 
 declare namespace base {
@@ -17,11 +19,11 @@ declare namespace base {
         readonly userSettings: UserSettingsAndroid;
         renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
         renderSpace(options: SpacerAttribute): string;
-        checkFrameHorizontal(data: squared.base.LayoutUI<T>): boolean;
-        checkConstraintFloat(data: squared.base.LayoutUI<T>, horizontal?: boolean): boolean;
-        checkConstraintHorizontal(data: squared.base.LayoutUI<T>): boolean;
-        checkLinearHorizontal(data: squared.base.LayoutUI<T>): boolean;
-        addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposite?: boolean): void;
+        checkFrameHorizontal(data: LayoutUI<T>): boolean;
+        checkConstraintFloat(data: LayoutUI<T>): boolean;
+        checkConstraintHorizontal(data: LayoutUI<T>): boolean;
+        checkLinearHorizontal(data: LayoutUI<T>): boolean;
+        addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposing?: boolean): void;
         addBarrier(nodes: T[], barrierDirection: string): string | undefined;
         evaluateAnchors(nodes: T[]): void;
         createNodeWrapper(node: T, parent: T, children?: T[], options?: WrapperOptions): T;
@@ -384,10 +386,10 @@ declare namespace lib {
         const LOCALIZE_ANDROID: {
             left: string;
             right: string;
-            layout_marginLeft: string;
-            layout_marginRight: string;
             paddingLeft: string;
             paddingRight: string;
+            layout_marginLeft: string;
+            layout_marginRight: string;
             layout_alignParentLeft: string;
             layout_alignParentRight: string;
             layout_alignLeft: string;

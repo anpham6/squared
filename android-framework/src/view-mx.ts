@@ -200,41 +200,35 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public static ascendFlexibleWidth(node: T) {
-            if (node.documentRoot) {
+            if (node.documentRoot && (node.hasWidth || node.blockStatic || node.blockWidth)) {
                 return true;
             }
             let parent = node.renderParent as T | undefined;
             let i = 0;
             while (parent) {
-                if (parent.hasWidth || parent.documentRoot && (parent.blockWidth || parent.blockStatic && !parent.inlineWidth)) {
+                if (parent.hasWidth || parseInt(parent.layoutWidth) > 0 || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic)) {
                     return true;
                 }
-                else if (parent.inlineWidth || parent.flexibleWidth && i > 0 || parent.naturalElement && parent.inlineVertical && !parent.blockWidth) {
-                    return false;
+                else if (parent.flexibleWidth) {
+                    if (i > 0 && parent.renderParent?.documentRoot === false) {
+                        return false;
+                    }
                 }
-                i++
-                parent = parent.renderParent as T | undefined;
-            }
-            return false;
-        }
-
-        public static ascendFlexibleHeight(node: T) {
-            if (node.documentRoot) {
-                return true;
-            }
-            let parent = node.renderParent as T | undefined;
-            let i = 0;
-            while (parent) {
-                if (parent.hasHeight || parent.documentRoot && parent.blockHeight) {
-                    return true;
-                }
-                else if (parent.inlineHeight || parent.flexibleHeight && i > 0) {
+                else if (parent.inlineWidth || parent.naturalElement && parent.inlineVertical) {
                     return false;
                 }
                 i++;
                 parent = parent.renderParent as T | undefined;
             }
             return false;
+        }
+
+        public static ascendFlexibleHeight(node: T) {
+            if (node.documentRoot && node.hasHeight) {
+                return true;
+            }
+            const parent = node.renderParent as T | undefined;
+            return parent !== undefined && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight === true;
         }
 
         public api = BUILD_ANDROID.LATEST;

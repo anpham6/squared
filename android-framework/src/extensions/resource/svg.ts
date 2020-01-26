@@ -32,7 +32,7 @@ import $SvgShape = squared.svg.SvgShape;
 const $lib = squared.lib;
 const { formatPX, isPercent } = $lib.css;
 const { truncate } = $lib.math;
-const { CSS } = $lib.regex;
+const { CHAR, CSS } = $lib.regex;
 const { convertCamelCase, convertInt, convertWord, filterArray, formatString, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = $lib.util;
 const { applyTemplate } = $lib.xml;
 
@@ -210,7 +210,7 @@ function createPathInterpolator(value: string) {
     else {
         const name = 'path_interpolator_' + convertWord(value);
         if (!STORED.animators.has(name)) {
-            const xml = formatString(INTERPOLATOR_XML, ...value.split(' '));
+            const xml = formatString(INTERPOLATOR_XML, ...value.split(CHAR.SPACE));
             STORED.animators.set(name, xml);
         }
         return '@anim/' + name;

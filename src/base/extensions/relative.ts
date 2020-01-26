@@ -46,7 +46,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
             target = node.clone(application.nextId, true, true) as T;
             target.baselineAltered = true;
             node.hide(true);
-            application.session.cache.append(target, false);
+            this.cache.append(target, false);
             const layout = new LayoutUI(
                 renderParent,
                 target,
@@ -58,9 +58,9 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 layout.renderIndex = index + 1;
             }
             application.addLayout(layout);
-            if (renderParent.layoutHorizontal && node.documentParent.parseUnit(node.css('textIndent')) < 0) {
+            if (node.parseUnit(node.css('textIndent')) < 0) {
+                const documentId = node.documentId;
                 renderParent.renderEach(item => {
-                    const documentId = node.documentId;
                     if (item.alignSibling('topBottom') === documentId) {
                         item.alignSibling('topBottom', target.documentId);
                     }

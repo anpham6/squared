@@ -19,7 +19,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     }
 
     public condition(node: T, parent: T) {
-        const width = node.hasPX('maxWidth') && !parent.hasAlign(NODE_ALIGNMENT.COLUMN);
+        const width = node.hasPX('maxWidth') && (node.blockStatic || node.onlyChild && (parent.blockStatic || parent.hasWidth) || parent.layoutVertical || parent.layoutFrame) && !parent.hasAlign(NODE_ALIGNMENT.COLUMN);
         const height = node.hasPX('maxHeight') && parent.hasHeight;
         if (width || height) {
             node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { width, height });
@@ -31,10 +31,11 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     public processNode(node: T, parent: T) {
         const mainData: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
         if (mainData) {
-            const container = parent.layoutConstraint ? parent : (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, {
+            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, {
                 controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
                 containerType: CONTAINER_NODE.CONSTRAINT
             });
+            container.addAlign(NODE_ALIGNMENT.BLOCK);
             if (mainData.width) {
                 node.setLayoutWidth('0px');
                 container.setLayoutWidth('match_parent');
@@ -58,21 +59,19 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                 }
             }
             mainData.container = container;
-            if (parent !== container) {
-                return {
-                    parent: container,
-                    renderAs: container,
-                    outputAs: this.application.renderNode(
-                        new LayoutUI(
-                            parent,
-                            container,
-                            container.containerType,
-                            NODE_ALIGNMENT.SINGLE,
-                            container.children as T[]
-                        )
+            return {
+                parent: container,
+                renderAs: container,
+                outputAs: this.application.renderNode(
+                    new LayoutUI(
+                        parent,
+                        container,
+                        container.containerType,
+                        NODE_ALIGNMENT.SINGLE,
+                        container.children as T[]
                     )
-                };
-            }
+                )
+            };
         }
         return undefined;
     }

@@ -802,7 +802,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         else if (this.styleText) {
                                             const textBounds = this.textBounds;
                                             if (textBounds) {
-                                                actualTop = Math.max(top, textBounds.top);
+                                                actualTop = Math.max(top, siblings.length > 2 ? textBounds.bottom : textBounds.top);
                                             }
                                         }
                                     }
