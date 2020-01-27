@@ -67,7 +67,7 @@ function getFlexValue(node: T, attr: string, fallback: number, parent?: Node | n
     return fallback;
 }
 
-function validateQuerySelector(self: T, node: T, selector: QueryData, index: number, last: boolean, adjacent?: string) {
+function validateQuerySelector(this: T, node: T, selector: QueryData, index: number, last: boolean, adjacent?: string) {
     if (selector.all) {
         return true;
     }
@@ -211,7 +211,7 @@ function validateQuerySelector(self: T, node: T, selector: QueryData, index: num
                             if (form) {
                                 const element = <HTMLElement> node.element;
                                 let valid = false;
-                                const children = (form.element as Element).querySelectorAll('*');
+                                const children = (<Element> form.element).querySelectorAll('*');
                                 const lengthA = children.length;
                                 for (let j = 0; j < lengthA; j++) {
                                     const item = <HTMLInputElement> children[index];
@@ -313,7 +313,7 @@ function validateQuerySelector(self: T, node: T, selector: QueryData, index: num
                     break;
                 }
                 case ':scope':
-                    if (!last || adjacent === '>' && node !== self) {
+                    if (!last || adjacent === '>' && node !== this) {
                         return false;
                     }
                     break;
@@ -477,7 +477,7 @@ function validateQuerySelector(self: T, node: T, selector: QueryData, index: num
                         return false;
                     }
             }
-            if (validateQuerySelector(self, node, notData, index, last)) {
+            if (validateQuerySelector.bind(this, node, notData, index, last)()) {
                 return false;
             }
         }
@@ -1277,7 +1277,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                         else {
                             for (const node of dataMap) {
-                                if (validateQuerySelector(this, node, dataEnd, i, lastEnd)) {
+                                if (validateQuerySelector.bind(this, node, dataEnd, i, lastEnd)()) {
                                     pending.push(node);
                                 }
                             }
@@ -1295,7 +1295,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 if (adjacent) {
                                     const parent = node.actualParent as T;
                                     if (adjacent === '>') {
-                                        if (validateQuerySelector(this, parent, selector, i, last, adjacent)) {
+                                        if (validateQuerySelector.bind(this, parent, selector, i, last, adjacent)()) {
                                             next.push(parent);
                                         }
                                     }
@@ -1306,7 +1306,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 const indexA = children.indexOf(node);
                                                 if (indexA > 0) {
                                                     const sibling = children[indexA - 1];
-                                                    if (sibling && validateQuerySelector(this, sibling, selector, i, last, adjacent)) {
+                                                    if (sibling && validateQuerySelector.bind(this, sibling, selector, i, last, adjacent)()) {
                                                         next.push(sibling);
                                                     }
                                                 }
@@ -1319,7 +1319,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                     if (sibling === node) {
                                                         break;
                                                     }
-                                                    else if (validateQuerySelector(this, sibling, selector, i, last, adjacent)) {
+                                                    else if (validateQuerySelector.bind(this, sibling, selector, i, last, adjacent)()) {
                                                         next.push(sibling);
                                                     }
                                                 }
@@ -1331,7 +1331,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 else if (node.depth - depth >= length - index) {
                                     let parent = node.actualParent as T;
                                     do {
-                                        if (validateQuerySelector(this, parent, selector, i, last)) {
+                                        if (validateQuerySelector.bind(this, parent, selector, i, last)()) {
                                             next.push(parent);
                                         }
                                         parent = parent.actualParent as T;

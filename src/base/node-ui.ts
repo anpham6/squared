@@ -45,6 +45,30 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
     return valid;
 }
 
+function traverseElementSibling(options: SiblingOptions = {}, element: Element, direction: "previousSibling" | "nextSibling", sessionId: string) {
+    const { floating, pageFlow, lineBreak, excluded } = options;
+    const result: T[] = [];
+    while (element) {
+        const node = getElementAsNode<T>(element, sessionId);
+        if (node) {
+            if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
+                result.push(node);
+            }
+            else if (node.pageFlow && !node.excluded) {
+                if (pageFlow === false) {
+                    break;
+                }
+                result.push(node);
+                if (floating !== false || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
+                    break;
+                }
+            }
+        }
+        element = <Element> element[direction];
+    }
+    return result;
+}
+
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth;
 const checkBlockDimension = (node: T, previous: T) => aboveRange(node.linear.top, previous.linear.bottom) && (isBlockWrap(node) || isBlockWrap(previous) || node.float !== previous.float);
@@ -107,14 +131,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static baseline<T extends NodeUI>(list: T[], text = false): T | null {
-        list = filterArray(list, item => {
-            if ((item.baseline || isLength(item.verticalAlign)) && (!text || item.textElement) && !item.floating && !item.baselineAltered) {
-                return item.naturalChild && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline);
+        const result: T[] = [];
+        for (const item of list) {
+            if ((item.baseline || isLength(item.verticalAlign)) && (!text || item.textElement) && !item.floating && (item.naturalChild && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline)) && !item.baselineAltered) {
+                result.push(item);
             }
-            return false;
-        });
-        if (list.length > 1) {
-            list.sort((a, b) => {
+        }
+        if (result.length > 1) {
+            result.sort((a, b) => {
                 if (a.length && b.length === 0) {
                     return 1;
                 }
@@ -159,16 +183,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (a.textElement && b.inputElement && a.childIndex < b.childIndex) {
                     return -1;
                 }
-                if (a.bounds.bottom > b.bounds.bottom) {
+                const bottomA = a.bounds.bottom;
+                const bottomB = b.bounds.bottom;
+                if (bottomA > bottomB) {
                     return -1;
                 }
-                else if (a.bounds.bottom < b.bounds.bottom) {
+                else if (bottomA < bottomB) {
                     return 1;
                 }
                 return 0;
             });
         }
-        return list[0] || null;
+        return result[0] || null;
     }
 
     public static linearData<T extends NodeUI>(list: T[], clearOnly = false): LinearData<T> {
@@ -305,12 +331,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             linearY = list[0].blockStatic;
             linearX = !linearY;
         }
-        return {
-            linearX,
-            linearY,
-            cleared,
-            floated
-        };
+        return { linearX, linearY, cleared, floated };
     }
 
     public static partitionRows(list: T[]) {
@@ -868,53 +889,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public previousSiblings(options: SiblingOptions = {}) {
-        const { floating, pageFlow, lineBreak, excluded } = options;
-        const result: T[] = [];
-        let element = <Element> (this.element?.previousSibling || this.firstChild?.element?.previousSibling);
-        while (element) {
-            const node = getElementAsNode<T>(element, this.sessionId);
-            if (node) {
-                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
-                    result.push(node);
-                }
-                else if (node.pageFlow && !node.excluded) {
-                    if (pageFlow === false) {
-                        break;
-                    }
-                    result.push(node);
-                    if (floating !== false || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
-                        break;
-                    }
-                }
-            }
-            element = <Element> element.previousSibling;
-        }
-        return result;
+        return traverseElementSibling(options, <Element> (this.element?.previousSibling || this.innerMostWrapped?.element?.previousSibling || this.firstChild?.element?.previousSibling), 'previousSibling', this.sessionId);
     }
 
     public nextSiblings(options: SiblingOptions = {}) {
-        const { floating, pageFlow, lineBreak, excluded } = options;
-        const result: T[] = [];
-        let element = <Element> (this.element?.nextSibling || this.lastChild?.element?.nextSibling);
-        while (element) {
-            const node = getElementAsNode<T>(element, this.sessionId);
-            if (node) {
-                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
-                    result.push(node);
-                }
-                else if (node.pageFlow && !node.excluded) {
-                    if (pageFlow === false) {
-                        break;
-                    }
-                    result.push(node);
-                    if (floating !== false || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
-                        break;
-                    }
-                }
-            }
-            element = <Element> element.nextSibling;
-        }
-        return result;
+        return traverseElementSibling(options, <Element> (this.element?.nextSibling || this.innerMostWrapped?.element?.nextSibling || this.firstChild?.element?.nextSibling), 'nextSibling', this.sessionId);
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {
@@ -1544,7 +1523,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get outerExtensionElement() {
         if (this.naturalChild) {
-            let current = (this._element as Element).parentElement;
+            let current = (<Element> this._element).parentElement;
             while (current) {
                 if (current.dataset.use) {
                     return current;

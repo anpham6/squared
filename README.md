@@ -326,8 +326,8 @@ The system methods querySelector and querySelectorAll can also be called from ev
 ```javascript
 squared.system.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"
 squared.system.getElementById(value: string, cache?: boolean)
-squared.system.querySelector(value: string)
-squared.system.querySelectorAll(value: string)
+squared.system.querySelector(value: string, cache?: boolean)
+squared.system.querySelectorAll(value: string, cache?: boolean)
 squared.system.getElementMap()
 squared.system.clearElementMap()
 
@@ -346,8 +346,8 @@ squared.system.saveFontAssets(filename?: string)
 // async methods
 await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"
 await chrome.getElementById(value: string, cache?: boolean)
-await chrome.querySelector(value: string)
-await chrome.querySelectorAll(value: string)
+await chrome.querySelector(value: string, cache?: boolean)
+await chrome.querySelectorAll(value: string, cache?: boolean)
 ```
 
 ### ANDROID: Extension Widgets

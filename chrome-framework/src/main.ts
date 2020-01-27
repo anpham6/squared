@@ -25,7 +25,7 @@ let file: File<View>;
 let userSettings: UserSettings;
 let elementMap: Map<Element, View>;
 
-function findElement(element: HTMLElement, cache = true) {
+function findElement(element: HTMLElement, cache: boolean) {
     if (cache) {
         const result = elementMap.get(element);
         if (result) {
@@ -39,7 +39,7 @@ function findElement(element: HTMLElement, cache = true) {
     return elementMap.get(element) || null;
 }
 
-async function findElementAsync(element: HTMLElement, cache = true) {
+async function findElementAsync(element: HTMLElement, cache: boolean) {
     if (cache) {
         const result = elementMap.get(element);
         if (result) {
@@ -50,26 +50,23 @@ async function findElementAsync(element: HTMLElement, cache = true) {
     return elementMap.get(element) || null;
 }
 
-async function findElementAllAsync(query: NodeListOf<Element>, result: View[]): Promise<View[]> {
+async function findElementAllAsync(query: NodeListOf<Element>, cache: boolean) {
+    const length = query.length;
+    const result: View[] = new Array(length);
     let incomplete = false;
-    query.forEach((element, index) => {
-        (async () => {
-            const item = await findElementAsync(<HTMLElement> element);
-            if (item) {
-                result[index] = item;
-            }
-            else {
-                incomplete = true;
-            }
-        })();
-    });
-    if (incomplete) {
-        flatArray(result);
+    for (let i = 0; i < length; i++) {
+        const item = await findElementAsync(<HTMLElement> query[i], cache);
+        if (item) {
+            result[i] = item;
+        }
+        else {
+            incomplete = true;
+        }
     }
-    const PromiseResult = class {
-        public then(resolve: () => void) {}
-    };
-    return new PromiseResult();
+    if (incomplete) {
+        flatArray<View>(result);
+    }
+    return result;
 }
 
 const appBase: ChromeFramework<View> = {
@@ -106,20 +103,20 @@ const appBase: ChromeFramework<View> = {
             }
             return null;
         },
-        querySelector(value: string) {
+        querySelector(value: string, cache = true) {
             if (application) {
                 const element = document.querySelector(value);
                 if (element) {
-                    return findElement(<HTMLElement> element);
+                    return findElement(<HTMLElement> element, cache);
                 }
             }
             return null;
         },
-        querySelectorAll(value: string) {
+        querySelectorAll(value: string, cache = true) {
             const result: View[] = [];
             if (application) {
                 document.querySelectorAll(value).forEach(element => {
-                    const item = findElement(<HTMLElement> element);
+                    const item = findElement(<HTMLElement> element, cache);
                     if (item) {
                         result.push(item);
                     }
@@ -233,22 +230,20 @@ const appBase: ChromeFramework<View> = {
         }
         return null;
     },
-    querySelector: async (value: string) => {
+    querySelector: async (value: string, cache = true) => {
         if (application) {
             const element = document.querySelector(value);
             if (element) {
-                return await findElementAsync(<HTMLElement> element);
+                return await findElementAsync(<HTMLElement> element, cache);
             }
         }
         return null;
     },
-    querySelectorAll: async (value: string) => {
+    querySelectorAll: async (value: string, cache = true) => {
         if (application) {
             const query = document.querySelectorAll(value);
             if (query.length) {
-                const result: View[] = new Array(query.length);
-                await findElementAllAsync(query, result);
-                return result;
+                return await findElementAllAsync(query, cache);
             }
         }
         return null;
