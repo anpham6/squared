@@ -157,6 +157,20 @@ export default abstract class NodeGroupUI extends NodeUI {
         return children[children.length - 1] || null;
     }
 
+    set childIndex(value) {
+        super.childIndex = value;
+    }
+    get childIndex() {
+        let result = super.childIndex;
+        if (result === Number.POSITIVE_INFINITY) {
+            for (const node of this) {
+                result = Math.min(node.childIndex, result);
+            }
+            super.childIndex = result;
+        }
+        return result;
+    }
+
     get tagName() {
         return '';
     }

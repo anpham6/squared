@@ -139,6 +139,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 const options = createViewAttribute();
                 ordinal = application.createNode({ parent });
+                ordinal.childIndex = node.childIndex;
                 ordinal.containerName = node.containerName + '_ORDINAL';
                 if (columnCount === 3) {
                     container.android('layout_columnSpan', '2');

@@ -1262,13 +1262,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         cache.sort((a, b) => {
             if (a.depth === b.depth) {
-                if (a.nodeGroup && (b.length === 0 || b.naturalChild)) {
-                    return -1;
+                const groupA = a.nodeGroup;
+                const groupB = b.nodeGroup;
+                if (groupA || groupB) {
+                    if (groupA && groupB) {
+                        return a.id < b.id ? -1 : 1;
+                    }
+                    else {
+                        return groupA ? -1 : 1;
+                    }
                 }
-                else if (b.nodeGroup && (a.length === 0 || a.naturalChild)) {
-                    return 1;
-                }
-                return 0;
             }
             return a.depth < b.depth ? -1 : 1;
         });
@@ -1421,6 +1424,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             inlineBelow.unshift(node);
             const wrapper = this.createNode({ parent, children: inlineBelow });
+            wrapper.childIndex = node.childIndex;
             wrapper.containerName = node.containerName;
             wrapper.inherit(node, 'boxStyle');
             wrapper.innerWrapped = node;

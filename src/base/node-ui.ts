@@ -401,6 +401,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _excludeSection = 0;
     private _excludeProcedure = 0;
     private _excludeResource = 0;
+    private _childIndex = Number.POSITIVE_INFINITY;
     private _visible = true;
     private _locked?: ObjectMapNested<boolean>;
     private _siblingsLeading?: T[];
@@ -1422,6 +1423,37 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get onlyChild() {
         return (this.renderParent?.renderChildren.length ?? this.parent?.length) === 1 && !this.documentRoot;
+    }
+
+    set childIndex(value) {
+        this._childIndex = value;
+    }
+    get childIndex() {
+        let result = this._childIndex;
+        if (result === Number.POSITIVE_INFINITY) {
+            const innerWrapped = this.innerMostWrapped;
+            if (innerWrapped) {
+                result = innerWrapped.childIndex;
+                this._childIndex = result;
+            }
+            else {
+                const element = this._element;
+                if (element) {
+                    const parentElement = element.parentElement;
+                    if (parentElement) {
+                        const childNodes = parentElement.childNodes;
+                        const length = childNodes.length;
+                        for (let i = 0; i < length; i++) {
+                            if (childNodes[i] === element) {
+                                result = i;
+                                this._childIndex = i;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     get textEmpty() {
