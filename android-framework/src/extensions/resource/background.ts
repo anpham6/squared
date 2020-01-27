@@ -1299,11 +1299,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     height = boundsHeight * (ratioHeight / ratioWidth);
                                     left = 0;
                                     if (height > boundsHeight) {
-                                        top = boundsHeight - height;
-                                        if (position.topAsPercent > 0) {
-                                            top = Math.round(top * position.topAsPercent);
+                                        if (node.hasHeight) {
+                                            top = boundsHeight - height;
+                                            if (position.topAsPercent > 0) {
+                                                top = Math.round(top * position.topAsPercent);
+                                            }
                                         }
-                                        if (!node.hasPX('height')) {
+                                        else {
                                             node.css('height', formatPX(boundsHeight - node.contentBoxHeight));
                                         }
                                     }
@@ -1315,7 +1317,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 else if (ratioWidth > ratioHeight) {
                                     width = boundsWidth * (ratioWidth / ratioHeight);
                                     height = boundsHeight;
-                                    if (width > boundsWidth) {
+                                    if (node.hasWidth && width > boundsWidth) {
                                         left = boundsWidth - width;
                                         if (position.leftAsPercent > 0) {
                                             left = Math.round(left * position.leftAsPercent);
@@ -1616,16 +1618,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 else if (value.item) {
-                    let width: number;
-                    let height: number;
-                    if (dimension) {
-                        width = Math.round(dimenWidth);
-                        height = Math.round(dimenHeight);
-                    }
-                    else {
-                        width = Math.round(node.actualWidth);
-                        height = Math.round(node.actualHeight);
-                    }
+                    const [width, height] = dimension ? [Math.round(dimenWidth), Math.round(dimenHeight)] : [Math.round(node.actualWidth), Math.round(node.actualHeight)];
                     if (size.split(' ').some(dimen => dimen !== '100%' && isLength(dimen, true))) {
                         imageData.width = width;
                         imageData.height = height;

@@ -113,6 +113,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 }
             }
         }
+        const [controlName, appBarName, collapsingToolbarName] = node.api < BUILD_ANDROID.Q ? [SUPPORT_ANDROID.TOOLBAR, SUPPORT_ANDROID.APPBAR, SUPPORT_ANDROID.COLLAPSING_TOOLBAR] : [SUPPORT_ANDROID_X.TOOLBAR, SUPPORT_ANDROID_X.APPBAR, SUPPORT_ANDROID_X.COLLAPSING_TOOLBAR];
         const hasCollapsingToolbar = 'collapsingToolbar' in options || collapsingToolbarChildren.length > 0;
         const hasAppBar = 'appBar' in options || appBarChildren.length > 0 || hasCollapsingToolbar;
         let appBarOverlay = '';
@@ -132,7 +133,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 if (popupTheme) {
                     popupOverlay = popupTheme.replace('@style/', '');
                 }
-                app.popupTheme = '@style/' + settings.manifestThemeName + '.PopupOverlay';
+                app.popupTheme = `@style/${settings.manifestThemeName}.PopupOverlay`;
             }
         }
         else {
@@ -140,19 +141,6 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             assignEmptyValue(toolbarOptions, 'android', 'fitsSystemWindows', 'true');
         }
         assignEmptyValue(toolbarOptions, 'android', 'layout_height', hasAppBar || !node.hasPX('height') ? '?android:attr/actionBarSize' : '');
-        let controlName: string;
-        let appBarName: string;
-        let collapsingToolbarName: string;
-        if (node.api < BUILD_ANDROID.Q) {
-            controlName = SUPPORT_ANDROID.TOOLBAR;
-            appBarName = SUPPORT_ANDROID.APPBAR;
-            collapsingToolbarName = SUPPORT_ANDROID.COLLAPSING_TOOLBAR;
-        }
-        else {
-            controlName = SUPPORT_ANDROID_X.TOOLBAR;
-            appBarName = SUPPORT_ANDROID_X.APPBAR;
-            collapsingToolbarName = SUPPORT_ANDROID_X.COLLAPSING_TOOLBAR;
-        }
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
         let appBarNode: T | undefined;

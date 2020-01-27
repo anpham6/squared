@@ -267,8 +267,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public convertToValues(keyTimes?: number[]) {
-        if (this.to) {
-            this.values = [this.from, this.to];
+        const to = this.to;
+        if (to) {
+            this.values = [this.from, to];
             if (this.from === '') {
                 this.evaluateStart = true;
             }
@@ -335,10 +336,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (!isNaN(endTime)) {
                 const { duration, iterationCount } = this;
                 if (iterationCount === -1 || duration > 0 && endTime < duration * iterationCount) {
-                    if (this.delay > endTime) {
+                    const delay = this.delay;
+                    if (delay > endTime) {
                         this.end = endTime;
                         if (iterationCount === -1) {
-                            this.iterationCount = Math.ceil((this.end - this.delay) / duration);
+                            this.iterationCount = Math.ceil((this.end - delay) / duration);
                         }
                     }
                     else {

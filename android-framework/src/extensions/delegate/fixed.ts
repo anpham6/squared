@@ -149,13 +149,13 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     node.css('maxWidth', innerWrapped.css('maxWidth'));
                     node.setLayoutWidth('0px');
                     node.contentBoxWidth = innerWrapped.contentBoxWidth;
-                    innerWrapped.setLayoutWidth('wrap_content');
+                    innerWrapped.setLayoutWidth('wrap_content', false);
                 }
                 if (maxData.height) {
                     node.css('maxHeight', innerWrapped.css('maxHeight'));
                     node.setLayoutHeight('0px');
                     node.contentBoxHeight = innerWrapped.contentBoxHeight;
-                    innerWrapped.setLayoutHeight('wrap_content');
+                    innerWrapped.setLayoutHeight('wrap_content', false);
                 }
             }
         }

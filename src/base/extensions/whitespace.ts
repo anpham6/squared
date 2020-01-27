@@ -28,7 +28,7 @@ function setSpacingOffset(node: NodeUI, region: number, value: number, adjustmen
     }
     offset -= adjustment;
     if (offset > 0) {
-        (node.renderAs || node.outerWrapper || node).modifyBox(region, offset);
+        (node.renderAs || node.outerMostWrapper || node).modifyBox(region, offset);
     }
 }
 
@@ -195,6 +195,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 }
                 const actualParent = node.actualParent as T;
                 const blockParent = isBlockElement(node) && !actualParent.layoutElement;
+                const pageFlow = node.pageFlow;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;
                 const length = children.length;
@@ -202,7 +203,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     const current = children[i] as T;
                     if (current.pageFlow) {
                         if (blockParent) {
-                            if (!current.floating) {
+                            if (pageFlow && !current.floating) {
                                 if (current.bounds.height > 0 || length === 1 || isBlockElement(current, i === 0 ? true : (i === length - 1 ? false : undefined), true)) {
                                     if (firstChild === undefined) {
                                         firstChild = current;
@@ -337,7 +338,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                 }
-                if (!hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && !actualParent.layoutElement && node.tagName !== 'FIELDSET') {
+                if (pageFlow && !hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && node.tagName !== 'FIELDSET') {
                     if (firstChild) {
                         applyMarginCollapse(node, firstChild, true);
                     }
@@ -492,10 +493,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                         else {
+                            const horizontalRows = renderParent.horizontalRows;
                             let horizontal: T[] | undefined;
-                            if (renderParent.horizontalRows) {
+                            if (horizontalRows) {
                                 found: {
-                                    const horizontalRows = renderParent.horizontalRows;
                                     let maxBottom = Number.NEGATIVE_INFINITY;
                                     const lengthA = horizontalRows.length;
                                     for (let i = 0; i < lengthA; i++) {
@@ -549,7 +550,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                     }
-                    if (renderParent.layoutHorizontal && !node.alignParent('left')) {
+                    if (!renderParent.layoutVertical && !node.alignParent('left')) {
                         const documentId = node.alignSibling('leftRight');
                         if (documentId !== '') {
                             const previousSibling = renderParent.renderChildren.find(item => item.documentId === documentId);

@@ -51,7 +51,7 @@ async function getImageSvgAsync(value: string) {
 }
 
 const isSvgExtension = (value: string) => /\.svg$/.test(value.toLowerCase());
-const parseConditionText = (rule: string, value: string) => new RegExp(`^@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
+const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public initializing = false;
@@ -486,6 +486,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         const styleSheetHref = item.parentStyleSheet?.href || undefined;
         const cssText = item.cssText;
         switch (item.type) {
+            case CSSRule.SUPPORTS_RULE:
+                this.applyCSSRuleList((<CSSSupportsRule> (item as unknown)).cssRules);
+                break;
             case CSSRule.STYLE_RULE: {
                 const cssStyle = item.style;
                 const important: ObjectMap<boolean> = {};

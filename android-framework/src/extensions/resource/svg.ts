@@ -738,8 +738,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             if (fileAsset) {
                 const parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;
                 parentElement.insertAdjacentHTML('beforeend', fileAsset.content);
-                if (parentElement.lastElementChild instanceof SVGSVGElement) {
-                    const element = parentElement.lastElementChild;
+                const lastElementChild = parentElement.lastElementChild;
+                if (lastElementChild instanceof SVGSVGElement) {
+                    const element = lastElementChild;
                     if (element.width.baseVal.value === 0) {
                         element.setAttribute('width', node.actualWidth.toString());
                     }
@@ -809,7 +810,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const togetherTargets: SvgAnimation[][] = [];
                 const isolatedTargets: SvgAnimation[][][] = [];
                 const transformTargets: SvgAnimation[][] = [];
-                const [companions, animations] = partitionArray(group.animate, child => child.companion !== undefined);
+                const [companions, animations] = partitionArray(group.animate, child => 'companion' in child);
                 const targetSetTemplate: SetTemplate = {
                     set: [],
                     objectAnimator: []
@@ -928,7 +929,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             synchronized = true;
                             checkBefore = true;
                         }
-                        else if (index <= 1 && items.some(item => item.companion !== undefined)) {
+                        else if (index <= 1 && items.some(item => 'companion' in item)) {
                             ordering = 'sequentially';
                         }
                         else {
@@ -1853,7 +1854,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     const lengthB = itemTotal.length;
                     for (let j = 0; j < lengthB; j++) {
                         if (itemTotal[j] === 1) {
-                            const transform = replaceData.find(data => data.index === j && data.animate !== undefined);
+                            const transform = replaceData.find(data => data.index === j && 'animate' in data);
                             if (transform) {
                                 const animate = transform.animate;
                                 if (animate) {

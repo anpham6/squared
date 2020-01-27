@@ -50,7 +50,7 @@ export const SVG = {
         return element.tagName === 'path';
     },
     shape: (element: Element): element is SVGGeometryElement => {
-        return SHAPES[element.tagName] !== undefined;
+        return element.tagName in SHAPES;
     },
     image: (element: Element): element is SVGImageElement => {
         return element.tagName === 'image';

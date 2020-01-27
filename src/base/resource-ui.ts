@@ -23,18 +23,9 @@ const REGEX_NOBREAKSPACE = /\u00A0/g;
 const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
 
-function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
-    const item = <RadialGradient> gradient;
-    const repeating = item.repeating === true;
-    let extent = 1;
-    let size: number;
-    if (repeating && gradient.type === 'radial') {
-        extent = item.radiusExtent / item.radius;
-        size = item.radius;
-    }
-    else {
-        size = item.horizontal ? (<Dimension> gradient.dimension).width : (<Dimension> gradient.dimension).height;
-    }
+function parseColorStops(node: NodeUI, gradient: RadialGradient, value: string) {
+    const repeating = gradient.repeating === true;
+    const [extent, size] = repeating && gradient.type === 'radial' ? [gradient.radiusExtent / gradient.radius, gradient.radius] : [1, (<Dimension> gradient.dimension)[gradient.horizontal ? 'width' : 'height']];
     const result: ColorStop[] = [];
     let previousOffset = 0;
     let match: RegExpExecArray | null;
@@ -55,7 +46,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                     offset = parseFloat(unit) / 100;
                 }
                 else if (isLength(unit)) {
-                    offset = node.parseUnit(unit, item.horizontal ? 'width' : 'height', false) / size;
+                    offset = node.parseUnit(unit, gradient.horizontal ? 'width' : 'height', false) / size;
                 }
                 else if (isCalc(unit)) {
                     offset = calculate(match[6], size, node.fontSize) / size;
@@ -194,28 +185,30 @@ function getBackgroundSize(node: NodeUI, index: number, value?: string) {
 
 function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: string[]) {
     const style = node.css(border[0]) || 'none';
-    let width = formatPX(attr !== 'outline' ? node[border[1]] : convertFloat(node.style[border[1]]));
-    let color: string | ColorData | undefined = node.css(border[2]) || 'initial';
-    switch (color) {
-        case 'initial':
-            color = 'rgb(0, 0, 0)';
-            break;
-        case 'inherit':
-        case 'currentcolor':
-            color = getInheritedStyle(<HTMLElement> node.element, border[2]);
-            break;
-    }
-    if (width !== '0px' && style !== 'none') {
-        if (width === '2px' && (style === 'inset' || style === 'outset')) {
-            width = '1px';
-        }
-        color = parseColor(color, 1, true);
-        if (color) {
-            boxStyle[attr] = <BorderAttribute> {
-                width,
-                style,
-                color
-            };
+    if (style !== 'none') {
+        let width = formatPX(attr !== 'outline' ? node[border[1]] : convertFloat(node.style[border[1]]));
+        if (width !== '0px') {
+            let color: string | ColorData | undefined = node.css(border[2]) || 'initial';
+            switch (color) {
+                case 'initial':
+                    color = 'rgb(0, 0, 0)';
+                    break;
+                case 'inherit':
+                case 'currentcolor':
+                    color = getInheritedStyle(<HTMLElement> node.element, border[2]);
+                    break;
+            }
+            if (width === '2px' && (style === 'inset' || style === 'outset')) {
+                width = '1px';
+            }
+            color = parseColor(color, 1, true);
+            if (color) {
+                boxStyle[attr] = <BorderAttribute> {
+                    width,
+                    style,
+                    color
+                };
+            }
         }
     }
 }
@@ -369,7 +362,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 angle: getAngle(direction),
                                 center: getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension)
                             };
-                            conic.colorStops = parseColorStops(node, conic, match[4]);
+                            conic.colorStops = parseColorStops(node, conic as any, match[4]);
                             gradient = conic;
                             break;
                         }
@@ -525,7 +518,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 angle,
                                 angleExtent: { x, y }
                             };
-                            linear.colorStops = parseColorStops(node, linear, match[4]);
+                            linear.colorStops = parseColorStops(node, linear as any, match[4]);
                             gradient = linear;
                             break;
                         }

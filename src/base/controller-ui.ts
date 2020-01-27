@@ -324,7 +324,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public hasAppendProcessing(id?: number) {
-        return id === undefined ? this._requireFormat : (this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined);
+        return id === undefined ? this._requireFormat : (id in this._beforeOutside || id in this._beforeInside || id in this._afterInside || id in this._afterOutside);
     }
 
     public includeElement(element: Element) {

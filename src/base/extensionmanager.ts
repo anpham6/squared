@@ -39,7 +39,8 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
 
     public exclude(ext: squared.base.Extension<T>) {
         const extensions = this.application.extensions;
-        for (let i = 0; i < extensions.length; i++) {
+        const length = extensions.length;
+        for (let i = 0; i < length; i++) {
             if (extensions[i] === ext) {
                 extensions.splice(i, 1);
                 return true;

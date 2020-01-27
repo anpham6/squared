@@ -860,7 +860,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                             }
                             else if (!actualParent.layoutElement) {
-                                checkParentWidth();
+                                if (this.nodeGroup || this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
+                                    layoutWidth = 'match_parent';
+                                }
+                                else {
+                                    checkParentWidth();
+                                }
                             }
                             else if (this.gridElement && this.onlyChild) {
                                 layoutWidth = 'match_parent';
@@ -1281,9 +1286,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (renderParent) {
                 this.alignLayout(renderParent);
                 this.setLineHeight(renderParent);
-                if (this.inlineWidth && this.renderChildren.some(node => node.blockWidth && node.some((item: T) => item.flexibleWidth))) {
-                    this.setLayoutWidth(this.documentRoot || renderParent.inlineWidth ? formatPX(this.actualWidth) : 'match_parent');
-                }
             }
         }
 
@@ -1747,7 +1749,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         get anchorTarget(): T {
             let target = this as T;
-            while (target) {
+            do {
                 const renderParent = target.renderParent as T;
                 if (renderParent) {
                     if (renderParent.layoutConstraint || renderParent.layoutRelative) {
@@ -1759,6 +1761,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 target = target.outerWrapper as T;
             }
+            while (target);
             return this;
         }
 

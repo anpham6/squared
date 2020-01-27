@@ -1843,7 +1843,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             const value = this.css('height');
             if (isPercent(value)) {
-                if (this.pageFlow && this.actualParent?.hasHeight) {
+                if (this.pageFlow && (this.actualParent?.hasHeight || this.documentBody)) {
                     result = parseFloat(value) > 0;
                 }
                 else {

@@ -1516,6 +1516,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected processFloatVertical(layout: LayoutUI<T>) {
         const controllerHandler = this.controllerHandler;
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
+        const cleared = layout.cleared;
         if (layout.containerType !== 0) {
             const node = layout.node;
             const parent = controllerHandler.createNodeGroup(node, [node], layout.parent);
@@ -1534,7 +1535,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         const staticRows: T[][] = [];
         const floatedRows: Null<T[]>[] = [];
-        const cleared = layout.cleared;
         const current: T[] = [];
         const floated: T[] = [];
         let clearReset = false;

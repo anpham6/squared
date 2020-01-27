@@ -87,10 +87,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         let actualLeft: number;
         node.each((item: T) => {
             if (item.companion) {
-                actualTop = item.actualRect('top', 'linear');
-                actualRight = item.actualRect('right', 'linear');
-                actualBottom = item.actualRect('bottom', 'linear');
-                actualLeft = item.actualRect('left', 'linear');
+                actualTop = item.actualRect('top');
+                actualRight = item.actualRect('right');
+                actualBottom = item.actualRect('bottom');
+                actualLeft = item.actualRect('left');
             }
             else {
                 ({ top: actualTop, right: actualRight, bottom: actualBottom, left: actualLeft } = item.linear);
@@ -824,7 +824,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         else if (this.styleText) {
                                             const textBounds = this.textBounds;
                                             if (textBounds) {
-                                                actualTop = Math.max(top, siblings.length > 2 ? textBounds.bottom : textBounds.top);
+                                                actualTop = Math.max(top, siblings.length > 2 ? (textBounds.top + textBounds.bottom) * 0.5 : actualTop);
                                             }
                                         }
                                     }

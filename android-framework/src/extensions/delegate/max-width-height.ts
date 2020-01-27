@@ -19,11 +19,13 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     }
 
     public condition(node: T, parent: T) {
-        const width = node.hasPX('maxWidth') && (node.blockStatic || node.onlyChild && (parent.blockStatic || parent.hasWidth) || parent.layoutVertical || parent.layoutFrame) && !parent.hasAlign(NODE_ALIGNMENT.COLUMN);
-        const height = node.hasPX('maxHeight') && parent.hasHeight;
-        if (width || height) {
-            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { width, height });
-            return true;
+        if (!parent.layoutElement && !(parent.hasAlign(NODE_ALIGNMENT.COLUMN) && parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT))) {
+            const width = node.hasPX('maxWidth') && (node.blockStatic || parent.layoutVertical || node.onlyChild && (parent.blockStatic || parent.hasWidth) || parent.layoutFrame);
+            const height = node.hasPX('maxHeight') && parent.hasHeight;
+            if (width || height) {
+                node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { width, height });
+                return true;
+            }
         }
         return false;
     }

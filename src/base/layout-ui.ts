@@ -36,44 +36,42 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         const children = this.children;
         const length = children.length;
         if (length) {
+            let floatedSize: number;
             if (length > 1) {
                 const linearData = NodeUI.linearData(children);
-                this._floated = linearData.floated;
+                const floated = linearData.floated;
+                this._floated = floated;
                 this._cleared = linearData.cleared;
                 this._linearX = linearData.linearX;
                 this._linearY = linearData.linearY;
+                floatedSize = floated.size;
             }
             else {
                 this._linearY = children[0].blockStatic;
                 this._linearX = !this._linearY;
+                floatedSize = 0;
             }
-            let A = 0;
-            let B = 0;
+            let A = true;
+            let B = true;
             for (let i = 0; i < length; i++) {
                 const item = children[i];
-                if (item.floating) {
-                    A++;
+                if (!item.floating) {
+                    A = false;
                 }
-                else {
-                    A = Number.POSITIVE_INFINITY;
+                if (!item.rightAligned) {
+                    B = false;
                 }
-                if (item.rightAligned) {
-                    B++;
-                }
-                else {
-                    B = Number.POSITIVE_INFINITY;
-                }
-                if (A === Number.POSITIVE_INFINITY && B === Number.POSITIVE_INFINITY) {
+                if (!A && !B) {
                     break;
                 }
             }
-            if (A === length || this._floated?.size === 2) {
+            if (A || floatedSize === 2) {
                 this.add(NODE_ALIGNMENT.FLOAT);
                 if (this.some(node => node.blockStatic)) {
                     this.add(NODE_ALIGNMENT.BLOCK);
                 }
             }
-            if (B === length) {
+            if (B) {
                 this.add(NODE_ALIGNMENT.RIGHT);
             }
             this.itemCount = length;

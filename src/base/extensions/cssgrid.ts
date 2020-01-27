@@ -410,25 +410,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         let autoWidth = false;
         let autoHeight = false;
         if (!node.has('gridTemplateAreas') && node.every(item => item.css('gridRowStart') === 'auto' && item.css('gridColumnStart') === 'auto')) {
-            let directionA: string;
-            let directionB: string;
-            let indexA: number;
-            let indexB: number;
-            let indexC: number;
-            if (horizontal) {
-                directionA = 'top';
-                directionB = 'bottom';
-                indexA = 2;
-                indexB = 1;
-                indexC = 3;
-            }
-            else {
-                directionA = 'left';
-                directionB = 'right';
-                indexA = 3;
-                indexB = 0;
-                indexC = 2;
-            }
+            const [directionA, directionB, indexA, indexB, indexC] = horizontal ? ['top', 'bottom', 2, 1, 3] : ['left', 'right', 3, 0, 2];
             let rowIndex = 0;
             let columnIndex = 0;
             let columnMax = 0;
@@ -518,10 +500,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             });
         }
         else {
-            autoWidth = setAutoFill(column, node.actualWidth);
-            autoHeight = setAutoFill(row, node.actualHeight);
             const templateAreas = mainData.templateAreas;
             let previousPlacement: number[] | undefined;
+            autoWidth = setAutoFill(column, node.actualWidth);
+            autoHeight = setAutoFill(row, node.actualHeight);
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
                 if (template !== 'none') {
                     trimString(template.trim(), '"').split(CHAR.SPACE).forEach((area, j) => {
@@ -760,16 +742,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         let ITERATION: number;
         {
-            let data: CssGridDirectionData;
-            let outerCoord: number;
-            if (horizontal) {
-                data = column;
-                outerCoord = node.box.top;
-            }
-            else {
-                data = row;
-                outerCoord = node.box.left;
-            }
+            const [data, outerCoord] = horizontal ? [column, node.box.top] : [row, node.box.left];
             let unit = data.unit;
             let length = 1;
             let outerCount = 0;

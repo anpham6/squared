@@ -178,7 +178,7 @@ export default abstract class NodeGroupUI extends NodeUI {
         let result = super.containerIndex;
         if (result === Number.POSITIVE_INFINITY) {
             for (const node of this) {
-                result = Math.min((node as NodeUI).containerIndex, result);
+                result = Math.min((<NodeUI> node).containerIndex, result);
             }
             super.containerIndex = result;
         }

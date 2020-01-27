@@ -364,7 +364,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const data: ExternalData = { rowSpan, colSpan };
                 for (let k = 0; k < rowSpan - 1; k++)  {
                     const l = (i + 1) + k;
-                    if (columnIndex[l] !== undefined) {
+                    if (l in columnIndex) {
                         columnIndex[l] += colSpan;
                     }
                 }
