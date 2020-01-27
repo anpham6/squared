@@ -1354,6 +1354,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const element = <HTMLInputElement> node.element;
                 const type = element.type;
                 switch (type) {
+                    case 'radio':
                     case 'checkbox':
                         if (element.checked) {
                             node.android('checked', 'true');

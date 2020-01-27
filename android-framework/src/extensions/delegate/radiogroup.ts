@@ -8,6 +8,8 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 const $base = squared.base;
 const { NodeUI } = $base;
 
+const { getElementAsNode } = squared.lib.session;
+
 const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
 
 const getInputName = (element: HTMLInputElement) => element.name ? element.name.trim() : '';
@@ -75,6 +77,9 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             const dataset = node.dataset;
             container.render(dataset.target && !dataset.use ? this.application.resolveTarget(dataset.target) : parent);
             for (const item of radiogroup) {
+                if (item.toElementBoolean('checked')) {
+                    item.android('checked', 'true');
+                }
                 item.positioned = true;
             }
             for (const item of removeable) {
@@ -91,6 +96,55 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 parent: container,
                 complete: true
             };
+        }
+        else {
+            radiogroup.length = 0;
+            const name = getInputName(<HTMLInputElement> node.element);
+            const sessionId = node.sessionId;
+            document.querySelectorAll(`input[type=radio][name=${name}]`).forEach((element: Element) => {
+                const item = getElementAsNode(element, sessionId) as T;
+                if (item) {
+                    radiogroup.push(item);
+                }
+            });
+            const length = radiogroup.length;
+            if (length > 1 && radiogroup.includes(node)) {
+                const controlName = CONTAINER_ANDROID.RADIOGROUP;
+                const data = new Map<T, number>();
+                for (const node of radiogroup) {
+                    const parents = node.ascend({ condition: (item: T) => item.layoutLinear, error: (item: T) => item.controlName === controlName, every: true }) as T[];
+                    if (parents.length) {
+                        for (const item of parents) {
+                            const value = (data.get(item) || 0) + 1;
+                            data.set(item, value);
+                        }
+                    }
+                    else {
+                        data.clear();
+                        break;
+                    }
+                }
+                for (const [parent, value] of data.entries()) {
+                    if (value === length) {
+                        parent.unsafe('controlName', controlName);
+                        parent.containerType = CONTAINER_NODE.RADIO;
+                        const renderParent = parent.renderParent;
+                        if (renderParent) {
+                            const template = <NodeXmlTemplate<T>> renderParent.renderTemplates?.find(item => item?.node === parent);
+                            if (template) {
+                                template.controlName = controlName;
+                            }
+                        }
+                        for (const item of radiogroup) {
+                            if (item.toElementBoolean('checked')) {
+                                item.android('checked', 'true');
+                            }
+                            item.positioned = true;
+                        }
+                        return undefined;
+                    }
+                }
+            }
         }
         return undefined;
     }

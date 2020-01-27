@@ -771,7 +771,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public ascend(options: AscendOptions = {}) {
-        const { condition, including, every, excluding } = options;
+        const { condition, including, error, every, excluding } = options;
         let attr = options.attr;
         if (!isString(attr)) {
             attr = 'actualParent';
@@ -779,6 +779,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const result: T[] = [];
         let current = options.startSelf ? this : this[attr];
         while (current && current !== excluding) {
+            if (error && error(current)) {
+                break;
+            }
             if (condition) {
                 if (condition(current)) {
                     result.push(current);

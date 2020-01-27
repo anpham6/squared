@@ -373,7 +373,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public rendered = false;
     public excluded = false;
     public floatContainer = false;
-    public containerIndex = Number.POSITIVE_INFINITY;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
     public abstract localSettings: {};
@@ -402,6 +401,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _excludeProcedure = 0;
     private _excludeResource = 0;
     private _childIndex = Number.POSITIVE_INFINITY;
+    private _containerIndex = Number.POSITIVE_INFINITY;
     private _visible = true;
     private _locked?: ObjectMapNested<boolean>;
     private _siblingsLeading?: T[];
@@ -1454,6 +1454,21 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         return result;
+    }
+
+    set containerIndex(value) {
+        this._containerIndex = value;
+    }
+    get containerIndex() {
+        let result = this._containerIndex;
+        if (result === Number.POSITIVE_INFINITY) {
+            const innerWrapped = this.innerMostWrapped;
+            if (innerWrapped) {
+                result = innerWrapped.containerIndex;
+                this._containerIndex = result;
+            }
+        }
+        return this._containerIndex;
     }
 
     get textEmpty() {
