@@ -18,12 +18,12 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
         circlePosition: false
     };
 
-    public is() {
-        return true;
+    public is(node: T) {
+        return this.included(<HTMLElement> node.element);
     }
 
     public condition(node: T) {
-        return this.included(<HTMLElement> node.element) && node.length > 0;
+        return node.length > 0;
     }
 
     public processNode(node: T, parent: T) {

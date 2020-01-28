@@ -852,10 +852,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
             }
-            if (blockDimension && this.css('width') === '100%' && !this.hasPX('maxWidth')) {
-                return NODE_TRAVERSE.VERTICAL;
-            }
-            const parent = this.actualParent || this.documentParent;
             for (const previous of this.siblingsLeading) {
                 if (previous.blockStatic || previous.autoMargin.leftRight) {
                     return NODE_TRAVERSE.VERTICAL;
@@ -868,11 +864,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 else {
                     const blockStatic = this.blockStatic || this.display === 'table';
-                    if (blockStatic && (!previous.floating || !previous.rightAligned && withinRange(previous.linear.right, parent.box.right) || cleared?.has(previous))) {
+                    if (blockStatic && (!previous.floating || !previous.rightAligned && withinRange(previous.linear.right, (this.actualParent || this.documentParent).box.right) || cleared?.has(previous))) {
                         return NODE_TRAVERSE.VERTICAL;
                     }
                     else if (previous.floating) {
-                        if (previous.float === 'left' && this.autoMargin.right || previous.float === 'right' && this.autoMargin.left) {
+                        if (blockDimension && this.css('width') === '100%' && !this.hasPX('maxWidth') || previous.float === 'left' && this.autoMargin.right || previous.float === 'right' && this.autoMargin.left) {
                             return NODE_TRAVERSE.VERTICAL;
                         }
                         else if (blockStatic && this.some(item => item.floating && aboveRange(item.linear.top, previous.linear.bottom))) {
@@ -1544,7 +1540,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get extensions() {
         let result = this._cached.extensions;
         if (result === undefined) {
-            result = this.dataset.use ? spliceArray(this.dataset.use.split(XML.SEPARATOR), value => value === '') : [];
+            const use = this.dataset.use;
+            result = use ? spliceArray(use.split(XML.SEPARATOR), value => value === '') : [];
             this._cached.extensions = result;
         }
         return result;

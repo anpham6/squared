@@ -47,10 +47,10 @@ function saveAlignment(preAlignment: ObjectIndex<StringMap>, element: HTMLElemen
 function getCounterValue(name: string, counterName: string) {
     if (name !== 'none') {
         const pattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
-        let counterMatch: RegExpExecArray | null;
-        while ((counterMatch = pattern.exec(name)) !== null) {
-            if (counterMatch[1] === counterName) {
-                return parseInt(counterMatch[2]);
+        let match: RegExpExecArray | null;
+        while ((match = pattern.exec(name)) !== null) {
+            if (match[1] === counterName) {
+                return parseInt(match[2]);
             }
         }
     }
@@ -226,19 +226,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public conditionElement(element: HTMLElement) {
         if (!this._excluded.has(element.tagName)) {
-            if (this.controllerHandler.visibleElement(element) || this._cascadeAll || element.dataset.use && element.dataset.use.split(XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value))) {
+            if (this.controllerHandler.visibleElement(element) || this._cascadeAll) {
                 return true;
             }
             else {
                 switch (getStyle(element).position) {
                     case 'absolute':
                     case 'fixed':
-                        return false;
+                        return this.isUseElement(element);
                 }
                 let current = element.parentElement;
                 while (current) {
                     if (getStyle(current).display === 'none') {
-                        return false;
+                        return this.isUseElement(element);
                     }
                     current = current.parentElement;
                 }
@@ -250,7 +250,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         return true;
                     }
                 }
-                return false;
+                return this.isUseElement(element);
             }
         }
         return false;
@@ -1716,6 +1716,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.alignmentType,
             node.children as T[]
         );
+    }
+
+    private isUseElement(element: HTMLElement) {
+        const use = element.dataset.use;
+        if (use && use.split(XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value))) {
+            return true;
+        }
+        return false;
     }
 
     get layouts() {

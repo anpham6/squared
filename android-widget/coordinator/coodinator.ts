@@ -31,8 +31,8 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.COORDINATOR : SUPPORT_ANDROID_X.COORDINATOR;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude({ resource: NODE_RESOURCE.ASSET });
-        node.renderExclude = false;
         node.render(parent);
+        node.renderExclude = false;
         return {
             output: <NodeXmlTemplate<T>> {
                 type: NODE_TEMPLATE.XML,

@@ -14,7 +14,7 @@ const $lib = squared.lib;
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { maxArray, truncate } = $lib.math;
 const { CHAR, CSS } = $lib.regex;
-const { captureMap, flatMultiArray, objectMap } = $lib.util;
+const { captureMap, flatMultiArray, isArray, objectMap } = $lib.util;
 
 const $base_lib = squared.base.lib;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
@@ -62,7 +62,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
                 let size = 0;
                 captureMap(
                     <View[][]> mainData.rowData[i],
-                    item => !!item && item.length > 0,
+                    item => isArray(item),
                     item => size = Math.min(size, ...objectMap(item, child => child.bounds[dimension]))
                 );
                 value += size;
@@ -337,6 +337,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 let minUnitSize = 0;
                 let sizeWeight = 0;
                 let fitContent = false;
+                let auto = false;
                 for (let i = 0, j = 0; i < cellSpan; i++) {
                     const k = cellStart + i;
                     const min = unitMin[k];
@@ -357,6 +358,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                     }
                     if (value === 'auto' || value === 'max-content') {
+                        auto = true;
                         if (cellSpan < unit.length && (!parent.hasPX(dimension) || unit.some(px => isLength(px)) || value === 'max-content')) {
                             size = node.bounds[dimension];
                             minSize = 0;
@@ -481,7 +483,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             item.mergeGravity('layout_gravity', horizontal ? 'fill_horizontal' : 'fill_vertical');
                         }
                         else if (!item.hasPX(dimension)) {
-                            item.css(dimension, formatPX(size), true);
+                            item.css(auto ? minDimension : dimension, formatPX(size), true);
                         }
                     }
                     if (columnWeight) {
@@ -548,7 +550,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             const target = renderAs || node;
             applyLayout(target, true, 'width');
-            if (!target.hasPX('width')) {
+            if (target !== node || node.hasPX('maxHeight')) {
+                target.mergeGravity('layout_gravity', 'fill');
+            }
+            else if (!target.hasPX('width')) {
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
             const [rowStart, rowSpan] = applyLayout(target, false, 'height');

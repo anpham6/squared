@@ -176,7 +176,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     const result: SvgOffsetPath[] = [];
                     if (keyPoints.length > 1) {
                         let previous: SvgOffsetPath | undefined;
-                        const isPointEqual = (time: number, point: DOMPoint, rotate: number) => !!previous && previous.key === time && previous.rotate === rotate && isEqual(previous.value, point);
+                        const isPointEqual = (time: number, point: DOMPoint, rotate: number) => previous?.key === time && previous.rotate === rotate && isEqual(previous.value, point);
                         const lengthA = keyTimes.length;
                         for (let i = 0; i < lengthA - 1; i++) {
                             const keyTime = keyTimes[i];

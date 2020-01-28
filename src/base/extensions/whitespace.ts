@@ -211,10 +211,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     lastChild = current;
                                 }
                                 else if (
-                                    current.bounds.height === 0 && node.layoutVertical && current.alignSibling('topBottom') === '' && current.alignSibling('bottomTop') === '' && (
-                                        current.renderChildren.length === 0 ||
-                                        current.every((item: T) => !item.visible)
-                                    ) && (
+                                    current.bounds.height === 0 && node.layoutVertical && current.alignSibling('topBottom') === '' && current.alignSibling('bottomTop') === '' && (current.renderChildren.length === 0 || current.every((item: T) => !item.visible)) && (
                                         !current.pseudoElement ||
                                         current.pseudoElement && (length === 1 || i > 0 || children.every((item, index) => index === 0 || item.floating || item.pseudoElement && item.textContent.trim() === '')))
                                     )

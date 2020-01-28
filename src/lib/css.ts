@@ -63,7 +63,7 @@ export function getFontSize(element: Element | null) {
 }
 
 export function hasComputedStyle(element: Element): element is HTMLElement {
-    return element.nodeName.charAt(0) !== '#' ? element instanceof HTMLElement || element instanceof SVGElement : false;
+    return element.nodeName.charAt(0) !== '#' ? (element instanceof HTMLElement || element instanceof SVGElement) : false;
 }
 
 export function parseSelectorText(value: string) {

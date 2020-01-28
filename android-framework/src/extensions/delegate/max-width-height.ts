@@ -19,13 +19,11 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     }
 
     public condition(node: T, parent: T) {
-        if (!parent.layoutElement && !(parent.hasAlign(NODE_ALIGNMENT.COLUMN) && parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT))) {
-            const width = node.hasPX('maxWidth') && (node.blockStatic || parent.layoutVertical || node.onlyChild && (parent.blockStatic || parent.hasWidth) || parent.layoutFrame);
-            const height = node.hasPX('maxHeight') && parent.hasHeight;
-            if (width || height) {
-                node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { width, height });
-                return true;
-            }
+        const width = node.hasPX('maxWidth') && (node.blockStatic || parent.layoutVertical || node.onlyChild && (parent.blockStatic || parent.hasWidth) || parent.layoutFrame) && !parent.layoutElement && !(parent.hasAlign(NODE_ALIGNMENT.COLUMN) && parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT));
+        const height = node.hasPX('maxHeight') && (parent.hasHeight || parent.gridElement || parent.tableElement);
+        if (width || height) {
+            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { width, height });
+            return true;
         }
         return false;
     }
@@ -58,6 +56,9 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                     autoMargin.top = false;
                     autoMargin.bottom = false;
                     autoMargin.topBottom = false;
+                    if (!mainData.width && node.blockStatic && !node.hasWidth) {
+                        node.setLayoutWidth('match_parent', false);
+                    }
                 }
             }
             mainData.container = container;

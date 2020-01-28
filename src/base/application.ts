@@ -31,7 +31,7 @@ const REGEX_DATAURI = new RegExp(`(url\\("(${STRING.DATAURI})"\\)),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
     const image = images.get(uri);
-    if (image === undefined || width > 0 && height > 0 || image.width === 0 && image.height === 0) {
+    if (image === undefined || width > 0 && height > 0 || image.width === 0 || image.height === 0) {
         images.set(uri, { width, height, uri });
     }
 }
@@ -85,13 +85,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         ResourceConstructor: Constructor<T>,
         ExtensionManagerConstructor: Constructor<T>)
     {
+        this.Node = nodeConstructor;
         const cache = this.processing.cache;
         this._cache = cache;
         const controllerHandler = <Controller<T>> (new ControllerConstructor(this, cache) as unknown);
         this._controllerHandler = controllerHandler;
         this._resourceHandler = <Resource<T>> (new ResourceConstructor(this, cache) as unknown);
         this._extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, cache) as unknown);
-        this.Node = nodeConstructor;
         this._nodeAfterInsert = controllerHandler.afterInsertNode;
     }
 
@@ -197,7 +197,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (isSvgExtension(uri)) {
                     imageElements.push(uri);
                 }
-                else if (image.width === 0 && image.height === 0) {
+                else if (image.width === 0 || image.height === 0) {
                     const element = document.createElement('img');
                     element.src = uri;
                     if (element.naturalWidth > 0 && element.naturalHeight > 0) {
@@ -344,10 +344,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         const node = this.insertNode(parentElement);
         if (node) {
             const { controllerHandler: controller, processing } = this;
-            const CACHE = processing.cache;
+            const cache = processing.cache;
             node.depth = depth;
             if (depth === 0) {
-                CACHE.append(node);
+                cache.append(node);
             }
             if (controller.preventNodeCascade(parentElement)) {
                 return node;
@@ -371,7 +371,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     child = this.cascadeParentNode(element, depth + 1, extensions);
                     if (child) {
                         elements[k++] = child;
-                        CACHE.append(child);
+                        cache.append(child);
                         inlineText = false;
                     }
                 }
@@ -608,7 +608,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                             const specificityData: ObjectMap<number> = getElementCache(element, attrSpecificity, sessionId) || {};
                             for (const attr in baseMap) {
                                 const revisedSpecificity = specificity + (important[attr] ? 1000 : 0);
-                                if (specificityData[attr] === undefined || revisedSpecificity >= specificityData[attr]) {
+                                const value = specificityData[attr];
+                                if (value === undefined || revisedSpecificity >= value) {
                                     const value = baseMap[attr];
                                     if (value === 'initial' && REGEX_BACKGROUND.test(attr)) {
                                         if (cssStyle.background === 'none') {

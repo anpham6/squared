@@ -138,24 +138,18 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
                 if (length > 1) {
                     let previousBottom = Number.POSITIVE_INFINITY;
                     for (const node of this.children) {
-                        if (node.multiline || node.blockStatic) {
+                        if (node.blockStatic || node.multiline || aboveRange(node.linear.top, previousBottom)) {
                             result = false;
                             break;
                         }
-                        else {
-                            if (aboveRange(node.linear.top, previousBottom)) {
-                                result = false;
-                                break;
-                            }
-                            previousBottom = node.linear.bottom;
-                        }
+                        previousBottom = node.linear.bottom;
                     }
                 }
+                this._singleRow = result;
             }
             else {
                 result = false;
             }
-            this._singleRow = result;
         }
         return result;
     }

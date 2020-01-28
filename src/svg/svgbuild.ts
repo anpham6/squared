@@ -8,7 +8,7 @@ const { isAngle, parseAngle } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = $lib.math;
 const { CHAR, STRING, XML } = $lib.regex;
-const { convertWord, hasBit, isString } = $lib.util;
+const { convertWord, hasBit, isArray, isString } = $lib.util;
 
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
@@ -297,7 +297,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (commands.length) {
             let points = SvgBuild.getPathPoints(commands);
             if (points.length) {
-                const transformed = !!transforms && transforms.length > 0;
+                const transformed = isArray(transforms);
                 if (transformed) {
                     points = SvgBuild.applyTransforms(<SvgTransform[]> transforms, points, parent && TRANSFORM.origin(parent.element));
                 }

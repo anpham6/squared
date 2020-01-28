@@ -89,7 +89,7 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean, autoPaddi
 }
 
 function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top: boolean, bottom: boolean) {
-    if (node.baselineAltered && !node.multiline || node.imageOrSvgElement || node.actualHeight === 0 || node.cssInitial('lineHeight') === 'initial') {
+    if (node.imageOrSvgElement || node.baselineAltered && !node.multiline || node.actualHeight === 0 || node.cssInitial('lineHeight') === 'initial') {
         return;
     }
     if (node.multiline) {
@@ -196,7 +196,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     percent -= sibling.bounds[dimension] / boxSize;
                 }
             }
-            return i > 1 ? Math.max(0, percent) : 1;
+            return i > 0 ? Math.max(0, percent) : 1;
         }
 
         public static ascendFlexibleWidth(node: T) {
@@ -210,14 +210,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return true;
                 }
                 else if (parent.flexibleWidth) {
-                    if (i > 0 && parent.renderParent?.documentRoot === false) {
+                    if (++i > 1) {
                         return false;
                     }
                 }
                 else if (parent.inlineWidth || parent.naturalElement && parent.inlineVertical) {
                     return false;
                 }
-                i++;
                 parent = parent.renderParent as T | undefined;
             }
             return false;
@@ -1006,12 +1005,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (width >= 0) {
                     this.android('maxWidth', formatPX(width), false);
-                    if (this.textElement) {
-                        this.android('ellipsize', 'end');
-                    }
-                    else if (this.imageElement) {
-                        adjustViewBounds = true;
-                    }
+                    adjustViewBounds = true;
                 }
                 if (isLength(maxHeight, true)) {
                     let height = -1;
@@ -1029,9 +1023,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (height >= 0) {
                         this.android('maxHeight', formatPX(height));
-                        if (this.imageElement) {
-                            adjustViewBounds = true;
-                        }
+                        adjustViewBounds = true;
                     }
                 }
             }
@@ -1725,8 +1717,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (controlName) {
                     let name: string | undefined;
                     if (this.styleElement) {
-                        const elementId = this.elementId;
-                        const value = elementId?.trim() || getNamedItem(<HTMLElement> this.element, 'name');
+                        const value = this.elementId?.trim() || getNamedItem(<HTMLElement> this.element, 'name');
                         if (value !== '') {
                             name = value.replace(REGEX_VALIDSTRING, '_').toLowerCase();
                             if (name === 'parent' || RESERVED_JAVA.includes(name)) {

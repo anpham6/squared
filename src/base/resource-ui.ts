@@ -332,7 +332,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static isBackgroundVisible(object: BoxStyle | undefined) {
-        return !!(object && (object.backgroundImage || object.borderTop || object.borderRight || object.borderBottom || object.borderLeft));
+        return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
     }
 
     public static parseBackgroundImage(node: NodeUI) {

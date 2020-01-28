@@ -44,7 +44,7 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get blockStatic() {
         if (this._cached.blockStatic === undefined) {
-            const documentParent = this.documentParent;
+            const documentParent = this.actualParent || this.documentParent;
             const value = (
                 this.naturalChildren.length > 0 && this.naturalChildren[0].blockStatic ||
                 this.actualWidth === documentParent.actualWidth && !this.some(node => node.plainText || node.naturalElement && node.rightAligned) ||

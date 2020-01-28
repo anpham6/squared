@@ -20,13 +20,15 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public static convertStepTimingFunction(attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number, fontSize?: number): [number[], string[]] | undefined {
+        const valueA = values[index];
+        const valueB = values[index + 1];
         let currentValue: any[] | undefined;
         let nextValue: any[] | undefined;
         switch (attributeName) {
             case 'fill':
             case 'stroke': {
-                const colorStart = parseColor(values[index]);
-                const colorEnd = parseColor(values[index + 1]);
+                const colorStart = parseColor(valueA);
+                const colorEnd = parseColor(valueB);
                 if (colorStart && colorEnd) {
                     currentValue = [colorStart];
                     nextValue = [colorEnd];
@@ -34,18 +36,16 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 break;
             }
             case 'points':
-                currentValue = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[index]));
-                nextValue = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[index + 1]));
+                currentValue = SvgBuild.convertPoints(SvgBuild.parseCoordinates(valueA));
+                nextValue = SvgBuild.convertPoints(SvgBuild.parseCoordinates(valueB));
                 break;
             case 'rotate':
             case 'scale':
             case 'translate':
-                currentValue = replaceMap<string, number>(values[index].trim().split(CHAR.SPACE), value => parseFloat(value));
-                nextValue = replaceMap<string, number>(values[index + 1].trim().split(CHAR.SPACE), value => parseFloat(value));
+                currentValue = replaceMap<string, number>(valueA.trim().split(CHAR.SPACE), value => parseFloat(value));
+                nextValue = replaceMap<string, number>(valueB.trim().split(CHAR.SPACE), value => parseFloat(value));
                 break;
-            default: {
-                const valueA = values[index];
-                const valueB = values[index + 1];
+            default:
                 if (isNumber(valueA)) {
                     currentValue = [parseFloat(valueA)];
                 }
@@ -59,7 +59,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     nextValue = [parseUnit(valueB, fontSize)];
                 }
                 break;
-            }
         }
         if (currentValue && nextValue) {
             const length = currentValue.length;
@@ -368,7 +367,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     set iterationCount(value) {
         const animationElement = this.animationElement;
         this._iterationCount = isNaN(value) ? 1 : value;
-        this.fillFreeze = this.iterationCount !== -1 && !!animationElement && getNamedItem(animationElement, 'fill') === 'freeze';
+        this.fillFreeze = this.iterationCount !== -1 && animationElement !== null && getNamedItem(animationElement, 'fill') === 'freeze';
         if (this.iterationCount !== 1) {
             this.setAttribute('accumulate', 'sum');
         }

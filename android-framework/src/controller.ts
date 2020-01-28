@@ -266,7 +266,7 @@ function constraintMinMax(node: View, horizontal: boolean) {
 
 function setConstraintPercent(node: View, value: string, horizontal: boolean, percent: number) {
     const parent = node.actualParent || node.documentParent;
-    let basePercent = (parseFloat(value) / 100);
+    let basePercent = parseFloat(value) / 100;
     if (basePercent < 1 && !(parent.flexElement && isPercent(node.flexbox.basis)) && (percent < 1 || node.blockStatic && !parent.gridElement)) {
         const parent = node.actualParent;
         const marginPercent = parent ? (horizontal ? node.marginLeft + node.marginRight : node.marginTop + node.marginBottom) / parent.box.width : 0;
@@ -401,8 +401,8 @@ function causesLineBreak(element: Element, sessionId: string) {
     }
     else {
         const node = getElementAsNode<View>(element, sessionId);
-        if (node) {
-            return !node.excluded && node.blockStatic;
+        if (node?.blockStatic === true && !node.excluded) {
+            return true;
         }
     }
     return false;
@@ -465,7 +465,7 @@ function setColumnVertical(partition: View[][], lastRow: boolean, previousRow?: 
                 }
                 else if (i > 0 && !item.multiline) {
                     const adjacent = partition[i - 1][j];
-                    if (adjacent && !adjacent.multiline && withinRange(item.bounds.top, adjacent.bounds.top)) {
+                    if (adjacent?.multiline === false && withinRange(item.bounds.top, adjacent.bounds.top)) {
                         item.anchor('top', adjacent.documentId);
                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, -adjacent.marginTop);
                     }
@@ -1516,7 +1516,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 if (node.css('whiteSpace') === 'nowrap') {
                     node.android('maxLines', '1');
-                    node.android('ellipsize', 'end');
+                    if (node.css('textOverflow') === 'ellipsis' && node.css('overflow') === 'hidden') {
+                        node.android('ellipsize', 'end');
+                    }
                 }
                 break;
             }
@@ -2537,11 +2539,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    for (let j = items.length - 1, isLast = true; j > 0; j--) {
+                    for (let j = items.length - 1, last = true; j > 0; j--) {
                         const previous = items[j];
                         if (previous.textElement) {
-                            previous.setSingleLine(isLast && !previous.rightAligned && !previous.centerAligned);
-                            isLast = false;
+                            previous.setSingleLine(last && !previous.rightAligned && !previous.centerAligned);
+                            last = false;
                         }
                     }
                 }
@@ -2970,7 +2972,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         let previousSiblings: T[] = [];
         let bottomFloating = false;
-        let percentWidth = View.availablePercent(children, 'width', node.box.width);
         for (let i = 0; i < length; i++) {
             const partition = horizontal[i];
             const previousRow = horizontal[i - 1];
@@ -2998,6 +2999,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (lengthA > 1 || rowEnd.autoMargin.leftRight) {
                         rowEnd.anchor(anchorEnd, 'parent');
                     }
+                    let percentWidth = View.availablePercent(seg, 'width', node.box.width);
                     for (let j = 0; j < lengthA; j++) {
                         const chain = seg[j];
                         const previous = seg[j - 1];

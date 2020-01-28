@@ -1,3 +1,4 @@
+import { VisibleStyle } from '../../../@types/base/node';
 import { ListData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
@@ -8,7 +9,7 @@ import { NODE_RESOURCE } from '../lib/enumeration';
 
 const { convertListStyle } = squared.lib.css;
 
-const hasSingleImage = (node: NodeUI) => node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
+const hasSingleImage = (visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat;
 
 export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute(): ListData {
@@ -20,57 +21,44 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        if (super.condition(node)) {
-            const length = node.length;
-            if (length) {
-                const floated = new Set<string>();
-                const children = node.children;
-                let blockStatic = 0;
-                let inlineVertical = 0;
-                let floating = 0;
-                let blockAlternate = 0;
-                let imageType = 0;
-                let listType = 0;
-                for (let i = 0; i < length; i++) {
-                    const item = children[i] as T;
-                    const listStyleType = item.css('listStyleType') !== 'none';
-                    if (item.display === 'list-item' && (listStyleType || item.innerBefore)) {
-                        listType++;
-                    }
-                    else if (item.marginLeft < 0 && !listStyleType && hasSingleImage(item)) {
-                        imageType++;
-                    }
-                    if (item.blockStatic) {
-                        blockStatic++;
-                    }
-                    else {
-                        blockStatic = Number.POSITIVE_INFINITY;
-                    }
-                    if (item.inlineVertical) {
-                        inlineVertical++;
-                    }
-                    else {
-                        blockStatic = Number.POSITIVE_INFINITY;
-                    }
+        const length = node.length;
+        if (length) {
+            const floated = new Set<string>();
+            let blockStatic = true;
+            let inlineVertical = true;
+            let floating = true;
+            let blockAlternate = true;
+            let bulletVisible = false;
+            const children = node.children;
+            for (let i = 0; i < length; i++) {
+                const item = children[i] as T;
+                if (item.display === 'list-item' && (item.css('listStyleType') !== 'none' || item.innerBefore) || item.marginLeft < 0 && item.css('listStyleType') === 'none' && hasSingleImage(item.visibleStyle)) {
+                    bulletVisible = true;
+                }
+                if (floating || blockAlternate) {
                     if (item.floating) {
                         floated.add(item.float);
-                        floating++;
-                        blockAlternate = Number.POSITIVE_INFINITY;
+                        blockAlternate = false;
                     }
                     else if (i === 0 || i === length - 1 || item.blockStatic || (children[i - 1] as T).blockStatic && (children[i + 1] as T).blockStatic) {
-                        blockAlternate++;
-                        floating = Number.POSITIVE_INFINITY;
+                        floating = false;
                     }
                     else {
-                        floating = Number.POSITIVE_INFINITY;
-                        blockAlternate = Number.POSITIVE_INFINITY;
-                    }
-                    if (blockStatic === Number.POSITIVE_INFINITY && inlineVertical === Number.POSITIVE_INFINITY && blockAlternate === Number.POSITIVE_INFINITY && floating === Number.POSITIVE_INFINITY) {
-                        return false;
+                        floating = false;
+                        blockAlternate = false;
                     }
                 }
-                return (imageType > 0 || listType > 0) && (blockStatic === length || inlineVertical === length || floating === length && floated.size === 1 || blockAlternate === length);
+                if (!item.blockStatic) {
+                    blockStatic = false;
+                }
+                if (!item.inlineVertical) {
+                    inlineVertical = false;
+                }
+                if (!blockStatic && !inlineVertical && !blockAlternate && !floating) {
+                    return false;
+                }
             }
+            return bulletVisible && (blockStatic || inlineVertical || floating && floated.size === 1 || blockAlternate);
         }
         return false;
     }
@@ -82,7 +70,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
             const mainData = List.createDataAttribute();
             const value = item.css('listStyleType');
             const enabled = item.display === 'list-item';
-            if (enabled || value !== '' && value !== 'none' || hasSingleImage(item)) {
+            if (enabled || value !== '' && value !== 'none' || hasSingleImage(item.visibleStyle)) {
                 if (item.has('listStyleImage')) {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
