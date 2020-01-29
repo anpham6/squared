@@ -27,6 +27,7 @@ export interface CssGridDirectionData {
     name: ObjectMap<number[]>;
     fixedWidth: boolean;
     flexible: boolean;
+    frTotal: number;
 }
 
 export interface CssGridCellData {

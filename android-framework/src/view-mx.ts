@@ -966,10 +966,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             else if (layoutHeight === '0px' && renderParent.inlineHeight && renderParent.android('minHeight') === '' && !actualParent.layoutElement) {
                 this.setLayoutHeight('wrap_content');
             }
-            if (this.hasPX('minWidth') && (!Node.isFlexibleDirection(this, 'row') || actualParent.flexElement && !this.flexibleWidth)) {
+            if (this.hasPX('minWidth') && (!Node.isFlexDirection(this, 'row') || actualParent.flexElement && !this.flexibleWidth)) {
                 this.android('minWidth', formatPX(this.parseUnit(this.css('minWidth')) + (!actualParent.gridElement ? this.contentBoxWidth : 0)), false);
             }
-            if (this.hasPX('minHeight') && this.display !== 'table-cell' && (!Node.isFlexibleDirection(this, 'column') || actualParent.flexElement && !this.flexibleHeight)) {
+            if (this.hasPX('minHeight') && this.display !== 'table-cell' && (!Node.isFlexDirection(this, 'column') || actualParent.flexElement && !this.flexibleHeight)) {
                 this.android('minHeight', formatPX(this.parseUnit(this.css('minHeight'), 'height') + (!actualParent.gridElement ? this.contentBoxHeight : 0)), false);
             }
             if (maxDimension) {

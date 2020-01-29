@@ -18,8 +18,8 @@ export function maxArray(list: number[]): number {
 }
 
 export function isEqual(valueA: number, valueB: number, precision = 5) {
-    const length = Math.floor(valueA).toString().length;
-    return valueA.toPrecision(length + precision) === valueB.toPrecision(length + precision);
+    precision += Math.floor(valueA).toString().length;
+    return valueA.toPrecision(precision) === valueB.toPrecision(precision);
 }
 
 export function moreEqual(valueA: number, valueB: number, precision = 5) {

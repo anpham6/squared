@@ -209,7 +209,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             autoFit: false,
             name: {},
             fixedWidth: false,
-            flexible: false
+            flexible: false,
+            frTotal: 0
         };
     }
 

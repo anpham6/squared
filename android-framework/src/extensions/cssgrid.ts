@@ -7,8 +7,9 @@ import View from '../view';
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import LayoutUI = squared.base.LayoutUI;
 import CssGrid = squared.base.extensions.CssGrid;
+
+const { LayoutUI, Node } = squared.base;
 
 const $lib = squared.lib;
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
@@ -21,8 +22,12 @@ const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_li
 
 const CSS_GRID = $base_lib.constant.EXT_NAME.CSS_GRID;
 
-const REGEX_ALIGNSELF = /start|end|center|baseline/;
 const REGEX_JUSTIFYSELF = /start|left|center|right|end/;
+const REGEX_JUSTIFYLEFT = /(start|left|baseline)$/;
+const REGEX_JUSTIFYRIGHT = /(right|end)$/;
+const REGEX_ALIGNSELF = /start|end|center|baseline/;
+const REGEX_ALIGNTOP = /(start|baseline)$/;
+const REGEX_ALIGNBOTTOM = /end$/;
 const REGEX_PX = CSS.PX;
 const REGEX_FR = /fr$/;
 
@@ -296,21 +301,63 @@ function checkAutoDimension(data: CssGridDirectionData, horizontal: boolean) {
     }
 }
 
+function checkFlexibleParent(node: View) {
+    const condition = (item: View) => {
+        const parent = item.actualParent;
+        if (parent?.gridElement) {
+            const mainData: CssGridData<View> = parent.data(CSS_GRID, 'mainData');
+            const cellData: CssGridCellData = item.data(CSS_GRID, 'cellData');
+            if (mainData && cellData) {
+                const unit = mainData.column.unit;
+                const columnStart = cellData.columnStart;
+                const columnSpan = cellData.columnSpan;
+                let valid = false;
+                for (let i = 0; i < columnSpan; i++) {
+                    const value = unit[columnStart + i];
+                    if (REGEX_FR.test(value) || isPercent(value)) {
+                        valid = true;
+                    }
+                    else if (value === 'auto') {
+                        valid = false;
+                        break;
+                    }
+                }
+                return valid;
+            }
+        }
+        else if (Node.isFlexDirection(item, 'row') && item.flexbox.grow > 0) {
+            return true;
+        }
+        return false;
+    };
+    return node.ascend({ condition, error: item => item.hasWidth }).length > 0;
+}
+
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
             const { column, row } = mainData;
-            checkAutoDimension(column, true);
-            checkAutoDimension(row, false);
+            const unit = column.unit;
             const layout = new LayoutUI(
                 parent,
                 node,
-                CONTAINER_NODE.GRID,
+                0,
                 NODE_ALIGNMENT.AUTO_LAYOUT,
                 node.children as T[]
             );
+            if (!node.documentRoot && !node.hasWidth && row.length === 1 && unit.length === column.length && unit.every(value => REGEX_FR.test(value)) && checkFlexibleParent(node)) {
+                column.frTotal = unit.reduce((a, b) => a + parseFloat(b), 0);
+                node.setLayoutWidth('match_parent');
+                node.lockAttr('android', 'layout_width');
+                layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
+            }
+            else {
+                checkAutoDimension(column, true);
+                checkAutoDimension(row, false);
+                layout.setContainerType(CONTAINER_NODE.GRID);
+            }
             layout.rowCount = row.length;
             layout.columnCount = column.length;
             return { output: this.application.renderNode(layout), complete: true };
@@ -324,13 +371,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         let renderAs: T | undefined;
         let outputAs: NodeXmlTemplate<T> | undefined;
         if (mainData && cellData) {
+            const layoutConstraint = parent.layoutConstraint;
             const { alignContent, column, row } = mainData;
             const { alignSelf, justifySelf } = node.flexbox;
             const applyLayout = (item: T, horizontal: boolean, dimension: string) => {
-                const [data, cellStart, cellSpan, unitDimension, layoutDirection, layoutSpan, minDimension] =
-                    horizontal
-                        ? [column, cellData.columnStart, cellData.columnSpan, STRING_ANDROID.HORIZONTAL, 'layout_column', 'layout_columnSpan', 'minWidth']
-                        : [row, cellData.rowStart, cellData.rowSpan, STRING_ANDROID.VERTICAL, 'layout_row', 'layout_rowSpan', 'minHeight'];
+                const [data, cellStart, cellSpan, minDimension] = horizontal ? [column, cellData.columnStart, cellData.columnSpan, 'minWidth'] : [row, cellData.rowStart, cellData.rowSpan, 'minHeight'];
                 const { unit, unitMin } = data;
                 let size = 0;
                 let minSize = 0;
@@ -383,7 +428,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             break;
                         }
                     }
-                    else if (/fr$/.test(value)) {
+                    else if (REGEX_FR.test(value)) {
                         if (horizontal || parent.hasHeight) {
                             if (sizeWeight === -1) {
                                 sizeWeight = 0;
@@ -406,7 +451,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         size = 0;
                     }
                     else {
-                        const gap = item.parseUnit(value, unitDimension);
+                        const gap = item.parseUnit(value, horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL);
                         if (minSize === 0) {
                             size += gap;
                         }
@@ -439,55 +484,104 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         minSize = minUnitSize;
                     }
                 }
-                item.android(layoutDirection, cellStart.toString());
-                item.android(layoutSpan, cellSpan.toString());
                 if (minSize > 0 && !item.hasPX(minDimension)) {
                     item.css(minDimension, formatPX(minSize), true);
                 }
-                if (horizontal && size === 0 && sizeWeight > 0 && cellSpan === data.length) {
-                    item.setLayoutWidth('match_parent');
+                if (layoutConstraint) {
+                    if (horizontal) {
+                        if (!item.hasPX('width', false)) {
+                            item.app('layout_constraintWidth_percent', truncate(sizeWeight / column.frTotal, item.localSettings.floatPrecision));
+                        }
+                        if (cellStart === 0) {
+                            item.anchor('left', 'parent');
+                            item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread', 0);
+                        }
+                        else {
+                            const previousSibling = (item.innerMostWrapped || item).previousSibling as T | null;
+                            if (previousSibling) {
+                                previousSibling.anchor('rightLeft', item.documentId);
+                                item.anchor('leftRight', previousSibling.anchorTarget.documentId);
+                            }
+                        }
+                        if (cellStart + cellSpan === column.length) {
+                            item.anchor('right', 'parent');
+                        }
+                        item.positioned = true;
+                    }
+                    else {
+                        if (!item.hasPX('height')) {
+                            if (sizeWeight > 0) {
+                                item.setLayoutHeight('match_parent');
+                            }
+                            else if (size > 0) {
+                                if (item.contentBox) {
+                                    size -= item.contentBoxHeight;
+                                }
+                                item.css(auto ? 'minHeight' : 'height', formatPX(size), true);
+                            }
+                        }
+                        item.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0);
+                    }
                 }
                 else {
-                    let columnWeight = horizontal && column.flexible;
-                    if (sizeWeight !== 0) {
-                        if (!item.hasPX(dimension)) {
-                            if (horizontal) {
-                                if ((sizeWeight === 1 || sizeWeight === -1) && cellData.columnSpan === column.length) {
-                                    item.setLayoutWidth('match_parent');
+                    item.android(horizontal ? 'layout_column' : 'layout_row', cellStart.toString());
+                    item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan', cellSpan.toString());
+                    if (horizontal && size === 0 && sizeWeight > 0 && cellSpan === data.length) {
+                        item.setLayoutWidth('match_parent');
+                    }
+                    else {
+                        let columnWeight = horizontal && column.flexible;
+                        if (sizeWeight !== 0) {
+                            if (!item.hasPX(dimension)) {
+                                if (horizontal) {
+                                    if ((sizeWeight === 1 || sizeWeight === -1) && cellData.columnSpan === column.length) {
+                                        item.setLayoutWidth('match_parent');
+                                    }
+                                    else {
+                                        item.setLayoutWidth('0px');
+                                        item.android('layout_columnWeight', sizeWeight === -1 ? '0.01' : truncate(sizeWeight, node.localSettings.floatPrecision));
+                                        item.mergeGravity('layout_gravity', 'fill_horizontal');
+                                    }
+                                    columnWeight = false;
                                 }
                                 else {
-                                    item.setLayoutWidth('0px');
-                                    item.android('layout_columnWeight', sizeWeight === -1 ? '0.01' : truncate(sizeWeight, node.localSettings.floatPrecision));
-                                    item.mergeGravity('layout_gravity', 'fill_horizontal');
+                                    if (sizeWeight === 1 && cellData.rowSpan === row.length) {
+                                        item.setLayoutHeight('match_parent');
+                                    }
+                                    else {
+                                        item.setLayoutHeight('0px');
+                                        item.android('layout_rowWeight', truncate(sizeWeight, node.localSettings.floatPrecision));
+                                        item.mergeGravity('layout_gravity', 'fill_vertical');
+                                    }
                                 }
-                                columnWeight = false;
                             }
-                            else {
-                                if (sizeWeight === 1 && cellData.rowSpan === row.length) {
-                                    item.setLayoutHeight('match_parent');
+                        }
+                        else if (size > 0) {
+                            if (item.contentBox) {
+                                size -= horizontal ? item.contentBoxWidth : item.contentBoxHeight;
+                            }
+                            if (fitContent && !item.hasPX(horizontal ? 'maxWidth' : 'maxHeight')) {
+                                item.css(horizontal ? 'maxWidth' : 'maxHeight', formatPX(size), true);
+                                item.mergeGravity('layout_gravity', horizontal ? 'fill_horizontal' : 'fill_vertical');
+                            }
+                            else if (!item.hasPX(dimension)) {
+                                if (auto) {
+                                    item.css(minDimension, formatPX(size), true);
+                                    if (horizontal) {
+                                        item.setLayoutWidth('wrap_content');
+                                    }
+                                    else {
+                                        item.setLayoutHeight('wrap_content');
+                                    }
                                 }
                                 else {
-                                    item.setLayoutHeight('0px');
-                                    item.android('layout_rowWeight', truncate(sizeWeight, node.localSettings.floatPrecision));
-                                    item.mergeGravity('layout_gravity', 'fill_vertical');
+                                    item.css(dimension, formatPX(size), true);
                                 }
                             }
                         }
-                    }
-                    else if (size > 0) {
-                        if (item.contentBox) {
-                            size -= horizontal ? item.contentBoxWidth : item.contentBoxHeight;
+                        if (columnWeight) {
+                            item.android('layout_columnWeight', '0');
                         }
-                        if (fitContent && !item.hasPX(horizontal ? 'maxWidth' : 'maxHeight')) {
-                            item.css(horizontal ? 'maxWidth' : 'maxHeight', formatPX(size), true);
-                            item.mergeGravity('layout_gravity', horizontal ? 'fill_horizontal' : 'fill_vertical');
-                        }
-                        else if (!item.hasPX(dimension)) {
-                            item.css(auto ? minDimension : dimension, formatPX(size), true);
-                        }
-                    }
-                    if (columnWeight) {
-                        item.android('layout_columnWeight', '0');
                     }
                 }
                 return [cellStart, cellSpan];
@@ -502,18 +596,15 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 parent.appendTry(node, renderAs);
                 renderAs.render(parent);
                 node.transferBox(BOX_STANDARD.MARGIN, renderAs);
-                let inlineWidth: boolean;
-                if (/(start|left|baseline)$/.test(justifySelf)) {
+                let inlineWidth = true;
+                if (REGEX_JUSTIFYLEFT.test(justifySelf)) {
                     node.mergeGravity('layout_gravity', 'left');
-                    inlineWidth = true;
                 }
-                else if (/(end|right)$/.test(justifySelf)) {
+                else if (REGEX_JUSTIFYRIGHT.test(justifySelf)) {
                     node.mergeGravity('layout_gravity', 'right');
-                    inlineWidth = true;
                 }
                 else if (justifySelf === 'center') {
                     node.mergeGravity('layout_gravity', STRING_ANDROID.CENTER_HORIZONTAL);
-                    inlineWidth = true;
                 }
                 else {
                     inlineWidth = false;
@@ -521,10 +612,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 if (!node.hasWidth) {
                     node.setLayoutWidth(inlineWidth ? 'wrap_content' : 'match_parent', false);
                 }
-                if (/(start|baseline)$/.test(alignSelf)) {
+                if (REGEX_ALIGNTOP.test(alignSelf)) {
                     node.mergeGravity('layout_gravity', 'top');
                 }
-                else if (/end$/.test(alignSelf)) {
+                else if (REGEX_ALIGNBOTTOM.test(alignSelf)) {
                     node.mergeGravity('layout_gravity', 'bottom');
                 }
                 else if (alignSelf === 'center') {
@@ -789,7 +880,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
             }
-            if (rowDirection && !column.fixedWidth && flexible && !View.ascendFlexibleWidth(node)) {
+            if (rowDirection && flexible && !column.fixedWidth && column.frTotal === 0 && !View.ascendFlexibleWidth(node)) {
                 node.each((item: T) => {
                     if (item.flexibleWidth) {
                         item.delete('android', 'layout_columnWeight');

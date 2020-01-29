@@ -6,6 +6,8 @@ import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertRoman,
 
 type CSSKeyframesData = squared.lib.css.CSSKeyframesData;
 
+const { LENGTH, PERCENT } = UNIT;
+
 const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
 const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
@@ -1046,7 +1048,7 @@ export function formatPercent(value: string | number, round = true) {
 }
 
 export function isLength(value: string, percent = false) {
-    return UNIT.LENGTH.test(value) || percent && isPercent(value);
+    return LENGTH.test(value) || percent && isPercent(value);
 }
 
 export function isCalc(value: string) {
@@ -1062,5 +1064,5 @@ export function isAngle(value: string) {
 }
 
 export function isPercent(value: string) {
-    return UNIT.PERCENT.test(value);
+    return PERCENT.test(value);
 }

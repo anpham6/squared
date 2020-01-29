@@ -545,9 +545,9 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static isFlexibleDirection(node: T, direction: string) {
+    public static isFlexDirection(node: T, direction: string) {
         const parent = node.actualParent;
-        if (parent && parent.flexElement && parent.css('flexDirection').startsWith(direction)) {
+        if (parent?.flexElement && parent.css('flexDirection').startsWith(direction)) {
             if (direction === 'column' && !parent.hasHeight) {
                 const grandParent = parent.actualParent;
                 if (grandParent) {
@@ -2618,7 +2618,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const { left, right } = this.bounds;
                 result = right - left;
             }
-            else if (this.display === 'table-cell' || Node.isFlexibleDirection(this, 'row')) {
+            else if (this.display === 'table-cell' || Node.isFlexDirection(this, 'row')) {
                 result = this.bounds.width;
             }
             else {
@@ -2640,7 +2640,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get actualHeight() {
         let result = this._cached.actualHeight;
         if (result === undefined) {
-            if (!this.plainText && this.display !== 'table-cell' && !Node.isFlexibleDirection(this, 'column')) {
+            if (!this.plainText && this.display !== 'table-cell' && !Node.isFlexDirection(this, 'column')) {
                 result = this.height;
                 if (result > 0) {
                     if (this.contentBox && !this.tableElement) {

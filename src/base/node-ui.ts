@@ -424,7 +424,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _childIndex = Number.POSITIVE_INFINITY;
     private _containerIndex = Number.POSITIVE_INFINITY;
     private _visible = true;
-    private _locked?: ObjectMapNested<boolean>;
+    private _locked: ObjectMapNested<boolean> = {};
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
     private _renderAs?: T;
@@ -468,6 +468,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 obj = {};
                 this['__' + name] = obj;
+            }
+            if (overwrite && this.lockedAttr(name, attr)) {
+                overwrite = false;
             }
             if (!overwrite && obj[attr]) {
                 value = obj[attr];
@@ -516,11 +519,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockAttr(name: string, attr: string) {
-        let locked = this._locked;
-        if (locked === undefined) {
-            locked = {};
-            this._locked = locked;
-        }
+        const locked = this._locked;
         let lockedData = locked[name];
         if (lockedData === undefined) {
             lockedData = {};
@@ -530,7 +529,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockedAttr(name: string, attr: string) {
-        return this._locked?.[name]?.[attr] || false;
+        return this._locked[name]?.[attr] || false;
     }
 
     public render(parent?: T) {

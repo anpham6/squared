@@ -466,7 +466,7 @@ declare namespace base {
     }
 
     class Node implements Node {
-        public static isFlexibleDirection(node: Node, direction: string): boolean;
+        public static isFlexDirection(node: Node, direction: string): boolean;
         constructor(id: number, sessionId?: string, element?: Element);
     }
 

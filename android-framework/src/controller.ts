@@ -489,11 +489,9 @@ function setReadOnly(node: View) {
 }
 
 function setLeftTopAxis(node: View, parent: View, hasDimension: boolean, horizontal: boolean) {
+    const [orientation, dimension, leftA, rightA, leftB, rightB, leftC, rightC] = horizontal ? [STRING_ANDROID.HORIZONTAL, 'width', 'left', 'right', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.PADDING_LEFT, BOX_STANDARD.PADDING_RIGHT]
+                                                                                             : [STRING_ANDROID.VERTICAL, 'height', 'top', 'bottom', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_BOTTOM];
     const autoMargin = node.autoMargin;
-    const [orientation, dimension, leftA, rightA, leftB, rightB, leftC, rightC] =
-        horizontal
-            ? [STRING_ANDROID.HORIZONTAL, 'width', 'left', 'right', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.PADDING_LEFT, BOX_STANDARD.PADDING_RIGHT]
-            : [STRING_ANDROID.VERTICAL, 'height', 'top', 'bottom', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_BOTTOM];
     if (hasDimension && autoMargin[orientation]) {
         if (node.hasPX(leftA) && autoMargin[rightA]) {
             node.anchor(leftA, 'parent');
@@ -622,7 +620,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             let flexible = false;
-            if (Node.isFlexibleDirection(node, horizontal ? 'row' : 'column')) {
+            if (Node.isFlexDirection(node, horizontal ? 'row' : 'column')) {
                 flexible = setFlexGrow(node.hasPX(dimension, false) ? formatPX(horizontal ? node.actualWidth : node.actualHeight) : '');
                 if (flexible) {
                     setLayoutDimension(node, '0px', horizontal, true);
@@ -2662,7 +2660,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     alignTop = true;
                                 }
                                 else {
-                                    item.anchorParent(STRING_ANDROID.VERTICAL);
+                                    item.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0.5);
                                 }
                                 break;
                             case 'text-bottom':

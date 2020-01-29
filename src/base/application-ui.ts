@@ -139,6 +139,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public finalize() {
         const { controllerHandler, session } = this;
+        const cache = session.cache;
+        const extensions = this.extensions;
+        const layouts = this._layouts;
         for (const [node, template] of session.targetQueue.entries()) {
             const parent = this.resolveTarget(node.dataset.target);
             if (parent) {
@@ -146,30 +149,38 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 this.addLayoutTemplate(parent, node, template);
             }
             else if (node.renderParent === undefined) {
-                session.cache.remove(node);
+                cache.remove(node);
             }
         }
-        const rendered = this.rendered;
-        for (const node of rendered) {
-            if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
-                node.setLayout();
-            }
-            if (node.hasProcedure(NODE_PROCEDURE.ALIGNMENT)) {
-                node.setAlignment();
+        const children = cache.children;
+        const length = children.length;
+        const rendered: T[] = new Array(length);
+        let j = 0;
+        for (let i = 0; i < length; i++) {
+            const node = children[i];
+            if (node.renderParent && node.visible) {
+                if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
+                    node.setLayout();
+                }
+                if (node.hasProcedure(NODE_PROCEDURE.ALIGNMENT)) {
+                    node.setAlignment();
+                }
+                rendered[j++] = node;
             }
         }
+        rendered.length = j;
         controllerHandler.optimize(rendered);
-        for (const ext of this.extensions) {
+        for (const ext of extensions) {
             for (const node of ext.subscribers) {
                 ext.postOptimize(node);
             }
         }
-        for (const node of this.rendered) {
+        for (const node of rendered) {
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
         }
-        for (const ext of this.extensions) {
+        for (const ext of extensions) {
             ext.beforeCascade();
         }
         const baseTemplate = this._localSettings.layout.baseTemplate;
@@ -188,10 +199,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 );
             }
         }
-        const layouts = this._layouts;
         this.resourceHandler.finalize(layouts);
         controllerHandler.finalize(layouts);
-        for (const ext of this.extensions) {
+        for (const ext of extensions) {
             ext.afterFinalize();
         }
         removeElementsByClassName('__squared.pseudo');
@@ -1665,16 +1675,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                 }
-                for (const child of inlineAbove) {
-                    if (child.bounds.left <= floatPosition) {
-                        marginLeft = Math.max(marginLeft, child.marginLeft);
-                        invalid = true;
+                if (floatPosition !== Number.NEGATIVE_INFINITY) {
+                    for (const child of inlineAbove) {
+                        if (child.bounds.left <= floatPosition) {
+                            marginLeft = Math.max(marginLeft, child.marginLeft);
+                            invalid = true;
+                        }
                     }
-                }
-                if (invalid) {
-                    const offset = floatPosition - parent.box.left - marginLeft;
-                    if (offset > 0) {
-                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this._localSettings.deviations.textMarginBoundarySize : 0));
+                    if (invalid) {
+                        const offset = floatPosition - parent.box.left - marginLeft;
+                        if (offset > 0) {
+                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this._localSettings.deviations.textMarginBoundarySize : 0));
+                        }
                     }
                 }
             }
@@ -1692,16 +1704,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                 }
-                for (const child of inlineAbove) {
-                    if (child.bounds.right >= floatPosition) {
-                        marginRight = Math.max(marginRight, child.marginRight);
-                        invalid = true;
+                if (floatPosition !== Number.POSITIVE_INFINITY) {
+                    for (const child of inlineAbove) {
+                        if (child.multiline || child.bounds.right >= floatPosition) {
+                            marginRight = Math.max(marginRight, child.marginRight);
+                            invalid = true;
+                        }
                     }
-                }
-                if (invalid) {
-                    const offset = parent.box.right - floatPosition - marginRight;
-                    if (offset > 0) {
-                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this._localSettings.deviations.textMarginBoundarySize : 0));
+                    if (invalid) {
+                        const offset = parent.box.right - floatPosition - marginRight;
+                        if (offset > 0) {
+                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this._localSettings.deviations.textMarginBoundarySize : 0));
+                        }
                     }
                 }
             }
@@ -1743,10 +1757,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return 0;
         });
-    }
-
-    get rendered() {
-        return this.session.cache.filter((node: T) => node.visible && node.renderParent !== undefined);
     }
 
     get extensionsCascade() {
