@@ -46,9 +46,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const mainData = Table.createDataAttribute(node);
         const tbody: T[] = [];
         let table: T[] = [];
-        let tfoot: T | undefined;
-        let thead: T | undefined;
-        function inheritStyles(parent: T | undefined) {
+        let tfoot: Undef<T>;
+        let thead: Undef<T>;
+        function inheritStyles(parent: Undef<T>) {
             if (parent) {
                 for (const item of parent.cascade() as T[]) {
                     switch (item.tagName) {
@@ -358,7 +358,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         columnIndex = new Array(rowCount).fill(0);
         for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
-            let lastChild: T | undefined;
+            let lastChild: Undef<T>;
             for (const td of tr.duplicate() as T[]) {
                 const { rowSpan, colSpan } = <HTMLTableCellElement> td.element;
                 const data: ExternalData = { rowSpan, colSpan };

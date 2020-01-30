@@ -108,7 +108,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
         const transformRefit = !!(transforms || companion?.parent?.requireRefit);
         const result: string[] = [];
-        let commands: SvgPathCommand[] | undefined;
+        let commands: Undef<SvgPathCommand[]>;
         const length = values.length;
         for (let i = 0; i < length; i++) {
             if (attr === 'd') {
@@ -216,7 +216,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public build(options?: SvgBuildOptions) {
-        let transforms: SvgTransform[] | undefined;
+        let transforms: Undef<SvgTransform[]>;
         if (options?.transforms) {
             transforms = SvgBuild.filterTransforms(options.transforms, options.exclude?.[this.element.tagName]);
         }
@@ -224,11 +224,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public draw(transforms?: SvgTransform[], options?: SvgBuildOptions) {
-        let residual: SvgTransformResidual | undefined;
-        let precision: number | undefined;
+        let residual: Undef<SvgTransformResidual>;
+        let precision: Undef<number>;
         if (options) {
-            residual = options.residual;
-            precision = options.precision;
+            ({ residual, precision } = options);
         }
         const element = this.element;
         const parent = <SvgContainer> this.parent;
@@ -256,10 +255,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 this.transformed = transforms;
                             }
                         }
-                        this.baseValue = SvgBuild.drawPath(SvgBuild.syncPathPoints(requireRefit ? cloneArray(commands, [], true) : commands, requireRefit ? cloneArray(points, [], true) : points, this.transformed !== undefined), precision);
+                        this.baseValue = SvgBuild.drawPath(SvgBuild.syncPathPoints(requireRefit ? cloneArray(commands, [], true) : commands, requireRefit ? cloneArray(points, [], true) : points, !!this.transformed), precision);
                         if (requireRefit) {
                             parent.refitPoints(points);
-                            d = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, this.transformed !== undefined), precision);
+                            d = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, !!this.transformed), precision);
                         }
                         else {
                             d = this.baseValue;
@@ -441,7 +440,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         let modified = false;
                         if (name !== 'Z' && (pathStartPoint.x !== pathEndPoint.x || pathStartPoint.y !== pathEndPoint.y)) {
                             if (leading > 0) {
-                                let afterStartPoint: SvgPoint | undefined;
+                                let afterStartPoint: Undef<SvgPoint>;
                                 if (pathStart.value.length > 1) {
                                     afterStartPoint = pathStart.value[1];
                                 }
@@ -470,7 +469,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 case 'M':
                                 case 'L': {
                                     if (trailing > 0) {
-                                        let beforeEndPoint: SvgPoint | undefined;
+                                        let beforeEndPoint: Undef<SvgPoint>;
                                         if (length === 1) {
                                             const startValue = pathStart.value;
                                             if (startValue.length > 1) {
@@ -638,9 +637,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return data;
     }
 
-    public extractStrokeDash(animations?: SvgAnimation[], precision?: number): [SvgAnimation[] | undefined, SvgStrokeDash[] | undefined, string, string] {
+    public extractStrokeDash(animations?: SvgAnimation[], precision?: number): [Undef<SvgAnimation[]>, Undef<SvgStrokeDash[]>, string, string] {
         const strokeWidth = convertInt(this.strokeWidth);
-        let result: SvgStrokeDash[] | undefined;
+        let result: Undef<SvgStrokeDash[]>;
         let path = '';
         let clipPath = '';
         if (strokeWidth > 0) {
@@ -701,7 +700,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             }
                         }
                     }
-                    let setDashLength: Undefined<(index: number) => void> = (index: number) => {
+                    let setDashLength: Undef<(index: number) => void> = (index: number) => {
                         let offset = valueOffset;
                         const length = sorted.length;
                         for (let i = index; i < length; i++) {
@@ -829,7 +828,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             clipPath = SvgBuild.drawRect(boxRect.right - boxRect.left, boxRect.bottom - boxRect.top + strokeOffset * 2, boxRect.left, boxRect.top - strokeOffset);
                                         }
                                     }
-                                    let replaceValue: string | undefined;
+                                    let replaceValue: Undef<string>;
                                     if (item.fillReplace && item.iterationCount !== -1) {
                                         const offsetForward = convertFloat(intervalMap.get(item.attributeName, item.getTotalDuration()) as string);
                                         if (offsetForward !== valueOffset) {

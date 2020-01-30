@@ -138,7 +138,7 @@ function resetMargin(node: NodeUI, value: number) {
     }
 }
 
-function isBlockElement(node: NodeUI | null, direction?: boolean, checkIndex = false): boolean {
+function isBlockElement(node: Null<NodeUI>, direction?: boolean, checkIndex = false): boolean {
     if (node && !node.lineBreak) {
         let valid = false;
         if (node.blockStatic) {
@@ -196,8 +196,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 const actualParent = node.actualParent as T;
                 const blockParent = isBlockElement(node) && !actualParent.layoutElement;
                 const pageFlow = node.pageFlow;
-                let firstChild: T | undefined;
-                let lastChild: T | undefined;
+                let firstChild: Undef<T>;
+                let lastChild: Undef<T>;
                 const length = children.length;
                 for (let i = 0; i < length; i++) {
                     const current = children[i] as T;
@@ -362,7 +362,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         let above = previousSiblings.pop() as T;
                         let below = nextSiblings.pop() as T;
                         let lineHeight = 0;
-                        let aboveLineBreak: T | undefined;
+                        let aboveLineBreak: Undef<T>;
                         if (above.rendered && below.rendered) {
                             const inline = above.inlineStatic && below.inlineStatic;
                             if (inline && previousSiblings.length === 0) {
@@ -491,7 +491,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                         else {
                             const horizontalRows = renderParent.horizontalRows;
-                            let horizontal: T[] | undefined;
+                            let horizontal: Undef<T[]>;
                             if (horizontalRows) {
                                 found: {
                                     let maxBottom = Number.NEGATIVE_INFINITY;

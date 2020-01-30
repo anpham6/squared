@@ -141,7 +141,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public postBaseLayout(node: T) {
-        const innerWrapped = node.innerMostWrapped as T | null;
+        const innerWrapped = <Null<T>> node.innerMostWrapped;
         if (innerWrapped) {
             const maxData: MaxWidthHeightData = innerWrapped.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
             if (maxData?.container?.outerWrapper === node) {

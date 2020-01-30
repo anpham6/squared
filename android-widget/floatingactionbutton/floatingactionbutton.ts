@@ -64,7 +64,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);
         node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
         Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-        let outerParent: T | undefined;
+        let outerParent: Undef<T>;
         if (!node.pageFlow || target) {
             const horizontalBias = getHorizontalBias(node);
             const verticalBias = getVerticalBias(node);

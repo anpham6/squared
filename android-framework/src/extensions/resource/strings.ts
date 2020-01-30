@@ -165,7 +165,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
     public createOptionArray(element: HTMLSelectElement, controlId: string) {
         const [stringArray, numberArray] = Resource.getOptionArray(element);
         const numberResourceValue = this.options.numberResourceValue;
-        let result: string[] | undefined;
+        let result: Undef<string[]>;
         if (!numberResourceValue && numberArray) {
             result = numberArray;
         }

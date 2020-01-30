@@ -25,10 +25,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         };
     }
 
-    public item(index?: number, value?: T): T | undefined {
+    public item(index?: number, value?: T): Undef<T> {
         const children = this._children;
         if (index !== undefined) {
-            if (value !== undefined) {
+            if (value) {
                 if (index >= 0 && index < children.length) {
                     children[index] = value;
                     return value;

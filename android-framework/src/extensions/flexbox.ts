@@ -80,7 +80,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
     if (items.length > 1 && (horizontal || percent)) {
         const groupBasis: FlexBasis[] = [];
         const percentage: View[] = [];
-        let maxBasis: View | undefined;
+        let maxBasis: Undef<View>;
         let maxBasisUnit = 0;
         let maxDimension = 0;
         let maxRatio = NaN;
@@ -279,7 +279,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             const chainVertical: T[][] = [];
             const segmented: T[] = [];
             if (wrap) {
-                let previous: T[] | undefined;
+                let previous: Undef<T[]>;
                 node.each((item: T) => {
                     if (item.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
                         const pageFlow = item.renderFilter(child => child.pageFlow) as T[];
@@ -375,10 +375,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     let maxSize = 0;
                     let growAvailable = 0;
                     let parentEnd = true;
-                    let baseline: T | null = null;
+                    let baseline: Null<T> = null;
                     let growAll: boolean;
-                    let percentWidth: number | undefined;
-                    let percentHeight: number | undefined;
+                    let percentWidth: Undef<number>;
+                    let percentHeight: Undef<number>;
                     if (opposing) {
                         growAll = false;
                         if (dimensionInverse) {
@@ -453,7 +453,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                         else {
                             const autoMargin = getAutoMargin(chain);
-                            const innerWrapped = chain.innerWrapped as T | undefined;
+                            const innerWrapped = <Undef<T>> chain.innerWrapped;
                             if (horizontal) {
                                 if (autoMargin.horizontal) {
                                     if (innerWrapped) {
@@ -513,7 +513,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'baseline':
                                     if (horizontal) {
                                         if (baseline === null) {
-                                            baseline = getBaseline(seg) as T | null;
+                                            baseline = <Null<T>> getBaseline(seg);
                                         }
                                         if (baseline) {
                                             if (baseline !== chain) {

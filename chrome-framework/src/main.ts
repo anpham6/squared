@@ -125,65 +125,50 @@ const appBase: ChromeFramework<View> = {
             return result;
         },
         getElementMap() {
-            if (controller) {
-                return controller.elementMap;
-            }
-            return new Map<Element, View>();
+            return controller ? controller.elementMap : new Map<Element, View>();
         },
         clearElementMap() {
-            if (controller) {
-                return controller.elementMap.clear();
-            }
+            controller?.elementMap.clear();
         },
         copyHtmlPage(directory: string, callback?: CallbackResult, name?: string) {
-            if (file && isString(directory)) {
-                file.copying(directory, <FileAsset[]> file.getHtmlPage(name), callback);
+            if (isString(directory)) {
+                file?.copying(directory, <FileAsset[]> file.getHtmlPage(name), callback);
             }
         },
         copyScriptAssets(directory: string, callback?: CallbackResult) {
-            if (file && isString(directory)) {
-                file.copying(directory, <FileAsset[]> file.getScriptAssets(), callback);
+            if (isString(directory)) {
+                file?.copying(directory, <FileAsset[]> file.getScriptAssets(), callback);
             }
         },
         copyLinkAssets(directory: string, callback?: CallbackResult, rel?: string) {
-            if (file && isString(directory)) {
-                file.copying(directory, <FileAsset[]> file.getLinkAssets(rel), callback);
+            if (isString(directory)) {
+                file?.copying(directory, <FileAsset[]> file.getLinkAssets(rel), callback);
             }
         },
         copyImageAssets(directory: string, callback?: CallbackResult) {
-            if (file && isString(directory)) {
-                file.copying(directory, <FileAsset[]> file.getImageAssets(), callback);
+            if (isString(directory)) {
+                file?.copying(directory, <FileAsset[]> file.getImageAssets(), callback);
             }
         },
         copyFontAssets(directory: string, callback?: CallbackResult) {
-            if (file && isString(directory)) {
-                file.copying(directory, <FileAsset[]> file.getFontAssets(), callback);
+            if (isString(directory)) {
+                file?.copying(directory, <FileAsset[]> file.getFontAssets(), callback);
             }
         },
         saveHtmlPage(filename?: string, name?: string) {
-            if (file) {
-                file.archiving((filename || userSettings.outputArchiveName) + '-html', <FileAsset[]> file.getHtmlPage(name));
-            }
+            file?.archiving((filename || userSettings.outputArchiveName) + '-html', <FileAsset[]> file.getHtmlPage(name));
         },
         saveScriptAssets(filename?: string) {
-            if (file) {
-                file.archiving((filename || userSettings.outputArchiveName) + '-script', <FileAsset[]> file.getScriptAssets());
-            }
+            file?.archiving((filename || userSettings.outputArchiveName) + '-script', <FileAsset[]> file.getScriptAssets());
         },
         saveLinkAssets(filename?: string, rel?: string) {
-            if (file) {
-                file.archiving((filename || userSettings.outputArchiveName) + '-link', <FileAsset[]> file.getLinkAssets(rel));
-            }
+            file?.archiving((filename || userSettings.outputArchiveName) + '-link', <FileAsset[]> file.getLinkAssets(rel));
         },
         saveImageAssets(filename?: string) {
-            if (file) {
-                file.archiving((filename || userSettings.outputArchiveName) + '-image', <FileAsset[]> file.getImageAssets());
-            }
+            file?.archiving((filename || userSettings.outputArchiveName) + '-image', <FileAsset[]> file.getImageAssets());
         },
         saveFontAssets(filename?: string) {
-            if (file) {
-                file.archiving((filename || userSettings.outputArchiveName) + '-font', <FileAsset[]> file.getFontAssets());
-            }
+            file?.archiving((filename || userSettings.outputArchiveName) + '-font', <FileAsset[]> file.getFontAssets());
         }
     },
     create() {

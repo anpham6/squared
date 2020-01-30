@@ -50,7 +50,7 @@ async function getImageSvgAsync(value: string) {
     return (await fetch(value, { method: 'GET', headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' }) })).text();
 }
 
-const isSvgExtension = (value: string) => /\.svg$/.test(value.toLowerCase());
+const isSvg = (value: string) => /\.svg$/.test(value.toLowerCase());
 const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
@@ -96,7 +96,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public abstract createNode(options: {}): T;
-    public abstract insertNode(element: Element, parent?: T): T | undefined;
+    public abstract insertNode(element: Element, parent?: T): Undef<T>;
     public abstract afterCreateCache(element: HTMLElement): void;
     public abstract finalize(): void;
 
@@ -139,7 +139,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const preloadImages = this.userSettings.preloadImages;
         const imageElements: PreloadImage[] = [];
         const styleElement = insertStyleSheetRule(`html > body { overflow: hidden !important; }`);
-        let THEN: Undefined<() => void>;
+        let THEN: Undef<() => void>;
         const resume = () => {
             this.initializing = false;
             for (const image of preloaded) {
@@ -172,7 +172,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             elements.push(document.body);
         }
         for (const value of elements) {
-            let element: HTMLElement | null;
+            let element: Null<HTMLElement>;
             if (typeof value === 'string') {
                 element = document.getElementById(value);
             }
@@ -194,7 +194,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             for (const image of images.values()) {
                 const uri = image.uri as string;
-                if (isSvgExtension(uri)) {
+                if (isSvg(uri)) {
                     imageElements.push(uri);
                 }
                 else if (image.width === 0 || image.height === 0) {
@@ -230,7 +230,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         for (const element of this.rootElements) {
             element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                if (isSvgExtension(image.src)) {
+                if (isSvg(image.src)) {
                     if (preloadImages) {
                         imageElements.push(image.src);
                     }
@@ -361,7 +361,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             let k = 0;
             for (let i = 0; i < length; i++) {
                 const element = <HTMLElement> childNodes[i];
-                let child: T | undefined;
+                let child: Undef<T>;
                 if (element.nodeName.charAt(0) === '#') {
                     if (isTextNode(element)) {
                         child = this.insertNode(element, node);
@@ -422,9 +422,9 @@ export default abstract class Application<T extends Node> implements squared.bas
             try {
                 const cssRules = item.cssRules;
                 if (cssRules) {
-                    const lengthA = cssRules.length;
-                    for (let j = 0; j < lengthA; j++) {
-                        const rule = cssRules[j];
+                    const length = cssRules.length;
+                    for (let i = 0; i < length; i++) {
+                        const rule = cssRules[i];
                         switch (rule.type) {
                             case CSSRule.STYLE_RULE:
                             case CSSRule.FONT_FACE_RULE:
@@ -461,7 +461,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const length = styleSheets.length;
         for (let i = 0; i < length; i++) {
             const styleSheet = styleSheets[i];
-            let mediaText: string | undefined;
+            let mediaText: Undef<string>;
             try {
                 mediaText = styleSheet.media.mediaText;
             }
@@ -496,7 +496,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const value = styleMap[attr];
                     if (value && value !== 'initial') {
                         let result = value;
-                        let match: RegExpExecArray | null;
+                        let match: Null<RegExpExecArray>;
                         while ((match = REGEX_DATAURI.exec(value)) !== null) {
                             if (match[3]) {
                                 const mimeType = match[3].split(XML.DELIMITER);
@@ -524,7 +524,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 parseImageUrl(baseMap, 'listStyleImage');
                 parseImageUrl(baseMap, 'content');
                 if (cssText.includes('!important')) {
-                    let match: RegExpExecArray | null;
+                    let match: Null<RegExpExecArray>;
                     while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
                         const attr = convertCamelCase(match[1]);
                         switch (attr) {
@@ -649,8 +649,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                         for (const value of srcMatch) {
                             const urlMatch = REGEX_URL.exec(value);
                             if (urlMatch) {
-                                let srcUrl: string | undefined;
-                                let srcLocal: string | undefined;
+                                let srcUrl: Undef<string>;
+                                let srcLocal: Undef<string>;
                                 const url = (urlMatch[2] || urlMatch[3]).trim();
                                 if (urlMatch[1] === 'url') {
                                     srcUrl = resolvePath(url, styleSheetHref);

@@ -61,8 +61,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return s * 1000 + ms;
     }
 
-    public element: SVGGraphicsElement | null = null;
-    public animationElement: SVGAnimationElement | null = null;
+    public element: Null<SVGGraphicsElement> = null;
+    public animationElement: Null<SVGAnimationElement> = null;
     public paused = false;
     public fillMode = 0;
     public synchronizeState = 0;
@@ -146,7 +146,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     set attributeName(value) {
         if (value !== 'transform' && !isString(this.baseValue)) {
-            let baseValue: string | undefined;
+            let baseValue: Undef<string>;
             const element = this.element;
             if (element) {
                 switch (value) {
@@ -228,7 +228,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get parentContainer() {
-        let result = <squared.svg.SvgContainer | undefined> this._parent;
+        let result = <Undef<squared.svg.SvgContainer>> this._parent;
         while (result && !SvgBuild.isContainer(result)) {
             result = result.parent;
         }

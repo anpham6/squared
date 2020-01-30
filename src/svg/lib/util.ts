@@ -25,7 +25,7 @@ const REGEX_TRANSFORM = {
     SCALE: new RegExp(`(scale[XY]?)\\(${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?\\)`, 'g'),
     TRANSLATE: new RegExp(`(translate[XY]?)\\(${STRING.LENGTH_PERCENTAGE}(?:, ${STRING.LENGTH_PERCENTAGE})?\\)`, 'g')
 };
-let REGEX_ROTATEORIGIN: RegExp | undefined;
+let REGEX_ROTATEORIGIN: Undef<RegExp>;
 
 function setOriginPosition(element: Element, point: Point, attr: string, position: string, dimension: number) {
     if (isLength(position)) {
@@ -161,13 +161,13 @@ export const TRANSFORM = {
             method: { x, y }
         };
     },
-    parse(element: SVGElement, value?: string): SvgTransform[] | undefined {
+    parse(element: SVGElement, value?: string): Undef<SvgTransform[]> {
         const transform = value || element.style.getPropertyValue('transform');
         if (transform !== '') {
             const ordered: SvgTransform[] = [];
             for (const name in REGEX_TRANSFORM) {
                 const pattern = REGEX_TRANSFORM[name];
-                let match: RegExpExecArray | null;
+                let match: Null<RegExpExecArray>;
                 while ((match = pattern.exec(transform)) !== null) {
                     const attr = match[1];
                     const isX = /X$/.test(attr);
@@ -237,7 +237,7 @@ export const TRANSFORM = {
         }
         return undefined;
     },
-    matrix(element: SVGElement, value?: string): SvgMatrix | undefined {
+    matrix(element: SVGElement, value?: string): Undef<SvgMatrix> {
         REGEX_TRANSFORM.MATRIX.lastIndex = 0;
         const match = REGEX_TRANSFORM.MATRIX.exec(value || getStyle(element).transform || '');
         if (match) {
@@ -333,7 +333,7 @@ export const TRANSFORM = {
             if (REGEX_ROTATEORIGIN === undefined) {
                 REGEX_ROTATEORIGIN = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
             }
-            let match: RegExpExecArray | null;
+            let match: Null<RegExpExecArray>;
             while ((match = REGEX_ROTATEORIGIN.exec(value)) !== null) {
                 const angle = parseFloat(match[1]);
                 if (angle !== 0) {
@@ -408,15 +408,16 @@ export function getAttribute(element: SVGElement, attr: string, computed = true)
 }
 
 export function getParentAttribute(element: SVGElement, attr: string, computed = true) {
-    let current: HTMLElement | SVGElement | null = element;
+    let current: Null<HTMLElement | SVGElement> = element;
     let value = '';
-    while (current && !(current instanceof HTMLElement)) {
+    do {
         value = getAttribute(current, attr, computed);
         if (value !== '' && value !== 'inherit') {
             break;
         }
         current = current.parentElement;
     }
+    while (current && !(current instanceof HTMLElement));
     return value;
 }
 
@@ -429,7 +430,7 @@ export function getTargetElement(element: SVGElement, rootElement?: SVGElement) 
     const value = getNamedItem(element, 'href');
     if (value.charAt(0) === '#') {
         const id = value.substring(1);
-        let parent: SVGElement | HTMLElement | null;
+        let parent: Null<SVGElement | HTMLElement>;
         if (rootElement) {
             parent = rootElement;
         }

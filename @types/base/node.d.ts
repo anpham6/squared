@@ -65,8 +65,8 @@ export interface CachedValue<T> {
     textContent?: string;
     textEmpty?: boolean;
     float?: string;
-    actualParent?: T | null;
-    absoluteParent?: T | null;
+    actualParent?: Null<T>;
+    absoluteParent?: Null<T>;
     actualWidth?: number;
     actualHeight?: number;
     attributes?: StringMap;

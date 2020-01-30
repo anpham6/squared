@@ -56,7 +56,7 @@ function setNaturalElements(node: T) {
     return children;
 }
 
-function getFlexValue(node: T, attr: string, fallback: number, parent?: Node | null): number {
+function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Node>): number {
     const value = (parent || node).css(attr);
     if (isNumber(value)) {
         return parseFloat(value);
@@ -600,7 +600,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected _fontSize?: number;
     protected _initial?: InitialData<T>;
 
-    protected readonly _element: Element | null = null;
+    protected readonly _element: Null<Element> = null;
 
     protected abstract _cached: CachedValue<T>;
     protected abstract _naturalChildren?: T[];
@@ -777,26 +777,26 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             attr = 'actualParent';
         }
         const result: T[] = [];
-        let current = options.startSelf ? this : this[attr];
-        while (current && current !== excluding) {
-            if (error && error(current)) {
+        let parent = options.startSelf ? this : this[attr];
+        while (parent && parent !== excluding) {
+            if (error && error(parent)) {
                 break;
             }
             if (condition) {
-                if (condition(current)) {
-                    result.push(current);
+                if (condition(parent)) {
+                    result.push(parent);
                     if (!every) {
                         break;
                     }
                 }
             }
             else {
-                result.push(current);
+                result.push(parent);
             }
-            if (current === including) {
+            if (parent === including) {
                 break;
             }
-            current = current[attr];
+            parent = parent[attr];
         }
         return result;
     }
@@ -916,17 +916,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssAscend(attr: string, startSelf = false) {
-        let current = startSelf ? this : this.actualParent;
+        let parent = startSelf ? this : this.actualParent;
         let value: string;
-        while (current) {
-            value = current.cssInitial(attr);
+        while (parent) {
+            value = parent.cssInitial(attr);
             if (value !== '') {
                 return value;
             }
-            if (current.documentBody) {
+            if (parent.documentBody) {
                 break;
             }
-            current = current.actualParent;
+            parent = parent.actualParent;
         }
         return '';
     }
@@ -963,7 +963,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssSpecificity(attr: string) {
-        let result: number | undefined;
+        let result: Undef<number>;
         if (this.styleElement) {
             if (this.pseudoElement) {
                 const element = <Element> this._element;
@@ -1152,17 +1152,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const selectors: QueryData[] = [];
                 let offset = -1;
                 invalid: {
-                    let adjacent: string | undefined;
-                    let match: RegExpExecArray | null;
+                    let adjacent: Undef<string>;
+                    let match: Null<RegExpExecArray>;
                     while ((match = SELECTOR_G.exec(query)) !== null) {
                         let segment = match[1];
                         let all = false;
-                        let tagName: string | undefined;
-                        let id: string | undefined;
-                        let classList: string[] | undefined;
-                        let attrList: QueryAttribute[] | undefined;
-                        let pseudoList: string[] | undefined;
-                        let notList: string[] | undefined;
+                        let tagName: Undef<string>;
+                        let id: Undef<string>;
+                        let classList: Undef<string[]>;
+                        let attrList: Undef<QueryAttribute[]>;
+                        let pseudoList: Undef<string[]>;
+                        let notList: Undef<string[]>;
                         if (segment.length === 1) {
                             const ch = segment.charAt(0);
                             switch (ch) {
@@ -1192,7 +1192,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             break invalid;
                         }
                         if (!all) {
-                            let subMatch: RegExpExecArray | null;
+                            let subMatch: Null<RegExpExecArray>;
                             while ((subMatch = SELECTOR_ATTR.exec(segment)) !== null) {
                                 if (attrList === undefined) {
                                     attrList = [];
@@ -1287,7 +1287,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         const depth = this.depth;
                         selectors.reverse();
                         length = selectors.length;
-                        const ascendQuerySelector = (index: number, adjacent: string | undefined, nodes: T[]): boolean => {
+                        const ascendQuerySelector = (index: number, adjacent: Undef<string>, nodes: T[]): boolean => {
                             const selector = selectors[index];
                             const last = index === length - 1;
                             const next: T[] = [];
@@ -2500,17 +2500,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     break;
                 default:
                     if (result !== '' && this.pageFlow && !this.plainText && !this.inputElement && (this._initial === undefined || this.cssInitial('backgroundColor') === result)) {
-                        let current = this.actualParent;
-                        while (current) {
-                            const color = current.cssInitial('backgroundColor', true);
+                        let parent = this.actualParent;
+                        while (parent) {
+                            const color = parent.cssInitial('backgroundColor', true);
                             if (color !== '') {
-                                if (color === result && current.backgroundColor === '') {
+                                if (color === result && parent.backgroundColor === '') {
                                     result = '';
                                 }
                                 break;
                             }
-                            current = current.actualParent;
-                        }
+                            parent = parent.actualParent;
+                        }parent
                     }
                     break;
             }
@@ -2677,7 +2677,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._naturalElements || setNaturalElements(this);
     }
 
-    get firstChild(): T | null {
+    get firstChild(): Null<T> {
         return this.naturalElements[0] || null;
     }
 
@@ -2814,13 +2814,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             result = this.naturalElement ? (<HTMLElement> this._element).dir : '';
             if (result === '') {
-                let current = this.actualParent;
-                while (current) {
-                    result = current.dir;
+                let parent = this.actualParent;
+                while (parent) {
+                    result = parent.dir;
                     if (result !== '') {
                         break;
                     }
-                    current = current.actualParent;
+                    parent = parent.actualParent;
                 }
             }
             this._cached.dir = result;

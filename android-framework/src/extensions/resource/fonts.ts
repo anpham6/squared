@@ -212,7 +212,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 };
                 for (let i = 0; i < 6; i++) {
                     const key = styleKeys[i];
-                    let value: string | undefined = fontData[key];
+                    let value: Undef<string> = fontData[key];
                     if (value) {
                         if (i === 3 && convertPixels) {
                             value = convertLength(value, true);
@@ -238,7 +238,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const tag in groupMap) {
             const styleTag = {};
             style[tag] = styleTag;
-            const sorted = filterArray(groupMap[tag], item => item !== undefined).sort((a, b) => {
+            const sorted = filterArray(groupMap[tag], item => !!item).sort((a, b) => {
                 let maxA = 0;
                 let maxB = 0;
                 let countA = 0;
@@ -450,7 +450,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const value of parentStyle) {
             const styleName: string[] = [];
             let parent = '';
-            let items: StringValue[] | undefined;
+            let items: Undef<StringValue[]>;
             value.split('.').forEach((tag, index, array) => {
                 const match = REGEX_TAGNAME.exec(tag);
                 if (match) {

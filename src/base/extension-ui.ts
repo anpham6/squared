@@ -7,7 +7,7 @@ const { hasComputedStyle } = $lib.css;
 const { includes } = $lib.util;
 
 export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
-    public static findNestedElement(element: Element | null, name: string) {
+    public static findNestedElement(element: Null<Element>, name: string) {
         if (element && hasComputedStyle(element)) {
             const children = element.children;
             const length = children.length;
@@ -60,11 +60,11 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
         return includes(element.dataset.use, this.name);
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> | undefined {
+    public processNode(node: T, parent: T): Undef<ExtensionResult<T>> {
         return undefined;
     }
 
-    public processChild(node: T, parent: T): ExtensionResult<T> | undefined {
+    public processChild(node: T, parent: T): Undef<ExtensionResult<T>> {
         return undefined;
     }
 

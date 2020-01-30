@@ -107,7 +107,7 @@ export function applyTemplate(tagName: string, template: ExternalData, children:
     const length = children.length;
     for (let i = 0; i < length; i++) {
         const item = children[i];
-        const include: string | undefined = tag['#'] && item[tag['#']];
+        const include: Undef<string> = tag['#'] && item[tag['#']];
         const closed = !nested && !include;
         let valid = false;
         output += indent + '<' + tagName;
@@ -179,7 +179,7 @@ export function applyTemplate(tagName: string, template: ExternalData, children:
 
 export function formatTemplate(value: string, closeEmpty = true, startIndent = -1, char = '\t') {
     const lines: XMLTagData[] = [];
-    let match: RegExpExecArray | null;
+    let match: Null<RegExpExecArray>;
     while ((match = REGEX_FORMAT.ITEM.exec(value)) !== null) {
         lines.push({
             tag: match[1],

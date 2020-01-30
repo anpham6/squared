@@ -37,7 +37,7 @@ function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     if (horizontal) {
         const length = mainData.column.length;
         const lengthA = mainData.row.length;
-        const result: Undefined<View[]>[][] = new Array(length);
+        const result: Undef<View[]>[][] = new Array(length);
         for (let i = 0; i < length; i++) {
             const data = new Array(lengthA);
             for (let j = 0; j < lengthA; j++) {
@@ -225,11 +225,11 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
     }
 }
 
-function getCellDimensions(node: View, horizontal: boolean, section: string[], insideGap: number): (string | undefined)[] {
-    let width: string | undefined;
-    let height: string | undefined;
-    let layout_columnWeight: string | undefined;
-    let layout_rowWeight: string | undefined;
+function getCellDimensions(node: View, horizontal: boolean, section: string[], insideGap: number): Undef<string>[] {
+    let width: Undef<string>;
+    let height: Undef<string>;
+    let layout_columnWeight: Undef<string>;
+    let layout_rowWeight: Undef<string>;
     if (section.every(value => REGEX_PX.test(value))) {
         let px = insideGap;
         for (const value of section) {
@@ -353,31 +353,25 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             layout.columnCount = columnCount;
             if (!node.documentRoot && !node.hasWidth && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => REGEX_FR.test(value)) && checkFlexibleParent(node)) {
                 const rowData = mainData.rowData;
-                const length = rowData.length;
-                const barrierData: T[][] = new Array(length);
+                const rowCount = rowData.length;
+                const barrierData: T[][] = new Array(rowCount);
                 let valid = true;
                 invalid: {
-                    for (let i = 0; i < length; i++) {
+                    for (let i = 0; i < rowCount; i++) {
+                        const nodes: T[] = [];
                         const row = rowData[i];
-                        const lengthA = row.length;
-                        if (lengthA <= columnCount) {
-                            const nodes: T[] = [];
-                            for (let j = 0; j < lengthA; j++) {
-                                const column = row[j];
-                                if (column && column.length === 1) {
-                                    nodes.push(column[0]);
-                                }
-                                else {
-                                    valid = false;
-                                    break invalid;
-                                }
+                        const length = row.length;
+                        for (let j = 0; j < length; j++) {
+                            const column = row[j];
+                            if (column && column.length === 1) {
+                                nodes.push(column[0]);
                             }
-                            barrierData[i] = nodes;
+                            else {
+                                valid = false;
+                                break invalid;
+                            }
                         }
-                        else {
-                            valid = false;
-                            break;
-                        }
+                        barrierData[i] = nodes;
                     }
                 }
                 if (valid) {
@@ -400,8 +394,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public processChild(node: T, parent: T) {
         const mainData: CssGridData<T> = parent.data(CSS_GRID, 'mainData');
         const cellData: CssGridCellData = node.data(CSS_GRID, 'cellData');
-        let renderAs: T | undefined;
-        let outputAs: NodeXmlTemplate<T> | undefined;
+        let renderAs: Undef<T>;
+        let outputAs: Undef<NodeXmlTemplate<T>>;
         if (mainData && cellData) {
             const layoutConstraint = parent.layoutConstraint;
             const { alignContent, column, row } = mainData;
@@ -530,7 +524,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread', 0);
                         }
                         else {
-                            const previousSibling = (item.innerMostWrapped || item).previousSibling as T | null;
+                            const previousSibling = <Null<T>> (item.innerMostWrapped || item).previousSibling;
                             if (previousSibling) {
                                 previousSibling.anchor('rightLeft', item.documentId);
                                 item.anchor('leftRight', previousSibling.anchorTarget.documentId);
@@ -757,7 +751,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             const barrierData = <T[][]> node.data(CSS_GRID, 'barrierData');
             if (barrierData) {
-                const length = barrierData.length;
+                const rowCount = barrierData.length;
                 if (length === 1) {
                     for (const item of barrierData[0]) {
                         item.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0);
@@ -766,14 +760,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 else {
                     const controller = <android.base.Controller<T>> this.controller;
                     const column = mainData.column;
-                    const gap = column.gap;
-                    const lengthA = column.length;
+                    const { gap, length } = column;
                     let previousBarrierId = '';
-                    for (let i = 0; i < length; i++) {
+                    for (let i = 0; i < rowCount; i++) {
                         const row = barrierData[i];
                         const barrierId = controller.addBarrier(row, 'bottom');
-                        let previousItem: T | undefined;
-                        for (let j = 0; j < lengthA; j++) {
+                        let previousItem: Undef<T>;
+                        for (let j = 0; j < length; j++) {
                             const item = row[j];
                             if (item) {
                                 if (i === 0) {
@@ -782,7 +775,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                     item.anchorStyle(STRING_ANDROID.VERTICAL);
                                 }
                                 else {
-                                    if (i === length - 1) {
+                                    if (i === rowCount - 1) {
                                         item.anchor('bottom', 'parent');
                                     }
                                     else {
@@ -790,7 +783,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                     }
                                     item.anchor('topBottom', previousBarrierId);
                                 }
-                                if (j < lengthA - 1) {
+                                if (j < length - 1) {
                                     item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, -gap);
                                 }
                                 previousItem = item;
@@ -809,7 +802,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                         layout_constraintEnd_toEndOf: 'parent',
                                         layout_constraintVertical_bias: i === 0 ? '0' : '',
                                         layout_constraintVertical_chainStyle: i === 0 ? 'packed' : '',
-                                        layout_constraintWidth_percent: (column.unit.slice(j, lengthA).reduce((a, b) => a + parseFloat(b), 0) / column.frTotal).toString()
+                                        layout_constraintWidth_percent: (column.unit.slice(j, length).reduce((a, b) => a + parseFloat(b), 0) / column.frTotal).toString()
                                     }
                                 };
                                 controller.addAfterInsideTemplate(node.id, controller.renderSpace(options), false);
@@ -917,14 +910,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     if (emptyRows[i] === undefined) {
                         const data = rowData[i];
                         for (let j = 0; j < unitSpan; j++) {
-                            if (data[j] === undefined) {
+                            if (data[j]) {
+                                createSpacer(i, rowDirection, unit, gap);
+                            }
+                            else {
                                 if (k === -1) {
                                     k = j;
                                 }
                                 l++;
-                            }
-                            else {
-                                createSpacer(i, rowDirection, unit, gap);
                             }
                         }
                     }

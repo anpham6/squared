@@ -31,7 +31,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         let last = -1;
         parent.each((item: T, index) => {
             const renderAs = item.renderAs as T;
-            let remove: T | undefined;
+            let remove: Undef<T>;
             if (renderAs) {
                 if (renderAs !== node) {
                     remove = item;
@@ -46,7 +46,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 last = index;
             }
             else if (!item.visible) {
-                const labelFor = item.labelFor as T | undefined;
+                const labelFor = <Undef<T>> item.labelFor;
                 if (labelFor && radiogroup.includes(labelFor)) {
                     last = index;
                 }

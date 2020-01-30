@@ -12,7 +12,7 @@ type SvgView = squared.svg.SvgView;
 
 const { cloneObject } = squared.lib.util;
 
-function getNearestViewBox(instance: SvgContainer | undefined) {
+function getNearestViewBox(instance: Undef<SvgContainer>) {
     while (instance) {
         if (instance.hasViewBox()) {
             return instance;
@@ -22,7 +22,7 @@ function getNearestViewBox(instance: SvgContainer | undefined) {
     return undefined;
 }
 
-function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): SVGPatternElement | undefined {
+function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): Undef<SVGPatternElement> {
     const value = getAttributeURL(getParentAttribute(element, 'fill'));
     if (value !== '') {
         if (viewport) {
@@ -66,7 +66,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
 
     public build(options?: SvgBuildOptions) {
         let element: SVGGraphicsElement | SVGSymbolElement;
-        let precision: number | undefined;
+        let precision: Undef<number>;
         let initialize = true;
         if (options) {
             element = options.symbolElement || options.patternElement || options.element || this.element;
@@ -86,7 +86,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const item = children[i];
-            let svg: SvgView | undefined;
+            let svg: Undef<SvgView>;
             if (SVG.svg(item)) {
                 svg = new squared.svg.Svg(item, false);
                 this.setAspectRatio(<SvgGroup> svg, item.viewBox.baseVal);
@@ -211,7 +211,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         return result;
     }
 
-    private getViewport(): Svg | undefined {
+    private getViewport(): Undef<Svg> {
         return this.viewport || SvgBuild.asSvg(this) && this || undefined;
     }
 

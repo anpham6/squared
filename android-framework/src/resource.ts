@@ -180,7 +180,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
         return '';
     }
 
-    public static addColor(color: ColorData | string | undefined, transparency = false) {
+    public static addColor(color: Undef<ColorData | string>, transparency = false) {
         if (typeof color === 'string') {
             color = parseColor(color, 1, transparency);
         }
@@ -223,7 +223,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
 
     public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
         const result: StringMap = {};
-        let mdpi: string | undefined;
+        let mdpi: Undef<string>;
         if (typeof element === 'string') {
             const match = CSS.URL.exec(element);
             if (match) {

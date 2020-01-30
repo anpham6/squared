@@ -39,7 +39,7 @@ function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
         const result: string[] = [];
-        let match: RegExpMatchArray | null;
+        let match: Null<RegExpMatchArray>;
         while ((match = REGEX_TIMINGFUNCTION.exec(value)) !== null) {
             result.push(match[1]);
         }
@@ -234,7 +234,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         const m = item.matrix;
                                         let name: string;
                                         let value: string;
-                                        let transformOrigin: Point | undefined;
+                                        let transformOrigin: Undef<Point>;
                                         switch (item.type) {
                                             case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                                                 name = 'translate';

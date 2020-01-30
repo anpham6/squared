@@ -24,7 +24,7 @@ type RepeatItem = {
     unitMin?: string;
 };
 
-type RowData = (NodeUI[] | undefined)[][];
+type RowData = Undef<NodeUI[]>[][];
 
 const CSS_GRID = EXT_NAME.CSS_GRID;
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
@@ -98,7 +98,7 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
     return false;
 }
 
-function getColumnTotal(rows: (NodeUI[] | undefined)[]) {
+function getColumnTotal(rows: Undef<NodeUI[]>[]) {
     let value = 0;
     for (const row of rows) {
         if (row) {
@@ -146,7 +146,7 @@ function fillUnitEqually(unit: string[], length: number) {
     }
 }
 
-function getOpenCellIndex(iteration: number, length: number, available: number[] | undefined) {
+function getOpenCellIndex(iteration: number, length: number, available: Undef<number[]>) {
     if (available) {
         for (let i = 0, j = -1, k = 0; i < iteration; i++) {
             if (available[i] === 0) {
@@ -245,7 +245,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         );
         const { column, dense, row, rowDirection: horizontal } = mainData;
         const [rowA, colA, rowB, colB] = horizontal ? [0, 1, 2, 3] : [1, 0, 3, 2];
-        const rowData: (T[] | undefined)[][] = [];
+        const rowData: Undef<T[]>[][] = [];
         const openCells: number[][] = [];
         const layout: GridLayout[] = [];
         const setDataRows = (item: T, placement: number[], length: number) => {
@@ -287,7 +287,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             if (value !== '' && value !== 'none' && value !== 'auto') {
                 const data = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = data;
-                let match: RegExpMatchArray | null;
+                let match: Null<RegExpMatchArray>;
                 let i = 1;
                 while ((match = REGEX_NAMED.exec(value)) !== null) {
                     const command = match[1].trim();
@@ -317,10 +317,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             }
                             if (iterations > 0) {
                                 const repeating: RepeatItem[] = [];
-                                let subMatch: RegExpMatchArray | null;
+                                let subMatch: Null<RegExpMatchArray>;
                                 while ((subMatch = REGEX_REPEAT.exec(match[3])) !== null) {
                                     const subPattern = subMatch[1];
-                                    let namedMatch: RegExpMatchArray | null;
+                                    let namedMatch: Null<RegExpMatchArray>;
                                     if ((namedMatch = REGEX_CELL_NAMED.exec(subPattern)) !== null) {
                                         const subName = namedMatch[1];
                                         if (name[subName] === undefined) {
@@ -416,7 +416,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             let rowIndex = 0;
             let columnIndex = 0;
             let columnMax = 0;
-            let previous: T | undefined;
+            let previous: Undef<T>;
             if (horizontal) {
                 if (column.autoFill) {
                     autoWidth = setAutoFill(column, node.actualWidth);
@@ -503,7 +503,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         else {
             const templateAreas = mainData.templateAreas;
-            let previousPlacement: number[] | undefined;
+            let previousPlacement: Undef<number[]>;
             autoWidth = setAutoFill(column, node.actualWidth);
             autoHeight = setAutoFill(row, node.actualHeight);
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
@@ -666,8 +666,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         return false;
                     };
-                    let rowStart: string[] | undefined;
-                    let colStart: string[] | undefined;
+                    let rowStart: Undef<string[]>;
+                    let colStart: Undef<string[]>;
                     for (let i = 0; i < 4; i++) {
                         const value = positions[i];
                         if (value !== 'auto' && placement[i] === 0) {

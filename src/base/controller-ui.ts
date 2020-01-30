@@ -33,8 +33,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract processTraverseVertical(layout: squared.base.LayoutUI<T>, siblings: T[]): squared.base.LayoutUI<T>;
     public abstract processLayoutHorizontal(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
-    public abstract renderNode(layout: squared.base.LayoutUI<T>): NodeTemplate<T> | undefined;
-    public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): NodeTemplate<T> | undefined;
+    public abstract renderNode(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
+    public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract setConstraints(): void;
     public abstract optimize(nodes: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
@@ -79,7 +79,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             styleMap = getElementCache(element, 'styleMap', sessionId) || {};
             const setBorderStyle = () => {
-                if (styleMap.border === undefined && checkBorderAttribute(0)) {
+                if (styleMap.border === undefined && checkBorderAttribute()) {
                     const inputBorderColor = this.localSettings.style.inputBorderColor;
                     styleMap.border = 'outset 1px ' + inputBorderColor;
                     for (let i = 0; i < 4; i++) {
@@ -109,7 +109,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     styleMap.paddingLeft = '6px';
                 }
             };
-            const checkBorderAttribute = (index: number) => !(styleMap[BOX_BORDER[0][index]] || styleMap[BOX_BORDER[1][index]] || styleMap[BOX_BORDER[2][index]] || styleMap[BOX_BORDER[3][index]]);
+            const checkBorderAttribute = () => !(BOX_BORDER[0][0] in styleMap || BOX_BORDER[1][0] in styleMap || BOX_BORDER[2][0] in styleMap || BOX_BORDER[3][0] in styleMap);
             const tagName = element.tagName;
             if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (tagName) {
@@ -357,7 +357,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             if (!node.documentRoot) {
                 const actualParent = node.parent as T;
                 const absoluteParent = node.absoluteParent as T;
-                let parent: T | undefined;
+                let parent: Undef<T>;
                 switch (node.css('position')) {
                     case 'relative':
                         if (!actualParent.layoutElement && node === actualParent.lastChild) {
@@ -377,13 +377,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             }
                             if (valid) {
                                 parent = actualParent.actualParent as T;
-                                do {
+                                while (parent && parent !== documentRoot) {
                                     if (node.withinX(parent.box) && node.withinY(parent.box) || parent.css('overflow') === 'hidden') {
                                         break;
                                     }
                                     parent = parent.actualParent as T;
                                 }
-                                while (parent && parent !== documentRoot);
                                 if (parent) {
                                     node.css('position', 'absolute', true);
                                     node.setBounds(false);
@@ -482,10 +481,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     let opacity = node.toFloat('opacity', 1);
                     let current = actualParent;
-                    while (current && current !== parent) {
+                    do {
                         opacity *= current.toFloat('opacity', 1);
                         current = current.actualParent as T;
                     }
+                    while (current && current !== parent);
                     node.css('opacity', opacity.toString());
                     node.parent = parent;
                     node.containerIndex = Number.POSITIVE_INFINITY;

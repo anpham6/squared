@@ -156,7 +156,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
 
 function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false) {
     if (border) {
-        let result: ExternalData | undefined;
+        let result: Undef<ExternalData>;
         if (isAlternatingBorder(border.style)) {
             const width = parseFloat(border.width);
             result = getBorderStyle(border, direction, !isInset);
@@ -176,7 +176,7 @@ function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = fal
     return undefined;
 }
 
-function getBorderRadius(radius?: string[]): StringMap | undefined {
+function getBorderRadius(radius?: string[]): Undef<StringMap> {
     if (radius) {
         const length = radius.length;
         if (length === 1) {
@@ -453,7 +453,7 @@ function getIndentOffset(border: BorderAttribute) {
     return width === 2 && border.style === 'double' ? 3 : width;
 }
 
-function getColorValue(value: ColorData | string | undefined, transparency = true) {
+function getColorValue(value: Undef<ColorData | string>, transparency = true) {
     const color = Resource.addColor(value, transparency);
     return color !== '' ? '@color/' + color : '';
 }
@@ -466,7 +466,7 @@ function fillBackgroundAttribute(attribute: string[], length: number) {
     return attribute;
 }
 
-function setBorderStyle(layerList: ObjectMap<any>, borders: (BorderAttribute | undefined)[], index: number, corners: StringMap | undefined, indentWidth: number, indentOffset: string) {
+function setBorderStyle(layerList: ObjectMap<any>, borders: Undef<BorderAttribute>[], index: number, corners: Undef<StringMap>, indentWidth: number, indentOffset: string) {
     const item = borders[index];
     if (item) {
         const width = roundFloat(item.width);
@@ -587,7 +587,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
         }
         function setHtmlBackground(node: T) {
-            const parent = node.actualParent as T | null;
+            const parent = <Null<T>> node.actualParent;
             if (parent?.visible === false) {
                 const background = parent.android('background');
                 if (background !== '') {
@@ -667,16 +667,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     }
 
     public getDrawableBorder(data: BoxStyle, outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false) {
-        const borders: (BorderAttribute | undefined)[] = new Array(4);
+        const borders: Undef<BorderAttribute>[] = new Array(4);
         const borderVisible: boolean[] = new Array(4);
         const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
         const indentOffset = indentWidth > 0 ? formatPX(indentWidth) : '';
         let borderStyle = true;
         let borderAll = true;
-        let border: BorderAttribute | undefined;
-        let borderData: BorderAttribute | undefined;
-        let shapeData: ExternalData[] | undefined;
-        let layerListData: ExternalData[] | undefined;
+        let border: Undef<BorderAttribute>;
+        let borderData: Undef<BorderAttribute>;
+        let shapeData: Undef<ExternalData[]>;
+        let layerListData: Undef<ExternalData[]>;
         if (outline) {
             borderData = outline;
             for (let i = 0; i < 4; i++) {
@@ -797,7 +797,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
             const result: BackgroundImageData[] = [];
             const images: (string | GradientTemplate)[] = [];
-            const imageDimensions: Undefined<Dimension>[] = [];
+            const imageDimensions: Undef<Dimension>[] = [];
             const imageSvg: boolean[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
             const backgroundPositionX = data.backgroundPositionX.split(XML.SEPARATOR);
@@ -1017,7 +1017,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let gravityX = '';
                     let gravityY = '';
                     let gravityAlign = '';
-                    let gravity: string | undefined;
+                    let gravity: Undef<string>;
                     if (!repeating && repeat !== 'repeat-x') {
                         switch (position.horizontal) {
                             case 'left':

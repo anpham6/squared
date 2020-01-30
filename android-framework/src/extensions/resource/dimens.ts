@@ -18,7 +18,7 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
         }
     }
     const previous = map.get(name);
-    return previous !== undefined && previous !== value ? Resource.generateId('dimen', name) : name;
+    return !!previous && previous !== value ? Resource.generateId('dimen', name) : name;
 }
 
 function createNamespaceData(namespace: string, node: View, group: ObjectMap<View[]>) {
@@ -78,7 +78,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             const dimens = STORED.dimens;
             for (const layout of this.application.layouts) {
                 let content = layout.content;
-                let match: RegExpExecArray | null;
+                let match: Null<RegExpExecArray>;
                 while ((match = REGEX_UNIT_ATTR.exec(content)) !== null) {
                     const [original, name, value] = match;
                     if (name !== 'text') {

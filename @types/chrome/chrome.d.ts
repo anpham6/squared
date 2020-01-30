@@ -2,10 +2,10 @@ import { ChromeAsset, UserSettingsChrome } from './application';
 
 type View = chrome.base.View;
 
-declare function getElement(element: HTMLElement, cache?: boolean): Promise<View | null>;
-declare function getElementById(value: string, cache?: boolean): Promise<View | null>;
-declare function querySelector(value: string): Promise<View | null>;
-declare function querySelectorAll(value: string): Promise<View[] | null>;
+declare function getElement(element: HTMLElement, cache?: boolean): Promise<Null<View>>;
+declare function getElementById(value: string, cache?: boolean): Promise<Null<View>>;
+declare function querySelector(value: string): Promise<Null<View>>;
+declare function querySelectorAll(value: string): Promise<Null<View>>;
 
 declare namespace base {
     interface Application<T extends View> extends squared.base.Application<T> {

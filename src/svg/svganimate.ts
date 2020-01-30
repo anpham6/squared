@@ -19,11 +19,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return value + (next - value) * percent;
     }
 
-    public static convertStepTimingFunction(attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number, fontSize?: number): [number[], string[]] | undefined {
+    public static convertStepTimingFunction(attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number, fontSize?: number): Undef<[number[], string[]]> {
         const valueA = values[index];
         const valueB = values[index + 1];
-        let currentValue: any[] | undefined;
-        let nextValue: any[] | undefined;
+        let currentValue: Undef<any[]>;
+        let nextValue: Undef<any[]>;
         switch (attributeName) {
             case 'fill':
             case 'stroke': {

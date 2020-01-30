@@ -121,7 +121,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     const keyTimes: number[] = [];
                     const values: string[] = [];
                     const keySplines: string[] = [];
-                    let previousValues: number[] | undefined;
+                    let previousValues: Undef<number[]>;
                     const length = keyTimesBase.length;
                     for (let i = 0; i < iterationCount; i++) {
                         if (i > 0 && keySplinesBase) {
@@ -131,7 +131,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                             const coordinates = SvgBuild.parseCoordinates(valuesBase[j]);
                             const lengthA = coordinates.length;
                             if (lengthA) {
-                                let currentValues: number[] | undefined;
+                                let currentValues: Undef<number[]>;
                                 switch (type) {
                                     case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                                         if (lengthA === 1) {
@@ -205,7 +205,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public setType(value: string) {
-        let values: number[][] | undefined;
+        let values: Undef<number[][]>;
         switch (value) {
             case 'translate':
                 this.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;

@@ -24,8 +24,8 @@ import WhiteSpace from './extensions/whitespace';
 import ConstraintGuideline from './extensions/constraint/guideline';
 
 import DelegateBackground from './extensions/delegate/background';
-import DelegateFixed from './extensions/delegate/fixed';
 import DelegateCssGrid from './extensions/delegate/cssgrid';
+import DelegateFixed from './extensions/delegate/fixed';
 import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
 import DelegateNegativeViewport from './extensions/delegate/negative-viewport';
 import DelegateNegativeX from './extensions/delegate/negative-x';

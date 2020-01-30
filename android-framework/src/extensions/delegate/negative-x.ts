@@ -51,7 +51,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         }
         let left = NaN;
         let right = NaN;
-        let firstChild: T | undefined;
+        let firstChild: Undef<T>;
         for (const item of outside) {
             const linear = item.linear;
             if (item.pageFlow) {

@@ -28,7 +28,7 @@ function parseColorStops(node: NodeUI, gradient: RadialGradient, value: string) 
     const [extent, size] = repeating && gradient.type === 'radial' ? [gradient.radiusExtent / gradient.radius, gradient.radius] : [1, (<Dimension> gradient.dimension)[gradient.horizontal ? 'width' : 'height']];
     const result: ColorStop[] = [];
     let previousOffset = 0;
-    let match: RegExpExecArray | null;
+    let match: Null<RegExpExecArray>;
     while ((match = REGEX_COLORSTOP.exec(value)) !== null) {
         const color = parseColor(match[1], 1, true);
         if (color) {
@@ -188,7 +188,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
     if (style !== 'none') {
         let width = formatPX(attr !== 'outline' ? node[border[1]] : convertFloat(node.style[border[1]]));
         if (width !== '0px') {
-            let color: string | ColorData | undefined = node.css(border[2]) || 'initial';
+            let color: Undef<string | ColorData> = node.css(border[2]) || 'initial';
             switch (color) {
                 case 'initial':
                     color = 'rgb(0, 0, 0)';
@@ -331,7 +331,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return numberArray ? [undefined, result] : [result];
     }
 
-    public static isBackgroundVisible(object: BoxStyle | undefined) {
+    public static isBackgroundVisible(object: Undef<BoxStyle>) {
         return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
     }
 
@@ -339,7 +339,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         const backgroundImage = node.backgroundImage;
         if (backgroundImage !== '') {
             const images: (string | Gradient)[] = [];
-            let match: RegExpExecArray | null;
+            let match: Null<RegExpExecArray>;
             let i = 0;
             while ((match = REGEX_BACKGROUNDIMAGE.exec(backgroundImage)) !== null) {
                 const value = match[0];
@@ -352,7 +352,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const direction = match[3];
                     const imageDimension = getBackgroundSize(node, i, node.css('backgroundSize'));
                     const dimension = imageDimension || node.actualDimension;
-                    let gradient: Gradient | undefined;
+                    let gradient: Undef<Gradient>;
                     switch (type) {
                         case 'conic': {
                             const position = getGradientPosition(direction);
@@ -535,7 +535,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return undefined;
     }
 
-    public static getBackgroundSize(node: NodeUI, value: string): Dimension | undefined {
+    public static getBackgroundSize(node: NodeUI, value: string): Undef<Dimension> {
         let width = 0;
         let height = 0;
         switch (value) {

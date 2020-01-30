@@ -28,7 +28,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         this.fileHandler?.reset();
     }
 
-    public addImage(element: HTMLImageElement | undefined) {
+    public addImage(element: Undef<HTMLImageElement>) {
         if (element?.complete) {
             const uri = element.src;
             if (/^data:image\//.test(uri)) {
@@ -69,7 +69,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public addRawData(uri: string, mimeType: string, encoding: string, content: string, width = 0, height = 0) {
         mimeType = mimeType.toLowerCase();
         encoding = encoding.toLowerCase();
-        let base64: string | undefined;
+        let base64: Undef<string>;
         if (encoding === 'base64') {
             base64 = content;
             if (mimeType === 'image/svg+xml') {
@@ -84,7 +84,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         const valid = uri.startsWith(origin);
         const pathname = valid ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '';
         const getFileName = () => buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
-        let filename: string | undefined;
+        let filename: Undef<string>;
         if (imageFormat === '*') {
             if (valid) {
                 filename = fromLastIndexOf(uri, '/');

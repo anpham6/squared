@@ -143,8 +143,8 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         assignEmptyValue(toolbarOptions, 'android', 'layout_height', hasAppBar || !node.hasPX('height') ? '?android:attr/actionBarSize' : '');
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
-        let appBarNode: T | undefined;
-        let collapsingToolbarNode: T | undefined;
+        let appBarNode: Undef<T>;
+        let collapsingToolbarNode: Undef<T>;
         if (hasAppBar) {
             let android = appBarOptions.android;
             assignEmptyValue(appBarOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_appbar');
@@ -195,7 +195,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 }
             }
         }
-        let outputAs: NodeXmlTemplate<T> | undefined;
+        let outputAs: Undef<NodeXmlTemplate<T>>;
         if (appBarNode) {
             appBarNode.setLayoutWidth('match_parent');
             appBarNode.setLayoutHeight('wrap_content');

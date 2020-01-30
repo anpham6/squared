@@ -45,7 +45,7 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
     return valid;
 }
 
-function traverseElementSibling(options: SiblingOptions = {}, element: Element, direction: "previousSibling" | "nextSibling", sessionId: string) {
+function traverseElementSibling(options: SiblingOptions = {}, element: Null<Element>, direction: "previousSibling" | "nextSibling", sessionId: string) {
     const { floating, pageFlow, lineBreak, excluded } = options;
     const result: T[] = [];
     while (element) {
@@ -130,7 +130,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         };
     }
 
-    public static baseline<T extends NodeUI>(list: T[], text = false): T | null {
+    public static baseline<T extends NodeUI>(list: T[], text = false): Null<T> {
         const result: T[] = [];
         for (const item of list) {
             if ((item.baseline || isLength(item.verticalAlign)) && (!text || item.textElement) && !item.floating && (item.naturalChild && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline)) && !item.baselineAltered) {
@@ -205,7 +205,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (list.length > 1) {
             const nodes: T[] = [];
             const floating = new Set<string>();
-            const clearable: ObjectMap<Undefined<T>> = {};
+            const clearable: ObjectMap<Undef<T>> = {};
             for (const node of list) {
                 if (node.pageFlow) {
                     if (floating.size) {
@@ -354,13 +354,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     siblings.length = 0;
                     continue;
                 }
-                let current = node.innerWrapped;
-                while (current) {
-                    if (current.naturalChild) {
-                        active = current;
+                let wrapped = node.innerWrapped;
+                while (wrapped) {
+                    if (wrapped.naturalChild) {
+                        active = wrapped;
                         break;
                     }
-                    current = current.innerWrapped;
+                    wrapped = wrapped.innerWrapped;
                 }
             }
             if (row.length === 0) {
@@ -399,7 +399,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract localSettings: {};
     public abstract renderParent?: T;
     public abstract renderExtension?: squared.base.ExtensionUI<T>[];
-    public abstract renderTemplates?: (NodeTemplate<T> | null)[];
+    public abstract renderTemplates?: Null<NodeTemplate<T>>[];
     public abstract outerWrapper?: T;
     public abstract innerWrapped?: T;
     public abstract innerBefore?: T;
@@ -1134,7 +1134,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get element() {
-        return this._element || <Element | null> this.innerMostWrapped?.unsafe('element') || null;
+        return this._element || <Null<Element>> this.innerMostWrapped?.unsafe('element') || null;
     }
 
     set naturalChild(value) {
@@ -1331,10 +1331,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     set actualParent(value) {
         this._cached.actualParent = value;
     }
-    get actualParent(): T | null {
+    get actualParent(): Null<T> {
         let result = this._cached.actualParent;
         if (result === undefined) {
-            result = super.actualParent as T | null;
+            result = <Null<T>> super.actualParent;
             if (result === null) {
                 const innerWrapped = this.innerMostWrapped;
                 if (innerWrapped) {
@@ -1395,7 +1395,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return null;
     }
 
-    get firstChild(): Node | null {
+    get firstChild(): Null<Node> {
         return this.naturalChildren[0] || null;
     }
 
@@ -1527,12 +1527,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get outerExtensionElement() {
         if (this.naturalChild) {
-            let current = (<Element> this._element).parentElement;
-            while (current) {
-                if (current.dataset.use) {
-                    return current;
+            let parent = (<Element> this._element).parentElement;
+            while (parent) {
+                if (parent.dataset.use) {
+                    return parent;
                 }
-                current = current.parentElement;
+                parent = parent.parentElement;
             }
         }
         return null;

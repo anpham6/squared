@@ -18,7 +18,7 @@ declare function include(value: ExtensionRequest, options?: {}): boolean;
 declare function includeAsync(value: ExtensionRequest | string, options?: {}): boolean;
 declare function exclude(value: ExtensionRequest | string): boolean;
 declare function configure(value: ExtensionRequest | string, options: {}): boolean;
-declare function retrieve(value: string): {} | null;
+declare function retrieve(value: string): Null<{}>;
 declare function ready(): boolean;
 declare function close(): void;
 declare function reset(): void;
@@ -43,7 +43,7 @@ declare namespace base {
         readonly resourceHandler: Resource<T>;
         readonly extensionManager: ExtensionManager<T>;
         readonly Node: Constructor<T>;
-        readonly fileHandler: File<T> | undefined;
+        readonly fileHandler: Undef<File<T>>;
         readonly extensions: Extension<T>[];
         readonly extensionsCascade: Extension<T>[];
         readonly nextId: number;
@@ -52,7 +52,7 @@ declare namespace base {
         parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
         createCache(documentRoot: HTMLElement): boolean;
         createNode(options: {}): T;
-        insertNode(element: Element, parent?: T): T | undefined;
+        insertNode(element: Element, parent?: T): Undef<T>;
         afterCreateCache(element: HTMLElement): void;
         finalize(): void;
         copyToDisk(directory: string, callback?: CallbackResult, assets?: FileAsset[]): void;
@@ -77,16 +77,16 @@ declare namespace base {
         readonly builtInExtensions: ObjectMap<ExtensionUI<T>>;
         readonly controllerHandler: ControllerUI<T>;
         readonly resourceHandler: ResourceUI<T>;
-        readonly fileHandler: FileUI<T> | undefined;
+        readonly fileHandler: Undef<FileUI<T>>;
         readonly extensions: ExtensionUI<T>[];
         readonly rootElements: Set<Element>;
         readonly layouts: FileAsset[];
         conditionElement(element: HTMLElement): boolean;
         createNode(options: AppNodeUIOptions<T>): T;
-        renderNode(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
-        resolveTarget(target: string | undefined): T | undefined;
+        renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
+        resolveTarget(target: Undef<string>): Undef<T>;
         addLayout(layout: LayoutUI<T>): void;
-        addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): void;
+        addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
     }
 
@@ -134,8 +134,8 @@ declare namespace base {
         processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): LayoutUI<T>;
         processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
         setConstraints(): void;
-        renderNode(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
-        renderNodeGroup(layout: LayoutUI<T>): NodeTemplate<T> | undefined;
+        renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
+        renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         createNodeGroup(node: T, children: T[], parent?: T, traverse?: boolean): T;
         sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
         addBeforeOutsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
@@ -160,12 +160,12 @@ declare namespace base {
         readonly cache: NodeList<T>;
         readonly userSettings: UserSettings;
         reset(): void;
-        addImage(element: HTMLImageElement | undefined): void;
-        getImage(src: string): ImageAsset | undefined;
+        addImage(element: Undef<HTMLImageElement>): void;
+        getImage(src: string): Undef<ImageAsset>;
         addFont(data: squared.lib.css.CSSFontFaceData): void;
-        getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): squared.lib.css.CSSFontFaceData | undefined;
+        getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<squared.lib.css.CSSFontFaceData>;
         addRawData(uri: string, mimeType: string, encoding: string, content: string): string;
-        getRawData(uri: string): RawAsset | undefined;
+        getRawData(uri: string): Undef<RawAsset>;
         setFileHandler(instance: File<T>): void;
     }
 
@@ -188,10 +188,10 @@ declare namespace base {
         public static STORED: ResourceStoredMap;
         public static generateId(section: string, name: string, start?: number): string;
         public static insertStoredAsset(asset: string, name: string, value: any): string;
-        public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): (string[] | undefined)[];
-        public static isBackgroundVisible(object: BoxStyle | undefined): boolean;
-        public static parseBackgroundImage(node: NodeUI): (string | Gradient)[] | undefined;
-        public static getBackgroundSize<T extends NodeUI>(node: T, value: string): Dimension | undefined;
+        public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
+        public static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
+        public static parseBackgroundImage(node: NodeUI): Undef<string | Gradient>[];
+        public static getBackgroundSize<T extends NodeUI>(node: T, value: string): Undef<Dimension>;
         public static isInheritedStyle<T extends NodeUI>(node: T, attr: string): boolean;
         public static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
     }
@@ -227,8 +227,8 @@ declare namespace base {
         included(element: HTMLElement): boolean;
         is(node: T): boolean;
         condition(node: T, parent?: T): boolean;
-        processNode(node: T, parent: T): ExtensionResult<T> | undefined;
-        processChild(node: T, parent: T): ExtensionResult<T> | undefined;
+        processNode(node: T, parent: T): Undef<ExtensionResult<T>>;
+        processChild(node: T, parent: T): Undef<ExtensionResult<T>>;
         addDescendant(node: T): void;
         postBaseLayout(node: T): void;
         postConstraints(node: T): void;
@@ -242,7 +242,7 @@ declare namespace base {
     }
 
     class ExtensionUI<T extends NodeUI> implements ExtensionUI<T> {
-        public static findNestedElement(element: Element | null, name: string): HTMLElement | null;
+        public static findNestedElement(element: Null<Element>, name: string): Null<HTMLElement>;
         constructor(name: string, framework: number, options?: ExternalData, tagNames?: string[]);
     }
 
@@ -250,9 +250,9 @@ declare namespace base {
         readonly application: Application<T>;
         include(ext: Extension<T>): boolean;
         exclude(ext: Extension<T>): boolean;
-        retrieve(name: string): Extension<T> | null;
+        retrieve(name: string): Null<Extension<T>>;
         optionValue(name: string, attr: string): any;
-        optionValueAsObject(name: string, attr: string): {} | null;
+        optionValueAsObject(name: string, attr: string): Null<{}>;
         optionValueAsString(name: string, attr: string): string;
         optionValueAsNumber(name: string, attr: string): number;
         optionValueAsBoolean(name: string, attr: string): boolean;
@@ -317,7 +317,7 @@ declare namespace base {
         depth: number;
         childIndex: number;
         documentRoot: boolean;
-        actualParent: Node | null;
+        actualParent: Null<Node>;
         inlineText: boolean;
         dir: string;
         naturalChildren: Node[];
@@ -327,11 +327,11 @@ declare namespace base {
         queryMap?: Node[][];
         textBounds?: BoxRectDimension;
         readonly sessionId: string;
-        readonly initial: InitialData<Node> | undefined;
+        readonly initial: Undef<InitialData<Node>>;
         readonly box: BoxRectDimension;
         readonly bounds: BoxRectDimension;
         readonly linear: BoxRectDimension;
-        readonly element: Element | null;
+        readonly element: Null<Element >;
         readonly elementId: string;
         readonly tagName: string;
         readonly htmlElement: boolean;
@@ -410,18 +410,18 @@ declare namespace base {
         readonly overflowX: boolean;
         readonly overflowY: boolean;
         readonly verticalAlign: string;
-        readonly absoluteParent: Node | null;
+        readonly absoluteParent: Null<Node>;
         readonly actualWidth: number;
         readonly actualHeight: number;
         readonly actualDimension: Dimension;
-        readonly firstChild: Node | null;
-        readonly lastChild: Node | null;
-        readonly firstStaticChild: Node | null;
-        readonly lastStaticChild: Node | null;
-        readonly previousSibling: Node | null;
-        readonly nextSibling: Node | null;
-        readonly previousElementSibling: Node | null;
-        readonly nextElementSibling: Node | null;
+        readonly firstChild: Null<Node>;
+        readonly lastChild: Null<Node>;
+        readonly firstStaticChild: Null<Node>;
+        readonly lastStaticChild: Null<Node>;
+        readonly previousSibling: Null<Node>;
+        readonly nextSibling: Null<Node>;
+        readonly previousElementSibling: Null<Node>;
+        readonly nextElementSibling: Null<Node>;
         readonly attributes: StringMap;
         readonly boundingClientRect: DOMRect;
         readonly cssStyle: StringMap;
@@ -461,7 +461,7 @@ declare namespace base {
         has(attr: string, checkType?: number, options?: {}): boolean;
         hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
         setBounds(cache?: boolean): void;
-        querySelector(value: string): Node | null;
+        querySelector(value: string): Null<Node>;
         querySelectorAll(value: string, resultCount?: number): Node[];
     }
 
@@ -484,7 +484,7 @@ declare namespace base {
         controlName: string;
         documentParent: NodeUI;
         renderExclude: boolean;
-        element: Element | null;
+        element: Null<Element >;
         textContent: string;
         positionAuto: boolean;
         baseline: boolean;
@@ -505,7 +505,7 @@ declare namespace base {
         renderAs?: NodeUI;
         renderParent?: NodeUI;
         renderExtension?: Extension<NodeUI>[];
-        renderTemplates?: (NodeTemplate<NodeUI> | null)[];
+        renderTemplates?: Null<NodeTemplate<NodeUI>>[];
         outerWrapper?: NodeUI;
         innerWrapped?: NodeUI;
         innerBefore?: NodeUI;
@@ -528,12 +528,12 @@ declare namespace base {
         readonly layoutHorizontal: boolean;
         readonly layoutVertical: boolean;
         readonly onlyChild: boolean;
-        readonly outerMostWrapper: NodeUI | null;
-        readonly innerMostWrapped: NodeUI | null;
+        readonly outerMostWrapper: Null<NodeUI>;
+        readonly innerMostWrapped: Null<NodeUI>;
         readonly support: Support;
         readonly documentId: string;
         readonly extensions: string[];
-        readonly outerExtensionElement: HTMLElement | null;
+        readonly outerExtensionElement: Null<HTMLElement>;
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(): void;
         setLayout(): void;
@@ -587,7 +587,7 @@ declare namespace base {
     class NodeUI implements NodeUI {
         public static linearData<T>(list: T[], clearOnly?: boolean): LinearData<T>;
         public static outerRegion<T>(node: T): BoxRectDimension;
-        public static baseline<T>(list: T[], text?: boolean): T | null;
+        public static baseline<T>(list: T[], text?: boolean): Null<T>;
         public static partitionRows<T>(list: T[], parent?: T): T[][];
         constructor(id: number, sessionId?: string, element?: Element);
     }
@@ -721,7 +721,7 @@ declare namespace lib {
             readonly children: T[];
             readonly length: number;
             [Symbol.iterator](): Iterator<T>;
-            item(index?: number, value?: T): T | undefined;
+            item(index?: number, value?: T): Undef<T>;
             append(item: T): this;
             remove(item: T): T[];
             retain(list: T[]): this;
@@ -729,7 +729,7 @@ declare namespace lib {
             duplicate(): T[];
             clear(): this;
             each(predicate: IteratorPredicate<T, void>): this;
-            find(predicate: IteratorPredicate<T, boolean> | string, value?: any): T | undefined;
+            find(predicate: IteratorPredicate<T, boolean> | string, value?: any): Undef<T>;
             sort(predicate: (a: T, b: T) => number): this;
             concat(list: T[]): this;
             join(...other: Container<T>[]): this;
@@ -751,11 +751,11 @@ declare namespace lib {
     }
 
     namespace color {
-        function findColorName(value: string): ColorResult | undefined;
-        function findColorShade(value: string): ColorResult | undefined;
-        function parseColor(value: string, opacity?: number, transparency?: boolean): ColorData | undefined;
-        function parseRGBA(value: string): RGBA | undefined;
-        function reduceRGBA(value: RGBA, percent: number, cacheName?: string): ColorData | undefined;
+        function findColorName(value: string): Undef<ColorResult>;
+        function findColorShade(value: string): Undef<ColorResult>;
+        function parseColor(value: string, opacity?: number, transparency?: boolean): Undef<ColorData>;
+        function parseRGBA(value: string): Undef<RGBA>;
+        function reduceRGBA(value: RGBA, percent: number, cacheName?: string): Undef<ColorData>;
         function getHexCode(...values: number[]): string;
         function convertHex(value: RGBA): string;
         function convertHSLA(value: RGBA): HSLA;
@@ -797,8 +797,8 @@ declare namespace lib {
         const BOX_BORDER: string[][];
         const BOX_PADDING: string[];
 
-        function getStyle(element: Element | null, pseudoElt?: string): CSSStyleDeclaration;
-        function getFontSize(element: Element | null): number;
+        function getStyle(element: Null<Element>, pseudoElt?: string): CSSStyleDeclaration;
+        function getFontSize(element: Null<Element>): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
         function parseSelectorText(value: string): string;
@@ -809,8 +809,8 @@ declare namespace lib {
         function getDataSet(element: HTMLElement | SVGElement, prefix: string): StringMap;
         function isParentStyle(element: Element, attr: string, ...styles: string[]): boolean;
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
-        function parseVar(element: HTMLElement | SVGElement, value: string): string | undefined;
-        function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number | undefined;
+        function parseVar(element: HTMLElement | SVGElement, value: string): Undef<string>;
+        function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): Undef<number>;
         function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, imageDimension?: Dimension, imageSize?: string): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
@@ -839,7 +839,7 @@ declare namespace lib {
         function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
         function getRangeClientRect(element: Element): BoxRectDimension;
         function removeElementsByClassName(className: string): void;
-        function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element): Element[] | undefined;
+        function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Undef<Element[]>;
         function getNamedItem(element: Element, attr: string): string;
         function createElement(parent: HTMLElement, tagName: string, attrs: StringMap): HTMLElement;
         function measureTextWidth(value: string, fontFamily: string, fontSize: number): number;
@@ -937,7 +937,7 @@ declare namespace lib {
         function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
         function getElementCache(element: Element, attr: string, sessionId: string): any;
         function deleteElementCache(element: Element, attr: string, sessionId: string): void;
-        function getElementAsNode<T>(element: Element, sessionId: string): T | null;
+        function getElementAsNode<T>(element: Element, sessionId: string): Null<T>;
     }
 
     namespace util {
@@ -962,7 +962,7 @@ declare namespace lib {
         function isObject(value: any): value is {};
         function isPlainObject(value: any): value is {};
         function isEqual(source: any, values: any): boolean;
-        function includes(source: string | undefined, value: string, delimiter?: RegExp): boolean;
+        function includes(source: Undef<string>, value: string, delimiter?: RegExp): boolean;
         function cloneInstance<T>(value: T): T;
         function cloneArray(data: any[], result?: any[], object?: boolean): any[];
         function cloneObject(data: {}, result?: {}, array?: boolean): {};
@@ -984,7 +984,7 @@ declare namespace lib {
         function belowRange(a: number, b: number, offset?: number): boolean;
         function assignEmptyProperty(dest: {}, source: {}): {};
         function assignEmptyValue(dest: {}, ...attrs: string[]): void;
-        function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): T | undefined;
+        function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
         function sortNumber(values: number[], ascending?: boolean): number[];
         function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
         function flatArray<T>(list: any[]): T[];
@@ -1051,7 +1051,7 @@ declare namespace svg {
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): boolean | undefined;
+        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
     }
 
     interface SvgViewBox {
@@ -1146,8 +1146,8 @@ declare namespace svg {
         replaceValue?: string;
         id?: number;
         companion?: NumberValue<SvgAnimation>;
-        readonly element: SVGGraphicsElement | null;
-        readonly animationElement: SVGAnimationElement | null;
+        readonly element: Null<SVGGraphicsElement>;
+        readonly animationElement: Null<SVGAnimationElement>;
         readonly instanceType: number;
         readonly fillReplace: boolean;
         readonly parentContainer?: SvgContainer;
@@ -1174,7 +1174,7 @@ declare namespace svg {
         by?: number;
         end?: number;
         synchronized?: NumberValue;
-        readonly animationElement: SVGAnimateElement | null;
+        readonly animationElement: Null<SVGAnimateElement>;
         readonly playable: boolean;
         readonly valueTo: string;
         readonly valueFrom: string;
@@ -1190,19 +1190,19 @@ declare namespace svg {
     interface SvgAnimateTransform extends SvgAnimate {
         transformFrom?: string;
         transformOrigin?: Point[];
-        readonly animationElement: SVGAnimateTransformElement | null;
+        readonly animationElement: Null<SVGAnimateTransformElement>;
         setType(value: string): void;
         expandToValues(): void;
     }
 
     interface SvgAnimateMotion extends SvgAnimateTransform {
-        motionPathElement: SVGGeometryElement | null;
+        motionPathElement: Null<SVGGeometryElement>;
         path: string;
         distance: string;
         rotate: string;
         rotateData?: NumberValue[];
         framesPerSecond?: number;
-        readonly animationElement: SVGAnimateMotionElement | null;
+        readonly animationElement: Null<SVGAnimateMotionElement>;
         readonly keyPoints: number[];
         readonly offsetLength: number;
         readonly offsetPath?: SvgOffsetPath[];
@@ -1213,7 +1213,7 @@ declare namespace svg {
     interface SvgAnimationIntervalMap {
         map: SvgAnimationIntervalAttributeMap;
         has(attr: string): boolean;
-        get(attr: string, time: number, playing?: boolean): string | undefined;
+        get(attr: string, time: number, playing?: boolean): Undef<string>;
         paused(attr: string, time: number): boolean;
         evaluateStart(item: SvgAnimate, otherValue?: any): string[];
     }
@@ -1241,16 +1241,16 @@ declare namespace svg {
 
     class SvgAnimate implements SvgAnimate {
         public static getSplitValue(value: number, next: number, percent: number): number;
-        public static convertStepTimingFunction(attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined;
+        public static convertStepTimingFunction(attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): Undef<[number[], string[]]>;
         public static toFractionList(value: string, delimiter?: string, ordered?: boolean): number[];
         constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement);
     }
 
     class SvgAnimateTransform implements SvgAnimateTransform {
-        public static toRotateList(values: string[]): number[][] | undefined;
-        public static toScaleList(values: string[]): number[][] | undefined;
-        public static toTranslateList(values: string[]): number[][] | undefined;
-        public static toSkewList(values: string[]): number[][] | undefined;
+        public static toRotateList(values: string[]): Undef<number[][]>;
+        public static toScaleList(values: string[]): Undef<number[][]>;
+        public static toTranslateList(values: string[]): Undef<number[][]>;
+        public static toSkewList(values: string[]): Undef<number[][]>;
         constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateTransformElement);
     }
 
@@ -1409,14 +1409,14 @@ declare namespace svg {
         readonly pathLength: number;
         readonly totalLength: number;
         draw(transforms?: SvgTransform[], options?: SvgBuildOptions): string;
-        extendLength(data: SvgPathExtendData, precision?: number): SvgPathExtendData | undefined;
+        extendLength(data: SvgPathExtendData, precision?: number): Undef<SvgPathExtendData>;
         flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number): SvgPathExtendData;
-        extractStrokeDash(animations?: SvgAnimation[], precision?: number): [SvgAnimation[] | undefined, SvgStrokeDash[] | undefined, string, string];
+        extractStrokeDash(animations?: SvgAnimation[], precision?: number): [Undef<SvgAnimation[]>, Undef<SvgStrokeDash[]>, string, string];
     }
 
     class SvgPath implements SvgPath {
         public static transform(value: string, transforms: SvgTransform[], element?: SVGGeometryElement, precision?: number): string;
-        public static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number): string[] | undefined;
+        public static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number): Undef<string[]>;
         constructor(element: SVGGeometryElement);
     }
 
@@ -1489,8 +1489,8 @@ declare namespace svg {
             };
             const TRANSFORM: {
                 create(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;
-                parse(element: SVGElement, value?: string): SvgTransform[] | undefined;
-                matrix(element: SVGElement, value?: string): SvgMatrix | undefined;
+                parse(element: SVGElement, value?: string): Undef<SvgTransform[]>;
+                matrix(element: SVGElement, value?: string): Undef<SvgMatrix>;
                 origin(element: SVGElement, value?: string): Point;
                 rotateOrigin(element: SVGElement, attr?: string): SvgPoint[];
                 typeAsName(type: number): string;
@@ -1520,8 +1520,8 @@ declare namespace svg {
             function getParentAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getAttributeURL(value: string): string;
             function getDOMRect(element: SVGElement): DOMRect;
-            function getTargetElement(element: SVGElement, rootElement?: HTMLElement | SVGElement | null): SVGElement | null;
-            function getNearestViewBox(element: SVGElement): DOMRect | undefined;
+            function getTargetElement(element: SVGElement, rootElement?: Null<HTMLElement | SVGElement>): Null<SVGElement>;
+            function getNearestViewBox(element: SVGElement): Undef<DOMRect>;
             function createPath(value: string): SVGPathElement;
             function getPathLength(value: string): string;
         }

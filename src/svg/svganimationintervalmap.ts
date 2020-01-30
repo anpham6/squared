@@ -102,7 +102,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     const interval = values[i];
                     const animation = interval.animation;
                     if (interval.value === '' || animation && interval.start && SvgBuild.isAnimate(animation) && animation.evaluateStart) {
-                        let value: string | undefined;
+                        let value: Undef<string>;
                         for (const group of map[keyName].values()) {
                             for (const previous of group) {
                                 if (interval.animation !== previous.animation && previous.value !== '' && (previous.time === -1 || previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) {
@@ -247,11 +247,11 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             }
             return false;
         }
-        return map !== undefined;
+        return !!map;
     }
 
     public get(attr: string, time: number, playing = false) {
-        let value: string | undefined;
+        let value: Undef<string>;
         const map = this.map[attr];
         if (map) {
             for (const [interval, data] of map.entries()) {

@@ -29,8 +29,8 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
 
     public processNode(node: T, parent: T) {
         const controller = <android.base.Controller<T>> this.controller;
-        let target = node.outerMostWrapper as T | null;
-        let targetParent: T | undefined;
+        let target = <Null<T>> node.outerMostWrapper;
+        let targetParent: Undef<T>;
         if (target) {
             targetParent = target.parent as T;
             const renderChildren = targetParent.renderChildren;
@@ -50,8 +50,8 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         const actualParent = targetParent || parent;
         const { backgroundColor, visibleStyle } = node;
         const parentVisible = isParentVisible(node, visibleStyle);
-        let container: T | undefined;
-        let parentAs: T | undefined;
+        let container: Undef<T>;
+        let parentAs: Undef<T>;
         if (backgroundColor !== '') {
             container = controller.createNodeWrapper(actualNode, actualParent);
             container.unsafe('excludeResource', NODE_RESOURCE.BOX_SPACING);
@@ -73,7 +73,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         const backgroundImage = node.backgroundImage;
         if (backgroundImage !== '') {
             const image = this.application.resourceHandler.getImage(resolveURL(backgroundImage));
-            const fitContent = image !== undefined && image.height < node.actualHeight;
+            const fitContent = !!image && image.height < node.actualHeight;
             if (container === undefined || parentVisible || actualParent.visibleStyle.background || !visibleStyle.backgroundRepeatY || fitContent) {
                 if (container) {
                     parentAs = container;
@@ -101,7 +101,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             container.unsafe('excludeResource', NODE_RESOURCE.BOX_SPACING);
             const height = actualParent.cssInitial('height');
             const minHeight = actualParent.cssInitial('minHeight');
-            let backgroundSize: string | undefined;
+            let backgroundSize: Undef<string>;
             if (height === '' && minHeight === '') {
                 container.setLayoutHeight(!parentVisible && (visibleStyle.backgroundRepeatY || image && !fitContent || node.has('backgroundSize')) ? 'match_parent' : 'wrap_content');
             }

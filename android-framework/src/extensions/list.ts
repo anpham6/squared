@@ -75,7 +75,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
             const container = node.length === 0 ? controller.createNodeGroup(node, [node], parent) : node;
-            let ordinal = value === '' ? node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T | undefined : undefined;
+            let ordinal = value === '' ? node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T> : undefined;
             if (ordinal) {
                 if (columnCount === 3) {
                     node.android('layout_columnSpan', '2');
@@ -110,7 +110,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 let paddingRight = 0;
                 let top = 0;
                 let left = 0;
-                let image: string | undefined;
+                let image: Undef<string>;
                 if (mainData.imageSrc !== '') {
                     const resource = <android.base.Resource<T>> this.resource;
                     if (mainData.imagePosition) {

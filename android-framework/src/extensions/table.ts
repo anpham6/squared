@@ -38,7 +38,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         item.setLayoutWidth('0px');
                     }
                     else {
-                        const expand: boolean | undefined = data.expand;
+                        const expand: Undef<boolean> = data.expand;
                         if (expand) {
                             const percent = convertFloat(data.percent) / 100;
                             if (percent > 0) {

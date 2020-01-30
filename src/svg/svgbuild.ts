@@ -104,7 +104,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static setName(element?: SVGElement) {
         if (element) {
             let value = '';
-            let tagName: string | undefined;
+            let tagName: Undef<string>;
             if (isString(element.id)) {
                 const id = convertWord(element.id, true);
                 if (!NAME_GRAPHICS.has(id)) {
@@ -353,7 +353,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let rotating = false;
             let rotatePrevious = 0;
             let overflow = 0;
-            let center: SvgPoint | undefined;
+            let center: Undef<SvgPoint>;
             for (let key = 0; key <= totalLength; key++) {
                 const nextPoint = element.getPointAtLength(key);
                 if (keyPoints.length) {
@@ -410,25 +410,25 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         value = value.trim();
         const result: SvgPathCommand[] = [];
         let first = true;
-        let match: RegExpExecArray | null;
+        let match: Null<RegExpExecArray>;
         while ((match = REGEX_COMMAND.exec(value)) !== null) {
             let key = match[1];
             if (first && key.toUpperCase() !== 'M') {
                 break;
             }
             const coordinates = SvgBuild.parseCoordinates((match[2] || '').trim());
-            let previousCommand: string | undefined;
-            let previousPoint: Point | undefined;
+            let previousCommand: Undef<string>;
+            let previousPoint: Undef<Point>;
             if (!first) {
                 const previous = result[result.length - 1];
                 previousCommand = previous.key.toUpperCase();
                 previousPoint = previous.end;
             }
-            let radiusX: number | undefined;
-            let radiusY: number | undefined;
-            let xAxisRotation: number | undefined;
-            let largeArcFlag: number | undefined;
-            let sweepFlag: number | undefined;
+            let radiusX: Undef<number>;
+            let radiusY: Undef<number>;
+            let xAxisRotation: Undef<number>;
+            let largeArcFlag: Undef<number>;
+            let sweepFlag: Undef<number>;
             switch (key.toUpperCase()) {
                 case 'M':
                     if (first) {
@@ -599,7 +599,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed = false) {
         invalid: {
-            let location: Point | undefined;
+            let location: Undef<Point>;
             for (const item of values) {
                 const coordinates = item.coordinates;
                 if (item.relative) {
@@ -884,7 +884,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static parseCoordinates(value: string) {
         const result: number[] = [];
-        let match: RegExpExecArray | null;
+        let match: Null<RegExpExecArray>;
         while ((match = REGEX_DECIMAL.exec(value)) !== null) {
             const coord = parseFloat(match[0]);
             if (!isNaN(coord)) {

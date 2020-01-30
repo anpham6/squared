@@ -953,7 +953,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
             return colorData;
         }
         let key = '';
-        let rgba: RGBA | undefined;
+        let rgba: Undef<RGBA>;
         if (value.charAt(0) === '#') {
             rgba = parseRGBA(value);
         }

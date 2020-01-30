@@ -20,8 +20,8 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
         for (const node of this.cache) {
             const renderTemplates = node.renderTemplates;
             if (renderTemplates) {
-                let open: NodeRenderIndex[] | undefined;
-                let close: NodeRenderIndex[] | undefined;
+                let open: Undef<NodeRenderIndex[]>;
+                let close: Undef<NodeRenderIndex[]>;
                 node.renderEach((item: T, index) => {
                     const dataset = item.dataset;
                     const name = dataset.androidInclude;

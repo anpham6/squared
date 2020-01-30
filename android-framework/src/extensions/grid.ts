@@ -64,7 +64,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         const cellData: GridCellData<T> = node.data(GRID, 'cellData');
         if (cellData) {
             const siblings = cellData.siblings?.slice(0);
-            let layout: LayoutUI<T> | undefined;
+            let layout: Undef<LayoutUI<T>>;
             if (siblings) {
                 const controller = <android.base.Controller<T>> this.controller;
                 siblings.unshift(node);
@@ -122,7 +122,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 node.renderEach(item => {
                     const cellData: GridCellData<T> = item.data(GRID, 'cellData');
                     if (cellData) {
-                        const parent = item.actualParent as T | null;
+                        const parent = <Null<T>> item.actualParent;
                         if (parent?.visible === false) {
                             const marginTop = parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1 ? parent.marginTop : 0;
                             const marginBottom = parent.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1 ? parent.marginBottom : 0;

@@ -203,7 +203,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (node.documentRoot && (node.hasWidth || node.blockStatic || node.blockWidth)) {
                 return true;
             }
-            let parent = node.renderParent as T | undefined;
+            let parent = <Undef<T>> node.renderParent;
             let i = 0;
             while (parent) {
                 if (parent.hasWidth || parseInt(parent.layoutWidth) > 0 || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic)) {
@@ -217,7 +217,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 else if (parent.inlineWidth || parent.naturalElement && parent.inlineVertical) {
                     return false;
                 }
-                parent = parent.renderParent as T | undefined;
+                parent = <Undef<T>> parent.renderParent;
             }
             return false;
         }
@@ -226,13 +226,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (node.documentRoot && node.hasHeight) {
                 return true;
             }
-            const parent = node.renderParent as T | undefined;
-            return parent !== undefined && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight === true;
+            const parent = <Undef<T>> node.renderParent;
+            return !!parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight === true;
         }
 
         public api = BUILD_ANDROID.LATEST;
         public renderParent?: T;
-        public renderTemplates?: (NodeTemplate<T> | null)[];
+        public renderTemplates?: Null<NodeTemplate<T>>[];
         public outerWrapper?: T;
         public companion?: T;
         public extracted?: T[];
@@ -328,7 +328,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (overwrite === undefined && documentId !== '') {
                             overwrite = relativeParent;
                         }
-                        const attr: string | undefined = LAYOUT_CONSTRAINT[position];
+                        const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
                         if (attr) {
                             let horizontal = false;
                             node.app(this.localizeString(attr), documentId, overwrite);
@@ -360,7 +360,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (overwrite === undefined && documentId !== '') {
                         overwrite = relativeParent;
                     }
-                    const attr: string | undefined = (relativeParent ? LAYOUT_RELATIVE_PARENT : LAYOUT_RELATIVE)[position];
+                    const attr: Undef<string> = (relativeParent ? LAYOUT_RELATIVE_PARENT : LAYOUT_RELATIVE)[position];
                     if (attr) {
                         node.android(this.localizeString(attr), documentId, overwrite);
                         return true;
@@ -422,7 +422,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else if (renderParent.layoutRelative) {
                     for (const value of position) {
-                        let attr: string | undefined = LAYOUT_RELATIVE[value];
+                        let attr: Undef<string> = LAYOUT_RELATIVE[value];
                         if (attr) {
                             node.delete('android', attr, this.localizeString(attr));
                         }
@@ -454,13 +454,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = node.renderParent as T;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
-                    const attr: string | undefined = LAYOUT_CONSTRAINT[position];
+                    const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
                     if (attr) {
                         return node.app(this.localizeString(attr)) === 'parent' || node.app(attr) === 'parent';
                     }
                 }
                 else if (renderParent.layoutRelative) {
-                    const attr: string | undefined = LAYOUT_RELATIVE_PARENT[position];
+                    const attr: Undef<string> = LAYOUT_RELATIVE_PARENT[position];
                     if (attr) {
                         return node.android(this.localizeString(attr)) === 'true' || node.android(attr) === 'true';
                     }
@@ -496,13 +496,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (renderParent) {
                 if (documentId) {
                     if (renderParent.layoutConstraint) {
-                        const attr: string | undefined = LAYOUT_CONSTRAINT[position];
+                        const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
                         if (attr) {
                             node.app(this.localizeString(attr), documentId);
                         }
                     }
                     else if (renderParent.layoutRelative) {
-                        const attr: string | undefined = LAYOUT_RELATIVE[position];
+                        const attr: Undef<string> = LAYOUT_RELATIVE[position];
                         if (attr) {
                             node.android(this.localizeString(attr), documentId);
                         }
@@ -510,14 +510,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else {
                     if (renderParent.layoutConstraint) {
-                        const attr: string | undefined = LAYOUT_CONSTRAINT[position];
+                        const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
                         if (attr) {
                             const value = node.app(this.localizeString(attr)) || node.app(attr);
                             return value !== 'parent' && value !== renderParent.documentId ? value : '';
                         }
                     }
                     else if (renderParent.layoutRelative) {
-                        const attr: string | undefined = LAYOUT_RELATIVE[position];
+                        const attr: Undef<string> = LAYOUT_RELATIVE[position];
                         if (attr) {
                             return node.android(this.localizeString(attr)) || node.android(attr);
                         }
@@ -823,12 +823,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else {
                         const checkParentWidth = () => {
-                            let current = renderParent;
+                            let parent = renderParent;
                             let blockAll = true;
                             do {
-                                if (!current.blockWidth) {
+                                if (!parent.blockWidth) {
                                     blockAll = false;
-                                    if (!current.inlineWidth) {
+                                    if (!parent.inlineWidth) {
                                         layoutWidth = 'match_parent';
                                     }
                                     else if (this.styleElement && this.cssTry('display', 'inline-block')) {
@@ -839,12 +839,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                     return;
                                 }
-                                else if (current.documentBody) {
+                                else if (parent.documentBody) {
                                     break;
                                 }
-                                current = current.renderParent as T;
+                                parent = parent.renderParent as T;
                             }
-                            while (current);
+                            while (parent);
                             if (blockAll && (renderParent.layoutVertical || renderParent.layoutFrame || this.onlyChild || (renderParent.layoutRelative || renderParent.layoutConstraint) && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '')) {
                                 layoutWidth = 'match_parent';
                             }
@@ -1375,13 +1375,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (margin) {
                     if (this.floating) {
-                        let node = (this.renderParent as T).renderChildren.find(item => !item.floating) as T | undefined;
+                        let node = <Undef<T>> (this.renderParent as T).renderChildren.find(item => !item.floating);
                         if (node) {
                             const boundsTop = this.bounds.top;
-                            let actualNode: T | undefined;
+                            let actualNode: Undef<T>;
                             while (node.bounds.top === boundsTop) {
                                 actualNode = node;
-                                const innerWrapped = node.innerWrapped as T | undefined;
+                                const innerWrapped = <Undef<T>> node.innerWrapped;
                                 if (innerWrapped) {
                                     node = innerWrapped;
                                 }
@@ -1604,7 +1604,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.layoutVertical) {
                     if (!renderParent.layoutFrame && !this.documentRoot && !this.hasAlign(NODE_ALIGNMENT.TOP)) {
                         let children = this.renderChildren;
-                        let firstChild: T | undefined;
+                        let firstChild: Undef<T>;
                         do {
                             firstChild = children[0];
                             if (firstChild && firstChild.naturalChild) {
@@ -1715,7 +1715,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (result === undefined) {
                 const controlName = this.controlName;
                 if (controlName) {
-                    let name: string | undefined;
+                    let name: Undef<string>;
                     if (this.styleElement) {
                         const value = this.elementId?.trim() || getNamedItem(<HTMLElement> this.element, 'name');
                         if (value !== '') {

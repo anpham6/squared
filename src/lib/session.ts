@@ -21,7 +21,7 @@ export function actualTextRangeRect(element: Element, sessionId: string, cache =
         }
     }
     const length = element.childElementCount;
-    let hidden: [HTMLElement, string][] | undefined;
+    let hidden: Undef<[HTMLElement, string][]>;
     if (length) {
         for (let i = 0; i < length; i++) {
             const style = getStyle(element.children[i]);
@@ -67,6 +67,6 @@ export function deleteElementCache(element: Element, attr: string, sessionId: st
     delete element[`__${attr}::${sessionId}`];
 }
 
-export function getElementAsNode<T>(element: Element, sessionId: string): T | null {
+export function getElementAsNode<T>(element: Element, sessionId: string): Null<T> {
     return getElementCache(element, 'node', sessionId) || null;
 }

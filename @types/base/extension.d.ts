@@ -2,9 +2,9 @@ export interface CssGridData<T> {
     children: T[];
     row: CssGridDirectionData;
     column: CssGridDirectionData;
-    emptyRows: Array<Undefined<number[]>>;
-    rowData: (T[] | undefined)[][];
-    rowSpanMultiple: (true | undefined)[];
+    emptyRows: Array<Undef<number[]>>;
+    rowData: Undef<T[]>[][];
+    rowSpanMultiple: Undef<true>[];
     rowDirection: boolean;
     dense: boolean;
     templateAreas: ObjectMap<CssGridCellData>;

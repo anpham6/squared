@@ -15,7 +15,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
                     case 'INPUT_RADIO':
                     case 'INPUT_CHECKBOX': {
                         const id = node.elementId;
-                        [node.nextSibling, node.previousSibling].some((sibling: T | null) => {
+                        [node.nextSibling, node.previousSibling].some((sibling: Null<T>) => {
                             if (sibling?.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
                                 let valid = false;
                                 if (id && id === sibling.toElementString('htmlFor')) {

@@ -84,7 +84,7 @@ function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
 function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTop: number) {
     const baselineHeight = baseline.baselineHeight;
     let imageHeight = 0;
-    let imageBaseline: View | undefined;
+    let imageBaseline: Undef<View>;
     for (const node of nodes) {
         if (!node.baselineAltered) {
             let height = node.baselineHeight;
@@ -377,7 +377,7 @@ function constraintPercentHeight(node: View, opposing: boolean, percent = 1) {
     return percent;
 }
 
-function isTargeted(parentElement: Element | null, node: View) {
+function isTargeted(parentElement: Null<Element>, node: View) {
     const target = node.dataset.target;
     if (target && parentElement) {
         const element = document.getElementById(target);
@@ -535,7 +535,7 @@ function setLeftTopAxis(node: View, parent: View, hasDimension: boolean, horizon
     node.positioned = true;
 }
 
-function setImageDimension(node: View, value: number, width: number, height: number, image: ImageAsset | undefined) {
+function setImageDimension(node: View, value: number, width: number, height: number, image: Undef<ImageAsset>) {
     width = value;
     node.css('width', formatPX(value), true);
     if (image && image.width > 0 && image.height > 0) {
@@ -1203,7 +1203,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let percentWidth = node.percentWidth ? width : -1;
                 const percentHeight = node.percentHeight ? height : -1;
                 let scaleType = 'fitXY';
-                let imageSet: ImageSrcSet[] | undefined;
+                let imageSet: Undef<ImageSrcSet[]>;
                 if (isString(element.srcset) || node.actualParent?.tagName === 'PICTURE') {
                     imageSet = getSrcSet(element, this.localSettings.supported.imageFormat as string[]);
                     if (imageSet.length) {
@@ -1442,8 +1442,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'METER':
             case 'PROGRESS': {
                 const { min, max, value } = <HTMLMeterElement> node.element;
-                let foregroundColor: string | undefined;
-                let backgroundColor: string | undefined;
+                let foregroundColor: Undef<string>;
+                let backgroundColor: Undef<string>;
                 if (node.tagName === 'METER') {
                     ({ meterForegroundColor: foregroundColor, meterBackgroundColor: backgroundColor } = this.localSettings.style);
                     if (max) {
@@ -1689,7 +1689,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!percent && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     const found = parent.renderChildren.some(item => {
                         if (item !== node && item.constraint[value]) {
-                            let attr: string | undefined;
+                            let attr: Undef<string>;
                             if (node.pageFlow && item.pageFlow) {
                                 if (withinRange(linear[LT], item.linear[RB])) {
                                     attr = LTRB;
@@ -2064,9 +2064,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
         let alignmentMultiLine = false;
         let sortPositionAuto = false;
-        let rowsRight: T[][] | undefined;
+        let rowsRight: Undef<T[][]>;
         if (node.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
-            let previous: T | undefined;
+            let previous: Undef<T>;
             for (const item of children) {
                 if (previous) {
                     item.anchor('topBottom', previous.documentId);
@@ -2090,7 +2090,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     return renderParent.box.width;
                 }
                 else {
-                    const parent = node.actualParent as T | null;
+                    const parent = <Null<T>> node.actualParent;
                     if (parent) {
                         if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === renderParent) {
                             const { left, width } = parent.box;
@@ -2150,7 +2150,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             let rowWidth = 0;
-            let previousRowLeft: T | undefined;
+            let previousRowLeft: Undef<T>;
             let textIndentSpacing = false;
             partitionArray(children, item => item.float !== 'right').forEach((seg, index) => {
                 const length = seg.length;
@@ -2210,7 +2210,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         continue;
                     }
                     let bounds = item.bounds;
-                    let siblings: Element[] | undefined;
+                    let siblings: Undef<Element[]>;
                     if (item.styleText && !item.hasPX('width')) {
                         const textBounds = item.textBounds;
                         if (textBounds && (<number> textBounds.numberOfLines > 1 || Math.ceil(textBounds.width) < item.box.width)) {
@@ -2403,15 +2403,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             alignmentMultiLine = true;
         }
         const setVerticalAlign = (rows: T[][]) => {
-            let previousBaseline: T | null = null;
+            let previousBaseline: Null<T> = null;
             const length = rows.length;
             const singleRow = length === 1 && !node.hasHeight;
             for (let i = 0; i < length; i++) {
                 const items = rows[i];
-                let baseline: T | null;
+                let baseline: Null<T>;
                 if (items.length > 1) {
                     const bottomAligned = getTextBottom(items);
-                    let textBottom = bottomAligned[0] as T | undefined;
+                    let textBottom = <Undef<T>> bottomAligned[0];
                     baseline = NodeUI.baseline(bottomAligned.length ? items.filter(item => !bottomAligned.includes(item)) : items);
                     if (baseline && textBottom) {
                         if (baseline !== textBottom && baseline.bounds.height < textBottom.bounds.height) {
@@ -2425,7 +2425,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const baselineAlign: T[] = [];
                     let documentId = i === 0 ? 'true' : (baseline ? baseline.documentId : '');
                     let maxCenterHeight = 0;
-                    let textBaseline: T | null = null;
+                    let textBaseline: Null<T> = null;
                     for (const item of items) {
                         if (item !== baseline && item !== textBottom) {
                             if (item.baseline) {
@@ -2622,9 +2622,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (!node.hasPX('width') && children.some(item => item.percentWidth)) {
             node.setLayoutWidth('match_parent');
         }
-        let tallest: T | undefined;
-        let bottom: T | undefined;
-        let previous: T | undefined;
+        let tallest: Undef<T>;
+        let bottom: Undef<T>;
+        let previous: Undef<T>;
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const item = children[i];
@@ -2806,7 +2806,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             columnSized = Number.POSITIVE_INFINITY;
         }
-        let previousRow: T | string | undefined;
+        let previousRow: Undef<T | string>;
         const length = rows.length;
         for (let i = 0; i < length; i++) {
             const row = rows[i];
@@ -2979,8 +2979,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const partition = horizontal[i];
             const previousRow = horizontal[i - 1];
             const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || item.autoMargin.left === true);
-            let aboveRowEnd: T | undefined;
-            let currentRowBottom: T | undefined;
+            let aboveRowEnd: Undef<T>;
+            let currentRowBottom: Undef<T>;
             const applyLayout = (seg: T[], reverse: boolean) => {
                 const lengthA = seg.length;
                 if (lengthA) {
@@ -3027,7 +3027,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         else {
                             if (previous) {
                                 if (!previous.pageFlow && previous.positionAuto) {
-                                    let found: T | undefined;
+                                    let found: Undef<T>;
                                     for (let k = j - 2; k >= 0; k--) {
                                         found = seg[k];
                                         if (found.pageFlow) {

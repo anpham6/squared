@@ -15,7 +15,7 @@ import * as xml from './lib/xml';
 type Node = squared.base.Node;
 type Application = squared.base.Application<Node>;
 type Extension = squared.base.Extension<Node>;
-type ExtensionRequest = Extension | string | null;
+type ExtensionRequest = Null<Extension | string>;
 
 const extensionsAsync = new Set<Extension>();
 const optionsAsync = new Map<string, ExternalData>();

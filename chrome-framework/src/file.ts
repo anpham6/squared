@@ -11,7 +11,7 @@ const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
 const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
 
-function parseUri(value: string): ChromeAsset | undefined {
+function parseUri(value: string): Undef<ChromeAsset> {
     value = trimEnd(value, '/');
     const match = COMPONENT.PROTOCOL.exec(value);
     let pathname = '';
@@ -148,7 +148,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             const filename = rawData.filename;
             if (filename) {
                 const { pathname, base64, content, mimeType } = rawData;
-                let data: ChromeAsset | undefined;
+                let data: Undef<ChromeAsset>;
                 if (pathname) {
                     data = { pathname, filename, uri };
                 }
@@ -168,7 +168,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
             const images: string[] = [];
             let srcset = element.srcset.trim();
-            let match: RegExpExecArray | null;
+            let match: Null<RegExpExecArray>;
             while ((match = REGEX_SRCSET.exec(srcset)) !== null) {
                 images.push(resolvePath(match[1]));
                 srcset = spliceString(srcset, match.index, match[0].length);
@@ -216,7 +216,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             .concat(this.getFontAssets());
     }
 
-    private validFile(data: ChromeAsset | undefined): data is ChromeAsset {
+    private validFile(data: Undef<ChromeAsset>): data is ChromeAsset {
         if (data) {
             const fullpath = data.pathname + '/' + data.filename;
             return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));

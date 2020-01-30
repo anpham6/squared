@@ -15,7 +15,7 @@ export function capitalize(value: string, upper = true) {
 
 export function capitalizeString(value: string) {
     const result = value.split('');
-    let match: RegExpMatchArray | null;
+    let match: Null<RegExpMatchArray>;
     while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
         const index = match.index;
         if (index !== undefined) {
@@ -28,7 +28,7 @@ export function capitalizeString(value: string) {
 
 export function lowerCaseString(value: string) {
     let result = value;
-    let match: RegExpMatchArray | null;
+    let match: Null<RegExpMatchArray>;
     while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
         const index = match.index;
         if (index !== undefined) {
@@ -227,7 +227,7 @@ export function isEqual(source: any, values: any) {
     return false;
 }
 
-export function includes(source: string | undefined, value: string, delimiter = XML.SEPARATOR) {
+export function includes(source: Undef<string>, value: string, delimiter = XML.SEPARATOR) {
     if (source) {
         for (const name of source.split(delimiter)) {
             if (name === value) {

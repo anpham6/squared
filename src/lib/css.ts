@@ -44,7 +44,7 @@ export const BOX_BORDER = [
 ];
 export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
 
-export function getStyle(element: Element | null, pseudoElt = ''): CSSStyleDeclaration {
+export function getStyle(element: Null<Element>, pseudoElt = ''): CSSStyleDeclaration {
     if (element) {
         const cached = element['__style' + pseudoElt];
         if (cached) {
@@ -60,7 +60,7 @@ export function getStyle(element: Element | null, pseudoElt = ''): CSSStyleDecla
     return <CSSStyleDeclaration> { display: 'none' };
 }
 
-export function getFontSize(element: Element | null) {
+export function getFontSize(element: Null<Element>) {
     return parseFloat(getStyle(element).getPropertyValue('font-size'));
 }
 
@@ -72,8 +72,8 @@ export function parseSelectorText(value: string) {
     value = value.trim();
     if (value.includes(',')) {
         let separatorValue = value;
-        let match: RegExpExecArray | null;
         let found = false;
+        let match: Null<RegExpExecArray>;
         while ((match = CSS.SELECTOR_ATTR.exec(separatorValue)) !== null) {
             const index = match.index;
             const length = match[0].length;
@@ -107,7 +107,7 @@ export function parseSelectorText(value: string) {
 export function getSpecificity(value: string) {
     CSS.SELECTOR_G.lastIndex = 0;
     let result = 0;
-    let match: RegExpExecArray | null;
+    let match: Null<RegExpExecArray>;
     while ((match = CSS.SELECTOR_G.exec(value)) !== null) {
         let segment = match[1];
         if (segment.length === 1) {
@@ -125,7 +125,7 @@ export function getSpecificity(value: string) {
         else if (segment.charAt(0) === '*') {
             segment = segment.substring(1);
         }
-        let subMatch: RegExpExecArray | null;
+        let subMatch: Null<RegExpExecArray>;
         while ((subMatch = CSS.SELECTOR_ATTR.exec(segment)) !== null) {
             if (subMatch[1]) {
                 result += 1;
@@ -289,10 +289,10 @@ export function validMediaRule(value: string, fontSize?: number) {
                 return true;
             default: {
                 REGEX_MEDIARULE.lastIndex = 0;
-                let match: RegExpExecArray | null;
+                let match: Null<RegExpExecArray>;
                 while ((match = REGEX_MEDIARULE.exec(value)) !== null) {
                     const negate = match[1] === 'not';
-                    let subMatch: RegExpExecArray | null;
+                    let subMatch: Null<RegExpExecArray>;
                     let valid = false;
                     while ((subMatch = REGEX_MEDIACONDITION.exec(match[2])) !== null) {
                         const attr = subMatch[1];
@@ -328,7 +328,7 @@ export function validMediaRule(value: string, fontSize?: number) {
                                 valid = compareRange(operation, /width$/.test(attr) ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
                                 break;
                             case 'orientation':
-                                valid = rule !== undefined && (rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight);
+                                valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
                                 break;
                             case 'resolution':
                             case 'min-resolution':
@@ -419,7 +419,7 @@ export function getInheritedStyle(element: Element, attr: string, exclude?: RegE
 
 export function parseVar(element: HTMLElement | SVGElement, value: string) {
     const style = getStyle(element);
-    let match: RegExpMatchArray | null;
+    let match: Null<RegExpMatchArray>;
     while ((match = CSS.VAR.exec(value)) !== null) {
         let propertyValue = style.getPropertyValue(match[1]).trim();
         const subValue = match[2];

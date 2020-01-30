@@ -145,7 +145,7 @@ export function removeElementsByClassName(className: string) {
     }
 }
 
-export function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element) {
+export function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element) {
     const result: Element[] = [];
     if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
         const parent = elementEnd.parentElement;
