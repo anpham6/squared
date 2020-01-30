@@ -731,6 +731,7 @@ declare namespace lib {
             find(predicate: IteratorPredicate<T, boolean> | string, value?: any): T | undefined;
             sort(predicate: (a: T, b: T) => number): this;
             concat(list: T[]): this;
+            join(...other: Container<T>[]): this;
             every(predicate: IteratorPredicate<T, boolean>): boolean;
             some(predicate: IteratorPredicate<T, boolean>): boolean;
             same(predicate: IteratorPredicate<T, any>): boolean;

@@ -117,6 +117,13 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this;
     }
 
+    public join(...other: Container<T>[]) {
+        for (const item of other) {
+            this._children = this._children.concat(item.children);
+        }
+        return this;
+    }
+
     public every(predicate: IteratorPredicate<T, boolean>) {
         const children = this._children;
         const length = children.length;

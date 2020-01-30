@@ -969,7 +969,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { processing, session } = this;
         const cache = processing.cache;
         const documentRoot = processing.node as T;
-        const extensionMap = this.session.extensionMap;
+        const extensionMap = session.extensionMap;
         const mapY = new Map<number, Map<number, T>>();
         let extensions = filterArray(this.extensions, item => !item.eventOnly);
         let maxDepth = 0;
@@ -1285,8 +1285,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return a.depth < b.depth ? -1 : 1;
         });
-        session.cache.concat(cache.children);
-        session.excluded.concat(processing.excluded.children);
+        session.cache.join(cache);
+        session.excluded.join(processing.excluded);
         for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
                 if (cache.contains(node)) {
