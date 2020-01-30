@@ -166,6 +166,19 @@ function getOpenCellIndex(iteration: number, length: number, available: number[]
     return 0;
 }
 
+function getOpenRowIndex(cells: number[][]) {
+    const length = cells.length;
+    for (let i = 0; i < length; i++) {
+        const cell = cells[i];
+        for (let j = 0; j < cell.length; j++) {
+            if (cell[j] === 0) {
+                return i;
+            }
+        }
+    }
+    return Math.max(0, length - 1);
+}
+
 const isUnitFR = (value: string) => /fr$/.test(value);
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? node.convertPX(value, index === 0 ? 'height' : 'width') : value;
 
@@ -235,9 +248,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         const rowData: (T[] | undefined)[][] = [];
         const openCells: number[][] = [];
         const layout: GridLayout[] = [];
-        row.gap = node.parseUnit(node.css('rowGap'), 'height', false);
-        column.gap = node.parseUnit(node.css('columnGap'), 'width', false);
-        function setDataRows(item: T, placement: number[], length: number) {
+        const setDataRows = (item: T, placement: number[], length: number) => {
             if (placement.every(value => value > 0)) {
                 for (let i = placement[rowA] - 1; i < placement[rowB] - 1; i++) {
                     let data = rowData[i];
@@ -269,19 +280,9 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 return true;
             }
             return false;
-        }
-        function getOpenRowIndex() {
-            const length = openCells.length;
-            for (let i = 0; i < length; i++) {
-                const cell = openCells[i];
-                for (let j = 0; j < cell.length; j++) {
-                    if (cell[j] === 0) {
-                        return i;
-                    }
-                }
-            }
-            return Math.max(0, length - 1);
-        }
+        };
+        row.gap = node.parseUnit(node.css('rowGap'), 'height', false);
+        column.gap = node.parseUnit(node.css('columnGap'), 'width', false);
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
             if (value !== '' && value !== 'none' && value !== 'auto') {
                 const data = index === 0 ? row : column;
@@ -818,7 +819,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const PLACEMENT = placement.slice(0);
                 if (PLACEMENT[rowA] === 0) {
                     let length = rowData.length;
-                    for (let i = (dense ? 0 : getOpenRowIndex()), j = 0, k = -1; i < length; i++) {
+                    for (let i = (dense ? 0 : getOpenRowIndex(openCells)), j = 0, k = -1; i < length; i++) {
                         const l = getOpenCellIndex(ITERATION, COLUMN_SPAN, openCells[i]);
                         if (l !== -1) {
                             if (j === 0) {

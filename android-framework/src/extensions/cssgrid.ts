@@ -1,4 +1,5 @@
 import { NodeXmlTemplate } from '../../../@types/base/application';
+import { SpacerAttribute } from '../../../@types/android/node';
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@types/base/extension';
 
 import Resource from '../resource';
@@ -340,6 +341,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         if (mainData) {
             const { column, row } = mainData;
             const unit = column.unit;
+            const columnCount = column.length;
             const layout = new LayoutUI(
                 parent,
                 node,
@@ -347,19 +349,49 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 NODE_ALIGNMENT.AUTO_LAYOUT,
                 node.children as T[]
             );
-            if (!node.documentRoot && !node.hasWidth && row.length === 1 && unit.length === column.length && unit.every(value => REGEX_FR.test(value)) && checkFlexibleParent(node)) {
-                column.frTotal = unit.reduce((a, b) => a + parseFloat(b), 0);
-                node.setLayoutWidth('match_parent');
-                node.lockAttr('android', 'layout_width');
-                layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
-            }
-            else {
-                checkAutoDimension(column, true);
-                checkAutoDimension(row, false);
-                layout.setContainerType(CONTAINER_NODE.GRID);
-            }
             layout.rowCount = row.length;
-            layout.columnCount = column.length;
+            layout.columnCount = columnCount;
+            if (!node.documentRoot && !node.hasWidth && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => REGEX_FR.test(value)) && checkFlexibleParent(node)) {
+                const rowData = mainData.rowData;
+                const length = rowData.length;
+                const barrierData: T[][] = new Array(length);
+                let valid = true;
+                invalid: {
+                    for (let i = 0; i < length; i++) {
+                        const row = rowData[i];
+                        const lengthA = row.length;
+                        if (lengthA <= columnCount) {
+                            const nodes: T[] = [];
+                            for (let j = 0; j < lengthA; j++) {
+                                const column = row[j];
+                                if (column && column.length === 1) {
+                                    nodes.push(column[0]);
+                                }
+                                else {
+                                    valid = false;
+                                    break invalid;
+                                }
+                            }
+                            barrierData[i] = nodes;
+                        }
+                        else {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+                if (valid) {
+                    column.frTotal = unit.reduce((a, b) => a + parseFloat(b), 0);
+                    node.setLayoutWidth('match_parent');
+                    node.lockAttr('android', 'layout_width');
+                    node.data(CSS_GRID, 'barrierData', barrierData);
+                    layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
+                    return { output: this.application.renderNode(layout), complete: true };
+                }
+            }
+            checkAutoDimension(column, true);
+            checkAutoDimension(row, false);
+            layout.setContainerType(CONTAINER_NODE.GRID);
             return { output: this.application.renderNode(layout), complete: true };
         }
         return undefined;
@@ -491,6 +523,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     if (horizontal) {
                         if (!item.hasPX('width', false)) {
                             item.app('layout_constraintWidth_percent', truncate(sizeWeight / column.frTotal, item.localSettings.floatPrecision));
+                            item.setLayoutWidth('0px');
                         }
                         if (cellStart === 0) {
                             item.anchor('left', 'parent');
@@ -520,7 +553,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 item.css(auto ? 'minHeight' : 'height', formatPX(size), true);
                             }
                         }
-                        item.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0);
                     }
                 }
                 else {
@@ -586,7 +618,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 return [cellStart, cellSpan];
             };
-            if (REGEX_ALIGNSELF.test(alignSelf) || REGEX_JUSTIFYSELF.test(justifySelf)) {
+            if (REGEX_ALIGNSELF.test(alignSelf) || REGEX_JUSTIFYSELF.test(justifySelf) || layoutConstraint) {
                 renderAs = this.application.createNode({ parent });
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -595,7 +627,21 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 renderAs.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.CUSTOMIZATION });
                 parent.appendTry(node, renderAs);
                 renderAs.render(parent);
-                node.transferBox(BOX_STANDARD.MARGIN, renderAs);
+                if (layoutConstraint) {
+                    const marginRight = node.getBox(BOX_STANDARD.MARGIN_RIGHT)[1];
+                    const marginBottom = node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1];
+                    if (marginRight > 0) {
+                        node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, -marginRight);
+                        renderAs.modifyBox(BOX_STANDARD.PADDING_RIGHT, marginRight);
+                    }
+                    if (marginBottom > 0) {
+                        node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, -marginBottom);
+                        renderAs.modifyBox(BOX_STANDARD.PADDING_BOTTOM, marginBottom);
+                    }
+                }
+                else {
+                    node.transferBox(BOX_STANDARD.MARGIN, renderAs);
+                }
                 let inlineWidth = true;
                 if (REGEX_JUSTIFYLEFT.test(justifySelf)) {
                     node.mergeGravity('layout_gravity', 'left');
@@ -655,11 +701,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
         }
-        return {
-            parent: renderAs,
-            renderAs,
-            outputAs
-        };
+        return { parent: renderAs, renderAs, outputAs };
     }
 
     public postBaseLayout(node: T) {
@@ -713,6 +755,72 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     node.setLayoutHeight('wrap_content', false);
                 }
             }
+            const barrierData = <T[][]> node.data(CSS_GRID, 'barrierData');
+            if (barrierData) {
+                const length = barrierData.length;
+                if (length === 1) {
+                    for (const item of barrierData[0]) {
+                        item.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0);
+                    }
+                }
+                else {
+                    const controller = <android.base.Controller<T>> this.controller;
+                    const column = mainData.column;
+                    const gap = column.gap;
+                    const lengthA = column.length;
+                    let previousBarrierId = '';
+                    for (let i = 0; i < length; i++) {
+                        const row = barrierData[i];
+                        const barrierId = controller.addBarrier(row, 'bottom');
+                        let previousItem: T | undefined;
+                        for (let j = 0; j < lengthA; j++) {
+                            const item = row[j];
+                            if (item) {
+                                if (i === 0) {
+                                    item.anchor('top', 'parent');
+                                    item.anchor('bottomTop', barrierId);
+                                    item.anchorStyle(STRING_ANDROID.VERTICAL);
+                                }
+                                else {
+                                    if (i === length - 1) {
+                                        item.anchor('bottom', 'parent');
+                                    }
+                                    else {
+                                        item.anchor('bottomTop', barrierId);
+                                    }
+                                    item.anchor('topBottom', previousBarrierId);
+                                }
+                                if (j < lengthA - 1) {
+                                    item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, -gap);
+                                }
+                                previousItem = item;
+                            }
+                            else if (previousItem) {
+                                const options = <SpacerAttribute> {
+                                    width: '0px',
+                                    height: 'wrap_content',
+                                    android: {},
+                                    app: {
+                                        layout_constraintTop_toTopOf: i === 0 ? 'parent' : '',
+                                        layout_constraintTop_toBottomOf: previousBarrierId,
+                                        layout_constraintBottom_toTopOf: i < length - 1 ? barrierId : '',
+                                        layout_constraintBottom_toBottomOf: i === length - 1 ? 'parent' : '',
+                                        layout_constraintStart_toEndOf: previousItem.anchorTarget.documentId,
+                                        layout_constraintEnd_toEndOf: 'parent',
+                                        layout_constraintVertical_bias: i === 0 ? '0' : '',
+                                        layout_constraintVertical_chainStyle: i === 0 ? 'packed' : '',
+                                        layout_constraintWidth_percent: (column.unit.slice(j, lengthA).reduce((a, b) => a + parseFloat(b), 0) / column.frTotal).toString()
+                                    }
+                                };
+                                controller.addAfterInsideTemplate(node.id, controller.renderSpace(options), false);
+                                previousItem.anchor('rightLeft', options.documentId);
+                                break;
+                            }
+                        }
+                        previousBarrierId = barrierId;
+                    }
+                }
+            }
         }
     }
 
@@ -724,7 +832,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const { flexible, gap, unit } = rowDirection ? column : row;
             const unitSpan = unit.length;
             const insertId = children[children.length - 1].id;
-            {
+            if (!node.layoutConstraint) {
                 let k = -1;
                 let l = 0;
                 const createSpacer = (i: number, horizontal: boolean, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) => {

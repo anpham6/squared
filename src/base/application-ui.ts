@@ -995,11 +995,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             mapY.set((i * -1) - 2, new Map<number, T>());
         }
         cache.afterAppend = (node: T) => {
-            removeMapY(node);
             setMapY((node.depth * -1) - 2, node.id, node);
             for (const item of node.cascade() as T[]) {
-                removeMapY(item);
-                setMapY((item.depth * -1) - 2, item.id, item);
+                if (item.length) {
+                    removeMapY(item);
+                    setMapY((item.depth * -1) - 2, item.id, item);
+                }
             }
         };
         for (const ext of this.extensions) {

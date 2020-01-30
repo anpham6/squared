@@ -1634,7 +1634,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (rowSpan) {
             android.layout_rowSpan = rowSpan.toString();
         }
-        return this.renderNodeStatic(CONTAINER_ANDROID.SPACE, { android, app }, width, height);
+        const optionsA: SpacerAttribute = { android, app };
+        const output = this.renderNodeStatic(CONTAINER_ANDROID.SPACE, optionsA, width, height);
+        options.documentId = optionsA.documentId;
+        return output;
     }
 
     public addGuideline(node: T, parent: T, orientation?: string, percent = false, opposing = false) {
@@ -1871,16 +1874,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 android: {},
                 app: {
                     barrierDirection,
-                    constraint_referenced_ids: objectMap(unbound, item => getDocumentId(item.documentId)).join(',')
+                    constraint_referenced_ids: objectMap(unbound, item => getDocumentId(item.anchorTarget.documentId)).join(',')
                 }
             });
             const target = unbound[unbound.length - 1];
-            this.addAfterOutsideTemplate(target.id, this.renderNodeStatic(target.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.BARRIER : CONTAINER_ANDROID_X.BARRIER, options), false);
+            this.addAfterOutsideTemplate(target.anchorTarget.id, this.renderNodeStatic(target.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.BARRIER : CONTAINER_ANDROID_X.BARRIER, options), false);
             const documentId = options.documentId;
-            for (const node of unbound) {
-                (node.constraint.barrier as {})[barrierDirection] = documentId;
+            if (documentId) {
+                for (const node of unbound) {
+                    (node.constraint.barrier as {})[barrierDirection] = documentId;
+                }
+                return documentId;
             }
-            return documentId;
         }
         return '';
     }

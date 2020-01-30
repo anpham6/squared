@@ -528,6 +528,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         lockedData[attr] = true;
     }
 
+    public unlockAttr(name: string, attr: string) {
+        const locked = this._locked[name];
+        if (locked) {
+            locked[attr] = false;
+        }
+    }
+
     public lockedAttr(name: string, attr: string) {
         return this._locked[name]?.[attr] || false;
     }
@@ -907,28 +914,30 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     setBoxReset();
                 }
                 else {
-                    let boxAdjustment = this._boxAdjustment;
-                    if (boxAdjustment === undefined) {
-                        boxAdjustment = newBoxModel();
-                        this._boxAdjustment = boxAdjustment;
+                    const nodes = this._boxRegister?.[region];
+                    if (nodes) {
+                        for (const node of nodes) {
+                            node.modifyBox(region, offset, negative);
+                        }
                     }
-                    if (!negative) {
-                        if (this[attr] + boxAdjustment[attr] + offset <= 0) {
-                            setBoxReset();
-                            boxAdjustment[attr] = 0;
+                    else {
+                        let boxAdjustment = this._boxAdjustment;
+                        if (boxAdjustment === undefined) {
+                            boxAdjustment = newBoxModel();
+                            this._boxAdjustment = boxAdjustment;
+                        }
+                        if (!negative) {
+                            if (this[attr] + boxAdjustment[attr] + offset <= 0) {
+                                setBoxReset();
+                                boxAdjustment[attr] = 0;
+                            }
+                            else {
+                                boxAdjustment[attr] += offset;
+                            }
                         }
                         else {
                             boxAdjustment[attr] += offset;
                         }
-                    }
-                    else {
-                        boxAdjustment[attr] += offset;
-                    }
-                }
-                const nodes = this._boxRegister?.[region];
-                if (nodes) {
-                    for (const node of nodes) {
-                        node.modifyBox(region, offset, negative);
                     }
                 }
             }

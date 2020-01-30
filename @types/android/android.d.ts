@@ -24,7 +24,7 @@ declare namespace base {
         checkConstraintHorizontal(data: LayoutUI<T>): boolean;
         checkLinearHorizontal(data: LayoutUI<T>): boolean;
         addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposing?: boolean): void;
-        addBarrier(nodes: T[], barrierDirection: string): string | undefined;
+        addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
         createNodeWrapper(node: T, parent: T, children?: T[], options?: WrapperOptions): T;
     }
