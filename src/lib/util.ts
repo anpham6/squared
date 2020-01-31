@@ -405,15 +405,15 @@ export function hasValue<T>(value: any): value is T {
     return value !== undefined && value !== null && value !== '';
 }
 
-export function withinRange(a: number, b: number, offset = 0.75) {
+export function withinRange(a: number, b: number, offset = 0.99) {
     return b >= (a - offset) && b <= (a + offset);
 }
 
-export function aboveRange(a: number, b: number, offset = 0.75) {
+export function aboveRange(a: number, b: number, offset = 0.99) {
     return a + offset > b;
 }
 
-export function belowRange(a: number, b: number, offset = 0.75) {
+export function belowRange(a: number, b: number, offset = 0.99) {
     return a - offset < b;
 }
 

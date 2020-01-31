@@ -189,7 +189,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             continue;
                         }
                         else if (isLength(value)) {
-                            percent -= sibling.parseUnit(value) / boxSize;
+                            percent -= sibling.parseUnit(value, dimension) / boxSize;
                             continue;
                         }
                     }
@@ -217,7 +217,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 else if (parent.inlineWidth || parent.naturalElement && parent.inlineVertical) {
                     return false;
                 }
-                parent = <Undef<T>> parent.renderParent;
+                parent = parent.renderParent as T;
             }
             return false;
         }
@@ -1381,7 +1381,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             let actualNode: Undef<T>;
                             while (node.bounds.top === boundsTop) {
                                 actualNode = node;
-                                const innerWrapped = <Undef<T>> node.innerWrapped;
+                                const innerWrapped = node.innerWrapped as T;
                                 if (innerWrapped) {
                                     node = innerWrapped;
                                 }

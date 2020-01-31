@@ -145,24 +145,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (b.length && a.length === 0) {
                     return -1;
                 }
-                let heightA = a.baselineHeight;
-                let heightB = b.baselineHeight;
-                if (a.marginTop !== 0) {
-                    if (a.imageElement || heightA >= heightB || a.marginTop < 0) {
-                        heightA += a.marginTop;
-                    }
-                    else {
-                        return a.marginTop > ((heightB - heightA) / 2) ? -1 : 1;
-                    }
-                }
-                if (b.marginTop !== 0) {
-                    if (b.imageElement || heightB >= heightA || b.marginTop < 0) {
-                        heightB += b.marginTop;
-                    }
-                    else {
-                        return b.marginTop > ((heightA - heightB) / 2) ? 1 : -1;
-                    }
-                }
+                const heightA = a.baselineHeight + a.marginTop;
+                const heightB = b.baselineHeight + b.marginTop;
                 if (!isEqual(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
                 }

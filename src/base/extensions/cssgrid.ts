@@ -7,7 +7,7 @@ import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const $lib = squared.lib;
-const { formatPX, isLength, isPercent } = $lib.css;
+const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { CHAR, CSS } = $lib.regex;
 const { isNumber, trimString, withinRange } = $lib.util;
 
@@ -793,6 +793,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
             let percent = 1;
             let fr = 0;
+            let auto = 0;
             for (const value of unit) {
                 if (isPercent(value)) {
                     percent -= parseFloat(value) / 100;
@@ -800,14 +801,25 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 else if (isUnitFR(value)) {
                     fr += parseFloat(value);
                 }
+                else if (value === 'auto') {
+                    auto++;
+                }
             }
             data.flexible = percent < 1 || fr > 0;
-            if (percent < 1 && fr > 0) {
-                const lengthB = unit.length;
-                for (let i = 0; i < lengthB; i++) {
-                    const value = unit[i];
-                    if (isUnitFR(value)) {
-                        unit[i] = percent * (parseFloat(value) / fr) + 'fr';
+            if (percent < 1) {
+                if (fr > 0) {
+                    const lengthB = unit.length;
+                    for (let i = 0; i < lengthB; i++) {
+                        const value = unit[i];
+                        if (isUnitFR(value)) {
+                            unit[i] = percent * (parseFloat(value) / fr) + 'fr';
+                        }
+                    }
+                }
+                else if (auto === 1) {
+                    const index = unit.findIndex(value => value === 'auto');
+                    if (index !== -1) {
+                        unit[index] = formatPercent(percent);
                     }
                 }
             }

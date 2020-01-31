@@ -376,6 +376,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (valid) {
                     column.frTotal = unit.reduce((a, b) => a + parseFloat(b), 0);
+                    row.frTotal = row.unit.reduce((a, b) => a + (REGEX_FR.test(b) ? parseFloat(b) : 0), 0);
                     node.setLayoutWidth('match_parent');
                     node.lockAttr('android', 'layout_width');
                     node.data(CSS_GRID, 'barrierData', barrierData);
@@ -535,17 +536,21 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                         item.positioned = true;
                     }
-                    else {
-                        if (!item.hasPX('height')) {
-                            if (sizeWeight > 0) {
+                    else if (!item.hasPX('height', false)) {
+                        if (sizeWeight > 0) {
+                            if (row.length === 1) {
                                 item.setLayoutHeight('match_parent');
                             }
-                            else if (size > 0) {
-                                if (item.contentBox) {
-                                    size -= item.contentBoxHeight;
-                                }
-                                item.css(auto ? 'minHeight' : 'height', formatPX(size), true);
+                            else {
+                                item.app('layout_constraintHeight_percent', truncate(sizeWeight / row.frTotal, item.localSettings.floatPrecision));
+                                item.setLayoutHeight('0px');
                             }
+                        }
+                        else if (size > 0) {
+                            if (item.contentBox) {
+                                size -= item.contentBoxHeight;
+                            }
+                            item.css(auto ? 'minHeight' : 'height', formatPX(size), true);
                         }
                     }
                 }
@@ -1009,9 +1014,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (minWidth > node.width) {
                     node.android('minWidth', formatPX(minWidth));
-                    if (!node.flexibleWidth && !node.blockWidth) {
-                        node.setLayoutWidth('wrap_content');
-                    }
+                }
+                if (!column.autoFill && !column.autoFit) {
+                    node.setLayoutWidth('wrap_content');
                 }
             }
         }

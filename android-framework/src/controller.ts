@@ -2560,7 +2560,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         previousBaseline = previousRow.find(sibling => !sibling.floating) || previousRow[0];
                     }
                     for (const sibling of previousRow) {
-                        if (sibling.baselineHeight >= previousBaseline.baselineHeight && sibling.linear.bottom >= previousBaseline.linear.bottom && (!sibling.floating || previousBaseline.floating)) {
+                        if (sibling.baselineHeight >= previousBaseline.baselineHeight && sibling.linear.bottom >= previousBaseline.linear.bottom && (!sibling.floating && sibling.baseline && sibling.cascade().every(item => item.baseline) || previousBaseline.floating)) {
                             previousBaseline = sibling;
                         }
                     }
@@ -3002,7 +3002,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (lengthA > 1 || rowEnd.autoMargin.leftRight) {
                         rowEnd.anchor(anchorEnd, 'parent');
                     }
-                    let percentWidth = View.availablePercent(seg, 'width', node.box.width);
+                    let percentWidth = View.availablePercent(partition, 'width', node.box.width);
                     for (let j = 0; j < lengthA; j++) {
                         const chain = seg[j];
                         const previous = seg[j - 1];

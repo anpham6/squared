@@ -180,5 +180,8 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
         else if (right !== 0) {
             target.modifyBox(BOX_STANDARD.MARGIN_LEFT, right * -1);
         }
+        if (target !== node) {
+            target.setBoxSpacing();
+        }
     }
 }

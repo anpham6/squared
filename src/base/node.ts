@@ -709,12 +709,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         this._cached = {};
                         return;
                     case 'width':
+                        cached.actualWidth = undefined;
                     case 'minWidth':
                         cached.width = undefined;
                     case 'maxWidth':
                         cached.overflow = undefined;
                         break;
                     case 'height':
+                        cached.actualHeight = undefined;
                     case 'minHeight':
                         cached.height = undefined;
                         cached.hasHeight = undefined;

@@ -978,13 +978,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             visibleStyle.backgroundRepeatY = true;
                         }
                     };
-                    const resetGravityPosition = () => {
+                    const resetGravityPosition = (coordinates = true) => {
                         gravityX = '';
                         gravityY = '';
-                        position.top = 0;
-                        position.right = 0;
-                        position.bottom = 0;
-                        position.left = 0;
+                        if (coordinates) {
+                            position.top = 0;
+                            position.right = 0;
+                            position.bottom = 0;
+                            position.left = 0;
+                        }
                         resizable = false;
                         recalibrate = false;
                     };
@@ -1297,20 +1299,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 if (ratioWidth < ratioHeight) {
                                     width = boundsWidth;
                                     height = boundsHeight * (ratioHeight / ratioWidth);
-                                    left = 0;
                                     if (height > boundsHeight) {
-                                        if (node.hasHeight) {
-                                            top = boundsHeight - height;
-                                            if (position.topAsPercent > 0) {
-                                                top = Math.round(top * position.topAsPercent);
-                                            }
+                                        top = boundsHeight - height;
+                                        if (position.topAsPercent > 0) {
+                                            top = Math.round(top * position.topAsPercent);
                                         }
-                                        else {
+                                        if (!node.hasPX('height')) {
                                             node.css('height', formatPX(boundsHeight - node.contentBoxHeight));
                                         }
-                                    }
-                                    else {
-                                        top = 0;
                                     }
                                     gravity = '';
                                 }
@@ -1323,18 +1319,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             left = Math.round(left * position.leftAsPercent);
                                         }
                                     }
-                                    else {
-                                        left = 0;
-                                    }
-                                    top = 0;
                                     gravity = '';
                                 }
                                 else {
-                                    left = 0;
-                                    top = 0;
                                     gravity = 'fill';
                                 }
-                                resetGravityPosition();
+                                resetGravityPosition(false);
                                 break;
                             }
                             case 'contain': {
@@ -1355,7 +1345,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 else {
                                     gravity = 'fill';
                                 }
-                                resetGravityPosition();
+                                resetGravityPosition(false);
                                 break;
                             }
                             default:
