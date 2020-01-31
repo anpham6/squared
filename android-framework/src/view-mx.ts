@@ -1,7 +1,7 @@
 import { NodeTemplate } from '../../@types/base/application';
 import { AutoMargin } from '../../@types/base/node';
 import { CustomizationResult } from '../../@types/android/application';
-import { CachedValueAndroidUI, Constraint, LocalSettings, SupportAndroid } from '../../@types/android/node';
+import { CachedValueAndroidUI, Constraint, LocalSettingsAndroidUI, SupportAndroid } from '../../@types/android/node';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
@@ -250,7 +250,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _namespaces = ['android', 'app'];
         protected _cached: CachedValueAndroidUI<T> = {};
         protected _controlName = '';
-        protected _localSettings!: LocalSettings;
+        protected _localSettings!: LocalSettingsAndroidUI;
         protected _documentParent?: T;
         protected _boxAdjustment?: BoxModel;
         protected _boxReset?: BoxModel;
@@ -871,14 +871,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         if (layoutWidth === '' && !this.floating) {
-                            if (this.layoutVertical && !renderParent.inlineWidth && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && item.blockStatic)) && !this.documentRoot ||
-                                !this.pageFlow && this.absoluteParent === actualParent && this.hasPX('left') && this.hasPX('right') ||
-                                this.is(CONTAINER_NODE.GRID) && this.some((node: T) => parseFloat(node.android('layout_columnWeight')) > 0))
+                            if (this.naturalElement && this.inline && !this.inlineHorizontal && !actualParent.layoutElement && this.some(item => item.naturalElement && item.blockStatic)) {
+                                checkParentWidth();
+                            }
+                            else if (
+                                this.layoutVertical && !renderParent.inlineWidth && (renderParent.layoutFrame && this.rightAligned || this.layoutLinear && this.naturalElements.some(item => item.lineBreak) || this.renderChildren.some(item => item.layoutConstraint && (item.flexibleWidth || item.blockStatic))) ||
+                                this.is(CONTAINER_NODE.GRID) && this.some((node: T) => parseFloat(node.android('layout_columnWeight')) > 0) ||
+                                !this.pageFlow && this.absoluteParent === actualParent && this.hasPX('left') && this.hasPX('right'))
                             {
                                 layoutWidth = 'match_parent';
-                            }
-                            else if (this.naturalElement && !this.inlineHorizontal && this.some(item => item.naturalElement && item.blockStatic && item.textElement) && !actualParent.layoutElement) {
-                                checkParentWidth();
                             }
                         }
                     }

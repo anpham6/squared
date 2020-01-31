@@ -1,5 +1,5 @@
 import { CustomizationResult, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
-import { Constraint, LocalSettings, SupportAndroid, SpacerAttribute, ViewAttribute, WrapperOptions } from './node';
+import { Constraint, LocalSettingsAndroidUI, SupportAndroid, SpacerAttribute, ViewAttribute, WrapperOptions } from './node';
 import { FileOutputOptions } from './resource';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -17,6 +17,7 @@ declare namespace base {
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
         readonly userSettings: UserSettingsAndroid;
+        readonly screenDimension: Dimension;
         renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
         renderSpace(options: SpacerAttribute): string;
         checkFrameHorizontal(data: LayoutUI<T>): boolean;
@@ -73,7 +74,7 @@ declare namespace base {
         tagName: string;
         anchored: boolean;
         api: number;
-        localSettings: LocalSettings;
+        localSettings: LocalSettingsAndroidUI;
         readonly layoutWidth: string;
         readonly layoutHeight: string;
         readonly constraint: Constraint;

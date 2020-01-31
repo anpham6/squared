@@ -1,5 +1,9 @@
 type Node = squared.base.Node;
 
+export interface LocalSettingsUI {
+    screenDimension: Dimension;
+}
+
 export interface InitialData<T> {
     styleMap?: StringMap;
     children?: T[];

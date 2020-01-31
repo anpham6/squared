@@ -8,6 +8,8 @@ const { CSS, STRING } = $lib.regex;
 const { getElementCache } = $lib.session;
 const { convertCamelCase } = $lib.util;
 
+const STRING_DECIMAL = `(${STRING.DECIMAL})`;
+
 const SHAPES = {
     path: 1,
     line: 2,
@@ -17,7 +19,6 @@ const SHAPES = {
     polyline: 6,
     polygon: 7
 };
-const STRING_DECIMAL = `(${STRING.DECIMAL})`;
 const REGEX_TRANSFORM = {
     MATRIX: new RegExp(`(matrix(?:3d)?)\\(${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?\\)`, 'g'),
     ROTATE: new RegExp(`(rotate[XY]?)\\(${STRING.CSS_ANGLE}\\)`, 'g'),
@@ -25,7 +26,7 @@ const REGEX_TRANSFORM = {
     SCALE: new RegExp(`(scale[XY]?)\\(${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?\\)`, 'g'),
     TRANSLATE: new RegExp(`(translate[XY]?)\\(${STRING.LENGTH_PERCENTAGE}(?:, ${STRING.LENGTH_PERCENTAGE})?\\)`, 'g')
 };
-let REGEX_ROTATEORIGIN: Undef<RegExp>;
+const REGEX_ROTATEORIGIN = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
 
 function setOriginPosition(element: Element, point: Point, attr: string, position: string, dimension: number) {
     if (isLength(position)) {
@@ -330,9 +331,6 @@ export const TRANSFORM = {
         const value = getNamedItem(element, attr);
         const result: SvgPoint[] = [];
         if (value !== '') {
-            if (REGEX_ROTATEORIGIN === undefined) {
-                REGEX_ROTATEORIGIN = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
-            }
             let match: Null<RegExpExecArray>;
             while ((match = REGEX_ROTATEORIGIN.exec(value)) !== null) {
                 const angle = parseFloat(match[1]);

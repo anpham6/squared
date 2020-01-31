@@ -1045,7 +1045,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return (this._element?.[attr] || fallback).toString();
     }
 
-    public parseUnit(value: string, dimension = 'width', parent = true) {
+    public parseUnit(value: string, dimension = 'width', parent = true, screenDimension?: Dimension) {
         if (value) {
             if (isPercent(value)) {
                 const node = parent && this.absoluteParent || this;
@@ -1060,13 +1060,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 return result;
             }
-            return parseUnit(value, this.fontSize);
+            return parseUnit(value, this.fontSize, screenDimension);
         }
         return 0;
     }
 
-    public convertPX(value: string, dimension = 'width', parent = true) {
-        return PX.test(value) ? value : Math.round(this.parseUnit(value, dimension, parent)) + 'px';
+    public convertPX(value: string, dimension = 'width', parent = true, screenDimension?: Dimension) {
+        return PX.test(value) ? value : Math.round(this.parseUnit(value, dimension, parent, screenDimension)) + 'px';
     }
 
     public has(attr: string, checkType = 0, options?: ObjectMap<string | string[] | boolean>) {

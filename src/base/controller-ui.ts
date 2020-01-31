@@ -41,6 +41,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract createNodeGroup(node: T, children: T[], parent?: T, traverse?: boolean): T;
 
     public abstract get userSettings(): UserUISettings;
+    public abstract get screenDimension(): Dimension;
     public abstract get containerTypeHorizontal(): LayoutType;
     public abstract get containerTypeVertical(): LayoutType;
     public abstract get containerTypeVerticalMargin(): LayoutType;

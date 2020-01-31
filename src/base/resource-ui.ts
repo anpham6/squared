@@ -175,10 +175,10 @@ function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boole
     return [value, inlined, true];
 }
 
-function getBackgroundSize(node: NodeUI, index: number, value?: string) {
+function getBackgroundSize(node: NodeUI, index: number, value?: string, screenDimension?: Dimension) {
     if (value) {
         const sizes = value.split(XML.SEPARATOR);
-        return ResourceUI.getBackgroundSize(node, sizes[index % sizes.length]);
+        return ResourceUI.getBackgroundSize(node, sizes[index % sizes.length], screenDimension);
     }
     return undefined;
 }
@@ -335,7 +335,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
     }
 
-    public static parseBackgroundImage(node: NodeUI) {
+    public static parseBackgroundImage(node: NodeUI, screenDimension?: Dimension) {
         const backgroundImage = node.backgroundImage;
         if (backgroundImage !== '') {
             const images: (string | Gradient)[] = [];
@@ -350,7 +350,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const repeating = match[1] === 'repeating';
                     const type = match[2];
                     const direction = match[3];
-                    const imageDimension = getBackgroundSize(node, i, node.css('backgroundSize'));
+                    const imageDimension = getBackgroundSize(node, i, node.css('backgroundSize'), screenDimension);
                     const dimension = imageDimension || node.actualDimension;
                     let gradient: Undef<Gradient>;
                     switch (type) {
@@ -360,7 +360,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 type,
                                 dimension,
                                 angle: getAngle(direction),
-                                center: getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension)
+                                center: getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension, '', screenDimension)
                             };
                             conic.colorStops = parseColorStops(node, conic as any, match[4]);
                             gradient = conic;
@@ -369,7 +369,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         case 'radial': {
                             const { width, height } = dimension;
                             const position = getGradientPosition(direction);
-                            const center = getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension);
+                            const center = getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension, '', screenDimension);
                             const { left, top } = center;
                             let shape = 'ellipse';
                             let closestSide = top;
@@ -498,17 +498,17 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 }
                                 const a = Math.abs(opposite - angle);
                                 x = truncateFraction(
-                                    offsetAngleX(
-                                        angle,
-                                        triangulate(a, 90 - a, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)))[1]
-                                    )
-                                );
+                                        offsetAngleX(
+                                            angle,
+                                            triangulate(a, 90 - a, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)))[1]
+                                        )
+                                    );
                                 y = truncateFraction(
-                                    offsetAngleY(
-                                        angle,
-                                        triangulate(90, 90 - angle, x)[0]
-                                    )
-                                );
+                                        offsetAngleY(
+                                            angle,
+                                            triangulate(90, 90 - angle, x)[0]
+                                        )
+                                    );
                             }
                             const linear = <LinearGradient> {
                                 type,
@@ -535,7 +535,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return undefined;
     }
 
-    public static getBackgroundSize(node: NodeUI, value: string): Undef<Dimension> {
+    public static getBackgroundSize(node: NodeUI, value: string, screenDimension?: Dimension): Undef<Dimension> {
         let width = 0;
         let height = 0;
         switch (value) {
@@ -559,10 +559,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         size = '100%';
                     }
                     if (i === 0) {
-                        width = node.parseUnit(size, 'width', false);
+                        width = node.parseUnit(size, 'width', false, screenDimension);
                     }
                     else {
-                        height = node.parseUnit(size, 'height', false);
+                        height = node.parseUnit(size, 'height', false, screenDimension);
                     }
                 }
                 break;
@@ -671,7 +671,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             }
             setBorderStyle(node, boxStyle, 'outline', BOX_BORDER[4]);
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node);
+                boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node, node.localSettings.screenDimension);
             }
             let backgroundColor = node.backgroundColor;
             if (backgroundColor === '' && !node.documentParent.visible) {

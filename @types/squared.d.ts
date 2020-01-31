@@ -1,6 +1,6 @@
 import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
-import { AutoMargin, AscendOptions, ExcludeOptions, InitialData, LinearData, SiblingOptions, Support, VisibleStyle } from './base/node';
+import { AutoMargin, AscendOptions, ExcludeOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgMatrix, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
@@ -120,6 +120,7 @@ declare namespace base {
     interface ControllerUI<T extends NodeUI> extends Controller<T> {
         readonly userSettings: UserUISettings;
         readonly localSettings: ControllerUISettings;
+        readonly screenDimension: Dimension;
         readonly containerTypeHorizontal: LayoutType;
         readonly containerTypeVertical: LayoutType;
         readonly containerTypeVerticalMargin: LayoutType;
@@ -190,8 +191,8 @@ declare namespace base {
         public static insertStoredAsset(asset: string, name: string, value: any): string;
         public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
         public static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
-        public static parseBackgroundImage(node: NodeUI): Undef<string | Gradient>[];
-        public static getBackgroundSize<T extends NodeUI>(node: T, value: string): Undef<Dimension>;
+        public static parseBackgroundImage(node: NodeUI, screenDimension?: Dimension): Undef<string | Gradient>[];
+        public static getBackgroundSize<T extends NodeUI>(node: T, value: string, screenDimension?: Dimension): Undef<Dimension>;
         public static isInheritedStyle<T extends NodeUI>(node: T, attr: string): boolean;
         public static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
     }
@@ -456,8 +457,8 @@ declare namespace base {
         toElementFloat(attr: string, fallback?: number): number;
         toElementBoolean(attr: string, fallback?: boolean): boolean;
         toElementString(attr: string, fallback?: string): string;
-        parseUnit(value: string, dimension?: string, parent?: boolean): number;
-        convertPX(value: string, dimension?: string, parent?: boolean): string;
+        parseUnit(value: string, dimension?: string, parent?: boolean, screenDimension?: Dimension): number;
+        convertPX(value: string, dimension?: string, parent?: boolean, screenDimension?: Dimension): string;
         has(attr: string, checkType?: number, options?: {}): boolean;
         hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
         setBounds(cache?: boolean): void;
@@ -500,7 +501,7 @@ declare namespace base {
         floatContainer: boolean;
         containerIndex: number;
         flexbox: Flexbox;
-        localSettings: {};
+        localSettings: LocalSettingsUI;
         fontSize: number;
         renderAs?: NodeUI;
         renderParent?: NodeUI;
@@ -811,7 +812,7 @@ declare namespace lib {
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
         function parseVar(element: HTMLElement | SVGElement, value: string): Undef<string>;
         function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): Undef<number>;
-        function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, imageDimension?: Dimension, imageSize?: string): BoxRectPosition;
+        function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, imageDimension?: Dimension, imageSize?: string, screenDimension?: Dimension): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function resolveURL(value: string): string;
@@ -819,7 +820,7 @@ declare namespace lib {
         function convertAngle(value: string, unit?: string): number;
         function convertPX(value: string, fontSize?: number): string;
         function calculate(value: string, dimension?: number, fontSize?: number): number;
-        function parseUnit(value: string, fontSize?: number): number;
+        function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension): number;
         function parseAngle(value: string): number;
         function formatPX(value: number): string;
         function formatPercent(value: string | number, round?: boolean): string;

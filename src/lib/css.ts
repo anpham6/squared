@@ -30,8 +30,10 @@ function compareRange(operation: string, unit: number, range: number) {
     }
 }
 
-const convertLength = (value: string, dimension: number, fontSize?: number) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
-const convertPercent = (value: string, dimension: number, fontSize?: number) => Math.min(isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension, 1);
+const getInnerWidth = (dimensions: Dimension | undefined) => dimensions && dimensions.width || window.innerWidth;
+const getInnerHeight = (dimensions: Dimension | undefined) => dimensions && dimensions.height || window.innerHeight;
+const convertLength = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize, screenDimension);
+const convertPercent = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => Math.min(isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize, screenDimension) / dimension, 1);
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -454,7 +456,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
     return undefined;
 }
 
-export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, imageDimension?: Dimension, imageSize?: string) {
+export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, imageDimension?: Dimension, imageSize?: string, screenDimension?: Dimension) {
     const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
     const result: BoxRectPosition = {
         static: true,
@@ -482,7 +484,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                             width *= parseFloat(sizeW) / 100;
                         }
                         else {
-                            const length = parseUnit(sizeW, fontSize);
+                            const length = parseUnit(sizeW, fontSize, screenDimension);
                             if (length) {
                                 width = length;
                             }
@@ -494,7 +496,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                             percent = ((parseFloat(sizeH) / 100) * dimension.height) / imageDimension.height;
                         }
                         else if (isLength(sizeH)) {
-                            const length = parseUnit(sizeH, fontSize);
+                            const length = parseUnit(sizeH, fontSize, screenDimension);
                             if (length) {
                                 percent = length / imageDimension.height;
                             }
@@ -510,7 +512,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                             height *= parseFloat(sizeH) / 100;
                         }
                         else {
-                            const length = parseUnit(sizeH, fontSize);
+                            const length = parseUnit(sizeH, fontSize, screenDimension);
                             if (length) {
                                 height = length;
                             }
@@ -522,7 +524,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                             percent = ((parseFloat(sizeW) / 100) * dimension.width) / imageDimension.width;
                         }
                         else if (isLength(sizeW)) {
-                            const length = parseUnit(sizeW, fontSize);
+                            const length = parseUnit(sizeW, fontSize, screenDimension);
                             if (length) {
                                 percent = length / imageDimension.width;
                             }
@@ -578,8 +580,8 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     result[directionAsPercent] = 0.5;
                     break;
                 default:
-                    result[direction] = convertLength(position, offsetParent, fontSize);
-                    result[directionAsPercent] = convertPercent(position, offsetParent, fontSize);
+                    result[direction] = convertLength(position, offsetParent, fontSize, screenDimension);
+                    result[directionAsPercent] = convertPercent(position, offsetParent, fontSize, screenDimension);
                     break;
             }
             setImageOffset(position, horizontal, direction, directionAsPercent);
@@ -606,8 +608,8 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     }
                     break;
                 case 1: {
-                    const location = convertLength(position, dimension.width, fontSize);
-                    const locationAsPercent = convertPercent(position, dimension.width, fontSize);
+                    const location = convertLength(position, dimension.width, fontSize, screenDimension);
+                    const locationAsPercent = convertPercent(position, dimension.width, fontSize, screenDimension);
                     switch (result.horizontal) {
                         case 'end':
                             result.horizontal = 'right';
@@ -645,8 +647,8 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     }
                     break;
                 case 3: {
-                    const location = convertLength(position, dimension.height, fontSize);
-                    const locationAsPercent = convertPercent(position, dimension.height, fontSize);
+                    const location = convertLength(position, dimension.height, fontSize, screenDimension);
+                    const locationAsPercent = convertPercent(position, dimension.height, fontSize, screenDimension);
                     if (result.vertical === 'bottom') {
                         result.bottom = location;
                         result.bottomAsPercent = locationAsPercent;
@@ -975,7 +977,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
     return undefined;
 }
 
-export function parseUnit(value: string, fontSize?: number) {
+export function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension) {
     if (value) {
         const match = UNIT.LENGTH.exec(value);
         if (match) {
@@ -1004,16 +1006,16 @@ export function parseUnit(value: string, fontSize?: number) {
                     result *= getDeviceDPI();
                     break;
                 case 'vw':
-                    result *= window.innerWidth / 100;
+                    result *= getInnerWidth(screenDimension) / 100;
                     break;
                 case 'vh':
-                    result *= window.innerHeight / 100;
+                    result *= getInnerHeight(screenDimension) / 100;
                     break;
                 case 'vmin':
-                    result *= Math.min(window.innerWidth, window.innerHeight) / 100;
+                    result *= Math.min(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
                     break;
                 case 'vmax':
-                    result *= Math.max(window.innerWidth, window.innerHeight) / 100;
+                    result *= Math.max(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
                     break;
             }
             return result;

@@ -1,6 +1,6 @@
 import { FileAsset, ImageAsset, LayoutType, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
 import { ControllerSettingsAndroid } from '../../@types/android/application';
-import { LocalSettings, SpacerAttribute, WrapperOptions } from '../../@types/android/node';
+import { LocalSettingsAndroidUI, SpacerAttribute, WrapperOptions } from '../../@types/android/node';
 
 import Resource from './resource';
 import View from './view';
@@ -708,7 +708,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     };
 
-    private _defaultViewSettings!: LocalSettings;
+    protected _screenDimension!: Dimension;
+
+    private _defaultViewSettings!: LocalSettingsAndroidUI;
     private _targetAPI!: number;
 
     constructor(
@@ -719,9 +721,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public init() {
-        const { supportRTL, targetAPI } = this.userSettings;
+        const { resolutionDPI, resolutionScreenWidth, resolutionScreenHeight, supportRTL, targetAPI } = this.userSettings;
+        const dpiRatio = 160 / resolutionDPI;
+        const screenDimension = { width: resolutionScreenWidth * dpiRatio, height: resolutionScreenHeight * dpiRatio };
         this._targetAPI = targetAPI || BUILD_ANDROID.LATEST;
+        this._screenDimension = screenDimension;
         this._defaultViewSettings = {
+            screenDimension,
             supportRTL,
             floatPrecision: this.localSettings.precision.standardFloat
         };
@@ -3184,5 +3190,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     get userSettings() {
         return this.application.userSettings;
+    }
+
+    get screenDimension() {
+        return this._screenDimension;
     }
 }

@@ -20,6 +20,8 @@ export interface UserUISettings extends UserSettings {
     showAttributes: boolean;
     insertSpaces: number;
     autoCloseOnWrite: boolean;
+    resolutionScreenWidth?: number;
+    resolutionScreenHeight?: number;
 }
 
 export interface ControllerSettings {

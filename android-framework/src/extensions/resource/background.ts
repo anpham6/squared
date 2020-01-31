@@ -550,17 +550,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     };
     public readonly eventOnly = true;
 
-    private _maxScreenWidth = Number.POSITIVE_INFINITY;
-    private _maxScreenHeight = Number.POSITIVE_INFINITY;
     private _resourceSvgInstance?: ResourceSvg<T>;
 
     public beforeParseDocument() {
         const application = <android.base.Application<T>> this.application;
-        const { resolutionDPI, resolutionScreenWidth, resolutionScreenHeight } = application.userSettings;
-        const dpiRatio = 160 / resolutionDPI;
-        this._maxScreenWidth = resolutionScreenWidth * dpiRatio;
-        this._maxScreenHeight = resolutionScreenHeight * dpiRatio;
-        this._resourceSvgInstance = this.controller.localSettings.svg.enabled ? <ResourceSvg<T>> application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
+        const controller = <android.base.Controller<T>> this.controller;
+        this._resourceSvgInstance = controller.localSettings.svg.enabled ? <ResourceSvg<T>> application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
     }
 
     public afterResources() {
@@ -764,10 +759,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             else {
-                setBorderStyle(layerListData[0], borders, 0, corners, indentWidth, indentOffset);
-                setBorderStyle(layerListData[0], borders, 3, corners, indentWidth, indentOffset);
-                setBorderStyle(layerListData[0], borders, 2, corners, indentWidth, indentOffset);
-                setBorderStyle(layerListData[0], borders, 1, corners, indentWidth, indentOffset);
+                const layer = layerListData[0];
+                setBorderStyle(layer, borders, 0, corners, indentWidth, indentOffset);
+                setBorderStyle(layer, borders, 3, corners, indentWidth, indentOffset);
+                setBorderStyle(layer, borders, 2, corners, indentWidth, indentOffset);
+                setBorderStyle(layer, borders, 1, corners, indentWidth, indentOffset);
             }
         }
         return [shapeData, layerListData];
@@ -779,21 +775,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if ((backgroundImage || extracted) && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
             const resource = <android.base.Resource<T>> this.resource;
             const bounds = node.bounds;
+            const screenDimension = node.localSettings.screenDimension;
             let { width: boundsWidth, height: boundsHeight } = bounds;
             if (node.documentBody) {
-                boundsWidth = this._maxScreenWidth;
-                boundsHeight = this._maxScreenHeight;
+                boundsWidth = screenDimension.width;
+                boundsHeight = screenDimension.height;
             }
             else if (node.documentRoot) {
                 if (!constrictedWidth(node)) {
-                    boundsWidth = this._maxScreenWidth;
+                    boundsWidth = screenDimension.width;
                 }
                 if (node.cssInitial('height') === '100%' || node.cssInitial('minHeight') === '100%') {
-                    boundsHeight = this._maxScreenHeight;
+                    boundsHeight = screenDimension.height;
                 }
             }
             else if (node.ascend({ condition: (item: T) => constrictedWidth(item) && (!item.layoutElement || item === node), startSelf: true }).length === 0) {
-                boundsWidth = Math.min(boundsWidth, this._maxScreenWidth);
+                boundsWidth = Math.min(boundsWidth, screenDimension.width);
             }
             const result: BackgroundImageData[] = [];
             const images: (string | GradientTemplate)[] = [];
@@ -894,7 +891,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (valid) {
                         const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
                         const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                        backgroundPosition[length] = getBackgroundPosition(checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'), node.actualDimension, node.fontSize, imageDimensions[length], backgroundSize[i]);
+                        backgroundPosition[length] = getBackgroundPosition(
+                            checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'),
+                            node.actualDimension,
+                            node.fontSize,
+                            imageDimensions[length],
+                            backgroundSize[i],
+                            screenDimension
+                        );
                         length++;
                     }
                     else {
@@ -927,7 +931,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             image.containerName === 'INPUT_IMAGE' ? getPixelUnit(0, 0) : getPixelUnit(imageBounds.left - bounds.left + node.borderLeftWidth, imageBounds.top - bounds.top + node.borderTopWidth),
                             node.actualDimension,
                             node.fontSize,
-                            imageBounds
+                            imageBounds,
+                            '',
+                            screenDimension
                         );
                         const stored = resource.getImage(element.src);
                         if (!node.hasPX('width')) {
@@ -1300,9 +1306,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     width = boundsWidth;
                                     height = boundsHeight * (ratioHeight / ratioWidth);
                                     if (height > boundsHeight) {
-                                        top = boundsHeight - height;
-                                        if (position.topAsPercent > 0) {
-                                            top = Math.round(top * position.topAsPercent);
+                                        const percent = position.topAsPercent;
+                                        if (percent > 0) {
+                                            top = Math.round((boundsHeight - height) * percent);
+                                            position.top = 0;
                                         }
                                         if (!node.hasPX('height')) {
                                             node.css('height', formatPX(boundsHeight - node.contentBoxHeight));
@@ -1314,9 +1321,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     width = boundsWidth * (ratioWidth / ratioHeight);
                                     height = boundsHeight;
                                     if (node.hasWidth && width > boundsWidth) {
-                                        left = boundsWidth - width;
-                                        if (position.leftAsPercent > 0) {
-                                            left = Math.round(left * position.leftAsPercent);
+                                        const percent = position.leftAsPercent;
+                                        if (percent > 0) {
+                                            left = Math.round((boundsWidth - width) * percent);
+                                            position.left = 0;
                                         }
                                     }
                                     gravity = '';

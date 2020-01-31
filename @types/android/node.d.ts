@@ -1,6 +1,6 @@
-import { CachedValueUI, ExcludeOptions, Support } from '../base/node';
+import { CachedValueUI, ExcludeOptions, LocalSettingsUI, Support } from '../base/node';
 
-export interface LocalSettings {
+export interface LocalSettingsAndroidUI extends LocalSettingsUI {
     supportRTL: boolean;
     floatPrecision: number;
 }

@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { CachedValueUI, ExcludeOptions, InitialData, LinearData, SiblingOptions, Support } from '../../@types/base/node';
+import { CachedValueUI, ExcludeOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support } from '../../@types/base/node';
 
 import Node from './node';
 
@@ -380,7 +380,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public floatContainer = false;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
-    public abstract localSettings: {};
+    public abstract localSettings: LocalSettingsUI;
     public abstract renderParent?: T;
     public abstract renderExtension?: squared.base.ExtensionUI<T>[];
     public abstract renderTemplates?: Null<NodeTemplate<T>>[];
@@ -526,6 +526,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public render(parent?: T) {
         this.renderParent = parent;
         this.rendered = true;
+    }
+
+    public parseUnit(value: string, dimension = 'width', parent = true, screenDimension?: Dimension) {
+        return super.parseUnit(value, dimension, parent, screenDimension || this.localSettings.screenDimension);
+    }
+
+    public convertPX(value: string, dimension = 'width', parent = true, screenDimension?: Dimension) {
+        return super.convertPX(value, dimension, parent, screenDimension || this.localSettings.screenDimension);
     }
 
     public renderEach(predicate: IteratorPredicate<T, void>) {
