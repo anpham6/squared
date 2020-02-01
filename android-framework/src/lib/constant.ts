@@ -24,18 +24,18 @@ export const EXT_ANDROID = {
 };
 
 export const CONTAINER_ANDROID = {
-    CHECKBOX: 'CheckBox',
     RADIO: 'RadioButton',
-    EDIT: 'EditText',
+    CHECKBOX: 'CheckBox',
     EDIT_LIST: 'AutoCompleteTextView',
     SELECT: 'Spinner',
-    RANGE: 'SeekBar',
+    EDIT: 'EditText',
     SVG: 'ImageView',
-    TEXT: 'TextView',
     IMAGE: 'ImageView',
     BUTTON: 'Button',
+    RANGE: 'SeekBar',
     METER: 'ProgressBar',
     PROGRESS: 'ProgressBar',
+    TEXT: 'TextView',
     LINE: 'View',
     SPACE: 'Space',
     FRAME: 'FrameLayout',

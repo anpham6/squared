@@ -14,7 +14,7 @@ const $lib = squared.lib;
 const { BOX_MARGIN, BOX_PADDING, formatPX, getDataSet, isLength, isPercent } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { clampRange, truncate } = $lib.math;
-const { aboveRange, capitalize, convertWord, fromLastIndexOf, isPlainObject, isString, replaceMap } = $lib.util;
+const { aboveRange, capitalize, convertFloat, convertWord, fromLastIndexOf, isPlainObject, isString, replaceMap } = $lib.util;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
 
@@ -871,7 +871,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         if (layoutWidth === '' && !this.floating) {
-                            if (this.naturalElement && this.inline && !this.inlineHorizontal && !actualParent.layoutElement && this.some(item => item.naturalElement && item.blockStatic)) {
+                            if (this.naturalElement && this.inline && !this.blockDimension && !actualParent.layoutElement && this.some(item => item.naturalElement && item.blockStatic)) {
                                 checkParentWidth();
                             }
                             else if (
@@ -1874,6 +1874,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             case CONTAINER_ANDROID.SELECT:
                                 result += 4;
                                 result /= this.toElementInt('size') || 1;
+                                break;
+                            default:
+                                result += Math.abs(convertFloat(this.verticalAlign) * -1);
                                 break;
                         }
                     }

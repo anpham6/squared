@@ -643,13 +643,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 return [cellStart, cellSpan];
             };
             if (REGEX_ALIGNSELF.test(alignSelf) || REGEX_JUSTIFYSELF.test(justifySelf) || layoutConstraint) {
-                renderAs = this.application.createNode({ parent });
+                renderAs = this.application.createNode({ parent, replace: node });
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'base', 'initial');
-                renderAs.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING);
                 renderAs.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.CUSTOMIZATION });
-                parent.appendTry(node, renderAs);
+                renderAs.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING);
                 renderAs.render(parent);
                 if (layoutConstraint) {
                     const marginRight = node.getBox(BOX_STANDARD.MARGIN_RIGHT)[1];
@@ -694,8 +693,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 else if (!node.hasHeight) {
                     node.setLayoutHeight('match_parent', false);
                 }
-                renderAs.innerWrapped = node;
-                node.parent = renderAs;
                 outputAs = this.application.renderNode(
                     new LayoutUI(
                         parent,
@@ -752,10 +749,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
             }
             else {
+                const length = column.length;
                 if (node.blockStatic || node.hasWidth) {
                     const percent = requireDirectionSpacer(column, node.actualWidth);
                     if (percent !== 0 && percent < 100) {
-                        const length = column.length;
                         if (percent > 0) {
                             controller.addAfterOutsideTemplate(
                                 insertId,
@@ -772,14 +769,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 false
                             );
                         }
-                        node.android('columnCount', (column.length + 1).toString());
+                        node.android('columnCount', (length + 1).toString());
                     }
                 }
                 if (outerWrapper) {
                     if (node.contentBoxWidth > 0 && node.hasPX('width', false)) {
                         node.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed', 0.5, true);
                     }
-                    else if (mainData.column.length === 1) {
+                    else if (length === 1) {
                         node.setLayoutWidth('match_parent');
                     }
                     else {

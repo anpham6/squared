@@ -32,7 +32,7 @@ import SvgShape = squared.svg.SvgShape;
 const $lib = squared.lib;
 const { formatPX, isPercent } = $lib.css;
 const { truncate } = $lib.math;
-const { CHAR, CSS } = $lib.regex;
+const { CHAR, CSS, FILE } = $lib.regex;
 const { convertCamelCase, convertInt, convertWord, filterArray, formatString, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = $lib.util;
 const { applyTemplate } = $lib.xml;
 
@@ -733,7 +733,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (match) {
             src = match[1];
         }
-        if (/\.svg$/.test(src.toLowerCase()) || /^data:image\/svg\+xml/.test(src)) {
+        if (FILE.SVG.test(src) || /^data:image\/svg\+xml/.test(src)) {
             const fileAsset = this.resource.getRawData(src);
             if (fileAsset) {
                 const parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;

@@ -45,7 +45,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         node.each((item: T) => {
-            if (item.inlineVertical && !item.baseline || item.imageElement) {
+            if (item.inlineVertical && isLength(item.verticalAlign) || item.imageElement || item.svgElement) {
                 item.baselineAltered = true;
             }
         });
@@ -76,26 +76,14 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                     const top = above.linear.top;
                     for (const item of children) {
                         if (item !== baseline) {
-                            if (item.inlineVertical && !item.baseline) {
+                            if (item.inlineVertical) {
                                 if (!aboveBaseline.includes(item)) {
-                                    const verticalAlign = item.verticalAlign;
-                                    let valid = false;
-                                    switch (verticalAlign) {
-                                        case 'super':
-                                        case 'sub':
-                                            valid = true;
-                                            break;
-                                        default:
-                                            if (isLength(verticalAlign) || baseline === undefined) {
-                                                valid = true;
-                                            }
-                                            break;
-                                    }
-                                    if (valid) {
+                                    if (isLength(item.verticalAlign) || baseline === undefined) {
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - top);
+                                        item.baselineAltered = true;
                                     }
                                 }
-                                else if (item.imageElement && baseline?.documentId === item.alignSibling('baseline')) {
+                                else if ((item.imageElement || item.svgElement) && baseline?.documentId === item.alignSibling('baseline')) {
                                     item.modifyBox(BOX_STANDARD.MARGIN_TOP, baseline.linear.top - item.linear.top);
                                 }
                             }

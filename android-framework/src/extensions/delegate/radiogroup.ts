@@ -71,7 +71,8 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             container.inherit(node, 'alignment');
             if (container.baseline) {
                 container.css('verticalAlign', 'middle');
-                container.baseline = false;
+                container.setCacheValue('baseline', false);
+                container.setCacheValue('verticalAlign', 'middle');
             }
             container.exclude({ resource: NODE_RESOURCE.ASSET });
             const dataset = node.dataset;

@@ -5,7 +5,7 @@ import { RESERVED_JAVA } from './lib/constant';
 const $lib = squared.lib;
 const { findColorShade, parseColor } = $lib.color;
 const { getSrcSet } = $lib.css;
-const { CHAR, COMPONENT, CSS, XML } = $lib.regex;
+const { CHAR, COMPONENT, CSS, FILE, XML } = $lib.regex;
 const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, spliceArray, trimString } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> squared.base.ResourceUI.STORED;
@@ -275,7 +275,7 @@ export default class Resource<T extends android.base.View> extends squared.base.
             const rawData = resource.getRawData(mdpi);
             if (rawData?.base64) {
                 const { base64, filename } = rawData;
-                if (/\.svg$/.test(filename.toLowerCase())) {
+                if (FILE.SVG.test(filename)) {
                     return '';
                 }
                 const pathname = prefix + filename;

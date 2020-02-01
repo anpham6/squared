@@ -15,6 +15,10 @@ export const STRING = {
     CSS_CALC: 'calc(\\(.+\\))'
 };
 
+export const FILE = {
+    SVG: /\.svg$/i
+};
+
 export const UNIT = {
     DECIMAL: new RegExp(`^${STRING.DECIMAL}$`),
     LENGTH: new RegExp(`^${STRING.LENGTH}$`),

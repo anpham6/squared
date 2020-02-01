@@ -35,6 +35,7 @@ export interface SpacerAttribute extends ViewAttribute {
 export interface WrapperOptions extends ExcludeOptions {
     controlName?: string;
     containerType?: number;
+    alignmentType?: number;
 }
 
 export interface SupportAndroid extends Support {

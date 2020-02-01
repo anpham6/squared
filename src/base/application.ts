@@ -11,7 +11,7 @@ const $lib = squared.lib;
 const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, validMediaRule } = $lib.css;
 const { isTextNode } = $lib.dom;
 const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
-const { CHAR, STRING, XML } = $lib.regex;
+const { CHAR, FILE, STRING, XML } = $lib.regex;
 const { getElementCache, setElementCache } = $lib.session;
 
 const { images, rawData } = Resource.ASSETS;
@@ -50,7 +50,7 @@ async function getImageSvgAsync(value: string) {
     return (await fetch(value, { method: 'GET', headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' }) })).text();
 }
 
-const isSvg = (value: string) => /\.svg$/.test(value.toLowerCase());
+const isSvg = (value: string) => FILE.SVG.test(value);
 const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {

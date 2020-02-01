@@ -10,7 +10,7 @@ import LayoutUI = squared.base.LayoutUI;
 const { formatPX } = squared.lib.css;
 
 const $base_lib = squared.base.lib;
-const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
+const { APP_SECTION, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 
 const SPRITE = $base_lib.constant.EXT_NAME.SPRITE;
 
@@ -27,11 +27,10 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
             if (drawable !== '') {
                 const { width, height } = mainData.image;
                 const { top, left } = mainData.position;
-                const container = this.application.createNode({ parent });
+                const container = this.application.createNode({ parent, replace: node });
                 container.inherit(node, 'base', 'initial', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                container.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE, procedure: NODE_PROCEDURE.CUSTOMIZATION });
-                parent.appendTry(node, container);
+                container.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.CUSTOMIZATION, section: APP_SECTION.ALL });
                 node.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
                 node.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.BOX_STYLE });
                 node.cssApply({
@@ -62,8 +61,6 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 });
                 node.unsetCache();
                 node.android('src', '@drawable/' + drawable);
-                node.parent = container;
-                container.innerWrapped = node;
                 return {
                     renderAs: container,
                     outputAs: this.application.renderNode(

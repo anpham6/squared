@@ -123,18 +123,13 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
     }
 }
 
-function resetMargin(node: NodeUI, value: number) {
-    const offset = node[CSS_SPACING.get(value) as string];
-    if (node.getBox(value)[0] === 0) {
-        node.modifyBox(value);
+function resetMargin(node: NodeUI, region: number) {
+    if (node.getBox(region)[0] === 0) {
+        node.modifyBox(region);
     }
     else {
-        for (const outerWrapper of node.ascend({ attr: 'outerWrapper' }) as NodeUI[]) {
-            if (outerWrapper.getBox(value)[1] >= offset) {
-                outerWrapper.modifyBox(value, -offset);
-                break;
-            }
-        }
+        const offset = node[CSS_SPACING.get(region) as string];
+        node.modifyBox(region, -offset, false, true);
     }
 }
 
@@ -480,9 +475,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
 
     public afterConstraints() {
         for (const node of this.cacheProcessing) {
-            if (node.pageFlow && node.styleElement && node.inlineVertical && !node.positioned) {
+            if (node.naturalChild && node.pageFlow && node.styleElement && node.inlineVertical && !node.positioned && !(node.actualParent as T).layoutElement) {
                 const renderParent = (node.outerMostWrapper || node).renderParent;
-                if (renderParent?.is(NODE_ALIGNMENT.AUTO_LAYOUT) === false) {
+                if (renderParent?.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) === false) {
                     if (node.blockDimension && !node.floating) {
                         if (renderParent.layoutVertical) {
                             const children = renderParent.renderChildren;

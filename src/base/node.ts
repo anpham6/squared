@@ -5,9 +5,10 @@ import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
 import { EXT_NAME } from './lib/constant';
 
 const $lib = squared.lib;
+const { USER_AGENT, isUserAgent } = $lib.client;
 const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
-const { CHAR, CSS, XML } = $lib.regex;
+const { CHAR, CSS, FILE, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, filterArray, hasBit, hasValue, isNumber, isObject, isString, spliceString } = $lib.util;
 
@@ -17,7 +18,6 @@ type T = Node;
 
 const REGEX_INLINE = /^inline/;
 const REGEX_INLINEDASH = /^inline-/;
-const REGEX_TABLE = /^table/;
 const REGEX_MARGIN = /^margin/;
 const REGEX_PADDING = /^padding/;
 const REGEX_BORDER = /^border/;
@@ -719,7 +719,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         cached.actualHeight = undefined;
                     case 'minHeight':
                         cached.height = undefined;
-                        cached.hasHeight = undefined;
                     case 'maxHeight':
                         cached.overflow = undefined;
                         break;
@@ -1604,7 +1603,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get svgElement() {
         let result = this._cached.svgElement;
         if (result === undefined) {
-            result = !this.htmlElement && !this.plainText && this._element instanceof SVGElement || this.imageElement && /\.svg$/.test(this.src.toLowerCase());
+            result = !this.htmlElement && !this.plainText && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.src);
             this._cached.svgElement = result;
         }
         return result;
@@ -1836,7 +1835,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get hasWidth() {
-        return this.width > 0;
+        let result = this._cached.hasWidth;
+        if (result === undefined) {
+            result = this.width > 0;
+            this._cached.hasWidth = result; 
+        }
+        return result;
     }
     get hasHeight() {
         let result = this._cached.hasHeight;
@@ -2086,7 +2090,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get contentBox() {
-        return this.css('boxSizing') !== 'border-box';
+        return this.css('boxSizing') !== 'border-box' || this.tableElement && isUserAgent(USER_AGENT.FIREFOX);
     }
 
     get contentBoxWidth() {
@@ -2122,26 +2126,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             result = this.inline && this.pageFlow && !this.floating && !this.imageElement;
             this._cached.inlineStatic = result;
-        }
-        return result;
-    }
-
-    get inlineHorizontal() {
-        let result = this._cached.inlineHorizontal;
-        if (result === undefined) {
-            if (this.naturalElement) {
-                if (this.flexElement || this.floating) {
-                    result = true;
-                }
-                else {
-                    const value = this.display;
-                    result = REGEX_INLINEDASH.test(value) || REGEX_TABLE.test(value) || this.tagName === 'RUBY';
-                }
-            }
-            else {
-                result = this.plainText;
-            }
-            this._cached.inlineVertical = result;
         }
         return result;
     }
@@ -2304,7 +2288,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get horizontalAligned() {
         let result = this._cached.horizontalAligned;
         if (result === undefined) {
-            result = !this.blockStatic && !this.autoMargin.horizontal && !(this.blockDimension && this.css('width') === '100%');
+            result = !this.blockStatic && !this.autoMargin.horizontal && !this.multiline && !(this.blockDimension && this.css('width') === '100%');
             this._cached.horizontalAligned = result;
         }
         return result;
@@ -2408,7 +2392,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             if (this.pageFlow && !this.floating) {
                 const value = this.cssInitial('verticalAlign', false, true);
-                result = value === 'baseline' || value === 'initial' || isLength(value, true);
+                result = value === 'baseline' || value === 'initial' || this.naturalElements.length === 0 && isLength(value, true);
             }
             else {
                 result = false;

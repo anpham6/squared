@@ -51,13 +51,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             const controller = <android.base.Controller<T>> this.controller;
             const firstChild = parent.firstStaticChild === node;
             const inside = node.css('listStylePosition') === 'inside';
+            const marginTop = node.marginTop;
             let value = mainData.ordinal || '';
             let minWidth = node.marginLeft;
             let marginLeft = 0;
             let columnCount = 0;
             let adjustPadding = false;
             let resetPadding = NaN;
-            let register = false;
             node.modifyBox(BOX_STANDARD.MARGIN_LEFT);
             if (parent.is(CONTAINER_NODE.GRID)) {
                 columnCount = convertInt(parent.android('columnCount')) || 1;
@@ -74,7 +74,22 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     minWidth += parent.marginLeft;
                 }
             }
-            const container = node.length === 0 ? controller.createNodeGroup(node, [node], parent) : node;
+            let container: T;
+            if (node.length === 0) {
+                const { containerType, alignmentType } = controller.containerTypeVertical;
+                container = controller.createNodeWrapper(node, parent, undefined, {
+                    controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
+                    containerType,
+                    alignmentType
+                });
+                if (marginTop !== 0) {
+                    container.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
+                    node.registerBox(BOX_STANDARD.MARGIN_TOP, container);
+                }
+            }
+            else {
+                container = node;
+            }
             let ordinal = value === '' ? node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T> : undefined;
             if (ordinal) {
                 if (columnCount === 3) {
@@ -86,24 +101,24 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         ordinal.android('minWidth', formatPX(minWidth));
                     }
                 }
+                ordinal.parent = parent;
                 ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.INLINE);
                 ordinal.modifyBox(BOX_STANDARD.MARGIN_LEFT);
-                ordinal.parent = parent;
                 ordinal.render(parent);
-                const layoutOrdinal = new LayoutUI(parent, ordinal);
+                const layout = new LayoutUI(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
-                    layoutOrdinal.setContainerType(CONTAINER_NODE.TEXT);
+                    layout.setContainerType(CONTAINER_NODE.TEXT);
                 }
                 else {
-                    if (layoutOrdinal.singleRowAligned) {
-                        layoutOrdinal.setContainerType(CONTAINER_NODE.RELATIVE, NODE_ALIGNMENT.HORIZONTAL);
+                    if (layout.singleRowAligned) {
+                        layout.setContainerType(CONTAINER_NODE.RELATIVE, NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
-                        layoutOrdinal.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.UNKNOWN);
+                        layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.UNKNOWN);
                     }
-                    layoutOrdinal.retain(ordinal.children as T[]);
+                    layout.retain(ordinal.children as T[]);
                 }
-                application.addLayoutTemplate(parent, ordinal, application.renderNode(layoutOrdinal));
+                application.addLayoutTemplate(parent, ordinal, application.renderNode(layout));
             }
             else {
                 let gravity = 'right';
@@ -182,10 +197,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (value !== '' && !/\.$/.test(value)) {
                         ordinal.fontSize *= 0.75;
                     }
-                    const { marginTop, paddingTop, lineHeight } = node;
+                    const { paddingTop, lineHeight } = node;
                     ordinal.cssApply({
                         minWidth: minWidth > 0 ? formatPX(minWidth) : '',
-                        marginTop: marginTop !== 0 ? formatPX(marginTop) : '',
                         marginLeft: marginLeft > 0 ? formatPX(marginLeft) : '',
                         paddingTop: paddingTop > 0 && node.getBox(BOX_STANDARD.PADDING_TOP)[0] === 0 ? formatPX(paddingTop) : '',
                         paddingRight: paddingRight > 0 ? formatPX(paddingRight) : '',
@@ -217,10 +231,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             controlName: ordinal.controlName
                         }
                     );
-                    register = true;
                 }
             }
             ordinal.positioned = true;
+            if (marginTop !== 0) {
+                ordinal.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
+                node.registerBox(BOX_STANDARD.MARGIN_TOP, ordinal);
+                node.modifyBox(BOX_STANDARD.MARGIN_TOP);
+            }
             if (adjustPadding) {
                 if (isNaN(resetPadding) || resetPadding <= 0) {
                     parent.modifyBox(parent.paddingLeft > 0 ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.MARGIN_LEFT);
@@ -242,14 +260,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
             if (node !== container) {
-                if (node.marginTop !== 0) {
-                    container.modifyBox(BOX_STANDARD.MARGIN_TOP, node.marginTop);
-                    node.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                    if (register) {
-                        container.registerBox(BOX_STANDARD.MARGIN_TOP, ordinal);
-                    }
-                    container.innerWrapped = node;
-                }
                 return {
                     parent: container,
                     renderAs: container,
@@ -261,9 +271,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         container.children as T[]
                     ))
                 };
-            }
-            else if (register) {
-                node.registerBox(BOX_STANDARD.MARGIN_TOP, ordinal);
             }
         }
         return undefined;

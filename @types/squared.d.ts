@@ -380,7 +380,6 @@ declare namespace base {
         readonly inlineFlow: boolean;
         readonly inline: boolean;
         readonly inlineStatic: boolean;
-        readonly inlineHorizontal: boolean;
         readonly inlineVertical: boolean;
         readonly plainText: boolean;
         readonly styleText: boolean;
@@ -487,7 +486,6 @@ declare namespace base {
         element: Null<Element >;
         textContent: string;
         positionAuto: boolean;
-        baseline: boolean;
         multiline: boolean;
         overflow: number;
         naturalChild: boolean;
@@ -575,7 +573,7 @@ declare namespace base {
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
         previousSiblings(options?: SiblingOptions): NodeUI[];
         nextSiblings(options?: SiblingOptions): NodeUI[];
-        modifyBox(region: number, offset?: number, negative?: boolean): void;
+        modifyBox(region: number, offset?: number, negative?: boolean, registered?: boolean): void;
         getBox(region: number): [number, number];
         resetBox(region: number, node?: NodeUI): void;
         transferBox(region: number, node: NodeUI): void;
@@ -885,6 +883,9 @@ declare namespace lib {
             DECIMAL: RegExp;
             LENGTH: RegExp;
             PERCENT: RegExp;
+        };
+        const FILE: {
+            SVG: RegExp;
         };
         const CSS: {
             PX: RegExp;

@@ -348,6 +348,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
 
     private createPlaceholder(node: T, children: T[], target?: string) {
         const placeholder = this.application.createNode({ parent: node, children });
+        placeholder.inherit(node, 'base');
         if (children.length) {
             let containerIndex = Number.POSITIVE_INFINITY;
             for (const item of children) {
@@ -358,7 +359,6 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         if (target) {
             placeholder.dataset.target = target;
         }
-        placeholder.inherit(node, 'base');
         placeholder.exclude({ resource: NODE_RESOURCE.ALL });
         placeholder.positioned = true;
         placeholder.renderExclude = false;

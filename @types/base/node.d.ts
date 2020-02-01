@@ -44,7 +44,6 @@ export interface CachedValue<T> {
     contentBoxHeight?: number;
     inline?: boolean;
     inlineStatic?: boolean;
-    inlineHorizontal?: boolean;
     inlineVertical?: boolean;
     block?: boolean;
     blockStatic?: boolean;
@@ -62,6 +61,7 @@ export interface CachedValue<T> {
     whiteSpace?: boolean;
     width?: number;
     height?: number;
+    hasWidth?: boolean;
     hasHeight?: boolean;
     overflow?: number;
     lineHeight?: number;

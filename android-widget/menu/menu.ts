@@ -136,13 +136,13 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         outerParent.childIndex = node.childIndex;
         outerParent.actualParent = parent.actualParent;
         node.documentRoot = true;
-        node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
         node.setControlType(NAVIGATION.MENU, CONTAINER_NODE.INLINE);
+        node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
         node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
+        node.render(outerParent);
         for (const item of node.cascade()) {
             this.addDescendant(item as T);
         }
-        node.render(outerParent);
         node.dataset.pathname = 'res/menu';
         return {
             output: <NodeXmlTemplate<T>> {

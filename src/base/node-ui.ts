@@ -12,7 +12,7 @@ const { isTextNode, newBoxModel } = $lib.dom;
 const { isEqual } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { aboveRange, assignEmptyProperty, belowRange, cloneObject, convertFloat, convertWord, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
+const { aboveRange, assignEmptyProperty, cloneObject, convertWord, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
 
 type T = NodeUI;
 
@@ -134,8 +134,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result: T[] = [];
         for (const item of list) {
             if (item.baseline && (!text || item.textElement) && !item.baselineAltered) {
-                if (item.layoutHorizontal) {
-                    if (item.every((child: T) => child.baselineElement)) {
+                const children = item.naturalChildren;
+                if (children.length) {
+                    if (children.every((child: T) => child.baselineElement)) {
                         result.push(item);
                     }
                 }
@@ -152,8 +153,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (b.length && a.length === 0) {
                     return -1;
                 }
-                const heightA = a.baselineHeight + a.marginBottom + Math.max(0, convertFloat(a.verticalAlign) * -1);
-                const heightB = b.baselineHeight + b.marginBottom + Math.max(0, convertFloat(b.verticalAlign) * -1);
+                const heightA = a.baselineHeight + a.marginBottom;
+                const heightB = b.baselineHeight + b.marginBottom;
                 if (!isEqual(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
                 }
@@ -256,11 +257,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     let y = 1;
                     for (let i = 1; i < length; i++) {
                         const node = nodes[i];
-                        if (node.alignedVertically(siblings, cleared)) {
+                        if (node.alignedVertically(siblings, cleared) > 0) {
                             y++;
                         }
                         else {
                             x++;
+                        }
+                        if (x > 1 && y > 1) {
+                            break;
                         }
                         siblings.push(node);
                     }
@@ -359,7 +363,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 siblings.push(active);
             }
             else {
-                if (active.alignedVertically(siblings, cleared)) {
+                if (active.alignedVertically(siblings, cleared) > 0) {
                     if (row.length) {
                         result.push(row);
                     }
@@ -807,31 +811,31 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                         else if (!/^inline-/.test(this.display)) {
-                            const { top, bottom } = this.linear;
+                            let { top, bottom } = this.linear;
                             if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
                             }
                             else if (siblings[0].float === 'right') {
                                 if (siblings.length > 1) {
-                                    let actualTop = top;
-                                    if (this.multiline) {
-                                        if (this.plainText) {
-                                            actualTop = bottom;
-                                        }
-                                        else if (this.styleText) {
-                                            const textBounds = this.textBounds;
-                                            if (textBounds) {
-                                                actualTop = Math.max(top, siblings.length > 2 ? (textBounds.top + textBounds.bottom) * 0.5 : actualTop);
-                                            }
-                                        }
-                                    }
                                     let maxBottom = Number.NEGATIVE_INFINITY;
                                     for (const item of siblings) {
                                         if (item.float === 'right') {
                                             maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
                                         }
                                     }
-                                    if (belowRange(actualTop, maxBottom)) {
+                                    if (siblings.length > 2) {
+                                        if (this.multiline) {
+                                            if (this.styleText) {
+                                                const textBounds = this.textBounds;
+                                                if (textBounds) {
+                                                    bottom = textBounds.bottom;
+                                                }
+                                            }
+                                            const offset = bottom - maxBottom;
+                                            top = offset <= 0 || offset / (bottom - top) < 0.5 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+                                        }
+                                    }
+                                    if (aboveRange(maxBottom, top)) {
                                         return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
                                     }
                                     else {
@@ -889,7 +893,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return traverseElementSibling(options, <Element> (this.element?.nextSibling || this.innerMostWrapped?.element?.nextSibling || this.firstChild?.element?.nextSibling), 'nextSibling', this.sessionId);
     }
 
-    public modifyBox(region: number, offset?: number, negative = true) {
+    public modifyBox(region: number, offset?: number, negative = true, registered = false) {
         if (offset !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
@@ -904,31 +908,29 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (offset === undefined) {
                     setBoxReset();
                 }
-                else {
-                    const nodes = this._boxRegister?.[region];
-                    if (nodes) {
-                        for (const node of nodes) {
-                            node.modifyBox(region, offset, negative);
-                        }
+                else if (!registered) {
+                    let boxAdjustment = this._boxAdjustment;
+                    if (boxAdjustment === undefined) {
+                        boxAdjustment = newBoxModel();
+                        this._boxAdjustment = boxAdjustment;
                     }
-                    else {
-                        let boxAdjustment = this._boxAdjustment;
-                        if (boxAdjustment === undefined) {
-                            boxAdjustment = newBoxModel();
-                            this._boxAdjustment = boxAdjustment;
-                        }
-                        if (!negative) {
-                            if (this[attr] + boxAdjustment[attr] + offset <= 0) {
-                                setBoxReset();
-                                boxAdjustment[attr] = 0;
-                            }
-                            else {
-                                boxAdjustment[attr] += offset;
-                            }
+                    if (!negative) {
+                        if (this[attr] + boxAdjustment[attr] + offset <= 0) {
+                            setBoxReset();
+                            boxAdjustment[attr] = 0;
                         }
                         else {
                             boxAdjustment[attr] += offset;
                         }
+                    }
+                    else {
+                        boxAdjustment[attr] += offset;
+                    }
+                }
+                const nodes = this._boxRegister?.[region];
+                if (nodes) {
+                    for (const node of nodes) {
+                        node.modifyBox(region, offset, negative);
                     }
                 }
             }
@@ -1289,9 +1291,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return super.overflow;
     }
 
-    set baseline(value: boolean) {
-        this._cached.baseline = value;
-    }
     get baseline() {
         return super.baseline;
     }
@@ -1299,15 +1298,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get baselineElement() {
         let result = this._cached.baselineElement;
         if (result === undefined) {
-            let node = this as T;
-            if (node.naturalChildren.length) {
-                let firstChild = node.firstChild as T;
-                while (firstChild && firstChild.baseline) {
-                    node = firstChild;
-                    firstChild = node.firstChild as T;
+            if (this.baseline) {
+                const children = this.naturalElements;
+                if (children.length) {
+                    result = children.every((node: T) => node.baselineElement);
+                }
+                else {
+                    result = this.textElement && !this.multiline || this.inputElement || this.imageElement || this.svgElement;
                 }
             }
-            result = node.baseline && (node.textElement && !node.multiline || node.inputElement || node.imageElement || node.svgElement) && !node.floating;
+            else {
+                result = false;
+            }
             this._cached.baselineElement = result;
         }
         return result;

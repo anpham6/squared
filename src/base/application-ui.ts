@@ -365,12 +365,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public createNode(options: AppNodeUIOptions<T>) {
         const processing = this.processing;
-        const { element, parent, children } = options;
+        const { element, parent, children, replace } = options;
         const node = new this.Node(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode);
         if (parent) {
             node.depth = parent.depth + 1;
             if (parent.naturalElement && (!element || element.parentElement === null)) {
                 node.actualParent = parent;
+            }
+            if (replace && parent.appendTry(replace, node, false)) {
+                replace.parent = node;
+                node.innerWrapped = replace;
             }
         }
         if (children) {
@@ -1071,7 +1075,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (m === 0) {
                                         const next = item.siblingsTrailing[0];
                                         if (next) {
-                                            if (!item.horizontalAligned || next.alignedVertically([item])) {
+                                            if (!item.horizontalAligned || next.alignedVertically([item]) > 0) {
                                                 vertical.push(item);
                                             }
                                             else {
@@ -1129,7 +1133,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                         }
                                         else {
-                                            if (item.alignedVertically()) {
+                                            if (item.alignedVertically() > 0) {
                                                 if (!checkTraverseVertical(item, horizontal, vertical)) {
                                                     break traverse;
                                                 }
