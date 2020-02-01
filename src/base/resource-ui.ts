@@ -650,7 +650,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 if (length) {
                     const dimension = horizontal ? 'width' : 'height';
                     for (let i = 0; i < length; i++) {
-                        borderRadius[i] = node.convertPX(borderRadius[i], dimension, false);
+                        borderRadius[i] = formatPX(node.parseUnit(borderRadius[i], dimension, false));
                     }
                     boxStyle.borderRadius = borderRadius;
                 }

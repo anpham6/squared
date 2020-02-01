@@ -4,6 +4,8 @@ import NodeUI from './node-ui';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
+const { isLength } = squared.lib.css;
+
 export default abstract class NodeGroupUI extends NodeUI {
     public init() {
         if (this.length) {
@@ -120,7 +122,12 @@ export default abstract class NodeGroupUI extends NodeUI {
         let result = this._cached.baseline;
         if (result === undefined) {
             const value = this.cssInitial('verticalAlign', true);
-            result = value !== '' ? value === 'baseline' : this.layoutHorizontal && this.every(node => node.baseline);
+            if (value === '') {
+                result = this.baselineElement;
+            }
+            else {
+                result = value === 'baseline' || isLength(value, true);
+            }
             this._cached.baseline = result;
         }
         return result;

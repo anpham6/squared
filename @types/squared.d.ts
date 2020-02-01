@@ -458,7 +458,6 @@ declare namespace base {
         toElementBoolean(attr: string, fallback?: boolean): boolean;
         toElementString(attr: string, fallback?: string): string;
         parseUnit(value: string, dimension?: string, parent?: boolean, screenDimension?: Dimension): number;
-        convertPX(value: string, dimension?: string, parent?: boolean, screenDimension?: Dimension): string;
         has(attr: string, checkType?: number, options?: {}): boolean;
         hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
         setBounds(cache?: boolean): void;
@@ -523,6 +522,7 @@ declare namespace base {
         readonly textEmpty: boolean;
         readonly preserveWhiteSpace: boolean;
         readonly baselineHeight: number;
+        readonly baselineElement: boolean;
         readonly positiveAxis: boolean;
         readonly percentWidth: boolean;
         readonly percentHeight: boolean;

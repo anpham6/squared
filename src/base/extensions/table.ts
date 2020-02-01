@@ -498,7 +498,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         if (i >= 0 && i < rowCount - 1) {
                             const next = tableFilled[i + 1][j];
                             if (next?.css('visibility') === 'visible' && next !== td) {
-                                if (td.borderBottomWidth >= next.borderTopWidth) {
+                                if (td.borderBottomWidth > next.borderTopWidth) {
                                     next.css('borderTopWidth', '0px', true);
                                 }
                                 else {

@@ -1877,9 +1877,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 break;
                         }
                     }
-                    else if (this.is(CONTAINER_NODE.PROGRESS)) {
-                        result += 4;
-                    }
                 }
                 this._cached.baselineHeight = result;
             }
@@ -1896,7 +1893,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (absoluteParent === documentParent) {
                             result = true;
                         }
-                        else if (absoluteParent && absoluteParent.box.right === documentParent.linear.right && this.has('right') && !this.has('left')) {
+                        else if (absoluteParent?.box.right === documentParent.linear.right && this.has('right') && !this.has('left')) {
                             this.css('top', formatPX(this.linear.top - documentParent.box.top), true);
                             result = true;
                         }

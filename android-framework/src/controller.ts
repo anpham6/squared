@@ -138,17 +138,10 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
 
 function isLayoutBaselineAligned(node: View) {
     if (!node.floating) {
-        const children = node.renderChildren;
         if (node.layoutHorizontal) {
-            return children.every(item => item.baseline && !item.baselineAltered && (!item.positionRelative || item.top === 0 && item.bottom === 0));
+            return node.renderChildren.every(item => item.baseline && !item.baselineAltered && (!item.positionRelative || item.top === 0 && item.bottom === 0));
         }
-        else if (node.layoutVertical) {
-            const firstChild = children[0];
-            return firstChild.baseline && (firstChild.textElement || firstChild.inputElement);
-        }
-        else if (node.layoutFrame && children.length === 1 && children[0].baseline) {
-            return true;
-        }
+        return node.baselineElement;
     }
     return false;
 }
@@ -589,28 +582,28 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public static setFlexDimension<T extends View>(node: T, dimension: string, percentWidth = 1, percentHeight = 1): [number, number] {
         const horizontal = dimension === 'width';
         const { grow, basis, shrink } = node.flexbox;
-        function setFlexGrow(value: string) {
+        function setFlexGrow(value: number) {
             if (grow > 0) {
                 node.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', truncate(grow, node.localSettings.floatPrecision));
                 return true;
             }
-            else if (value !== '') {
+            else if (value > 0) {
                 if (shrink > 1) {
-                    value = formatPX(parseFloat(value) / shrink);
+                    value /= shrink;
                 }
                 else if (shrink > 1) {
-                    value = formatPX((1 - shrink) * parseFloat(value));
+                    value *= 1 - shrink;
                 }
-                node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', value);
+                node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
             }
             return false;
         }
         if (isLength(basis)) {
-            setFlexGrow(node.convertPX(basis, dimension));
+            setFlexGrow(node.parseUnit(basis, dimension));
             setLayoutDimension(node, '0px', horizontal, true);
         }
         else if (basis !== '0%' && isPercent(basis)) {
-            setFlexGrow('');
+            setFlexGrow(0);
             if (horizontal) {
                 percentWidth = setConstraintPercent(node, basis, true, percentWidth);
             }
@@ -621,7 +614,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             let flexible = false;
             if (Node.isFlexDirection(node, horizontal ? 'row' : 'column')) {
-                flexible = setFlexGrow(node.hasPX(dimension, false) ? formatPX(horizontal ? node.actualWidth : node.actualHeight) : '');
+                flexible = setFlexGrow(node.hasPX(dimension, false) ? horizontal ? node.actualWidth : node.actualHeight : 0);
                 if (flexible) {
                     setLayoutDimension(node, '0px', horizontal, true);
                 }
@@ -1076,64 +1069,51 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public setConstraints() {
         for (const node of this.cache) {
-            if (node.layoutRelative) {
-                this.processRelativeHorizontal(node, node.renderChildren as T[]);
-            }
-            else if (node.layoutConstraint) {
-                const children = node.renderFilter((item: T) => !item.positioned) as T[];
-                if (children.length) {
-                    const pageFlow: T[] = [];
-                    for (const item of children) {
-                        if (item.pageFlow || item.positionAuto) {
-                            pageFlow.push(item);
-                        }
-                        else if (item.leftTopAxis) {
-                            setLeftTopAxis(item, node, item.hasWidth, true);
-                            setLeftTopAxis(item, node, item.hasHeight, false);
+            const renderChildren = node.renderChildren as T[];
+            const length = renderChildren.length;
+            if (length) {
+                if (node.layoutRelative) {
+                    this.processRelativeHorizontal(node, renderChildren);
+                }
+                else if (node.layoutConstraint) {
+                    const pageFlow: T[] = new Array(length);
+                    let j = 0;
+                    for (let i = 0; i < length; i++) {
+                        const item = renderChildren[i];
+                        if (!item.positioned) {
+                            if (item.pageFlow || item.positionAuto) {
+                                pageFlow[j++] = item;
+                            }
+                            else {
+                                if (item.leftTopAxis) {
+                                    setLeftTopAxis(item, node, item.hasWidth, true);
+                                    setLeftTopAxis(item, node, item.hasHeight, false);
+                                }
+                                if (!item.anchored) {
+                                    this.addGuideline(item, node);
+                                }
+                            }
                         }
                     }
-                    if (pageFlow.length) {
+                    if (j > 0) {
+                        pageFlow.length = j;
                         if (node.layoutHorizontal && !node.layoutElement) {
                             this.processConstraintHorizontal(node, pageFlow);
                         }
                         else if (node.hasAlign(NODE_ALIGNMENT.COLUMN)) {
                             this.processConstraintColumn(node, pageFlow);
                         }
-                        else if (pageFlow.length > 1) {
+                        else if (j > 1) {
                             this.processConstraintChain(node, pageFlow);
                         }
                         else {
                             const item = pageFlow[0];
-                            item.anchorParent(STRING_ANDROID.HORIZONTAL);
-                            item.anchorParent(STRING_ANDROID.VERTICAL);
-                            if (item.rightAligned) {
-                                item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', 1, false);
-                            }
-                            else if (!item.centerAligned) {
-                                item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', 0, false);
-                            }
-                            if (!item.autoMargin.topBottom) {
-                                item.anchorStyle(STRING_ANDROID.VERTICAL, 'packed', 0, false);
-                            }
+                            const autoMargin = item.autoMargin;
+                            item.anchorParent(STRING_ANDROID.VERTICAL, 'packed', autoMargin.topBottom ? 0.5 : (autoMargin.top ? 1 : 0), false);
+                            item.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed', item.centerAligned ? 0.5 : (item.rightAligned ? 1 : 0), false);
                             Controller.setConstraintDimension(item);
                         }
                         this.evaluateAnchors(pageFlow);
-                    }
-                    for (const item of children) {
-                        if (!item.anchored) {
-                            if (item.outerWrapper) {
-                                const { horizontal, vertical } = item.constraint;
-                                if (horizontal) {
-                                    item.anchorParent(STRING_ANDROID.HORIZONTAL);
-                                }
-                                if (vertical) {
-                                    item.anchorParent(STRING_ANDROID.VERTICAL);
-                                }
-                            }
-                            else {
-                                this.addGuideline(item, node);
-                            }
-                        }
                     }
                 }
             }
@@ -2563,10 +2543,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (i > 0) {
                     const previousRow = rows[i - 1];
                     if (previousBaseline === null) {
-                        previousBaseline = previousRow.find(sibling => !sibling.floating) || previousRow[0];
+                        previousBaseline = previousRow.find(sibling => sibling.baselineElement) || previousRow[0];
                     }
                     for (const sibling of previousRow) {
-                        if (sibling.baselineHeight >= previousBaseline.baselineHeight && sibling.linear.bottom >= previousBaseline.linear.bottom && (!sibling.floating && sibling.baseline && sibling.cascade().every(item => item.baseline) || previousBaseline.floating)) {
+                        if (sibling !== previousBaseline && (sibling.baselineElement || previousBaseline.floating) && sibling.baselineHeight >= previousBaseline.baselineHeight && sibling.linear.bottom >= previousBaseline.linear.bottom) {
                             previousBaseline = sibling;
                         }
                     }
@@ -2628,6 +2608,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (!node.hasPX('width') && children.some(item => item.percentWidth)) {
             node.setLayoutWidth('match_parent');
         }
+        let valid = true;
         let tallest: Undef<T>;
         let bottom: Undef<T>;
         let previous: Undef<T>;
@@ -2715,6 +2696,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             item.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
                             item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
                             item.baselineAltered = true;
+                            valid = false;
                         }
                     }
                     else if (item.plainText && baseline) {
@@ -2764,8 +2746,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else {
-                baseline.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
-                baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.floor(baseline.linear.top - node.box.top));
+                if (valid && baseline.baselineElement) {
+                    baseline.anchorParent(STRING_ANDROID.VERTICAL);
+                    baseline.anchor('baseline', 'parent');
+                }
+                else {
+                    baseline.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
+                    baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.floor(baseline.linear.top - node.box.top));
+                }
             }
             baseline.anchored = true;
         }

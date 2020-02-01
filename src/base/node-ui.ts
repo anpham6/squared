@@ -7,12 +7,12 @@ import { CSS_SPACING } from './lib/constant';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 const $lib = squared.lib;
-const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, formatPX, isLength, isPercent } = $lib.css;
+const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, formatPX, isPercent } = $lib.css;
 const { isTextNode, newBoxModel } = $lib.dom;
 const { isEqual } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { aboveRange, assignEmptyProperty, belowRange, cloneObject, convertWord, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
+const { aboveRange, assignEmptyProperty, belowRange, cloneObject, convertFloat, convertWord, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
 
 type T = NodeUI;
 
@@ -133,8 +133,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public static baseline<T extends NodeUI>(list: T[], text = false): Null<T> {
         const result: T[] = [];
         for (const item of list) {
-            if ((item.baseline || isLength(item.verticalAlign)) && (!text || item.textElement) && !item.floating && (item.naturalChild && item.length === 0 || !item.layoutVertical && item.every(child => child.baseline && !child.multiline)) && !item.baselineAltered) {
-                result.push(item);
+            if (item.baseline && (!text || item.textElement) && !item.baselineAltered) {
+                if (item.layoutHorizontal) {
+                    if (item.every((child: T) => child.baselineElement)) {
+                        result.push(item);
+                    }
+                }
+                else {
+                    result.push(item);
+                }
             }
         }
         if (result.length > 1) {
@@ -145,8 +152,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (b.length && a.length === 0) {
                     return -1;
                 }
-                const heightA = a.baselineHeight + a.marginTop;
-                const heightB = b.baselineHeight + b.marginTop;
+                const heightA = a.baselineHeight + a.marginBottom + Math.max(0, convertFloat(a.verticalAlign) * -1);
+                const heightB = b.baselineHeight + b.marginBottom + Math.max(0, convertFloat(b.verticalAlign) * -1);
                 if (!isEqual(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
                 }
@@ -532,10 +539,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return super.parseUnit(value, dimension, parent, screenDimension || this.localSettings.screenDimension);
     }
 
-    public convertPX(value: string, dimension = 'width', parent = true, screenDimension?: Dimension) {
-        return super.convertPX(value, dimension, parent, screenDimension || this.localSettings.screenDimension);
-    }
-
     public renderEach(predicate: IteratorPredicate<T, void>) {
         const children = this.renderChildren;
         const length = children.length;
@@ -655,10 +658,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this.setCacheValue('backgroundColor', backgroundColor);
                     this.setCacheValue('backgroundImage', backgroundImage);
                     node.cssApply({
-                        borderTopWidth: '0px',
-                        borderBottomWidth: '0px',
-                        borderRightWidth: '0px',
-                        borderLeftWidth: '0px',
                         backgroundColor: 'transparent',
                         backgroundImage: 'none',
                         border: '0px none solid',
@@ -857,9 +856,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (previous.lineBreak) {
                     return NODE_TRAVERSE.LINEBREAK;
                 }
-                else if (cleared?.get(previous) === 'both' && (!isArray(siblings) || siblings[0] !== previous)) {
-                    return NODE_TRAVERSE.FLOAT_CLEAR;
-                }
                 else {
                     const blockStatic = this.blockStatic || this.display === 'table';
                     if (blockStatic && (!previous.floating || !previous.rightAligned && withinRange(previous.linear.right, (this.actualParent || this.documentParent).box.right) || cleared?.has(previous))) {
@@ -874,7 +870,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                     }
                 }
-                if (blockDimension && checkBlockDimension(this, previous)) {
+                if (cleared?.get(previous) === 'both' && (!isArray(siblings) || siblings[0] !== previous)) {
+                    return NODE_TRAVERSE.FLOAT_CLEAR;
+                }
+                else if (blockDimension && checkBlockDimension(this, previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }
@@ -1295,6 +1294,23 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get baseline() {
         return super.baseline;
+    }
+
+    get baselineElement() {
+        let result = this._cached.baselineElement;
+        if (result === undefined) {
+            let node = this as T;
+            if (node.naturalChildren.length) {
+                let firstChild = node.firstChild as T;
+                while (firstChild && firstChild.baseline) {
+                    node = firstChild;
+                    firstChild = node.firstChild as T;
+                }
+            }
+            result = node.baseline && (node.textElement && !node.multiline || node.inputElement || node.imageElement || node.svgElement) && !node.floating;
+            this._cached.baselineElement = result;
+        }
+        return result;
     }
 
     set multiline(value: boolean) {

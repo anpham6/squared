@@ -1065,10 +1065,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return 0;
     }
 
-    public convertPX(value: string, dimension = 'width', parent = true, screenDimension?: Dimension) {
-        return PX.test(value) ? value : Math.round(this.parseUnit(value, dimension, parent, screenDimension)) + 'px';
-    }
-
     public has(attr: string, checkType = 0, options?: ObjectMap<string | string[] | boolean>) {
         const value = (options?.map === 'initial' && this._initial?.styleMap || this._styleMap)[attr];
         if (value) {
@@ -1431,7 +1427,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (!this.positionStatic) {
             const unit = this.cssInitial(attr, true);
             if (isLength(unit)) {
-                return convertFloat(this.convertPX(unit, attr === 'left' || attr === 'right' ? 'width' : 'height'));
+                return this.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
             }
             else if (isPercent(unit) && this.styleElement) {
                 return convertFloat(this.style[attr]);
@@ -1683,6 +1679,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'BUTTON':
                 case 'SELECT':
                 case 'TEXTAREA':
+                case 'PROGRESS':
+                case 'METER':
                     result = true;
                     break;
                 default:
@@ -2409,8 +2407,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.baseline;
         if (result === undefined) {
             if (this.pageFlow && !this.floating) {
-                const value = this.verticalAlign;
-                result = value === 'baseline' || value === '0px' || value === 'initial';
+                const value = this.cssInitial('verticalAlign', false, true);
+                result = value === 'baseline' || value === 'initial' || isLength(value, true);
             }
             else {
                 result = false;
@@ -2425,7 +2423,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             result = this.css('verticalAlign');
             if (isLength(result, true)) {
-                result = this.convertPX(result, 'height');
+                result = this.parseUnit(result, 'height') + 'px';
             }
             this._cached.verticalAlign = result;
         }

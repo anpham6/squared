@@ -13,7 +13,6 @@ const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: 
 const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
 const REGEX_SRCSET = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
 const REGEX_CALCULATE = /(\s+[+-]\s+|\s*[*/]\s*)/;
-const REGEX_PX = CSS.PX;
 
 function compareRange(operation: string, unit: number, range: number) {
     switch (operation) {
@@ -858,7 +857,7 @@ export function convertAngle(value: string, unit = 'deg') {
 }
 
 export function convertPX(value: string, fontSize?: number) {
-    return value ? (REGEX_PX.test(value) ? value : parseUnit(value, fontSize) + 'px') : '0px';
+    return value ? parseUnit(value, fontSize) + 'px' : '0px';
 }
 
 export function calculate(value: string, dimension = 0, fontSize?: number) {

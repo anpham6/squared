@@ -52,6 +52,7 @@ export interface CachedValue<T> {
     blockVertical?: boolean;
     floating?: boolean;
     baseline?: boolean;
+    baselineElement?: boolean;
     verticalAlign?: string;
     multiline?: boolean;
     centerAligned?: boolean;

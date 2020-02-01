@@ -118,7 +118,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         if (CSS.PX.test(value)) {
             filled += parseFloat(value);
         }
-        else if (isUnitFR(value)) {
+        else if (isFr(value)) {
             fractional += parseFloat(value);
         }
         else if (isPercent(value)) {
@@ -130,7 +130,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         if (ratio > 0) {
             for (let i = 0; i < length; i++) {
                 const value = unit[i];
-                if (isUnitFR(value)) {
+                if (isFr(value)) {
                     unit[i] = formatPX(parseFloat(value) * ratio);
                 }
             }
@@ -179,8 +179,8 @@ function getOpenRowIndex(cells: number[][]) {
     return Math.max(0, length - 1);
 }
 
-const isUnitFR = (value: string) => /fr$/.test(value);
-const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? node.convertPX(value, index === 0 ? 'height' : 'width') : value;
+const isFr = (value: string) => /fr$/.test(value);
+const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, index === 0 ? 'height' : 'width')) : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static isAligned<T extends NodeUI>(node: T) {
@@ -284,100 +284,104 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         row.gap = node.parseUnit(node.css('rowGap'), 'height', false);
         column.gap = node.parseUnit(node.css('columnGap'), 'width', false);
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
-            if (value !== '' && value !== 'none' && value !== 'auto') {
+            if (value !== '' && value !== 'none' && !(value === 'auto' && index <= 1)) {
                 const data = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = data;
                 let match: Null<RegExpMatchArray>;
                 let i = 1;
                 while ((match = REGEX_NAMED.exec(value)) !== null) {
                     const command = match[1].trim();
-                    if (index < 2) {
-                        if (command.charAt(0) === '[') {
-                            for (const attr of match[4].split(CHAR.SPACE)) {
-                                let item = name[attr];
-                                if (item === undefined) {
-                                    item = [];
-                                    name[attr] = item;
+                    switch (index) {
+                        case 0:
+                        case 1:
+                            if (command.charAt(0) === '[') {
+                                for (const attr of match[4].split(CHAR.SPACE)) {
+                                    let item = name[attr];
+                                    if (item === undefined) {
+                                        item = [];
+                                        name[attr] = item;
+                                    }
+                                    item.push(i);
                                 }
-                                item.push(i);
                             }
-                        }
-                        else if (/^repeat/.test(command)) {
-                            let iterations = 1;
-                            switch (match[2]) {
-                                case 'auto-fit':
-                                    data.autoFit = true;
-                                    break;
-                                case 'auto-fill':
-                                    data.autoFill = true;
-                                    break;
-                                default:
-                                    iterations = parseInt(match[2]) || 1;
-                                    break;
-                            }
-                            if (iterations > 0) {
-                                const repeating: RepeatItem[] = [];
-                                let subMatch: Null<RegExpMatchArray>;
-                                while ((subMatch = REGEX_REPEAT.exec(match[3])) !== null) {
-                                    const subPattern = subMatch[1];
-                                    let namedMatch: Null<RegExpMatchArray>;
-                                    if ((namedMatch = REGEX_CELL_NAMED.exec(subPattern)) !== null) {
-                                        const subName = namedMatch[1];
-                                        if (name[subName] === undefined) {
-                                            name[subName] = [];
+                            else if (/^repeat/.test(command)) {
+                                let iterations = 1;
+                                switch (match[2]) {
+                                    case 'auto-fit':
+                                        data.autoFit = true;
+                                        break;
+                                    case 'auto-fill':
+                                        data.autoFill = true;
+                                        break;
+                                    default:
+                                        iterations = parseInt(match[2]) || 1;
+                                        break;
+                                }
+                                if (iterations > 0) {
+                                    const repeating: RepeatItem[] = [];
+                                    let subMatch: Null<RegExpMatchArray>;
+                                    while ((subMatch = REGEX_REPEAT.exec(match[3])) !== null) {
+                                        const subPattern = subMatch[1];
+                                        let namedMatch: Null<RegExpMatchArray>;
+                                        if ((namedMatch = REGEX_CELL_NAMED.exec(subPattern)) !== null) {
+                                            const subName = namedMatch[1];
+                                            if (name[subName] === undefined) {
+                                                name[subName] = [];
+                                            }
+                                            repeating.push({ name: subName });
                                         }
-                                        repeating.push({ name: subName });
-                                    }
-                                    else if ((namedMatch = REGEX_CELL_MINMAX.exec(subPattern)) !== null) {
-                                        repeating.push({ unit: convertLength(node, namedMatch[2], index), unitMin: convertLength(node, namedMatch[1], index) });
-                                    }
-                                    else if ((namedMatch = REGEX_CELL_FIT_CONTENT.exec(subPattern)) !== null) {
-                                        repeating.push({ unit: convertLength(node, namedMatch[1], index), unitMin: '0px' });
-                                    }
-                                    else if ((namedMatch = REGEX_CELL_UNIT.exec(subPattern)) !== null) {
-                                        repeating.push({ unit: convertLength(node, namedMatch[0], index) });
-                                    }
-                                }
-                                if (repeating.length) {
-                                    for (let j = 0; j < iterations; j++) {
-                                        for (const item of repeating) {
-                                            const { name: nameA, unit: unitA } = item;
-                                            if (nameA) {
-                                                name[nameA].push(i);
-                                            }
-                                            else if (unitA) {
-                                                unit.push(unitA);
-                                                unitMin.push(item.unitMin || '');
-                                                repeat.push(true);
-                                                i++;
-                                            }
+                                        else if ((namedMatch = REGEX_CELL_MINMAX.exec(subPattern)) !== null) {
+                                            repeating.push({ unit: convertLength(node, namedMatch[2], index), unitMin: convertLength(node, namedMatch[1], index) });
+                                        }
+                                        else if ((namedMatch = REGEX_CELL_FIT_CONTENT.exec(subPattern)) !== null) {
+                                            repeating.push({ unit: convertLength(node, namedMatch[1], index), unitMin: '0px' });
+                                        }
+                                        else if ((namedMatch = REGEX_CELL_UNIT.exec(subPattern)) !== null) {
+                                            repeating.push({ unit: convertLength(node, namedMatch[0], index) });
                                         }
                                     }
+                                    if (repeating.length) {
+                                        for (let j = 0; j < iterations; j++) {
+                                            for (const item of repeating) {
+                                                const { name: nameA, unit: unitA } = item;
+                                                if (nameA) {
+                                                    name[nameA].push(i);
+                                                }
+                                                else if (unitA) {
+                                                    unit.push(unitA);
+                                                    unitMin.push(item.unitMin || '');
+                                                    repeat.push(true);
+                                                    i++;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    REGEX_REPEAT.lastIndex = 0;
                                 }
-                                REGEX_REPEAT.lastIndex = 0;
                             }
-                        }
-                        else if (/^minmax/.test(command)) {
-                            unit.push(convertLength(node, match[6], index));
-                            unitMin.push(convertLength(node, match[5], index));
-                            repeat.push(false);
-                            i++;
-                        }
-                        else if (/^fit-content/.test(command)) {
-                            unit.push(convertLength(node, match[7], index));
-                            unitMin.push('0px');
-                            repeat.push(false);
-                            i++;
-                        }
-                        else if (REGEX_UNIT.test(command)) {
-                            unit.push(convertLength(node, command, index));
-                            unitMin.push('');
-                            repeat.push(false);
-                            i++;
-                        }
-                    }
-                    else {
-                        (index === 2 ? row : column).auto.push(node.convertPX(command));
+                            else if (/^minmax/.test(command)) {
+                                unit.push(convertLength(node, match[6], index));
+                                unitMin.push(convertLength(node, match[5], index));
+                                repeat.push(false);
+                                i++;
+                            }
+                            else if (/^fit-content/.test(command)) {
+                                unit.push(convertLength(node, match[7], index));
+                                unitMin.push('0px');
+                                repeat.push(false);
+                                i++;
+                            }
+                            else if (REGEX_UNIT.test(command)) {
+                                unit.push(convertLength(node, command, index));
+                                unitMin.push('');
+                                repeat.push(false);
+                                i++;
+                            }
+                            break;
+                        case 2:
+                        case 3:
+                            (index === 2 ? row : column).auto.push(isLength(command) ? formatPX(node.parseUnit(command, index === 2 ? 'height' : 'width')) : command);
+                            break
                     }
                 }
                 REGEX_NAMED.lastIndex = 0;
@@ -798,7 +802,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (isPercent(value)) {
                     percent -= parseFloat(value) / 100;
                 }
-                else if (isUnitFR(value)) {
+                else if (isFr(value)) {
                     fr += parseFloat(value);
                 }
                 else if (value === 'auto') {
@@ -811,7 +815,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     const lengthB = unit.length;
                     for (let i = 0; i < lengthB; i++) {
                         const value = unit[i];
-                        if (isUnitFR(value)) {
+                        if (isFr(value)) {
                             unit[i] = percent * (parseFloat(value) / fr) + 'fr';
                         }
                     }

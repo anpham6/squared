@@ -326,7 +326,20 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (!inheritedTop && previousSiblings.length > 1) {
                                     if (previousSiblings[0].floating && (node.layoutVertical || current.renderParent?.layoutVertical)) {
                                         const offset = previousSiblings[0].linear.top - current.linear.top;
-                                        if (offset < 0) {
+                                        if (current === firstChild) {
+                                            if (offset > 0) {
+                                                const marginTop = current.marginTop;
+                                                if (marginTop > 0) {
+                                                    if (offset < marginTop) {
+                                                        current.modifyBox(BOX_STANDARD.MARGIN_TOP, -offset, false);
+                                                    }
+                                                    else {
+                                                        current.modifyBox(BOX_STANDARD.MARGIN_TOP);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else if (offset < 0) {
                                             current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset, false);
                                         }
                                     }
@@ -468,8 +481,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     public afterConstraints() {
         for (const node of this.cacheProcessing) {
             if (node.pageFlow && node.styleElement && node.inlineVertical && !node.positioned) {
-                const renderParent = node.renderParent;
-                if (renderParent && !renderParent.tableElement && node.actualParent?.layoutElement === false) {
+                const renderParent = (node.outerMostWrapper || node).renderParent;
+                if (renderParent?.is(NODE_ALIGNMENT.AUTO_LAYOUT) === false) {
                     if (node.blockDimension && !node.floating) {
                         if (renderParent.layoutVertical) {
                             const children = renderParent.renderChildren;

@@ -10,13 +10,13 @@ const { getBackgroundPosition, resolveURL } = squared.lib.css;
 const REGEX_BACKGROUNDPOSITION = /^0[a-z%]+|left|start|top/;
 
 export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
-    public is() {
-        return true;
+    public is(node: T) {
+        return node.length === 0 && node.hasWidth && node.hasHeight;
     }
 
     public condition(node: T) {
         const backgroundImage = node.backgroundImage;
-        if (backgroundImage !== '' && node.hasWidth && node.hasHeight && node.length === 0 && (this.included(<HTMLElement> node.element) || !node.dataset.use)) {
+        if (backgroundImage !== '' && (this.included(<HTMLElement> node.element) || !node.dataset.use)) {
             const image = <ImageAsset> (this.resource.getRawData(backgroundImage) || this.resource.getImage(resolveURL(backgroundImage)));
             if (image) {
                 const dimension = node.actualDimension;
@@ -26,7 +26,7 @@ export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
                     backgroundPositionX + ' ' + backgroundPositionY,
                     dimension,
                     node.fontSize,
-                    image,
+                    undefined,
                     '',
                     node.localSettings.screenDimension
                 );
