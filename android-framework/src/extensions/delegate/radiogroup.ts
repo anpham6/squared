@@ -5,12 +5,29 @@ import View from '../../view';
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-const $base = squared.base;
-const { NodeUI } = $base;
-
 const { getElementAsNode } = squared.lib.session;
 
+const $base = squared.base;
 const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
+
+const NodeUI = $base.NodeUI;
+
+function setBaselineIndex(children: View[], container: View) {
+    let valid = false;
+    const length = children.length;
+    for (let i = 0; i < length; i++) {
+        const item = children[i];
+        if (item.toElementBoolean('checked')) {
+            item.android('checked', 'true');
+        }
+        if (!valid && item.baseline && item.parent === container && container.layoutLinear && (i === 0 || container.layoutHorizontal)) {
+            container.android('baselineAlignedChildIndex', i.toString());
+            valid = true;
+        }
+        item.positioned = true;
+    }
+    return valid;
+}
 
 const getInputName = (element: HTMLInputElement) => element.name ? element.name.trim() : '';
 
@@ -55,7 +72,8 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 removeable.push(remove);
             }
         });
-        if (radiogroup.length > 1) {
+        let length = radiogroup.length;
+        if (length > 1) {
             const linearX = NodeUI.linearData(parent.children.slice(first, last + 1)).linearX;
             const container = this.controller.createNodeGroup(node, radiogroup, parent, true);
             const controlName = CONTAINER_ANDROID.RADIOGROUP;
@@ -69,19 +87,13 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             }
             container.setControlType(controlName, CONTAINER_NODE.LINEAR);
             container.inherit(node, 'alignment');
-            if (container.baseline) {
-                container.css('verticalAlign', 'middle');
-                container.setCacheValue('baseline', false);
-                container.setCacheValue('verticalAlign', 'middle');
-            }
             container.exclude({ resource: NODE_RESOURCE.ASSET });
             const dataset = node.dataset;
             container.render(dataset.target && !dataset.use ? this.application.resolveTarget(dataset.target) : parent);
-            for (const item of radiogroup) {
-                if (item.toElementBoolean('checked')) {
-                    item.android('checked', 'true');
-                }
-                item.positioned = true;
+            if (!setBaselineIndex(radiogroup, container)) {
+                container.css('verticalAlign', 'middle');
+                container.setCacheValue('baseline', false);
+                container.setCacheValue('verticalAlign', 'middle');
             }
             for (const item of removeable) {
                 item.hide();
@@ -108,7 +120,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                     radiogroup.push(item);
                 }
             });
-            const length = radiogroup.length;
+            length = radiogroup.length;
             if (length > 1 && radiogroup.includes(node)) {
                 const controlName = CONTAINER_ANDROID.RADIOGROUP;
                 const data = new Map<T, number>();
@@ -136,12 +148,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                                 template.controlName = controlName;
                             }
                         }
-                        for (const item of radiogroup) {
-                            if (item.toElementBoolean('checked')) {
-                                item.android('checked', 'true');
-                            }
-                            item.positioned = true;
-                        }
+                        setBaselineIndex(radiogroup, parent);
                         return undefined;
                     }
                 }

@@ -456,7 +456,7 @@ declare namespace base {
         toElementFloat(attr: string, fallback?: number): number;
         toElementBoolean(attr: string, fallback?: boolean): boolean;
         toElementString(attr: string, fallback?: string): string;
-        parseUnit(value: string, dimension?: string, parent?: boolean, screenDimension?: Dimension): number;
+        parseUnit(value: string, dimension?: "width" | "height", parent?: boolean, screenDimension?: Dimension): number;
         has(attr: string, checkType?: number, options?: {}): boolean;
         hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
         setBounds(cache?: boolean): void;
@@ -573,11 +573,11 @@ declare namespace base {
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
         previousSiblings(options?: SiblingOptions): NodeUI[];
         nextSiblings(options?: SiblingOptions): NodeUI[];
-        modifyBox(region: number, offset?: number, negative?: boolean, registered?: boolean): void;
+        modifyBox(region: number, offset?: number, negative?: boolean): void;
         getBox(region: number): [number, number];
         resetBox(region: number, node?: NodeUI): void;
         transferBox(region: number, node: NodeUI): void;
-        registerBox(region: number, node?: NodeUI): Set<NodeUI>;
+        registerBox(region: number, node?: NodeUI): Undef<NodeUI>;
         extractAttributes(depth: number): string;
         setCacheValue(attr: string, value: any): void;
         cssSet(attr: string, value: string, cache?: boolean): string;

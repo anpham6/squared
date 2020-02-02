@@ -81,4 +81,9 @@ export interface TableCellData {
     rowSpan: number;
     colSpan: number;
     spaceSpan?: number;
+    percent?: string;
+    expand?: boolean;
+    downsized?: boolean;
+    exceed?: boolean;
+    placed?: boolean;
 }

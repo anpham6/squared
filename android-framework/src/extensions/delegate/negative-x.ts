@@ -40,15 +40,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
             containerType: CONTAINER_NODE.CONSTRAINT
         });
-        const { marginTop, marginBottom } = node;
-        if (marginTop > 0) {
-            container.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
-            node.modifyBox(BOX_STANDARD.MARGIN_TOP);
-        }
-        if (marginBottom > 0) {
-            container.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, marginBottom);
-            node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM);
-        }
+        node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
         let left = NaN;
         let right = NaN;
         let firstChild: Undef<T>;

@@ -507,12 +507,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         size = 0;
                     }
                     else {
-                        const gap = item.parseUnit(value, horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL);
+                        const cellSize = item.parseUnit(value, horizontal ? 'width' : 'height');
                         if (minSize === 0) {
-                            size += gap;
+                            size += cellSize;
                         }
                         else {
-                            minSize += gap;
+                            minSize += cellSize;
                         }
                     }
                     if (node.textElement && CHAR.UNITZERO.test(min)) {
@@ -636,6 +636,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             }
                         }
                     }
+                    else if (unit.length === 0 && !item.hasPX(dimension)) {
+                        if (horizontal) {
+                            item.setLayoutWidth('match_parent', false);
+                        }
+                        else {
+                            item.setLayoutHeight('wrap_content', false);
+                        }
+                    }
                     if (columnWeight) {
                         item.android('layout_columnWeight', '0');
                     }
@@ -650,21 +658,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 renderAs.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.CUSTOMIZATION });
                 renderAs.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING);
                 renderAs.render(parent);
-                if (layoutConstraint) {
-                    const marginRight = node.getBox(BOX_STANDARD.MARGIN_RIGHT)[1];
-                    const marginBottom = node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1];
-                    if (marginRight > 0) {
-                        node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, -marginRight);
-                        renderAs.modifyBox(BOX_STANDARD.PADDING_RIGHT, marginRight);
-                    }
-                    if (marginBottom > 0) {
-                        node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, -marginBottom);
-                        renderAs.modifyBox(BOX_STANDARD.PADDING_BOTTOM, marginBottom);
-                    }
-                }
-                else {
-                    node.transferBox(BOX_STANDARD.MARGIN, renderAs);
-                }
+                node.transferBox(BOX_STANDARD.MARGIN, renderAs);
                 let inlineWidth = true;
                 if (REGEX_JUSTIFYLEFT.test(justifySelf)) {
                     node.mergeGravity('layout_gravity', 'left');
@@ -715,7 +709,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
             const [rowStart, rowSpan] = applyLayout(target, false, 'height');
-            if (alignContent === 'normal' && !parent.hasPX('height') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && node.bounds.height > (<BoxRectDimension> node.data(CSS_GRID, 'boundsData'))?.height && checkRowSpan(node, mainData, rowSpan, rowStart)) {
+            if (alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (<BoxRectDimension> node.data(CSS_GRID, 'boundsData'))?.height && checkRowSpan(node, mainData, rowSpan, rowStart)) {
                 target.css('minHeight', formatPX(node.actualHeight), true);
             }
             else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && /^space/.test(alignContent)) && !REGEX_ALIGNSELF.test(mainData.alignItems)) {
@@ -787,7 +781,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (CssGrid.isAligned(node)) {
                 setContentSpacing(node, mainData, alignContent, false, 'height', outerWrapper, BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, 0, (<android.base.Controller<T>> this.controller).userSettings.resolutionScreenHeight);
                 if (outerWrapper) {
-                    switch (justifyContent) {
+                    switch (alignContent) {
                         case 'space-around':
                         case 'space-evenly':
                             node.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0.5, true);

@@ -1,4 +1,4 @@
-import { TableData } from '../../../@types/base/extension';
+import { TableData, TableCellData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
@@ -101,21 +101,37 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const tableFilled: T[][] = [];
         const mapWidth: string[] = [];
         const rowCount = table.length;
-        let columnIndex: number[] = new Array(rowCount).fill(0);
         let columnCount = 0;
         for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
             rowWidth[i] = horizontal;
-            tableFilled[i] = [];
-            tr.each((td: T, j) => {
+            const row: T[] = tableFilled[i] || [];
+            tableFilled[i] = row;
+            tr.each((td: T, index) => {
                 const element = <HTMLTableCellElement> td.element;
-                for (let k = 0; k < element.rowSpan - 1; k++)  {
-                    const col = i + k + 1;
-                    if (columnIndex[col] >= 0) {
-                        columnIndex[col] += element.colSpan;
+                const rowSpan = element.rowSpan;
+                let colSpan = element.colSpan;
+                let j = -1;
+                for (let k = 0; j === -1; k++) {
+                    if (row[k] === undefined) {
+                        j = k;
                     }
                 }
-                const m = columnIndex[i];
+                for (let k = i; k < i + rowSpan; k++) {
+                    if (tableFilled[k] === undefined) {
+                        tableFilled[k] = [];
+                    }
+                    for (let l = j, m = 0; l < j + colSpan; l++) {
+                        if (tableFilled[k][l] === undefined) {
+                            tableFilled[k][l] = td;
+                            m++;
+                        }
+                        else {
+                            colSpan = m
+                            break;
+                        }
+                    }
+                }
                 if (!td.hasPX('width')) {
                     const value = getNamedItem(element, 'width');
                     if (isPercent(value)) {
@@ -136,7 +152,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     if (colgroup) {
-                        const { backgroundImage, backgroundColor } = getStyle(colgroup.children[m]);
+                        const { backgroundImage, backgroundColor } = getStyle(colgroup.children[index + 1]);
                         if (backgroundImage && backgroundImage !== 'none') {
                             td.css('backgroundImage', backgroundImage, true);
                         }
@@ -204,28 +220,28 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 const columnWidth = td.cssInitial('width');
-                const reevaluate = mapWidth[m] === undefined || mapWidth[m] === 'auto';
+                const reevaluate = mapWidth[j] === undefined || mapWidth[j] === 'auto';
                 const width = td.bounds.width;
                 if (i === 0 || reevaluate || !mainData.layoutFixed) {
                     if (columnWidth === '' || columnWidth === 'auto') {
-                        if (mapWidth[m] === undefined) {
-                            mapWidth[m] = columnWidth || '0px';
-                            mapBounds[m] = 0;
+                        if (mapWidth[j] === undefined) {
+                            mapWidth[j] = columnWidth || '0px';
+                            mapBounds[j] = 0;
                         }
                         else if (i === rowCount - 1) {
-                            if (reevaluate && mapBounds[m] === 0) {
-                                mapBounds[m] = width;
+                            if (reevaluate && mapBounds[j] === 0) {
+                                mapBounds[j] = width;
                             }
                         }
                     }
                     else {
                         const percent = isPercent(columnWidth);
-                        const length = isLength(mapWidth[m]);
-                        if (reevaluate || width < mapBounds[m] || width === mapBounds[m] && (length && percent || percent && isPercent(mapWidth[m]) && td.parseUnit(columnWidth) >= td.parseUnit(mapWidth[m]) || length && isLength(columnWidth) && td.parseUnit(columnWidth) > td.parseUnit(mapWidth[m]))) {
-                            mapWidth[m] = columnWidth;
+                        const length = isLength(mapWidth[j]);
+                        if (reevaluate || width < mapBounds[j] || width === mapBounds[j] && (length && percent || percent && isPercent(mapWidth[j]) && td.parseUnit(columnWidth) >= td.parseUnit(mapWidth[j]) || length && isLength(columnWidth) && td.parseUnit(columnWidth) > td.parseUnit(mapWidth[j]))) {
+                            mapWidth[j] = columnWidth;
                         }
                         if (reevaluate || element.colSpan === 1) {
-                            mapBounds[m] = width;
+                            mapBounds[j] = width;
                         }
                     }
                 }
@@ -233,16 +249,17 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     rowWidth[i] += width + horizontal;
                 }
                 if (spacingWidth > 0) {
-                    td.modifyBox(BOX_STANDARD.MARGIN_LEFT, columnIndex[i] === 0 ? horizontal : spacingWidth);
-                    td.modifyBox(BOX_STANDARD.MARGIN_RIGHT, j === 0 ? spacingWidth : horizontal);
+                    td.modifyBox(BOX_STANDARD.MARGIN_LEFT, j === 0 ? horizontal : spacingWidth);
+                    td.modifyBox(BOX_STANDARD.MARGIN_RIGHT, index === 0 ? spacingWidth : horizontal);
                 }
                 if (spacingHeight > 0) {
                     td.modifyBox(BOX_STANDARD.MARGIN_TOP, i === 0 ? vertical : spacingHeight);
-                    td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, i + element.rowSpan < rowCount ? spacingHeight : vertical);
+                    td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, i + rowSpan < rowCount ? spacingHeight : vertical);
                 }
-                columnIndex[i] += element.colSpan;
+                td.data(TABLE, 'cellData', { colSpan, rowSpan });
             });
-            columnCount = Math.max(columnCount, columnIndex[i]);
+            tr.hide();
+            columnCount = Math.max(columnCount, row.length);
         }
         if (node.hasPX('width', false) && mapWidth.some(value => isPercent(value))) {
             replaceMap<string, string>(mapWidth, (value, index) => {
@@ -355,23 +372,17 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             caption.parent = node;
         }
         const hasWidth = node.hasWidth;
-        columnIndex = new Array(rowCount).fill(0);
         for (let i = 0; i < rowCount; i++) {
-            const tr = table[i];
-            let lastChild: Undef<T>;
-            for (const td of tr.duplicate() as T[]) {
-                const { rowSpan, colSpan } = <HTMLTableCellElement> td.element;
-                const data: ExternalData = { rowSpan, colSpan };
-                for (let k = 0; k < rowSpan - 1; k++)  {
-                    const l = (i + 1) + k;
-                    if (l in columnIndex) {
-                        columnIndex[l] += colSpan;
-                    }
+            const tr = tableFilled[i];
+            const length = tr.length;
+            for (let j = 0; j < length; ) {
+                const td = tr[j];
+                const data: TableCellData = td.data(TABLE, 'cellData');
+                if (data.placed) {
+                    j += data.colSpan;
+                    continue;
                 }
-                if (!td.has('verticalAlign')) {
-                    td.css('verticalAlign', 'middle');
-                }
-                const columnWidth = mapWidth[columnIndex[i]];
+                const columnWidth = mapWidth[j];
                 if (columnWidth) {
                     switch (mainData.layoutType) {
                         case LAYOUT_TABLE.NONE:
@@ -444,23 +455,16 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             break;
                     }
                 }
-                columnIndex[i] += colSpan;
-                for (let k = 0; k < rowSpan; k++) {
-                    for (let l = 0; l < colSpan; l++) {
-                        tableFilled[i + k].push(td);
-                    }
-                }
-                td.data(TABLE, 'cellData', data);
+                data.placed = true;
                 td.parent = node;
-                lastChild = td;
+                j += data.colSpan;
             }
-            if (lastChild && columnIndex[i] < columnCount) {
-                const data: ExternalData = lastChild.data(TABLE, 'cellData');
+            if (length < columnCount) {
+                const data: ExternalData = tr[length - 1].data(TABLE, 'cellData');
                 if (data) {
-                    data.spaceSpan = columnCount - columnIndex[i];
+                    data.spaceSpan = columnCount - length;
                 }
             }
-            tr.hide();
         }
         if (mainData.borderCollapse) {
             const borderTopColor = node.css('borderTopColor');

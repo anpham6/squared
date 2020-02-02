@@ -52,7 +52,7 @@ const MAP_vertical = {
     RLBT: 'bottomTop'
 };
 
-function adjustGrowRatio(parent: View, items: View[], attr: string) {
+function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") {
     const horizontal = attr === 'width';
     const hasDimension = 'has' + capitalize(attr);
     const setPercentage = (item: View) => item.flexbox.basis = (item.bounds[attr] / parent.box[attr] * 100) + '%';
@@ -348,7 +348,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 }
                 const { orientation, orientationInverse, WH, HW, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_horizontal : MAP_vertical;
                 const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
-                const WHL = WH.toLowerCase();
+                const WHL = horizontal ? 'width' : 'height';
                 const HWL = HW.toLowerCase();
                 const dimension: boolean = node['has' + HW];
                 const dimensionInverse: boolean = node['has' + WH];

@@ -5,8 +5,6 @@ import View from '../../view';
 import LayoutUI = squared.base.LayoutUI;
 import CssGrid = squared.base.extensions.CssGrid;
 
-const { formatPX } = squared.lib.css;
-
 const { NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const getLayoutDimension = (value: string) => value === 'space-between' ? 'match_parent' : 'wrap_content';
@@ -24,15 +22,16 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, {
             controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
             containerType: CONTAINER_NODE.CONSTRAINT,
-            resource: NODE_RESOURCE.ASSET
+            resource: NODE_RESOURCE.ASSET,
+            resetMargin: !node.documentBody
         });
-        container.inherit(node, 'base', 'initial', 'styleMap', 'boxStyle');
+        container.inherit(node, 'styleMap', 'boxStyle');
         if (CssGrid.isJustified(node)) {
             node.setLayoutWidth(getLayoutDimension(node.css('justifyContent')));
         }
         else {
-            if (node.contentBoxWidth > 0 && node.hasPX('width', false)) {
-                node.setLayoutWidth(formatPX(node.actualWidth - node.contentBoxWidth));
+            if (node.hasPX('width', false)) {
+                node.setLayoutWidth('match_parent');
             }
             else {
                 container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
@@ -42,8 +41,8 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
             node.setLayoutHeight(getLayoutDimension(node.css('alignContent')));
         }
         else {
-            if (node.contentBoxHeight > 0 && node.hasPX('height', false)) {
-                node.setLayoutHeight(formatPX(node.actualHeight - node.contentBoxHeight));
+            if (node.hasPX('height', false)) {
+                node.setLayoutHeight('match_parent');
             }
             else {
                 container.setLayoutHeight('wrap_content');

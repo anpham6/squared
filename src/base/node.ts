@@ -6,7 +6,7 @@ import { EXT_NAME } from './lib/constant';
 
 const $lib = squared.lib;
 const { USER_AGENT, isUserAgent } = $lib.client;
-const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
+const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
 const { CHAR, CSS, FILE, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = $lib.session;
@@ -1044,7 +1044,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return (this._element?.[attr] || fallback).toString();
     }
 
-    public parseUnit(value: string, dimension = 'width', parent = true, screenDimension?: Dimension) {
+    public parseUnit(value: string, dimension: "width" | "height" = 'width', parent = true, screenDimension?: Dimension) {
         if (value) {
             if (isPercent(value)) {
                 const node = parent && this.absoluteParent || this;
@@ -1372,7 +1372,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    private setDimension(attr: string, attrMin: string, attrMax: string) {
+    private setDimension(attr: "width" | "height", attrMin: string, attrMax: string) {
         const styleMap = this._styleMap;
         const valueA = styleMap[attr];
         const baseValue = this.parseUnit(valueA, attr);
@@ -1678,8 +1678,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'BUTTON':
                 case 'SELECT':
                 case 'TEXTAREA':
-                case 'PROGRESS':
-                case 'METER':
                     result = true;
                     break;
                 default:
@@ -1838,7 +1836,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.hasWidth;
         if (result === undefined) {
             result = this.width > 0;
-            this._cached.hasWidth = result; 
+            this._cached.hasWidth = result;
         }
         return result;
     }
@@ -2154,6 +2152,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             case 'BR':
             case 'HR':
             case 'TEXTAREA':
+            case 'PROGRESS':
+            case 'METER':
                 this._inlineText = false;
                 break;
             case 'BUTTON':
@@ -2288,7 +2288,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get horizontalAligned() {
         let result = this._cached.horizontalAligned;
         if (result === undefined) {
-            result = !this.blockStatic && !this.autoMargin.horizontal && !this.multiline && !(this.blockDimension && this.css('width') === '100%');
+            result = !this.blockStatic && !this.autoMargin.horizontal && !(this.blockDimension && this.css('width') === '100%') && (!this.multiline || this.floating);
             this._cached.horizontalAligned = result;
         }
         return result;
@@ -2749,7 +2749,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             result = this.naturalElement ? getFontSize(this.style) : parseUnit(this.css('fontSize'));
             if (result === 0 && !this.naturalChild) {
                 const element = this.element;
-                result = element ? getFontSize(getStyle(element)) : NaN;
+                result = element && hasComputedStyle(element) ? getFontSize(getStyle(element)) : NaN;
             }
             while (isNaN(result)) {
                 const parent = this.actualParent;

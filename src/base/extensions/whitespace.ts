@@ -34,10 +34,8 @@ function setSpacingOffset(node: NodeUI, region: number, value: number, adjustmen
 
 function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
     if (isBlockElement(child, direction)) {
-        const [margin, borderWidth, padding, boxMargin] =
-            direction
-                ? ['marginTop', 'borderTopWidth', 'paddingTop', BOX_STANDARD.MARGIN_TOP]
-                : ['marginBottom', 'borderBottomWidth', 'paddingBottom', BOX_STANDARD.MARGIN_BOTTOM];
+        const [margin, borderWidth, padding, region] = direction ? ['marginTop', 'borderTopWidth', 'paddingTop', BOX_STANDARD.MARGIN_TOP]
+                                                                 : ['marginBottom', 'borderBottomWidth', 'paddingBottom', BOX_STANDARD.MARGIN_BOTTOM];
         if (node[borderWidth] === 0) {
             if (node[padding] === 0) {
                 while (DOCTYPE_HTML && child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0 && canResetChild(child)) {
@@ -49,8 +47,8 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                         break;
                     }
                 }
-                const offsetParent = node[margin];
-                const offsetChild = child[margin];
+                const offsetParent: number = node[margin];
+                const offsetChild: number = child[margin];
                 if (offsetParent > 0 || offsetChild > 0) {
                     const height = child.bounds.height;
                     let resetChild = false;
@@ -62,12 +60,12 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                         if (height === 0 && outside && child.textEmpty && child.extensions.length === 0) {
                             child.hide();
                         }
-                        else if (child.getBox(boxMargin)[0] !== 1) {
+                        else if (child.getBox(region)[0] !== 1) {
                             if (outside) {
                                 resetChild = true;
                             }
                             else if (node.documentBody) {
-                                resetMargin(node, boxMargin);
+                                resetMargin(node, region);
                                 if (direction) {
                                     node.bounds.top = 0;
                                     node.unset('box');
@@ -75,16 +73,27 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                                 }
                             }
                             else {
-                                if (node.getBox(boxMargin)[0] !== 1) {
-                                    node.modifyBox(boxMargin);
-                                    node.modifyBox(boxMargin, offsetChild);
+                                if (node.getBox(region)[0] !== 1) {
+                                    node.modifyBox(region);
+                                    node.modifyBox(region, offsetChild);
                                 }
                                 resetChild = true;
                             }
                         }
+                        else {
+                            const outerWrapper = child.registerBox(region);
+                            if (outerWrapper) {
+                                const value = outerWrapper.getBox(region)[1];
+                                if (value > 0) {
+                                    node.modifyBox(region);
+                                    node.modifyBox(region, value);
+                                    outerWrapper.modifyBox(region, -value);
+                                }
+                            }
+                        }
                     }
                     if (resetChild) {
-                        resetMargin(child, boxMargin);
+                        resetMargin(child, region);
                         if (height === 0 && !child.every(item => item.floating)) {
                             resetMargin(child, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
                         }
@@ -128,8 +137,11 @@ function resetMargin(node: NodeUI, region: number) {
         node.modifyBox(region);
     }
     else {
-        const offset = node[CSS_SPACING.get(region) as string];
-        node.modifyBox(region, -offset, false, true);
+        const outerWrapper = node.registerBox(region);
+        if (outerWrapper) {
+            const offset = node[CSS_SPACING.get(region) as string];
+            outerWrapper.modifyBox(region, -offset, false);
+        }
     }
 }
 
@@ -308,14 +320,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         }
                                     }
                                     if (inheritedTop) {
-                                        for (const item of current.registerBox(BOX_STANDARD.MARGIN_TOP)) {
-                                            item.setCacheValue('marginTop', marginTop);
-                                        }
+                                        current.registerBox(BOX_STANDARD.MARGIN_TOP)?.setCacheValue('marginTop', marginTop);
                                     }
                                     if (inheritedBottom) {
-                                        for (const item of previous.registerBox(BOX_STANDARD.MARGIN_BOTTOM)) {
-                                            item.setCacheValue('marginBottom', marginBottom);
-                                        }
+                                        previous.registerBox(BOX_STANDARD.MARGIN_BOTTOM)?.setCacheValue('marginBottom', marginBottom);
                                     }
                                 }
                                 if (!inheritedTop && previousSiblings.length > 1) {

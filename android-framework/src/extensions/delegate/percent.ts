@@ -4,7 +4,7 @@ import View from '../../view';
 
 import LayoutUI = squared.base.LayoutUI;
 
-const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
+const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const isFlexible = (node: View) => !node.documentParent.layoutElement && !/^table/.test(node.display);
 
@@ -24,7 +24,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public processNode(node: T, parent: T) {
-        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent);
+        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, { resetMargin: true });
         if (node.percentWidth) {
             container.css('display', 'block');
             container.setLayoutWidth('match_parent');
@@ -54,12 +54,5 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             ),
             include: true
         };
-    }
-
-    public postConstraints(node: T) {
-        const outerWrapper = node.outerMostWrapper;
-        if (outerWrapper) {
-            node.resetBox(BOX_STANDARD.MARGIN, outerWrapper);
-        }
     }
 }

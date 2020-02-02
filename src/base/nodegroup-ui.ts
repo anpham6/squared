@@ -123,7 +123,7 @@ export default abstract class NodeGroupUI extends NodeUI {
         if (result === undefined) {
             const value = this.cssInitial('verticalAlign', true);
             if (value === '') {
-                result = this.baselineElement;
+                result = this.every((node: NodeUI) => node.baseline);
             }
             else {
                 result = value === 'baseline' || isLength(value, true);

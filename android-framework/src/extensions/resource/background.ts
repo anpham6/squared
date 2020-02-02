@@ -5,7 +5,7 @@ import Resource from '../../resource';
 import ResourceSvg from './svg';
 import View from '../../view';
 
-import { EXT_ANDROID, STRING_ANDROID, XMLNS_ANDROID } from '../../lib/constant';
+import { EXT_ANDROID, STRING_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
 import LAYERLIST_TMPL from '../../template/layer-list';
@@ -1257,6 +1257,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     height = boundsHeight;
                                     resetGravityPosition();
                                 }
+                                gravity = 'fill';
                             }
                             if (dimenWidth > boundsWidth) {
                                 gravityX = '';
@@ -1298,13 +1299,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             break;
                     }
                     if (dimension) {
+                        const ratioWidth = dimenWidth / boundsWidth;
+                        const ratioHeight = dimenHeight / boundsHeight;
+                        const getImageWidth = () => dimenWidth * height / dimenHeight;
+                        const getImageHeight = () => dimenHeight * width / dimenWidth;
+                        const getImageRatioWidth = () => boundsWidth * (ratioWidth / ratioHeight);
+                        const getImageRatioHeight = () => boundsHeight * (ratioHeight / ratioWidth);
                         switch (size) {
                             case 'cover': {
-                                const ratioWidth = dimenWidth / boundsWidth;
-                                const ratioHeight = dimenHeight / boundsHeight;
                                 if (ratioWidth < ratioHeight) {
                                     width = boundsWidth;
-                                    height = boundsHeight * (ratioHeight / ratioWidth);
+                                    height = getImageRatioHeight();
                                     if (height > boundsHeight) {
                                         const percent = position.topAsPercent;
                                         if (percent > 0) {
@@ -1318,7 +1323,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     gravity = '';
                                 }
                                 else if (ratioWidth > ratioHeight) {
-                                    width = boundsWidth * (ratioWidth / ratioHeight);
+                                    width = getImageRatioWidth();
                                     height = boundsHeight;
                                     if (node.hasWidth && width > boundsWidth) {
                                         const percent = position.leftAsPercent;
@@ -1336,32 +1341,33 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 break;
                             }
                             case 'contain': {
-                                const ratioWidth = dimenWidth / boundsWidth;
-                                const ratioHeight = dimenHeight / boundsHeight;
                                 if (ratioWidth > ratioHeight) {
-                                    gravityAlign = 'fill_horizontal|center_vertical';
-                                    width = 0;
-                                    height = boundsHeight * (ratioHeight / ratioWidth);
+                                    height = getImageRatioHeight();
+                                    width = dimenWidth < boundsWidth ? getImageWidth() : boundsWidth;
                                     gravity = '';
+                                    gravityAlign = 'fill_horizontal|center_vertical';
                                 }
                                 else if (ratioWidth < ratioHeight) {
-                                    gravityAlign = 'fill_vertical|center_horizontal';
-                                    width = boundsWidth * (ratioWidth / ratioHeight);
-                                    height = 0;
+                                    width = getImageRatioWidth();
+                                    height = dimenHeight < boundsHeight ? getImageHeight() : boundsHeight;
                                     gravity = '';
+                                    gravityAlign = 'fill_vertical|center_horizontal';
                                 }
                                 else {
-                                    gravity = 'fill';
+                                    width = getImageRatioWidth();
+                                    height = getImageRatioHeight();
+                                    gravity = '';
+                                    gravityAlign = 'fill';
                                 }
-                                resetGravityPosition(false);
+                                resetGravityPosition();
                                 break;
                             }
                             default:
                                 if (width === 0 && height > 0 && canResizeHorizontal()) {
-                                    width = dimenWidth * height / dimenHeight;
+                                    width = getImageWidth();
                                 }
                                 if (height === 0 && width > 0 && canResizeVertical()) {
-                                    height = dimenHeight * width / dimenWidth;
+                                    height = getImageHeight();
                                 }
                                 break;
                         }
@@ -1407,7 +1413,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         gravityY = '';
                         recalibrate = false;
                     }
-                    else if (width === 0 && height === 0 && dimenWidth < boundsWidth && dimenHeight < boundsHeight && canResizeHorizontal() && canResizeVertical() && !svg) {
+                    else if (width === 0 && height === 0 && dimenWidth < boundsWidth && dimenHeight < boundsHeight && !svg && canResizeHorizontal() && canResizeVertical()) {
                         width = dimenWidth;
                         height = dimenHeight;
                     }
@@ -1496,10 +1502,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                             else if (boundsHeight < dimenHeight && !node.hasPX('height') && node.length === 0) {
                                 height = boundsHeight;
-                                gravityAlign = '';
                                 if (gravityY === '') {
-                                    gravityY = 'top';
+                                    switch (node.controlName) {
+                                        case SUPPORT_ANDROID.TOOLBAR:
+                                        case SUPPORT_ANDROID_X.TOOLBAR:
+                                            gravityY = 'fill_vertical';
+                                            break;
+                                        default:
+                                            gravityY = 'top';
+                                            break;
+                                    }
                                 }
+                                tileModeY = '';
                             }
                         }
                     }
@@ -1540,12 +1554,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                 }
                             }
-                            else if (tileModeY !== '' && (gravityX === '' || gravityX.includes('start') || gravityX.includes('left') || gravityX.includes('fill_horizontal'))) {
-                                gravityAlign = gravityX;
-                                gravityX = '';
-                                if (node.renderChildren.length) {
-                                    tileModeY = '';
-                                }
+                            else if (tileModeY !== '' && node.renderChildren.length && (gravityX === '' || gravityX.includes('start') || gravityX.includes('left') || gravityX.includes('fill_horizontal'))) {
+                                tileModeY = '';
                             }
                         }
                     }
@@ -1559,7 +1569,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 gravity = 'center';
                             }
                         }
-                        else if (gravityX === 'fill_horizontal' && gravityY === 'fill_vertical') {
+                        else if (gravityX.includes('fill_horizontal') && gravityY.includes('fill_vertical')) {
                             gravity = 'fill';
                         }
                         else {
@@ -1571,19 +1581,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 gravity += (gravity ? '|' : '') + gravityY;
                             }
                         }
-                        if (gravityX === 'fill_horizontal') {
-                            gravityX = '';
-                        }
-                        if (gravityY === 'fill_vertical') {
-                            gravityY = '';
-                        }
+                        gravityX = '';
+                        gravityY = '';
                     }
                     const covering = size === 'cover' || size === 'contain';
                     if (node.documentBody && !covering && tileModeX !== 'repeat' && gravity !== '' && gravityAlign === '') {
                         imageData.gravity = gravity;
                         imageData.drawable = src;
                     }
-                    else if ((tileMode === 'repeat' || tileModeX !== '' || tileModeY !== '' || gravityAlign !== '' && gravity !== '' || covering || !resizable && height > 0) && !svg) {
+                    else if (!svg && (tileMode === 'repeat' || tileModeX !== '' || tileModeY !== '' || gravityAlign !== '' && gravity !== '' || covering || !resizable && height > 0)) {
                         switch (gravity) {
                             case 'top':
                                 if (tileModeY === 'repeat' && !node.hasHeight && !node.layoutLinear && !(node.layoutRelative && node.horizontalRows === undefined)) {

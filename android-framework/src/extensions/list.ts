@@ -14,12 +14,25 @@ const { formatPX, getBackgroundPosition } = $lib.css;
 const { convertInt } = $lib.util;
 
 const $base = squared.base;
-const { NodeUI } = $base;
-
 const $base_lib = $base.lib;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = $base_lib.enumeration;
 
 const LIST = $base_lib.constant.EXT_NAME.LIST;
+const NodeUI = $base.NodeUI;
+
+function isBlockElement(node: View) {
+    if (node.blockStatic) {
+        return true;
+    }
+    else if (!node.floating) {
+        switch (node.display) {
+            case 'table':
+            case 'list-item':
+                return true;
+        }
+    }
+    return false;
+}
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
@@ -83,8 +96,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     alignmentType
                 });
                 if (marginTop !== 0) {
-                    container.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
-                    node.registerBox(BOX_STANDARD.MARGIN_TOP, container);
+                    node.resetBox(BOX_STANDARD.MARGIN_TOP, container);
                 }
             }
             else {
@@ -150,6 +162,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     image = resource.addImageSrc(mainData.imageSrc);
                 }
+                const options = createViewAttribute();
+                ordinal = application.createNode({ parent });
+                ordinal.childIndex = node.childIndex;
+                ordinal.containerName = node.containerName + '_ORDINAL';
+                ordinal.inherit(node, 'textStyle');
+                if (value !== '' && !/\.$/.test(value)) {
+                    ordinal.fontSize *= 0.75;
+                }
                 if (gravity === 'right') {
                     if (image) {
                         paddingRight = Math.max(minWidth / 6, 4);
@@ -159,10 +179,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         value += '&#160;'.repeat(value.length === 1 ? 3 : 2);
                     }
                 }
-                const options = createViewAttribute();
-                ordinal = application.createNode({ parent });
-                ordinal.childIndex = node.childIndex;
-                ordinal.containerName = node.containerName + '_ORDINAL';
                 if (columnCount === 3) {
                     container.android('layout_columnSpan', '2');
                 }
@@ -191,11 +207,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         ordinal.setControlType(CONTAINER_ANDROID.SPACE, CONTAINER_NODE.SPACE);
                         ordinal.renderExclude = false;
                         node.modifyBox(BOX_STANDARD.PADDING_LEFT);
-                    }
-                    ordinal.depth = node.depth;
-                    ordinal.inherit(node, 'textStyle');
-                    if (value !== '' && !/\.$/.test(value)) {
-                        ordinal.fontSize *= 0.75;
                     }
                     const { paddingTop, lineHeight } = node;
                     ordinal.cssApply({
@@ -234,10 +245,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
             ordinal.positioned = true;
-            if (marginTop !== 0) {
+            const blockParent = isBlockElement(parent);
+            const blockNode = isBlockElement(node);
+            if (marginTop !== 0 && (firstChild && blockParent && blockNode && marginTop > parent.marginTop || !blockParent || !blockNode)) {
                 ordinal.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
-                node.registerBox(BOX_STANDARD.MARGIN_TOP, ordinal);
-                node.modifyBox(BOX_STANDARD.MARGIN_TOP);
             }
             if (adjustPadding) {
                 if (isNaN(resetPadding) || resetPadding <= 0) {
@@ -251,7 +262,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 container.setLayoutWidth('0px');
                 container.android('layout_columnWeight', '1');
                 if (container !== node) {
-                    if (node.baseline) {
+                    if (node.baselineElement) {
                         container.android('baselineAlignedChildIndex', '0');
                     }
                 }

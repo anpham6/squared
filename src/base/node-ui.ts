@@ -7,7 +7,7 @@ import { CSS_SPACING } from './lib/constant';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 const $lib = squared.lib;
-const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, formatPX, isPercent } = $lib.css;
+const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, isPercent } = $lib.css;
 const { isTextNode, newBoxModel } = $lib.dom;
 const { isEqual } = $lib.math;
 const { XML } = $lib.regex;
@@ -134,9 +134,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result: T[] = [];
         for (const item of list) {
             if (item.baseline && (!text || item.textElement) && !item.baselineAltered) {
-                const children = item.naturalChildren;
-                if (children.length) {
-                    if (children.every((child: T) => child.baselineElement)) {
+                if (item.naturalChildren.length) {
+                    if (item.baselineElement) {
                         result.push(item);
                     }
                 }
@@ -405,9 +404,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract horizontalRows?: T[][];
     public abstract readonly renderChildren: T[];
 
+    protected _boxRegister: ObjectIndex<T> = {};
     protected _documentParent?: T;
     protected _controlName?: string;
-    protected _boxRegister?: ObjectMap<Set<T>>;
     protected abstract _cached: CachedValueUI<T>;
     protected abstract _namespaces: string[];
     protected abstract _boxAdjustment?: BoxModel;
@@ -539,7 +538,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this.rendered = true;
     }
 
-    public parseUnit(value: string, dimension = 'width', parent = true, screenDimension?: Dimension) {
+    public parseUnit(value: string, dimension: "width" | "height" = 'width', parent = true, screenDimension?: Dimension) {
         return super.parseUnit(value, dimension, parent, screenDimension || this.localSettings.screenDimension);
     }
 
@@ -893,7 +892,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return traverseElementSibling(options, <Element> (this.element?.nextSibling || this.innerMostWrapped?.element?.nextSibling || this.firstChild?.element?.nextSibling), 'nextSibling', this.sessionId);
     }
 
-    public modifyBox(region: number, offset?: number, negative = true, registered = false) {
+    public modifyBox(region: number, offset?: number, negative = true) {
         if (offset !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
@@ -905,32 +904,38 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     boxReset[attr] = 1;
                 };
+                const node = this._boxRegister[region];
                 if (offset === undefined) {
-                    setBoxReset();
-                }
-                else if (!registered) {
-                    let boxAdjustment = this._boxAdjustment;
-                    if (boxAdjustment === undefined) {
-                        boxAdjustment = newBoxModel();
-                        this._boxAdjustment = boxAdjustment;
-                    }
-                    if (!negative) {
-                        if (this[attr] + boxAdjustment[attr] + offset <= 0) {
-                            setBoxReset();
-                            boxAdjustment[attr] = 0;
-                        }
-                        else {
-                            boxAdjustment[attr] += offset;
+                    if (node) {
+                        const value: number = this[attr] || node.getBox(region)[1];
+                        if (value > 0) {
+                            node.modifyBox(region, -value, false);
                         }
                     }
                     else {
-                        boxAdjustment[attr] += offset;
+                        setBoxReset();
                     }
                 }
-                const nodes = this._boxRegister?.[region];
-                if (nodes) {
-                    for (const node of nodes) {
+                else {
+                    if (node) {
                         node.modifyBox(region, offset, negative);
+                    }
+                    else {
+                        let boxAdjustment = this._boxAdjustment;
+                        if (boxAdjustment === undefined) {
+                            boxAdjustment = newBoxModel();
+                            this._boxAdjustment = boxAdjustment;
+                        }
+                        if (!negative) {
+                            if (this[attr] + boxAdjustment[attr] + offset <= 0) {
+                                if (this.naturalChild) {
+                                    setBoxReset();
+                                }
+                                boxAdjustment[attr] = 0;
+                                return;
+                            }
+                        }
+                        boxAdjustment[attr] += offset;
                     }
                 }
             }
@@ -950,30 +955,34 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
         const applyReset = (attrs: string[], start: number) => {
             for (let i = 0; i < 4; i++) {
-                const name = attrs[i];
-                if (boxReset[name] === 0) {
-                    boxReset[name] = 1;
+                const key = CSS_SPACING_KEYS[i + start];
+                if (hasBit(region, key)) {
+                    boxReset[attrs[i]] = 1;
                     if (node) {
-                        const key = CSS_SPACING_KEYS[i + start];
-                        const attr = CSS_SPACING.get(key) as string;
-                        const value = this[attr];
-                        if (value !== 0) {
-                            if (!node.naturalChild && node[attr] === 0) {
-                                node.css(attr, formatPX(value), true);
+                        const previous = this.registerBox(key);
+                        if (previous) {
+                            previous.resetBox(key, node);
+                        }
+                        else {
+                            if (this.naturalChild) {
+                                const value = this[CSS_SPACING.get(key) as string];
+                                if (value >= 0) {
+                                    node.modifyBox(key, value);
+                                    this.registerBox(key, node);
+                                }
                             }
                             else {
-                                node.modifyBox(key, value);
+                                this.transferBox(key, node);
                             }
-                            this.registerBox(key, node);
                         }
                     }
                 }
             }
         };
-        if (hasBit(region, BOX_STANDARD.MARGIN)) {
+        if (hasBit(BOX_STANDARD.MARGIN, region)) {
             applyReset(BOX_MARGIN, 0);
         }
-        if (hasBit(region, BOX_STANDARD.PADDING)) {
+        if (hasBit(BOX_STANDARD.PADDING, region)) {
             applyReset(BOX_PADDING, 4);
         }
     }
@@ -986,69 +995,75 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
         const applyReset = (attrs: string[], start: number) => {
             for (let i = 0; i < 4; i++) {
-                const value: number = boxAdjustment[attrs[i]];
-                if (value > 0) {
-                    const key = CSS_SPACING_KEYS[i + start];
-                    node.modifyBox(key, value, false);
-                    this.registerBox(key, node);
-                    boxAdjustment[attrs[i]] = 0;
+                const key = CSS_SPACING_KEYS[i + start];
+                if (hasBit(region, key)) {
+                    const name = attrs[i];
+                    const value: number = boxAdjustment[name];
+                    if (value !== 0) {
+                        node.modifyBox(key, value, false);
+                        boxAdjustment[name] = 0;
+                    }
+                    const previous = this.registerBox(key);
+                    if (previous) {
+                        previous.transferBox(key, node);
+                    }
+                    else {
+                        this.registerBox(key, node);
+                    }
                 }
             }
         };
-        if (hasBit(region, BOX_STANDARD.MARGIN)) {
+        if (hasBit(BOX_STANDARD.MARGIN, region)) {
             applyReset(BOX_MARGIN, 0);
         }
-        if (hasBit(region, BOX_STANDARD.PADDING)) {
+        if (hasBit(BOX_STANDARD.PADDING, region)) {
             applyReset(BOX_PADDING, 4);
         }
     }
 
-    public registerBox(region: number, node?: T) {
-        let boxRegister = this._boxRegister;
-        if (boxRegister === undefined) {
-            boxRegister = {};
-            this._boxRegister = boxRegister;
-        }
-        let result = boxRegister[region];
-        if (result === undefined) {
-            result = new Set();
-            boxRegister[region] = result;
-        }
+    public registerBox(region: number, node?: T): Undef<NodeUI> {
+        const boxRegister = this._boxRegister;
         if (node) {
-            result.add(node);
+            boxRegister[region] = node;
         }
-        return result;
+        return boxRegister[region];
     }
 
     public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
-        if (!this.layoutElement) {
-            let node = this as T;
-            while (!node.naturalChild) {
-                const innerWrapped = node.innerWrapped as T;
-                if (innerWrapped) {
-                    node = innerWrapped;
-                    if (node.naturalChild && node.getBox(attr === 'paddingTop' ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM)[0] !== 1) {
+        if (value > 0) {
+            if (!this.layoutElement) {
+                let node = (this as T).innerMostWrapped;
+                if (node) {
+                    if (node.naturalChild) {
+                        if (node.getBox(attr === 'paddingTop' ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM)[0] === 0) {
+                            return 0;
+                        }
+                    }
+                    else {
                         return value;
                     }
                 }
                 else {
-                    return value;
+                    node = this as T;
+                }
+                if (node.naturalChild) {
+                    let reset = false;
+                    if (canCascadeChildren(node)) {
+                        reset = cascadeActualPadding(node.naturalElements as T[], attr, value);
+                    }
+                    return reset ? 0 : value;
                 }
             }
-            let reset = false;
-            if (canCascadeChildren(node)) {
-                reset = cascadeActualPadding(node.naturalElements as T[], attr, value);
+            else if (this.gridElement) {
+                switch (this.css('alignContent')) {
+                    case 'space-around':
+                    case 'space-evenly':
+                        return 0;
+                }
             }
-            return reset ? 0 : value;
+            return value;
         }
-        else if (this.gridElement) {
-            switch (this.css('alignContent')) {
-                case 'space-around':
-                case 'space-evenly':
-                    return 0;
-            }
-        }
-        return value;
+        return 0;
     }
 
     public cloneBase(node: T) {

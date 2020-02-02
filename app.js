@@ -98,6 +98,7 @@ app.post('/api/assets/copy', (req, res) => {
             }
         }
         try {
+            const invalid = {};
             for (const file of req.body) {
                 const { pathname, filename, level, quality } = getFileData(file, directory);
                 function writeBuffer() {
@@ -141,16 +142,26 @@ app.post('/api/assets/copy', (req, res) => {
                     delayed++;
                     const stream = fs.createWriteStream(filename);
                     stream.on('finish', () => {
-                        writeBuffer();
-                        finalize(true);
+                        if (!invalid[filename]) {
+                            writeBuffer();
+                            finalize(true);
+                        }
                     });
                     request(file.uri)
                         .on('response', res => {
                             if (res.statusCode !== 200) {
+                                invalid[filename] = true;
+                                if (res.statusCode === 404) {
+                                    console.log(`FAIL: ${file.uri} (File not found)`);
+                                }
                                 finalize(true);
                             }
                         })
-                        .on('error', () => finalize(true))
+                        .on('error', () => {
+                            if (!invalid[filename]) {
+                                finalize(true);
+                            }
+                        })
                         .pipe(stream);
                 }
             }
@@ -214,6 +225,7 @@ app.post('/api/assets/archive', (req, res) => {
             if (unzip_to) {
                 archive.directory(unzip_to, false);
             }
+            const invalid = {};
             for (const file of req.body) {
                 const { pathname, filename, level, quality } = getFileData(file, directory);
                 const data = { name: `${(query.directory ? `${query.directory}/` : '') + file.pathname}/${file.filename}` };
@@ -269,16 +281,26 @@ app.post('/api/assets/archive', (req, res) => {
                     delayed++;
                     const stream = fs.createWriteStream(filename);
                     stream.on('finish', () => {
-                        writeBuffer();
-                        finalize(true);
+                        if (!invalid[filename]) {
+                            writeBuffer();
+                            finalize(true);
+                        }
                     });
                     request(file.uri)
                         .on('response', res => {
                             if (res.statusCode !== 200) {
+                                invalid[filename] = true;
+                                if (res.statusCode === 404) {
+                                    console.log(`FAIL: ${file.uri} (File not found)`);
+                                }
                                 finalize(true);
                             }
                         })
-                        .on('error', () => finalize(true))
+                        .on('error', () => {
+                            if (!invalid[filename]) {
+                                finalize(true);
+                            }
+                        })
                         .pipe(stream);
                 }
             }

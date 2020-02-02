@@ -284,7 +284,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         row.gap = node.parseUnit(node.css('rowGap'), 'height', false);
         column.gap = node.parseUnit(node.css('columnGap'), 'width', false);
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
-            if (value !== '' && value !== 'none' && !(value === 'auto' && index <= 1)) {
+            if (value !== '' && value !== 'none' && value !== 'auto') {
                 const data = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = data;
                 let match: Null<RegExpMatchArray>;

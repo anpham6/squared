@@ -80,7 +80,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {
         const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData');
         if (mainData) {
-            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[]);
+            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentId && !node.pageFlow });
             if (node.documentBody) {
                 let valid = false;
                 if (mainData.right) {
@@ -100,8 +100,13 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     });
                 }
             }
-            else if (!node.pageFlow) {
-                node.resetBox(BOX_STANDARD.MARGIN, container);
+            if (!node.pageFlow) {
+                if (!node.hasPX('width') && node.has('left') && node.has('right')) {
+                    node.setLayoutWidth('match_parent');
+                }
+                if (!node.hasPX('height') && node.has('top') && node.has('bottom')) {
+                    node.setLayoutHeight('match_parent');
+                }
             }
             for (const item of mainData.children) {
                 const autoMargin = item.autoMargin;
@@ -159,17 +164,5 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 }
             }
         }
-    }
-
-    public postConstraints(node: T) {
-        node.each((item: T) => {
-            const constraint = item.constraint;
-            if (!constraint.horizontal) {
-                item.anchor('left', 'parent');
-            }
-            if (!constraint.vertical) {
-                item.anchor('top', 'parent');
-            }
-        });
     }
 }
