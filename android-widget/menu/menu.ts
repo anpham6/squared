@@ -5,9 +5,10 @@ import Resource = android.base.Resource;
 
 const { isNumber } = squared.lib.util;
 
+const $lib = android.lib;
+
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const $lib = android.lib;
 const { EXT_ANDROID } = $lib.constant;
 const { CONTAINER_NODE } = $lib.enumeration;
 const { createViewAttribute } = $lib.util;

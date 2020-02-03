@@ -3,6 +3,7 @@ import SvgBuild from './svgbuild';
 import { getAttribute, getAttributeURL } from './lib/util';
 
 const $lib = squared.lib;
+
 const { parseColor } = $lib.color;
 const { calculateVar, getFontSize, isCustomProperty, isLength, isPercent, parseUnit } = $lib.css;
 const { CSS, STRING, XML } = $lib.regex;

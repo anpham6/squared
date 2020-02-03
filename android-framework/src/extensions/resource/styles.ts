@@ -6,6 +6,7 @@ import View from '../../view';
 import { createStyleAttribute } from '../../lib/util';
 
 const $lib = squared.lib;
+
 const { XML } = $lib.regex;
 const { capitalize, trimString } = $lib.util;
 

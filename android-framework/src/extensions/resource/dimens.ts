@@ -4,6 +4,7 @@ import Resource from '../../resource';
 import View from '../../view';
 
 const $lib = squared.lib;
+
 const { XML } = $lib.regex;
 const { convertUnderscore, fromLastIndexOf } = $lib.util;
 

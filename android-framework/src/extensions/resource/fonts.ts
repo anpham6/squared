@@ -8,6 +8,7 @@ import { BUILD_ANDROID } from '../../lib/enumeration';
 import { convertLength } from '../../lib/util';
 
 const $lib = squared.lib;
+
 const { XML } = $lib.regex;
 const { capitalize, convertInt, convertWord, filterArray, objectMap, spliceArray, trimString } = $lib.util;
 

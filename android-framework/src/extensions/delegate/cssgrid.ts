@@ -3,9 +3,12 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 import View from '../../view';
 
 import LayoutUI = squared.base.LayoutUI;
-import CssGrid = squared.base.extensions.CssGrid;
 
-const { NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
+const $base = squared.base;
+
+const { NODE_ALIGNMENT, NODE_RESOURCE } = $base.lib.enumeration;
+
+const CssGrid = $base.extensions.CssGrid;
 
 const getLayoutDimension = (value: string) => value === 'space-between' ? 'match_parent' : 'wrap_content';
 

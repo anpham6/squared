@@ -11,6 +11,8 @@ import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { createViewAttribute, getDocumentId, getRootNs } from './lib/util';
 
 const $lib = squared.lib;
+const $base = squared.base;
+
 const { PLATFORM, USER_AGENT, isPlatform, isUserAgent } = $lib.client;
 const { parseColor } = $lib.color;
 const { formatPX, getSrcSet, isLength, isPercent, parseUnit } = $lib.css;
@@ -21,9 +23,9 @@ const { getElementAsNode } = $lib.session;
 const { aboveRange, assignEmptyValue, convertFloat, filterArray, hasBit, isString, objectMap, optionalAsObject, partitionArray, withinRange } = $lib.util;
 const { STRING_XMLENCODING, replaceTab } = $lib.xml;
 
-const $base = squared.base;
-const { Node, NodeUI } = $base;
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
+
+const { Node, NodeUI } = $base;
 
 const REGEX_TEXTSHADOW = /^(?:(rgba?\([^)]+\)|[a-z]+) )?(-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?.*$/;
 

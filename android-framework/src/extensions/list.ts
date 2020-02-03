@@ -10,15 +10,16 @@ import { createViewAttribute } from '../lib/util';
 import LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
+const $base = squared.base;
+const $base_lib = $base.lib;
+
 const { formatPX, getBackgroundPosition } = $lib.css;
 const { convertInt } = $lib.util;
 
-const $base = squared.base;
-const $base_lib = $base.lib;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = $base_lib.enumeration;
 
-const LIST = $base_lib.constant.EXT_NAME.LIST;
 const NodeUI = $base.NodeUI;
+const LIST = $base_lib.constant.EXT_NAME.LIST;
 
 function isBlockElement(node: View) {
     if (node.blockStatic) {

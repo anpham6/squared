@@ -5,6 +5,7 @@ import NodeUI from '../node-ui';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const $lib = squared.lib;
+
 const { assignRect } = $lib.dom;
 const { convertFloat, filterArray, withinRange } = $lib.util;
 

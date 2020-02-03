@@ -7,6 +7,7 @@ import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const $lib = squared.lib;
+
 const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength, isPercent } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { maxArray } = $lib.math;

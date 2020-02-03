@@ -7,6 +7,7 @@ import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 import { SVG, getAttribute, getPathLength, getTargetElement } from './lib/util';
 
 const $lib = squared.lib;
+
 const { isPercent, parseAngle } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { truncateFraction } = $lib.math;

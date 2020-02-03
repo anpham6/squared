@@ -3,6 +3,7 @@ import { ControllerSettings } from '../../@types/base/application';
 import View from './view';
 
 const $lib = squared.lib;
+
 const { isTextNode } = $lib.dom;
 const { setElementCache } = $lib.session;
 

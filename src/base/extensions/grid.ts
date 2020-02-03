@@ -7,6 +7,7 @@ import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const $lib = squared.lib;
+
 const { formatPX, isLength, isPercent } = $lib.css;
 const { aboveRange, belowRange, withinRange } = $lib.util;
 

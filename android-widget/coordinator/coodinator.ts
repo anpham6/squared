@@ -4,11 +4,12 @@ import { WIDGET_NAME } from '../lib/constant';
 
 import Resource = android.base.Resource;
 
+const $lib = android.lib;
+
 const { getElementAsNode } = squared.lib.session;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const $lib = android.lib;
 const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $lib.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $lib.enumeration;
 const { createViewAttribute } = $lib.util;

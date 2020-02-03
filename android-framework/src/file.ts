@@ -16,6 +16,7 @@ import STRINGARRAY_TMPL from './template/resources/string-array';
 import STYLE_TMPL from './template/resources/style';
 
 const $lib = squared.lib;
+
 const { fromLastIndexOf, objectMap } = $lib.util;
 const { applyTemplate, replaceTab } = $lib.xml;
 

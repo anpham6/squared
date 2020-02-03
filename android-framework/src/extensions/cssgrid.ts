@@ -10,17 +10,18 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import CssGrid = squared.base.extensions.CssGrid;
 
-const { LayoutUI, Node } = squared.base;
-
 const $lib = squared.lib;
+const $base = squared.base;
+const $base_lib = $base.lib;
+
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { maxArray, truncate } = $lib.math;
 const { CHAR, CSS } = $lib.regex;
 const { captureMap, flatMultiArray, isArray, objectMap } = $lib.util;
 
-const $base_lib = squared.base.lib;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 
+const { LayoutUI, Node } = $base;
 const CSS_GRID = $base_lib.constant.EXT_NAME.CSS_GRID;
 
 const REGEX_JUSTIFYSELF = /start|left|center|right|end/;

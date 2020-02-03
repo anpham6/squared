@@ -8,17 +8,16 @@ import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { localizeString } from './lib/util';
 
-import Node = squared.base.Node;
-
-const NodeUI = squared.base.NodeUI;
-
 const $lib = squared.lib;
+
 const { BOX_MARGIN, BOX_PADDING, formatPX, getDataSet, isLength, isPercent } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { clampRange, truncate } = $lib.math;
 const { aboveRange, capitalize, convertFloat, convertWord, fromLastIndexOf, isPlainObject, isString, replaceMap } = $lib.util;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
+
+const Node = squared.base.Node;
 
 type T = android.base.View;
 
@@ -1628,18 +1627,21 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else {
                     const children = this.renderChildren;
+                    let baseline = true;
                     if (children.some(node => node.floating) && !children.some(node => node.imageElement && node.baseline)) {
                         this.android('baselineAligned', 'false');
-                    }
-                    else {
-                        const baseline = NodeUI.baseline(children, true);
-                        if (baseline) {
-                            this.android('baselineAlignedChildIndex', children.indexOf(baseline).toString());
-                        }
+                        baseline = false;
                     }
                     const length = children.length;
-                    for (let i = 1; i < length; i++) {
-                        children[i].setSingleLine(i === length - 1);
+                    for (let i = 0; i < length; i++) {
+                        const item = children[i];
+                        if (i > 0) {
+                            item.setSingleLine(i === length - 1);
+                        }
+                        if (baseline && item.baselineElement) {
+                            this.android('baselineAlignedChildIndex', i.toString());
+                            baseline = false;
+                        }
                     }
                 }
             }

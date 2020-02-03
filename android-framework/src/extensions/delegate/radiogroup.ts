@@ -8,6 +8,7 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 const { getElementAsNode } = squared.lib.session;
 
 const $base = squared.base;
+
 const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
 
 const NodeUI = $base.NodeUI;

@@ -6,6 +6,7 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 
 const $lib = squared.lib;
+
 const { getHexCode, parseColor } = $lib.color;
 const { getFontSize, isLength, parseUnit } = $lib.css;
 const { getNamedItem } = $lib.dom;

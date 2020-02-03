@@ -8,10 +8,11 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
+const $base_lib = squared.base.lib;
+
 const { formatPX } = $lib.css;
 const { captureMap, withinRange } = $lib.util;
 
-const $base_lib = squared.base.lib;
 const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 
 const GRID = $base_lib.constant.EXT_NAME.GRID;

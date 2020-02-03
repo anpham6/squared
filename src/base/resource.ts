@@ -3,6 +3,7 @@ import { ControllerSettings, ResourceAssetMap, UserSettings } from '../../@types
 type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
 
 const $lib = squared.lib;
+
 const { CSS, STRING, XML } = $lib.regex;
 const { buildAlphaString, fromLastIndexOf } = $lib.util;
 

@@ -5,6 +5,7 @@ import Controller from './controller';
 import { NODE_TEMPLATE } from './lib/enumeration';
 
 const $lib = squared.lib;
+
 const { USER_AGENT, isUserAgent } = $lib.client;
 const { BOX_BORDER, BOX_PADDING, formatPX, getStyle, isLength, isPercent } = $lib.css;
 const { isTextNode } = $lib.dom;

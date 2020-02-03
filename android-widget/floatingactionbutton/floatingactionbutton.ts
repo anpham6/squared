@@ -5,15 +5,17 @@ import { WIDGET_NAME } from '../lib/constant';
 import Resource = android.base.Resource;
 
 const $lib = squared.lib;
+const $libA = android.lib;
+
 const { parseColor } = $lib.color;
 const { assignEmptyValue } = $lib.util;
 
 const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const $libA = android.lib;
+const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
+
 const { EXT_ANDROID, STRING_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
-const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
 
 const PREFIX_DIALOG = 'ic_dialog_';
 const SUPPORTED_INPUT = ['button', 'file', 'image', 'reset', 'search', 'submit'];

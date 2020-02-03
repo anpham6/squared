@@ -8,6 +8,7 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 import LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
+
 const { formatPX } = $lib.css;
 const { withinRange } = $lib.util;
 

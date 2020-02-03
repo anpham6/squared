@@ -11,6 +11,7 @@ import { SYNCHRONIZE_MODE, SYNCHRONIZE_STATE } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
 
 const $lib = squared.lib;
+
 const { clampRange, isEqual, nextMultiple } = $lib.math;
 const { CHAR } = $lib.regex;
 const { hasBit, hasValue, isEqual: isEqualObject, isNumber, joinMap, objectMap, replaceMap, spliceArray, sortNumber } = $lib.util;

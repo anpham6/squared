@@ -13,6 +13,7 @@ import SHAPE_TMPL from '../../template/shape';
 import VECTOR_TMPL from '../../template/vector';
 
 const $lib = squared.lib;
+
 const { reduceRGBA } = $lib.color;
 const { formatPercent, formatPX, getBackgroundPosition, isLength, isPercent } = $lib.css;
 const { truncate } = $lib.math;

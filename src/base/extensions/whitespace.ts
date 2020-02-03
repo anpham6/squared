@@ -5,6 +5,7 @@ import { CSS_SPACING } from '../lib/constant';
 import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
 const $lib = squared.lib;
+
 const { formatPX } = $lib.css;
 const { hasBit } = $lib.util;
 

@@ -10,6 +10,7 @@ import { KEYSPLINE_NAME } from './lib/constant';
 import { TRANSFORM, getAttribute } from './lib/util';
 
 const $lib = squared.lib;
+
 const { calculateVar, isCustomProperty, getFontSize, getKeyframeRules, parseAngle, parseVar, isAngle, isCalc } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;

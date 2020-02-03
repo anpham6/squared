@@ -13,6 +13,7 @@ import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
 const $lib = squared.lib;
+
 const { isPercent } = $lib.css;
 const { getNamedItem } = $lib.dom;
 

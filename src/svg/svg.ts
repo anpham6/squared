@@ -10,6 +10,7 @@ import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getDOMRect, getTargetElement } from './lib/util';
 
 const $lib = squared.lib;
+
 const { parseColor } = $lib.color;
 const { getNamedItem } = $lib.dom;
 const { cloneObject } = $lib.util;

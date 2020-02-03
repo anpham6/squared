@@ -12,6 +12,7 @@ import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { SVG, TRANSFORM, getPathLength } from './lib/util';
 
 const $lib = squared.lib;
+
 const { getNamedItem } = $lib.dom;
 const { isEqual, lessEqual, nextMultiple, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = $lib.math;
 const { cloneArray, convertInt, convertFloat } = $lib.util;

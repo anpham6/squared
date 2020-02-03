@@ -12,6 +12,7 @@ import NodeList from './nodelist';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 const $lib = squared.lib;
+
 const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule, isLength, resolveURL } = $lib.css;
 const { getNamedItem, getRangeClientRect, isTextNode, removeElementsByClassName } = $lib.dom;
 const { aboveRange, captureMap, convertFloat, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;

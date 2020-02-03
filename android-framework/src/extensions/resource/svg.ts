@@ -30,13 +30,14 @@ import SvgPath = squared.svg.SvgPath;
 import SvgShape = squared.svg.SvgShape;
 
 const $lib = squared.lib;
+const $svg_lib = squared.svg.lib;
+
 const { formatPX, isPercent } = $lib.css;
 const { truncate } = $lib.math;
 const { CHAR, CSS, FILE } = $lib.regex;
 const { convertCamelCase, convertInt, convertWord, filterArray, formatString, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = $lib.util;
 const { applyTemplate } = $lib.xml;
 
-const $svg_lib = squared.svg.lib;
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = $svg_lib.constant;
 const { MATRIX, SVG, TRANSFORM } = $svg_lib.util;
 

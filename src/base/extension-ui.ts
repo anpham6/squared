@@ -3,6 +3,7 @@ import { ExtensionResult } from '../../@types/base/application';
 import Extension from './extension';
 
 const $lib = squared.lib;
+
 const { hasComputedStyle } = $lib.css;
 const { includes } = $lib.util;
 

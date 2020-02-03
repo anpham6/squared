@@ -7,6 +7,7 @@ import { CONTAINER_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID } from '../../lib/enumeration';
 
 const $lib = squared.lib;
+
 const { formatPX } = $lib.css;
 const { measureTextWidth } = $lib.dom;
 const { capitalizeString, lowerCaseString, isNumber, isString } = $lib.util;

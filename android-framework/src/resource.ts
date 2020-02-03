@@ -3,6 +3,7 @@ import { ResourceStoredMapAndroid, StyleAttribute } from '../../@types/android/a
 import { RESERVED_JAVA } from './lib/constant';
 
 const $lib = squared.lib;
+
 const { findColorShade, parseColor } = $lib.color;
 const { getSrcSet } = $lib.css;
 const { CHAR, COMPONENT, CSS, FILE, XML } = $lib.regex;

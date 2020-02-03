@@ -7,6 +7,7 @@ import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
 const $lib = squared.lib;
+
 const { truncate } = $lib.math;
 const { isPlainObject } = $lib.util;
 

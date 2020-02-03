@@ -7,6 +7,7 @@ import { CSS_SPACING } from './lib/constant';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 const $lib = squared.lib;
+
 const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, isPercent } = $lib.css;
 const { isTextNode, newBoxModel } = $lib.dom;
 const { isEqual } = $lib.math;

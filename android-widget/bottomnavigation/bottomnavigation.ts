@@ -3,16 +3,17 @@ import { UserSettingsAndroid } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
-import Resource = android.base.Resource;
+const $lib = android.lib;
 
 const { assignEmptyValue, optionalAsString } = squared.lib.util;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const $lib = android.lib;
 const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $lib.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $lib.enumeration;
 const { createStyleAttribute, createViewAttribute } = $lib.util;
+
+const Resource = android.base.Resource;
 
 export default class BottomNavigation<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     constructor(

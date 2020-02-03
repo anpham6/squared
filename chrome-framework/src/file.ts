@@ -4,6 +4,7 @@ import { ChromeAsset } from '../../@types/chrome/application';
 import Resource from './resource';
 
 const $lib = squared.lib;
+
 const { COMPONENT } = $lib.regex;
 const { convertWord, fromLastIndexOf, resolvePath, spliceString, trimEnd } = $lib.util;
 

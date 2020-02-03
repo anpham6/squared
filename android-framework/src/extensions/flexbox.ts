@@ -7,16 +7,18 @@ import { STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
-import NodeUI = squared.base.NodeUI;
 
 const $lib = squared.lib;
+const $base = squared.base;
+const $base_lib = $base.lib;
+
 const { isLength } = $lib.css;
 const { truncate } = $lib.math;
 const { capitalize, sameArray, withinRange } = $lib.util;
 
-const $base_lib = squared.base.lib;
 const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 
+const NodeUI = $base.NodeUI;
 const FLEXBOX = $base_lib.constant.EXT_NAME.FLEXBOX;
 
 type FlexBasis = {

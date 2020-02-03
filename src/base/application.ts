@@ -8,6 +8,7 @@ import NodeList from './nodelist';
 import Resource from './resource';
 
 const $lib = squared.lib;
+
 const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, validMediaRule } = $lib.css;
 const { isTextNode } = $lib.dom;
 const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;

@@ -4,6 +4,7 @@ import NodeUI from '../node-ui';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const $lib = squared.lib;
+
 const { isLength } = $lib.css;
 const { convertFloat } = $lib.util;
 

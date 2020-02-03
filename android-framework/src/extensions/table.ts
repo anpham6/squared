@@ -7,12 +7,13 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
+const $base_lib = squared.base.lib;
+
 const { formatPX } = $lib.css;
 const { aboveRange, convertFloat, convertInt, trimEnd } = $lib.util;
 
 const { UNITZERO } = $lib.regex.CHAR;
 
-const $base_lib = squared.base.lib;
 const { CSS_UNIT, NODE_ALIGNMENT } = $base_lib.enumeration;
 
 const TABLE = $base_lib.constant.EXT_NAME.TABLE;

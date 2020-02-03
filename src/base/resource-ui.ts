@@ -5,6 +5,7 @@ import Resource from './resource';
 import { NODE_RESOURCE } from './lib/enumeration';
 
 const $lib = squared.lib;
+
 const { USER_AGENT, isUserAgent } = $lib.client;
 const { parseColor } = $lib.color;
 const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = $lib.css;

@@ -5,6 +5,7 @@ import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
 import { EXT_NAME } from './lib/constant';
 
 const $lib = squared.lib;
+
 const { USER_AGENT, isUserAgent } = $lib.client;
 const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;

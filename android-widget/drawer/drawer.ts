@@ -6,12 +6,13 @@ import { WIDGET_NAME } from '../lib/constant';
 import Resource = android.base.Resource;
 
 const $lib = squared.lib;
+const $libA = android.lib;
+
 const { assignEmptyValue, cloneObject, includes, optionalAsString } = $lib.util;
 const { getElementAsNode } = $lib.session;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const $libA = android.lib;
 const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
 const { createStyleAttribute, createViewAttribute } = $libA.util;

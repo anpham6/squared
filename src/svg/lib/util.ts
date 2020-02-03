@@ -1,6 +1,7 @@
 import { SvgMatrix, SvgPoint, SvgTransform } from '../../../@types/svg/object';
 
 const $lib = squared.lib;
+
 const { convertAngle, getFontSize, getStyle, isLength, isPercent, parseUnit } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { convertRadian } = $lib.math;
@@ -9,7 +10,6 @@ const { getElementCache } = $lib.session;
 const { convertCamelCase } = $lib.util;
 
 const STRING_DECIMAL = `(${STRING.DECIMAL})`;
-
 const SHAPES = {
     path: 1,
     line: 2,

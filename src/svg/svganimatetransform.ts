@@ -5,6 +5,7 @@ import { INSTANCE_TYPE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
 const $lib = squared.lib;
+
 const { getNamedItem } = $lib.dom;
 const { replaceMap } = $lib.util;
 

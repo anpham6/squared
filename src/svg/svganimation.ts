@@ -6,6 +6,7 @@ import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
 import { getAttribute } from './lib/util';
 
 const $lib = squared.lib;
+
 const { getFontSize, isLength, parseUnit } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { capitalize, hasBit, isNumber, isString, optionalAsString } = $lib.util;
