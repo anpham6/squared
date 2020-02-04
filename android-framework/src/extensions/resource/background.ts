@@ -1634,8 +1634,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         applyTemplate('vector', VECTOR_TMPL, [{
                             'xmlns:android': XMLNS_ANDROID.android,
                             'xmlns:aapt': XMLNS_ANDROID.aapt,
-                            'android:width': imageData.width || formatPX(width),
-                            'android:height': imageData.height || formatPX(height),
+                            'android:width': formatPX(imageData.width as number || width),
+                            'android:height': formatPX(imageData.height as number || height),
                             'android:viewportWidth': width.toString(),
                             'android:viewportHeight': height.toString(),
                             'path': {

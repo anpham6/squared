@@ -394,7 +394,7 @@ export function getDOMRect(element: SVGElement) {
 export function getAttribute(element: SVGElement, attr: string, computed = true) {
     let value = getNamedItem(element, attr);
     if (value === '') {
-        const styleMap: StringMap = getElementCache(element, 'styleMap', '0');
+        const styleMap: StringMap = getElementCache(element, 'styleMap');
         if (styleMap) {
             value = styleMap[convertCamelCase(attr)] || '';
         }

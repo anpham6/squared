@@ -1,4 +1,4 @@
-/* android.widget.drawer 1.3.8
+/* android.widget.drawer 1.4.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,15 +6,15 @@ this.android.widget = this.android.widget || {};
 this.android.widget.drawer = (function () {
     'use strict';
 
+    var Resource = android.base.Resource;
     const $lib = squared.lib;
+    const $libA = android.lib;
     const { assignEmptyValue, cloneObject, includes, optionalAsString } = $lib.util;
     const { getElementAsNode } = $lib.session;
     const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-    const $libA = android.lib;
     const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
     const { createStyleAttribute, createViewAttribute } = $libA.util;
-    const { Resource } = android.base;
     class Drawer extends squared.base.ExtensionUI {
         constructor(name, framework, options, tagNames) {
             super(name, framework, options, tagNames);
@@ -47,7 +47,7 @@ this.android.widget.drawer = (function () {
             const options = createViewAttribute(this.options.self);
             if (Drawer.findNestedElement(node.element, "android.widget.menu" /* MENU */)) {
                 assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
-                this.setStyleTheme(node.localSettings.targetAPI);
+                this.setStyleTheme(node.api);
             }
             else {
                 const navigationViewOptions = createViewAttribute(this.options.navigationView);
@@ -59,9 +59,9 @@ this.android.widget.drawer = (function () {
             }
             node.documentRoot = true;
             node.renderExclude = false;
-            const controlName = node.localSettings.targetAPI < 29 /* Q */ ? SUPPORT_ANDROID.DRAWER : SUPPORT_ANDROID_X.DRAWER;
+            const controlName = node.api < 29 /* Q */ ? SUPPORT_ANDROID.DRAWER : SUPPORT_ANDROID_X.DRAWER;
             node.setControlType(controlName, CONTAINER_NODE.BLOCK);
-            node.exclude(NODE_RESOURCE.FONT_STYLE);
+            node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
             node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
             node.render(parent);
             node.setLayoutWidth('match_parent');
@@ -82,18 +82,23 @@ this.android.widget.drawer = (function () {
                 const options = createViewAttribute(this.options.navigationView);
                 const menu = optionalAsString(Drawer.findNestedElement(element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
                 const headerLayout = optionalAsString(Drawer.findNestedElement(element, EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
+                let app = options.app;
+                if (app === undefined) {
+                    app = {};
+                    options.app = app;
+                }
                 if (menu !== '') {
-                    assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
+                    assignEmptyValue(app, 'menu', '@menu/' + menu);
                 }
                 if (headerLayout !== '') {
-                    assignEmptyValue(options, 'app', 'headerLayout', '@layout/' + headerLayout);
+                    assignEmptyValue(app, 'headerLayout', '@layout/' + headerLayout);
                 }
                 if (menu !== '' || headerLayout !== '') {
                     const controller = this.controller;
                     assignEmptyValue(options, 'android', 'id', node.documentId.replace('@', '@+') + '_navigation');
                     assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                     assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
-                    controller.addAfterInsideTemplate(node.id, controller.renderNodeStatic(node.localSettings.targetAPI < 29 /* Q */ ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW, Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'match_parent'));
+                    controller.addAfterInsideTemplate(node.id, controller.renderNodeStatic(node.api < 29 /* Q */ ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW, Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'match_parent'));
                 }
             }
         }

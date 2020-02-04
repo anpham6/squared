@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 1.3.8
+/* android.widget.floatingactionbutton 1.4.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,20 +6,21 @@ this.android.widget = this.android.widget || {};
 this.android.widget.floatingactionbutton = (function () {
     'use strict';
 
+    var Resource = android.base.Resource;
     const $lib = squared.lib;
+    const $libA = android.lib;
     const { parseColor } = $lib.color;
     const { assignEmptyValue } = $lib.util;
     const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-    const $libA = android.lib;
+    const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
     const { EXT_ANDROID, STRING_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
-    const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
-    const { Resource } = android.base;
     const PREFIX_DIALOG = 'ic_dialog_';
+    const SUPPORTED_INPUT = ['button', 'file', 'image', 'reset', 'search', 'submit'];
     class FloatingActionButton extends squared.base.ExtensionUI {
         is(node) {
             const element = node.element;
-            return super.is(node) && (element.tagName !== 'INPUT' || ['button', 'file', 'image', 'reset', 'search', 'submit'].includes(element.type));
+            return super.is(node) && (element.tagName !== 'INPUT' || SUPPORTED_INPUT.includes(element.type));
         }
         condition(node) {
             return this.included(node.element);
@@ -29,7 +30,7 @@ this.android.widget.floatingactionbutton = (function () {
             const element = node.element;
             const target = node.dataset.target;
             const options = createViewAttribute(this.options[element.id]);
-            const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', true, 1)));
+            const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1)));
             assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? '@color/' + colorName : '?attr/colorAccent');
             if (!node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 assignEmptyValue(options, 'android', 'focusable', 'false');
@@ -49,11 +50,16 @@ this.android.widget.floatingactionbutton = (function () {
                     break;
             }
             if (src !== '') {
-                assignEmptyValue(options, 'app', 'srcCompat', '@drawable/' + src);
+                let app = options.app;
+                if (app === undefined) {
+                    app = {};
+                    options.app = app;
+                }
+                assignEmptyValue(app, 'srcCompat', '@drawable/' + src);
             }
-            const controlName = node.localSettings.targetAPI < 29 /* Q */ ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
+            const controlName = node.api < 29 /* Q */ ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
             node.setControlType(controlName, CONTAINER_NODE.BUTTON);
-            node.exclude(NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET);
+            node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
             Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
             let outerParent;
             if (!node.pageFlow || target) {
@@ -103,7 +109,7 @@ this.android.widget.floatingactionbutton = (function () {
                 if (target) {
                     const layoutGravity = node.android('layout_gravity');
                     let anchor = parent.documentId;
-                    if (parent.controlName === (node.localSettings.targetAPI < 29 /* Q */ ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
+                    if (parent.controlName === (node.api < 29 /* Q */ ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
                         const value = parent.data("android.widget.toolbar" /* TOOLBAR */, 'outerParent');
                         if (value) {
                             anchor = value;
@@ -114,7 +120,7 @@ this.android.widget.floatingactionbutton = (function () {
                         node.delete('android', 'layout_gravity');
                     }
                     node.app('layout_anchor', anchor);
-                    node.exclude(0, NODE_PROCEDURE.ALIGNMENT);
+                    node.exclude({ procedure: NODE_PROCEDURE.ALIGNMENT });
                     node.render(this.application.resolveTarget(target));
                     outerParent = node.renderParent;
                 }

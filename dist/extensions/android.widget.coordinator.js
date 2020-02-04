@@ -1,4 +1,4 @@
-/* android.widget.coordinator 1.3.8
+/* android.widget.coordinator 1.4.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,13 +6,13 @@ this.android.widget = this.android.widget || {};
 this.android.widget.coordinator = (function () {
     'use strict';
 
+    var Resource = android.base.Resource;
+    const $lib = android.lib;
     const { getElementAsNode } = squared.lib.session;
     const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-    const $lib = android.lib;
     const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $lib.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $lib.enumeration;
     const { createViewAttribute } = $lib.util;
-    const { Resource } = android.base;
     class Coordinator extends squared.base.ExtensionUI {
         processNode(node, parent) {
             var _a;
@@ -29,11 +29,11 @@ this.android.widget.coordinator = (function () {
                     }
                 }
             }
-            const controlName = node.localSettings.targetAPI < 29 /* Q */ ? SUPPORT_ANDROID.COORDINATOR : SUPPORT_ANDROID_X.COORDINATOR;
+            const controlName = node.api < 29 /* Q */ ? SUPPORT_ANDROID.COORDINATOR : SUPPORT_ANDROID_X.COORDINATOR;
             node.setControlType(controlName, CONTAINER_NODE.BLOCK);
-            node.exclude(NODE_RESOURCE.ASSET);
-            node.renderExclude = false;
+            node.exclude({ resource: NODE_RESOURCE.ASSET });
             node.render(parent);
+            node.renderExclude = false;
             return {
                 output: {
                     type: 1 /* XML */,

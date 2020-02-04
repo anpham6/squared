@@ -19,20 +19,6 @@ const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = $base_lib.enumeration;
 
 const LIST = $base_lib.constant.EXT_NAME.LIST;
 
-function isBlockElement(node: View) {
-    if (node.blockStatic) {
-        return true;
-    }
-    else if (!node.floating) {
-        switch (node.display) {
-            case 'table':
-            case 'list-item':
-                return true;
-        }
-    }
-    return false;
-}
-
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
         const layout = new LayoutUI(parent, node, 0, 0, node.children as T[]);
@@ -90,7 +76,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (node.length === 0) {
                 const { containerType, alignmentType } = controller.containerTypeVertical;
                 container = controller.createNodeWrapper(node, parent, undefined, {
-                    controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
+                    controlName: View.getControlName(CONTAINER_NODE.LINEAR, node.api),
                     containerType,
                     alignmentType
                 });
@@ -243,12 +229,12 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     );
                 }
             }
-            ordinal.positioned = true;
-            const blockParent = isBlockElement(parent);
-            const blockNode = isBlockElement(node);
-            if (marginTop !== 0 && (blockParent && blockNode && (firstChild && (marginTop > parent.marginTop || parent.borderTopWidth > 0 || parent.paddingTop > 0) || !firstChild && (node.previousSibling?.marginBottom || 0) < marginTop) || !blockParent || !blockNode)) {
+            if (marginTop !== 0) {
                 ordinal.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
+                ordinal.companion = container;
+                this.subscribers.add(ordinal);
             }
+            ordinal.positioned = true;
             if (adjustPadding) {
                 if (isNaN(resetPadding) || resetPadding <= 0) {
                     parent.modifyBox(parent.paddingLeft > 0 ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.MARGIN_LEFT);
@@ -260,11 +246,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (columnCount > 0) {
                 container.setLayoutWidth('0px');
                 container.android('layout_columnWeight', '1');
-                if (container !== node) {
-                    if (node.baselineElement) {
-                        container.android('baselineAlignedChildIndex', '0');
-                    }
-                }
             }
             if (node !== container) {
                 return {
@@ -281,5 +262,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             }
         }
         return undefined;
+    }
+
+    public postConstraints(node: T) {
+        const companion = !node.naturalChild && node.companion;
+        if (companion) {
+            const [reset, adjustment] = companion.getBox(BOX_STANDARD.MARGIN_TOP);
+            const value = node.getBox(BOX_STANDARD.MARGIN_TOP)[1];
+            node.modifyBox(BOX_STANDARD.MARGIN_TOP, (reset === 1 ? 0 : adjustment) - value);
+        }
     }
 }

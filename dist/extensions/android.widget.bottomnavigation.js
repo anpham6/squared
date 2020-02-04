@@ -1,4 +1,4 @@
-/* android.widget.bottomnavigation 1.3.8
+/* android.widget.bottomnavigation 1.4.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,13 +6,13 @@ this.android.widget = this.android.widget || {};
 this.android.widget.bottomnavigation = (function () {
     'use strict';
 
+    const $lib = android.lib;
     const { assignEmptyValue, optionalAsString } = squared.lib.util;
     const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-    const $lib = android.lib;
     const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $lib.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $lib.enumeration;
     const { createStyleAttribute, createViewAttribute } = $lib.util;
-    const { Resource } = android.base;
+    const Resource = android.base.Resource;
     class BottomNavigation extends squared.base.ExtensionUI {
         constructor(name, framework, options, tagNames) {
             super(name, framework, options, tagNames);
@@ -30,9 +30,9 @@ this.android.widget.bottomnavigation = (function () {
                     child.hide();
                 }
             }
-            const controlName = node.localSettings.targetAPI < 29 /* Q */ ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
+            const controlName = node.api < 29 /* Q */ ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
             node.setControlType(controlName, CONTAINER_NODE.BLOCK);
-            node.exclude(NODE_RESOURCE.ASSET);
+            node.exclude({ resource: NODE_RESOURCE.ASSET });
             node.render(parent);
             node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
             node.setLayoutWidth('match_parent');
@@ -62,8 +62,13 @@ this.android.widget.bottomnavigation = (function () {
                 const menu = optionalAsString(BottomNavigation.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
                 if (menu !== '') {
                     const options = createViewAttribute(this.options[node.elementId]);
-                    assignEmptyValue(options, 'app', 'menu', '@menu/' + menu);
-                    node.app('menu', options.app.menu);
+                    let app = options.app;
+                    if (app === undefined) {
+                        app = {};
+                        options.app = app;
+                    }
+                    assignEmptyValue(app, 'menu', '@menu/' + menu);
+                    node.app('menu', app.menu);
                 }
             }
         }

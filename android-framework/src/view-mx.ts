@@ -1614,25 +1614,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         private alignLayout(renderParent: T) {
             if (this.layoutLinear) {
+                const children = this.renderChildren;
                 if (this.layoutVertical) {
-                    if (!renderParent.layoutFrame && !this.documentRoot) {
-                        let children = this.renderChildren;
-                        let firstChild: Undef<T>;
-                        do {
-                            firstChild = children[0];
-                            if (firstChild && firstChild.naturalChild) {
-                                break;
-                            }
-                            children = firstChild.renderChildren as T[];
-                        }
-                        while (children.length);
-                        if (firstChild.baselineElement || firstChild.textElement) {
+                    if (children.length === 1 && !renderParent.layoutFrame && !this.documentRoot) {
+                        const node = children[0];
+                        if (node.baselineElement || node.textElement) {
                             this.android('baselineAlignedChildIndex', '0');
                         }
                     }
                 }
                 else {
-                    const children = this.renderChildren;
                     let baseline = true;
                     if (children.some(node => node.floating) && !children.some(node => node.imageElement && node.baseline)) {
                         this.android('baselineAligned', 'false');

@@ -29,8 +29,8 @@ function compareRange(operation: string, unit: number, range: number) {
     }
 }
 
-const getInnerWidth = (dimensions: Dimension | undefined) => dimensions && dimensions.width || window.innerWidth;
-const getInnerHeight = (dimensions: Dimension | undefined) => dimensions && dimensions.height || window.innerHeight;
+const getInnerWidth = (dimensions: Undef<Dimension>) => dimensions && dimensions.width || window.innerWidth;
+const getInnerHeight = (dimensions: Undef<Dimension>) => dimensions && dimensions.height || window.innerHeight;
 const convertLength = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize, screenDimension);
 const convertPercent = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => Math.min(isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize, screenDimension) / dimension, 1);
 

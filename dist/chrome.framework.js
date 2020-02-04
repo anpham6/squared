@@ -1,4 +1,4 @@
-/* chrome-framework 1.3.8
+/* chrome-framework 1.4.0
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -25,21 +25,30 @@ var chrome = (function () {
             this.extensions = [];
         }
         finalize() { }
+        createNode(options) {
+            return new this.Node(this.nextId, this.processing.sessionId, options.element);
+        }
         insertNode(element, parent) {
             if (isTextNode(element)) {
                 if (this.userSettings.excludePlainText) {
                     return undefined;
                 }
                 this.controllerHandler.applyDefaultStyles(element);
+                const node = this.createNode({ element });
+                if (parent) {
+                    node.cssApply(parent.textStyle);
+                }
+                return node;
             }
-            const node = this.createNode(element, false);
-            if (node.plainText && parent) {
-                node.cssApply(parent.textStyle);
-            }
-            return node;
+            return this.createNode({ element });
         }
         afterCreateCache() {
-            this.controllerHandler.cacheElementList(this.processing.cache);
+            if (this.userSettings.cacheQuerySelectorResultSet) {
+                this.controllerHandler.cacheElementList(this.processing.cache);
+            }
+            else {
+                this.controllerHandler.cacheElement(this.processing.node);
+            }
         }
         get length() {
             return ASSETS.images.size + ASSETS.rawData.size + ASSETS.fonts.size;
@@ -80,6 +89,9 @@ var chrome = (function () {
         }
         includeElement() {
             return true;
+        }
+        cacheElement(node) {
+            this._elementMap.set(node.element, node);
         }
         cacheElementList(list) {
             const elementMap = this._elementMap;
@@ -125,7 +137,7 @@ var chrome = (function () {
             }
         }
         if (pathname !== '') {
-            const extension = filename.indexOf('.') !== -1 ? fromLastIndexOf(filename, '.').toLowerCase() : undefined;
+            const extension = filename.includes('.') ? fromLastIndexOf(filename, '.').toLowerCase() : undefined;
             return {
                 pathname,
                 filename,
@@ -165,7 +177,7 @@ var chrome = (function () {
                 }
                 else {
                     const filename = data.filename;
-                    if (filename.indexOf('.') === -1) {
+                    if (!filename.includes('.')) {
                         data.pathname += '/' + filename;
                         data.filename = 'index.html';
                     }
@@ -393,6 +405,7 @@ var chrome = (function () {
         handleExtensionsAsync: true,
         showErrorMessages: false,
         createQuerySelectorMap: true,
+        cacheQuerySelectorResultSet: true,
         excludePlainText: true,
         outputFileExclusions: ['squared.*', 'chrome.framework.*'],
         outputDirectory: '',
@@ -428,7 +441,7 @@ var chrome = (function () {
     let file;
     let userSettings;
     let elementMap;
-    function findElement(element, cache = true) {
+    function findElement(element, cache) {
         if (cache) {
             const result = elementMap.get(element);
             if (result) {
@@ -441,7 +454,7 @@ var chrome = (function () {
         userSettings.preloadImages = preloadImages;
         return elementMap.get(element) || null;
     }
-    function findElementAsync(element, cache = true) {
+    function findElementAsync(element, cache) {
         return __awaiter(this, void 0, void 0, function* () {
             if (cache) {
                 const result = elementMap.get(element);
@@ -451,6 +464,26 @@ var chrome = (function () {
             }
             yield application.parseDocument(element);
             return elementMap.get(element) || null;
+        });
+    }
+    function findElementAllAsync(query, cache) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const length = query.length;
+            const result = new Array(length);
+            let incomplete = false;
+            for (let i = 0; i < length; i++) {
+                const item = yield findElementAsync(query[i], cache);
+                if (item) {
+                    result[i] = item;
+                }
+                else {
+                    incomplete = true;
+                }
+            }
+            if (incomplete) {
+                flatArray(result);
+            }
+            return result;
         });
     }
     const appBase = {
@@ -487,20 +520,20 @@ var chrome = (function () {
                 }
                 return null;
             },
-            querySelector(value) {
+            querySelector(value, cache = true) {
                 if (application) {
                     const element = document.querySelector(value);
                     if (element) {
-                        return findElement(element);
+                        return findElement(element, cache);
                     }
                 }
                 return null;
             },
-            querySelectorAll(value) {
+            querySelectorAll(value, cache = true) {
                 const result = [];
                 if (application) {
                     document.querySelectorAll(value).forEach(element => {
-                        const item = findElement(element);
+                        const item = findElement(element, cache);
                         if (item) {
                             result.push(item);
                         }
@@ -509,65 +542,61 @@ var chrome = (function () {
                 return result;
             },
             getElementMap() {
-                if (controller) {
-                    return controller.elementMap;
-                }
-                return new Map();
+                return controller ? controller.elementMap : new Map();
             },
             clearElementMap() {
-                if (controller) {
-                    return controller.elementMap.clear();
-                }
+                var _a;
+                (_a = controller) === null || _a === void 0 ? void 0 : _a.elementMap.clear();
             },
             copyHtmlPage(directory, callback, name) {
-                if (file && isString(directory)) {
-                    file.copying(directory, file.getHtmlPage(name), callback);
+                var _a;
+                if (isString(directory)) {
+                    (_a = file) === null || _a === void 0 ? void 0 : _a.copying(directory, file.getHtmlPage(name), callback);
                 }
             },
             copyScriptAssets(directory, callback) {
-                if (file && isString(directory)) {
-                    file.copying(directory, file.getScriptAssets(), callback);
+                var _a;
+                if (isString(directory)) {
+                    (_a = file) === null || _a === void 0 ? void 0 : _a.copying(directory, file.getScriptAssets(), callback);
                 }
             },
             copyLinkAssets(directory, callback, rel) {
-                if (file && isString(directory)) {
-                    file.copying(directory, file.getLinkAssets(rel), callback);
+                var _a;
+                if (isString(directory)) {
+                    (_a = file) === null || _a === void 0 ? void 0 : _a.copying(directory, file.getLinkAssets(rel), callback);
                 }
             },
             copyImageAssets(directory, callback) {
-                if (file && isString(directory)) {
-                    file.copying(directory, file.getImageAssets(), callback);
+                var _a;
+                if (isString(directory)) {
+                    (_a = file) === null || _a === void 0 ? void 0 : _a.copying(directory, file.getImageAssets(), callback);
                 }
             },
             copyFontAssets(directory, callback) {
-                if (file && isString(directory)) {
-                    file.copying(directory, file.getFontAssets(), callback);
+                var _a;
+                if (isString(directory)) {
+                    (_a = file) === null || _a === void 0 ? void 0 : _a.copying(directory, file.getFontAssets(), callback);
                 }
             },
             saveHtmlPage(filename, name) {
-                if (file) {
-                    file.archiving((filename || userSettings.outputArchiveName) + '-html', file.getHtmlPage(name));
-                }
+                var _a;
+                (_a = file) === null || _a === void 0 ? void 0 : _a.archiving((filename || userSettings.outputArchiveName) + '-html', file.getHtmlPage(name));
             },
             saveScriptAssets(filename) {
-                if (file) {
-                    file.archiving((filename || userSettings.outputArchiveName) + '-script', file.getScriptAssets());
-                }
+                var _a;
+                (_a = file) === null || _a === void 0 ? void 0 : _a.archiving((filename || userSettings.outputArchiveName) + '-script', file.getScriptAssets());
             },
             saveLinkAssets(filename, rel) {
-                if (file) {
-                    file.archiving((filename || userSettings.outputArchiveName) + '-link', file.getLinkAssets(rel));
-                }
+                var _a;
+                (_a = file) === null || _a === void 0 ? void 0 : _a.archiving((filename || userSettings.outputArchiveName) + '-link', file.getLinkAssets(rel));
             },
             saveImageAssets(filename) {
-                if (file) {
-                    file.archiving((filename || userSettings.outputArchiveName) + '-image', file.getImageAssets());
-                }
+                var _a;
+                (_a = file) === null || _a === void 0 ? void 0 : _a.archiving((filename || userSettings.outputArchiveName) + '-image', file.getImageAssets());
             },
             saveFontAssets(filename) {
-                if (file) {
-                    file.archiving((filename || userSettings.outputArchiveName) + '-font', file.getFontAssets());
-                }
+                var _a;
+                (_a = file) === null || _a === void 0 ? void 0 : _a.archiving((filename || userSettings.outputArchiveName) + '-font', file.getFontAssets());
             }
         },
         create() {
@@ -614,34 +643,23 @@ var chrome = (function () {
             }
             return null;
         }),
-        querySelector: (value) => __awaiter(void 0, void 0, void 0, function* () {
+        querySelector: (value, cache = true) => __awaiter(void 0, void 0, void 0, function* () {
             if (application) {
                 const element = document.querySelector(value);
                 if (element) {
-                    return yield findElementAsync(element);
+                    return yield findElementAsync(element, cache);
                 }
             }
             return null;
         }),
-        querySelectorAll: (value) => __awaiter(void 0, void 0, void 0, function* () {
+        querySelectorAll: (value, cache = true) => __awaiter(void 0, void 0, void 0, function* () {
             if (application) {
                 const query = document.querySelectorAll(value);
-                const result = new Array(query.length);
-                let incomplete = false;
-                yield (() => __awaiter(void 0, void 0, void 0, function* () {
-                    query.forEach((element, index) => __awaiter(void 0, void 0, void 0, function* () {
-                        const item = yield findElementAsync(element);
-                        if (item) {
-                            result[index] = item;
-                        }
-                        else {
-                            incomplete = true;
-                        }
-                    }));
-                }))();
-                return incomplete ? flatArray(result) : result;
+                if (query.length) {
+                    return yield findElementAllAsync(query, cache);
+                }
             }
-            return [];
+            return null;
         })
     };
 

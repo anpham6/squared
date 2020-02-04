@@ -1,4 +1,4 @@
-/* android.widget.menu 1.3.8
+/* android.widget.menu 1.4.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,13 +6,13 @@ this.android.widget = this.android.widget || {};
 this.android.widget.menu = (function () {
     'use strict';
 
+    var Resource = android.base.Resource;
     const { isNumber } = squared.lib.util;
-    const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const $lib = android.lib;
+    const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { EXT_ANDROID } = $lib.constant;
     const { CONTAINER_NODE } = $lib.enumeration;
     const { createViewAttribute } = $lib.util;
-    const { Resource } = android.base;
     const REGEX_ITEM = {
         id: /^@\+id\/\w+$/,
         title: /^.+$/,
@@ -51,12 +51,19 @@ this.android.widget.menu = (function () {
     function parseDataSet(validator, element, options) {
         const dataset = element.dataset;
         for (const attr in dataset) {
-            if (validator[attr]) {
+            const pattern = validator[attr];
+            if (pattern) {
                 const value = dataset[attr];
                 if (value) {
-                    const match = validator[attr].exec(value);
+                    const match = pattern.exec(value);
                     if (match) {
-                        options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
+                        const name = NAMESPACE_APP.includes(attr) ? 'app' : 'android';
+                        let data = options[name];
+                        if (data === undefined) {
+                            data = {};
+                            options[name] = data;
+                        }
+                        data[attr] = Array.from(new Set(match)).join('|');
                     }
                 }
             }
@@ -112,16 +119,17 @@ this.android.widget.menu = (function () {
             return this.included(node.element);
         }
         processNode(node, parent) {
-            const outerParent = this.application.createNode(undefined, false);
+            const outerParent = this.application.createNode({ parent, append: false });
+            outerParent.childIndex = node.childIndex;
             outerParent.actualParent = parent.actualParent;
             node.documentRoot = true;
-            node.addAlign(4 /* AUTO_LAYOUT */);
             node.setControlType(NAVIGATION.MENU, CONTAINER_NODE.INLINE);
-            node.exclude(NODE_RESOURCE.ALL, NODE_PROCEDURE.ALL);
+            node.addAlign(4 /* AUTO_LAYOUT */);
+            node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
+            node.render(outerParent);
             for (const item of node.cascade()) {
                 this.addDescendant(item);
             }
-            node.render(outerParent);
             node.dataset.pathname = 'res/menu';
             return {
                 output: {
@@ -204,7 +212,7 @@ this.android.widget.menu = (function () {
                 android.title = numberResourceValue || !isNumber(name) ? '@string/' + name : title;
             }
             node.setControlType(controlName, CONTAINER_NODE.INLINE);
-            node.exclude(NODE_RESOURCE.ALL, NODE_PROCEDURE.ALL);
+            node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
             node.render(parent);
             node.apply(options);
             return {

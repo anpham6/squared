@@ -1042,7 +1042,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 valid = floated.size === 0 || floated.has('right') && floated.size === 1 && layout.cleared.size === 0;
                 break;
         }
-        if (valid || layout.some(node => node.blockVertical || node.percentWidth || (node.verticalAlign === 'middle' || node.verticalAlign === 'bottom') && !layout.parent.hasHeight)) {
+        if (valid || layout.some(node => node.blockVertical || node.percentWidth || node.verticalAlign === 'bottom' && !layout.parent.hasHeight)) {
             return layout.singleRowAligned && layout.every(node => node.positiveAxis || node.renderExclude);
         }
         return false;
