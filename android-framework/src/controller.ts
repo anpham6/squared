@@ -1464,7 +1464,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.android('progressBackgroundTint', '@color/' + Resource.addColor(backgroundColor));
                 node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
                 node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.FONT_STYLE });
-                node.inlineText = false;
                 break;
             }
         }
@@ -2777,6 +2776,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             else {
                 items.push(item);
+            }
+            if (!(item.textElement && (item.plainText || item.inlineText))) {
+                item.modifyBox(BOX_STANDARD.MARGIN_RIGHT);
             }
         }
         if (items.length === 0) {

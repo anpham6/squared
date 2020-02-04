@@ -10,15 +10,13 @@ import { createViewAttribute } from '../lib/util';
 import LayoutUI = squared.base.LayoutUI;
 
 const $lib = squared.lib;
-const $base = squared.base;
-const $base_lib = $base.lib;
+const $base_lib = squared.base.lib;
 
 const { formatPX, getBackgroundPosition } = $lib.css;
 const { convertInt } = $lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = $base_lib.enumeration;
 
-const NodeUI = $base.NodeUI;
 const LIST = $base_lib.constant.EXT_NAME.LIST;
 
 function isBlockElement(node: View) {
@@ -248,7 +246,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             ordinal.positioned = true;
             const blockParent = isBlockElement(parent);
             const blockNode = isBlockElement(node);
-            if (marginTop !== 0 && (firstChild && blockParent && blockNode && marginTop > parent.marginTop || !blockParent || !blockNode)) {
+            if (marginTop !== 0 && (blockParent && blockNode && (firstChild && (marginTop > parent.marginTop || parent.borderTopWidth > 0 || parent.paddingTop > 0) || !firstChild && (node.previousSibling?.marginBottom || 0) < marginTop) || !blockParent || !blockNode)) {
                 ordinal.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
             }
             if (adjustPadding) {
@@ -266,9 +264,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (node.baselineElement) {
                         container.android('baselineAlignedChildIndex', '0');
                     }
-                }
-                else if (node.filter((item: T) => item.visible).length > 1 && NodeUI.linearData(node.children).linearY) {
-                    node.addAlign(NODE_ALIGNMENT.TOP);
                 }
             }
             if (node !== container) {

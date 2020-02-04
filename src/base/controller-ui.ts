@@ -15,7 +15,14 @@ const { pushIndent, pushIndentArray } = $lib.xml;
 
 type NodeUI = squared.base.NodeUI;
 
+function positionAbsolute(style: CSSStyleDeclaration) {
+    const position = style.getPropertyValue('position');
+    return position === 'absolute' || position === 'fixed';
+}
+
 const withinViewport = (rect: DOMRect | ClientRect) => !(rect.top + window.scrollY + rect.height < 0 || rect.left + window.scrollX + rect.width < 0);
+const getBorderWidth = (style: CSSStyleDeclaration, attr: string) => style.getPropertyValue(attr + '-style') !== 'none' ? getNumberValue(style, attr + '-width') : 0;
+const getNumberValue = (style: CSSStyleDeclaration, attr: string) => parseInt(style.getPropertyValue(attr));
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
     public abstract readonly localSettings: ControllerUISettings;
@@ -333,22 +340,57 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return !(this._unsupportedTagName.has(element.tagName) || element.tagName === 'INPUT' && this._unsupportedTagName.has(element.tagName + ':' + (<HTMLInputElement> element).type)) || (<HTMLElement> element).contentEditable === 'true';
     }
 
-    public visibleElement(element: Element) {
-        const rect = actualClientRect(element, this.sessionId);
-        if (withinViewport(rect)) {
-            const style = getStyle(element);
-            if (rect.width > 0 && rect.height > 0) {
+    public visibleElement(element: Element, pseudoElt?: string) {
+        let style: CSSStyleDeclaration;
+        let width: number;
+        let height: number;
+        let valid: boolean;
+        if (pseudoElt) {
+            const parentElement = element.parentElement;
+            style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);
+            if (getNumberValue(style, 'width') === 0) {
+                width = getBorderWidth(style, 'border-left') > 0 ||
+                        getNumberValue(style, 'padding-left') > 0 ||
+                        getNumberValue(style, 'padding-right') > 0 ||
+                        getBorderWidth(style, 'border-right') > 0 ? 1 : 0;
+            }
+            else {
+                width = 1;
+            }
+            if (getNumberValue(style, 'height') === 0) {
+                height = getBorderWidth(style, 'border-top') > 0 ||
+                         getNumberValue(style, 'padding-top') > 0 ||
+                         getNumberValue(style, 'padding-bottom') > 0 ||
+                         getBorderWidth(style, 'border-bottom') > 0 ? 1 : 0;
+            }
+            else {
+                height = 1;
+            }
+            valid = true;
+        }
+        else {
+            style = getStyle(element);
+            const rect = actualClientRect(element, this.sessionId);
+            ({ width, height } = rect);
+            valid = withinViewport(rect);
+        }
+        if (valid) {
+            if (width > 0 && height > 0) {
                 if (style.getPropertyValue('visibility') === 'visible') {
                     return true;
                 }
-                const position = style.getPropertyValue('position');
-                return position !== 'absolute' && position !== 'fixed';
+                return !positionAbsolute(style);
             }
-            return element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' ||
-                rect.width > 0 && style.getPropertyValue('float') !== 'none' ||
-                style.getPropertyValue('clear') !== 'none' ||
-                style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) ||
-                element.className === '__squared.pseudo';
+            if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none') {
+                return true;
+            }
+            else if (!positionAbsolute(style)) {
+                return (
+                    width > 0 && style.getPropertyValue('float') !== 'none' ||
+                    style.getPropertyValue('clear') !== 'none' ||
+                    style.getPropertyValue('display') === 'block' && (getNumberValue(style, 'margin-top') !== 0 || getNumberValue(style, 'margin-bottom') !== 0)
+                );
+            }
         }
         return false;
     }

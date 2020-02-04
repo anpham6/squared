@@ -1320,7 +1320,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     result = children.every((node: T) => node.baselineElement);
                 }
                 else {
-                    result = this.textElement && !this.multiline || this.inputElement || this.imageElement || this.svgElement;
+                    result = this.inlineText && this.textElement || this.plainText && !this.multiline || this.inputElement || this.imageElement || this.svgElement;
                 }
             }
             else {

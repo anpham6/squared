@@ -235,12 +235,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this._layouts.length = 0;
     }
 
-    public conditionElement(element: HTMLElement) {
+    public conditionElement(element: HTMLElement, pseudoElt?: string) {
         if (!this._excluded.has(element.tagName)) {
-            if (this.controllerHandler.visibleElement(element) || this._cascadeAll) {
+            if (this.controllerHandler.visibleElement(element, pseudoElt) || this._cascadeAll) {
                 return true;
             }
-            else {
+            else if (!pseudoElt) {
                 switch (getStyle(element).position) {
                     case 'absolute':
                     case 'fixed':
@@ -267,7 +267,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public insertNode(element: Element, parent?: T) {
+    public insertNode(element: Element, parent?: T, pseudoElt?: string) {
         if (isTextNode(element)) {
             if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (parent.element as Element).childElementCount === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
@@ -279,7 +279,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 return node;
             }
         }
-        else if (this.conditionElement(<HTMLElement> element)) {
+        else if (this.conditionElement(<HTMLElement> element, pseudoElt)) {
             this.controllerHandler.applyDefaultStyles(element);
             return this.createNode({ parent, element, append: false });
         }
@@ -588,7 +588,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const element = <HTMLElement> childNodes[i];
                 let child: Undef<T>;
                 if (element === beforeElement) {
-                    child = this.insertNode(beforeElement);
+                    child = this.insertNode(beforeElement, undefined, '::before');
                     if (child) {
                         node.innerBefore = child;
                         if (!child.textEmpty) {
@@ -598,7 +598,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 else if (element === afterElement) {
-                    child = this.insertNode(afterElement);
+                    child = this.insertNode(afterElement, undefined, '::after');
                     if (child) {
                         node.innerAfter = child;
                         if (!child.textEmpty) {

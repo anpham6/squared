@@ -2479,8 +2479,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             result = this.css('backgroundColor');
             switch (result) {
                 case 'initial':
-                case 'rgba(0, 0, 0, 0)':
                 case 'transparent':
+                case 'rgba(0, 0, 0, 0)':
                     result = '';
                     break;
                 default:

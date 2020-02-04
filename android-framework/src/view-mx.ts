@@ -104,24 +104,25 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
         else {
             let offset = 0;
             let usePadding = true;
-            if (!inlineStyle && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
+            if (!inlineStyle && node.inlineText && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
                 if (node.cssTry('white-space', 'nowrap')) {
-                    offset = (lineHeight - node.boundingClientRect.height) / 2;
+                    offset = (lineHeight - (node.textBounds || node.boundingClientRect).height) / 2;
                     usePadding = false;
                     node.cssFinally('white-space');
                 }
                 node.cssFinally('line-height');
             }
             else {
-                const { height, numberOfLines } = node.bounds;
-                if (node.plainText && <number> numberOfLines > 1) {
-                    node.android('minHeight', formatPX(height / <number> numberOfLines));
-                    node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
-                    return;
+                const height = node.bounds.height;
+                if (node.plainText) {
+                    const numberOfLines = node.bounds.numberOfLines as number;
+                    if (numberOfLines > 1) {
+                        node.android('minHeight', formatPX(height / numberOfLines));
+                        node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
+                        return;
+                    }
                 }
-                else {
-                    offset = (lineHeight - height) / 2;
-                }
+                offset = (lineHeight - height) / 2;
             }
             const upper = Math.round(offset);
             if (upper > 0) {
@@ -712,7 +713,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     let value = -1;
                     if (isPercent(width)) {
                         if (this.inputElement) {
-                            value = this.bounds.width;
+                            if (width === '100%' && !renderParent.inlineWidth) {
+                                layoutWidth = 'match_parent';
+                            }
+                            else {
+                                value = this.bounds.width;
+                            }
                         }
                         else if (renderParent.layoutConstraint && !renderParent.hasPX('width', false)) {
                             if (width === '100%') {
@@ -740,7 +746,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         else if (width === '100%') {
-                            if (!maxDimension) {
+                            if (!maxDimension && this.hasPX('maxWidth')) {
                                 const maxWidth = this.css('maxWidth');
                                 const maxValue = this.parseUnit(maxWidth);
                                 const absoluteParent = this.absoluteParent || actualParent;
@@ -1609,7 +1615,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         private alignLayout(renderParent: T) {
             if (this.layoutLinear) {
                 if (this.layoutVertical) {
-                    if (!renderParent.layoutFrame && !this.documentRoot && !this.hasAlign(NODE_ALIGNMENT.TOP)) {
+                    if (!renderParent.layoutFrame && !this.documentRoot) {
                         let children = this.renderChildren;
                         let firstChild: Undef<T>;
                         do {
@@ -1620,7 +1626,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             children = firstChild.renderChildren as T[];
                         }
                         while (children.length);
-                        if (firstChild.baselineElement) {
+                        if (firstChild.baselineElement || firstChild.textElement) {
                             this.android('baselineAlignedChildIndex', '0');
                         }
                     }

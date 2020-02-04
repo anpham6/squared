@@ -52,7 +52,7 @@ declare namespace base {
         parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
         createCache(documentRoot: HTMLElement): boolean;
         createNode(options: {}): T;
-        insertNode(element: Element, parent?: T): Undef<T>;
+        insertNode(element: Element, parent?: T, pseudoElt?: string): Undef<T>;
         afterCreateCache(element: HTMLElement): void;
         finalize(): void;
         copyToDisk(directory: string, callback?: CallbackResult, assets?: FileAsset[]): void;
@@ -81,7 +81,7 @@ declare namespace base {
         readonly extensions: ExtensionUI<T>[];
         readonly rootElements: Set<Element>;
         readonly layouts: FileAsset[];
-        conditionElement(element: HTMLElement): boolean;
+        conditionElement(element: HTMLElement, pseudoElt?: string): boolean;
         createNode(options: AppNodeUIOptions<T>): T;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         resolveTarget(target: Undef<string>): Undef<T>;
@@ -128,7 +128,7 @@ declare namespace base {
         optimize(nodes: T[]): void;
         finalize(layouts: FileAsset[]): void;
         evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
-        visibleElement(element: Element, target?: string): boolean;
+        visibleElement(element: Element, pseudoElt?: string): boolean;
         processUnknownParent(layout: LayoutUI<T>): LayoutResult<T>;
         processUnknownChild(layout: LayoutUI<T>): LayoutResult<T>;
         processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): LayoutUI<T>;

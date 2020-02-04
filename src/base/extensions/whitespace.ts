@@ -508,6 +508,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                         else {
                             const horizontalRows = renderParent.horizontalRows;
+                            const validSibling = (item: T) => item.pageFlow && item.blockDimension && !item.floating;
                             let horizontal: Undef<T[]>;
                             if (horizontalRows) {
                                 found: {
@@ -528,7 +529,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             }
                                         }
                                         for (const item of row) {
-                                            if (item.blockDimension && !item.floating) {
+                                            if (validSibling(item)) {
                                                 maxBottom = Math.max(item.actualRect('bottom'), maxBottom);
                                             }
                                         }
@@ -550,10 +551,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         if (horizontal.includes(item)) {
                                             break;
                                         }
-                                        else if (item.lineBreak) {
-                                            maxBottom = Number.NEGATIVE_INFINITY;
+                                        else if (item.excluded) {
+                                            continue;
                                         }
-                                        else if (item.blockDimension && !item.floating) {
+                                        else if (validSibling(item)) {
                                             maxBottom = Math.max(item.actualRect('bottom'), maxBottom);
                                         }
                                     }
