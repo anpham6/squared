@@ -10,6 +10,7 @@ import LayoutUI = squared.base.LayoutUI;
 const $lib = squared.lib;
 
 const { formatPX } = $lib.css;
+const { hypotenuse } = $lib.math;
 const { withinRange } = $lib.util;
 
 const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
@@ -90,7 +91,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                     const { x: x1, y: y1 } = item.center;
                     const x = Math.abs(x1 - x2);
                     const y = Math.abs(y1 - y2);
-                    const radius = Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)));
+                    const radius = Math.round(hypotenuse(x, y));
                     let degrees = Math.round(Math.atan(Math.min(x, y) / Math.max(x, y)) * (180 / Math.PI));
                     if (y1 > y2) {
                         if (x1 > x2) {

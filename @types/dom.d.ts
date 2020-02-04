@@ -93,7 +93,6 @@ interface Gradient {
 
 interface RepeatingGradient extends Gradient {
     repeating: boolean;
-    horizontal: boolean;
 }
 
 interface LinearGradient extends RepeatingGradient {

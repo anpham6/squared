@@ -324,10 +324,10 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
         }
         case 'linear': {
             const { angle, angleExtent, dimension } = <LinearGradient> gradient;
+            const { width, height } = <Dimension> dimension;
             let positionX = angleExtent.x;
             let positionY = angleExtent.y;
             if (angle <= 90) {
-                const height = (<Dimension> dimension).height;
                 positionY += height;
                 result.startX = '0';
                 result.startY = height.toString();
@@ -337,13 +337,11 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
                 result.startY = '0';
             }
             else if (angle <= 270) {
-                const width = (<Dimension> dimension).width;
                 positionX += width;
                 result.startX = width.toString();
                 result.startY = '0';
             }
             else {
-                const { width, height } = <Dimension> dimension;
                 positionX += width;
                 positionY += height;
                 result.startX = width.toString();

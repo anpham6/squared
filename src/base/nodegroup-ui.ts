@@ -45,19 +45,20 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get blockStatic() {
+        let result = this._cached.blockStatic;
         if (this._cached.blockStatic === undefined) {
             const documentParent = this.actualParent || this.documentParent;
-            const value = (
+            result = (
                 this.naturalChildren.length > 0 && this.naturalChildren[0].blockStatic ||
                 this.actualWidth === documentParent.actualWidth && !this.some(node => node.plainText || node.naturalElement && node.rightAligned) ||
                 this.layoutVertical && this.some(node => node.blockStatic || node.rightAligned) ||
                 documentParent.blockStatic && (documentParent.layoutVertical || this.hasAlign(NODE_ALIGNMENT.COLUMN))
             );
-            if (value || this.containerType !== 0) {
-                this._cached.blockStatic = value;
+            if (result || this.containerType !== 0) {
+                this._cached.blockStatic = result;
             }
         }
-        return this._cached.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK);
+        return result || this.hasAlign(NODE_ALIGNMENT.BLOCK);
     }
 
     get blockDimension() {

@@ -15,4 +15,4 @@ temp/
 package-lock.json
 rollup.config.*
 tsconfig.*
-tslint.json
+.eslintrc.js

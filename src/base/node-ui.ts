@@ -279,13 +279,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             const { left, right } = node.linear;
                             boxLeft = Math.min(boxLeft, left);
                             boxRight = Math.max(boxRight, right);
-                            if (node.floating) {
-                                if (node.float === 'left') {
-                                    floatLeft = Math.max(floatLeft, right);
-                                }
-                                else {
-                                    floatRight = Math.min(floatRight, left);
-                                }
+                            if (node.float === 'left') {
+                                floatLeft = Math.max(floatLeft, right);
+                            }
+                            else if (node.float === 'right') {
+                                floatRight = Math.min(floatRight, left);
                             }
                         }
                         for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < length; i++) {
@@ -331,7 +329,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static partitionRows(list: T[]) {
         const parent = list[0].actualParent;
-        const cleared = parent?.floatContainer ? NodeUI.linearData(parent.naturalElements as T[], true).cleared : undefined;
+        const cleared = parent?.floatContainer ? NodeUI.linearData(parent.naturalChildren as T[], true).cleared : undefined;
         const result: T[][] = [];
         let row: T[] = [];
         let siblings: T[] = [];
@@ -349,13 +347,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     siblings.length = 0;
                     continue;
                 }
-                let wrapped = node.innerWrapped;
-                while (wrapped) {
-                    if (wrapped.naturalChild) {
-                        active = wrapped;
-                        break;
-                    }
-                    wrapped = wrapped.innerWrapped;
+                const wrapped = node.innerMostWrapped;
+                if (wrapped) {
+                    active = wrapped;
                 }
             }
             if (row.length === 0) {
@@ -514,13 +508,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockAttr(name: string, attr: string) {
-        const locked = this._locked;
-        let lockedData = locked[name];
-        if (lockedData === undefined) {
-            lockedData = {};
-            locked[name] = lockedData;
+        let locked = this._locked[name];
+        if (locked === undefined) {
+            locked = {};
+            this._locked[name] = locked;
         }
-        lockedData[attr] = true;
+        locked[attr] = true;
     }
 
     public unlockAttr(name: string, attr: string) {

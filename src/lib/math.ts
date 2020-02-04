@@ -171,3 +171,37 @@ export function nextMultiple(values: number[], minimum = 0, offset?: number[]) {
     }
     return values[0];
 }
+
+export function sin(value: number, accuracy = 11) {
+    value = convertRadian(value);
+    let result = value;
+    for (let i = 3, j = 0; i <= accuracy; i += 2, j++) {
+        result += Math.pow(value, i) / factorial(i) * (j % 2 === 0 ? -1 : 1);
+    }
+    return result;
+}
+
+export function cos(value: number, accuracy = 10) {
+    value = convertRadian(value);
+    let result = 1;
+    for (let i = 2, j = 0; i <= accuracy; i += 2, j++) {
+        result += Math.pow(value, i) / factorial(i) * (j % 2 === 0 ? -1 : 1);
+    }
+    return result;
+}
+
+export function tan(value: number, accuracy = 11) {
+    return sin(value, accuracy) / cos(value, accuracy);
+}
+
+export function factorial(value: number) {
+    let result = 2;
+    for (let i = 3; i <= value; i++) {
+        result *= i;
+    }
+    return result;
+}
+
+export function hypotenuse(a: number, b: number) {
+    return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+}

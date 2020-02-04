@@ -187,7 +187,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const baseTemplate = this._localSettings.layout.baseTemplate;
         for (const layout of session.documentRoot) {
             const node = layout.node;
-            if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.naturalChildren.every(item => item.documentRoot)) {
+            if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.naturalElements.every(item => item.documentRoot)) {
                 continue;
             }
             const renderTemplates = node.renderParent?.renderTemplates;

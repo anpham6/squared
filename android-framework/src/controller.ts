@@ -1480,7 +1480,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('scrollbars', overflow);
                 }
                 if (node.has('letterSpacing')) {
-                    node.android('letterSpacing', truncate(node.toFloat('letterSpacing') / node.fontSize, this.localSettings.precision.standardFloat));
+                    node.android('letterSpacing', truncate(node.toFloat('letterSpacing') / node.fontSize, node.localSettings.floatPrecision));
                 }
                 if (node.css('textAlign') === 'justify') {
                     node.android('justificationMode', 'inter_word');
@@ -1490,7 +1490,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (match) {
                         const color = Resource.addColor(parseColor(match[1] || node.css('color')));
                         if (color !== '') {
-                            const precision = this.localSettings.precision.standardFloat;
+                            const precision = node.localSettings.floatPrecision;
                             const fontSize = node.fontSize;
                             const shadowRadius = match[4];
                             node.android('shadowColor', '@color/' + color);
@@ -1629,9 +1629,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public addGuideline(node: T, parent: T, orientation?: string, percent = false, opposing = false) {
-        const absoluteParent = node.absoluteParent as T;
-        const boxParent = parent.nodeGroup && !node.documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
-        const box = boxParent.box;
+        const documentParent = parent.nodeGroup && !node.documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
+        const box = documentParent.box;
         const linear = node.linear;
         const bounds = node.positionStatic ? node.bounds : linear;
         const applyLayout = (value: string, horizontal: boolean) => {
@@ -1735,15 +1734,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
             }
+            const absoluteParent = node.absoluteParent as T;
             if (percent) {
                 const position = Math.abs(bounds[LT] - box[LT]) / box[horizontal ? 'width' : 'height'];
-                location = parseFloat(truncate(!opposing ? position : 1 - position, this.localSettings.precision.standardFloat));
+                location = parseFloat(truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision));
                 beginPercent += 'percent';
             }
             else {
                 location = bounds[LT] - box[!opposing ? LT : RB];
-                if (!horizontal && !boxParent.nodeGroup) {
-                    if (boxParent !== absoluteParent) {
+                if (!horizontal && !documentParent.nodeGroup) {
+                    if (documentParent !== absoluteParent) {
                         if (!absoluteParent.positionRelative && absoluteParent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 1) {
                             location -= absoluteParent.marginTop;
                         }
@@ -1759,8 +1759,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             const guideline = parent.constraint.guideline || {};
             if (!node.pageFlow) {
-                if (node.parent === boxParent.outerMostWrapper) {
-                    location += boxParent[!opposing ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
+                if (node.parent === documentParent.outerMostWrapper) {
+                    location += documentParent[!opposing ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
                 }
                 else if (absoluteParent === node.documentParent) {
                     let direction: number;
@@ -1770,7 +1770,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         direction = !opposing ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM;
                     }
-                    location = adjustAbsolutePaddingOffset(boxParent, direction, location);
+                    location = adjustAbsolutePaddingOffset(documentParent, direction, location);
                 }
             }
             else if (node.inlineVertical) {
@@ -1789,26 +1789,26 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (location < 0) {
                     const innerWrapped = node.innerMostWrapped;
                     if (innerWrapped?.pageFlow === false) {
-                        let boxMargin = 0;
+                        let region = 0;
                         switch (LT) {
                             case 'top':
-                                boxMargin = BOX_STANDARD.MARGIN_TOP;
+                                region = BOX_STANDARD.MARGIN_TOP;
                                 break;
                             case 'left':
-                                boxMargin = BOX_STANDARD.MARGIN_LEFT;
+                                region = BOX_STANDARD.MARGIN_LEFT;
                                 break;
                             case 'bottom':
-                                boxMargin = BOX_STANDARD.MARGIN_BOTTOM;
+                                region = BOX_STANDARD.MARGIN_BOTTOM;
                                 break;
                             case 'right':
-                                boxMargin = BOX_STANDARD.MARGIN_RIGHT;
+                                region = BOX_STANDARD.MARGIN_RIGHT;
                                 break;
                         }
-                        innerWrapped.modifyBox(boxMargin, location);
+                        innerWrapped.modifyBox(region, location);
                     }
                 }
             }
-            else if (horizontal && location + bounds.width >= box.right && boxParent.hasPX('width') && !node.hasPX('right') || !horizontal && location + bounds.height >= box.bottom && boxParent.hasPX('height') && !node.hasPX('bottom')) {
+            else if (horizontal && location + bounds.width >= box.right && documentParent.hasPX('width') && !node.hasPX('right') || !horizontal && location + bounds.height >= box.bottom && documentParent.hasPX('height') && !node.hasPX('bottom')) {
                 node.anchor(RB, 'parent', true);
             }
             else {
@@ -2892,7 +2892,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 for (let j = 0; j < lengthB; j++) {
                     const data = columns[j];
                     for (const item of data) {
-                        item.app('layout_constraintWidth_percent', truncate((1 / columnMin) - percentGap, this.localSettings.precision.standardFloat));
+                        item.app('layout_constraintWidth_percent', truncate((1 / columnMin) - percentGap, node.localSettings.floatPrecision));
                         item.setLayoutWidth('0px');
                     }
                     horizontal.push(data[0]);
@@ -3103,8 +3103,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     aboveRowEnd = previousRow[0];
                     const lengthB = previousRow.length;
                     for (let k = 1; k < lengthB; k++) {
-                        if (previousRow[k].linear.bottom >= aboveRowEnd.linear.bottom) {
-                            aboveRowEnd = previousRow[k];
+                        const item = previousRow[k];
+                        if (item.linear.bottom >= aboveRowEnd.linear.bottom) {
+                            aboveRowEnd = item;
                         }
                     }
                 }
@@ -3112,9 +3113,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     currentRowBottom = partition[0];
                     const lengthB = partition.length;
                     for (let k = 1; k < lengthB; k++) {
-                        const row = partition[k];
-                        if (row.linear.bottom >= currentRowBottom.linear.bottom) {
-                            currentRowBottom = row;
+                        const item = partition[k];
+                        if (item.linear.bottom >= currentRowBottom.linear.bottom) {
+                            currentRowBottom = item;
                         }
                     }
                     bottomFloating = false;

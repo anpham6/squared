@@ -9,7 +9,7 @@ const $lib = squared.lib;
 const { USER_AGENT, isUserAgent } = $lib.client;
 const { parseColor } = $lib.color;
 const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = $lib.css;
-const { isEqual, offsetAngleX, offsetAngleY, relativeAngle, triangulate, truncateFraction } = $lib.math;
+const { cos, isEqual, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = $lib.math;
 const { CHAR, ESCAPE, STRING, XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
 const { convertCamelCase, convertFloat, hasValue, isEqual: isEqualObject, isNumber, isString, trimEnd, trimStart } = $lib.util;
@@ -24,9 +24,48 @@ const REGEX_NOBREAKSPACE = /\u00A0/g;
 const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
 
-function parseColorStops(node: NodeUI, gradient: RadialGradient, value: string) {
-    const repeating = gradient.repeating === true;
-    const [extent, size] = repeating && gradient.type === 'radial' ? [gradient.radiusExtent / gradient.radius, gradient.radius] : [1, (<Dimension> gradient.dimension)[gradient.horizontal ? 'width' : 'height']];
+function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
+    const { width, height } = <Dimension> gradient.dimension;
+    let repeat = false;
+    let horizontal = true;
+    let extent = 1;
+    let size: number;
+    switch (gradient.type) {
+        case 'conic': {
+            size = Math.min(width, height);
+            break;
+        }
+        case 'radial': {
+            const { repeating, radiusExtent, radius } = <RadialGradient> gradient;
+            horizontal = node.actualWidth <= node.actualHeight;
+            repeat = repeating;
+            extent = radiusExtent / radius;
+            size = radius;
+            break;
+        }
+        default: {
+            const { repeating, angle } = <LinearGradient> gradient;
+            repeat = repeating;
+            switch (angle) {
+                case 0:
+                case 180:
+                case 360:
+                    size = height;
+                    horizontal = false;
+                    break;
+                case 90:
+                case 270:
+                    size = width;
+                    break;
+                default: {
+                    size = Math.abs(width * sin(angle)) + Math.abs(height * cos(angle));
+                    horizontal = width >= height;
+                    break;
+                }
+            }
+            break;
+        }
+    }
     const result: ColorStop[] = [];
     let previousOffset = 0;
     let match: Null<RegExpExecArray>;
@@ -47,12 +86,12 @@ function parseColorStops(node: NodeUI, gradient: RadialGradient, value: string) 
                     offset = parseFloat(unit) / 100;
                 }
                 else if (isLength(unit)) {
-                    offset = node.parseUnit(unit, gradient.horizontal ? 'width' : 'height', false) / size;
+                    offset = node.parseUnit(unit, horizontal ? 'width' : 'height', false) / size;
                 }
                 else if (isCalc(unit)) {
                     offset = calculate(match[6], size, node.fontSize) / size;
                 }
-                if (repeating && offset !== -1) {
+                if (repeat && offset !== -1) {
                     offset *= extent;
                 }
             }
@@ -98,7 +137,7 @@ function parseColorStops(node: NodeUI, gradient: RadialGradient, value: string) 
         }
         percent = stop.offset;
     }
-    if (repeating) {
+    if (repeat) {
         if (percent < 100) {
             complete: {
                 const original = result.slice(0);
@@ -363,15 +402,15 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 angle: getAngle(direction),
                                 center: getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension, '', screenDimension)
                             };
-                            conic.colorStops = parseColorStops(node, conic as any, match[4]);
+                            conic.colorStops = parseColorStops(node, conic, match[4]);
                             gradient = conic;
                             break;
                         }
                         case 'radial': {
-                            const { width, height } = dimension;
                             const position = getGradientPosition(direction);
                             const center = getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension, '', screenDimension);
                             const { left, top } = center;
+                            const { width, height } = dimension;
                             let shape = 'ellipse';
                             let closestSide = top;
                             let farthestSide = top;
@@ -401,7 +440,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 }
                             }
                             for (const corner of [[0, 0], [width, 0], [width, height], [0, height]]) {
-                                const length = Math.round(Math.sqrt(Math.pow(Math.abs(corner[0] - left), 2) + Math.pow(Math.abs(corner[1] - top), 2)));
+                                const length = Math.round(hypotenuse(Math.abs(corner[0] - left), Math.abs(corner[1] - top)));
                                 closestCorner = Math.min(length, closestCorner);
                                 farthestCorner = Math.max(length, farthestCorner);
                             }
@@ -412,7 +451,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             const radial = <RadialGradient> {
                                 type,
                                 repeating,
-                                horizontal: node.actualWidth <= node.actualHeight,
                                 dimension,
                                 shape,
                                 center,
@@ -501,7 +539,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 x = truncateFraction(
                                         offsetAngleX(
                                             angle,
-                                            triangulate(a, 90 - a, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)))[1]
+                                            triangulate(a, 90 - a, hypotenuse(width, height))[1]
                                         )
                                     );
                                 y = truncateFraction(
@@ -514,12 +552,11 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             const linear = <LinearGradient> {
                                 type,
                                 repeating,
-                                horizontal: angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315,
                                 dimension,
                                 angle,
                                 angleExtent: { x, y }
                             };
-                            linear.colorStops = parseColorStops(node, linear as any, match[4]);
+                            linear.colorStops = parseColorStops(node, linear, match[4]);
                             gradient = linear;
                             break;
                         }

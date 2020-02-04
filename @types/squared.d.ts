@@ -863,6 +863,11 @@ declare namespace lib {
         function offsetAngleY(angle: number, value: number): number;
         function clampRange(value: number, min?: number, max?: number): number;
         function nextMultiple(values: number[], minumum?: number, offset?: number[]): number;
+        function sin(value: number, accuracy?: number): number;
+        function cos(value: number, accuracy?: number): number;
+        function tan(value: number, accuracy?: number): number;
+        function factorial(value: number): number;
+        function hypotenuse(a: number, b: number): number;
     }
 
     namespace regex {
