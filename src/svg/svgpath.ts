@@ -14,7 +14,7 @@ import { SVG, TRANSFORM, getPathLength } from './lib/util';
 const $lib = squared.lib;
 
 const { getNamedItem } = $lib.dom;
-const { isEqual, lessEqual, nextMultiple, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = $lib.math;
+const { equal, lessEqual, nextMultiple, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = $lib.math;
 const { cloneArray, convertInt, convertFloat } = $lib.util;
 
 type SvgContainer = squared.svg.SvgContainer;
@@ -932,7 +932,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                     offsetRemaining = truncateFraction(offsetRemaining - remainingValue);
                                                 }
                                             }
-                                            if (isEqual(offsetRemaining, extendedLength)) {
+                                            if (equal(offsetRemaining, extendedLength)) {
                                                 offsetRemaining = extendedLength;
                                             }
                                             if (offsetRemaining > extendedLength) {

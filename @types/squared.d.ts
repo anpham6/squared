@@ -849,9 +849,9 @@ declare namespace lib {
         function minArray(list: number[]): number;
         function maxArray(list: number[]): number;
         function convertRadian(value: number): number;
-        function isEqual(valueA: number, valueB: number, precision?: number): boolean;
-        function moreEqual(valueA: number, valueB: number, precision?: number): boolean;
-        function lessEqual(valueA: number, valueB: number, precision?: number): boolean;
+        function equal(a: number, b: number, precision?: number): boolean;
+        function moreEqual(a: number, b: number, precision?: number): boolean;
+        function lessEqual(a: number, b: number, precision?: number): boolean;
         function truncate(value: number | string, precision?: number): string;
         function truncateTrailingZero(value: string): string;
         function truncateFraction(value: number): number;

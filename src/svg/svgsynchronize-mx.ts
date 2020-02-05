@@ -12,9 +12,9 @@ import { SVG, TRANSFORM } from './lib/util';
 
 const $lib = squared.lib;
 
-const { clampRange, isEqual, nextMultiple } = $lib.math;
+const { clampRange, equal, nextMultiple } = $lib.math;
 const { CHAR } = $lib.regex;
-const { hasBit, hasValue, isEqual: isEqualObject, isNumber, joinMap, objectMap, replaceMap, spliceArray, sortNumber } = $lib.util;
+const { hasBit, hasValue, isEqual, isNumber, joinMap, objectMap, replaceMap, spliceArray, sortNumber } = $lib.util;
 
 type SvgContainer = squared.svg.SvgContainer;
 type AnimateValue = number | Point[] | string;
@@ -494,7 +494,7 @@ function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue,
         }
         if (stored !== value || duplicate) {
             if (!duplicate) {
-                if (typeof stored === 'number' && isEqual(value as number, stored)) {
+                if (typeof stored === 'number' && equal(value as number, stored)) {
                     return time;
                 }
                 while (time > 0 && map.has(time)) {
@@ -1135,7 +1135,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         attributeEnd: {
                             const length = groupDelay.length;
                             for (let i = 0; i < length; i++) {
-                                const data = groupData[i];
+                                let data = groupData[i];
                                 let delay = groupDelay[i];
                                 for (let j = 0; j < data.length; j++) {
                                     const item = data[j];
@@ -1273,7 +1273,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             baseValue = TRANSFORM.typeAsValue(item.type);
                                             setFreezeValue(actualMaxTime, baseValue, item.type);
                                         }
-                                        let parallel = delay === Number.POSITIVE_INFINITY || (maxTime !== -1 || item.hasState(SYNCHRONIZE_STATE.BACKWARDS)) && !(i === 0 && j === 0);
+                                        let parallel = delay === Number.POSITIVE_INFINITY || (maxTime !== -1 || item.hasState(SYNCHRONIZE_STATE.BACKWARDS)) && !(i === 0 && j === 0) || item.hasState(SYNCHRONIZE_STATE.RESUME);
                                         complete = true;
                                         threadTimeExceeded: {
                                             const forwardItem = getForwardItem(forwardMap, attr);
@@ -1475,7 +1475,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 resume.addState(SYNCHRONIZE_STATE.RESUME);
                                                 removeIncomplete(incomplete, resume);
                                                 delay = resume.delay;
-                                                groupData[i] = [resume];
+                                                data = [resume];
                                                 j = -1;
                                             }
                                         }
@@ -1587,7 +1587,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         value = baseValueMap[attr];
                                     }
                                 }
-                                if (value !== undefined && !isEqualObject(<AnimateValue> baseMap.get(maxTime), value)) {
+                                if (value !== undefined && !isEqual(<AnimateValue> baseMap.get(maxTime), value)) {
                                     maxTime = setTimelineValue(baseMap, maxTime, value);
                                     if (transforming) {
                                         setTimeRange(animateTimeRangeMap, key, maxTime);
@@ -1653,10 +1653,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             for (let j = 0; j < length; j++) {
                                                 let time = getItemTime(delay, item.duration, keyTimesBase, i, j);
                                                 if (!joined && time >= maxTime) {
-                                                    if (!baseMap.has(maxTime)) {
-                                                        [maxTime, baseValue] = insertSplitValue(item, maxTime, baseValue, keyTimesBase, values, item.keySplines, delay, i, j, maxTime, keyTimeMode, baseMap, repeatingInterpolatorMap, repeatingTransformOriginMap);
-                                                        keyTimesRepeating.add(maxTime);
-                                                    }
+                                                    [maxTime, baseValue] = insertSplitValue(item, maxTime, baseValue, keyTimesBase, values, item.keySplines, delay, i, j, maxTime, keyTimeMode, baseMap, repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                    keyTimesRepeating.add(maxTime);
                                                     joined = true;
                                                 }
                                                 if (joined && time > maxTime) {

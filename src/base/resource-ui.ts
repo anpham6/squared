@@ -9,10 +9,10 @@ const $lib = squared.lib;
 const { USER_AGENT, isUserAgent } = $lib.client;
 const { parseColor } = $lib.color;
 const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = $lib.css;
-const { cos, isEqual, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = $lib.math;
+const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = $lib.math;
 const { CHAR, ESCAPE, STRING, XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { convertCamelCase, convertFloat, hasValue, isEqual: isEqualObject, isNumber, isString, trimEnd, trimStart } = $lib.util;
+const { convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, trimEnd, trimStart } = $lib.util;
 const { STRING_TABSPACE } = $lib.xml;
 
 type NodeUI = squared.base.NodeUI;
@@ -521,7 +521,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             }
                             let x = truncateFraction(offsetAngleX(angle, width));
                             let y = truncateFraction(offsetAngleY(angle, height));
-                            if (x !== width && y !== height && !isEqual(Math.abs(x), Math.abs(y))) {
+                            if (x !== width && y !== height && !equal(Math.abs(x), Math.abs(y))) {
                                 let opposite: number;
                                 if (angle <= 90) {
                                     opposite = relativeAngle({ x: 0, y: height }, { x: width, y: 0 });
@@ -632,7 +632,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         const stored = ResourceUI.STORED[asset];
         if (stored) {
             for (const [name, data] of stored.entries()) {
-                if (isEqualObject(value, data)) {
+                if (isEqual(value, data)) {
                     return name;
                 }
             }

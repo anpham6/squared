@@ -10,7 +10,7 @@ const $lib = squared.lib;
 
 const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, isPercent } = $lib.css;
 const { isTextNode, newBoxModel } = $lib.dom;
-const { isEqual } = $lib.math;
+const { equal } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
 const { aboveRange, assignEmptyProperty, cloneObject, convertWord, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
@@ -155,7 +155,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 const heightA = a.baselineHeight + a.marginBottom;
                 const heightB = b.baselineHeight + b.marginBottom;
-                if (!isEqual(heightA, heightB)) {
+                if (!equal(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
                 }
                 else if (a.textElement && b.textElement) {

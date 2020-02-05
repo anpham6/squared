@@ -17,17 +17,17 @@ export function maxArray(list: number[]): number {
     return Math.max.apply(null, list);
 }
 
-export function isEqual(valueA: number, valueB: number, precision = 5) {
+export function equal(valueA: number, valueB: number, precision = 5) {
     precision += Math.floor(valueA).toString().length;
     return valueA.toPrecision(precision) === valueB.toPrecision(precision);
 }
 
 export function moreEqual(valueA: number, valueB: number, precision = 5) {
-    return valueA > valueB || isEqual(valueA, valueB, precision);
+    return valueA > valueB || equal(valueA, valueB, precision);
 }
 
 export function lessEqual(valueA: number, valueB: number, precision = 5) {
-    return valueA < valueB || isEqual(valueA, valueB, precision);
+    return valueA < valueB || equal(valueA, valueB, precision);
 }
 
 export function truncate(value: number | string, precision = 3) {
